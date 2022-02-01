@@ -1,0 +1,29 @@
+{
+  "name": "@lindorm-io/core",
+  "description": "Core utilities and files for lindorm.io",
+  "version": "0.2.12",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/errors": "0.1.10",
+    "date-fns": "^2.26.0",
+    "lodash": "^4.17.21",
+    "random-number-csprng": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.181",
+    "@types/random-number-csprng": "^1.0.0"
+  }
+}

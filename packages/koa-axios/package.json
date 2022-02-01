@@ -1,0 +1,31 @@
+{
+  "name": "@lindorm-io/koa-axios",
+  "description": "Axios Request Handler middleware for @lindorm-io/koa applications",
+  "version": "0.0.15",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "peerDependencies": {
+    "@lindorm-io/axios": ">=0.2.7",
+    "@lindorm-io/koa": ">=0.7.2",
+    "@lindorm-io/winston": ">=0.1.8"
+  },
+  "devDependencies": {
+    "@lindorm-io/axios": "^0.2.7",
+    "@lindorm-io/koa": "^0.8.1",
+    "@lindorm-io/winston": "^0.1.8",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0"
+  }
+}

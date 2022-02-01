@@ -1,0 +1,23 @@
+mongo:
+  host: localhost
+  port: 3301
+  db_name: identity
+  username: root
+  password: example
+
+oauth:
+  host: https://oauth.test.api.lindorm.io
+  client_id: secret
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 3302
+
+server:
+  environment: test
+  host: https://identity.test.api.lindorm.io
+  port: 3300
+
+services:
+  communication_service: https://communication.test.api.lindorm.io

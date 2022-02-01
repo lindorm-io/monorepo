@@ -1,0 +1,86 @@
+{
+  "private": true,
+  "name": "@lindorm-io/monorepo",
+  "description": "Lindorm packages",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "maintainers": [
+    "jonn@lindorm.io"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:lindorm-io/monorepo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lindorm-io/monorepo/issues"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap --use-workspaces",
+    "build": "yarn clean && lerna run build",
+    "build:changed": "lerna run --since origin/master --include-dependents build",
+    "clean": "lerna run clean --parallel",
+    "lint": "lerna exec -- eslint . --ext .ts",
+    "lint:changed": "lerna exec --since origin/master --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
+    "release": "yarn lint:changed && yarn build:changed && cross-env HUSKY_BYPASS=true lerna publish",
+    "test": "lerna run test",
+    "test:changed": "lerna run --since origin/master --include-dependents test",
+    "test:update": "lerna run test -- -u",
+    "test:update:changed": "lerna run --since origin/master --include-dependents test -- -u",
+    "typecheck": "lerna run typecheck",
+    "typecheck:changed": "lerna exec --since origin/master --include-dependents -- tsc --noEmit",
+    "upgrade": "yarn upgrade-interactive --latest"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.2.3",
+    "@commitlint/config-conventional": "^16.2.1",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^17.0.23",
+    "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.12.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.25.4",
+    "husky": "^7.0.4",
+    "jest": "^27.4.7",
+    "jest-extended": "^2.0.0",
+    "lerna": "^4.0.0",
+    "lint-staged": "^12.3.7",
+    "mockdate": "^3.0.5",
+    "prettier": "^2.6.1",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.1.4",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.6.3"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "[[ -n $HUSKY_BYPASS ]] || commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn lint:changed && yarn typecheck:changed && yarn test:changed"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "prettier": {
+    "printWidth": 100,
+    "trailingComma": "all"
+  },
+  "volta": {
+    "node": "14.19.1",
+    "yarn": "1.22.18"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

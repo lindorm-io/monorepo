@@ -1,0 +1,28 @@
+expiry:
+  connect_identifier_session: 2 hours
+
+mongo:
+  host: localhost
+  port: 27017
+  db_name: identity
+  username: username
+  password: password
+
+oauth:
+  host: localhost
+  client_id: id
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+  password: password
+
+server:
+  environment: development
+  host: localhost
+  port: 3000
+
+services:
+  communication_service: localhost

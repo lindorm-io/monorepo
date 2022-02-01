@@ -1,0 +1,37 @@
+{
+  "name": "@lindorm-io/koa",
+  "description": "Koa App & Router for lindorm.io",
+  "version": "0.8.1",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/core": "0.2.12",
+    "@lindorm-io/errors": "0.1.10",
+    "@lindorm-io/winston": "0.1.9",
+    "joi": "^17.5.0",
+    "koa": "2.13.4",
+    "koa-bodyparser": "4.3.0",
+    "koa-router": "10.1.1",
+    "koa-useragent": "4.0.0",
+    "lodash": "4.17.21"
+  },
+  "devDependencies": {
+    "@types/express-useragent": "^1.0.2",
+    "@types/koa": "^2.13.4",
+    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-router": "^7.4.4",
+    "@types/lodash": "^4.14.181"
+  }
+}

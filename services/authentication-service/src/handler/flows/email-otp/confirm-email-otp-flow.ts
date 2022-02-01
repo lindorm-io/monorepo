@@ -1,0 +1,42 @@
+import { Account, LoginSession, FlowSession } from "../../../entity";
+import { ClientError } from "@lindorm-io/errors";
+import { Context } from "../../../types";
+import { identityAuthenticateIdentifier } from "../../axios";
+
+interface Options {
+  otp: string;
+}
+
+export const confirmEmailOtpFlow = async (
+  ctx: Context,
+  loginSession: LoginSession,
+  flowSession: FlowSession,
+  options: Options,
+): Promise<Account> => {
+  const {
+    logger,
+    repository: { accountRepository },
+  } = ctx;
+
+  const { otp } = options;
+
+  logger.info("Confirming Flow", {
+    loginSessionId: loginSession.id,
+    flowSessionId: flowSession.id,
+    type: flowSession.type,
+  });
+
+  logger.debug("Verifying OTP");
+
+  if (otp !== flowSession.otp) {
+    throw new ClientError("Invalid OTP");
+  }
+
+  logger.debug("Verifying Identity");
+
+  const { identityId } = await identityAuthenticateIdentifier(ctx, loginSession, flowSession);
+
+  logger.debug("Resolving Account");
+
+  return await accountRepository.findOrCreate({ id: identityId });
+};

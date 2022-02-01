@@ -1,0 +1,41 @@
+{
+  "name": "@lindorm-io/koa-jwt",
+  "description": "Token issuer middleware for @lindorm-io/koa applications",
+  "version": "0.4.5",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/core": "^0.2.12",
+    "@lindorm-io/errors": "^0.1.10"
+  },
+  "peerDependencies": {
+    "@lindorm-io/jwt": ">=0.6.0",
+    "@lindorm-io/key-pair": ">=0.3.5",
+    "@lindorm-io/koa": ">=0.7.2",
+    "@lindorm-io/winston": ">=0.1.8"
+  },
+  "devDependencies": {
+    "@lindorm-io/jwt": "^0.6.0",
+    "@lindorm-io/key-pair": "^0.4.0",
+    "@lindorm-io/koa": "^0.8.1",
+    "@lindorm-io/winston": "^0.1.8",
+    "@types/express-useragent": "^1.0.2",
+    "@types/koa": "^2.13.4",
+    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-router": "^7.4.4",
+    "koa": "^2.13.3",
+    "koa-bodyparser": "^4.3.0"
+  }
+}

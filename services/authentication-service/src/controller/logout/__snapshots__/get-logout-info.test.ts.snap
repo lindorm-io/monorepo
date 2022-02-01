@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getLogoutInfoController should resolve 1`] = `
+Object {
+  "body": Object {
+    "client": Object {
+      "description": "description",
+      "logoUri": "https://client.logo.uri/",
+      "name": "name",
+      "type": "public",
+    },
+  },
+}
+`;

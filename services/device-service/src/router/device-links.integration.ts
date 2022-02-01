@@ -1,0 +1,222 @@
+import MockDate from "mockdate";
+import request from "supertest";
+import { ChallengeStrategy, Factor } from "../enum";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { getTestDeviceLink } from "../test/entity";
+import { koa } from "../server/koa";
+import { randomUUID } from "crypto";
+import {
+  getTestAccessToken,
+  getTestChallengeConfirmationToken,
+  setupIntegration,
+  TEST_DEVICE_REPOSITORY,
+} from "../test/integration";
+
+MockDate.set("2021-01-01T08:00:00.000Z");
+
+describe("/device-links", () => {
+  const salt =
+    "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
+
+  const crypto = new CryptoLayered({
+    aes: { secret: salt },
+    sha: { secret: salt },
+  });
+
+  beforeAll(setupIntegration);
+
+  test("GET /", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink({}));
+
+    const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
+      getTestDeviceLink({
+        identityId: deviceLink.identityId,
+        deviceMetadata: {
+          ...deviceLink.deviceMetadata,
+          macAddress: "E1:9A:09:75:46:93",
+        },
+        name: "My Xperia 7",
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+
+    const response = await request(koa.callback())
+      .get("/device-links")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      device_links: expect.arrayContaining([
+        expect.objectContaining({
+          id: deviceLink.id,
+        }),
+        expect.objectContaining({
+          id: deviceLink2.id,
+        }),
+      ]),
+    });
+  });
+
+  test("DELETE /:id", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+
+    await request(koa.callback())
+      .delete(`/device-links/${deviceLink.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    await expect(TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id })).rejects.toThrow(
+      EntityNotFoundError,
+    );
+  });
+
+  test("GET /:id", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+      getTestDeviceLink({
+        biometry: await crypto.encrypt("secret"),
+        pincode: await crypto.encrypt("123456"),
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+
+    const response = await request(koa.callback())
+      .get(`/device-links/${deviceLink.id}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      id: deviceLink.id,
+      active: true,
+      device_metadata: {
+        brand: "Apple",
+        build_id: "12A269",
+        build_number: "89",
+        mac_address: "0B:ED:A0:D5:5A:2D",
+        model: "iPhone7,2",
+        system_name: "iOS",
+      },
+      identity_id: deviceLink.identityId,
+      installation_id: deviceLink.installationId,
+      name: "Test DeviceLink Name",
+      trusted: true,
+      unique_id: deviceLink.uniqueId,
+    });
+  });
+
+  test("PUT /:id/biometry", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+      getTestDeviceLink({
+        biometry: await crypto.encrypt("secret"),
+        pincode: await crypto.encrypt("123456"),
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+    const challengeConfirmationToken = getTestChallengeConfirmationToken({
+      claims: {
+        deviceLinkId: deviceLink.id,
+        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
+      },
+      sessionId: randomUUID(),
+      subject: deviceLink.identityId,
+    });
+
+    await request(koa.callback())
+      .put(`/device-links/${deviceLink.id}/biometry`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        challengeConfirmationToken,
+        biometry: getRandomString(128),
+      })
+      .expect(200);
+
+    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+
+    expect(result.biometry).not.toBe(deviceLink.biometry);
+  });
+
+  test("PUT /:id/pincode", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+      getTestDeviceLink({
+        biometry: await crypto.encrypt("secret"),
+        pincode: await crypto.encrypt("123456"),
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+
+    const challengeConfirmationToken = getTestChallengeConfirmationToken({
+      claims: {
+        deviceLinkId: deviceLink.id,
+        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
+      },
+      sessionId: randomUUID(),
+      subject: deviceLink.identityId,
+    });
+
+    await request(koa.callback())
+      .put(`/device-links/${deviceLink.id}/pincode`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        challengeConfirmationToken,
+        pincode: getRandomNumber(6).toString().padStart(6, "0"),
+      })
+      .expect(200);
+
+    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+
+    expect(result.pincode).not.toBe(deviceLink.pincode);
+  });
+
+  test("PUT /:id/trusted", async () => {
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+      await getTestDeviceLink({
+        trusted: false,
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: deviceLink.identityId,
+    });
+
+    const challengeConfirmationToken = getTestChallengeConfirmationToken({
+      claims: {
+        deviceLinkId: deviceLink.id,
+        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
+      },
+      sessionId: randomUUID(),
+      subject: deviceLink.identityId,
+    });
+
+    await request(koa.callback())
+      .put(`/device-links/${deviceLink.id}/trusted`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        challengeConfirmationToken,
+      })
+      .expect(200);
+
+    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+
+    expect(result.trusted).toBe(true);
+  });
+});

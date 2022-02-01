@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getUserinfoController should resolve with basic userinfo 1`] = `
+Object {
+  "body": "body",
+}
+`;

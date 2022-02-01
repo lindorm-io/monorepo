@@ -1,0 +1,23 @@
+import { Context } from "../../types";
+import { Identity } from "../../entity";
+
+export const removeIdentityDisplayName = async (
+  ctx: Context,
+  identity: Identity,
+): Promise<void> => {
+  const {
+    repository: { displayNameRepository },
+  } = ctx;
+
+  if (!identity.displayName.name) {
+    return;
+  }
+
+  const entity = await displayNameRepository.find({
+    name: identity.displayName.name,
+  });
+
+  entity.remove(identity.displayName.number);
+
+  await displayNameRepository.update(entity);
+};

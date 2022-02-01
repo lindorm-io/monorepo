@@ -1,0 +1,35 @@
+import { ClientCache, ClientRepository } from "../infrastructure";
+import { IntervalWorker } from "@lindorm-io/koa";
+import { mongoConnection, redisConnection } from "../instance";
+import { stringToMilliseconds, stringToSeconds } from "@lindorm-io/core";
+import { winston } from "../logger";
+
+const logger = winston.createChildLogger(["clientCacheWorker"]);
+const expiresInSeconds = stringToSeconds("62 minutes");
+const time = stringToMilliseconds("60 minutes");
+
+export const clientCacheWorker = new IntervalWorker({
+  callback: async (): Promise<void> => {
+    await mongoConnection.waitForConnection();
+    await redisConnection.waitForConnection();
+
+    const repository = new ClientRepository({
+      db: mongoConnection.database(),
+      logger,
+    });
+
+    const cache = new ClientCache({
+      client: redisConnection.client(),
+      expiresInSeconds,
+      logger,
+    });
+
+    const clients = await repository.findMany({});
+
+    for (const client of clients) {
+      await cache.create(client);
+    }
+  },
+  logger,
+  time,
+});

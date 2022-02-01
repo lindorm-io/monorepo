@@ -1,0 +1,9 @@
+oauth:
+  host: https://oauth.staging.api.lindorm.io
+
+server:
+  environment: staging
+  host: https://identity.staging.api.lindorm.io
+
+services:
+  communication_service: https://communication.staging.api.lindorm.io

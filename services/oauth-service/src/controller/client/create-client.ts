@@ -1,0 +1,72 @@
+import Joi from "joi";
+import { Client } from "../../entity";
+import { ClientType, DisplayMode, JOI_GUID, LevelOfAssurance, ResponseMode } from "../../common";
+import { Context } from "../../types";
+import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { configuration } from "../../configuration";
+import { argon } from "../../instance";
+import { getRandomString } from "@lindorm-io/core";
+
+interface RequestData {
+  description: string;
+  identityId: string;
+  host: string;
+  logoutUri: string;
+  name: string;
+  redirectUri: string;
+}
+
+interface ResponseBody {
+  id: string;
+  secret: string;
+}
+
+export const createClientSchema = Joi.object<RequestData>({
+  description: Joi.string().required(),
+  identityId: JOI_GUID,
+  host: Joi.string().uri().required(),
+  logoutUri: Joi.string().uri().required(),
+  name: Joi.string().required(),
+  redirectUri: Joi.string().uri().required(),
+});
+
+export const createClientController: Controller<Context<RequestData>> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
+  const {
+    cache: { clientCache },
+    data: { description, identityId, host, logoutUri, name, redirectUri },
+    repository: { clientRepository },
+  } = ctx;
+
+  const secret = getRandomString(128);
+
+  const client = await clientRepository.create(
+    new Client({
+      active: configuration.client.default_active_state,
+      defaults: {
+        displayMode: DisplayMode.PAGE,
+        levelOfAssurance: configuration.client.default_level_of_assurance as LevelOfAssurance,
+        responseMode: ResponseMode.QUERY,
+      },
+      description,
+      host,
+      logoutUri,
+      name,
+      owners: [identityId],
+      redirectUri,
+      secret: await argon.encrypt(secret),
+      type: ClientType.PUBLIC,
+    }),
+  );
+
+  await clientCache.create(client);
+
+  return {
+    body: {
+      id: client.id,
+      secret,
+    },
+    status: HttpStatus.Success.CREATED,
+  };
+};

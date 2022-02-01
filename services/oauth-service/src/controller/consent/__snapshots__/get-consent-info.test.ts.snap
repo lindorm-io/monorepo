@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getConsentInfoController should resolve 1`] = `
+Object {
+  "body": Object {
+    "authorizationSession": Object {
+      "displayMode": "popup",
+      "expiresAt": "2021-01-02T08:00:00.000Z",
+      "expiresIn": 86400,
+      "id": "896f2d7b-2205-42b4-b1c6-ec2ac2d22895",
+      "originalUri": "https://localhost/oauth/authorize?query=query",
+      "promptModes": Array [
+        "login",
+        "consent",
+      ],
+      "uiLocales": Array [
+        "sv-SE",
+        "en-GB",
+      ],
+    },
+    "client": Object {
+      "description": "Client description",
+      "logoUri": "https://logo.uri/logo",
+      "name": "ClientName",
+      "requiredScopes": Array [
+        "offline_access",
+        "openid",
+      ],
+      "scopeDescriptions": Array [
+        Object {
+          "description": "Give the client access to your OpenID claims.",
+          "name": "openid",
+        },
+        Object {
+          "description": "Give the client access to your profile information.",
+          "name": "profile",
+        },
+      ],
+      "type": "confidential",
+    },
+    "consentRequired": true,
+    "consentSession": Object {
+      "audiences": Array [
+        "411ab157-e9df-4be8-a607-c5452a5d6d55",
+        "70e9d574-be33-47a2-bcfb-e596c2170bb1",
+      ],
+      "scopes": Array [
+        "openid",
+        "email",
+        "profile",
+      ],
+    },
+    "consentStatus": "pending",
+    "requested": Object {
+      "audiences": Array [
+        "1f7e85f9-d707-4319-8b7e-c3c6a2bf8312",
+      ],
+      "scopes": Array [
+        "address",
+        "email",
+        "offline_access",
+        "openid",
+        "phone",
+        "profile",
+      ],
+    },
+  },
+}
+`;

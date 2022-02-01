@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`stringifyBlob should create a text blob with json and meta values 1`] = `
+Object {
+  "array": Array [
+    true,
+    2020-01-01T08:00:00.000Z,
+    12345,
+    "string",
+    Object {
+      "array": Array [
+        true,
+        123,
+        "arr",
+      ],
+      "bool": false,
+      "date": 2020-01-01T08:00:00.000Z,
+      "num": 123,
+      "str": "str",
+    },
+  ],
+  "boolean": true,
+  "date": 2020-01-01T08:00:00.000Z,
+  "number": 12345,
+  "object": Object {
+    "a": "a",
+    "b": 1,
+    "c": null,
+    "d": true,
+    "e": Array [],
+    "f": undefined,
+  },
+  "string": "string",
+}
+`;

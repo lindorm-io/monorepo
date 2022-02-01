@@ -1,0 +1,33 @@
+{
+  "name": "@lindorm-io/mongo",
+  "description": "Mongo and Repository tools for lindorm.io",
+  "version": "0.7.0",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:integration": "compd --file docker-compose.yml jest --config jest.config.integration.js",
+    "test:unit": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/entity": "^0.3.0",
+    "@lindorm-io/errors": "^0.1.10",
+    "@lindorm-io/winston": "^0.1.9",
+    "lodash": "^4.17.21",
+    "mongodb": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.181",
+    "compd": "^4.0.0",
+    "mongo-mock": "^4.1.0"
+  }
+}

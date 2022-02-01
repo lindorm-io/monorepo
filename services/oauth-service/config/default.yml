@@ -1,0 +1,54 @@
+client:
+  default_active_state: false
+  default_level_of_assurance: 1
+
+cookies:
+  keys:
+    - secret
+
+expiry:
+  access_token: 3 minutes
+  authorization_session: 30 minutes
+  browser_session: 20 hours
+  browser_session_remember: 30 days
+  client_credentials: 60 seconds
+  code_session: 60 seconds
+  id_token: 24 hours
+  logout_session: 60 seconds
+  refresh_session: 30 days
+
+frontend:
+  base_url: localhost
+  routes:
+    error: /error
+
+mongo:
+  host: localhost
+  port: 27017
+  db_name: oauth
+  username: username
+  password: password
+
+oauth:
+  client_id: id
+
+redirect:
+  login: /oauth/login
+  consent: /oauth/consent
+  logout: /oauth/logout
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+  password: password
+
+server:
+  domain: https://lindorm.io
+  environment: development
+  host: localhost
+  port: 3000
+
+services:
+  authentication_service: localhost
+  identity_service: localhost

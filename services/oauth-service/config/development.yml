@@ -1,0 +1,29 @@
+cookies:
+  keys:
+    - secret
+
+frontend:
+  base_url: http://localhost:4000
+
+mongo:
+  host: localhost
+  port: 3401
+  db_name: oauth
+  username: root
+  password: example
+
+oauth:
+  client_id: secret
+
+redis:
+  host: localhost
+  port: 3402
+
+server:
+  environment: development
+  host: http://localhost
+  port: 3400
+
+services:
+  authentication_service: http://localhost:3100
+  identity_service: http://localhost:3300

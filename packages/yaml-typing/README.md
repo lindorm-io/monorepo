@@ -1,0 +1,1 @@
+# @lindorm-io/yaml-typing

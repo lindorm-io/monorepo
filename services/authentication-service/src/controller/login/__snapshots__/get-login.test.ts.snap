@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getLoginController should resolve info 1`] = `
+Object {
+  "body": Object {
+    "availableFlows": Array [
+      "email_otp",
+      "session_otp",
+      "webauthn",
+    ],
+    "availableOidc": Array [
+      "apple",
+      "google",
+    ],
+    "currentFlow": Object {
+      "flowType": "email_otp",
+      "id": "209f419e-9674-4e76-8a8f-1f5a74f99e30",
+      "pollingRequired": true,
+      "status": "pending",
+    },
+    "loginHint": Array [
+      "test@lindorm.io",
+      "+46705498721",
+    ],
+    "prioritizedFlow": "prioritized_flow",
+    "remember": true,
+    "requestedMethods": Array [
+      "email_otp",
+    ],
+  },
+}
+`;

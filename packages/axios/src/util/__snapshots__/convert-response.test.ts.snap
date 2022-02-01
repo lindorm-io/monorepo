@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertResponse should resolve a limited response object 1`] = `
+Object {
+  "data": Object {
+    "data": true,
+  },
+  "headers": Object {
+    "headers": true,
+  },
+  "status": 200,
+  "statusText": "OK",
+}
+`;

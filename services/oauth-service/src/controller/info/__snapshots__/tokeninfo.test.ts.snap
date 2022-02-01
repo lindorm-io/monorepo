@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`tokeninfoController should resolve token info 1`] = `
+Object {
+  "body": Object {
+    "acr": Array [
+      "acr1",
+    ],
+    "active": true,
+    "amr": Array [
+      "amr1",
+    ],
+    "aud": "audiences",
+    "clientId": "455118ba-d8f1-4a0a-affa-a53235590dba",
+    "exp": "expires",
+    "iat": "issuedAt",
+    "iss": "issuer",
+    "jti": "id",
+    "loa": 2,
+    "nbf": "notBefore",
+    "scope": "scopes",
+    "sid": "sessionId",
+    "sub": "subject",
+    "tokenType": "type",
+    "username": "username",
+  },
+}
+`;

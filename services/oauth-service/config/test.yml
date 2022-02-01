@@ -1,0 +1,29 @@
+cookies:
+  keys:
+    - secret
+
+frontend:
+  base_url: https://frontend.url/
+
+mongo:
+  host: localhost
+  port: 3401
+  db_name: oauth
+  username: root
+  password: example
+
+oauth:
+  client_id: secret
+
+redis:
+  host: localhost
+  port: 3402
+
+server:
+  environment: test
+  host: https://oauth.test.api.lindorm.io
+  port: 3400
+
+services:
+  authentication_service: https://authentication.test.api.lindorm.io
+  identity_service: https://identity.test.api.lindorm.io

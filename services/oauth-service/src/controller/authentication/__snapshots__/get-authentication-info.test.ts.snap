@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getAuthenticationInfoController should resolve 1`] = `
+Object {
+  "body": Object {
+    "authenticationRequired": true,
+    "authenticationStatus": "pending",
+    "authorizationSession": Object {
+      "displayMode": "popup",
+      "expiresAt": "2021-01-02T08:00:00.000Z",
+      "expiresIn": 86400,
+      "id": "896f2d7b-2205-42b4-b1c6-ec2ac2d22895",
+      "identityId": "3f6ee784-bf36-4570-b15e-883dad02ec56",
+      "loginHint": Array [
+        "test@lindorm.io",
+      ],
+      "originalUri": "https://localhost/oauth/authorize?query=query",
+      "promptModes": Array [
+        "login",
+        "consent",
+      ],
+      "uiLocales": Array [
+        "sv-SE",
+        "en-GB",
+      ],
+    },
+    "browserSession": Object {
+      "amrValues": Array [
+        "email_otp",
+        "phone_otp",
+      ],
+      "country": "se",
+      "identityId": "26ef8a68-dd67-414b-bcff-e6dbe2b6707a",
+      "levelOfAssurance": 2,
+      "remember": true,
+    },
+    "client": Object {
+      "description": "Client description",
+      "logoUri": "https://logo.uri/logo",
+      "name": "ClientName",
+      "type": "confidential",
+    },
+    "requested": Object {
+      "authenticationId": "99fc4b14-507b-49b4-92b1-adcea1a69a91",
+      "authenticationMethods": Array [
+        "email_otp",
+        "phone_otp",
+      ],
+      "country": "se",
+      "levelOfAssurance": 2,
+      "pkceVerifier": "89fec5f64da748a4b6baae15b73f1345",
+    },
+  },
+}
+`;

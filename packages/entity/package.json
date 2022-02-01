@@ -1,0 +1,23 @@
+{
+  "name": "@lindorm-io/entity",
+  "description": "Base Entity for lindorm.io",
+  "version": "0.3.0",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/errors": "^0.1.10",
+    "joi": "^17.5.0"
+  }
+}

@@ -1,0 +1,35 @@
+crypto:
+  aes: secret
+  sha: secret
+
+expiry:
+  challenge_confirmation_token: 5 minutes
+  challenge_session: 5 minutes
+  enrolment_session: 15 minutes
+  remote_device_challenge_session: 15 minutes
+
+mongo:
+  host: localhost
+  port: 27017
+  db_name: device
+  username: username
+  password: password
+
+oauth:
+  host: localhost
+  client_id: id
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+  password: password
+
+server:
+  environment: development
+  host: localhost
+  port: 3000
+
+services:
+  communication_service: localhost

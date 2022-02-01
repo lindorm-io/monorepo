@@ -1,0 +1,145 @@
+import MockDate from "mockdate";
+import request from "supertest";
+import { baseHash, createURL } from "@lindorm-io/core";
+import { getTestClient } from "../../test/entity";
+import { getTestData } from "../../test/data";
+import { koa } from "../../server/koa";
+import { randomUUID } from "crypto";
+import {
+  DisplayMode,
+  PromptMode,
+  ResponseMode,
+  ResponseType,
+  Scope,
+  SessionStatus,
+} from "../../common";
+import {
+  getAxiosResponse,
+  getTestIdToken,
+  setupIntegration,
+  TEST_AUTHORIZATION_SESSION_CACHE,
+  TEST_CLIENT_CACHE,
+} from "../../test/integration";
+
+MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.mock("@lindorm-io/axios", () => ({
+  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
+  Axios: class Axios {
+    private readonly name: string;
+    public constructor(opts: any) {
+      this.name = opts.name;
+    }
+    public async get(path: string, args: any): Promise<any> {
+      return getAxiosResponse("GET", this.name, path, args);
+    }
+    public async post(path: string, args: any): Promise<any> {
+      return getAxiosResponse("POST", this.name, path, args);
+    }
+  },
+}));
+
+describe("/oauth2/authorize", () => {
+  beforeAll(setupIntegration);
+
+  test("GET /", async () => {
+    const { codeChallenge, codeChallengeMethod, nonce, state } = getTestData();
+
+    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+
+    const identityId = randomUUID();
+    const idToken = getTestIdToken({
+      audiences: [client.id],
+      claims: {
+        email: "email@lindorm.io",
+        phoneNumber: "+46705498721",
+        username: "identity_username",
+      },
+      subject: identityId,
+    });
+
+    const redirectData = baseHash(JSON.stringify({ string: "string", number: 123, boolean: true }));
+
+    const url = createURL("/oauth2/authorize", {
+      baseUrl: "https://test.test",
+      query: {
+        acrValues: ["loa_3", "session_otp", "email_otp", "phone_otp"],
+        authenticationId: "f4215681-c782-4251-b1bb-c145202c52da",
+        clientId: client.id,
+        codeChallenge,
+        codeChallengeMethod,
+        display: DisplayMode.PAGE,
+        idTokenHint: idToken,
+        loginHint: "test@lindorm.io",
+        maxAge: 3600,
+        nonce,
+        pkceVerifier: "a1991d47a77b4dff89d2f7fd51361c66",
+        prompt: [PromptMode.LOGIN, PromptMode.CONSENT],
+        redirectData,
+        redirectUri: "https://test.client.lindorm.io/redirect",
+        responseMode: ResponseMode.FRAGMENT,
+        responseType: [ResponseType.CODE, ResponseType.TOKEN],
+        scope: [
+          Scope.ADDRESS,
+          Scope.EMAIL,
+          Scope.OFFLINE_ACCESS,
+          Scope.OPENID,
+          Scope.PHONE,
+          Scope.PROFILE,
+        ],
+        state,
+        uiLocales: ["sv-SE", "en-GB"],
+      },
+    });
+
+    const response = await request(koa.callback())
+      .get(url.toString().replace("https://test.test", ""))
+      .expect(302);
+
+    const location = new URL(response.headers.location);
+    expect(location.origin).toBe("https://authentication.test.api.lindorm.io");
+    expect(location.pathname).toBe("/oauth/login");
+    expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
+
+    const session = await TEST_AUTHORIZATION_SESSION_CACHE.find({
+      id: location.searchParams.get("session_id"),
+    });
+
+    expect(session).toStrictEqual(
+      expect.objectContaining({
+        audiences: [client.id],
+        authenticationId: "f4215681-c782-4251-b1bb-c145202c52da",
+        authenticationMethods: ["session_otp", "email_otp", "phone_otp"],
+        authenticationStatus: SessionStatus.PENDING,
+        browserSessionId: expect.any(String),
+        clientId: client.id,
+        code: null,
+        codeChallenge: codeChallenge,
+        codeChallengeMethod: "S256",
+        consentStatus: SessionStatus.PENDING,
+        displayMode: "page",
+        expires: new Date("2021-01-01T08:30:00.000Z"),
+        idTokenHint: expect.any(String),
+        identityId: identityId,
+        levelOfAssurance: 3,
+        loginHint: ["test@lindorm.io", "email@lindorm.io", "+46705498721", "identity_username"],
+        maxAge: 3600,
+        nonce: nonce,
+        originalUri: expect.any(String),
+        promptModes: ["login", "consent"],
+        redirectData,
+        redirectUri: "https://test.client.lindorm.io/redirect",
+        responseMode: "fragment",
+        responseTypes: ["code", "token"],
+        scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
+        state: state,
+        uiLocales: ["sv-SE", "en-GB"],
+      }),
+    );
+
+    expect(response.headers["set-cookie"]).toEqual([
+      `lindorm_io_oauth_browser_session=${session.browserSessionId}; path=/; domain=https://lindorm.io; samesite=none`,
+      `lindorm_io_oauth_authorization_session=${session.id}; path=/; expires=Fri, 01 Jan 2021 08:30:00 GMT; domain=https://lindorm.io; samesite=none`,
+    ]);
+  });
+});

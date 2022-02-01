@@ -1,0 +1,27 @@
+crypto:
+  aes: secret
+  sha: secret
+
+mongo:
+  host: localhost
+  port: 3201
+  db_name: device
+  username: root
+  password: example
+
+oauth:
+  host: http://localhost:3400
+  client_id: secret
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 3202
+
+server:
+  environment: development
+  host: http://localhost
+  port: 3200
+
+services:
+  communication_service: http://localhost:3009

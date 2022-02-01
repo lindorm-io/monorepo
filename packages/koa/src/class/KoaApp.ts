@@ -1,0 +1,220 @@
+/* eslint @typescript-eslint/no-var-requires: 0 */
+
+import Koa from "koa";
+import Router from "koa-router";
+import bodyParser from "koa-bodyparser";
+import userAgent from "koa-useragent";
+import { Environment } from "../enum";
+import { IntervalWorker } from "./IntervalWorker";
+import { Logger } from "@lindorm-io/winston";
+import { Middleware } from "../types";
+import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
+import { isObject } from "lodash";
+import {
+  dataHandlingMiddleware,
+  defaultStatusMiddleware,
+  errorMiddleware,
+  initContextMiddleware,
+  metadataMiddleware,
+  responseTimeMiddleware,
+  serverInfoMiddleware,
+  sessionLoggerMiddleware,
+  utilContextMiddleware,
+} from "../middleware/private";
+
+interface Options {
+  environment?: Environment;
+  domain?: string;
+  host: string;
+  keys?: Array<string>;
+  logger: Logger;
+  port: number;
+  setup?: () => Promise<void>;
+}
+
+export class KoaApp {
+  public readonly koa: Koa;
+  public readonly koaRouter: Router;
+
+  private readonly host: string;
+  private readonly logger: Logger;
+  private readonly middleware: Array<Middleware<any>>;
+  private readonly port: number;
+  private readonly setup?: () => Promise<void>;
+  private readonly workers: Array<IntervalWorker>;
+
+  private loaded: boolean;
+  private started: boolean;
+
+  public constructor(options: Options) {
+    this.koa = new Koa();
+    this.koaRouter = new Router();
+
+    this.host = options.host;
+    this.loaded = false;
+    this.started = false;
+    this.logger = options.logger;
+    this.middleware = [
+      userAgent,
+      bodyParser(),
+      defaultStatusMiddleware,
+      dataHandlingMiddleware,
+      initContextMiddleware,
+      serverInfoMiddleware(options),
+      utilContextMiddleware,
+      metadataMiddleware,
+      sessionLoggerMiddleware({ logger: this.logger }),
+      errorMiddleware,
+      responseTimeMiddleware,
+    ];
+    this.port = options.port;
+    this.setup = options.setup;
+    this.workers = [];
+
+    this.koa.keys = options.keys || [];
+  }
+
+  public get app(): Koa {
+    return this.koa;
+  }
+
+  public set app(_: Koa) {
+    throw new Error("Not allowed to set app");
+  }
+
+  public get router(): Router {
+    return this.koaRouter;
+  }
+
+  public set router(_: Router) {
+    throw new Error("Not allowed to set router");
+  }
+
+  public callback(): any {
+    this.load();
+
+    return this.koa.callback();
+  }
+
+  public addMiddleware(middleware: Middleware<any>): void {
+    this.middleware.push(middleware);
+  }
+
+  public addMiddlewares(middlewares: Array<Middleware<any>>): void {
+    for (const middleware of middlewares) {
+      this.addMiddleware(middleware);
+    }
+  }
+
+  public addRoute(route: string, router: Router): void {
+    if (!isObject(router)) {
+      throw new Error(`Invalid router [ ${typeof router} ]`);
+    }
+
+    this.logger.debug("Adding route", { route });
+
+    this.koaRouter.use(route, router.routes(), router.allowedMethods());
+  }
+
+  public addRoutesAutomatically(directory: string, options?: StructureScannerOptions): void {
+    if (!StructureScanner.hasItems(directory)) {
+      throw new Error(`Router directory [ ${directory} ] is empty`);
+    }
+
+    const scanner = new StructureScanner(directory, options);
+
+    for (const file of scanner.scan()) {
+      const router: Router = require(file.path).default;
+
+      this.addRoute(scanner.getRoute(file), router);
+    }
+  }
+
+  public addWorker(worker: IntervalWorker): void {
+    this.workers.push(worker);
+  }
+
+  public load(): void {
+    if (this.loaded) return;
+
+    this.loadMiddleware();
+    this.loadRouter();
+    this.loadEmitter();
+
+    this.loaded = true;
+
+    this.logger.verbose("app is loaded");
+  }
+
+  public async start(): Promise<void> {
+    if (this.started) return;
+
+    const promise = this.waitForStartEvent();
+
+    this.load();
+    this.listen();
+
+    if (this.setup) {
+      this.logger.verbose("app setup");
+      await this.setup();
+    }
+
+    await promise;
+
+    this.started = true;
+
+    this.logger.verbose("app has started");
+  }
+
+  private listen(): void {
+    this.koa.listen(this.port, (): void => {
+      this.logger.verbose(`listening on server port: ${this.port}`);
+      this.logger.info(`server available on: ${this.host}:${this.port}`);
+
+      this.koa.emit("start");
+    });
+  }
+
+  private loadEmitter(): void {
+    this.koa.on("error", (error): void => {
+      console.error("app caught error", error);
+    });
+
+    this.koa.on("start", (): void => {
+      this.loadWorkers();
+    });
+  }
+
+  private loadMiddleware(): void {
+    for (const middleware of this.middleware) {
+      this.koa.use(middleware);
+    }
+  }
+
+  private loadRouter(): void {
+    this.koa.use(this.koaRouter.routes());
+    this.koa.use(this.koaRouter.allowedMethods());
+  }
+
+  private loadWorkers(): void {
+    for (const worker of this.workers) {
+      worker.start();
+      worker.trigger();
+    }
+  }
+
+  private async waitForStartEvent(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("app start has timed out"));
+      }, 30000);
+
+      this.koa.on("start", () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+  }
+}
+
+export { Router };

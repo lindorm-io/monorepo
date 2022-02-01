@@ -1,0 +1,49 @@
+cookies:
+  keys:
+    - secret
+
+expiry:
+  browser_link_cookie: 100 years
+  consent_session: 30 minutes
+  flow_session: 15 minutes
+  login_session: 30 minutes
+  mfa_cookie: 75 minutes
+
+frontend:
+  base_url: localhost
+  routes:
+    consent: /consent
+    error: /error
+    login: /login
+    logout: /logout
+
+mongo:
+  host: localhost
+  port: 27017
+  db_name: authentication
+  username: username
+  password: password
+
+oauth:
+  host: localhost
+  client_id: id
+  client_secret: secret
+
+oidc_providers: []
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+  password: password
+
+server:
+  domain: https://lindorm.io
+  environment: development
+  host: localhost
+  port: 3000
+
+services:
+  communication_service: localhost
+  device_service: localhost
+  identity_service: localhost

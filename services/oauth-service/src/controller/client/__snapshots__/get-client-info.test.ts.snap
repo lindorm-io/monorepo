@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getClientInfoController should resolve client 1`] = `
+Object {
+  "body": Object {
+    "active": true,
+    "allowed": Object {
+      "grantTypes": Array [
+        "authorization_code",
+        "client_credentials",
+        "refresh_token",
+      ],
+      "responseTypes": Array [
+        "code",
+        "id_token",
+        "token",
+      ],
+      "scopes": Array [
+        "address",
+        "email",
+        "offline_access",
+        "openid",
+        "phone",
+        "profile",
+        "lindorm.io:oauth:authentication:read",
+        "lindorm.io:oauth:authentication:write",
+        "lindorm.io:oauth:client:delete",
+        "lindorm.io:oauth:client:read",
+        "lindorm.io:oauth:client:write",
+        "lindorm.io:communication:message:send",
+        "lindorm.io:identity:identifier:read",
+        "lindorm.io:identity:identifier:write",
+        "lindorm.io:identity:identity:read",
+        "lindorm.io:identity:identity:write",
+        "lindorm.io:oauth:logout:read",
+        "lindorm.io:oauth:logout:write",
+      ],
+    },
+    "defaults": Object {
+      "displayMode": "popup",
+      "levelOfAssurance": 3,
+      "responseMode": "query",
+    },
+    "description": "Client description",
+    "expiry": Object {
+      "accessToken": "99 seconds",
+      "idToken": "99 seconds",
+      "refreshToken": "99 seconds",
+    },
+    "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
+    "name": "ClientName",
+    "owners": Array [
+      "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+    ],
+    "permissions": Array [
+      "lindorm.io/authentication:client/confidential",
+      "lindorm.io/communication:client/confidential",
+      "lindorm.io/device:client/confidential",
+      "lindorm.io/identity:client/confidential",
+      "lindorm.io/oauth:client/confidential",
+    ],
+    "redirectUri": "https://test.client.lindorm.io/redirect",
+    "scopeDescriptions": Array [
+      Object {
+        "description": "Give the client access to your OpenID claims.",
+        "name": "openid",
+      },
+      Object {
+        "description": "Give the client access to your profile information.",
+        "name": "profile",
+      },
+    ],
+    "type": "confidential",
+  },
+}
+`;

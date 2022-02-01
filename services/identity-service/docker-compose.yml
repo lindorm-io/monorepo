@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  service_identity_mongo:
+    image: mongo
+    restart: always
+    container_name: service_identity_mongo
+    labels:
+      - mongo
+    ports:
+      - "3301:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+  service_identity_redis:
+    image: redis
+    restart: always
+    container_name: service_identity_redis
+    labels:
+      - redis
+    ports:
+      - "3302:6379"

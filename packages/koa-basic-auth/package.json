@@ -1,0 +1,37 @@
+{
+  "name": "@lindorm-io/koa-basic-auth",
+  "description": "Basic Auth middleware for @lindorm-io/koa applications",
+  "version": "0.1.9",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "test": "jest",
+    "test:watch": "jest --watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/core": "^0.2.8",
+    "@lindorm-io/errors": "^0.1.9",
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "@lindorm-io/koa": ">=0.8.1"
+  },
+  "devDependencies": {
+    "@lindorm-io/koa": "^0.8.1",
+    "@types/express-useragent": "^1.0.2",
+    "@types/koa": "^2.13.4",
+    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-router": "^7.4.4",
+    "@types/lodash": "^4.14.181",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0"
+  }
+}

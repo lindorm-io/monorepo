@@ -1,0 +1,161 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getUserinfoResponseBody should resolve ACCESSIBILITY 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "preferredAccessibility": Array [
+      "setting1",
+      "setting2",
+      "setting3",
+    ],
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve ADDRESS 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "address": "getAddress",
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve CONNECTED_PROVIDERS 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "connectedProviders": "getConnectedProviders",
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve EMAIL 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "email": undefined,
+    "emailVerified": undefined,
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve NATIONAL_IDENTITY_NUMBER 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "nationalIdentityNumber": "619492152033",
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve PHONE 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "phoneNumber": undefined,
+    "phoneNumberVerified": undefined,
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve PROFILE 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "birthDate": "2000-01-01",
+    "displayName": "getDisplayName",
+    "familyName": "familyName",
+    "gender": "gender",
+    "givenName": "givenName",
+    "gravatarUri": "https://gravatar.url/",
+    "locale": "sv-SE",
+    "middleName": "middleName",
+    "name": "getName",
+    "nickname": "nickname",
+    "picture": "https://picture.url/",
+    "preferredUsername": "username",
+    "profile": "https://profile.url/",
+    "pronouns": "she/her",
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+    "website": "https://website.url/",
+    "zoneInfo": "Europe/Stockholm",
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve SOCIAL_SECURITY_NUMBER 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "socialSecurityNumber": "279708557743",
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve USERNAME 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+    "username": "bFp3ihd84Ps8Ocjf",
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;
+
+exports[`getUserinfoResponseBody should resolve basic data 1`] = `
+Object {
+  "active": true,
+  "claims": Object {
+    "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+    "updatedAt": 1596873600,
+  },
+  "permissions": Array [
+    "user",
+  ],
+}
+`;

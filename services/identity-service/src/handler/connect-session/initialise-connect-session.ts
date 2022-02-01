@@ -1,0 +1,72 @@
+import { ClientError } from "@lindorm-io/errors";
+import { ConnectSession, Identity } from "../../entity";
+import { Context } from "../../types";
+import { IdentifierType } from "../../common";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { configuration } from "../../configuration";
+import { argon } from "../../instance";
+import { getRandomNumber, stringToSeconds } from "@lindorm-io/core";
+
+interface Options {
+  identifier: string;
+  type: IdentifierType;
+}
+
+export const initialiseConnectSession = async (
+  ctx: Context,
+  identity: Identity,
+  options: Options,
+): Promise<ConnectSession> => {
+  const {
+    axios: { communicationClient, oauthClient },
+    cache: { connectSessionCache },
+  } = ctx;
+
+  const { identifier, type } = options;
+
+  const expiresIn = stringToSeconds(configuration.expiry.connect_identifier_session);
+  const code = getRandomNumber(6).toString().padStart(6, "0");
+
+  const session = await connectSessionCache.create(
+    new ConnectSession({
+      code: await argon.encrypt(code.toString()),
+      identifier,
+      identityId: identity.id,
+      type,
+    }),
+    expiresIn,
+  );
+
+  let data: Record<string, any>;
+  let send: string;
+  let templateName: string;
+
+  switch (type) {
+    case IdentifierType.EMAIL:
+      data = { email: identifier };
+      send = "email";
+      templateName = "connect-email";
+      break;
+
+    case IdentifierType.PHONE:
+      data = { phoneNumber: identifier };
+      send = "sms";
+      templateName = "connect-phone";
+      break;
+
+    default:
+      throw new ClientError("Unexpected type");
+  }
+
+  await communicationClient.post(`/internal/send/${send}`, {
+    data: {
+      code,
+      expiresIn,
+      templateName,
+      ...data,
+    },
+    middleware: [clientCredentialsMiddleware(oauthClient)],
+  });
+
+  return session;
+};

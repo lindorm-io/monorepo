@@ -1,0 +1,19 @@
+import { KoaContext, Middleware } from "../../types";
+import { Environment } from "../../enum";
+
+interface Options {
+  domain?: string;
+  environment?: Environment;
+  host: string;
+}
+
+export const serverInfoMiddleware =
+  (options: Options): Middleware<KoaContext> =>
+  async (ctx, next): Promise<void> => {
+    ctx.server = {
+      domain: options.domain || options.host,
+      environment: options.environment || Environment.DEVELOPMENT,
+    };
+
+    await next();
+  };

@@ -1,0 +1,23 @@
+mongo:
+  host: localhost
+  port: 3301
+  db_name: identity
+  username: root
+  password: example
+
+redis:
+  host: localhost
+  port: 3302
+
+oauth:
+  host: http://localhost:3400
+  client_id: secret
+  client_secret: secret
+
+server:
+  environment: development
+  host: http://localhost
+  port: 3300
+
+services:
+  communication_service: http://localhost:3009

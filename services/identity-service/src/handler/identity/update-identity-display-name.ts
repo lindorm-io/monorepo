@@ -1,0 +1,34 @@
+import { Context } from "../../types";
+import { Identity } from "../../entity";
+
+export const updateIdentityDisplayName = async (
+  ctx: Context,
+  identity: Identity,
+  displayName: string,
+): Promise<void> => {
+  const {
+    repository: { displayNameRepository },
+  } = ctx;
+
+  if (identity.displayName.name) {
+    const current = await displayNameRepository.find({
+      name: identity.displayName.name,
+    });
+
+    current.remove(identity.displayName.number);
+
+    await displayNameRepository.update(current);
+  }
+
+  const entity = await displayNameRepository.findOrCreate({ name: displayName });
+  const number = await entity.generateNumber();
+
+  entity.add(number);
+
+  await displayNameRepository.update(entity);
+
+  identity.displayName = {
+    name: displayName,
+    number,
+  };
+};

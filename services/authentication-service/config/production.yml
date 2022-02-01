@@ -1,0 +1,10 @@
+oauth:
+  host: https://oauth.api.lindorm.io
+
+server:
+  environment: production
+  host: https://authentication.api.lindorm.io
+
+services:
+  communication_service: https://communication.api.lindorm.io
+  identity_service: https://identity.api.lindorm.io
