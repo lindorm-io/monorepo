@@ -36,6 +36,7 @@ export class KoaApp {
   public readonly koa: Koa;
   public readonly koaRouter: Router;
 
+  private readonly environment: Environment;
   private readonly host: string;
   private readonly logger: Logger;
   private readonly middleware: Array<Middleware<any>>;
@@ -50,6 +51,7 @@ export class KoaApp {
     this.koa = new Koa();
     this.koaRouter = new Router();
 
+    this.environment = options.environment;
     this.host = options.host;
     this.loaded = false;
     this.started = false;
@@ -111,7 +113,7 @@ export class KoaApp {
       throw new Error(`Invalid router [ ${typeof router} ]`);
     }
 
-    this.logger.debug("Adding route", { route });
+    this.logger.debug("adding route", { route });
 
     this.koaRouter.use(route, router.routes(), router.allowedMethods());
   }
@@ -143,7 +145,7 @@ export class KoaApp {
 
     this.loaded = true;
 
-    this.logger.verbose("app is loaded");
+    this.logger.verbose("server is loaded");
   }
 
   public async start(): Promise<void> {
@@ -155,7 +157,7 @@ export class KoaApp {
     this.listen();
 
     if (this.setup) {
-      this.logger.verbose("app setup");
+      this.logger.verbose("server will setup");
       await this.setup();
     }
 
@@ -163,7 +165,11 @@ export class KoaApp {
 
     this.started = true;
 
-    this.logger.verbose("app has started");
+    this.logger.verbose("server has started", {
+      environment: this.environment,
+      host: this.host,
+      port: this.port,
+    });
   }
 
   private listen(): void {
@@ -206,7 +212,7 @@ export class KoaApp {
   private async waitForStartEvent(): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error("app start has timed out"));
+        reject(new Error("server start has timed out"));
       }, 30000);
 
       this.koa.on("start", () => {
