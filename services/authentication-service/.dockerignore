@@ -1,9 +1,0 @@
-data
-docker
-node_modules
-
-.env
-.npmrc
-
-Dockerfile
-example.env
