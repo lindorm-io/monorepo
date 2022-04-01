@@ -28,7 +28,7 @@
     "test:update:changed": "lerna run --since origin/master --include-dependents test -- -u",
     "typecheck": "lerna run typecheck",
     "typecheck:changed": "lerna exec --since origin/master --include-dependents -- tsc --noEmit",
-    "upgrade": "yarn upgrade-interactive --latest"
+    "upgrade:dependencies": "yarn upgrade-interactive --latest"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",
