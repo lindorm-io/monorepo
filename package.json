@@ -17,18 +17,20 @@
   "scripts": {
     "bootstrap": "lerna bootstrap --use-workspaces",
     "build": "yarn clean && lerna run build",
-    "build:changed": "lerna run --since origin/main --include-dependents build",
+    "build:changed": "lerna run --since --include-dependents build",
     "clean": "lerna run clean --parallel",
     "lint": "lerna exec -- eslint . --ext .ts",
-    "lint:changed": "lerna exec --since origin/main --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
-    "release": "yarn lint:changed && yarn build:changed && cross-env HUSKY_BYPASS=true lerna publish",
+    "lint:changed": "lerna exec --since --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
+    "release": "yarn verify:changed && yarn build:changed && cross-env HUSKY_BYPASS=true lerna publish",
     "test": "lerna run test",
-    "test:changed": "lerna run --since origin/main --include-dependents test",
+    "test:changed": "lerna run --since --include-dependents test",
     "test:update": "lerna run test -- -u",
-    "test:update:changed": "lerna run --since origin/main --include-dependents test -- -u",
+    "test:update:changed": "lerna run --since --include-dependents test -- -u",
     "typecheck": "lerna run typecheck",
-    "typecheck:changed": "lerna exec --since origin/main --include-dependents -- tsc --noEmit",
-    "upgrade:dependencies": "yarn upgrade-interactive --latest"
+    "typecheck:changed": "lerna exec --since --include-dependents -- tsc --noEmit",
+    "upgrade:dependencies": "yarn upgrade-interactive --latest",
+    "verify": "yarn typecheck && yarn lint && yarn test",
+    "verify:changed": "yarn typecheck:changed && yarn lint:changed && yarn test:changed"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.2.3",
@@ -63,7 +65,7 @@
     "hooks": {
       "commit-msg": "[[ -n $HUSKY_BYPASS ]] || commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged",
-      "pre-push": "yarn lint:changed && yarn typecheck:changed && yarn test:changed"
+      "pre-push": "yarn verify:changed"
     }
   },
   "lint-staged": {
