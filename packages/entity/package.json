@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/entity",
   "description": "Base Entity for lindorm.io",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,7 +17,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/errors": "^0.1.10",
+    "@lindorm-io/errors": "^0.1.11",
     "joi": "^17.5.0"
   }
 }

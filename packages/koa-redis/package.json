@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-redis",
   "description": "Redis Connection middleware for @lindorm-io/koa applications",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,8 +17,8 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.2.12",
-    "@lindorm-io/errors": "^0.1.10",
+    "@lindorm-io/core": "^0.2.13",
+    "@lindorm-io/errors": "^0.1.11",
     "lodash": "4.17.21"
   },
   "peerDependencies": {
@@ -28,10 +28,10 @@
     "@lindorm-io/winston": ">=0.1.9"
   },
   "devDependencies": {
-    "@lindorm-io/entity": "^0.3.0",
-    "@lindorm-io/koa": "^0.8.1",
-    "@lindorm-io/redis": "^0.5.0",
-    "@lindorm-io/winston": "^0.1.9",
+    "@lindorm-io/entity": "^0.3.1",
+    "@lindorm-io/koa": "^0.8.2",
+    "@lindorm-io/redis": "^0.5.1",
+    "@lindorm-io/winston": "^0.1.10",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^4.28.7",
     "@types/ioredis-mock": "^5.6.0",
