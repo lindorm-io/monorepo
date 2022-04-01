@@ -35,7 +35,7 @@ interface Oauth {
 }
 
 interface Server {
-  environment: null | string;
+  environment: string;
   host:        string;
   port:        number;
 }

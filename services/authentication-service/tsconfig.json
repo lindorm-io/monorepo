@@ -9,12 +9,12 @@
     "outDir": "dist",
     "preserveConstEnums": true,
     "removeComments": true,
-    "rootDir": ".",
+    "rootDir": "src",
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": false,
     "target": "ESNEXT"
   },
-  "include": ["generated/**/*", "src/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["**/*.fixture.ts", "**/*.integration.ts", "**/*.test.ts"]
 }

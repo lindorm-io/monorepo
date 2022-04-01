@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist node_modules",
-    "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w generated",
+    "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w src/generated",
     "start": "node dist/server",
     "start:dev": "compd --file docker-compose.yml nodemon",
     "test": "jest",
