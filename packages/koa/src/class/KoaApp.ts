@@ -153,11 +153,17 @@ export class KoaApp {
 
     const promise = this.waitForStartEvent();
 
+    this.logger.info("starting server", {
+      environment: this.environment,
+      host: this.host,
+      port: this.port,
+    });
+
     this.load();
     this.listen();
 
     if (this.setup) {
-      this.logger.verbose("server will setup");
+      this.logger.verbose("initialising setup");
       await this.setup();
     }
 
@@ -165,11 +171,7 @@ export class KoaApp {
 
     this.started = true;
 
-    this.logger.verbose("server has started", {
-      environment: this.environment,
-      host: this.host,
-      port: this.port,
-    });
+    this.logger.info("server has started");
   }
 
   private listen(): void {
@@ -192,17 +194,23 @@ export class KoaApp {
   }
 
   private loadMiddleware(): void {
+    this.logger.verbose("loading middleware");
+
     for (const middleware of this.middleware) {
       this.koa.use(middleware);
     }
   }
 
   private loadRouter(): void {
+    this.logger.verbose("loading router");
+
     this.koa.use(this.koaRouter.routes());
     this.koa.use(this.koaRouter.allowedMethods());
   }
 
   private loadWorkers(): void {
+    this.logger.verbose("loading workers");
+
     for (const worker of this.workers) {
       worker.start();
       worker.trigger();
@@ -210,6 +218,8 @@ export class KoaApp {
   }
 
   private async waitForStartEvent(): Promise<void> {
+    this.logger.verbose("waiting for start event");
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error("server start has timed out"));
