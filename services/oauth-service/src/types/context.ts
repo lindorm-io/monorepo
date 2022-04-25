@@ -14,6 +14,7 @@ import {
   InvalidToken,
   LogoutSession,
   RefreshSession,
+  Tenant,
 } from "../entity";
 import {
   AuthorizationSessionCache,
@@ -24,6 +25,7 @@ import {
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
+  TenantRepository,
 } from "../infrastructure";
 
 export interface Context<Body = Record<string, any>> extends KoaContext<Body> {
@@ -51,6 +53,7 @@ export interface Context<Body = Record<string, any>> extends KoaContext<Body> {
     invalidToken: InvalidToken;
     logoutSession: LogoutSession;
     refreshSession: RefreshSession;
+    tenant: Tenant;
   };
   jwt: TokenIssuer;
   keys: Array<KeyPair>;
@@ -61,6 +64,7 @@ export interface Context<Body = Record<string, any>> extends KoaContext<Body> {
     consentSessionRepository: ConsentSessionRepository;
     keyPairRepository: KeyPairRepository;
     refreshSessionRepository: RefreshSessionRepository;
+    tenantRepository: TenantRepository;
   };
   token: {
     bearerToken: IssuerVerifyData<never, never>;

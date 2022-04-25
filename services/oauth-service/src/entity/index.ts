@@ -5,3 +5,4 @@ export * from "./ConsentSession";
 export * from "./InvalidToken";
 export * from "./LogoutSession";
 export * from "./RefreshSession";
+export * from "./Tenant";

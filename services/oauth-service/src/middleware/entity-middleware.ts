@@ -6,6 +6,7 @@ import {
   Client,
   ConsentSession,
   LogoutSession,
+  Tenant,
 } from "../entity";
 import {
   AuthorizationSessionCache,
@@ -13,6 +14,7 @@ import {
   ClientCache,
   ConsentSessionRepository,
   LogoutSessionCache,
+  TenantRepository,
 } from "../infrastructure";
 
 export const authorizationSessionEntityMiddleware = cacheEntityMiddleware(
@@ -36,3 +38,5 @@ export const logoutSessionEntityMiddleware = cacheEntityMiddleware(
   LogoutSession,
   LogoutSessionCache,
 );
+
+export const tenantEntityMiddleware = repositoryEntityMiddleware(Tenant, TenantRepository);
