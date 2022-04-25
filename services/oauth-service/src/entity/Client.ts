@@ -36,19 +36,20 @@ export interface ClientAttributes extends EntityAttributes {
   logoUri: string | null;
   logoutUri: string;
   name: string;
-  owners: Array<string>;
   permissions: Array<string>;
-  redirectUri: string;
+  redirectUris: Array<string>;
   requiredScopes: Array<string>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
+  tenant: string;
   type: ClientType;
 }
 
 export type ClientOptions = Optional<
   ClientAttributes,
   | EntityKeys
+  | "active"
   | "allowed"
   | "defaults"
   | "description"
@@ -84,13 +85,13 @@ const schema = Joi.object<ClientAttributes>({
   logoUri: Joi.string().uri().allow(null).required(),
   logoutUri: Joi.string().uri().required(),
   name: Joi.string().required(),
-  owners: Joi.array().items(JOI_GUID).required(),
   permissions: Joi.array().items(Joi.string()).required(),
-  redirectUri: Joi.string().uri().required(),
+  redirectUris: Joi.array().items(Joi.string().uri()).required(),
   requiredScopes: Joi.array().items(Joi.string()).required(),
   rtbfUri: Joi.string().uri().allow(null).required(),
   scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).required(),
   secret: JOI_ARGON_STRING.required(),
+  tenant: JOI_GUID.required(),
   type: JOI_CLIENT_TYPE.required(),
 });
 
@@ -104,13 +105,13 @@ export class Client extends LindormEntity<ClientAttributes> {
   public logoUri: string | null;
   public logoutUri: string;
   public name: string;
-  public owners: Array<string>;
   public permissions: Array<string>;
-  public redirectUri: string;
+  public redirectUris: Array<string>;
   public requiredScopes: Array<string>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string | null;
+  public tenant: string;
   public type: ClientType;
 
   public constructor(options: ClientOptions) {
@@ -137,13 +138,13 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.logoUri = options.logoUri || null;
     this.logoutUri = options.logoutUri;
     this.name = options.name;
-    this.owners = options.owners;
     this.permissions = options.permissions || [];
-    this.redirectUri = options.redirectUri;
+    this.redirectUris = options.redirectUris;
     this.requiredScopes = options.requiredScopes || [];
     this.rtbfUri = options.rtbfUri || null;
     this.scopeDescriptions = options.scopeDescriptions || [];
     this.secret = options.secret;
+    this.tenant = options.tenant;
     this.type = options.type;
   }
 
@@ -164,13 +165,13 @@ export class Client extends LindormEntity<ClientAttributes> {
       logoUri: this.logoUri,
       logoutUri: this.logoutUri,
       name: this.name,
-      owners: this.owners,
       permissions: this.permissions,
-      redirectUri: this.redirectUri,
+      redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,
       rtbfUri: this.rtbfUri,
       scopeDescriptions: this.scopeDescriptions,
       secret: this.secret,
+      tenant: this.tenant,
       type: this.type,
     };
   }
