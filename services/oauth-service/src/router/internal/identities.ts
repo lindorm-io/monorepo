@@ -12,7 +12,7 @@ router.get(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTITY_IDENTITY_READ],
+    scopes: [ClientScope.OAUTH_IDENTITY_READ],
   }),
 
   useSchema(getIdentitySessionsSchema),

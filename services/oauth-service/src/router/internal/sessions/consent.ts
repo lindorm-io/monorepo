@@ -27,7 +27,7 @@ router.get(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_READ],
+    scopes: [ClientScope.OAUTH_CONSENT_READ],
   }),
 
   useSchema(getConsentInfoSchema),
@@ -42,7 +42,7 @@ router.put(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
+    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
   }),
 
   useSchema(confirmConsentSchema),
@@ -57,7 +57,7 @@ router.put(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
+    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
   }),
 
   useSchema(rejectConsentSchema),
@@ -70,7 +70,7 @@ router.put(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
+    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
   }),
 
   useSchema(skipConsentSchema),

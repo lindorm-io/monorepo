@@ -20,7 +20,7 @@ import {
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-describe("/internal/sessions/authorize", () => {
+describe("/internal/sessions/consent", () => {
   beforeAll(setupIntegration);
 
   test("GET /:id", async () => {

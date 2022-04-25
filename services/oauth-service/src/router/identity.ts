@@ -14,4 +14,4 @@ router.use(
   }),
 );
 
-router.post("/forget", useController(forgetIdentityController));
+router.post("/rtbf", useController(forgetIdentityController));

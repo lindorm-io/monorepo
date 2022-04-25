@@ -25,15 +25,32 @@ router.get("/openid-configuration", async (ctx: Context): Promise<void> => {
     logoutEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
     requestParameterSupported: false,
     requestUriParameterSupported: true,
-    responseTypesSupported: Object.values(ResponseType),
+    responseTypesSupported: [
+      ResponseType.CODE,
+      ResponseType.ID_TOKEN,
+      ResponseType.TOKEN,
+
+      [ResponseType.CODE, ResponseType.ID_TOKEN].join(" "),
+      [ResponseType.CODE, ResponseType.TOKEN].join(" "),
+      [ResponseType.ID_TOKEN, ResponseType.TOKEN].join(" "),
+
+      [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN].join(" "),
+    ],
     revokeEndpoint: new URL("/oauth2/sessions/revoke", configuration.server.host).toString(),
     scopesSupported: [
+      Scope.OPENID,
       Scope.ADDRESS,
       Scope.EMAIL,
-      Scope.OFFLINE_ACCESS,
-      Scope.OPENID,
       Scope.PHONE,
       Scope.PROFILE,
+
+      Scope.ACCESSIBILITY,
+      Scope.CONNECTED_PROVIDERS,
+      Scope.NATIONAL_IDENTITY_NUMBER,
+      Scope.SOCIAL_SECURITY_NUMBER,
+      Scope.USERNAME,
+
+      Scope.OFFLINE_ACCESS,
     ],
     subjectTypesSupported: ["identity", "client"],
     tokenEndpoint: new URL("/oauth2/token", configuration.server.host).toString(),
@@ -46,8 +63,6 @@ router.get("/openid-configuration", async (ctx: Context): Promise<void> => {
 });
 
 router.get("/jwks.json", async (ctx: Context): Promise<void> => {
-  ctx.body = {
-    keys: ctx.keystore.getJWKS(),
-  };
+  ctx.body = { keys: ctx.keystore.getJWKS() };
   ctx.status = HttpStatus.Success.OK;
 });
