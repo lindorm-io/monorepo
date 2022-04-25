@@ -2,6 +2,7 @@ import Joi from "joi";
 import { ClientAttributes } from "../../entity";
 import { Context } from "../../types";
 import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { JOI_GUID } from "../../common";
 
 interface RequestData {
   id: string;
@@ -10,7 +11,7 @@ interface RequestData {
 type ResponseBody = Partial<ClientAttributes>;
 
 export const getClientInfoSchema = Joi.object<RequestData>({
-  id: Joi.string().required(),
+  id: JOI_GUID.required(),
 });
 
 export const getClientInfoController: Controller<Context<RequestData>> = async (
@@ -29,10 +30,10 @@ export const getClientInfoController: Controller<Context<RequestData>> = async (
       expiry: client.expiry,
       logoutUri: client.logoutUri,
       name: client.name,
-      owners: client.owners,
       permissions: client.permissions,
-      redirectUri: client.redirectUri,
+      redirectUris: client.redirectUris,
       scopeDescriptions: client.scopeDescriptions,
+      tenant: client.tenant,
       type: client.type,
     },
   };

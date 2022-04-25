@@ -14,7 +14,7 @@ describe("assertAuthorizeRedirectUri", () => {
 
     client = getTestClient();
 
-    client.redirectUri = "REDIRECT1";
+    client.redirectUris = ["REDIRECT1"];
   });
 
   test("should succeed", () => {
@@ -22,7 +22,7 @@ describe("assertAuthorizeRedirectUri", () => {
   });
 
   test("should throw", () => {
-    client.redirectUri = "REDIRECT2";
+    client.redirectUris = ["REDIRECT2"];
 
     expect(() => assertAuthorizeRedirectUri(authorizationSession, client)).toThrow(ClientError);
   });

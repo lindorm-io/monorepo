@@ -3,17 +3,17 @@ import { Client } from "../../entity";
 import { ClientType, DisplayMode, JOI_GUID, LevelOfAssurance, ResponseMode } from "../../common";
 import { Context } from "../../types";
 import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
 import { argon } from "../../instance";
+import { configuration } from "../../configuration";
 import { getRandomString } from "@lindorm-io/core";
 
 interface RequestData {
   description: string;
-  identityId: string;
   host: string;
   logoutUri: string;
   name: string;
-  redirectUri: string;
+  redirectUris: Array<string>;
+  tenantId: string;
 }
 
 interface ResponseBody {
@@ -23,11 +23,11 @@ interface ResponseBody {
 
 export const createClientSchema = Joi.object<RequestData>({
   description: Joi.string().required(),
-  identityId: JOI_GUID,
   host: Joi.string().uri().required(),
   logoutUri: Joi.string().uri().required(),
   name: Joi.string().required(),
-  redirectUri: Joi.string().uri().required(),
+  redirectUris: Joi.array().items(Joi.string().uri()).required(),
+  tenantId: JOI_GUID.required(),
 });
 
 export const createClientController: Controller<Context<RequestData>> = async (
@@ -35,7 +35,8 @@ export const createClientController: Controller<Context<RequestData>> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { clientCache },
-    data: { description, identityId, host, logoutUri, name, redirectUri },
+    data: { description, host, logoutUri, name, redirectUris },
+    entity: { tenant },
     repository: { clientRepository },
   } = ctx;
 
@@ -53,8 +54,8 @@ export const createClientController: Controller<Context<RequestData>> = async (
       host,
       logoutUri,
       name,
-      owners: [identityId],
-      redirectUri,
+      tenant: tenant.id,
+      redirectUris,
       secret: await argon.encrypt(secret),
       type: ClientType.PUBLIC,
     }),

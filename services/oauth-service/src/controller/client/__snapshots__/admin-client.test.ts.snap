@@ -1,0 +1,129 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`adminClientController should resolve updated client 1`] = `
+Array [
+  Array [
+    Object {
+      "active": false,
+      "allowed": Object {
+        "grantTypes": Array [
+          "refresh_token",
+        ],
+        "responseTypes": Array [
+          "token",
+        ],
+        "scopes": Array [
+          "openid",
+        ],
+      },
+      "created": 2021-01-01T08:00:00.000Z,
+      "defaults": Object {
+        "displayMode": "popup",
+        "levelOfAssurance": 3,
+        "responseMode": "query",
+      },
+      "description": "Client description",
+      "expiry": Object {
+        "accessToken": "99 seconds",
+        "idToken": "99 seconds",
+        "refreshToken": "99 seconds",
+      },
+      "host": "https://test.client.lindorm.io",
+      "id": "be664120-2430-4050-b56c-fd4176b652d9",
+      "logoUri": "https://logo.uri/logo",
+      "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
+      "name": "ClientName",
+      "permissions": Array [
+        "lindorm.io/oauth-service/client/public",
+      ],
+      "redirectUris": Array [
+        "https://test.client.lindorm.io/redirect",
+      ],
+      "requiredScopes": Array [
+        "offline_access",
+        "openid",
+      ],
+      "rtbfUri": "https://test.client.lindorm.io/rtbf",
+      "scopeDescriptions": Array [
+        Object {
+          "description": "Give the client access to your OpenID claims.",
+          "name": "openid",
+        },
+        Object {
+          "description": "Give the client access to your profile information.",
+          "name": "profile",
+        },
+      ],
+      "secret": "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
+      "tenant": "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+      "type": "public",
+      "updated": 2021-01-01T08:00:00.000Z,
+      "version": 1,
+    },
+  ],
+]
+`;
+
+exports[`adminClientController should resolve updated client 2`] = `
+Array [
+  Array [
+    Object {
+      "active": false,
+      "allowed": Object {
+        "grantTypes": Array [
+          "refresh_token",
+        ],
+        "responseTypes": Array [
+          "token",
+        ],
+        "scopes": Array [
+          "openid",
+        ],
+      },
+      "created": 2021-01-01T08:00:00.000Z,
+      "defaults": Object {
+        "displayMode": "popup",
+        "levelOfAssurance": 3,
+        "responseMode": "query",
+      },
+      "description": "Client description",
+      "expiry": Object {
+        "accessToken": "99 seconds",
+        "idToken": "99 seconds",
+        "refreshToken": "99 seconds",
+      },
+      "host": "https://test.client.lindorm.io",
+      "id": "be664120-2430-4050-b56c-fd4176b652d9",
+      "logoUri": "https://logo.uri/logo",
+      "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
+      "name": "ClientName",
+      "permissions": Array [
+        "lindorm.io/oauth-service/client/public",
+      ],
+      "redirectUris": Array [
+        "https://test.client.lindorm.io/redirect",
+      ],
+      "requiredScopes": Array [
+        "offline_access",
+        "openid",
+      ],
+      "rtbfUri": "https://test.client.lindorm.io/rtbf",
+      "scopeDescriptions": Array [
+        Object {
+          "description": "Give the client access to your OpenID claims.",
+          "name": "openid",
+        },
+        Object {
+          "description": "Give the client access to your profile information.",
+          "name": "profile",
+        },
+      ],
+      "secret": "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
+      "tenant": "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+      "type": "public",
+      "updated": 2021-01-01T08:00:00.000Z,
+      "version": 1,
+    },
+  ],
+]
+`;

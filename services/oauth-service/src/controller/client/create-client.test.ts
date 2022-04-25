@@ -1,4 +1,5 @@
 import { createClientController } from "./create-client";
+import { getTestTenant } from "../../test/entity";
 
 jest.mock("@lindorm-io/core", () => ({
   ...(jest.requireActual("@lindorm-io/core") as object),
@@ -23,11 +24,13 @@ describe("createClientController", () => {
       },
       data: {
         description: "description",
-        identityId: "identityId",
         host: "host",
         logoutUri: "logoutUri",
         name: "name",
-        redirectUri: "redirectUri",
+        redirectUris: ["redirectUri"],
+      },
+      entity: {
+        tenant: getTestTenant(),
       },
       repository: {
         clientRepository: {
