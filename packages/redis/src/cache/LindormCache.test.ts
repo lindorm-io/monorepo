@@ -58,6 +58,16 @@ describe("LindormCache", () => {
     await expect(redis.get(entityKey(entity))).resolves.toBe(null);
   });
 
+  test("should destroy many", async () => {
+    const destroy1 = await cache.create(new TestEntity({ name: "destroy" }));
+    const destroy2 = await cache.create(new TestEntity({ name: "destroy" }));
+
+    await cache.destroyMany({ name: "destroy" });
+
+    await expect(redis.get(entityKey(destroy1))).resolves.toBe(null);
+    await expect(redis.get(entityKey(destroy2))).resolves.toBe(null);
+  });
+
   test("should find using id", async () => {
     await expect(cache.find({ id: entity.id })).resolves.toStrictEqual(entity);
   });

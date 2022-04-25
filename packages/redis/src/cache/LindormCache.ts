@@ -80,6 +80,20 @@ export abstract class LindormCache<
     await this.delEntity(entity);
   }
 
+  public async destroyMany(filter: Partial<Interface>): Promise<Array<void>> {
+    const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
+
+    if (!results.length) return;
+
+    const promises = [];
+
+    for (const entity of results) {
+      promises.push(this.destroy(entity));
+    }
+
+    return Promise.all(promises);
+  }
+
   public async find(
     filter: Partial<Interface>,
     options?: LindormCacheFindOptions,
