@@ -17,6 +17,8 @@ oauth:
 redis:
   host: localhost
   port: 3202
+  username: null
+  password: null
 
 server:
   environment: test
