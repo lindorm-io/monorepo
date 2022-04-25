@@ -1,7 +1,8 @@
-import { IdentityServiceClaims } from "./claims";
+import { IdentityServiceClaims } from "../claims";
 
-export interface AuthenticateIdentifierResponseBody {
-  identityId: string;
+export interface GetUserinfoRequestBody {
+  id: string;
+  scope: string;
 }
 
 export interface GetUserinfoResponseBody {

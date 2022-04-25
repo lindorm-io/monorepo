@@ -1,5 +1,4 @@
-import { RdcSessionMode } from "../enum";
-import { RequestMethod } from "../../lindorm";
+import { RdcSessionMode, RequestMethod } from "../../enum";
 
 export interface InitialiseRdcSessionRequestData {
   confirmMethod?: RequestMethod;
@@ -17,4 +16,9 @@ export interface InitialiseRdcSessionRequestData {
   templateName: string;
   templateParameters?: Record<string, any>;
   tokenPayload?: Record<string, any>;
+}
+
+export interface InitialiseRdcSessionResponseBody {
+  id: string;
+  expiresIn: number;
 }

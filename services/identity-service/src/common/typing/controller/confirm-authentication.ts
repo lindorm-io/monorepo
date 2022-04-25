@@ -1,4 +1,4 @@
-import { LevelOfAssurance } from "./common";
+import { LevelOfAssurance } from "../common";
 
 export interface ConfirmAuthenticationRequestBody {
   acrValues: Array<string>;
@@ -6,9 +6,4 @@ export interface ConfirmAuthenticationRequestBody {
   identityId: string;
   levelOfAssurance: LevelOfAssurance;
   remember: boolean;
-}
-
-export interface ConfirmConsentRequestBody {
-  audiences: Array<string>;
-  scopes: Array<string>;
 }

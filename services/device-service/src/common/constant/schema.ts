@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ClientType, SessionStatus } from "../enum";
 
 export const JOI_ARGON_STRING = Joi.string()
-  .pattern(/^([$]crypto2id[$]).+$/)
+  .pattern(/^([$]argon2id[$]).+$/)
   .min(64);
 
 export const JOI_CLIENT_TYPE = Joi.string().valid(ClientType.PUBLIC, ClientType.CONFIDENTIAL);
