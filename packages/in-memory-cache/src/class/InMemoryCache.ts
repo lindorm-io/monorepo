@@ -41,30 +41,28 @@ export class InMemoryCache<Data> {
     this.intervalTimeout = options.intervalTimeout || 10000;
     this.ttl = options.ttl || 60 * 12;
 
-    this.fetchData();
+    this.safelyFetchData().then();
   }
 
   public get(key: string): Data | undefined {
-    if (this.shouldFetch()) this.fetchData();
-
+    if (this.shouldFetch()) {
+      this.safelyFetchData().then();
+    }
     return this.data.get(key);
   }
 
-  public async getAsync(key: string): Promise<Data | undefined> {
-    if (this.shouldFetch()) await this.fetchDataAsync();
+  public set(key: string, data: Data): void {
+    this.data.set(key, data);
+  }
 
-    return this.data.get(key);
+  public delete(key: string): void {
+    this.data.delete(key);
   }
 
   public scan(): Array<Data> {
-    if (this.shouldFetch()) this.fetchData();
-
-    return Array.from(this.data.values());
-  }
-
-  public async scanAsync(): Promise<Array<Data>> {
-    if (this.shouldFetch()) await this.fetchDataAsync();
-
+    if (this.shouldFetch()) {
+      this.safelyFetchData().then();
+    }
     return Array.from(this.data.values());
   }
 
@@ -75,6 +73,15 @@ export class InMemoryCache<Data> {
       timestamp: this.timestamp,
       ttl: this.ttl,
     };
+  }
+
+  public async ping(): Promise<void> {
+    if (!this.shouldFetch()) return;
+    return this.safelyFetchData();
+  }
+
+  public async reload(): Promise<void> {
+    return this.safelyFetchData();
   }
 
   private shouldFetch(): boolean {
@@ -101,8 +108,8 @@ export class InMemoryCache<Data> {
     return false;
   }
 
-  private fetchData(): void {
-    this.fetchDataAsync().catch((err) => {
+  private async safelyFetchData(): Promise<void> {
+    return this.fetchDataAsync().catch((err) => {
       this.logger.verbose(err);
     });
   }
