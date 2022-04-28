@@ -51,6 +51,13 @@ export class InMemoryCache<Data> {
     return this.data.get(key);
   }
 
+  public async getAsync(key: string): Promise<Data | undefined> {
+    if (this.shouldFetch()) {
+      await this.fetchDataAsync();
+    }
+    return this.data.get(key);
+  }
+
   public set(key: string, data: Data): void {
     this.data.set(key, data);
   }
@@ -66,6 +73,13 @@ export class InMemoryCache<Data> {
     return Array.from(this.data.values());
   }
 
+  public async scanAsync(key: string): Promise<Array<Data>> {
+    if (this.shouldFetch()) {
+      await this.fetchDataAsync();
+    }
+    return Array.from(this.data.values());
+  }
+
   public status(): InMemoryCacheStatus {
     return {
       fetching: this.fetching,
@@ -76,7 +90,9 @@ export class InMemoryCache<Data> {
   }
 
   public async ping(): Promise<void> {
-    if (!this.shouldFetch()) return;
+    if (!this.shouldFetch()) {
+      return;
+    }
     return this.safelyFetchData();
   }
 
