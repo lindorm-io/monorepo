@@ -41,7 +41,7 @@ describe("/internal/userinfo", () => {
         sub: identity.id,
         updated_at: 1609488000,
       },
-      permissions: ["user"],
+      permissions: ["lindorm.io/any/identity/any:user"],
     });
   });
 

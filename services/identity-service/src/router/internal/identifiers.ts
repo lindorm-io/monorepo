@@ -12,7 +12,7 @@ router.post(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTIFIER_READ, ClientScope.IDENTIFIER_WRITE],
+    scopes: [ClientScope.IDENTITY_IDENTIFIER_READ, ClientScope.IDENTITY_IDENTIFIER_WRITE],
   }),
   useSchema(authenticateIdentifierSchema),
   useController(authenticateIdentifierController),

@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`identityUpdateController should update identity 1`] = `
+Array [
+  Array [
+    Object {
+      "active": true,
+      "address": Object {
+        "country": "new-country",
+        "locality": "new-locality",
+        "postalCode": "new-postalCode",
+        "region": "new-region",
+        "streetAddress": Array [
+          "new-streetAddress",
+        ],
+      },
+      "birthDate": "new-birthDate",
+      "created": 2022-04-28T05:26:06.500Z,
+      "displayName": Object {
+        "name": null,
+        "number": null,
+      },
+      "familyName": "new-familyName",
+      "gender": "new-gender",
+      "givenName": "new-givenName",
+      "gravatarUri": "new-gravatar",
+      "id": "identityId",
+      "locale": "new-locale",
+      "middleName": "new-middleName",
+      "namingSystem": "new-namingSystem",
+      "nationalIdentityNumber": "new-nationalIdentityNumber",
+      "nickname": "new-nickname",
+      "permissions": Array [
+        "lindorm.io/any/identity/any:user",
+      ],
+      "picture": "new-picture",
+      "preferredAccessibility": Array [
+        "new-setting",
+      ],
+      "preferredUsername": "new-username",
+      "profile": "new-profile",
+      "pronouns": "new-pronouns",
+      "socialSecurityNumber": "new-socialSecurityNumber",
+      "updated": 2022-04-28T05:26:06.500Z,
+      "username": "new-username",
+      "version": 0,
+      "website": "new-website",
+      "zoneInfo": "new-zoneInfo",
+    },
+  ],
+]
+`;

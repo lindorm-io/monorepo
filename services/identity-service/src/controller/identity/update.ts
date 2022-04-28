@@ -15,7 +15,6 @@ import {
 
 interface RequestData {
   id: string;
-
   address: IdentityAddress;
   birthDate: string;
   displayName: string;
@@ -40,7 +39,6 @@ interface RequestData {
 
 export const identityUpdateSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
-
   address: JOI_IDENTITY_ADDRESS.optional(),
   birthDate: JOI_BIRTHDATE.allow(null).optional(),
   displayName: JOI_IDENTITY_DISPLAY_NAME.optional(),
@@ -136,17 +134,11 @@ export const identityUpdateController: Controller<Context<RequestData>> = async 
     identity.preferredUsername = username;
   }
 
-  await identityRepository.update(identity);
-
   if (includes(scopes, Scope.USERNAME) && !isUndefined(username)) {
     identity.username = username;
   }
 
-  try {
-    await identityRepository.update(identity);
-  } catch (_) {
-    // ignore
-  }
+  await identityRepository.update(identity);
 
   return { body: {} };
 };

@@ -98,7 +98,7 @@ describe("/identities", () => {
         website: "https://website.url/",
         zone_info: "Europe/Stockholm",
       },
-      permissions: ["user"],
+      permissions: ["lindorm.io/any/identity/any:user"],
     });
   });
 

@@ -13,7 +13,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -27,7 +27,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -41,7 +41,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -56,7 +56,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -70,7 +70,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -85,7 +85,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -114,7 +114,7 @@ Object {
     "zoneInfo": "Europe/Stockholm",
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -128,7 +128,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -142,7 +142,7 @@ Object {
     "username": "bFp3ihd84Ps8Ocjf",
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;
@@ -155,7 +155,7 @@ Object {
     "updatedAt": 1596873600,
   },
   "permissions": Array [
-    "user",
+    "lindorm.io/any/identity/any:user",
   ],
 }
 `;

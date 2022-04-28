@@ -17,7 +17,7 @@ router.get(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTITY_READ],
+    scopes: [ClientScope.IDENTITY_IDENTITY_READ],
   }),
 
   useSchema(getUserinfoSchema),
@@ -30,7 +30,7 @@ router.put(
   paramsMiddleware,
   clientAuthMiddleware({
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTITY_WRITE],
+    scopes: [ClientScope.IDENTITY_IDENTITY_WRITE],
   }),
 
   useSchema(addUserinfoSchema),

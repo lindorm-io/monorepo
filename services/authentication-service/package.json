@@ -20,7 +20,8 @@
     "test:unit:watch": "jest --config jest.config.js --watch --",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch",
-    "upgrade:dependencies": "yarn upgrade-interactive --latest"
+    "upgrade:dependencies": "yarn upgrade-interactive --latest",
+    "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.2.9",
