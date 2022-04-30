@@ -19,6 +19,7 @@ import {
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
+  TenantRepository,
 } from "../infrastructure";
 
 export const serverMiddlewares = [
@@ -44,6 +45,7 @@ export const serverMiddlewares = [
   repositoryMiddleware(ConsentSessionRepository),
   repositoryMiddleware(KeyPairRepository),
   repositoryMiddleware(RefreshSessionRepository),
+  repositoryMiddleware(TenantRepository),
 
   // Cache
 
