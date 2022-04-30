@@ -6,7 +6,7 @@ interface Options extends LogOptions {
 }
 
 export const logAxiosResponse = ({ logger, name, time, response }: Options): void => {
-  logger.info(`${name || "axios"} response`, {
+  logger.verbose(`${name || "axios"} response`, {
     config: {
       auth: response?.config?.auth,
       host: response?.request?.host,

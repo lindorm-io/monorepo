@@ -153,7 +153,7 @@ export class KoaApp {
 
     const promise = this.waitForStartEvent();
 
-    this.logger.info("starting server", {
+    this.logger.verbose("starting server", {
       environment: this.environment,
       host: this.host,
       port: this.port,
@@ -171,7 +171,7 @@ export class KoaApp {
 
     this.started = true;
 
-    this.logger.info("server has started");
+    this.logger.verbose("server has started");
   }
 
   private listen(): void {

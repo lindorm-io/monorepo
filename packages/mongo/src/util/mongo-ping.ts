@@ -5,11 +5,11 @@ export const mongoPing = async (connection: MongoConnection, logger: Logger): Pr
   try {
     await connection.client().connect();
 
-    logger.info("Mongo Ping Success");
+    logger.verbose("mongo ping success");
 
     return true;
   } catch (err: any) {
-    logger.error("Mongo Ping Failure", err);
+    logger.error("mongo ping failure", err);
 
     return false;
   }

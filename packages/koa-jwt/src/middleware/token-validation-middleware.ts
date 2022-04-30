@@ -90,12 +90,12 @@ export const tokenValidationMiddleware =
         await customValidation(ctx, ctx.token[contextKey]);
       }
 
-      ctx.logger.debug("Token validated", {
+      ctx.logger.debug("token validated", {
         [contextKey]: token,
       });
     } catch (err: any) {
       if (options.optional) {
-        ctx.logger.debug("Optional error ignored", err);
+        ctx.logger.debug("optional error ignored", err);
       } else {
         throw new ClientError(err.message || "Invalid token", {
           error: err,

@@ -16,7 +16,7 @@ export const sessionLoggerMiddleware =
     try {
       await next();
     } finally {
-      ctx.logger.info("Service Response", {
+      ctx.logger.info("service response", {
         request: {
           body: ctx.request.body,
           header: ctx.request.header,

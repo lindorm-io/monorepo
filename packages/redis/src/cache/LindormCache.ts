@@ -237,7 +237,7 @@ export abstract class LindormCache<
       }
 
       if (cleanup.length) {
-        this.logger.debug("Cleanup invoked", {
+        this.logger.debug("cleanup invoked", {
           cleanup,
         });
 

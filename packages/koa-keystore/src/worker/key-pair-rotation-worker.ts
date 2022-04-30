@@ -41,7 +41,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
       const keys = await repository.findMany({ expires: { $gt: new Date() } });
 
       if (!keys.length) {
-        logger.warn("No valid KeyPair found", { keys });
+        logger.warn("no valid keypair found", { keys });
 
         const keyPair = await generateKeyPair({
           namedCurve,
@@ -51,7 +51,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
 
         keyPair.expires = add(new Date(), stringToDurationObject(rotationInterval));
 
-        logger.info("Generating new KeyPair", {
+        logger.verbose("generating new keypair", {
           id: keyPair.id,
           expires: keyPair.expires,
           namedCurve: keyPair.namedCurve,
@@ -74,11 +74,9 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           keyPair.allowed = sub(next.expires, stringToDurationObject("2 days"));
           keyPair.expires = add(next.expires, stringToDurationObject(rotationInterval));
 
-          logger.info("");
-
           await repository.create(keyPair);
         } else {
-          logger.warn("KeyPair will never expire", next);
+          logger.warn("keypair will never expire", next);
         }
       }
     },

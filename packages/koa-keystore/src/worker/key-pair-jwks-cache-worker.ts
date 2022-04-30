@@ -22,7 +22,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const time = workerIntervalInSeconds * 1000;
   const logger = winston.createChildLogger(["keyPairJwksCacheWorker"]);
 
-  logger.info("Creating JWKS Cache Worker", {
+  logger.verbose("creating jwks cache worker", {
     baseUrl,
     clientName,
     workerInterval,

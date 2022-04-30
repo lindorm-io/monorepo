@@ -80,7 +80,7 @@ export const bearerAuthMiddleware =
         await customValidation(ctx, ctx.token[contextKey]);
       }
 
-      ctx.logger.debug("Bearer Token validated", {
+      ctx.logger.debug("bearer token validated", {
         [contextKey]: token,
       });
     } catch (err: any) {

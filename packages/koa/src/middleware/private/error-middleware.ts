@@ -7,7 +7,7 @@ export const errorMiddleware: Middleware<KoaContext> = async (ctx, next): Promis
     await next();
   } catch (err: any) {
     try {
-      ctx.logger.error("Service Request Error", err);
+      ctx.logger.error("service request error", err);
 
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);

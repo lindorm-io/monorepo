@@ -102,7 +102,7 @@ export class InMemoryCache<Data> {
 
   private shouldFetch(): boolean {
     if (!this.timestamp) {
-      this.logger.verbose("Should fetch (undefined timestamp)", {
+      this.logger.verbose("should fetch (undefined timestamp)", {
         timestamp: this.timestamp,
       });
 
@@ -112,7 +112,7 @@ export class InMemoryCache<Data> {
     const now = new Date();
 
     if (isAfter(now, addSeconds(this.timestamp, this.ttl))) {
-      this.logger.verbose("Should fetch (timestamp expiry)", {
+      this.logger.verbose("should fetch (timestamp expiry)", {
         now,
         timestamp: this.timestamp,
         ttl: this.ttl,
@@ -132,7 +132,7 @@ export class InMemoryCache<Data> {
 
   private async fetchDataAsync(): Promise<void> {
     if (this.fetching) {
-      this.logger.verbose("Fetching data using interval");
+      this.logger.verbose("fetching data using interval");
 
       return new Promise((resolve, reject) => {
         let current = 0;
@@ -155,7 +155,7 @@ export class InMemoryCache<Data> {
     this.fetching = true;
 
     try {
-      this.logger.verbose("Fetching data using fetchDataFunction");
+      this.logger.verbose("fetching data using fetchDataFunction");
       const data = await this.fetchDataFunction(this.data);
 
       if (!data || !(data instanceof Map)) {

@@ -15,17 +15,17 @@ export class IORedisConnection extends RedisConnectionBase implements IRedisConn
     this.redis = new IORedis(this.clientOptions);
 
     this.redis.on("connect", () => {
-      this.logger.info("Connected to Redis", this.clientOptions);
+      this.logger.verbose("connected to redis", this.clientOptions);
       this.connected = true;
     });
 
     this.redis.on("error", (err: Error) => {
-      this.logger.error("Redis encountered an error", { error: err });
+      this.logger.error("redis encountered an error", { error: err });
       this.connected = false;
     });
 
     this.redis.on("reconnecting", (delay: number) => {
-      this.logger.info("Reconnecting to Redis", { delay });
+      this.logger.verbose("reconnecting to redis", { delay });
       this.connected = false;
     });
   }

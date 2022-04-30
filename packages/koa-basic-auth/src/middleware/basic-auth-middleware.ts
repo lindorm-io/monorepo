@@ -23,7 +23,7 @@ export const basicAuthMiddleware =
 
     const authorization = ctx.getAuthorizationHeader();
 
-    ctx.logger.debug("Authorization Header exists", { authorization });
+    ctx.logger.debug("authorization header exists", { authorization });
 
     if (authorization?.type !== "Basic") {
       metric.end();
@@ -34,12 +34,12 @@ export const basicAuthMiddleware =
       });
     }
 
-    ctx.logger.debug("Basic Auth identified", { credentials: authorization.value });
+    ctx.logger.debug("basic auth identified", { credentials: authorization.value });
 
     const credentials = getCredentials(authorization.value);
     validateCredentials(credentials, options.clients);
 
-    ctx.logger.info("Basic Auth validated", { username: credentials.username });
+    ctx.logger.verbose("basic auth validated", { username: credentials.username });
 
     metric.end();
 

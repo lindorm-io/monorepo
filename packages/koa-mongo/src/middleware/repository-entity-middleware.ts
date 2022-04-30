@@ -30,7 +30,7 @@ export const repositoryEntityMiddleware =
     const attributeValue = get(ctx, path);
 
     if (!isString(attributeValue) && optional) {
-      ctx.logger.debug("Optional entity identifier not found", { path });
+      ctx.logger.debug("optional entity identifier not found", { path });
 
       metric.end();
 
