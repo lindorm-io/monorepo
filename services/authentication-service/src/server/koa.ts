@@ -24,7 +24,6 @@ export const koa = new KoaApp({
   setup: async (): Promise<void> => {
     await mongoConnection.waitForConnection();
     await redisConnection.waitForConnection();
-    console.log("done");
   },
 });
 
