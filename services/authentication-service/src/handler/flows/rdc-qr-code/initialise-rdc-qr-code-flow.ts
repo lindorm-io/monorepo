@@ -49,6 +49,7 @@ export const initialiseRdcQrCodeFlow = async (
   await flowSessionCache.update(flowSession);
 
   const data: InitialiseRdcSessionRequestData = {
+    clientId: configuration.oauth.client_id,
     confirmMethod: RequestMethod.PUT,
     confirmPayload: { flowToken },
     confirmUri: createURL("/authenticate/flows/:id/confirm", {
