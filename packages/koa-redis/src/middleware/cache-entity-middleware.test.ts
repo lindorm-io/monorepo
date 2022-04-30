@@ -42,13 +42,12 @@ describe("cacheMiddleware", () => {
   });
 
   test("should set entity on context and verify with custom validation callback", async () => {
-    const customValidataion: CustomValidation = async (context, entity) => {
+    const customValidation: CustomValidation = async (context, entity) => {
       if (!entity) {
         throw new Error("message");
-        console.log(context);
       }
     };
-    options.customValidation = customValidataion;
+    options.customValidation = customValidation;
 
     await expect(
       cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
@@ -119,13 +118,12 @@ describe("cacheMiddleware", () => {
   });
 
   test("should throw ClientError with custom validation callback", async () => {
-    const customValidataion: CustomValidation = async (context, entity) => {
+    const customValidation: CustomValidation = async (context, entity) => {
       if (entity) {
         throw new Error("message");
-        console.log(context);
       }
     };
-    options.customValidation = customValidataion;
+    options.customValidation = customValidation;
 
     await expect(
       cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),

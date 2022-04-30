@@ -101,7 +101,6 @@ describe("bearerAuthMiddleware", () => {
       bearerAuthMiddleware(middlewareOptions)({}, async (context, verifyData) => {
         if (verifyData.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
-          console.log(context);
         }
       })(ctx, next),
     ).resolves.toBeUndefined();
