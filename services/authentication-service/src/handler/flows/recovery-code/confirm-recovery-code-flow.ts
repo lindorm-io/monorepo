@@ -45,5 +45,7 @@ export const confirmRecoveryCodeFlow = async (
 
   await cryptoLayered.assert(code, account.recoveryCode);
 
-  return account;
+  account.recoveryCode = null;
+
+  return accountRepository.update(account);
 };
