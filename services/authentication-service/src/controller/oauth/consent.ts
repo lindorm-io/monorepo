@@ -39,7 +39,6 @@ export const oauthConsentController: Controller<Context<RequestData>> = async (
 
   if (!consentRequired) {
     const { redirectTo } = await oauthSkipConsent(ctx, sessionId);
-
     return { redirect: redirectTo };
   }
 
@@ -49,7 +48,6 @@ export const oauthConsentController: Controller<Context<RequestData>> = async (
       audiences,
       scopes,
     });
-
     return { redirect: redirectTo };
   }
 

@@ -30,9 +30,7 @@ export const getLoginController: Controller<Context> = async (
 
   if (isAuthenticationReadyToConfirm(loginSession)) {
     const { redirectTo } = await oauthConfirmAuthentication(ctx, loginSession);
-
     ctx.deleteCookie(LOGIN_SESSION_COOKIE_NAME);
-
     return { redirect: redirectTo };
   }
 

@@ -31,7 +31,6 @@ export const oauthLogoutController: Controller<Context<RequestData>> = async (
 
   if (type === ClientType.CONFIDENTIAL) {
     const { redirectTo } = await oauthConfirmLogout(ctx, sessionId);
-
     return { redirect: redirectTo };
   }
 
