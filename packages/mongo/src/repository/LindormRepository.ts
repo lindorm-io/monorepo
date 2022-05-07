@@ -259,15 +259,15 @@ export abstract class LindormRepository<
     await entity.schemaValidation();
 
     const start = Date.now();
-    const currentVersion = entity.version;
+    const currentRevision = entity.revision;
 
+    entity.revision += 1;
     entity.updated = new Date();
-    entity.version += 1;
 
     const { id, ...payload } = entity.toJSON();
     const filter = {
       id,
-      version: { $eq: currentVersion },
+      revision: { $eq: currentRevision },
     };
 
     await this.promise();
