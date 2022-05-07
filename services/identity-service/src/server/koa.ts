@@ -7,6 +7,7 @@ import { serverMiddlewares } from "../middleware";
 import { winston } from "../logger";
 
 export const koa = new KoaApp({
+  environment: configuration.server.environment as Environment,
   host: configuration.server.host,
   port: configuration.server.port,
   logger: winston,
