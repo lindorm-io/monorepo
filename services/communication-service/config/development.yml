@@ -1,0 +1,13 @@
+oauth:
+  host: http://localhost:3500
+  client_id: secret
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 3202
+
+server:
+  environment: development
+  host: http://localhost
+  port: 3200

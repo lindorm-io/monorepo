@@ -1,0 +1,14 @@
+oauth:
+  host: localhost
+  client_id: id
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+
+server:
+  environment: development
+  host: localhost
+  port: 3000

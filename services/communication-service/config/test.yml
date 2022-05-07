@@ -1,0 +1,13 @@
+oauth:
+  host: https://oauth.test.api.lindorm.io
+  client_id: secret
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 3202
+
+server:
+  environment: test
+  host: https://communication.test.api.lindorm.io
+  port: 3200

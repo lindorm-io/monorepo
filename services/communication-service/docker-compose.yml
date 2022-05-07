@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+  communication_service_redis:
+    image: redis
+    container_name: communication_service_redis
+    labels:
+      - redis
+    ports:
+      - "3202:6379"
