@@ -1,27 +1,12 @@
 import { Logger } from "@lindorm-io/winston";
 import { isAfter, addSeconds } from "date-fns";
 import { LindormError } from "@lindorm-io/errors";
-
-export type FetchDataFunction<Data> = (data: Map<string, Data>) => Promise<Map<string, Data>>;
-
-export type GetKeyFunction<Data> = (data: Data) => string;
-
-export interface InMemoryCacheOptions<Data> {
-  fetchDataFunction: FetchDataFunction<Data>;
-  getKeyFunction: GetKeyFunction<Data>;
-  intervalTick?: number;
-  intervalTimeout?: number;
-  logger: Logger;
-  name: string;
-  ttl?: number;
-}
-
-export interface InMemoryCacheStatus {
-  fetching: boolean;
-  size: number;
-  timestamp: Date | undefined;
-  ttl: number;
-}
+import {
+  FetchDataFunction,
+  GetKeyFunction,
+  InMemoryCacheOptions,
+  InMemoryCacheStatus,
+} from "../types";
 
 export class InMemoryCache<Data> {
   private readonly fetchDataFunction: FetchDataFunction<Data>;
@@ -83,7 +68,7 @@ export class InMemoryCache<Data> {
     return Array.from(this.data.values());
   }
 
-  public async scanAsync(key: string): Promise<Array<Data>> {
+  public async scanAsync(): Promise<Array<Data>> {
     if (this.shouldFetch()) {
       await this.fetchDataAsync();
     }
@@ -99,7 +84,7 @@ export class InMemoryCache<Data> {
     };
   }
 
-  public async ping(): Promise<void> {
+  public async heartbeat(): Promise<void> {
     if (!this.shouldFetch()) {
       return;
     }
