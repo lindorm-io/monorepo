@@ -1,23 +1,21 @@
 version: "3.7"
 
 services:
-  service_device_mongo:
+  device_service_mongo:
     image: mongo
-    restart: always
-    container_name: service_device_mongo
+    container_name: device_service_mongo
     labels:
       - mongo
     ports:
-      - "3201:27017"
+      - "3301:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
 
-  service_device_redis:
+  device_service_redis:
     image: redis
-    restart: always
-    container_name: service_device_redis
+    container_name: device_service_redis
     labels:
       - redis
     ports:
-      - "3202:6379"
+      - "3302:6379"

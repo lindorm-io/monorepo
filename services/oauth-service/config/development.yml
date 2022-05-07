@@ -7,7 +7,7 @@ frontend:
 
 mongo:
   host: localhost
-  port: 3401
+  port: 3501
   db_name: oauth
   username: root
   password: example
@@ -17,12 +17,12 @@ oauth:
 
 redis:
   host: localhost
-  port: 3402
+  port: 3502
 
 server:
   environment: development
   host: http://localhost
-  port: 3400
+  port: 3500
 
 services:
   authentication_service: http://localhost:3100

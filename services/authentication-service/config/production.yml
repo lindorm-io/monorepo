@@ -1,6 +1,10 @@
 oauth:
   host: https://oauth.api.lindorm.io
 
+redis:
+  username: username
+  password: password
+
 server:
   environment: production
   host: https://authentication.api.lindorm.io

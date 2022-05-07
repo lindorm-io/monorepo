@@ -1,10 +1,9 @@
 version: "3.7"
 
 services:
-  service_authentication_mongo:
+  authentication_service_mongo:
     image: mongo
-    restart: always
-    container_name: service_authentication_mongo
+    container_name: authentication_service_mongo
     labels:
       - mongo
     ports:
@@ -13,10 +12,9 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
 
-  service_authentication_redis:
+  authentication_service_redis:
     image: redis
-    restart: always
-    container_name: service_authentication_redis
+    container_name: authentication_service_redis
     labels:
       - redis
     ports:

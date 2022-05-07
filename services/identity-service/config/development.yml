@@ -1,23 +1,23 @@
 mongo:
   host: localhost
-  port: 3301
+  port: 3401
   db_name: identity
   username: root
   password: example
 
 redis:
   host: localhost
-  port: 3302
+  port: 3402
 
 oauth:
-  host: http://localhost:3400
+  host: http://localhost:3500
   client_id: secret
   client_secret: secret
 
 server:
   environment: development
   host: http://localhost
-  port: 3300
+  port: 3400
 
 services:
-  communication_service: http://localhost:3009
+  communication_service: http://localhost:3200

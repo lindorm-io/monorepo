@@ -7,7 +7,7 @@ frontend:
 
 mongo:
   host: localhost
-  port: 3401
+  port: 3501
   db_name: oauth
   username: root
   password: example
@@ -17,14 +17,12 @@ oauth:
 
 redis:
   host: localhost
-  port: 3402
-  username: null
-  password: null
+  port: 3502
 
 server:
   environment: test
   host: https://oauth.test.api.lindorm.io
-  port: 3400
+  port: 3500
 
 services:
   authentication_service: https://authentication.test.api.lindorm.io

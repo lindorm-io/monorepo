@@ -1,6 +1,10 @@
 oauth:
   host: https://oauth.staging.api.lindorm.io
 
+redis:
+  username: username
+  password: password
+
 server:
   environment: staging
   host: https://identity.staging.api.lindorm.io

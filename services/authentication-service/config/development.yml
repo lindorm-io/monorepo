@@ -13,7 +13,7 @@ mongo:
   password: example
 
 oauth:
-  host: http://localhost:3400
+  host: http://localhost:3500
   client_id: secret
   client_secret: secret
 
@@ -27,6 +27,6 @@ server:
   port: 3100
 
 services:
-  communication_service: http://localhost:3009
-  device_service: http://localhost:3200
-  identity_service: http://localhost:3300
+  communication_service: http://localhost:3200
+  device_service: http://localhost:3300
+  identity_service: http://localhost:3400

@@ -55,8 +55,6 @@ oidc_providers:
 redis:
   host: localhost
   port: 3102
-  username: null
-  password: null
 
 server:
   environment: test

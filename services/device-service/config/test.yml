@@ -1,10 +1,6 @@
-crypto:
-  aes: secret
-  sha: secret
-
 mongo:
   host: localhost
-  port: 3201
+  port: 3301
   db_name: device
   username: root
   password: example
@@ -16,14 +12,12 @@ oauth:
 
 redis:
   host: localhost
-  port: 3202
-  username: null
-  password: null
+  port: 3302
 
 server:
   environment: test
   host: https://device.test.api.lindorm.io
-  port: 3200
+  port: 3300
 
 services:
   communication_service: https://communication.test.api.lindorm.io
