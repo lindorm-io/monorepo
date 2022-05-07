@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/in-memory-cache",
   "description": "In Memory Cache for lindorm.io",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,9 +18,8 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/errors": "^0.1.11",
-    "@lindorm-io/winston": "^0.1.10",
+    "@lindorm-io/errors": "^0.1.12",
+    "@lindorm-io/winston": "^0.1.11",
     "date-fns": "^2.27.0"
-  },
-  "devDependencies": {}
+  }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/string-blob",
   "description": "String Blob utility for lindorm.io",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,7 +18,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.2.13",
+    "@lindorm-io/core": "^0.3.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

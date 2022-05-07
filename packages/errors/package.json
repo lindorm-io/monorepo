@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/errors",
   "description": "Standard errors for lindorm.io",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
