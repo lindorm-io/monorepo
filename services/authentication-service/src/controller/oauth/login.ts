@@ -76,7 +76,7 @@ export const oauthLoginController: Controller<Context<RequestData>> = async (
     return { redirect: redirectTo };
   }
 
-  ctx.setCookie(LOGIN_SESSION_COOKIE_NAME, loginSession.id, loginSession.expires);
+  ctx.setCookie(LOGIN_SESSION_COOKIE_NAME, loginSession.id, { expiry: loginSession.expires });
 
   return {
     redirect: createURL(configuration.frontend.routes.login, {

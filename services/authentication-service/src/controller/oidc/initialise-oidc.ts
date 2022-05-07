@@ -70,7 +70,7 @@ export const initialiseOidcController: Controller<Context<RequestData>> = async 
     },
   });
 
-  ctx.setCookie(OIDC_SESSION_COOKIE_NAME, oidcSession.id, oidcSession.expires);
+  ctx.setCookie(OIDC_SESSION_COOKIE_NAME, oidcSession.id, { expiry: oidcSession.expires });
 
   loginSession.remember = remember;
 

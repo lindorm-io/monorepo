@@ -6,6 +6,6 @@ export const setBrowserSessionCookie = (ctx: Context, browserSession: BrowserSes
   ctx.setCookie(
     BROWSER_SESSION_COOKIE_NAME,
     browserSession.id,
-    browserSession.remember ? browserSession.expires : undefined,
+    browserSession.remember ? { expiry: browserSession.expires } : undefined,
   );
 };

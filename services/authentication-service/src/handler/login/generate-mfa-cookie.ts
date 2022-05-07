@@ -16,9 +16,7 @@ export const generateMfaCookie = async (ctx: Context, account: Account): Promise
     expiresIn,
   );
 
-  ctx.setCookie(
-    MFA_COOKIE_NAME,
-    mfaCookieSession.id,
-    getExpiryDate(configuration.expiry.mfa_cookie),
-  );
+  ctx.setCookie(MFA_COOKIE_NAME, mfaCookieSession.id, {
+    expiry: getExpiryDate(configuration.expiry.mfa_cookie),
+  });
 };

@@ -46,7 +46,7 @@ export const oauthLogoutController: Controller<Context<RequestData>> = async (
     expiresIn,
   );
 
-  ctx.setCookie(LOGOUT_SESSION_COOKIE_NAME, logoutSession.id, logoutSession.expires);
+  ctx.setCookie(LOGOUT_SESSION_COOKIE_NAME, logoutSession.id, { expiry: logoutSession.expires });
 
   return {
     redirect: createURL(configuration.frontend.routes.logout, {

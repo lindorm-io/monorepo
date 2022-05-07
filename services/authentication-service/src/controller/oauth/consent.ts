@@ -67,7 +67,7 @@ export const oauthConsentController: Controller<Context<RequestData>> = async (
     expiresIn,
   );
 
-  ctx.setCookie(CONSENT_SESSION_COOKIE_NAME, consentSession.id, consentSession.expires);
+  ctx.setCookie(CONSENT_SESSION_COOKIE_NAME, consentSession.id, { expiry: consentSession.expires });
 
   return {
     redirect: createURL(configuration.frontend.routes.consent, {
