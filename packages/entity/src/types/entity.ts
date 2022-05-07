@@ -1,11 +1,12 @@
 import { Optional } from "./utility";
 
-export type EntityKeys = "id" | "created" | "updated" | "version";
+export type EntityKeys = "id" | "created" | "updated" | "revision" | "version";
 
 export interface EntityAttributes {
   id: string;
   created: Date;
   updated: Date;
+  revision: number;
   version: number;
 }
 
