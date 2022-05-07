@@ -5,7 +5,7 @@ import { Logger } from "@lindorm-io/winston";
 import { Metric } from "../class";
 import { Request, Response } from "koa";
 import { RouterContext } from "koa-router";
-import { SetCookieOptions } from "../util";
+import { GetCookieOptions, SetCookieOptions } from "../util";
 
 interface KoaRequest<Body extends RecordAny> extends Request {
   body: Body;
@@ -44,7 +44,7 @@ export interface KoaContext<RequestData extends RecordString = RecordAny, Respon
   getAuthorizationHeader(): AuthorizationHeader;
   getMetadataHeaders(): KoaMetadataHeaders;
   getMetric(key: string): Metric;
-  getCookie(name: string): string | undefined;
-  setCookie(name: string, value: string, options?: SetCookieOptions): void;
+  getCookie(name: string, options?: Partial<GetCookieOptions>): string | undefined;
+  setCookie(name: string, value: string, options?: Partial<SetCookieOptions>): void;
   deleteCookie(name: string): void;
 }
