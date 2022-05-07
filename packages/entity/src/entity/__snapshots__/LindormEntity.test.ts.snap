@@ -5,6 +5,7 @@ Object {
   "created": 2020-01-01T07:00:00.000Z,
   "id": "e397bc49-849e-4df6-a536-7b9fa3574ace",
   "name": "name",
+  "revision": 0,
   "updated": 2020-01-01T09:00:00.000Z,
   "version": 0,
 }
@@ -15,6 +16,7 @@ Object {
   "created": 2020-01-01T07:00:00.000Z,
   "id": "e397bc49-849e-4df6-a536-7b9fa3574ace",
   "name": "name",
+  "revision": 0,
   "updated": 2020-01-01T09:00:00.000Z,
   "version": 0,
 }

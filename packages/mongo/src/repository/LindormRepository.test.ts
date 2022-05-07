@@ -154,7 +154,7 @@ describe("LindormRepository.ts", () => {
     await expect(collection.findOne({ id: entity.id })).resolves.toStrictEqual(
       expect.objectContaining({
         name: "new-entity-name",
-        version: 1,
+        revision: 1,
       }),
     );
   });
