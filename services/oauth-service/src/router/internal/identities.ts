@@ -14,7 +14,6 @@ router.get(
     permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
     scopes: [ClientScope.OAUTH_IDENTITY_READ],
   }),
-
   useSchema(getIdentitySessionsSchema),
   useController(getIdentitySessionsController),
 );
