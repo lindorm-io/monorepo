@@ -5,7 +5,7 @@ export const mongoPing = async (connection: MongoConnection, logger: Logger): Pr
   try {
     await connection.client().connect();
 
-    logger.verbose("mongo ping success");
+    logger.debug("mongo ping success");
 
     return true;
   } catch (err: any) {

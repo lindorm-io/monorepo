@@ -12,7 +12,7 @@ export const mongoQuery = async (
 
     await callback({ db: connection.database(), logger });
 
-    logger.verbose("mongo query success");
+    logger.debug("mongo query success");
   } catch (err: any) {
     logger.error("mongo query failure", err);
   }

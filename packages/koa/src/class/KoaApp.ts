@@ -145,7 +145,7 @@ export class KoaApp {
 
     this.loaded = true;
 
-    this.logger.verbose("server is loaded");
+    this.logger.debug("server is loaded");
   }
 
   public async start(): Promise<void> {
@@ -153,7 +153,7 @@ export class KoaApp {
 
     const promise = this.waitForStartEvent();
 
-    this.logger.verbose("starting server", {
+    this.logger.info("starting server", {
       environment: this.environment,
       host: this.host,
       port: this.port,
@@ -163,7 +163,7 @@ export class KoaApp {
     this.listen();
 
     if (this.setup) {
-      this.logger.verbose("initialising setup");
+      this.logger.debug("initialising setup");
       await this.setup();
     }
 
@@ -171,13 +171,12 @@ export class KoaApp {
 
     this.started = true;
 
-    this.logger.verbose("server has started");
+    this.logger.debug("server has started");
   }
 
   private listen(): void {
     this.koa.listen(this.port, (): void => {
-      this.logger.verbose(`listening on server port: ${this.port}`);
-      this.logger.info(`server available on: ${this.host}:${this.port}`);
+      this.logger.verbose(`server available on: ${this.host}:${this.port}`);
 
       this.koa.emit("start");
     });
@@ -194,7 +193,7 @@ export class KoaApp {
   }
 
   private loadMiddleware(): void {
-    this.logger.verbose("loading middleware");
+    this.logger.debug("loading middleware");
 
     for (const middleware of this.middleware) {
       this.koa.use(middleware);
@@ -202,14 +201,14 @@ export class KoaApp {
   }
 
   private loadRouter(): void {
-    this.logger.verbose("loading router");
+    this.logger.debug("loading router");
 
     this.koa.use(this.koaRouter.routes());
     this.koa.use(this.koaRouter.allowedMethods());
   }
 
   private loadWorkers(): void {
-    this.logger.verbose("loading workers");
+    this.logger.debug("loading workers");
 
     for (const worker of this.workers) {
       worker.start();
@@ -218,7 +217,7 @@ export class KoaApp {
   }
 
   private async waitForStartEvent(): Promise<void> {
-    this.logger.verbose("waiting for start event");
+    this.logger.debug("waiting for start event");
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {

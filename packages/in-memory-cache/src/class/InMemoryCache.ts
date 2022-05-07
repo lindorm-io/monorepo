@@ -21,7 +21,7 @@ export class InMemoryCache<Data> {
 
   public constructor(options: InMemoryCacheOptions<Data>) {
     this.logger = options.logger.createChildLogger(["InMemoryCache", options.name]);
-    this.logger.verbose("Initialising");
+    this.logger.debug("Initialising");
 
     this.data = new Map<string, Data>();
     this.fetchDataFunction = options.fetchDataFunction;
@@ -97,7 +97,7 @@ export class InMemoryCache<Data> {
 
   private shouldFetch(): boolean {
     if (!this.timestamp) {
-      this.logger.verbose("should fetch (undefined timestamp)", {
+      this.logger.debug("should fetch (undefined timestamp)", {
         timestamp: this.timestamp,
       });
 
@@ -107,7 +107,7 @@ export class InMemoryCache<Data> {
     const now = new Date();
 
     if (isAfter(now, addSeconds(this.timestamp, this.ttl))) {
-      this.logger.verbose("should fetch (timestamp expiry)", {
+      this.logger.debug("should fetch (timestamp expiry)", {
         now,
         timestamp: this.timestamp,
         ttl: this.ttl,
@@ -121,13 +121,13 @@ export class InMemoryCache<Data> {
 
   private async safelyFetchData(): Promise<void> {
     return this.fetchDataAsync().catch((err) => {
-      this.logger.verbose(err);
+      this.logger.debug(err);
     });
   }
 
   private async fetchDataAsync(): Promise<void> {
     if (this.fetching) {
-      this.logger.verbose("fetching data using interval");
+      this.logger.debug("fetching data using interval");
 
       return new Promise((resolve, reject) => {
         let current = 0;
@@ -150,7 +150,7 @@ export class InMemoryCache<Data> {
     this.fetching = true;
 
     try {
-      this.logger.verbose("fetching data using fetchDataFunction");
+      this.logger.debug("fetching data using fetchDataFunction");
       const data = await this.fetchDataFunction(this.data);
 
       if (!data || !(data instanceof Map)) {

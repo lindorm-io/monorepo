@@ -15,7 +15,7 @@ export class IORedisConnection extends RedisConnectionBase implements IRedisConn
     this.redis = new IORedis(this.clientOptions);
 
     this.redis.on("connect", () => {
-      this.logger.verbose("connected to redis", this.clientOptions);
+      this.logger.debug("connected to redis", this.clientOptions);
       this.connected = true;
     });
 
@@ -25,7 +25,7 @@ export class IORedisConnection extends RedisConnectionBase implements IRedisConn
     });
 
     this.redis.on("reconnecting", (delay: number) => {
-      this.logger.verbose("reconnecting to redis", { delay });
+      this.logger.debug("reconnecting to redis", { delay });
       this.connected = false;
     });
   }

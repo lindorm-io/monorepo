@@ -32,7 +32,7 @@ export class IntervalWorker extends EventEmitter {
   }
 
   public trigger(): void {
-    this.logger.verbose("worker trigger");
+    this.logger.debug("worker trigger");
 
     this.callback()
       .then((result: any) => {
@@ -46,14 +46,14 @@ export class IntervalWorker extends EventEmitter {
   }
 
   public start(): void {
-    this.logger.verbose("worker start", { intervalMs: this.time });
+    this.logger.debug("worker start", { intervalMs: this.time });
     this.interval = setInterval(() => this.trigger(), this.time);
 
     super.emit(IntervalWorkerEvent.START);
   }
 
   public stop(): void {
-    this.logger.verbose("worker stop");
+    this.logger.debug("worker stop");
 
     if (this.interval) {
       clearInterval(this.interval);
