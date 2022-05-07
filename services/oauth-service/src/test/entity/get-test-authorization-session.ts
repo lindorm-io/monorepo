@@ -33,7 +33,7 @@ export const getTestAuthorizationSession = (
     loginHint: ["test@lindorm.io"],
     maxAge: 999,
     nonce: "xkBpdx5HF1T0fiJL",
-    originalUri: "https://localhost/oauth/authorize?query=query",
+    originalUri: "https://localhost/oauth2/authorize?query=query",
     pkceVerifier: "89fec5f64da748a4b6baae15b73f1345",
     promptModes: [PromptMode.LOGIN, PromptMode.CONSENT],
     redirectData: baseHash(

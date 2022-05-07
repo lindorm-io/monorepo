@@ -91,7 +91,7 @@ describe("/internal/sessions/logout", () => {
         id: logoutSession.id,
         expires_at: "2021-01-02T08:00:00.000Z",
         expires_in: 86400,
-        original_uri: "https://localhost/oauth/sessions/logout?query=query",
+        original_uri: "https://localhost/oauth2/sessions/logout?query=query",
       },
       logout_status: "pending",
     });
@@ -147,7 +147,7 @@ describe("/internal/sessions/logout", () => {
     const url = new URL(response.body.redirect_to);
 
     expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
-    expect(url.pathname).toBe("/oauth/sessions/logout/verify");
+    expect(url.pathname).toBe("/oauth2/sessions/logout/verify");
     expect(url.searchParams.get("session_id")).toStrictEqual(logoutSession.id);
     expect(url.searchParams.get("redirect_uri")).toStrictEqual(logoutSession.redirectUri);
   });

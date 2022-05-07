@@ -13,7 +13,7 @@ Object {
       "expiresAt": "2021-01-02T08:00:00.000Z",
       "expiresIn": 86400,
       "id": "09e75ed3-751f-44f8-82ac-bc797250a793",
-      "originalUri": "https://localhost/oauth/sessions/logout?query=query",
+      "originalUri": "https://localhost/oauth2/sessions/logout?query=query",
     },
     "logoutStatus": "pending",
   },

@@ -5,7 +5,7 @@ import { configuration } from "../configuration";
 export const createAuthorizationVerifyRedirectUri = (
   authorizationSession: AuthorizationSession,
 ): string => {
-  return createURL("/oauth/sessions/authorize/verify", {
+  return createURL("/oauth2/sessions/authorize/verify", {
     baseUrl: configuration.server.host,
     query: {
       sessionId: authorizationSession.id,

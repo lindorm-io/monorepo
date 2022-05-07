@@ -29,7 +29,7 @@ describe("oauthLogoutController", () => {
         client: getTestClient(),
       },
       request: {
-        originalUrl: "/oauth/sessions/logout?query=query",
+        originalUrl: "/oauth2/sessions/logout?query=query",
       },
       token: {
         idToken: {

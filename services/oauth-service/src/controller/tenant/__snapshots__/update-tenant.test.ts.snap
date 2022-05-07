@@ -12,6 +12,7 @@ Array [
       "id": "612edde0-2679-47b1-8fad-d01c8a7570b6",
       "name": "new name",
       "owner": "d7dc7f9f-90f8-4853-9695-933bdff59aff",
+      "revision": 0,
       "subdomain": "new-subdomain",
       "updated": 2021-01-01T08:00:00.000Z,
       "version": 1,

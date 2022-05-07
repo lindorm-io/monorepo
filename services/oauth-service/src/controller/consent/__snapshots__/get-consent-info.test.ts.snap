@@ -8,7 +8,7 @@ Object {
       "expiresAt": "2021-01-02T08:00:00.000Z",
       "expiresIn": 86400,
       "id": "896f2d7b-2205-42b4-b1c6-ec2ac2d22895",
-      "originalUri": "https://localhost/oauth/authorize?query=query",
+      "originalUri": "https://localhost/oauth2/authorize?query=query",
       "promptModes": Array [
         "login",
         "consent",

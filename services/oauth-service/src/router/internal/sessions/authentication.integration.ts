@@ -64,7 +64,7 @@ describe("/internal/sessions/authentication", () => {
         expires_in: 86400,
         identity_id: identityId,
         login_hint: ["test@lindorm.io"],
-        original_uri: "https://localhost/oauth/authorize?query=query",
+        original_uri: "https://localhost/oauth2/authorize?query=query",
         prompt_modes: ["login", "consent"],
         ui_locales: ["sv-SE", "en-GB"],
       },
@@ -137,7 +137,7 @@ describe("/internal/sessions/authentication", () => {
     const url = new URL(response.body.redirect_to);
 
     expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
-    expect(url.pathname).toBe("/oauth/sessions/authorize/verify");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
     expect(url.searchParams.get("session_id")).toBe(authorizationSession.id);
     expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });
@@ -214,7 +214,7 @@ describe("/internal/sessions/authentication", () => {
     const url = new URL(response.body.redirect_to);
 
     expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
-    expect(url.pathname).toBe("/oauth/sessions/authorize/verify");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
     expect(url.searchParams.get("session_id")).toBe(authorizationSession.id);
     expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });

@@ -76,6 +76,7 @@ Array [
       "requiredScopes": Array [
         "openid",
       ],
+      "revision": 0,
       "rtbfUri": "https://new.test.client.com/rtbf",
       "scopeDescriptions": Array [
         Object {
@@ -169,6 +170,7 @@ Array [
       "requiredScopes": Array [
         "openid",
       ],
+      "revision": 0,
       "rtbfUri": "https://new.test.client.com/rtbf",
       "scopeDescriptions": Array [
         Object {

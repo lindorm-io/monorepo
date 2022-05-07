@@ -43,6 +43,7 @@ Array [
         "offline_access",
         "openid",
       ],
+      "revision": 0,
       "rtbfUri": "https://test.client.lindorm.io/rtbf",
       "scopeDescriptions": Array [
         Object {
@@ -107,6 +108,7 @@ Array [
         "offline_access",
         "openid",
       ],
+      "revision": 0,
       "rtbfUri": "https://test.client.lindorm.io/rtbf",
       "scopeDescriptions": Array [
         Object {

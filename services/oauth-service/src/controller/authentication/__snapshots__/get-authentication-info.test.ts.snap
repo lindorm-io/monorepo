@@ -14,7 +14,7 @@ Object {
       "loginHint": Array [
         "test@lindorm.io",
       ],
-      "originalUri": "https://localhost/oauth/authorize?query=query",
+      "originalUri": "https://localhost/oauth2/authorize?query=query",
       "promptModes": Array [
         "login",
         "consent",

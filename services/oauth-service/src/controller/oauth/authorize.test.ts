@@ -64,7 +64,7 @@ describe("oauthAuthorizeController", () => {
         }),
       },
       request: {
-        originalUrl: "/oauth/authorize?query=query",
+        originalUrl: "/oauth2/authorize?query=query",
       },
       token: {
         idToken: {
@@ -134,7 +134,7 @@ describe("oauthAuthorizeController", () => {
         loginHint: ["test@lindorm.io", "+46705498721", "identity_username"],
         maxAge: 500,
         nonce: "J2qVbRKmMg1UPCty",
-        originalUri: "https://oauth.test.api.lindorm.io/oauth/authorize?query=query",
+        originalUri: "https://oauth.test.api.lindorm.io/oauth2/authorize?query=query",
         pkceVerifier: "pkceVerifier",
         promptModes: ["login", "consent"],
         redirectUri: "https://test.lindorm.io/redirect",
@@ -192,7 +192,7 @@ describe("oauthAuthorizeController", () => {
         loginHint: [],
         maxAge: null,
         nonce: "6LN9WV959LfBXLk1",
-        originalUri: "https://oauth.test.api.lindorm.io/oauth/authorize?query=query",
+        originalUri: "https://oauth.test.api.lindorm.io/oauth2/authorize?query=query",
         pkceVerifier: null,
         promptModes: [],
         redirectUri: "https://test.lindorm.io/redirect",
