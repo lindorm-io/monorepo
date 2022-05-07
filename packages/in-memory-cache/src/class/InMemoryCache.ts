@@ -4,8 +4,11 @@ import { LindormError } from "@lindorm-io/errors";
 
 export type FetchDataFunction<Data> = (data: Map<string, Data>) => Promise<Map<string, Data>>;
 
+export type GetKeyFunction<Data> = (data: Data) => string;
+
 export interface InMemoryCacheOptions<Data> {
   fetchDataFunction: FetchDataFunction<Data>;
+  getKeyFunction: GetKeyFunction<Data>;
   intervalTick?: number;
   intervalTimeout?: number;
   logger: Logger;
@@ -22,6 +25,7 @@ export interface InMemoryCacheStatus {
 
 export class InMemoryCache<Data> {
   private readonly fetchDataFunction: FetchDataFunction<Data>;
+  private readonly getKeyFunction: GetKeyFunction<Data>;
   private readonly intervalTick: number;
   private readonly intervalTimeout: number;
   private readonly ttl: number;
@@ -36,6 +40,7 @@ export class InMemoryCache<Data> {
 
     this.data = new Map<string, Data>();
     this.fetchDataFunction = options.fetchDataFunction;
+    this.getKeyFunction = options.getKeyFunction;
     this.fetching = false;
     this.intervalTick = options.intervalTick || 100;
     this.intervalTimeout = options.intervalTimeout || 10000;
@@ -58,12 +63,17 @@ export class InMemoryCache<Data> {
     return this.data.get(key);
   }
 
-  public set(key: string, data: Data): void {
-    this.data.set(key, data);
+  public set(data: Data): Data {
+    this.data.set(this.getKeyFunction(data), data);
+    return data;
   }
 
   public delete(key: string): void {
     this.data.delete(key);
+  }
+
+  public destroy(data: Data): void {
+    this.data.delete(this.getKeyFunction(data));
   }
 
   public scan(): Array<Data> {
