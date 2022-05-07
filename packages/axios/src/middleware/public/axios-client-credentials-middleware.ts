@@ -21,7 +21,7 @@ export const axiosClientCredentialsMiddleware = (middlewareOptions: MiddlewareOp
     clientSecret,
     clientVersion,
     grantType = "client_credentials",
-    path = "/oauth/token",
+    path = "/oauth2/token",
     timeoutAdjustment = 5,
   } = middlewareOptions;
 
