@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-axios",
   "description": "Axios Request Handler middleware for @lindorm-io/koa applications",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@lindorm-io/axios": "^0.2.10",
-    "@lindorm-io/koa": "^0.9.0",
+    "@lindorm-io/koa": "^0.9.1",
     "@lindorm-io/winston": "^0.1.11",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0"
