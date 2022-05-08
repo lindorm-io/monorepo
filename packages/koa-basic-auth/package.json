@@ -31,7 +31,7 @@
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-router": "^7.4.4",
-    "@types/lodash": "^4.14.181",
+    "@types/lodash": "^4.14.182",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0"
   }

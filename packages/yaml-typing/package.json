@@ -22,7 +22,7 @@
     "generate-typing": "dist/program.js"
   },
   "dependencies": {
-    "commander": "^9.1.0",
+    "commander": "^9.2.0",
     "js-yaml": "^4.1.0",
     "quicktype-core": "^6.0.71"
   },

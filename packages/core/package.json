@@ -24,7 +24,7 @@
     "random-number-csprng": "^1.0.2"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.181",
+    "@types/lodash": "^4.14.182",
     "@types/random-number-csprng": "^1.0.0"
   }
 }

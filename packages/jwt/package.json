@@ -28,6 +28,6 @@
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^8.5.6",
-    "@types/lodash": "^4.14.181"
+    "@types/lodash": "^4.14.182"
   }
 }
