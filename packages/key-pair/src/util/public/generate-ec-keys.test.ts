@@ -1,40 +1,24 @@
 import { generateEcKeys } from "./generate-ec-keys";
-import { Algorithm, NamedCurve } from "../../enum";
+import { generateKeyPair as _generateKeyPair } from "crypto";
 
-describe("generateECCKeys", () => {
-  test("should generate with default options", async () => {
-    const result = await generateEcKeys();
+jest.mock("crypto");
 
-    expect(result.algorithms).toStrictEqual([Algorithm.ES512]);
+const generateKeyPair = _generateKeyPair as unknown as jest.Mock;
 
-    expect(result.publicKey).toContain("-----BEGIN PUBLIC KEY-----");
-    expect(result.publicKey).toContain("-----END PUBLIC KEY-----");
-    expect(result.publicKey.length).toBe(268);
+describe("generateRSAKeys", () => {
+  test("should resolve", async () => {
+    generateKeyPair.mockImplementation((_1: never, _2: never, callback: any) =>
+      callback(null, "PUBLIC_KEY", "PRIVATE_KEY"),
+    );
 
-    expect(result.privateKey).toContain("-----BEGIN PRIVATE KEY-----");
-    expect(result.privateKey).toContain("-----END PRIVATE KEY-----");
-    expect(result.privateKey.length).toBe(384);
+    await expect(generateEcKeys()).resolves.toMatchSnapshot();
   });
 
-  test("should generate with namedCurve P-384", async () => {
-    const result = await generateEcKeys({
-      namedCurve: NamedCurve.P384,
-    });
+  test("should reject", async () => {
+    generateKeyPair.mockImplementation((_1: never, _2: never, callback: any) =>
+      callback(new Error("Error")),
+    );
 
-    expect(result.algorithms).toStrictEqual([Algorithm.ES384]);
-
-    expect(result.publicKey.length).toBe(215);
-    expect(result.privateKey.length).toBe(306);
-  });
-
-  test("should generate with namedCurve P-256", async () => {
-    const result = await generateEcKeys({
-      namedCurve: NamedCurve.P256,
-    });
-
-    expect(result.algorithms).toStrictEqual([Algorithm.ES256]);
-
-    expect(result.publicKey.length).toBe(178);
-    expect(result.privateKey.length).toBe(241);
+    await expect(generateEcKeys()).rejects.toThrow(Error);
   });
 });

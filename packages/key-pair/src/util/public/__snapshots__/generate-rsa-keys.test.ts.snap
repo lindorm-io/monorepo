@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generateRSAKeys should resolve 1`] = `
+Object {
+  "algorithms": Array [
+    "RS256",
+    "RS384",
+    "RS512",
+  ],
+  "passphrase": "",
+  "privateKey": "PRIVATE_KEY",
+  "publicKey": "PUBLIC_KEY",
+  "type": "RSA",
+}
+`;
