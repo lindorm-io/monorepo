@@ -1,5 +1,5 @@
 import { LoginSession, FlowSession } from "../../../entity";
-import { ClientScope } from "../../../common";
+import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomString } from "@lindorm-io/core";
@@ -42,17 +42,14 @@ export const initialiseSessionAcceptWithCodeFlow = async (
 
   await flowSessionCache.update(flowSession);
 
+  const data: EmitSocketEventRequestData = {
+    channels: { sessions: loginSession.sessions },
+    content: { id: flowSession.id, flowToken },
+    event: "authentication:session-code",
+  };
+
   await communicationClient.post("/internal/socket/emit", {
-    data: {
-      channels: {
-        sessions: loginSession.sessions,
-      },
-      content: {
-        id: flowSession.id,
-        flowToken,
-      },
-      event: "authentication:session-code",
-    },
+    data,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 

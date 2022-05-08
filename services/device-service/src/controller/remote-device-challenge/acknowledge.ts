@@ -4,7 +4,14 @@ import { Controller, ControllerResponse } from "@lindorm-io/koa";
 import { TokenType } from "../../enum";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { difference } from "lodash";
-import { ClientScope, JOI_GUID, RdcSessionMode, SessionStatus, SubjectHint } from "../../common";
+import {
+  ClientScope,
+  EmitSocketEventRequestData,
+  JOI_GUID,
+  RdcSessionMode,
+  SessionStatus,
+  SubjectHint,
+} from "../../common";
 
 interface RequestData {
   id: string;
@@ -80,17 +87,14 @@ export const acknowledgeRdcController: Controller<Context<RequestData>> = async 
   const deviceLinks = difference(rdcSession.deviceLinks, [linkId]);
 
   if (mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
+    const data: EmitSocketEventRequestData = {
+      channels: { deviceLinks, identities: [identityId] },
+      content: { id },
+      event: "rdcSession:acknowledged",
+    };
+
     await communicationClient.post("/internal/socket/emit", {
-      data: {
-        event: "rdcSession:acknowledged",
-        channels: {
-          deviceLinks,
-          identities: [identityId],
-        },
-        content: {
-          id,
-        },
-      },
+      data,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
       ],

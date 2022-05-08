@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession, Identity } from "../../entity";
 import { Context } from "../../types";
-import { IdentifierType } from "../../common";
+import { IdentifierType, SendEmailRequestData, SendSmsRequestData } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../configuration";
 import { argon } from "../../instance";
@@ -37,21 +37,27 @@ export const initialiseConnectSession = async (
     expiresIn,
   );
 
-  let data: Record<string, any>;
+  let emailData: SendEmailRequestData;
+  let smsData: SendSmsRequestData;
   let send: string;
-  let templateName: string;
 
   switch (type) {
     case IdentifierType.EMAIL:
-      data = { email: identifier };
       send = "email";
-      templateName = "connect-email";
+      emailData = {
+        content: { expiresIn, otp: code },
+        template: "connect-email",
+        to: identifier,
+      };
       break;
 
     case IdentifierType.PHONE:
-      data = { phoneNumber: identifier };
       send = "sms";
-      templateName = "connect-phone";
+      smsData = {
+        content: { expiresIn, otp: code },
+        template: "connect-phone",
+        to: identifier,
+      };
       break;
 
     default:
@@ -59,12 +65,7 @@ export const initialiseConnectSession = async (
   }
 
   await communicationClient.post(`/internal/send/${send}`, {
-    data: {
-      code,
-      expiresIn,
-      templateName,
-      ...data,
-    },
+    data: send === "email" ? emailData : smsData,
     middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 

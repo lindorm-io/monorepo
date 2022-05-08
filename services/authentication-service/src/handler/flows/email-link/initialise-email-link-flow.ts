@@ -1,5 +1,5 @@
 import { LoginSession, FlowSession } from "../../../entity";
-import { ClientScope } from "../../../common";
+import { ClientScope, SendEmailRequestData } from "../../../common";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomString } from "@lindorm-io/core";
@@ -36,14 +36,18 @@ export const initialiseEmailLinkFlow = async (
 
   const { expiresIn } = getExpires(flowSession.expires);
 
-  await communicationClient.post("/internal/send/email", {
-    data: {
+  const data: SendEmailRequestData = {
+    content: {
       code: flowSession.code,
-      email,
       expiresIn,
-      template: "auth-email-link",
       flowToken,
     },
+    template: "auth-email-link",
+    to: email,
+  };
+
+  await communicationClient.post("/internal/send/email", {
+    data,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
     ],

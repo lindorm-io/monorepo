@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ClientScope, RdcSessionMode } from "../../common";
+import { ClientScope, EmitSocketEventRequestData, RdcSessionMode } from "../../common";
 import { Context } from "../../types";
 import { RdcSession, RdcSessionAttributes } from "../../entity";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -93,17 +93,14 @@ export const createRdcSession = async (
   const { id } = rdcSession;
 
   if (mode === RdcSessionMode.PUSH_NOTIFICATION) {
+    const data: EmitSocketEventRequestData = {
+      channels: { deviceLinks, identities: [identityId] },
+      content: { id },
+      event: "rdcSession:created",
+    };
+
     await communicationClient.post("/internal/socket/emit", {
-      data: {
-        event: "rdcSession:created",
-        channels: {
-          deviceLinks,
-          identities: [identityId],
-        },
-        content: {
-          id,
-        },
-      },
+      data,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
       ],

@@ -1,5 +1,5 @@
 import { LoginSession, FlowSession } from "../../../entity";
-import { ClientScope } from "../../../common";
+import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { Context, FlowHandlerInitialiseOptions } from "../../../types";
 import { ServerError } from "@lindorm-io/errors";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -38,16 +38,14 @@ export const initialiseSessionOtpFlow = async (
 
   await flowSessionCache.update(flowSession);
 
+  const data: EmitSocketEventRequestData = {
+    channels: { sessions: loginSession.sessions },
+    content: { otp: flowSession.otp },
+    event: "authentication:session-otp",
+  };
+
   await communicationClient.post("/internal/socket/emit", {
-    data: {
-      channels: {
-        sessions: loginSession.sessions,
-      },
-      content: {
-        otp: flowSession.otp,
-      },
-      event: "authentication:session-otp",
-    },
+    data,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 };

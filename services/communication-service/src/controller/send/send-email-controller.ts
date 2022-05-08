@@ -1,21 +1,15 @@
 import Joi from "joi";
 import { Context } from "../../types";
 import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { JOI_EMAIL } from "../../common";
+import { JOI_EMAIL, SendEmailRequestData } from "../../common";
 
-interface RequestData {
-  content: Record<string, unknown>;
-  template: string;
-  to: string;
-}
-
-export const sendEmailSchema = Joi.object<RequestData>().keys({
+export const sendEmailSchema = Joi.object<SendEmailRequestData>().keys({
   content: Joi.object().required(),
   template: Joi.string().required(),
   to: JOI_EMAIL.required(),
 });
 
-export const sendEmailController: Controller<Context<RequestData>> = async (
+export const sendEmailController: Controller<Context<SendEmailRequestData>> = async (
   ctx,
 ): ControllerResponse => {
   const { data, logger } = ctx;

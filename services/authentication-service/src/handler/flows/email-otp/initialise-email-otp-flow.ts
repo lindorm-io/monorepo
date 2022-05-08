@@ -1,4 +1,4 @@
-import { ClientScope } from "../../../common";
+import { ClientScope, SendEmailRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
@@ -36,13 +36,17 @@ export const initialiseEmailOtpFlow = async (
 
   const { expiresIn } = getExpires(flowSession.expires);
 
-  await communicationClient.post("/internal/send/email", {
-    data: {
-      email,
+  const data: SendEmailRequestData = {
+    content: {
       expiresIn,
       otp: flowSession.otp,
-      template: "auth-email-otp",
     },
+    template: "auth-email-otp",
+    to: email,
+  };
+
+  await communicationClient.post("/internal/send/email", {
+    data,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
     ],
