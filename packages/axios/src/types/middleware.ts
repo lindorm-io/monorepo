@@ -1,8 +1,7 @@
-import { AnyObject } from "./util";
 import { AxiosRequest, AxiosResponse, RequestConfig, RequestOptions } from "./axios";
 import { IAxiosRequestError } from "../error";
 
-export interface AxiosMiddleware<Data = AnyObject> {
+export interface AxiosMiddleware<Data = Record<string, any>> {
   config?: (config: RequestConfig) => Promise<RequestConfig>;
   error?: (error: IAxiosRequestError) => Promise<IAxiosRequestError>;
   request?: (request: AxiosRequest) => Promise<AxiosRequest>;

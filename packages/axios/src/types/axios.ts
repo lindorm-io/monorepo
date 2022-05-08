@@ -1,4 +1,3 @@
-import { AnyObject } from "./util";
 import { AxiosBasicCredentials as BasicCredentials, Method } from "axios";
 import { AxiosMiddleware } from "./middleware";
 import { Logger } from "@lindorm-io/winston";
@@ -21,15 +20,15 @@ export interface AxiosConfig {
 }
 
 export interface AxiosRequest {
-  data?: AnyObject;
-  headers?: AnyObject;
-  params?: AnyObject;
-  query?: AnyObject;
+  data?: Record<string, any>;
+  headers?: Record<string, any>;
+  params?: Record<string, any>;
+  query?: Record<string, any>;
 }
 
 export interface AxiosResponse<ResponseData> {
   data: ResponseData;
-  headers: AnyObject;
+  headers: Record<string, any>;
   status?: number;
   statusText?: string;
 }

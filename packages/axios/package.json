@@ -20,7 +20,7 @@
   "dependencies": {
     "@lindorm-io/core": "^0.3.0",
     "@lindorm-io/errors": "^0.1.12",
-    "axios": "0.26.1",
+    "axios": "0.27.2",
     "date-fns": "^2.25.0",
     "lodash": "4.17.21"
   },
@@ -29,6 +29,6 @@
   },
   "devDependencies": {
     "@lindorm-io/winston": "^0.1.11",
-    "@types/lodash": "^4.14.181"
+    "@types/lodash": "^4.14.182"
   }
 }

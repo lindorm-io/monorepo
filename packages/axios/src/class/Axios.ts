@@ -13,7 +13,6 @@ import {
   AxiosResponse,
   RequestConfig,
   RequestOptions,
-  Unknown,
 } from "../types";
 
 export class Axios {
@@ -29,7 +28,7 @@ export class Axios {
     this.name = options.name || null;
   }
 
-  public async get<Data = Unknown>(
+  public async get<Data = Record<string, any>>(
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
@@ -40,35 +39,35 @@ export class Axios {
     return this.createRequest<Data>({ method: "get", path }, options);
   }
 
-  public async post<Data = Unknown>(
+  public async post<Data = Record<string, any>>(
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
     return this.createRequest<Data>({ method: "post", path }, options);
   }
 
-  public async put<Data = Unknown>(
+  public async put<Data = Record<string, any>>(
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
     return this.createRequest<Data>({ method: "put", path }, options);
   }
 
-  public async patch<Data = Unknown>(
+  public async patch<Data = Record<string, any>>(
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
     return this.createRequest<Data>({ method: "patch", path }, options);
   }
 
-  public async delete<Data = Unknown>(
+  public async delete<Data = Record<string, any>>(
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
     return this.createRequest<Data>({ method: "delete", path }, options);
   }
 
-  public async request<Data = Unknown>(
+  public async request<Data = Record<string, any>>(
     method: Method,
     path: string,
     options: RequestOptions = {},

@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
 import { AxiosRequestError } from "../error";
 
-export const convertError = (error: AxiosError): AxiosRequestError => {
+export const convertError = (error: AxiosError<any>): AxiosRequestError => {
   const lindormKoaError = error?.response?.data?.error || {};
   const message = error.message || "Axios Request Handler encountered an error";
 

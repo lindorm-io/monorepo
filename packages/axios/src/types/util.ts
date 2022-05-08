@@ -1,8 +1,5 @@
 import { Logger } from "@lindorm-io/winston";
 
-export type AnyObject = Record<string, any>;
-export type Unknown = Record<string, unknown>;
-
 export interface ResponseTime {
   axios: number;
   server: number | undefined;

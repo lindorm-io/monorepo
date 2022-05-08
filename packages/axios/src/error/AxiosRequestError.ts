@@ -1,24 +1,24 @@
 import { LindormError, LindormErrorOptions, ILindormError } from "@lindorm-io/errors";
-import { AxiosConfig, AxiosRequest, AxiosResponse, Unknown } from "../types";
+import { AxiosConfig, AxiosRequest, AxiosResponse } from "../types";
 
 export interface IAxiosRequestError extends ILindormError {
   readonly config: AxiosConfig;
   readonly request: AxiosRequest;
-  readonly response: AxiosResponse<Unknown>;
+  readonly response: AxiosResponse<Record<string, any>>;
   readonly statusCode: number;
 }
 
 export interface AxiosRequestErrorOptions extends LindormErrorOptions {
   config: AxiosConfig;
   request: AxiosRequest;
-  response: AxiosResponse<Unknown>;
+  response: AxiosResponse<Record<string, any>>;
   statusCode: number;
 }
 
 export class AxiosRequestError extends LindormError {
   public readonly config: AxiosConfig;
   public readonly request: AxiosRequest;
-  public readonly response: AxiosResponse<Unknown>;
+  public readonly response: AxiosResponse<Record<string, any>>;
   public readonly statusCode: number;
 
   public constructor(message: string, options: AxiosRequestErrorOptions) {
