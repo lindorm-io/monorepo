@@ -2,10 +2,10 @@ import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession, Identity } from "../../entity";
 import { Context } from "../../types";
 import { IdentifierType, SendEmailRequestData, SendSmsRequestData } from "../../common";
+import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../configuration";
-import { argon } from "../../instance";
-import { getRandomNumber, stringToSeconds } from "@lindorm-io/core";
+import { getRandomNumberAsync, stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
   identifier: string;
@@ -25,7 +25,7 @@ export const initialiseConnectSession = async (
   const { identifier, type } = options;
 
   const expiresIn = stringToSeconds(configuration.expiry.connect_identifier_session);
-  const code = getRandomNumber(6).toString().padStart(6, "0");
+  const code = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
 
   const session = await connectSessionCache.create(
     new ConnectSession({
