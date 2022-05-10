@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/core",
   "description": "Core utilities and files for lindorm.io",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,7 +18,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/errors": "^0.1.12",
+    "@lindorm-io/errors": "^0.1.13",
     "date-fns": "^2.26.0",
     "lodash": "^4.17.21",
     "random-number-csprng": "^1.0.2"

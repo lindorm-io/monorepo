@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.9.1...@lindorm-io/koa@0.10.0) (2022-05-10)
+
+
+### Bug Fixes
+
+* update log levels ([62cf31b](https://github.com/lindorm-io/monorepo/commit/62cf31b40aa35673b5498287881b3ad9cdd13f02))
+
+
+### Features
+
+* create addWorkers method for koa app ([f442fe5](https://github.com/lindorm-io/monorepo/commit/f442fe558e3634307eb92feb129e88af9b194912))
+
+
+
+
+
 ## [0.9.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.9.0...@lindorm-io/koa@0.9.1) (2022-05-07)
 
 
