@@ -1,4 +1,5 @@
 import { LogLevel } from "../enum";
+import { WinstonError } from "../error";
 import { WinstonInstance } from "./WinstonInstance";
 import { clone, isArray, isObject, isString } from "lodash";
 import {
@@ -101,7 +102,7 @@ export class Logger {
 
   public createChildLogger(context: ChildLoggerContext): Logger {
     if (!isString(context) && !isArray(context)) {
-      throw new Error("Invalid logger context");
+      throw new WinstonError("Invalid logger context");
     }
 
     return new Logger({ context, parent: this });
@@ -109,11 +110,11 @@ export class Logger {
 
   public createSessionLogger(session: Record<string, any>): Logger {
     if (!isObject(session)) {
-      throw new Error("Invalid logger session");
+      throw new WinstonError("Invalid logger session");
     }
 
     if (this.session) {
-      throw new Error("Logger session already exists");
+      throw new WinstonError("Logger session already exists");
     }
 
     return new Logger({ session, parent: this });
@@ -121,7 +122,7 @@ export class Logger {
 
   public addSessionMetadata(metadata: SessionMetadata): void {
     if (!this.session) {
-      throw new Error("Logger session not found");
+      throw new WinstonError("Logger session not found");
     }
 
     this.session = {
