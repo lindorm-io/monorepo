@@ -22,14 +22,14 @@ import {
   utilContextMiddleware,
 } from "../middleware/private";
 
-interface Options {
+export interface KoaAppOptions {
   environment?: Environment;
   domain?: string;
   host: string;
   keys?: Array<string>;
   logger: Logger;
   port: number;
-  setup?: () => Promise<void>;
+  setup?(): Promise<void>;
 }
 
 export class KoaApp {
@@ -47,7 +47,7 @@ export class KoaApp {
   private loaded: boolean;
   private started: boolean;
 
-  public constructor(options: Options) {
+  public constructor(options: KoaAppOptions) {
     this.koa = new Koa();
     this.koaRouter = new Router();
 
@@ -134,6 +134,12 @@ export class KoaApp {
 
   public addWorker(worker: IntervalWorker): void {
     this.workers.push(worker);
+  }
+
+  public addWorkers(workers: Array<IntervalWorker>): void {
+    for (const worker of workers) {
+      this.addWorker(worker);
+    }
   }
 
   public load(): void {
