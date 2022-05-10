@@ -1,13 +1,13 @@
 import * as winston from "winston";
 import { Filter, LogOptions, WinstonInstanceOptions, FilterCallback, LogDetails } from "../types";
+import { LogLevel } from "../enum";
+import { clone, get, includes, isError, isObject, set } from "lodash";
+import { defaultFilterCallback, readableFormat } from "../util";
 import {
   HttpTransportOptions,
   StreamTransportOptions,
   FileTransportOptions,
 } from "winston/lib/winston/transports";
-import { LogLevel } from "../enum";
-import { clone, get, includes, isError, isObject, set } from "lodash";
-import { defaultFilterCallback, readableFormat } from "../util";
 
 export class WinstonInstance {
   private readonly filter: Array<Filter>;

@@ -1,11 +1,11 @@
-import fastSafeStringify from "fast-safe-stringify";
+import { LogLevel } from "../enum";
+import { WinstonInstance } from "./WinstonInstance";
+import { clone, isArray, isObject, isString } from "lodash";
 import {
   HttpTransportOptions,
   StreamTransportOptions,
   FileTransportOptions,
 } from "winston/lib/winston/transports";
-import { LogLevel } from "../enum";
-import { LoggerError } from "../error";
 import {
   LoggerOptions,
   ChildLoggerContext,
@@ -13,9 +13,6 @@ import {
   LogDetails,
   SessionMetadata,
 } from "../types";
-import { WinstonInstance } from "./WinstonInstance";
-import { clone, isArray, isString } from "lodash";
-import { isObjectStrict } from "@lindorm-io/core";
 
 export class Logger {
   private readonly context: Array<string>;
@@ -104,25 +101,19 @@ export class Logger {
 
   public createChildLogger(context: ChildLoggerContext): Logger {
     if (!isString(context) && !isArray(context)) {
-      throw new LoggerError("Invalid logger context", {
-        debug: { context },
-      });
+      throw new Error("Invalid logger context");
     }
 
     return new Logger({ context, parent: this });
   }
 
   public createSessionLogger(session: Record<string, any>): Logger {
-    if (!isObjectStrict(session)) {
-      throw new LoggerError("Invalid logger session", {
-        debug: { session: fastSafeStringify(session) },
-      });
+    if (!isObject(session)) {
+      throw new Error("Invalid logger session");
     }
 
     if (this.session) {
-      throw new LoggerError("Logger session already exists", {
-        debug: { session: fastSafeStringify(this.session) },
-      });
+      throw new Error("Logger session already exists");
     }
 
     return new Logger({ session, parent: this });
@@ -130,9 +121,7 @@ export class Logger {
 
   public addSessionMetadata(metadata: SessionMetadata): void {
     if (!this.session) {
-      throw new LoggerError("Logger session not found", {
-        debug: { session: this.session },
-      });
+      throw new Error("Logger session not found");
     }
 
     this.session = {
