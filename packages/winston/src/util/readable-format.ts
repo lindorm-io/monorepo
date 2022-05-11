@@ -1,47 +1,51 @@
-import chalk from "chalk";
+import chalk, { Chalk } from "chalk";
 import fastSafeStringify from "fast-safe-stringify";
 import { ExtendableError } from "@lindorm-io/errors";
 import { LogLevel } from "../enum";
+import { TransformableInfo } from "logform";
 import { inspect } from "util";
 import { isError, isObject } from "lodash";
+
+const colourise = (chalk: Chalk, colours: boolean, input: string) =>
+  colours ? chalk(input) : input;
 
 const sanitize = (object: Record<string, any>): Record<string, any> => {
   return JSON.parse(fastSafeStringify(object));
 };
 
-const formatLevel = (level: string): string => {
+const formatLevel = (level: string, colours: boolean): string => {
   switch (level) {
     case LogLevel.ERROR:
-      return chalk.red(level.toUpperCase());
+      return colourise(chalk.red, colours, level.toUpperCase());
     case LogLevel.WARN:
-      return chalk.yellow(level.toUpperCase());
+      return colourise(chalk.yellow, colours, level.toUpperCase());
     case LogLevel.INFO:
-      return chalk.green(level.toUpperCase());
+      return colourise(chalk.green, colours, level.toUpperCase());
     case LogLevel.VERBOSE:
-      return chalk.cyan(level.toUpperCase());
+      return colourise(chalk.cyan, colours, level.toUpperCase());
     case LogLevel.DEBUG:
-      return chalk.blueBright(level.toUpperCase());
+      return colourise(chalk.blueBright, colours, level.toUpperCase());
     case LogLevel.SILLY:
-      return chalk.grey(level.toUpperCase());
+      return colourise(chalk.grey, colours, level.toUpperCase());
     default:
-      return chalk.whiteBright(level.toUpperCase());
+      return colourise(chalk.whiteBright, colours, level.toUpperCase());
   }
 };
 
-const levelColor = (level: string, input: string): string => {
+const levelColor = (level: string, colours: boolean, input: string): string => {
   switch (level) {
     case LogLevel.ERROR:
-      return chalk.red(input);
+      return colourise(chalk.red, colours, input);
     case LogLevel.WARN:
-      return chalk.yellow(input);
+      return colourise(chalk.yellow, colours, input);
     default:
-      return chalk.whiteBright(input);
+      return colourise(chalk.whiteBright, colours, input);
   }
 };
 
-const formatContent = (details: Record<string, any>, colors?: boolean): string => {
+const formatContent = (details: Record<string, any>, colours: boolean): string => {
   return inspect(sanitize(details), {
-    colors: colors !== false,
+    colors: colours !== false,
     depth: Infinity,
     compact: 5,
     breakLength: process.stdout.columns ? process.stdout.columns - 10 : 140,
@@ -49,41 +53,47 @@ const formatContent = (details: Record<string, any>, colors?: boolean): string =
   });
 };
 
-export const readableFormat = (msg: any): string => {
-  if (!msg.time || !msg.context) {
-    return formatContent(msg, false);
+export const readableFormat = (info: TransformableInfo, colours: boolean): string => {
+  if (!info.time || !info.context) {
+    return formatContent(info, false);
   }
 
   try {
-    const time = chalk.black(msg.time.toISOString());
-    const level = formatLevel(msg.level);
-    const message = levelColor(msg.level, msg.message);
+    const time = colourise(chalk.black, colours, info.time.toISOString());
+    const level = formatLevel(info.level, colours);
+    const message = levelColor(info.level, colours, info.message);
 
-    const context = msg.context.length ? chalk.black(` [ ${msg.context.join(":")} ]`) : "";
+    const context = info.context.length
+      ? colourise(chalk.black, colours, ` [ ${info.context.join(":")} ]`)
+      : "";
 
     const formatted = `${time}  ${level}${chalk.black(":")} ${message}${context}`;
 
-    if (isError(msg.details)) {
-      if (msg.details instanceof ExtendableError) {
-        const { id, errors, stack, ...rest } = msg.details;
+    if (isError(info.details)) {
+      if (info.details instanceof ExtendableError) {
+        const { errors, stack, ...rest } = info.details as any;
         const details = formatContent(rest, false);
 
-        return `${formatted}\n${chalk.red(stack)}\n${chalk.red(details)}`;
+        return `${formatted}\n${colourise(chalk.red, colours, stack)}\n${colourise(
+          chalk.red,
+          colours,
+          details,
+        )}`;
       }
 
-      const details = msg.details.stack ? msg.details.stack : msg.details;
+      const details = info.details.stack ? info.details.stack : info.details;
 
-      return `${formatted}\n${chalk.red(details)}`;
+      return `${formatted}\n${colourise(chalk.red, colours, details as string)}`;
     }
 
-    if (isObject(msg.details)) {
-      const details = formatContent(msg.details);
+    if (isObject(info.details)) {
+      const details = formatContent(info.details, colours);
       return `${formatted}\n${details}`;
     }
 
     return formatted;
   } catch (err) {
     console.error("error when formatting message", err);
-    return fastSafeStringify(msg);
+    return fastSafeStringify(info);
   }
 };

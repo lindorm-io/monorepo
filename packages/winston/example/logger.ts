@@ -43,3 +43,9 @@ session.info("this will be displayed because it is a child of child1");
 logger.setFocus(null);
 
 child2.info("this will be displayed because focus is restored to null");
+
+const logger2 = new Logger();
+
+logger2.addConsole(LogLevel.INFO, true, false);
+
+logger2.info("this will not have any colour", { details: "data" });

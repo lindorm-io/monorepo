@@ -43,12 +43,14 @@ export class WinstonInstance {
     this.focus = focus || null;
   }
 
-  public addConsole(level: LogLevel = LogLevel.DEBUG, readable = false): void {
+  public addConsole(level: LogLevel = LogLevel.DEBUG, readable = false, colour = true): void {
     this.winston.add(
       new winston.transports.Console({
         handleExceptions: true,
         level,
-        format: readable ? winston.format.printf(readableFormat) : winston.format.json(),
+        format: readable
+          ? winston.format.printf((info) => readableFormat(info, colour))
+          : winston.format.json(),
       }),
     );
   }

@@ -139,8 +139,8 @@ export class Logger {
     this.winston.setFocus(focus);
   }
 
-  public addConsole(level: LogLevel = LogLevel.DEBUG, readable?: boolean): void {
-    this.winston.addConsole(level, readable);
+  public addConsole(level: LogLevel = LogLevel.DEBUG, readable?: boolean, colours?: boolean): void {
+    this.winston.addConsole(level, readable, colours);
   }
 
   public addFileTransport(level: LogLevel = LogLevel.DEBUG, options?: FileTransportOptions): void {
