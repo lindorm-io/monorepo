@@ -1,6 +1,7 @@
-import { extname, join } from "path";
-import { load } from "js-yaml";
 import { existsSync, mkdirSync, readdirSync, readFileSync } from "fs";
+import { extname, join } from "path";
+import { includes } from "lodash";
+import { load } from "js-yaml";
 
 interface Options {
   root: string;
@@ -22,7 +23,7 @@ export const readYamlFiles = (read: string, options: Partial<Options> = {}): Arr
   for (const file of files) {
     const ext = extname(file);
 
-    if (!extensions.includes(ext)) continue;
+    if (!includes(extensions, ext)) continue;
 
     const doc = load(readFileSync(join(readDir, file), "utf8"));
 

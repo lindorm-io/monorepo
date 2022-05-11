@@ -1,10 +1,11 @@
 import { createWriteStream, existsSync, mkdirSync } from "fs";
+import { includes, startsWith } from "lodash";
 import { join } from "path";
 
 const getModifiedLine = (line: string, fileName: string, requireAll: boolean): string => {
   let result = line + "\n";
 
-  if (line.startsWith("export interface") && !line.includes(fileName)) {
+  if (startsWith(line, "export interface") && !includes(line, fileName)) {
     result = result.replace("export ", "");
   }
 
