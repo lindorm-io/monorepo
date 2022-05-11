@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.2.0...@lindorm-io/winston@0.2.1) (2022-05-11)
+
+
+### Bug Fixes
+
+* add logger transport options ([33d6ab0](https://github.com/lindorm-io/monorepo/commit/33d6ab0cf950fe45a06f15bc68ddb692e7a57ae0))
+
+
+
+
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.1.13...@lindorm-io/winston@0.2.0) (2022-05-11)
 
 
