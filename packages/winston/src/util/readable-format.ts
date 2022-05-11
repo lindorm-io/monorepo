@@ -2,7 +2,7 @@ import chalk, { Chalk } from "chalk";
 import fastSafeStringify from "fast-safe-stringify";
 import { ExtendableError } from "@lindorm-io/errors";
 import { LogLevel } from "../enum";
-import { LoggerMessage } from "../types";
+import { LoggerMessage, LoggerTransportOptions } from "../types";
 import { inspect } from "util";
 import { isError, isObject } from "lodash";
 
@@ -53,13 +53,19 @@ const formatContent = (details: Record<string, any>, colours: boolean): string =
   });
 };
 
-export const readableFormat = (info: LoggerMessage, colours: boolean): string => {
+export const readableFormat = (
+  info: LoggerMessage,
+  options: Partial<LoggerTransportOptions>,
+): string => {
+  const { colours, timestamp } = options;
+
   if (!info.time || !info.context) {
     return formatContent(info, false);
   }
 
   try {
     const time = colourise(chalk.black, colours, info.time.toISOString());
+    const colon = colourise(chalk.black, colours, ":");
     const level = formatLevel(info.level, colours);
     const message = levelColor(info.level, colours, info.message);
 
@@ -67,7 +73,8 @@ export const readableFormat = (info: LoggerMessage, colours: boolean): string =>
       ? colourise(chalk.black, colours, ` [ ${info.context.join(":")} ]`)
       : "";
 
-    const formatted = `${time}  ${level}${chalk.black(":")} ${message}${context}`;
+    const content = `${level}${colon} ${message}${context}`;
+    const formatted = timestamp ? `${time}  ${content}` : content;
 
     if (isError(info.details)) {
       if (info.details instanceof ExtendableError) {

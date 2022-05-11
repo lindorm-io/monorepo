@@ -29,3 +29,9 @@ export interface LoggerOptions extends WinstonInstanceOptions {
   parent?: Logger;
   session?: Record<string, any>;
 }
+
+export interface LoggerTransportOptions {
+  readable: boolean;
+  colours: boolean;
+  timestamp: boolean;
+}

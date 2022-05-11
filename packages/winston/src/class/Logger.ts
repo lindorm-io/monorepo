@@ -13,6 +13,7 @@ import {
   FilterCallback,
   LogDetails,
   SessionMetadata,
+  LoggerTransportOptions,
 } from "../types";
 
 export class Logger {
@@ -139,8 +140,11 @@ export class Logger {
     this.winston.setFocus(focus);
   }
 
-  public addConsole(level: LogLevel = LogLevel.DEBUG, readable?: boolean, colours?: boolean): void {
-    this.winston.addConsole(level, readable, colours);
+  public addConsole(
+    level: LogLevel = LogLevel.DEBUG,
+    options: Partial<LoggerTransportOptions> = {},
+  ): void {
+    this.winston.addConsole(level, options);
   }
 
   public addFileTransport(level: LogLevel = LogLevel.DEBUG, options?: FileTransportOptions): void {

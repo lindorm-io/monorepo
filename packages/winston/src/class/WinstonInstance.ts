@@ -8,6 +8,7 @@ import {
   WinstonInstanceOptions,
   FilterCallback,
   LogDetails,
+  LoggerTransportOptions,
 } from "../types";
 import {
   HttpTransportOptions,
@@ -49,13 +50,16 @@ export class WinstonInstance {
     this.focus = focus || null;
   }
 
-  public addConsole(level: LogLevel = LogLevel.DEBUG, readable = false, colour = true): void {
+  public addConsole(
+    level: LogLevel = LogLevel.DEBUG,
+    options: Partial<LoggerTransportOptions>,
+  ): void {
     this.winston.add(
       new winston.transports.Console({
         handleExceptions: true,
         level,
-        format: readable
-          ? winston.format.printf((info) => readableFormat(info as LoggerMessage, colour))
+        format: options.readable
+          ? winston.format.printf((info) => readableFormat(info as LoggerMessage, options))
           : winston.format.json(),
       }),
     );
