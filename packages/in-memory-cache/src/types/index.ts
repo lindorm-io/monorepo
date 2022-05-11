@@ -1,6 +1,16 @@
 import { Logger } from "@lindorm-io/winston";
 
-export type FetchDataFunction<Data> = (data: Map<string, Data>) => Promise<Map<string, Data>>;
+export interface FetchDataContext<Data> {
+  logger: Logger;
+  clear(): void;
+  delete(key: string): void;
+  destroy(data: Data): void;
+  get(key: string): Data | undefined;
+  scan(): Array<Data>;
+  set(data: Data): void;
+}
+
+export type FetchDataFunction<Data> = (context: FetchDataContext<Data>) => Promise<void>;
 
 export type GetKeyFunction<Data> = (data: Data) => string;
 

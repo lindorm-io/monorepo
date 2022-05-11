@@ -1,6 +1,6 @@
+import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/winston";
 import { isAfter, addSeconds } from "date-fns";
-import { LindormError } from "@lindorm-io/errors";
 import {
   FetchDataFunction,
   GetKeyFunction,
@@ -14,21 +14,21 @@ export class InMemoryCache<Data> {
   private readonly intervalTick: number;
   private readonly intervalTimeout: number;
   private readonly ttl: number;
-  private data: Map<string, Data>;
   private fetching: boolean;
   private logger: Logger;
+  private state: Map<string, Data>;
   private timestamp: Date | undefined;
 
   public constructor(options: InMemoryCacheOptions<Data>) {
     this.logger = options.logger.createChildLogger(["InMemoryCache", options.name]);
     this.logger.debug("Initialising");
 
-    this.data = new Map<string, Data>();
     this.fetchDataFunction = options.fetchDataFunction;
-    this.getKeyFunction = options.getKeyFunction;
     this.fetching = false;
+    this.getKeyFunction = options.getKeyFunction;
     this.intervalTick = options.intervalTick || 100;
     this.intervalTimeout = options.intervalTimeout || 10000;
+    this.state = new Map<string, Data>();
     this.ttl = options.ttl || 60 * 12;
 
     this.safelyFetchData().then();
@@ -38,47 +38,47 @@ export class InMemoryCache<Data> {
     if (this.shouldFetch()) {
       this.safelyFetchData().then();
     }
-    return this.data.get(key);
+    return this.getData(key);
   }
 
   public async getAsync(key: string): Promise<Data | undefined> {
     if (this.shouldFetch()) {
       await this.fetchDataAsync();
     }
-    return this.data.get(key);
+    return this.getData(key);
   }
 
   public set(data: Data): Data {
-    this.data.set(this.getKeyFunction(data), data);
+    this.state.set(this.getKeyFunction(data), data);
     return data;
   }
 
   public delete(key: string): void {
-    this.data.delete(key);
+    this.state.delete(key);
   }
 
   public destroy(data: Data): void {
-    this.data.delete(this.getKeyFunction(data));
+    this.state.delete(this.getKeyFunction(data));
   }
 
   public scan(): Array<Data> {
     if (this.shouldFetch()) {
       this.safelyFetchData().then();
     }
-    return Array.from(this.data.values());
+    return this.getArray();
   }
 
   public async scanAsync(): Promise<Array<Data>> {
     if (this.shouldFetch()) {
       await this.fetchDataAsync();
     }
-    return Array.from(this.data.values());
+    return this.getArray();
   }
 
   public status(): InMemoryCacheStatus {
     return {
       fetching: this.fetching,
-      size: this.data.size,
+      size: this.state.size,
       timestamp: this.timestamp,
       ttl: this.ttl,
     };
@@ -93,6 +93,18 @@ export class InMemoryCache<Data> {
 
   public async reload(): Promise<void> {
     return this.safelyFetchData();
+  }
+
+  private clearState(): void {
+    this.state = new Map<string, Data>();
+  }
+
+  private getArray(): Array<Data> {
+    return Array.from(this.state.values());
+  }
+
+  private getData(key: string): Data | undefined {
+    return this.state.get(key);
   }
 
   private shouldFetch(): boolean {
@@ -127,7 +139,7 @@ export class InMemoryCache<Data> {
 
   private async fetchDataAsync(): Promise<void> {
     if (this.fetching) {
-      this.logger.debug("fetching data using interval");
+      this.logger.debug("Fetching data using interval");
 
       return new Promise((resolve, reject) => {
         let current = 0;
@@ -150,14 +162,17 @@ export class InMemoryCache<Data> {
     this.fetching = true;
 
     try {
-      this.logger.debug("fetching data using fetchDataFunction");
-      const data = await this.fetchDataFunction(this.data);
+      this.logger.debug("Fetching data using fetchDataFunction");
+      await this.fetchDataFunction({
+        logger: this.logger.createChildLogger("FetchDataFunction"),
+        scan: this.getArray.bind(this),
+        clear: this.clearState.bind(this),
+        delete: this.delete.bind(this),
+        destroy: this.destroy.bind(this),
+        get: this.getData.bind(this),
+        set: this.set.bind(this),
+      });
 
-      if (!data || !(data instanceof Map)) {
-        throw new LindormError("Invalid data");
-      }
-
-      this.data = data;
       this.timestamp = new Date();
       this.fetching = false;
     } catch (err) {

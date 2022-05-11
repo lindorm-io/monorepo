@@ -11,11 +11,10 @@ describe("InMemoryCache", () => {
       name: "testCache",
       logger,
       getKeyFunction: (data) => data.id,
-      fetchDataFunction: async () => {
+      fetchDataFunction: async (ctx) => {
         await sleep(250);
-        const map = new Map<string, any>();
-        map.set("1", { id: "1", value: "one" });
-        return map;
+        ctx.clear();
+        ctx.set({ id: "1", value: "one" });
       },
     });
   });

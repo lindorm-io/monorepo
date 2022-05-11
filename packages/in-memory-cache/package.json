@@ -20,6 +20,10 @@
   "dependencies": {
     "@lindorm-io/errors": "^0.1.13",
     "@lindorm-io/winston": "^0.2.0",
-    "date-fns": "^2.27.0"
+    "date-fns": "^2.27.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.182"
   }
 }
