@@ -1,8 +1,14 @@
 import * as winston from "winston";
-import { Filter, LogOptions, WinstonInstanceOptions, FilterCallback, LogDetails } from "../types";
 import { LogLevel } from "../enum";
 import { clone, get, includes, isError, isObject, set } from "lodash";
 import { defaultFilterCallback, readableFormat } from "../util";
+import {
+  Filter,
+  LoggerMessage,
+  WinstonInstanceOptions,
+  FilterCallback,
+  LogDetails,
+} from "../types";
 import {
   HttpTransportOptions,
   StreamTransportOptions,
@@ -22,7 +28,7 @@ export class WinstonInstance {
 
   // public
 
-  public log(options: LogOptions): void {
+  public log(options: LoggerMessage): void {
     if (this.focus && options.context.length && !includes(options.context, this.focus)) return;
 
     this.winston.log({
@@ -49,7 +55,7 @@ export class WinstonInstance {
         handleExceptions: true,
         level,
         format: readable
-          ? winston.format.printf((info) => readableFormat(info, colour))
+          ? winston.format.printf((info) => readableFormat(info as LoggerMessage, colour))
           : winston.format.json(),
       }),
     );

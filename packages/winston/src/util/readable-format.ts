@@ -2,11 +2,11 @@ import chalk, { Chalk } from "chalk";
 import fastSafeStringify from "fast-safe-stringify";
 import { ExtendableError } from "@lindorm-io/errors";
 import { LogLevel } from "../enum";
-import { TransformableInfo } from "logform";
+import { LoggerMessage } from "../types";
 import { inspect } from "util";
 import { isError, isObject } from "lodash";
 
-const colourise = (chalk: Chalk, colours: boolean, input: string) =>
+const colourise = (chalk: Chalk, colours: boolean, input: string): string =>
   colours ? chalk(input) : input;
 
 const sanitize = (object: Record<string, any>): Record<string, any> => {
@@ -53,7 +53,7 @@ const formatContent = (details: Record<string, any>, colours: boolean): string =
   });
 };
 
-export const readableFormat = (info: TransformableInfo, colours: boolean): string => {
+export const readableFormat = (info: LoggerMessage, colours: boolean): string => {
   if (!info.time || !info.context) {
     return formatContent(info, false);
   }
