@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/redis",
   "description": "Redis and Cache tools lindorm.io packages",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -28,7 +28,7 @@
     "@lindorm-io/entity": "^0.3.3",
     "@lindorm-io/errors": "^0.1.13",
     "@lindorm-io/string-blob": "^0.0.5",
-    "@lindorm-io/winston": "^0.1.13",
+    "@lindorm-io/winston": "^0.2.0",
     "ioredis": "^4.28.2",
     "lodash": "^4.17.21"
   },
