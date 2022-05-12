@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.10.3...@lindorm-io/koa@0.11.0) (2022-05-12)
+
+
+### Features
+
+* automatically set up health and heartbeat in koa app ([6eacbb7](https://github.com/lindorm-io/monorepo/commit/6eacbb750a6e3aa0a972a78059602a9e75d0069c))
+
+
+
+
+
 ## [0.10.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.10.2...@lindorm-io/koa@0.10.3) (2022-05-11)
 
 **Note:** Version bump only for package @lindorm-io/koa

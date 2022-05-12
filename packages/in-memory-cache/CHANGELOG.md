@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.4...@lindorm-io/in-memory-cache@0.1.5) (2022-05-12)
+
+
+### Bug Fixes
+
+* use heartbeat in get and scan ([22e70e2](https://github.com/lindorm-io/monorepo/commit/22e70e2497cb5f2a91b292f3a4227d57e1ad36e5))
+
+
+
+
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.3...@lindorm-io/in-memory-cache@0.1.4) (2022-05-11)
 
 
