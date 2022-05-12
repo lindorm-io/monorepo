@@ -1,3 +1,4 @@
+import { Context } from "../types";
 import { Environment, KoaApp } from "@lindorm-io/koa";
 import { configuration } from "../configuration";
 import { join } from "path";
@@ -13,7 +14,7 @@ import {
   oidcProvidersJwksWorkers,
 } from "../worker";
 
-export const koa = new KoaApp({
+export const koa = new KoaApp<Context>({
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
