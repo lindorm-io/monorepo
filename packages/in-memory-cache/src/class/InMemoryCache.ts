@@ -35,17 +35,23 @@ export class InMemoryCache<Data> {
   }
 
   public get(key: string): Data | undefined {
-    if (this.shouldFetch()) {
-      this.safelyFetchData().then();
-    }
+    this.heartbeat().then();
     return this.getData(key);
   }
 
   public async getAsync(key: string): Promise<Data | undefined> {
-    if (this.shouldFetch()) {
-      await this.fetchDataAsync();
-    }
+    await this.heartbeat();
     return this.getData(key);
+  }
+
+  public scan(): Array<Data> {
+    this.heartbeat().then();
+    return this.getArray();
+  }
+
+  public async scanAsync(): Promise<Array<Data>> {
+    await this.heartbeat();
+    return this.getArray();
   }
 
   public set(data: Data): Data {
@@ -59,20 +65,6 @@ export class InMemoryCache<Data> {
 
   public destroy(data: Data): void {
     this.state.delete(this.getKeyFunction(data));
-  }
-
-  public scan(): Array<Data> {
-    if (this.shouldFetch()) {
-      this.safelyFetchData().then();
-    }
-    return this.getArray();
-  }
-
-  public async scanAsync(): Promise<Array<Data>> {
-    if (this.shouldFetch()) {
-      await this.fetchDataAsync();
-    }
-    return this.getArray();
   }
 
   public status(): InMemoryCacheStatus {
