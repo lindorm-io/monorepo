@@ -6,9 +6,10 @@ import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
 import { Environment } from "../enum";
 import { IntervalWorker } from "./IntervalWorker";
+import { KoaAppOptions, KoaContext, Middleware } from "../types";
 import { Logger } from "@lindorm-io/winston";
-import { Middleware } from "../types";
 import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
+import { createHealthRouter, createHeartbeatRouter } from "../router";
 import { isObject } from "lodash";
 import {
   dataHandlingMiddleware,
@@ -22,24 +23,14 @@ import {
   utilContextMiddleware,
 } from "../middleware/private";
 
-export interface KoaAppOptions {
-  environment?: Environment;
-  domain?: string;
-  host: string;
-  keys?: Array<string>;
-  logger: Logger;
-  port: number;
-  setup?(): Promise<void>;
-}
-
-export class KoaApp {
+export class KoaApp<Context extends KoaContext = KoaContext> {
   public readonly koa: Koa;
   public readonly koaRouter: Router;
 
   private readonly environment: Environment;
   private readonly host: string;
   private readonly logger: Logger;
-  private readonly middleware: Array<Middleware<any>>;
+  private readonly middleware: Array<Middleware<Context>>;
   private readonly port: number;
   private readonly setup?: () => Promise<void>;
   private readonly workers: Array<IntervalWorker>;
@@ -47,7 +38,7 @@ export class KoaApp {
   private loaded: boolean;
   private started: boolean;
 
-  public constructor(options: KoaAppOptions) {
+  public constructor(options: KoaAppOptions<Context>) {
     this.koa = new Koa();
     this.koaRouter = new Router();
 
@@ -68,12 +59,16 @@ export class KoaApp {
       sessionLoggerMiddleware({ logger: this.logger }),
       errorMiddleware,
       responseTimeMiddleware,
+      ...(options.middleware || []),
     ];
     this.port = options.port;
     this.setup = options.setup;
-    this.workers = [];
+    this.workers = options.workers || [];
 
     this.koa.keys = options.keys || [];
+
+    this.addRoute("/health", createHealthRouter<Context>(options.health));
+    this.addRoute("/heartbeat", createHeartbeatRouter<Context>(options.heartbeat));
   }
 
   public get app(): Koa {
