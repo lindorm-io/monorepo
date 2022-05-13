@@ -19,6 +19,15 @@ describe("createURL", () => {
     ).toBe("https://lindorm.io/test");
   });
 
+  test("should add basePort to path", () => {
+    expect(
+      createURL("/test", {
+        basePort: 3000,
+        baseUrl: "https://lindorm.io",
+      }).toString(),
+    ).toBe("https://lindorm.io:3000/test");
+  });
+
   test("should add params to path", () => {
     expect(
       createURL(
@@ -69,5 +78,9 @@ describe("createURL", () => {
 
   test("should throw on URL/baseUrl conflict", () => {
     expect(() => createURL(new URL("https://lindorm.io/test"), { baseUrl: "url" })).toThrow(Error);
+  });
+
+  test("should throw on basePort/baseUrl conflict", () => {
+    expect(() => createURL("/pathname", { basePort: 4000 })).toThrow(Error);
   });
 });
