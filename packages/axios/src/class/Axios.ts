@@ -16,16 +16,18 @@ import {
 } from "../types";
 
 export class Axios {
-  private readonly baseUrl: string | null;
+  private readonly basePort: number | undefined;
+  private readonly baseUrl: string | undefined;
   private readonly logger: Logger;
   private readonly middleware: Array<AxiosMiddleware>;
-  private readonly name: string | null;
+  private readonly name: string | undefined;
 
   public constructor(options: AxiosOptions) {
-    this.baseUrl = options.baseUrl || null;
+    this.baseUrl = options.baseUrl;
+    this.basePort = options.basePort;
     this.logger = options.logger.createChildLogger("Axios");
     this.middleware = options.middleware || [];
-    this.name = options.name || null;
+    this.name = options.name;
   }
 
   public async get<Data = Record<string, any>>(
@@ -83,7 +85,12 @@ export class Axios {
     }
 
     if (this.baseUrl) {
-      return createURL(path, { baseUrl: this.baseUrl, params, query }).toString();
+      return createURL(path, {
+        basePort: this.basePort,
+        baseUrl: this.baseUrl,
+        params,
+        query,
+      }).toString();
     }
 
     throw new Error(`Invalid Path: [ ${path} ]`);
