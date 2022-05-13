@@ -2,36 +2,49 @@ import Timeout = NodeJS.Timeout;
 import { EventEmitter } from "events";
 import { Logger } from "@lindorm-io/winston";
 
+type Callback = () => Promise<void>;
+type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
+
 interface Options {
-  callback: () => Promise<any>;
-  time: number;
+  callback: Callback;
   logger: Logger;
+  retry?: number;
+  onError?: OnError;
+  time: number;
 }
 
-enum IntervalWorkerEvent {
-  START = "INTERVAL_WORKER_START",
-  STOP = "INTERVAL_WORKER_STOP",
-  SUCCESS = "INTERVAL_WORKER_SUCCESS",
-  ERROR = "INTERVAL_WORKER_ERROR",
+export enum IntervalWorkerEvent {
+  START = "interval_worker_start",
+  STOP = "interval_worker_stop",
+  SUCCESS = "interval_worker_success",
+  ERROR = "interval_worker_error",
 }
+
+const sleep = (time: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, time));
 
 export class IntervalWorker extends EventEmitter {
-  private readonly callback: () => Promise<any>;
-  private interval: Timeout | undefined;
+  private readonly callback: Callback;
+  private readonly onError: OnError | undefined;
   private readonly logger: Logger;
+  private readonly retry: number | undefined;
   private readonly time: number;
+
+  private interval: Timeout | undefined;
 
   public constructor(options: Options) {
     super();
 
     this.callback = options.callback;
+    this.onError = options.onError;
+
     this.interval = undefined;
+    this.retry = options.retry;
     this.time = options.time;
 
     this.logger = options.logger.createChildLogger("interval-worker");
   }
 
-  public trigger(): void {
+  public trigger(attempt = 1): void {
     this.logger.debug("worker trigger");
 
     this.callback()
@@ -42,6 +55,14 @@ export class IntervalWorker extends EventEmitter {
       .catch((err: Error) => {
         this.logger.error("worker error", err);
         super.emit(IntervalWorkerEvent.ERROR, err);
+
+        if (this.onError) {
+          this.onError(err, this).then();
+        }
+
+        if (attempt <= this.retry) {
+          sleep(250).then(() => this.trigger(attempt + 1));
+        }
       });
   }
 
