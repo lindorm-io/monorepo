@@ -81,6 +81,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
+    retry: 3,
     time: stringToMilliseconds(workerInterval),
   });
 };

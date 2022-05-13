@@ -29,6 +29,7 @@ export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
       await repository.destroyMany({ expires: { $lt: new Date() } });
     },
     logger,
+    retry: 3,
     time,
   });
 };

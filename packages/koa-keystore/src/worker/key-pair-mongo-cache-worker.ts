@@ -6,6 +6,7 @@ import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
 import { stringToSeconds } from "@lindorm-io/core";
+import { LindormError } from "@lindorm-io/errors";
 
 interface Options {
   mongoConnection: MongoConnection;
@@ -32,13 +33,17 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
         logger,
       });
 
+      const array = await repository.findMany({});
+
+      if (!array.length) {
+        throw new LindormError("No keys could be found in repository");
+      }
+
       const cache = new KeyPairCache({
         client: redisConnection.client(),
         logger,
         expiresInSeconds,
       });
-
-      const array = await repository.findMany({});
 
       for (const entity of array) {
         const expires = Keystore.getTTL(entity);
@@ -46,6 +51,7 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
+    retry: 3,
     time,
   });
 };

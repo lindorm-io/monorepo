@@ -48,6 +48,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
+    retry: 3,
     time,
   });
 };
