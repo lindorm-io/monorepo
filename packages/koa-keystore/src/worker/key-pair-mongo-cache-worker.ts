@@ -11,12 +11,19 @@ import { LindormError } from "@lindorm-io/errors";
 interface Options {
   mongoConnection: MongoConnection;
   redisConnection: RedisConnection;
+  retry?: number;
   winston: Logger;
   workerInterval?: string;
 }
 
 export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
-  const { mongoConnection, redisConnection, winston, workerInterval = "1 hours" } = options;
+  const {
+    mongoConnection,
+    redisConnection,
+    retry = 3,
+    winston,
+    workerInterval = "1 hours",
+  } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const expiresInSeconds = workerIntervalInSeconds + 120;
@@ -51,7 +58,7 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
-    retry: 3,
+    retry,
     time,
   });
 };

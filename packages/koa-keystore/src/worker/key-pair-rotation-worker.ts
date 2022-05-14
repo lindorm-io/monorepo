@@ -11,6 +11,7 @@ interface Options {
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
   passphrase?: string;
+  retry?: number;
   rotationInterval?: string;
   winston: Logger;
   workerInterval?: string;
@@ -22,6 +23,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
     mongoConnection,
     namedCurve = NamedCurve.P521,
     passphrase = "",
+    retry = 3,
     rotationInterval = "90 days",
     winston,
     workerInterval = "1 days",
@@ -81,7 +83,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
-    retry: 3,
+    retry,
     time: stringToMilliseconds(workerInterval),
   });
 };

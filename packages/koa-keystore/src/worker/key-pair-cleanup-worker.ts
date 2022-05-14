@@ -6,12 +6,13 @@ import { stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
   mongoConnection: MongoConnection;
+  retry?: number;
   winston: Logger;
   workerInterval?: string;
 }
 
 export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
-  const { mongoConnection, winston, workerInterval = "1 days" } = options;
+  const { mongoConnection, retry = 3, winston, workerInterval = "1 days" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
@@ -29,7 +30,7 @@ export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
       await repository.destroyMany({ expires: { $lt: new Date() } });
     },
     logger,
-    retry: 3,
+    retry,
     time,
   });
 };
