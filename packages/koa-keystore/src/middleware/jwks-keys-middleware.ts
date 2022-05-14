@@ -4,8 +4,9 @@ import { WebKeyHandler } from "../class";
 import { flatten } from "lodash";
 
 interface Options {
-  baseUrl: string;
   clientName: string;
+  host: string;
+  port?: number;
 }
 
 export const jwksKeysMiddleware =
@@ -14,9 +15,10 @@ export const jwksKeysMiddleware =
     const metric = ctx.getMetric("keystore");
 
     const handler = new WebKeyHandler({
-      baseUrl: options.baseUrl,
-      logger: ctx.logger,
       clientName: options.clientName,
+      host: options.host,
+      port: options.port,
+      logger: ctx.logger,
     });
 
     const keys = await handler.getKeys();
@@ -24,8 +26,9 @@ export const jwksKeysMiddleware =
     ctx.keys = flatten([ctx.keys, keys]);
 
     ctx.logger.debug("keys found on client", {
-      baseUrl: options.baseUrl,
-      client: options.clientName,
+      clientName: options.clientName,
+      host: options.host,
+      port: options.port,
       amount: keys.length,
       total: ctx.keys.length,
     });
