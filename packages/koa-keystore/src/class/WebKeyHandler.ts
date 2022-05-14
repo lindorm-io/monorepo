@@ -5,8 +5,9 @@ import { Logger } from "@lindorm-io/winston";
 import { WebKeyHandlerError } from "../error";
 
 interface Options {
-  baseUrl: string;
   clientName: string;
+  host: string;
+  port?: number;
   logger: Logger;
 }
 
@@ -21,7 +22,8 @@ export class WebKeyHandler {
   public constructor(options: Options) {
     this.logger = options.logger.createChildLogger(["WebKeyHandler"]);
     this.axios = new Axios({
-      baseUrl: options.baseUrl,
+      baseUrl: options.host,
+      basePort: options.port,
       logger: this.logger,
       name: options.clientName,
     });

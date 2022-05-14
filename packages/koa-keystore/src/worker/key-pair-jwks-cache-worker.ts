@@ -7,15 +7,25 @@ import { WebKeyHandler } from "../class";
 import { stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
-  baseUrl: string;
   clientName: string;
+  host: string;
+  port?: number;
   redisConnection: RedisConnection;
+  retry?: number;
   winston: Logger;
   workerInterval?: string;
 }
 
 export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
-  const { baseUrl, clientName, redisConnection, winston, workerInterval = "5 minutes" } = options;
+  const {
+    clientName,
+    host,
+    port,
+    redisConnection,
+    retry = 3,
+    winston,
+    workerInterval = "5 minutes",
+  } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const expiresInSeconds = workerIntervalInSeconds + 120;
@@ -23,12 +33,13 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const logger = winston.createChildLogger(["keyPairJwksCacheWorker"]);
 
   logger.verbose("creating jwks cache worker", {
-    baseUrl,
+    host,
+    port,
     clientName,
     workerInterval,
   });
 
-  const handler = new WebKeyHandler({ baseUrl, logger, clientName });
+  const handler = new WebKeyHandler({ clientName, host, port, logger });
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
@@ -48,7 +59,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
       }
     },
     logger,
-    retry: 3,
+    retry,
     time,
   });
 };
