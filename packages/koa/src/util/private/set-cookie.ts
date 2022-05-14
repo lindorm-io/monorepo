@@ -1,6 +1,6 @@
 import { includes, isDate, isNumber } from "lodash";
-import { KoaContext } from "../types";
-import { Environment } from "../enum";
+import { KoaContext } from "../../types";
+import { Environment } from "../../enum";
 
 export interface SetCookieOptions {
   expiry: Date | number;

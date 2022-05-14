@@ -1,7 +1,7 @@
 import { KoaContext, Middleware } from "../../types";
 import { RedirectError } from "@lindorm-io/errors";
 import { get } from "lodash";
-import { isURL } from "../../util";
+import { isURL } from "../../util/private";
 
 export interface RedirectErrorMiddlewareOptions {
   redirectUri: string;

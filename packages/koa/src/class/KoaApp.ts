@@ -8,6 +8,8 @@ import { Environment } from "../enum";
 import { IntervalWorker } from "./IntervalWorker";
 import { KoaAppOptions, KoaContext, Middleware } from "../types";
 import { Logger } from "@lindorm-io/winston";
+import { Server as HttpServer, createServer } from "http";
+import { Server as IOServer } from "socket.io";
 import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
 import { createHealthRouter, createHeartbeatRouter } from "../router";
 import { isObject } from "lodash";
@@ -20,15 +22,17 @@ import {
   responseTimeMiddleware,
   serverInfoMiddleware,
   sessionLoggerMiddleware,
+  socketIoMiddleware,
   utilContextMiddleware,
 } from "../middleware/private";
 
 export class KoaApp<Context extends KoaContext = KoaContext> {
-  public readonly koa: Koa;
-  public readonly koaRouter: Router;
-
   private readonly environment: Environment;
   private readonly host: string;
+  private readonly httpServer: HttpServer;
+  private readonly ioServer: IOServer;
+  private readonly koaApp: Koa;
+  private readonly koaRouter: Router;
   private readonly logger: Logger;
   private readonly middleware: Array<Middleware<Context>>;
   private readonly port: number;
@@ -39,14 +43,21 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
   private started: boolean;
 
   public constructor(options: KoaAppOptions<Context>) {
-    this.koa = new Koa();
+    this.koaApp = new Koa();
+    this.koaApp.keys = options.keys || [];
+
     this.koaRouter = new Router();
 
     this.environment = options.environment;
     this.host = options.host;
     this.loaded = false;
-    this.started = false;
     this.logger = options.logger;
+    this.port = options.port;
+    this.setup = options.setup;
+    this.started = false;
+    this.workers = options.workers || [];
+    this.httpServer = createServer(this.koaApp.callback());
+
     this.middleware = [
       userAgent,
       bodyParser(),
@@ -61,28 +72,55 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
       responseTimeMiddleware,
       ...(options.middleware || []),
     ];
-    this.port = options.port;
-    this.setup = options.setup;
-    this.workers = options.workers || [];
 
-    this.koa.keys = options.keys || [];
+    if (options.createSocketListeners) {
+      this.ioServer = new IOServer(this.httpServer);
+      this.middleware.push(socketIoMiddleware(this.ioServer));
 
-    this.addRoute("/health", createHealthRouter<Context>(options.health));
-    this.addRoute("/heartbeat", createHeartbeatRouter<Context>(options.heartbeat));
+      if (options.socketMiddleware) {
+        for (const middleware of options.socketMiddleware) {
+          this.ioServer.use(middleware);
+        }
+      }
+
+      options.createSocketListeners(this.ioServer);
+    }
+
+    this.addRoute("/health", createHealthRouter<Context>(options.heartbeatCallback));
+    this.addRoute("/heartbeat", createHeartbeatRouter<Context>(options.heartbeatCallback));
+
+    if (options.routerDirectory) {
+      this.addRoutesAutomatically(options.routerDirectory);
+    }
   }
 
-  public get app(): Koa {
-    return this.koa;
+  public get http(): HttpServer {
+    return this.httpServer;
   }
 
-  public set app(_: Koa) {
-    throw new Error("Not allowed to set app");
+  public set http(_: HttpServer) {
+    throw new Error("Not allowed to set http server");
+  }
+
+  public get io(): IOServer {
+    return this.ioServer;
+  }
+
+  public set io(_: IOServer) {
+    throw new Error("Not allowed to set io server");
+  }
+
+  public get koa(): Koa {
+    return this.koaApp;
+  }
+
+  public set koa(_: Koa) {
+    throw new Error("Not allowed to set koa");
   }
 
   public get router(): Router {
     return this.koaRouter;
   }
-
   public set router(_: Router) {
     throw new Error("Not allowed to set router");
   }
@@ -90,7 +128,7 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
   public callback(): any {
     this.load();
 
-    return this.koa.callback();
+    return this.koaApp.callback();
   }
 
   public addMiddleware(middleware: Middleware<any>): void {
@@ -176,19 +214,19 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
   }
 
   private listen(): void {
-    this.koa.listen(this.port, (): void => {
+    this.httpServer.listen(this.port, (): void => {
       this.logger.verbose(`server available on: ${this.host}:${this.port}`);
 
-      this.koa.emit("start");
+      this.koaApp.emit("start");
     });
   }
 
   private loadEmitter(): void {
-    this.koa.on("error", (error): void => {
+    this.koaApp.on("error", (error): void => {
       console.error("app caught error", error);
     });
 
-    this.koa.on("start", (): void => {
+    this.koaApp.on("start", (): void => {
       this.loadWorkers();
     });
   }
@@ -197,15 +235,15 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
     this.logger.debug("loading middleware");
 
     for (const middleware of this.middleware) {
-      this.koa.use(middleware);
+      this.koaApp.use(middleware);
     }
   }
 
   private loadRouter(): void {
     this.logger.debug("loading router");
 
-    this.koa.use(this.koaRouter.routes());
-    this.koa.use(this.koaRouter.allowedMethods());
+    this.koaApp.use(this.koaRouter.routes());
+    this.koaApp.use(this.koaRouter.allowedMethods());
   }
 
   private loadWorkers(): void {
@@ -225,7 +263,7 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
         reject(new Error("server start has timed out"));
       }, 30000);
 
-      this.koa.on("start", () => {
+      this.koaApp.on("start", () => {
         clearTimeout(timeout);
         resolve();
       });

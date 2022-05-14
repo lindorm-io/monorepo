@@ -5,7 +5,7 @@ import { Logger } from "@lindorm-io/winston";
 import { Metric } from "../class";
 import { Request, Response } from "koa";
 import { RouterContext } from "koa-router";
-import { GetCookieOptions, SetCookieOptions } from "../util";
+import { GetCookieOptions, SetCookieOptions } from "../util/private";
 
 interface KoaRequest<Body extends RecordAny> extends Request {
   body: Body;

@@ -1,6 +1,6 @@
-import { AuthorizationHeader } from "../types";
+import { AuthorizationHeader } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
-import { KoaContext } from "../types";
+import { KoaContext } from "../../types";
 
 export const getAuthorizationHeader = (ctx: KoaContext) => (): AuthorizationHeader => {
   const header = ctx.get("Authorization");

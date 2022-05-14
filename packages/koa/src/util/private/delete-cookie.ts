@@ -1,4 +1,4 @@
-import { KoaContext } from "../types";
+import { KoaContext } from "../../types";
 
 export const deleteCookie =
   (ctx: KoaContext) =>

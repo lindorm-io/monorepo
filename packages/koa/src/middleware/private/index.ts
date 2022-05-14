@@ -6,4 +6,5 @@ export * from "./metadata-middleware";
 export * from "./response-time-middleware";
 export * from "./server-info-middleware";
 export * from "./session-logger-middleware";
+export * from "./socket-io-middleware";
 export * from "./util-context-middleware";

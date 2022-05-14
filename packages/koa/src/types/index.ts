@@ -4,4 +4,5 @@ export * from "./controller";
 export * from "./koa";
 export * from "./koa-app";
 export * from "./metadata";
+export * from "./socket";
 export * from "./util";

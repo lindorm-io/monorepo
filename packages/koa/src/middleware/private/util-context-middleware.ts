@@ -6,7 +6,7 @@ import {
   getCookie,
   getMetadataHeaders,
   setCookie,
-} from "../../util";
+} from "../../util/private";
 
 export const utilContextMiddleware: Middleware<KoaContext> = async (ctx, next): Promise<void> => {
   ctx.deleteCookie = deleteCookie(ctx);

@@ -1,5 +1,5 @@
-import { KoaContext, KoaMetadataHeaders } from "../types";
-import { MetadataHeader } from "../enum";
+import { KoaContext, KoaMetadataHeaders } from "../../types";
+import { MetadataHeader } from "../../enum";
 
 export const getMetadataHeaders = (ctx: KoaContext) => (): KoaMetadataHeaders => ({
   [MetadataHeader.AGENT_BROWSER]: ctx.metadata.agent.browser,

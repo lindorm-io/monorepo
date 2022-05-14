@@ -1,6 +1,6 @@
 import { includes } from "lodash";
-import { KoaContext } from "../types";
-import { Environment } from "../enum";
+import { KoaContext } from "../../types";
+import { Environment } from "../../enum";
 
 export interface GetCookieOptions {
   signed: boolean;

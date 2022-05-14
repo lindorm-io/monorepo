@@ -1,8 +1,12 @@
 import { Environment } from "../enum";
-import { Logger } from "@lindorm-io/winston";
-import { Middleware } from "./koa";
 import { IntervalWorker } from "../class";
 import { KoaContext } from "./context";
+import { Logger } from "@lindorm-io/winston";
+import { Middleware } from "./koa";
+import { Server } from "socket.io";
+import { DefaultLindormSocketMiddleware } from "./socket";
+
+export type CreateSocketListeners = (io: Server) => void;
 
 export type HealthCallback<Context extends KoaContext> = (ctx: Context) => Promise<void>;
 
@@ -21,10 +25,13 @@ export interface KoaAppOptions<Context extends KoaContext> {
   environment?: Environment;
   keys?: Array<string>;
   middleware?: Array<Middleware<any>>;
+  routerDirectory?: string;
+  socketMiddleware?: Array<DefaultLindormSocketMiddleware>;
   workers?: Array<IntervalWorker>;
 
   // functions
-  health?: HealthCallback<Context>;
-  heartbeat?: HeartbeatCallback<Context>;
+  createSocketListeners?: CreateSocketListeners;
+  healthCallback?: HealthCallback<Context>;
+  heartbeatCallback?: HeartbeatCallback<Context>;
   setup?: SetupCallback;
 }
