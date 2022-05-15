@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.2.14...@lindorm-io/koa-bearer-auth@0.3.0) (2022-05-15)
+
+
+### Features
+
+* update typing and add socket middleware ([cc67667](https://github.com/lindorm-io/monorepo/commit/cc6766794cfbdffe37da8bb0f9f8951cbf31ad0d))
+
+
+
+
+
 ## [0.2.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.2.13...@lindorm-io/koa-bearer-auth@0.2.14) (2022-05-12)
 
 **Note:** Version bump only for package @lindorm-io/koa-bearer-auth

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.0.25...@lindorm-io/koa-axios@0.1.0) (2022-05-15)
+
+
+### Bug Fixes
+
+* align host/port nomenclature in packages ([cb75975](https://github.com/lindorm-io/monorepo/commit/cb759757b77ed8b60ba8788b7dd009078b9b7825))
+
+
+### Features
+
+* update typing and add socket middleware ([cc67667](https://github.com/lindorm-io/monorepo/commit/cc6766794cfbdffe37da8bb0f9f8951cbf31ad0d))
+
+
+
+
+
 ## [0.0.25](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.0.24...@lindorm-io/koa-axios@0.0.25) (2022-05-12)
 
 **Note:** Version bump only for package @lindorm-io/koa-axios

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.3.1...@lindorm-io/core@0.4.0) (2022-05-15)
+
+
+### Bug Fixes
+
+* align host/port nomenclature in packages ([cb75975](https://github.com/lindorm-io/monorepo/commit/cb759757b77ed8b60ba8788b7dd009078b9b7825))
+
+
+### Features
+
+* add base port to url creator utility ([9a057ea](https://github.com/lindorm-io/monorepo/commit/9a057ea77be888c7e534d5a2ee11ea958c685eaf))
+
+
+
+
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.3.0...@lindorm-io/core@0.3.1) (2022-05-10)
 
 **Note:** Version bump only for package @lindorm-io/core

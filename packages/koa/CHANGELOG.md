@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.11.0...@lindorm-io/koa@0.12.0) (2022-05-15)
+
+
+### Bug Fixes
+
+* update context nomenclature ([c39e042](https://github.com/lindorm-io/monorepo/commit/c39e0423368bb47d5121c4660afb70f893c1891a))
+* use boolean to determine enabling of socket.io ([c81e087](https://github.com/lindorm-io/monorepo/commit/c81e08770b14788a5bae742667885150f876c60e))
+
+
+### Features
+
+* add logger to socket context by default ([5a7e030](https://github.com/lindorm-io/monorepo/commit/5a7e03006689d6fc4ce12ce857ad8ca8331f6beb))
+* add on-error and retry logic to interval worker ([a010e75](https://github.com/lindorm-io/monorepo/commit/a010e75275d896a17410748948e416736faf2294))
+* add socket.io to koa ([a25a9c9](https://github.com/lindorm-io/monorepo/commit/a25a9c9a843593bf29298d59806c4f8614e745e5))
+* update typing and add socket middleware ([cc67667](https://github.com/lindorm-io/monorepo/commit/cc6766794cfbdffe37da8bb0f9f8951cbf31ad0d))
+
+
+
+
+
 # [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.10.3...@lindorm-io/koa@0.11.0) (2022-05-12)
 
 
