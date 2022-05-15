@@ -5,8 +5,8 @@ export const socketAxiosMiddleware =
   (config: AxiosMiddlewareConfig): DefaultLindormAxiosSocketMiddleware =>
   (socket, next): void => {
     socket.ctx.axios[config.clientName] = new Axios({
-      baseUrl: config.host,
-      basePort: config.port,
+      host: config.host,
+      port: config.port,
       logger: socket.ctx.logger,
       middleware: config.middleware,
       name: config.clientName,

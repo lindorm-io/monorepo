@@ -4,8 +4,8 @@ import { snakeCase, startsWith } from "lodash";
 type Default = Record<string, string | number | boolean | Array<string | number | boolean>>;
 
 interface Options<Params, Query> {
-  basePort?: number;
-  baseUrl?: string;
+  host?: string;
+  port?: number;
   params?: Params;
   query?: Query;
 }
@@ -68,17 +68,17 @@ export const createURL = <Params extends Default = Default, Query extends Defaul
   path: string | URL,
   options: Options<Params, Query> = {},
 ): URL => {
-  const { basePort, baseUrl, params, query } = options;
+  const { host, port, params, query } = options;
 
-  if (path instanceof URL && baseUrl) {
-    throw new Error("Options [ baseUrl ] cannot be used when path is URL");
+  if (path instanceof URL && host) {
+    throw new Error("Options [ host ] cannot be used when path is URL");
   }
 
-  if (basePort && !baseUrl) {
-    throw new Error("Options [ basePort ] cannot be used without baseUrl");
+  if (port && !host) {
+    throw new Error("Options [ port ] cannot be used without host");
   }
 
-  const url = basePort ? `${baseUrl}:${basePort}` : baseUrl;
+  const url = port ? `${host}:${port}` : host;
   const original = path instanceof URL ? path : new URL(path, url);
   const pathname = addParamsToPathname<Params>(original.pathname, params);
   const string = original.toString().replace(original.pathname, pathname);

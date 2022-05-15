@@ -3,8 +3,8 @@ import { AxiosMiddleware } from "./middleware";
 import { Logger } from "@lindorm-io/winston";
 
 export interface AxiosOptions {
-  basePort?: number;
-  baseUrl?: string;
+  host?: string;
+  port?: number;
   logger: Logger;
   middleware?: Array<AxiosMiddleware>;
   name?: string;

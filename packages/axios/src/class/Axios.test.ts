@@ -20,7 +20,8 @@ describe("Axios", () => {
 
   beforeEach(() => {
     handler = new Axios({
-      baseUrl: "http://localhost",
+      host: "http://localhost",
+      port: 4000,
       logger,
       middleware: [],
     });

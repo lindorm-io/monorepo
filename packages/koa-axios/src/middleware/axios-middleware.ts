@@ -17,8 +17,8 @@ export const axiosMiddleware =
     };
 
     ctx.axios[config.clientName] = new Axios({
-      baseUrl: config.host,
-      basePort: config.port,
+      host: config.host,
+      port: config.port,
       logger: ctx.logger,
       middleware: [metadataMiddleware, ...(config.middleware || [])],
       name: config.clientName,

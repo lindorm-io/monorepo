@@ -16,7 +16,8 @@ describe("axiosClientCredentialsMiddleware", () => {
 
   beforeEach(() => {
     axios = new Axios({
-      baseUrl: "https://oauth.lindorm.io",
+      host: "https://oauth.lindorm.io",
+      port: 4000,
       logger,
       middleware: [],
     });

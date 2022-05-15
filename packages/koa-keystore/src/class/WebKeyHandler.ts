@@ -22,8 +22,8 @@ export class WebKeyHandler {
   public constructor(options: Options) {
     this.logger = options.logger.createChildLogger(["WebKeyHandler"]);
     this.axios = new Axios({
-      baseUrl: options.host,
-      basePort: options.port,
+      host: options.host,
+      port: options.port,
       logger: this.logger,
       name: options.clientName,
     });

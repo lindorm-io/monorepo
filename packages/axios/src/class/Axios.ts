@@ -16,15 +16,15 @@ import {
 } from "../types";
 
 export class Axios {
-  private readonly basePort: number | undefined;
-  private readonly baseUrl: string | undefined;
+  private readonly host: string | undefined;
+  private readonly port: number | undefined;
   private readonly logger: Logger;
   private readonly middleware: Array<AxiosMiddleware>;
   private readonly name: string | undefined;
 
   public constructor(options: AxiosOptions) {
-    this.baseUrl = options.baseUrl;
-    this.basePort = options.basePort;
+    this.port = options.port;
+    this.host = options.host;
     this.logger = options.logger.createChildLogger("Axios");
     this.middleware = options.middleware || [];
     this.name = options.name;
@@ -84,10 +84,10 @@ export class Axios {
       return createURL(path, { params, query }).toString();
     }
 
-    if (this.baseUrl) {
+    if (this.host) {
       return createURL(path, {
-        basePort: this.basePort,
-        baseUrl: this.baseUrl,
+        host: this.host,
+        port: this.port,
         params,
         query,
       }).toString();
