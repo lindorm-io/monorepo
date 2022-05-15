@@ -1,6 +1,6 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 
-export const initContextMiddleware: Middleware = async (ctx, next): Promise<void> => {
+export const initContextMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
   ctx.axios = {};
   ctx.cache = {};
   ctx.connection = {};

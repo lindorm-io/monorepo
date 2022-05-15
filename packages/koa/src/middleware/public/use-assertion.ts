@@ -1,4 +1,4 @@
-import { AssertionFunction, DefaultLindormKoaContext, Middleware } from "../../types";
+import { AssertionFunction, DefaultLindormKoaContext, DefaultLindormMiddleware } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 import { get, isUndefined } from "lodash";
 
@@ -17,7 +17,7 @@ const defaultAssertion: AssertionFunction = (expect, actual) => expect === actua
 export const useAssertion =
   <Context extends DefaultLindormKoaContext = DefaultLindormKoaContext>(
     options: Options,
-  ): Middleware<Context> =>
+  ): DefaultLindormMiddleware<Context> =>
   async (ctx, next): Promise<void> => {
     const { assertion = defaultAssertion, fromPath, hint } = options;
 

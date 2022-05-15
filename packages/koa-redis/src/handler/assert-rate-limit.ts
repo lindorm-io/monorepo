@@ -1,4 +1,4 @@
-import { RedisContext } from "../types";
+import { DefaultLindormRedisContext } from "../types";
 import { getRateLimitKey } from "../util";
 import { ClientError } from "@lindorm-io/errors";
 
@@ -9,7 +9,10 @@ interface Options {
   value: string;
 }
 
-export const assertRateLimit = async (ctx: RedisContext, options: Options): Promise<void> => {
+export const assertRateLimit = async (
+  ctx: DefaultLindormRedisContext,
+  options: Options,
+): Promise<void> => {
   const {
     connection: { redis },
   } = ctx;

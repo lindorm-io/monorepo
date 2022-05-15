@@ -2,6 +2,7 @@ export * from "./data-handling-middleware";
 export * from "./default-status-middleware";
 export * from "./error-middleware";
 export * from "./init-context-middleware";
+export * from "./init-socket-context-middleware";
 export * from "./metadata-middleware";
 export * from "./response-time-middleware";
 export * from "./server-info-middleware";

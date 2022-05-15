@@ -1,12 +1,15 @@
 import { Environment, MetadataHeader } from "../../enum";
-import { DefaultLindormKoaContext, Middleware } from "../../types";
+import { DefaultLindormKoaContext, DefaultLindormMiddleware } from "../../types";
 import { randomUUID } from "crypto";
 
 interface AgentContext extends DefaultLindormKoaContext {
   userAgent: Record<string, any>;
 }
 
-export const metadataMiddleware: Middleware<AgentContext> = async (ctx, next): Promise<void> => {
+export const metadataMiddleware: DefaultLindormMiddleware<AgentContext> = async (
+  ctx,
+  next,
+): Promise<void> => {
   const geoIp = ctx.userAgent?.geoIp ? JSON.stringify(ctx.userAgent?.geoIp) : null;
 
   ctx.metadata = {

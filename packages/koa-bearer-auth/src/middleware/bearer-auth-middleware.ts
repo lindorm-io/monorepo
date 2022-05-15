@@ -1,16 +1,10 @@
-import { BearerAuthContext, CustomValidation } from "../types";
 import { ClientError } from "@lindorm-io/errors";
-import { Middleware } from "@lindorm-io/koa";
 import { get, isFunction } from "lodash";
-
-interface MiddlewareOptions {
-  clockTolerance?: number;
-  contextKey?: string;
-  issuer: string;
-  maxAge?: string;
-  subjectHint?: string;
-  types?: Array<string>;
-}
+import {
+  CustomValidation,
+  DefaultLindormBearerAuthKoaMiddleware,
+  BearerAuthMiddlewareConfig,
+} from "../types";
 
 export interface BearerAuthOptions {
   audience?: string;
@@ -33,11 +27,11 @@ export interface BearerAuthOptions {
 }
 
 export const bearerAuthMiddleware =
-  (middlewareOptions: MiddlewareOptions) =>
+  (config: BearerAuthMiddlewareConfig) =>
   (
     options: BearerAuthOptions = {},
     customValidation?: CustomValidation,
-  ): Middleware<BearerAuthContext> =>
+  ): DefaultLindormBearerAuthKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("auth");
 
@@ -48,7 +42,7 @@ export const bearerAuthMiddleware =
       maxAge,
       subjectHint,
       types,
-    } = middlewareOptions;
+    } = config;
     const { audience, audiences, nonce, permissions, scopes, subject, subjects, fromPath } =
       options;
 
@@ -86,7 +80,7 @@ export const bearerAuthMiddleware =
     } catch (err: any) {
       throw new ClientError("Invalid Authorization", {
         error: err,
-        debug: { middlewareOptions, options },
+        debug: { config, options },
         description: "Bearer Token is invalid",
         statusCode: ClientError.StatusCode.UNAUTHORIZED,
       });

@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Middleware } from "@lindorm-io/koa";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisKoaMiddleware } from "../types";
 import { assertRateLimit } from "../handler";
 import { get } from "lodash";
 
@@ -16,7 +15,7 @@ export interface RateLimitMiddlewareOptions {
 
 export const rateLimitMiddleware =
   (middlewareOptions: MiddlewareOptions) =>
-  (path: string, options: RateLimitMiddlewareOptions = {}): Middleware<RedisContext> =>
+  (path: string, options: RateLimitMiddlewareOptions = {}): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const { expiresInSeconds, keyName, limit } = middlewareOptions;
     const { fallback } = options;

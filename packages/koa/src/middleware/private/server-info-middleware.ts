@@ -1,4 +1,4 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 import { Environment } from "../../enum";
 
 interface Options {
@@ -8,7 +8,7 @@ interface Options {
 }
 
 export const serverInfoMiddleware =
-  (options: Options): Middleware =>
+  (options: Options): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     ctx.server = {
       domain: options.domain || options.host,

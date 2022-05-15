@@ -1,7 +1,7 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 import { camelKeys, isObjectStrict } from "@lindorm-io/core";
 
-export const paramsMiddleware: Middleware = async (ctx, next): Promise<void> => {
+export const paramsMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
   const params = isObjectStrict(ctx.params) ? camelKeys(ctx.params) : {};
 
   for (const [key, value] of Object.entries(params)) {

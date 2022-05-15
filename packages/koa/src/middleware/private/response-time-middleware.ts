@@ -1,6 +1,9 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 
-export const responseTimeMiddleware: Middleware = async (ctx, next): Promise<void> => {
+export const responseTimeMiddleware: DefaultLindormMiddleware = async (
+  ctx,
+  next,
+): Promise<void> => {
   const metric = ctx.getMetric("responseTime");
   const startTime = Date.now();
 

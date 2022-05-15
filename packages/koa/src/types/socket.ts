@@ -1,21 +1,19 @@
-import { DefaultEventsMap, EventsMap } from "socket.io/dist/typed-events";
-import { DefaultLindormSocketContext } from "./socket-context";
+import { DefaultLindormContext } from "./lindorm-context";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { Socket } from "socket.io/dist/socket";
 
 export interface DefaultLindormSocket<
-  ListenEvents extends EventsMap = DefaultEventsMap,
-  EmitEvents extends EventsMap = ListenEvents,
-  ServerSideEvents extends EventsMap = DefaultEventsMap,
-  SocketData = any,
-> extends Socket<ListenEvents, EmitEvents, ServerSideEvents, SocketData> {
-  lindorm: DefaultLindormSocketContext;
+  Context extends DefaultLindormContext = DefaultLindormContext,
+  Data extends Record<string, any> = Record<string, any>,
+> extends Socket {
+  ctx: Context;
+  data: Data;
 }
 
-export type LindormSocketPromise<Options = any> = (
-  socket: DefaultLindormSocket,
-  options: Options,
-) => Promise<void>;
+export type LindormSocketPromise<
+  Socket extends DefaultLindormSocket = DefaultLindormSocket,
+  Options = any,
+> = (socket: Socket, options?: Options) => Promise<void>;
 
 export type SocketMiddlewareNext = (err?: ExtendedError) => void;
 

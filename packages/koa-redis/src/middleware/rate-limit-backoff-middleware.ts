@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Middleware } from "@lindorm-io/koa";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisKoaMiddleware } from "../types";
 import { get } from "lodash";
 import { assertRateLimitBackoff, clearRateLimitBackoff, setRateLimitBackoff } from "../handler";
 
@@ -10,7 +9,7 @@ interface MiddlewareOptions {
 
 export const rateLimitBackoffMiddleware =
   (middlewareOptions: MiddlewareOptions) =>
-  (path: string): Middleware<RedisContext> =>
+  (path: string): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const { keyName } = middlewareOptions;
 

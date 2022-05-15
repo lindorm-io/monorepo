@@ -31,7 +31,8 @@ describe("jwksKeysMiddleware", () => {
   test("should successfully add keys to context", async () => {
     await expect(
       jwksKeysMiddleware({
-        baseUrl: "baseUrl",
+        host: "https://lindorm.io",
+        port: 4000,
         clientName: "clientName",
       })(ctx, next),
     ).resolves.toBeUndefined();

@@ -1,16 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
-import { CustomValidation, TokenIssuerContext } from "../types";
-import { Middleware } from "@lindorm-io/koa";
+import {
+  CustomValidation,
+  DefaultLindormJwtKoaMiddleware,
+  TokenValidationMiddlewareConfig,
+} from "../types";
 import { get, isFunction, isString } from "lodash";
-
-interface MiddlewareOptions {
-  clockTolerance?: number;
-  contextKey: string;
-  issuer: string;
-  maxAge?: string;
-  subjectHint?: string;
-  types: Array<string>;
-}
 
 export interface TokenValidationOptions {
   audience?: string;
@@ -37,16 +31,16 @@ export interface TokenValidationOptions {
 }
 
 export const tokenValidationMiddleware =
-  (middlewareOptions: MiddlewareOptions) =>
+  (config: TokenValidationMiddlewareConfig) =>
   (
     path: string,
     options: TokenValidationOptions = {},
     customValidation?: CustomValidation,
-  ): Middleware<TokenIssuerContext> =>
+  ): DefaultLindormJwtKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("token");
 
-    const { clockTolerance, contextKey, issuer, maxAge, subjectHint, types } = middlewareOptions;
+    const { clockTolerance, contextKey, issuer, maxAge, subjectHint, types } = config;
     const {
       audience,
       audiences,
@@ -64,7 +58,7 @@ export const tokenValidationMiddleware =
     try {
       if (!isString(token)) {
         throw new ClientError("Token not found", {
-          debug: { middlewareOptions, options, path, token },
+          debug: { middlewareOptions: config, options, path, token },
         });
       }
 
@@ -99,7 +93,7 @@ export const tokenValidationMiddleware =
       } else {
         throw new ClientError(err.message || "Invalid token", {
           error: err,
-          debug: { middlewareOptions, options },
+          debug: { config, options },
           description: `${contextKey} is invalid`,
           statusCode: ClientError.StatusCode.UNAUTHORIZED,
         });

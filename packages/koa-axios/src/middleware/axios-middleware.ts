@@ -1,15 +1,8 @@
-import { AxiosContext } from "../types";
-import { Middleware } from "@lindorm-io/koa";
 import { Axios, AxiosMiddleware } from "@lindorm-io/axios";
-
-interface MiddlewareOptions {
-  baseUrl?: string;
-  clientName: string;
-  middleware?: Array<AxiosMiddleware>;
-}
+import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
 
 export const axiosMiddleware =
-  (middlewareOptions: MiddlewareOptions): Middleware<AxiosContext> =>
+  (config: AxiosMiddlewareConfig): DefaultLindormAxiosKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const start = Date.now();
 
@@ -23,11 +16,12 @@ export const axiosMiddleware =
       }),
     };
 
-    ctx.axios[middlewareOptions.clientName] = new Axios({
-      baseUrl: middlewareOptions.baseUrl,
+    ctx.axios[config.clientName] = new Axios({
+      baseUrl: config.host,
+      basePort: config.port,
       logger: ctx.logger,
-      middleware: [metadataMiddleware, ...(middlewareOptions.middleware || [])],
-      name: middlewareOptions.clientName,
+      middleware: [metadataMiddleware, ...(config.middleware || [])],
+      name: config.clientName,
     });
 
     ctx.metrics.axios = (ctx.metrics.axios || 0) + (Date.now() - start);

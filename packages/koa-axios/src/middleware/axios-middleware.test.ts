@@ -14,7 +14,8 @@ describe("axiosMiddleware", () => {
 
   beforeEach(() => {
     options = {
-      baseUrl: "https://lindorm.io",
+      host: "https://lindorm.io",
+      port: 4000,
       middleware: [{ request: jest.fn().mockResolvedValue({}) }],
       clientName: "axiosClient",
     };
@@ -36,6 +37,7 @@ describe("axiosMiddleware", () => {
 
     expect(ctx.axios.axiosClient).toStrictEqual(expect.any(Axios));
     expect(ctx.axios.axiosClient.baseUrl).toBe("https://lindorm.io");
+    expect(ctx.axios.axiosClient.basePort).toBe(4000);
     expect(ctx.axios.axiosClient.middleware.length).toBe(2);
     expect(ctx.metrics.axios).toBe(0);
   });

@@ -1,15 +1,14 @@
 import { CacheBase } from "@lindorm-io/redis";
-import { Middleware } from "@lindorm-io/koa";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisKoaMiddleware } from "../types";
 import { camelCase } from "lodash";
 
-interface CacheMiddlewareOptions {
+interface Options {
   cacheKey?: string;
   expiresInSeconds?: number;
 }
 
 export const cacheMiddleware =
-  (Cache: typeof CacheBase, options?: CacheMiddlewareOptions): Middleware<RedisContext> =>
+  (Cache: typeof CacheBase, options?: Options): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("redis");
 

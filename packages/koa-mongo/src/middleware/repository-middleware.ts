@@ -1,5 +1,4 @@
-import { Middleware } from "@lindorm-io/koa";
-import { MongoContext } from "../types";
+import { DefaultLindormMongoKoaMiddleware } from "../types";
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { camelCase } from "lodash";
 
@@ -8,7 +7,7 @@ interface Options {
 }
 
 export const repositoryMiddleware =
-  (Repository: typeof RepositoryBase, options?: Options): Middleware<MongoContext> =>
+  (Repository: typeof RepositoryBase, options?: Options): DefaultLindormMongoKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("mongo");
 

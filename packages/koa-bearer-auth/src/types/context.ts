@@ -1,7 +1,21 @@
 import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
-import { KoaContext } from "@lindorm-io/koa";
+import {
+  DefaultLindormContext,
+  DefaultLindormKoaContext,
+  DefaultLindormMiddleware,
+  DefaultLindormSocket,
+  DefaultLindormSocketMiddleware,
+} from "@lindorm-io/koa";
 
-export interface BearerAuthContext extends KoaContext {
+interface Context extends DefaultLindormContext {
   jwt: TokenIssuer;
   token: Record<string, IssuerVerifyData<unknown, unknown>>;
 }
+
+export type DefaultLindormBearerAuthKoaMiddleware = DefaultLindormMiddleware<
+  DefaultLindormKoaContext<Context>
+>;
+
+export type DefaultLindormBearerAuthSocketMiddleware = DefaultLindormSocketMiddleware<
+  DefaultLindormSocket<Context>
+>;

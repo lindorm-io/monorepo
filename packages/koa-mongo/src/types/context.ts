@@ -1,11 +1,25 @@
 import { EntityAttributes, LindormEntity } from "@lindorm-io/entity";
-import { KoaContext } from "@lindorm-io/koa";
 import { LindormRepository, MongoConnection } from "@lindorm-io/mongo";
+import {
+  DefaultLindormContext,
+  DefaultLindormKoaContext,
+  DefaultLindormMiddleware,
+  DefaultLindormSocket,
+  DefaultLindormSocketMiddleware,
+} from "@lindorm-io/koa";
 
-export interface MongoContext extends KoaContext {
+export interface DefaultLindormMongoContext extends DefaultLindormContext {
   connection: {
     mongo: MongoConnection;
   };
   entity: Record<string, LindormEntity<EntityAttributes>>;
   repository: Record<string, LindormRepository<EntityAttributes, LindormEntity<EntityAttributes>>>;
 }
+
+export type DefaultLindormMongoKoaMiddleware = DefaultLindormMiddleware<
+  DefaultLindormKoaContext<DefaultLindormMongoContext>
+>;
+
+export type DefaultLindormMongoSocketMiddleware = DefaultLindormSocketMiddleware<
+  DefaultLindormSocket<DefaultLindormMongoContext>
+>;

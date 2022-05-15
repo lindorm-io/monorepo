@@ -1,4 +1,4 @@
-import { RedisContext } from "../types";
+import { DefaultLindormRedisContext } from "../types";
 import { getRateLimitBackoffAttemptKey } from "../util";
 
 interface Options {
@@ -6,7 +6,10 @@ interface Options {
   value: string;
 }
 
-export const clearRateLimitBackoff = async (ctx: RedisContext, options: Options): Promise<void> => {
+export const clearRateLimitBackoff = async (
+  ctx: DefaultLindormRedisContext,
+  options: Options,
+): Promise<void> => {
   const {
     connection: { redis },
   } = ctx;

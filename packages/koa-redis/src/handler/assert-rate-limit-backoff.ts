@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisContext } from "../types";
 import { getRateLimitBackoffExpireKey } from "../util";
 
 interface Options {
@@ -8,7 +8,7 @@ interface Options {
 }
 
 export const assertRateLimitBackoff = async (
-  ctx: RedisContext,
+  ctx: DefaultLindormRedisContext,
   options: Options,
 ): Promise<void> => {
   const {

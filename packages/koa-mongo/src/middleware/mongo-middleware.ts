@@ -1,9 +1,8 @@
-import { Middleware } from "@lindorm-io/koa";
+import { DefaultLindormMongoKoaMiddleware } from "../types";
 import { MongoConnection } from "@lindorm-io/mongo";
-import { MongoContext } from "../types";
 
 export const mongoMiddleware =
-  (connection: MongoConnection): Middleware<MongoContext> =>
+  (connection: MongoConnection): DefaultLindormMongoKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("mongo");
 

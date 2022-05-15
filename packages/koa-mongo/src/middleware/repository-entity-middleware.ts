@@ -1,7 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { Middleware } from "@lindorm-io/koa";
-import { CustomValidation, MongoContext } from "../types";
+import { CustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { camelCase, get, isFunction, isString } from "lodash";
 
@@ -22,7 +21,10 @@ export const repositoryEntityMiddleware =
     Repository: typeof RepositoryBase,
     middlewareOptions: MiddlewareOptions = {},
   ) =>
-  (path: string, options: RepositoryEntityMiddlewareOptions = {}): Middleware<MongoContext> =>
+  (
+    path: string,
+    options: RepositoryEntityMiddlewareOptions = {},
+  ): DefaultLindormMongoKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("entity");
 

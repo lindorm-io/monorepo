@@ -1,11 +1,16 @@
-import { DefaultLindormSocketMiddleware, LindormSocketPromise } from "../../types";
+import {
+  DefaultLindormSocket,
+  DefaultLindormSocketMiddleware,
+  LindormSocketPromise,
+  SocketMiddlewareNext,
+} from "../../types";
 
 export const promisifyLindormSocketMiddleware =
-  <Options = any>(
-    promise: LindormSocketPromise<Options>,
-    options: Options,
-  ): DefaultLindormSocketMiddleware =>
-  (socket, next) => {
+  <Socket extends DefaultLindormSocket = DefaultLindormSocket, Options = any>(
+    promise: LindormSocketPromise<Socket, Options>,
+    options?: Options,
+  ): DefaultLindormSocketMiddleware<Socket> =>
+  (socket: Socket, next: SocketMiddlewareNext) => {
     promise(socket, options)
       .then(() => next())
       .catch((err) => next(err));

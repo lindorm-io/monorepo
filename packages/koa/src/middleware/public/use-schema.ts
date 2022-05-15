@@ -1,9 +1,9 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 import { Schema, ValidationError } from "joi";
 import { ClientError } from "@lindorm-io/errors";
 
 export const useSchema =
-  (schema: Schema): Middleware =>
+  (schema: Schema): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     try {
       await schema.validateAsync(ctx.data);

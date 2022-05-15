@@ -1,4 +1,4 @@
-import { Middleware } from "../../types";
+import { DefaultLindormMiddleware } from "../../types";
 import { RedirectError } from "@lindorm-io/errors";
 import { get } from "lodash";
 import { isURL } from "../../util/private";
@@ -9,7 +9,7 @@ export interface RedirectErrorMiddlewareOptions {
 }
 
 export const redirectErrorMiddleware =
-  (options: RedirectErrorMiddlewareOptions): Middleware =>
+  (options: RedirectErrorMiddlewareOptions): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     try {
       await next();

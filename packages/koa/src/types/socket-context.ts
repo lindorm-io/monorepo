@@ -1,5 +1,3 @@
-import { Logger } from "@lindorm-io/winston";
+import { DefaultLindormContext } from "./lindorm-context";
 
-export interface DefaultLindormSocketContext {
-  logger: Logger;
-}
+export type DefaultLindormSocketContext = DefaultLindormContext;

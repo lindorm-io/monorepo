@@ -1,8 +1,5 @@
 import { IssuerVerifyData } from "@lindorm-io/jwt";
-import { KoaContext } from "@lindorm-io/koa";
-import { TokenIssuerContext } from "./context";
+import { DefaultLindormKoaContext } from "@lindorm-io/koa";
 
-export type CustomValidation<Context extends KoaContext = TokenIssuerContext> = (
-  ctx: Context,
-  verifyData: IssuerVerifyData<any, any>,
-) => Promise<void>;
+export type CustomValidation<Context extends DefaultLindormKoaContext = DefaultLindormKoaContext> =
+  (ctx: Context, verifyData: IssuerVerifyData<any, any>) => Promise<void>;

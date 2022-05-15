@@ -1,5 +1,5 @@
 import { MAXIMUM_RATE_LIMIT_ATTEMPTS, MAXIMUM_RATE_LIMIT_EXPIRY } from "../constant";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisContext } from "../types";
 import {
   getRateLimitBackoffAttemptKey,
   getRateLimitBackoffExpireKey,
@@ -16,7 +16,10 @@ interface Result {
   retryIn?: number;
 }
 
-export const setRateLimitBackoff = async (ctx: RedisContext, options: Options): Promise<Result> => {
+export const setRateLimitBackoff = async (
+  ctx: DefaultLindormRedisContext,
+  options: Options,
+): Promise<Result> => {
   const {
     connection: { redis },
   } = ctx;

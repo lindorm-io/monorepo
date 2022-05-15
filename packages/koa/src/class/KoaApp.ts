@@ -4,7 +4,7 @@ import Koa from "koa";
 import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
-import { DefaultLindormKoaContext, KoaAppOptions, Middleware } from "../types";
+import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
 import { Environment } from "../enum";
 import { IntervalWorker } from "./IntervalWorker";
 import { Logger } from "@lindorm-io/winston";
@@ -18,6 +18,7 @@ import {
   defaultStatusMiddleware,
   errorMiddleware,
   initContextMiddleware,
+  initSocketContextMiddleware,
   metadataMiddleware,
   responseTimeMiddleware,
   serverInfoMiddleware,
@@ -35,7 +36,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   private readonly koaApp: Koa;
   private readonly koaRouter: Router;
   private readonly logger: Logger;
-  private readonly middleware: Array<Middleware<Context>>;
+  private readonly middleware: Array<DefaultLindormMiddleware<Context>>;
   private readonly port: number;
   private readonly setup?: () => Promise<void>;
   private readonly workers: Array<IntervalWorker>;
@@ -79,6 +80,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       this.middleware.push(socketIoMiddleware(this.ioServer));
 
       const socketMiddleware = [
+        initSocketContextMiddleware,
         socketLoggerMiddleware(this.logger),
         ...(options.socketMiddleware || []),
       ];
@@ -137,11 +139,11 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     return this.koaApp.callback();
   }
 
-  public addMiddleware(middleware: Middleware<any>): void {
+  public addMiddleware(middleware: DefaultLindormMiddleware<any>): void {
     this.middleware.push(middleware);
   }
 
-  public addMiddlewares(middlewares: Array<Middleware<any>>): void {
+  public addMiddlewares(middlewares: Array<DefaultLindormMiddleware<any>>): void {
     for (const middleware of middlewares) {
       this.addMiddleware(middleware);
     }

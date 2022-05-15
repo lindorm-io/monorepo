@@ -1,9 +1,8 @@
-import { Middleware } from "@lindorm-io/koa";
 import { RedisConnection } from "@lindorm-io/redis";
-import { RedisContext } from "../types";
+import { DefaultLindormRedisKoaMiddleware } from "../types";
 
 export const redisMiddleware =
-  (connection: RedisConnection): Middleware<RedisContext> =>
+  (connection: RedisConnection): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("redis");
 

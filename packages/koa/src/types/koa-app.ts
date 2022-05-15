@@ -3,7 +3,7 @@ import { DefaultLindormSocketMiddleware } from "./socket";
 import { Environment } from "../enum";
 import { IntervalWorker } from "../class";
 import { Logger } from "@lindorm-io/winston";
-import { Middleware } from "./koa";
+import { DefaultLindormMiddleware } from "./koa";
 import { Server } from "socket.io";
 
 export type SocketListeners = (io: Server) => void;
@@ -30,7 +30,7 @@ export interface KoaAppOptions<
   domain?: string;
   environment?: Environment;
   keys?: Array<string>;
-  middleware?: Array<Middleware<any>>;
+  middleware?: Array<DefaultLindormMiddleware<any>>;
   routerDirectory?: string;
   socket: boolean;
   socketMiddleware?: Array<DefaultLindormSocketMiddleware>;

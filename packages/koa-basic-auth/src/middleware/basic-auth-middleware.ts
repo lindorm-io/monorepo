@@ -1,5 +1,5 @@
 import { Credentials } from "../types";
-import { KoaContext, Middleware } from "@lindorm-io/koa";
+import { DefaultLindormMiddleware } from "@lindorm-io/koa";
 import { getCredentials, validateCredentials } from "../utils";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 
@@ -8,7 +8,7 @@ interface Options {
 }
 
 export const basicAuthMiddleware =
-  (options: Options): Middleware<KoaContext> =>
+  (options: Options): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("auth");
 

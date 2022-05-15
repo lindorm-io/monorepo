@@ -4,6 +4,7 @@ export * from "./controller";
 export * from "./koa";
 export * from "./koa-app";
 export * from "./koa-context";
+export * from "./lindorm-context";
 export * from "./metadata";
 export * from "./socket";
 export * from "./socket-context";

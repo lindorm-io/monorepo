@@ -1,8 +1,7 @@
 import { CacheBase } from "@lindorm-io/redis";
 import { ClientError } from "@lindorm-io/errors";
-import { CustomValidation, RedisContext } from "../types";
+import { CustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { Middleware } from "@lindorm-io/koa";
 import { camelCase, get, isFunction, isString } from "lodash";
 
 interface MiddlewareOptions {
@@ -18,7 +17,7 @@ export interface CacheEntityMiddlewareOptions {
 
 export const cacheEntityMiddleware =
   (Entity: typeof EntityBase, Cache: typeof CacheBase, middlewareOptions: MiddlewareOptions = {}) =>
-  (path: string, options: CacheEntityMiddlewareOptions = {}): Middleware<RedisContext> =>
+  (path: string, options: CacheEntityMiddlewareOptions = {}): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("entity");
 
