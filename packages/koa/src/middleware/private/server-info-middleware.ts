@@ -13,6 +13,7 @@ export const serverInfoMiddleware =
     ctx.server = {
       domain: options.domain || options.host,
       environment: options.environment || Environment.DEVELOPMENT,
+      host: options.host,
     };
 
     await next();

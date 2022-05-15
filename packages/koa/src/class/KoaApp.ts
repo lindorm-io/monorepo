@@ -23,6 +23,7 @@ import {
   serverInfoMiddleware,
   sessionLoggerMiddleware,
   socketIoMiddleware,
+  socketLoggerMiddleware,
   utilContextMiddleware,
 } from "../middleware/private";
 
@@ -67,7 +68,7 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
       serverInfoMiddleware(options),
       utilContextMiddleware,
       metadataMiddleware,
-      sessionLoggerMiddleware({ logger: this.logger }),
+      sessionLoggerMiddleware(this.logger),
       errorMiddleware,
       responseTimeMiddleware,
       ...(options.middleware || []),
@@ -77,7 +78,12 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
       this.ioServer = new IOServer(this.httpServer);
       this.middleware.push(socketIoMiddleware(this.ioServer));
 
-      for (const middleware of options.socketMiddleware || []) {
+      const socketMiddleware = [
+        socketLoggerMiddleware(this.logger),
+        ...(options.socketMiddleware || []),
+      ];
+
+      for (const middleware of socketMiddleware) {
         this.ioServer.use(middleware);
       }
 

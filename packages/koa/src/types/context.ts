@@ -31,6 +31,7 @@ export interface KoaContext<RequestData extends RecordString = RecordAny, Respon
   server: {
     domain: string;
     environment: Environment;
+    host: string;
   };
   token: RecordAny;
 
