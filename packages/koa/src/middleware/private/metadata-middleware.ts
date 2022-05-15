@@ -1,8 +1,8 @@
 import { Environment, MetadataHeader } from "../../enum";
-import { KoaContext, Middleware } from "../../types";
+import { DefaultLindormKoaContext, Middleware } from "../../types";
 import { randomUUID } from "crypto";
 
-interface AgentContext extends KoaContext {
+interface AgentContext extends DefaultLindormKoaContext {
   userAgent: Record<string, any>;
 }
 

@@ -1,7 +1,7 @@
-import { KoaContext } from "../../types";
+import { DefaultLindormKoaContext } from "../../types";
 
 export const deleteCookie =
-  (ctx: KoaContext) =>
+  (ctx: DefaultLindormKoaContext) =>
   (name: string): void => {
     ctx.cookies.set(name);
   };

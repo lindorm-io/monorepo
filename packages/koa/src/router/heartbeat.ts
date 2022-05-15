@@ -1,8 +1,10 @@
 import Router from "koa-router";
-import { HeartbeatCallback, KoaContext } from "../types";
+import { DefaultLindormKoaContext, HeartbeatCallback } from "../types";
 import { HttpStatus } from "../constant";
 
-export const createHeartbeatRouter = <Context extends KoaContext>(
+export const createHeartbeatRouter = <
+  Context extends DefaultLindormKoaContext = DefaultLindormKoaContext,
+>(
   callback?: HeartbeatCallback<Context>,
 ): Router => {
   const router = new Router<unknown, Context>();

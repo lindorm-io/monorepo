@@ -1,8 +1,6 @@
-import type { DefaultState, Middleware as KoaMiddleware } from "koa";
-import type { KoaContext } from "./context";
+import { DefaultLindormKoaContext } from "./koa-context";
+import { DefaultState, Middleware as KoaMiddleware } from "koa";
 
 export type { Next } from "koa";
-export type Middleware<Context extends KoaContext = KoaContext> = KoaMiddleware<
-  DefaultState,
-  Context
->;
+export type Middleware<Context extends DefaultLindormKoaContext = DefaultLindormKoaContext> =
+  KoaMiddleware<DefaultState, Context>;

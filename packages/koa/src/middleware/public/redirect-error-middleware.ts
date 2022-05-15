@@ -1,4 +1,4 @@
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 import { RedirectError } from "@lindorm-io/errors";
 import { get } from "lodash";
 import { isURL } from "../../util/private";
@@ -9,7 +9,7 @@ export interface RedirectErrorMiddlewareOptions {
 }
 
 export const redirectErrorMiddleware =
-  (options: RedirectErrorMiddlewareOptions): Middleware<KoaContext> =>
+  (options: RedirectErrorMiddlewareOptions): Middleware =>
   async (ctx, next): Promise<void> => {
     try {
       await next();

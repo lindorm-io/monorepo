@@ -4,9 +4,9 @@ import Koa from "koa";
 import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
+import { DefaultLindormKoaContext, KoaAppOptions, Middleware } from "../types";
 import { Environment } from "../enum";
 import { IntervalWorker } from "./IntervalWorker";
-import { KoaAppOptions, KoaContext, Middleware } from "../types";
 import { Logger } from "@lindorm-io/winston";
 import { Server as HttpServer, createServer } from "http";
 import { Server as IOServer } from "socket.io";
@@ -27,7 +27,7 @@ import {
   utilContextMiddleware,
 } from "../middleware/private";
 
-export class KoaApp<Context extends KoaContext = KoaContext> {
+export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoaContext> {
   private readonly environment: Environment;
   private readonly host: string;
   private readonly httpServer: HttpServer;

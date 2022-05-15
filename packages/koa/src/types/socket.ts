@@ -1,11 +1,7 @@
 import { DefaultEventsMap, EventsMap } from "socket.io/dist/typed-events";
+import { DefaultLindormSocketContext } from "./socket-context";
 import { ExtendedError } from "socket.io/dist/namespace";
-import { Logger } from "@lindorm-io/winston";
 import { Socket } from "socket.io/dist/socket";
-
-export interface DefaultLindormSocketContext {
-  logger: Logger;
-}
 
 export interface DefaultLindormSocket<
   ListenEvents extends EventsMap = DefaultEventsMap,

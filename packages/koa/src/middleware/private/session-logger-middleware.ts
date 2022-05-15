@@ -1,8 +1,8 @@
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 import { Logger } from "@lindorm-io/winston";
 
 export const sessionLoggerMiddleware =
-  (winston: Logger): Middleware<KoaContext> =>
+  (winston: Logger): Middleware =>
   async (ctx, next): Promise<void> => {
     ctx.logger = winston.createSessionLogger({
       correlationId: ctx.metadata.identifiers.correlationId,

@@ -1,9 +1,12 @@
-import { Controller, KoaContext } from "../../types";
+import { Controller, DefaultLindormKoaContext } from "../../types";
 import { HttpStatus } from "../../constant";
 
 export const useController =
-  (controller: Controller, controllerName?: string) =>
-  async (ctx: KoaContext): Promise<void> => {
+  <Context extends DefaultLindormKoaContext = DefaultLindormKoaContext>(
+    controller: Controller<Context>,
+    controllerName?: string,
+  ) =>
+  async (ctx: Context): Promise<void> => {
     const name = controllerName || controller.name || "controller";
     const metric = ctx.getMetric(name);
 

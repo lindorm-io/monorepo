@@ -1,9 +1,9 @@
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 import { Schema, ValidationError } from "joi";
 import { ClientError } from "@lindorm-io/errors";
 
 export const useSchema =
-  (schema: Schema): Middleware<KoaContext> =>
+  (schema: Schema): Middleware =>
   async (ctx, next): Promise<void> => {
     try {
       await schema.validateAsync(ctx.data);

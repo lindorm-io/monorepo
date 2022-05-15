@@ -1,6 +1,6 @@
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 
-export const initContextMiddleware: Middleware<KoaContext> = async (ctx, next): Promise<void> => {
+export const initContextMiddleware: Middleware = async (ctx, next): Promise<void> => {
   ctx.axios = {};
   ctx.cache = {};
   ctx.connection = {};

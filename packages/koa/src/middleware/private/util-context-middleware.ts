@@ -1,5 +1,5 @@
 import { Metric } from "../../class";
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 import {
   deleteCookie,
   getAuthorizationHeader,
@@ -8,7 +8,7 @@ import {
   setCookie,
 } from "../../util/private";
 
-export const utilContextMiddleware: Middleware<KoaContext> = async (ctx, next): Promise<void> => {
+export const utilContextMiddleware: Middleware = async (ctx, next): Promise<void> => {
   ctx.deleteCookie = deleteCookie(ctx);
   ctx.getAuthorizationHeader = getAuthorizationHeader(ctx);
   ctx.getCookie = getCookie(ctx);

@@ -1,8 +1,10 @@
 import Router from "koa-router";
-import { HealthCallback, KoaContext } from "../types";
+import { DefaultLindormKoaContext, HealthCallback } from "../types";
 import { HttpStatus } from "../constant";
 
-export const createHealthRouter = <Context extends KoaContext>(
+export const createHealthRouter = <
+  Context extends DefaultLindormKoaContext = DefaultLindormKoaContext,
+>(
   callback?: HealthCallback<Context>,
 ): Router => {
   const router = new Router<unknown, Context>();

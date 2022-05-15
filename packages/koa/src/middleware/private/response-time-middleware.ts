@@ -1,6 +1,6 @@
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 
-export const responseTimeMiddleware: Middleware<KoaContext> = async (ctx, next): Promise<void> => {
+export const responseTimeMiddleware: Middleware = async (ctx, next): Promise<void> => {
   const metric = ctx.getMetric("responseTime");
   const startTime = Date.now();
 

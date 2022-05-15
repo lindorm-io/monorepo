@@ -30,14 +30,14 @@ interface Identifiers {
   fingerprint: string | null;
 }
 
-export interface KoaMetadata {
+export interface LindormKoaMetadata {
   agent: Agent;
   client: Client;
   device: Device;
   identifiers: Identifiers;
 }
 
-export interface KoaMetadataHeaders {
+export interface LindormKoaMetadataHeaders {
   [MetadataHeader.AGENT_BROWSER]: string | null;
   [MetadataHeader.AGENT_GEO_IP]: string | null;
   [MetadataHeader.AGENT_OS]: string | null;

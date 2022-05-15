@@ -1,5 +1,5 @@
 import { includes } from "lodash";
-import { KoaContext } from "../../types";
+import { DefaultLindormKoaContext } from "../../types";
 import { Environment } from "../../enum";
 
 export interface GetCookieOptions {
@@ -7,7 +7,7 @@ export interface GetCookieOptions {
 }
 
 export const getCookie =
-  (ctx: KoaContext) =>
+  (ctx: DefaultLindormKoaContext) =>
   (name: string, options: Partial<GetCookieOptions> = {}): string | undefined => {
     const {
       cookies,

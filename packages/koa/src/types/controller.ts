@@ -1,12 +1,12 @@
-import { KoaContext } from "./context";
-import { RecordAny } from "./util";
+import { DefaultLindormKoaContext } from "./koa-context";
 
-export type ControllerResponse<Body = RecordAny> = Promise<{
+export type ControllerResponse<Body extends Record<string, any> = Record<string, any>> = Promise<{
   body?: Body;
   redirect?: URL | string;
   status?: number;
 }>;
 
-export type Controller<Context extends KoaContext = KoaContext, Body = RecordAny> = (
-  ctx: Context,
-) => ControllerResponse<Body>;
+export type Controller<
+  Context extends DefaultLindormKoaContext = DefaultLindormKoaContext,
+  Body extends Record<string, any> = Record<string, any>,
+> = (ctx: Context) => ControllerResponse<Body>;

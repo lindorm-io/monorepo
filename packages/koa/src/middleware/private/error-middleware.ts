@@ -1,8 +1,8 @@
 import { HttpStatus } from "../../constant";
-import { KoaContext, Middleware } from "../../types";
+import { Middleware } from "../../types";
 import { RedirectError } from "@lindorm-io/errors";
 
-export const errorMiddleware: Middleware<KoaContext> = async (ctx, next): Promise<void> => {
+export const errorMiddleware: Middleware = async (ctx, next): Promise<void> => {
   try {
     await next();
   } catch (err: any) {
