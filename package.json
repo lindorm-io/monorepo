@@ -28,7 +28,7 @@
     "test:update": "lerna run test:update",
     "test:update:changed": "lerna run --since --include-dependents test:update",
     "typecheck": "lerna run typecheck",
-    "typecheck:changed": "lerna exec --since --include-dependents -- tsc --noEmit",
+    "typecheck:changed": "lerna run --since --include-dependents typecheck --parallel",
     "upgrade:dependencies": "yarn upgrade-interactive --latest",
     "verify": "yarn typecheck && yarn lint && yarn test",
     "verify:changed": "yarn typecheck:changed && yarn lint:changed && yarn test:changed"
