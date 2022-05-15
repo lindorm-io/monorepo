@@ -41,7 +41,7 @@ describe("Axios", () => {
       headers: {},
       method: "get",
       timeout: 3000,
-      url: "http://localhost/get/path",
+      url: "http://localhost:4000/get/path",
     });
   });
 
@@ -52,7 +52,7 @@ describe("Axios", () => {
       headers: {},
       method: "post",
       timeout: 3000,
-      url: "http://localhost/post/path",
+      url: "http://localhost:4000/post/path",
     });
   });
 
@@ -63,7 +63,7 @@ describe("Axios", () => {
       headers: {},
       method: "put",
       timeout: 3000,
-      url: "http://localhost/put/path",
+      url: "http://localhost:4000/put/path",
     });
   });
 
@@ -74,7 +74,7 @@ describe("Axios", () => {
       headers: {},
       method: "patch",
       timeout: 3000,
-      url: "http://localhost/patch/path",
+      url: "http://localhost:4000/patch/path",
     });
   });
 
@@ -85,7 +85,7 @@ describe("Axios", () => {
       headers: {},
       method: "delete",
       timeout: 3000,
-      url: "http://localhost/delete/path",
+      url: "http://localhost:4000/delete/path",
     });
   });
 
@@ -194,7 +194,7 @@ describe("Axios", () => {
 
     expect(request).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "http://localhost/get/path/paramValue",
+        url: "http://localhost:4000/get/path/paramValue",
       }),
     );
   });
@@ -213,7 +213,7 @@ describe("Axios", () => {
 
     expect(request).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "http://localhost/get/path/query?query_1=queryValue&query_2=12345&query_3=query+with+spaces&query_4=https%3A%2F%2Ftest.lindorm.io%2Froute%2F",
+        url: "http://localhost:4000/get/path/query?query_1=queryValue&query_2=12345&query_3=query+with+spaces&query_4=https%3A%2F%2Ftest.lindorm.io%2Froute%2F",
       }),
     );
   });

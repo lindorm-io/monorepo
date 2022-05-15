@@ -80,7 +80,7 @@ describe("axiosClientCredentialsMiddleware", () => {
       },
       method: "post",
       timeout: 3000,
-      url: "https://oauth.lindorm.io/oauth2/token",
+      url: "https://oauth.lindorm.io:4000/oauth2/token",
     });
   });
 

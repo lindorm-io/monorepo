@@ -11,19 +11,19 @@ describe("createURL", () => {
     );
   });
 
-  test("should add baseUrl to path", () => {
+  test("should add host to path", () => {
     expect(
       createURL("/test", {
-        baseUrl: "https://lindorm.io",
+        host: "https://lindorm.io",
       }).toString(),
     ).toBe("https://lindorm.io/test");
   });
 
-  test("should add basePort to path", () => {
+  test("should add port to path", () => {
     expect(
       createURL("/test", {
-        basePort: 3000,
-        baseUrl: "https://lindorm.io",
+        host: "https://lindorm.io",
+        port: 3000,
       }).toString(),
     ).toBe("https://lindorm.io:3000/test");
   });
@@ -31,7 +31,7 @@ describe("createURL", () => {
   test("should add params to path", () => {
     expect(
       createURL(
-        "https://lindorm.io/one/:paramOne/two/:paramTwo/three/:paramThree/four/:paramFour/five/:paramFive",
+        "https://lindorm.io:4000/one/:paramOne/two/:paramTwo/three/:paramThree/four/:paramFour/five/:paramFive",
         {
           params: {
             paramOne: "string",
@@ -43,7 +43,7 @@ describe("createURL", () => {
         },
       ).toString(),
     ).toBe(
-      "https://lindorm.io/one/string/two/123456/three/true/four/string%20with%20spaces/five/array%20987%20false",
+      "https://lindorm.io:4000/one/string/two/123456/three/true/four/string%20with%20spaces/five/array%20987%20false",
     );
   });
 
@@ -76,11 +76,11 @@ describe("createURL", () => {
     ).toBe("https://lindorm.io/test/one/two?query_one=string&query_two=123456");
   });
 
-  test("should throw on URL/baseUrl conflict", () => {
-    expect(() => createURL(new URL("https://lindorm.io/test"), { baseUrl: "url" })).toThrow(Error);
+  test("should throw on URL/host conflict", () => {
+    expect(() => createURL(new URL("https://lindorm.io/test"), { host: "url" })).toThrow(Error);
   });
 
-  test("should throw on basePort/baseUrl conflict", () => {
-    expect(() => createURL("/pathname", { basePort: 4000 })).toThrow(Error);
+  test("should throw on port/host conflict", () => {
+    expect(() => createURL("/pathname", { port: 4000 })).toThrow(Error);
   });
 });
