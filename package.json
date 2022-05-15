@@ -22,7 +22,7 @@
     "clean:changed": "lerna run --since --include-dependents clean --parallel",
     "lint": "lerna exec -- eslint . --ext .ts",
     "lint:changed": "lerna exec --since --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
-    "release": "yarn clean:changed && yarn build:changed && yarn test:changed && cross-env HUSKY_BYPASS=true lerna publish",
+    "release": "yarn clean:changed && yarn build:changed && yarn typecheck:changed && yarn test:changed && cross-env HUSKY_BYPASS=true lerna publish",
     "test": "lerna run test",
     "test:changed": "lerna run --since --include-dependents test",
     "test:update": "lerna run test:update",
