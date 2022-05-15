@@ -73,17 +73,17 @@ export class KoaApp<Context extends KoaContext = KoaContext> {
       ...(options.middleware || []),
     ];
 
-    if (options.createSocketListeners) {
+    if (options.socket) {
       this.ioServer = new IOServer(this.httpServer);
       this.middleware.push(socketIoMiddleware(this.ioServer));
 
-      if (options.socketMiddleware) {
-        for (const middleware of options.socketMiddleware) {
-          this.ioServer.use(middleware);
-        }
+      for (const middleware of options.socketMiddleware || []) {
+        this.ioServer.use(middleware);
       }
 
-      options.createSocketListeners(this.ioServer);
+      if (options.socketListeners) {
+        options.socketListeners(this.ioServer);
+      }
     }
 
     this.addRoute("/health", createHealthRouter<Context>(options.heartbeatCallback));

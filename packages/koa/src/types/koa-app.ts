@@ -6,7 +6,7 @@ import { Middleware } from "./koa";
 import { Server } from "socket.io";
 import { DefaultLindormSocketMiddleware } from "./socket";
 
-export type CreateSocketListeners = (io: Server) => void;
+export type SocketListeners = (io: Server) => void;
 
 export type HealthCallback<Context extends KoaContext> = (ctx: Context) => Promise<void>;
 
@@ -26,11 +26,12 @@ export interface KoaAppOptions<Context extends KoaContext> {
   keys?: Array<string>;
   middleware?: Array<Middleware<any>>;
   routerDirectory?: string;
+  socket: boolean;
   socketMiddleware?: Array<DefaultLindormSocketMiddleware>;
   workers?: Array<IntervalWorker>;
 
   // functions
-  createSocketListeners?: CreateSocketListeners;
+  socketListeners?: SocketListeners;
   healthCallback?: HealthCallback<Context>;
   heartbeatCallback?: HeartbeatCallback<Context>;
   setup?: SetupCallback;
