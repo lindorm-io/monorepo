@@ -224,7 +224,9 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
   private listen(): void {
     this.httpServer.listen(this.port, (): void => {
-      this.logger.verbose(`server available on: ${this.host}:${this.port}`);
+      this.logger.verbose("server listening on port", {
+        port: this.port,
+      });
 
       this.koaApp.emit("start");
     });
