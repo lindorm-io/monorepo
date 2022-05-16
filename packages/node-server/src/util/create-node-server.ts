@@ -69,8 +69,10 @@ export const createNodeServer = <
       middleware.push(keystoreMiddleware);
       socketMiddleware.push(socketKeystoreMiddleware);
 
-      middleware.push(tokenIssuerMiddleware({ issuer: options.host }));
-      socketMiddleware.push(socketTokenIssuerMiddleware({ issuer: options.host }));
+      middleware.push(tokenIssuerMiddleware({ issuer: options.issuer || options.host }));
+      socketMiddleware.push(
+        socketTokenIssuerMiddleware({ issuer: options.issuer || options.host }),
+      );
     }
   }
 

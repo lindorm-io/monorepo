@@ -9,6 +9,7 @@ export interface CreateNodeServerOptions<
   caches?: Array<typeof CacheBase>;
   isKeyPairCached?: boolean;
   isKeyPairInRepository?: boolean;
+  issuer?: string;
   mongoConnection?: MongoConnection;
   redisConnection?: RedisConnection;
   repositories?: Array<typeof RepositoryBase>;
