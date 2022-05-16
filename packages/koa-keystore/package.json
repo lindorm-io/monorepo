@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-keystore",
   "description": "Keystore middleware for @lindorm-io/koa applications",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,11 +24,11 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/axios": "^0.3.0",
+    "@lindorm-io/axios": "^0.3.1",
     "@lindorm-io/core": "^0.4.0",
     "@lindorm-io/errors": "^0.1.13",
     "@lindorm-io/key-pair": "^0.4.4",
-    "@lindorm-io/koa": "^0.12.0",
+    "@lindorm-io/koa": "^0.12.1",
     "@lindorm-io/mongo": "^0.7.6",
     "@lindorm-io/redis": "^0.6.5",
     "@lindorm-io/winston": "^0.2.1",

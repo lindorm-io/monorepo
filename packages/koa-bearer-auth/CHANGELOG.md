@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.0...@lindorm-io/koa-bearer-auth@0.3.1) (2022-05-16)
+
+
+### Bug Fixes
+
+* rename custom validation type ([8d442d4](https://github.com/lindorm-io/monorepo/commit/8d442d4af5503618cab64f434101e00d0d1b2bba))
+
+
+
+
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.2.14...@lindorm-io/koa-bearer-auth@0.3.0) (2022-05-15)
 
 

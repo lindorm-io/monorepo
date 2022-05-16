@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.0...@lindorm-io/koa@0.12.1) (2022-05-16)
+
+
+### Bug Fixes
+
+* add verbose logging when attaching socket io ([688beb1](https://github.com/lindorm-io/monorepo/commit/688beb1e9565104041d82bfa74097dd6b842a84b))
+* improve timeout and logging for interval worker retries ([fdc6982](https://github.com/lindorm-io/monorepo/commit/fdc6982d038979c5b880f81c6c15e55c75127dd2))
+* improve typing for koa package ([dba419c](https://github.com/lindorm-io/monorepo/commit/dba419c265b589ad3d16000f904bd280fb93d38e))
+
+
+
+
+
 # [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.11.0...@lindorm-io/koa@0.12.0) (2022-05-15)
 
 
