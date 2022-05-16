@@ -1,16 +1,20 @@
 import { Server } from "socket.io";
-import { logger } from "./logger";
+import { winston } from "./logger";
 
 export const socketListeners = (io: Server): void => {
   io.on("connection", (socket) => {
-    logger.info("connection", { id: socket.id, data: socket.data });
+    const logger = winston
+      .createChildLogger(["socket-listeners"])
+      .createSessionLogger({ sockedId: socket.id });
+
+    logger.info("connection established");
 
     socket.on("test", (...args) => {
-      logger.info("connection test", { id: socket.id, args });
+      logger.info("test event", { args });
     });
 
     socket.on("join_device_channel", (token) => {
-      logger.info("Join device channel", { token });
+      logger.info("join device channel", { token });
     });
   });
 };

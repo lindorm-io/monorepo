@@ -5,7 +5,7 @@ import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { keyPairOAuthJwksWorker } from "../worker";
-import { logger } from "./logger";
+import { winston } from "./logger";
 import { redisConnection } from "../instance";
 import { socketListeners } from "./socket";
 
@@ -14,7 +14,7 @@ export const server = createNodeServer<ServerKoaContext>({
   host: configuration.server.host,
   isKeyPairCached: true,
   issuer: configuration.server.issuer,
-  logger: logger,
+  logger: winston,
   port: configuration.server.port,
   redisConnection,
   routerDirectory: join(__dirname, "..", "router"),
