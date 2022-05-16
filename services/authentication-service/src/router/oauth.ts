@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { ServerKoaContext } from "../types";
 import { ERROR_REDIRECT_URI } from "../constant";
 import { redirectErrorMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -10,7 +10,7 @@ import {
   oauthLogoutSchema,
 } from "../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

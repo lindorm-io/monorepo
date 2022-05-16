@@ -3,14 +3,14 @@ import { LoginSession, FlowSession } from "../../../entity";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomNumberAsync } from "@lindorm-io/core";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 interface Options extends FlowHandlerInitialiseOptions {
   email: string;
 }
 
 export const initialiseEmailOtpFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

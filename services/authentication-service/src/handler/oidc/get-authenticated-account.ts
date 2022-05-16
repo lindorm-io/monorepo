@@ -1,7 +1,7 @@
 import { Account, LoginSession, OidcSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { OpenIDClaims } from "../../common";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { find } from "lodash";
 import { identityAuthenticateOidc, identityUpdateUserinfo } from "../axios";
 
@@ -11,7 +11,7 @@ interface Options {
 }
 
 export const getAuthenticatedAccount = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   oidcSession: OidcSession,
   options: Options,

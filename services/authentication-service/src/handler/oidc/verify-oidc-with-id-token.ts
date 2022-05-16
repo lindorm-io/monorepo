@@ -1,11 +1,11 @@
 import { Account, LoginSession, OidcSession } from "../../entity";
-import { Context } from "../../types";
-import { configuration } from "../../configuration";
+import { ServerKoaContext } from "../../types";
+import { configuration } from "../../server/configuration";
 import { find } from "lodash";
 import { getAuthenticatedAccount } from "./get-authenticated-account";
 
 export const verifyOidcWithIdToken = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   oidcSession: OidcSession,
   idToken: string,

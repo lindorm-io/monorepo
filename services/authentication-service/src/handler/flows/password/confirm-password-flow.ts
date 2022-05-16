@@ -1,6 +1,6 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { identityAuthenticateIdentifier } from "../../axios";
 
@@ -9,7 +9,7 @@ interface Options {
 }
 
 export const confirmPasswordFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

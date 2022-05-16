@@ -3,14 +3,14 @@ import { ClientScope, SendSmsRequestData } from "../../../common";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomNumberAsync } from "@lindorm-io/core";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 interface Options extends FlowHandlerInitialiseOptions {
   phoneNumber: string;
 }
 
 export const initialisePhoneOtpFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

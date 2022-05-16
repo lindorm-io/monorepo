@@ -1,12 +1,12 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
+import { ServerKoaController } from "../../types";
 import { assertPKCE, createURL } from "@lindorm-io/core";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { filter, includes } from "lodash";
 import { isAuthenticationReadyToConfirm } from "../../util";
 import { randomUUID } from "crypto";
@@ -24,7 +24,7 @@ export const oauthLoginSchema = Joi.object<RequestData>({
   sessionId: JOI_GUID.required(),
 });
 
-export const oauthLoginController: Controller<Context<RequestData>> = async (
+export const oauthLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -80,7 +80,7 @@ export const oauthLoginController: Controller<Context<RequestData>> = async (
 
   return {
     redirect: createURL(configuration.frontend.routes.login, {
-      baseUrl: configuration.frontend.base_url,
+      host: configuration.frontend.base_url,
       query: { displayMode, uiLocales },
     }),
   };

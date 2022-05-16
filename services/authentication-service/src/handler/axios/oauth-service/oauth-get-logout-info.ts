@@ -1,9 +1,9 @@
 import { ClientScope, GetLogoutSessionInfoResponseBody } from "../../../common";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 
 export const oauthGetLogoutSessionInfo = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   sessionId: string,
 ): Promise<GetLogoutSessionInfoResponseBody> => {
   const {

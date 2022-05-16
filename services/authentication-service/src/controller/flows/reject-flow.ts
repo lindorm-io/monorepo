@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;
@@ -15,7 +15,7 @@ export const rejectFlowSchema = Joi.object<RequestData>({
   rdcSessionStatus: Joi.string().optional(),
 });
 
-export const rejectFlowController: Controller<Context<RequestData>> = async (
+export const rejectFlowController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

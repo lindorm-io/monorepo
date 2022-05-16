@@ -1,10 +1,10 @@
 import { Account } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { filter } from "lodash";
 import { oauthGetIdentitySessions } from "../axios";
 
 export const getValidIdentitySessions = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   account?: Account,
 ): Promise<Array<string>> => {
   if (!account) {

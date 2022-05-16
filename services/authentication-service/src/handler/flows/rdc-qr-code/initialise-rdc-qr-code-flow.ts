@@ -1,8 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { LoginSession, FlowSession } from "../../../entity";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { configuration } from "../../../configuration";
+import { configuration } from "../../../server/configuration";
 import { createURL, getRandomString } from "@lindorm-io/core";
 import {
   ClientScope,
@@ -18,7 +18,7 @@ interface Result {
 }
 
 export const initialiseRdcQrCodeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,
@@ -53,7 +53,8 @@ export const initialiseRdcQrCodeFlow = async (
     confirmMethod: RequestMethod.PUT,
     confirmPayload: { flowToken },
     confirmUri: createURL("/authenticate/flows/:id/confirm", {
-      baseUrl: configuration.server.host,
+      host: configuration.server.host,
+      port: configuration.server.port,
       params: { id: flowSession.id },
     }).toString(),
     expiresAt: flowSession.expires.toISOString(),
@@ -61,7 +62,8 @@ export const initialiseRdcQrCodeFlow = async (
     nonce: flowSession.nonce,
     rejectMethod: RequestMethod.PUT,
     rejectUri: createURL("/authenticate/flows/:id/reject", {
-      baseUrl: configuration.server.host,
+      host: configuration.server.host,
+      port: configuration.server.port,
       params: { id: flowSession.id },
     }).toString(),
     scopes: ["authentication"],

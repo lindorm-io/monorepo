@@ -1,5 +1,5 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { ServerError } from "@lindorm-io/errors";
 
 interface Options {
@@ -7,7 +7,7 @@ interface Options {
 }
 
 export const confirmBankIdSeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

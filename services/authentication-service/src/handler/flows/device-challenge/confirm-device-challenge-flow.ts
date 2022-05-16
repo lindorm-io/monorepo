@@ -1,14 +1,14 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { TokenType } from "../../../enum";
-import { configuration } from "../../../configuration";
+import { configuration } from "../../../server/configuration";
 
 interface Options {
   challengeConfirmationToken: string;
 }
 
 export const confirmDeviceChallengeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,
@@ -30,7 +30,8 @@ export const confirmDeviceChallengeFlow = async (
   logger.debug("Verifying Challenge Confirmation Token");
 
   jwt.verify(challengeConfirmationToken, {
-    issuer: configuration.services.device_service,
+    issuer:
+      configuration.services.device_service.issuer || configuration.services.device_service.host,
     nonce: flowSession.nonce,
     scopes: ["authentication"],
     subject: loginSession.identityId,

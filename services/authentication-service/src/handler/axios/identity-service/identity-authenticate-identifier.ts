@@ -1,5 +1,5 @@
 import { LoginSession, FlowSession } from "../../../entity";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import {
   AuthenticateIdentifierRequestData,
@@ -9,7 +9,7 @@ import {
 } from "../../../common";
 
 export const identityAuthenticateIdentifier = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
 ): Promise<AuthenticateIdentifierResponseBody> => {

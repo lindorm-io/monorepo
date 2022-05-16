@@ -43,9 +43,8 @@ interface Mongo {
 }
 
 interface Oauth {
-  client_id:      string;
-  client_secret:  string;
-  host:           string;
+  client_id:     string;
+  client_secret: string;
 }
 
 interface OidcProvider {
@@ -66,12 +65,20 @@ interface Server {
   domain:      string;
   environment: string;
   host:        string;
+  issuer:      string;
   port:        number;
 }
 
 interface Services {
-  communication_service: string;
-  device_service:        string;
-  identity_service:      string;
+  communication_service: Service;
+  device_service:        Service;
+  identity_service:      Service;
+  oauth_service:         Service;
+}
+
+interface Service {
+  host:    string;
+  issuer:  string;
+  port:    number;
 }
 

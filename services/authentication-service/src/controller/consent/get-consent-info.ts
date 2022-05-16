@@ -1,6 +1,6 @@
 import { ClientType, ScopeDescription } from "../../common";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 
 interface ResponseBody {
   client: {
@@ -14,7 +14,7 @@ interface ResponseBody {
   scopes: Array<string>;
 }
 
-export const getConsentInfoController: Controller<Context> = async (
+export const getConsentInfoController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

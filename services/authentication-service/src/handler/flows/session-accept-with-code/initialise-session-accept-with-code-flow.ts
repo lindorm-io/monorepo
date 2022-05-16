@@ -3,7 +3,7 @@ import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomString } from "@lindorm-io/core";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 type Options = FlowHandlerInitialiseOptions;
 
@@ -12,7 +12,7 @@ interface Result {
 }
 
 export const initialiseSessionAcceptWithCodeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

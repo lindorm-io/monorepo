@@ -1,10 +1,10 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
+import { ServerKoaController } from "../../types";
 import { SessionStatus } from "../../common";
-import { oauthConfirmAuthentication, getCurrentFlowSession } from "../../handler";
 import { getPrioritizedFlow, isAuthenticationReadyToConfirm, isPollingRequired } from "../../util";
+import { oauthConfirmAuthentication, getCurrentFlowSession } from "../../handler";
 
 interface ResponseBody {
   availableFlows: Array<FlowType>;
@@ -21,7 +21,7 @@ interface ResponseBody {
   requestedMethods: Array<string>;
 }
 
-export const getLoginController: Controller<Context> = async (
+export const getLoginController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

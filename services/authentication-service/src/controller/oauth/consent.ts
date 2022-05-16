@@ -3,9 +3,9 @@ import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
 import { ClientType, JOI_GUID, SessionStatus } from "../../common";
 import { ConsentSession } from "../../entity";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { oauthConfirmConsent, oauthGetConsentInfo, oauthSkipConsent } from "../../handler";
 
@@ -17,7 +17,7 @@ export const oauthConsentSchema = Joi.object<RequestData>({
   sessionId: JOI_GUID.required(),
 });
 
-export const oauthConsentController: Controller<Context<RequestData>> = async (
+export const oauthConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -71,7 +71,7 @@ export const oauthConsentController: Controller<Context<RequestData>> = async (
 
   return {
     redirect: createURL(configuration.frontend.routes.consent, {
-      baseUrl: configuration.frontend.base_url,
+      host: configuration.frontend.base_url,
       query: { displayMode, uiLocales },
     }),
   };

@@ -1,9 +1,9 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { ClientScope, AddUserinfoRequestBody } from "../../../common";
 import { clientCredentialsMiddleware } from "../../../middleware";
 
 export const identityUpdateUserinfo = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identityId: string,
   options: Partial<AddUserinfoRequestBody>,
 ): Promise<void> => {

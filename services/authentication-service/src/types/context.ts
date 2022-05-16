@@ -1,9 +1,12 @@
-import { Axios } from "@lindorm-io/axios";
-import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
-import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { KoaContext } from "@lindorm-io/koa";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
+import {
+  LindormNodeServerAxios,
+  LindormNodeServerCache,
+  LindormNodeServerContext,
+  LindormNodeServerKoaContext,
+  LindormNodeServerKoaMiddleware,
+  LindormNodeServerRepository,
+  LindormNodeServerToken,
+} from "@lindorm-io/node-server";
 import {
   Account,
   BrowserLink,
@@ -24,47 +27,57 @@ import {
   OidcSessionCache,
   LogoutSessionCache,
 } from "../infrastructure";
+import { Axios } from "@lindorm-io/axios";
+import { IssuerVerifyData } from "@lindorm-io/jwt";
+import { Controller } from "@lindorm-io/koa";
 
-export interface Context<Body = Record<string, any>> extends KoaContext<Body> {
-  axios: {
-    axiosClient: Axios;
-    communicationClient: Axios;
-    deviceLinkClient: Axios;
-    identityClient: Axios;
-    oauthClient: Axios;
-  };
-  cache: {
-    consentSessionCache: ConsentSessionCache;
-    flowSessionCache: FlowSessionCache;
-    loginSessionCache: LoginSessionCache;
-    logoutSessionCache: LogoutSessionCache;
-    mfaCookieSessionCache: MfaCookieSessionCache;
-    oidcSessionCache: OidcSessionCache;
-  };
-  connection: {
-    mongo: MongoConnection;
-    redis: RedisConnection;
-  };
-  entity: {
-    account: Account;
-    browserLink: BrowserLink;
-    consentSession: ConsentSession;
-    flowSession: FlowSession;
-    loginSession: LoginSession;
-    logoutSession: LogoutSession;
-    mfaCookieSession: MfaCookieSession;
-    oidcSession: OidcSession;
-  };
-  jwt: TokenIssuer;
-  keys: Array<KeyPair>;
-  keystore: Keystore;
-  repository: {
-    accountRepository: AccountRepository;
-    browserLinkRepository: BrowserLinkRepository;
-  };
-  token: {
-    bearerToken: IssuerVerifyData<never, never>;
-    challengeConfirmationToken: IssuerVerifyData<unknown, unknown>;
-    flowToken: IssuerVerifyData<never, never>;
-  };
+interface ServerAxios extends LindormNodeServerAxios {
+  communicationClient: Axios;
+  deviceLinkClient: Axios;
+  identityClient: Axios;
+  oauthClient: Axios;
 }
+
+interface ServerCache extends LindormNodeServerCache {
+  consentSessionCache: ConsentSessionCache;
+  flowSessionCache: FlowSessionCache;
+  loginSessionCache: LoginSessionCache;
+  logoutSessionCache: LogoutSessionCache;
+  mfaCookieSessionCache: MfaCookieSessionCache;
+  oidcSessionCache: OidcSessionCache;
+}
+
+interface ServerEntity {
+  account: Account;
+  browserLink: BrowserLink;
+  consentSession: ConsentSession;
+  flowSession: FlowSession;
+  loginSession: LoginSession;
+  logoutSession: LogoutSession;
+  mfaCookieSession: MfaCookieSession;
+  oidcSession: OidcSession;
+}
+
+interface ServerRepository extends LindormNodeServerRepository {
+  accountRepository: AccountRepository;
+  browserLinkRepository: BrowserLinkRepository;
+}
+
+interface ServerToken extends LindormNodeServerToken {
+  challengeConfirmationToken: IssuerVerifyData<unknown, unknown>;
+  flowToken: IssuerVerifyData<never, never>;
+}
+
+interface Context extends LindormNodeServerContext {
+  axios: ServerAxios;
+  cache: ServerCache;
+  entity: ServerEntity;
+  repository: ServerRepository;
+  token: ServerToken;
+}
+
+export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+
+export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

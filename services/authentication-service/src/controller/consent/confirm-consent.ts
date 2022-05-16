@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { oauthConfirmConsent } from "../../handler";
 import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { oauthConfirmConsent } from "../../handler";
 
 interface RequestData {
   audiences: Array<string>;
@@ -14,7 +14,7 @@ export const confirmConsentSchema = Joi.object<RequestData>({
   scopes: Joi.array().items(Joi.string().lowercase()),
 });
 
-export const confirmConsentController: Controller<Context<RequestData>> = async (
+export const confirmConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

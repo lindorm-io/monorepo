@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Router, useController } from "@lindorm-io/koa";
 import { logoutSessionCookieMiddleware } from "../../middleware";
 import {
@@ -7,7 +7,7 @@ import {
   rejectLogoutController,
 } from "../../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get("/", logoutSessionCookieMiddleware, useController(getLogoutInfoController));

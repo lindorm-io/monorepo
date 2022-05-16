@@ -1,9 +1,9 @@
 import { ClientScope, ResponseWithRedirectBody } from "../../../common";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 
 export const oauthRejectConsent = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   sessionId: string,
 ): Promise<ResponseWithRedirectBody> => {
   const {

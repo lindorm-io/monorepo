@@ -1,11 +1,11 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { OIDC_SESSION_COOKIE_NAME } from "../../constant";
 import { OidcSession } from "../../entity";
 import { ResponseMode } from "../../common";
-import { configuration } from "../../configuration";
+import { ServerKoaController } from "../../types";
+import { configuration } from "../../server/configuration";
 import { createHash } from "crypto";
 import { createURL, getExpires, getRandomString, PKCEMethod } from "@lindorm-io/core";
 import { find } from "lodash";
@@ -20,7 +20,7 @@ export const initialiseOidcSchema = Joi.object<RequestData>({
   remember: Joi.boolean().required(),
 });
 
-export const initialiseOidcController: Controller<Context<RequestData>> = async (
+export const initialiseOidcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -46,7 +46,7 @@ export const initialiseOidcController: Controller<Context<RequestData>> = async 
       loginSessionId: loginSession.id,
       nonce: getRandomString(16),
       redirectUri: createURL("/sessions/login/oidc", {
-        baseUrl: configuration.frontend.base_url,
+        host: configuration.frontend.base_url,
       }).toString(),
       scope: scope,
       state: getRandomString(48),
@@ -55,7 +55,7 @@ export const initialiseOidcController: Controller<Context<RequestData>> = async 
   );
 
   const redirectTo = createURL(authorize_endpoint, {
-    baseUrl: base_url,
+    host: base_url,
     query: {
       clientId: client_id,
       codeChallenge: createHash("sha256").update(oidcSession.codeVerifier, "utf8").digest("base64"),

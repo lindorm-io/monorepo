@@ -3,14 +3,14 @@ import { ClientScope, SendEmailRequestData } from "../../../common";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomString } from "@lindorm-io/core";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 interface Options extends FlowHandlerInitialiseOptions {
   email: string;
 }
 
 export const initialiseEmailLinkFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

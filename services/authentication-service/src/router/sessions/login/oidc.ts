@@ -1,14 +1,14 @@
-import { Context } from "../../../types";
 import { ERROR_REDIRECT_URI } from "../../../constant";
+import { ServerKoaContext } from "../../../types";
 import { includes } from "lodash";
+import { loginSessionCookieMiddleware, oidcSessionCookieMiddleware } from "../../../middleware";
 import {
-  redirectErrorMiddleware,
   Router,
+  redirectErrorMiddleware,
   useAssertion,
   useController,
   useSchema,
 } from "@lindorm-io/koa";
-import { loginSessionCookieMiddleware, oidcSessionCookieMiddleware } from "../../../middleware";
 import {
   initialiseOidcController,
   initialiseOidcSchema,
@@ -16,7 +16,7 @@ import {
   verifyOidcSchema,
 } from "../../../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.post(

@@ -1,5 +1,5 @@
 import { axiosClientCredentialsMiddleware } from "@lindorm-io/axios";
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
 
 export const clientCredentialsMiddleware = axiosClientCredentialsMiddleware({
   clientEnvironment: configuration.server.environment,

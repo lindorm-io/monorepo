@@ -1,14 +1,16 @@
-oauth:
-  host: https://oauth.api.lindorm.io
-
 redis:
   username: username
   password: password
 
 server:
+  domain: https://lindorm.io
   environment: production
-  host: https://authentication.api.lindorm.io
+  host: https://authentication.lindorm.io
 
 services:
-  communication_service: https://communication.api.lindorm.io
-  identity_service: https://identity.api.lindorm.io
+  communication_service:
+    host: https://communication.lindorm.io
+  identity_service:
+    host: https://identity.lindorm.io
+  oauth_service:
+    host: https://oauth.lindorm.io

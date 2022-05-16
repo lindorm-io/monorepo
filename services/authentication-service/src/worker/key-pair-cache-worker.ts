@@ -1,7 +1,7 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
+import { winston } from "../server/logger";
 import { mongoConnection, redisConnection } from "../instance";
-import { winston } from "../logger";
 import { keyPairJwksCacheWorker, keyPairMongoCacheWorker } from "@lindorm-io/koa-keystore";
 
 export const oidcProvidersJwksWorkers: Array<IntervalWorker> = [];
@@ -11,7 +11,7 @@ for (const provider of configuration.oidc_providers) {
 
   oidcProvidersJwksWorkers.push(
     keyPairJwksCacheWorker({
-      baseUrl: provider.base_url,
+      host: provider.base_url,
       clientName: provider.key,
       redisConnection,
       winston,
@@ -20,14 +20,16 @@ for (const provider of configuration.oidc_providers) {
 }
 
 export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
-  baseUrl: configuration.services.device_service,
+  host: configuration.services.device_service.host,
+  port: configuration.services.device_service.port,
   clientName: "Device",
   redisConnection,
   winston,
 });
 
 export const keyPairOAuthJwksWorker = keyPairJwksCacheWorker({
-  baseUrl: configuration.oauth.host,
+  host: configuration.services.oauth_service.host,
+  port: configuration.services.oauth_service.port,
   clientName: "OAuth",
   redisConnection,
   winston,

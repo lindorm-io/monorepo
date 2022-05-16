@@ -1,10 +1,10 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { MFA_COOKIE_NAME } from "../../../constant";
 
 export const confirmMfaCookieFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
 ): Promise<Account> => {

@@ -1,13 +1,13 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 
 interface Options {
   otp: string;
 }
 
 export const confirmSessionOtpFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

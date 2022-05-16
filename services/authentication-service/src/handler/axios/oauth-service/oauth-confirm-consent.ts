@@ -1,4 +1,4 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { ClientScope, ConfirmConsentRequestBody, ResponseWithRedirectBody } from "../../../common";
 
@@ -7,7 +7,7 @@ interface Options extends ConfirmConsentRequestBody {
 }
 
 export const oauthConfirmConsent = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   options: Options,
 ): Promise<ResponseWithRedirectBody> => {
   const {

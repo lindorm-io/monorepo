@@ -1,10 +1,10 @@
 import { Account, MfaCookieSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { MFA_COOKIE_NAME } from "../../constant";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getExpires, getExpiryDate } from "@lindorm-io/core";
 
-export const generateMfaCookie = async (ctx: Context, account: Account): Promise<void> => {
+export const generateMfaCookie = async (ctx: ServerKoaContext, account: Account): Promise<void> => {
   const {
     cache: { mfaCookieSessionCache },
   } = ctx;

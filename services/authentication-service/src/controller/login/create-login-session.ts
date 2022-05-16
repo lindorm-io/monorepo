@@ -1,13 +1,17 @@
 import Joi from "joi";
 import { Account, LoginSession } from "../../entity";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { JOI_EMAIL, JOI_GUID, JOI_NONCE, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_FLOW_TYPE, JOI_PKCE_METHOD } from "../../constant";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getExpires, PKCEMethod } from "@lindorm-io/core";
 import { handleFlowInitialisation, resolveAllowedFlows } from "../../handler";
-import { Context, InitialiseFlowRequestData, InitialiseFlowResponseBody } from "../../types";
+import {
+  InitialiseFlowRequestData,
+  InitialiseFlowResponseBody,
+  ServerKoaController,
+} from "../../types";
 
 interface RequestData extends Partial<InitialiseFlowRequestData> {
   flowType: FlowType;
@@ -34,7 +38,7 @@ export const createLoginSessionSchema = Joi.object<RequestData>({
   username: Joi.string().optional(),
 });
 
-export const createLoginSessionController: Controller<Context<RequestData>> = async (
+export const createLoginSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

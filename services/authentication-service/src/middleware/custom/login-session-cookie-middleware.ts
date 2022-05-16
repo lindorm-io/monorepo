@@ -1,9 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaMiddleware } from "../../types";
 import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
-import { Middleware } from "@lindorm-io/koa";
 
-export const loginSessionCookieMiddleware: Middleware<Context> = async (
+export const loginSessionCookieMiddleware: ServerKoaMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {

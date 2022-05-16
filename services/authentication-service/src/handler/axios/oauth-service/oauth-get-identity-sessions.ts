@@ -1,10 +1,10 @@
 import { Account } from "../../../entity";
 import { ClientScope, GetIdentitySessionsResponseBody } from "../../../common";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 
 export const oauthGetIdentitySessions = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   account: Account,
 ): Promise<GetIdentitySessionsResponseBody> => {
   const {

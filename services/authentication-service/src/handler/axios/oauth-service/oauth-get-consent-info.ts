@@ -1,9 +1,9 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { ClientScope, GetConsentInfoResponseBody } from "../../../common";
 
 export const oauthGetConsentInfo = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   sessionId: string,
 ): Promise<GetConsentInfoResponseBody> => {
   const {

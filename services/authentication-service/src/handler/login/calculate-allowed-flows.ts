@@ -1,11 +1,11 @@
 import { Account, LoginSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { FlowType } from "../../enum";
 import { includes } from "lodash";
 import { BROWSER_LINK_COOKIE_NAME, FLOW_TYPE_CONFIG, MFA_COOKIE_NAME } from "../../constant";
 
 export const calculateAllowedFlows = (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   account?: Account,
 ): Array<FlowType> => {

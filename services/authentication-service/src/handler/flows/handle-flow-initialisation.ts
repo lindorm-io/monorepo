@@ -2,10 +2,14 @@ import { LoginSession, FlowSession } from "../../entity";
 import { FlowType, TokenType } from "../../enum";
 import { ServerError } from "@lindorm-io/errors";
 import { SubjectHint } from "../../common";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getExpires } from "@lindorm-io/core";
 import { isPollingRequired, isTokenReturned } from "../../util";
-import { Context, InitialiseFlowRequestData, InitialiseFlowResponseBody } from "../../types";
+import {
+  ServerKoaContext,
+  InitialiseFlowRequestData,
+  InitialiseFlowResponseBody,
+} from "../../types";
 import {
   initialiseBankIdSeFlow,
   initialiseDeviceChallengeFlow,
@@ -23,7 +27,7 @@ import {
 } from "../../handler";
 
 export const handleFlowInitialisation = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   options: InitialiseFlowRequestData,
 ): Promise<InitialiseFlowResponseBody> => {

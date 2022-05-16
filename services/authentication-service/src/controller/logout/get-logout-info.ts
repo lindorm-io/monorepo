@@ -1,6 +1,6 @@
 import { ClientType } from "../../common";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 
 interface ResponseBody {
   client: {
@@ -11,7 +11,7 @@ interface ResponseBody {
   };
 }
 
-export const getLogoutInfoController: Controller<Context> = async (
+export const getLogoutInfoController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

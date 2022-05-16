@@ -1,15 +1,15 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { TOTPHandler } from "../../../class";
-import { configuration } from "../../../configuration";
+import { configuration } from "../../../server/configuration";
 
 interface Options {
   totp: string;
 }
 
 export const confirmTimeBasedOtpFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

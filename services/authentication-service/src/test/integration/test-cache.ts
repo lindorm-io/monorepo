@@ -1,6 +1,6 @@
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
 import { redisConnection } from "../../instance";
-import { winston } from "../../logger";
+import { winston } from "../../server/logger";
 import {
   ConsentSessionCache,
   FlowSessionCache,

@@ -1,11 +1,11 @@
 import Joi from "joi";
 import { Account } from "../../entity";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { LOGIN_SESSION_COOKIE_NAME, OIDC_SESSION_COOKIE_NAME } from "../../constant";
 import { LevelOfAssurance, ResponseType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
-import { configuration } from "../../configuration";
+import { ServerKoaController } from "../../types";
+import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { find } from "lodash";
 import { isAuthenticationReadyToConfirm } from "../../util";
@@ -35,7 +35,7 @@ export const verifyOidcSchema = Joi.object<RequestData>({
   tokenType: Joi.string().optional(),
 });
 
-export const verifyOidcController: Controller<Context<RequestData>> = async (
+export const verifyOidcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -47,9 +47,6 @@ export const verifyOidcController: Controller<Context<RequestData>> = async (
 
   let loginSession = ctx.entity.loginSession;
 
-  let loaValue: LevelOfAssurance;
-  let responseType: ResponseType;
-
   const oidcConfiguration = find(configuration.oidc_providers, {
     key: oidcSession.identityProvider,
   });
@@ -58,8 +55,8 @@ export const verifyOidcController: Controller<Context<RequestData>> = async (
     throw new ServerError("Invalid identity provider");
   }
 
-  loaValue = oidcConfiguration.loa_value as LevelOfAssurance;
-  responseType = oidcConfiguration.response_type as ResponseType;
+  const loaValue = oidcConfiguration.loa_value as LevelOfAssurance;
+  const responseType = oidcConfiguration.response_type as ResponseType;
 
   let account: Account;
 
@@ -100,7 +97,7 @@ export const verifyOidcController: Controller<Context<RequestData>> = async (
 
   return {
     redirect: createURL(configuration.frontend.routes.login, {
-      baseUrl: configuration.frontend.base_url,
+      host: configuration.frontend.base_url,
     }),
   };
 };

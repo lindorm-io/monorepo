@@ -1,4 +1,4 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
 
@@ -7,7 +7,7 @@ interface Options {
 }
 
 export const confirmWebauthnFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

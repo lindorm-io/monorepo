@@ -1,9 +1,13 @@
 import Joi from "joi";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_EMAIL, JOI_NONCE, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_FLOW_TYPE } from "../../constant";
 import { handleFlowInitialisation } from "../../handler";
-import { Context, InitialiseFlowRequestData, InitialiseFlowResponseBody } from "../../types";
+import {
+  InitialiseFlowRequestData,
+  InitialiseFlowResponseBody,
+  ServerKoaController,
+} from "../../types";
 
 interface RequestData extends InitialiseFlowRequestData {
   remember: boolean;
@@ -18,7 +22,7 @@ export const initialiseFlowSchema = Joi.object<RequestData>({
   username: Joi.string().optional(),
 });
 
-export const initialiseFlowController: Controller<Context<RequestData>> = async (
+export const initialiseFlowController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<InitialiseFlowResponseBody> => {
   const {

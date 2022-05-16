@@ -1,6 +1,6 @@
 import { LoginSession, FlowSession } from "../../../entity";
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { ServerError } from "@lindorm-io/errors";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomNumberAsync } from "@lindorm-io/core";
@@ -8,7 +8,7 @@ import { getRandomNumberAsync } from "@lindorm-io/core";
 type Options = FlowHandlerInitialiseOptions;
 
 export const initialiseSessionOtpFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

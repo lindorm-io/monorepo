@@ -1,8 +1,7 @@
 import Joi from "joi";
 import { Account } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
 import { canFlowGenerateMfaCookie } from "../../util";
@@ -23,6 +22,7 @@ import {
   generateMfaCookie,
   updateLoginSessionWithFlow,
 } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;
@@ -48,7 +48,7 @@ export const confirmFlowSchema = Joi.object<RequestData>({
   totp: Joi.string().optional(),
 });
 
-export const confirmFlowController: Controller<Context<RequestData>> = async (
+export const confirmFlowController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

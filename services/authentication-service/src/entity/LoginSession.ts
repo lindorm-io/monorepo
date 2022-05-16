@@ -2,7 +2,7 @@ import Joi from "joi";
 import { FlowType } from "../enum";
 import { JOI_FLOW_TYPE } from "../constant";
 import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, LevelOfAssurance } from "../common";
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
 import { getExpiryDate, PKCEMethod } from "@lindorm-io/core";
 import {
   EntityAttributes,

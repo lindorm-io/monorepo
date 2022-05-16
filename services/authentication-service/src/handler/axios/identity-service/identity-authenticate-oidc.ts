@@ -1,5 +1,5 @@
 import { LoginSession } from "../../../entity";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import {
   AuthenticateIdentifierRequestData,
@@ -14,7 +14,7 @@ interface Options {
 }
 
 export const identityAuthenticateOidc = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   options: Options,
 ): Promise<AuthenticateIdentifierResponseBody> => {

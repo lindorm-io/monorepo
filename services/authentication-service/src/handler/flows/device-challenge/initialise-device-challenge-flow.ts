@@ -1,8 +1,8 @@
 import { LoginSession, FlowSession } from "../../../entity";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 export const initialiseDeviceChallengeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: FlowHandlerInitialiseOptions,

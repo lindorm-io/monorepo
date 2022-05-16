@@ -1,6 +1,6 @@
 import { LevelOfAssurance } from "../common";
 import { LoginSession } from "../entity";
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
 import { find } from "lodash";
 import { getFlowTypeConfig } from "./get-flow-type-config";
 

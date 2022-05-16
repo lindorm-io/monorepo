@@ -1,9 +1,8 @@
 import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Middleware } from "@lindorm-io/koa";
+import { ServerKoaMiddleware } from "../../types";
 
-export const consentSessionCookieMiddleware: Middleware<Context> = async (
+export const consentSessionCookieMiddleware: ServerKoaMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {

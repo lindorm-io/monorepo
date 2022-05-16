@@ -1,10 +1,10 @@
 import { Account, LoginSession, FlowSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { calculateLevelOfAssurance } from "../../util";
 import { resolveAllowedFlows } from "./resolve-allowed-flows";
 
 export const updateLoginSessionWithFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   account: Account,
   loginSession: LoginSession,
   flowSession: FlowSession,

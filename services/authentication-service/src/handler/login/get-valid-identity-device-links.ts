@@ -1,9 +1,9 @@
 import { Account } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { deviceLinkGetIdentityDeviceLinks } from "../axios";
 
 export const getValidIdentityDeviceLinks = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   account?: Account,
 ): Promise<Array<string>> => {
   if (!account) {

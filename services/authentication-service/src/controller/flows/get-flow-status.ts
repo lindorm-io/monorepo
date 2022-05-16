@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_GUID, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;
@@ -16,7 +16,7 @@ export const getFlowStatusSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getFlowStatusController: Controller<Context<RequestData>> = async (
+export const getFlowStatusController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

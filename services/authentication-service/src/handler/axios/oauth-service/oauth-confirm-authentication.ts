@@ -1,5 +1,5 @@
 import { LoginSession } from "../../../entity";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import {
   ClientScope,
@@ -8,7 +8,7 @@ import {
 } from "../../../common";
 
 export const oauthConfirmAuthentication = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
 ): Promise<ResponseWithRedirectBody> => {
   const {

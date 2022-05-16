@@ -1,9 +1,9 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { LOGOUT_SESSION_COOKIE_NAME } from "../../constant";
+import { ServerKoaController } from "../../types";
 import { oauthConfirmLogout } from "../../handler";
 
-export const confirmLogoutController: Controller<Context> = async (ctx): ControllerResponse => {
+export const confirmLogoutController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     cache: { logoutSessionCache },
     entity: { logoutSession },

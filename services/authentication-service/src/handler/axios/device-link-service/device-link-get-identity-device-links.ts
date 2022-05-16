@@ -1,10 +1,10 @@
 import { Account } from "../../../entity";
 import { ClientScope, GetIdentityDeviceLinksResponseBody } from "../../../common";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 
 export const deviceLinkGetIdentityDeviceLinks = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   account: Account,
 ): Promise<GetIdentityDeviceLinksResponseBody> => {
   const {

@@ -1,7 +1,7 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
 import { BROWSER_LINK_COOKIE_NAME } from "../../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { identityAuthenticateIdentifier } from "../../axios";
 
@@ -10,7 +10,7 @@ interface Options {
 }
 
 export const confirmPasswordBrowserLinkFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

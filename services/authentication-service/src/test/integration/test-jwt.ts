@@ -1,5 +1,5 @@
 import { TokenIssuer } from "@lindorm-io/jwt";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getTestKeystore } from "./test-keystore";
 import { logger } from "../logger";
 

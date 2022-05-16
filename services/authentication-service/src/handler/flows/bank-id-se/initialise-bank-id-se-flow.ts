@@ -1,13 +1,13 @@
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { Context, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 type Options = FlowHandlerInitialiseOptions;
 
 type Result = Record<string, unknown>;
 
 export const initialiseBankIdSeFlow = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
   options: Options,

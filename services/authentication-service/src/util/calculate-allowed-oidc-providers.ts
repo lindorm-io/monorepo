@@ -1,5 +1,5 @@
 import { LoginSession } from "../entity";
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
 import { filter, includes } from "lodash";
 
 export const calculateAllowedOidcProviders = (loginSession: LoginSession): Array<string> => {

@@ -1,9 +1,9 @@
 import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { oauthRejectConsent } from "../../handler";
 
-export const rejectConsentController: Controller<Context> = async (ctx): ControllerResponse => {
+export const rejectConsentController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     cache: { consentSessionCache },
     entity: { consentSession },

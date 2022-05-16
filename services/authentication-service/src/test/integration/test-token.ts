@@ -1,7 +1,7 @@
 import { IssuerSignOptions } from "@lindorm-io/jwt";
 import { getTestJwt } from "./test-jwt";
 import { TokenType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { SubjectHint } from "../../common";
 
 export const getTestChallengeConfirmationToken = (

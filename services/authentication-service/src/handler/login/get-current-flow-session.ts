@@ -1,10 +1,10 @@
 import { FlowSession, LoginSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { filter, includes, orderBy } from "lodash";
 import { SessionStatus } from "../../common";
 
 export const getCurrentFlowSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
 ): Promise<FlowSession | null> => {
   const {

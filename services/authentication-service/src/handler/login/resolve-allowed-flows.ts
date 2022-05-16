@@ -1,12 +1,12 @@
 import { Account, LoginSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { calculateAllowedFlows } from "./calculate-allowed-flows";
 import { getValidIdentityDeviceLinks } from "./get-valid-identity-device-links";
 import { getValidIdentitySessions } from "./get-valid-identity-sessions";
 import { calculateAllowedOidcProviders } from "../../util";
 
 export const resolveAllowedFlows = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   loginSession: LoginSession,
   account?: Account,
 ): Promise<LoginSession> => {
