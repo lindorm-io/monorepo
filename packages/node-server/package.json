@@ -20,11 +20,11 @@
   "dependencies": {
     "@lindorm-io/axios": "^0.3.1",
     "@lindorm-io/core": "^0.4.0",
-    "@lindorm-io/crypto": "^0.1.9",
+    "@lindorm-io/crypto": "^0.1.10",
     "@lindorm-io/entity": "^0.3.3",
     "@lindorm-io/errors": "^0.1.13",
-    "@lindorm-io/jwt": "^0.6.8",
-    "@lindorm-io/key-pair": "^0.4.3",
+    "@lindorm-io/jwt": "^0.6.9",
+    "@lindorm-io/key-pair": "^0.4.4",
     "@lindorm-io/koa": "^0.12.1",
     "@lindorm-io/koa-axios": "^0.1.1",
     "@lindorm-io/koa-basic-auth": "^0.2.1",
@@ -34,7 +34,7 @@
     "@lindorm-io/koa-mongo": "^0.7.1",
     "@lindorm-io/koa-redis": "^0.5.1",
     "@lindorm-io/mongo": "^0.7.6",
-    "@lindorm-io/redis": "^0.6.4",
+    "@lindorm-io/redis": "^0.6.5",
     "@lindorm-io/winston": "^0.2.1",
     "config": "^3.3.6"
   },
