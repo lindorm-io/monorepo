@@ -1,5 +1,5 @@
 import { mongoConnection } from "../../instance";
-import { winston } from "../../logger";
+import { logger } from "../logger";
 import {
   DisplayNameRepository,
   EmailRepository,
@@ -19,7 +19,6 @@ interface TestRepository {
 export const getTestRepository = async (): Promise<TestRepository> => {
   await mongoConnection.waitForConnection();
   const db = mongoConnection.database();
-  const logger = winston;
 
   return {
     displayNameRepository: new DisplayNameRepository({ db, logger }),

@@ -15,7 +15,7 @@ Array [
         ],
       },
       "birthDate": "new-birthDate",
-      "created": 2022-05-07T06:05:00.358Z,
+      "created": 2020-01-01T08:00:00.000Z,
       "displayName": Object {
         "name": null,
         "number": null,
@@ -42,7 +42,7 @@ Array [
       "pronouns": "new-pronouns",
       "revision": 0,
       "socialSecurityNumber": "new-socialSecurityNumber",
-      "updated": 2022-05-07T06:05:00.358Z,
+      "updated": 2020-01-01T08:00:00.000Z,
       "username": "new-username",
       "version": 0,
       "website": "new-website",

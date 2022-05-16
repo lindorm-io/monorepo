@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { getTestIdentity } from "../../test/entity";
 import {
   TEST_EMAIL_REPOSITORY,
@@ -30,7 +30,7 @@ describe("/internal/userinfo", () => {
 
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/internal/userinfo/${identity.id}?scope=openid`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
@@ -58,7 +58,7 @@ describe("/internal/userinfo", () => {
 
     const clientCredentials = getTestClientCredentials();
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/internal/userinfo/${identity.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({

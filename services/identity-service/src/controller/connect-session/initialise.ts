@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession } from "../../entity";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType } from "../../common";
 import { JOI_EMAIL, JOI_GUID, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
@@ -30,9 +30,9 @@ export const identifierConnectInitialiseSchema = Joi.object<RequestData>({
   type: JOI_IDENTIFIER_TYPE.required(),
 });
 
-export const identifierConnectInitialiseController: Controller<
-  Context<RequestData, ResponseBody>
-> = async (ctx): ControllerResponse<ResponseBody> => {
+export const identifierConnectInitialiseController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
   const {
     data: { identifier, type },
     entity: { identity },

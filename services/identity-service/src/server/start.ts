@@ -1,3 +1,3 @@
-import { koa } from "./koa";
+import { server } from "./server";
 
-koa.start().then().catch(console.error);
+server.start().catch(console.error);

@@ -1,7 +1,7 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 
 export const getConnectedProviders = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identityId: string,
 ): Promise<Array<string>> => {
   const {

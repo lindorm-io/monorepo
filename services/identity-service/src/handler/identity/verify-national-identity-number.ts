@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity } from "../../entity";
 
@@ -9,7 +9,7 @@ interface Options {
 }
 
 export const verifyNationalIdentityNumber = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   options: Options,
 ): Promise<Identity> => {
   const {

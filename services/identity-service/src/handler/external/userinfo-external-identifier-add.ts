@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { ExternalIdentifier } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 
@@ -9,7 +9,7 @@ interface Options {
 }
 
 export const userinfoExternalIdentifierAdd = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   options: Options,
 ): Promise<ExternalIdentifier> => {
   const {

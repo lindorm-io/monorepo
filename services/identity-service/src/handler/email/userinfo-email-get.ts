@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { orderBy } from "lodash";
 
 interface Result {
@@ -11,7 +11,10 @@ const EMPTY: Result = {
   emailVerified: false,
 };
 
-export const userinfoEmailGet = async (ctx: Context, identityId: string): Promise<Result> => {
+export const userinfoEmailGet = async (
+  ctx: ServerKoaContext,
+  identityId: string,
+): Promise<Result> => {
   const {
     repository: { emailRepository },
   } = ctx;

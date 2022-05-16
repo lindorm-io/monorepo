@@ -1,9 +1,10 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { Identity } from "../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { koa } from "../server/koa";
+import { Identity } from "../entity";
+import { getRandomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
+import { server } from "../server/server";
 import {
   getTestDisplayName,
   getTestEmail,
@@ -20,7 +21,6 @@ import {
   getTestAccessToken,
   setupIntegration,
 } from "../test/integration";
-import { getRandomString } from "@lindorm-io/core";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -53,7 +53,7 @@ describe("/identities", () => {
       subject: identity.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/identities/${identity.id}/`)
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
@@ -112,7 +112,7 @@ describe("/identities", () => {
 
     const accessToken = getTestAccessToken({ subject: identity.id });
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/identities/${identity.id}/`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
@@ -171,7 +171,7 @@ describe("/identities", () => {
       subject: identity.id,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .delete(`/identities/${identity.id}/`)
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
@@ -207,7 +207,7 @@ describe("/identities", () => {
       subject: identity.id,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .delete(`/identities/${identity.id}/identifiers/email`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
@@ -239,7 +239,7 @@ describe("/identities", () => {
       subject: identity.id,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/identities/${identity.id}/identifiers/email/set-primary`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({

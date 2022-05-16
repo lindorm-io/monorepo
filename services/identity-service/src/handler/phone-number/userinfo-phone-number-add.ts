@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { PhoneNumber } from "../../entity";
 
@@ -8,7 +8,7 @@ interface Options {
 }
 
 export const userinfoPhoneNumberAdd = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   options: Options,
 ): Promise<PhoneNumber> => {
   const {

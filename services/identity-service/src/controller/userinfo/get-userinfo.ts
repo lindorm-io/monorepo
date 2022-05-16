@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { GetUserinfoRequestBody, GetUserinfoResponseBody, JOI_GUID } from "../../common";
 import { getUserinfoResponseBody } from "../../handler";
 
@@ -9,7 +9,7 @@ export const getUserinfoSchema = Joi.object<GetUserinfoRequestBody>({
   scope: Joi.string().required(),
 });
 
-export const getUserinfoController: Controller<Context<GetUserinfoRequestBody>> = async (
+export const getUserinfoController: ServerKoaController<GetUserinfoRequestBody> = async (
   ctx,
 ): ControllerResponse<GetUserinfoResponseBody> => {
   const {

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType } from "../../common";
 import { JOI_EMAIL, JOI_GUID, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
@@ -31,7 +31,7 @@ export const identifierSetPrimarySchema = Joi.object<RequestData>({
   }),
 });
 
-export const identifierSetPrimaryController: Controller<Context<RequestData>> = async (
+export const identifierSetPrimaryController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

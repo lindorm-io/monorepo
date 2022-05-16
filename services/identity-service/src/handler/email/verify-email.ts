@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Email, Identity } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { ClientError } from "@lindorm-io/errors";
@@ -8,7 +8,7 @@ interface Options {
   email: string;
 }
 
-export const verifyEmail = async (ctx: Context, options: Options): Promise<Identity> => {
+export const verifyEmail = async (ctx: ServerKoaContext, options: Options): Promise<Identity> => {
   const {
     repository: { identityRepository, emailRepository },
   } = ctx;

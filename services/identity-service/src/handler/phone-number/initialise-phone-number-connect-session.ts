@@ -1,12 +1,12 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession, Identity, PhoneNumber } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { IdentifierType } from "../../common";
 import { initialiseConnectSession } from "../connect-session";
 
 export const initialisePhoneNumberConnectSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identity: Identity,
   phoneNumber: string,
 ): Promise<ConnectSession> => {

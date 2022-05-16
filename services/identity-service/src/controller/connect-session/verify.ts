@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType } from "../../common";
 import { JOI_GUID } from "../../common";
 import { verifyEmailConnectSession, verifyPhoneNumberConnectSession } from "../../handler";
@@ -16,7 +16,7 @@ export const identifierConnectVerifySchema = Joi.object<RequestData>({
   code: Joi.string().required(),
 });
 
-export const identifierConnectVerifyController: Controller<Context<RequestData>> = async (
+export const identifierConnectVerifyController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

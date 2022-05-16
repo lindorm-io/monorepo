@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { GetUserinfoResponseBody, IdentityServiceClaims, Scope } from "../../common";
 import { Identity } from "../../entity";
 import { getAddress, getDisplayName, getName } from "../../util";
@@ -9,7 +9,7 @@ import { userinfoEmailGet } from "../email";
 import { userinfoPhoneNumberGet } from "../phone-number";
 
 export const getUserinfoResponseBody = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identity: Identity,
   scopes: Array<string>,
 ): Promise<GetUserinfoResponseBody> => {

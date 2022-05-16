@@ -9,7 +9,6 @@ mongo:
   password: password
 
 oauth:
-  host: localhost
   client_id: id
   client_secret: secret
 
@@ -19,9 +18,16 @@ redis:
   username: username
 
 server:
+  domain: https://lindorm.io
   environment: development
+  issuer: https://identity.lindorm.io
   host: localhost
   port: 3000
 
 services:
-  communication_service: localhost
+  communication_service:
+    issuer: https://communication.lindorm.io
+    host: localhost
+  oauth_service:
+    issuer: https://oauth.lindorm.io
+    host: localhost

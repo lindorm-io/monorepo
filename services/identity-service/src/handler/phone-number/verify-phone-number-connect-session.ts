@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { argon } from "../../instance";
 
 export const verifyPhoneNumberConnectSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   session: ConnectSession,
   code: string,
 ): Promise<void> => {

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { Email, Identity, ExternalIdentifier, PhoneNumber } from "../../entity";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import {
   getTestEmail,
   getTestIdentity,
@@ -50,7 +50,7 @@ describe("/internal/identifiers", () => {
   test("POST /verify", async () => {
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/internal/identifiers/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -67,7 +67,7 @@ describe("/internal/identifiers", () => {
   test("POST /verify", async () => {
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/internal/identifiers/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -84,7 +84,7 @@ describe("/internal/identifiers", () => {
   test("POST /verify", async () => {
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/internal/identifiers/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -102,7 +102,7 @@ describe("/internal/identifiers", () => {
   test("POST /verify", async () => {
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/internal/identifiers/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({

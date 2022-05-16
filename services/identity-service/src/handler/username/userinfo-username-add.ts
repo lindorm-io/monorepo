@@ -1,7 +1,10 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Identity } from "../../entity";
 
-export const userinfoUsernameAdd = async (ctx: Context, identity: Identity): Promise<void> => {
+export const userinfoUsernameAdd = async (
+  ctx: ServerKoaContext,
+  identity: Identity,
+): Promise<void> => {
   const {
     repository: { identityRepository },
   } = ctx;

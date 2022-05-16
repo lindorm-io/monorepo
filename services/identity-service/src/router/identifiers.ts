@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { ServerKoaContext } from "../types";
 import {
   connectSessionEntityMiddleware,
   identityAuthMiddleware,
@@ -13,7 +13,7 @@ import {
 } from "../controller";
 import { Scope } from "../common";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.post(

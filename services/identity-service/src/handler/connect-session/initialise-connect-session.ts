@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession, Identity } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { IdentifierType, SendEmailRequestData, SendSmsRequestData } from "../../common";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getRandomNumberAsync, stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
@@ -13,7 +13,7 @@ interface Options {
 }
 
 export const initialiseConnectSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identity: Identity,
   options: Options,
 ): Promise<ConnectSession> => {

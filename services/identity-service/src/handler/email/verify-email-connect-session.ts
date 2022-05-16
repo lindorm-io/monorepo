@@ -1,10 +1,10 @@
 import { ConnectSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { argon } from "../../instance";
 import { ClientError } from "@lindorm-io/errors";
 
 export const verifyEmailConnectSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   session: ConnectSession,
   code: string,
 ): Promise<void> => {

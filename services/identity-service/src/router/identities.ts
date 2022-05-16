@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { ServerKoaContext } from "../types";
 import { Scope } from "../common";
 import { identityAuthMiddleware, identityEntityMiddleware } from "../middleware";
 import { Router, useController, paramsMiddleware, useSchema } from "@lindorm-io/koa";
@@ -15,7 +15,7 @@ import {
   identityUpdateSchema,
 } from "../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

@@ -1,5 +1,5 @@
 import { ClientPermission, ClientScope } from "../../common";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, identityEntityMiddleware } from "../../middleware";
 import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
 import {
@@ -9,7 +9,7 @@ import {
   getUserinfoSchema,
 } from "../../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

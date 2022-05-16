@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Email } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 
@@ -7,7 +7,7 @@ interface Options {
   email: string;
 }
 
-export const userinfoEmailAdd = async (ctx: Context, options: Options): Promise<Email> => {
+export const userinfoEmailAdd = async (ctx: ServerKoaContext, options: Options): Promise<Email> => {
   const {
     repository: { emailRepository },
   } = ctx;

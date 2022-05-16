@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { GetUserinfoResponseBody, JOI_GUID } from "../../common";
+import { ServerKoaController } from "../../types";
 import { getUserinfoResponseBody } from "../../handler";
 
 interface RequestData {
@@ -12,7 +12,7 @@ export const identityGetSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const identityGetController: Controller<Context<RequestData>> = async (
+export const identityGetController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<GetUserinfoResponseBody> => {
   const {

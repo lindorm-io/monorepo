@@ -1,8 +1,8 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Identity } from "../../entity";
 
 export const updateIdentityDisplayName = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identity: Identity,
   displayName: string,
 ): Promise<void> => {

@@ -1,8 +1,8 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Identity } from "../../entity";
 
 export const removeIdentityDisplayName = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identity: Identity,
 ): Promise<void> => {
   const {

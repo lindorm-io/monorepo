@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 
 interface Options {
@@ -6,7 +6,7 @@ interface Options {
   phoneNumber: string;
 }
 
-export const removePhoneNumber = async (ctx: Context, options: Options): Promise<void> => {
+export const removePhoneNumber = async (ctx: ServerKoaContext, options: Options): Promise<void> => {
   const {
     repository: { phoneNumberRepository },
   } = ctx;

@@ -1,10 +1,13 @@
 import { Axios } from "@lindorm-io/axios";
-import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
-import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
-import { KoaContext } from "@lindorm-io/koa";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
+import { Controller } from "@lindorm-io/koa";
+import {
+  LindormNodeServerAxios,
+  LindormNodeServerCache,
+  LindormNodeServerContext,
+  LindormNodeServerKoaContext,
+  LindormNodeServerKoaMiddleware,
+  LindormNodeServerRepository,
+} from "@lindorm-io/node-server";
 import {
   ConnectSession,
   DisplayName,
@@ -22,42 +25,41 @@ import {
   PhoneNumberRepository,
 } from "../infrastructure";
 
-export interface Context<
-  RequestData extends Record<string, any> = Record<string, any>,
-  ResponseBody = unknown,
-> extends KoaContext<RequestData, ResponseBody> {
-  axios: {
-    axiosClient: Axios;
-    communicationClient: Axios;
-    oauthClient: Axios;
-  };
-  cache: {
-    connectSessionCache: ConnectSessionCache;
-    keyPairCache: KeyPairCache;
-  };
-  connection: {
-    mongo: MongoConnection;
-    redis: RedisConnection;
-  };
-  entity: {
-    connectSession: ConnectSession;
-    displayName: DisplayName;
-    email: Email;
-    externalIdentifier: ExternalIdentifier;
-    identity: Identity;
-    phoneNumber: PhoneNumber;
-  };
-  jwt: TokenIssuer;
-  keys: Array<KeyPair>;
-  keystore: Keystore;
-  repository: {
-    displayNameRepository: DisplayNameRepository;
-    emailRepository: EmailRepository;
-    externalIdentifierRepository: ExternalIdentifierRepository;
-    identityRepository: IdentityRepository;
-    phoneNumberRepository: PhoneNumberRepository;
-  };
-  token: {
-    bearerToken: IssuerVerifyData<never, never>;
-  };
+interface ServerAxios extends LindormNodeServerAxios {
+  communicationClient: Axios;
+  oauthClient: Axios;
 }
+
+interface ServerCache extends LindormNodeServerCache {
+  connectSessionCache: ConnectSessionCache;
+}
+
+interface ServerEntity {
+  connectSession: ConnectSession;
+  displayName: DisplayName;
+  email: Email;
+  externalIdentifier: ExternalIdentifier;
+  identity: Identity;
+  phoneNumber: PhoneNumber;
+}
+
+interface ServerRepository extends LindormNodeServerRepository {
+  displayNameRepository: DisplayNameRepository;
+  emailRepository: EmailRepository;
+  externalIdentifierRepository: ExternalIdentifierRepository;
+  identityRepository: IdentityRepository;
+  phoneNumberRepository: PhoneNumberRepository;
+}
+
+interface Context extends LindormNodeServerContext {
+  axios: ServerAxios;
+  cache: ServerCache;
+  entity: ServerEntity;
+  repository: ServerRepository;
+}
+
+export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+
+export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

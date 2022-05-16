@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { setupIntegration } from "../../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -9,7 +9,7 @@ describe("/.well-known", () => {
   beforeAll(setupIntegration);
 
   test("GET /jwks.json", async () => {
-    const response = await request(koa.callback()).get("/.well-known/jwks.json").expect(200);
+    const response = await request(server.callback()).get("/.well-known/jwks.json").expect(200);
 
     expect(response.body).toStrictEqual({
       keys: [

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType, JOI_NIN } from "../../common";
 import { Identity } from "../../entity";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
@@ -39,8 +39,8 @@ export const authenticateIdentifierSchema = Joi.object<AuthenticateIdentifierReq
   type: JOI_IDENTIFIER_TYPE.required(),
 });
 
-export const authenticateIdentifierController: Controller<
-  Context<AuthenticateIdentifierRequestData>
+export const authenticateIdentifierController: ServerKoaController<
+  AuthenticateIdentifierRequestData
 > = async (ctx): ControllerResponse<AuthenticateIdentifierResponseBody> => {
   const {
     data: { identifier, identityId, provider, type },

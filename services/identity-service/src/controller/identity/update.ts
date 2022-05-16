@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context, IdentityAddress } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController, IdentityAddress } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_LOCALE, Scope } from "../../common";
 import { NamingSystem } from "../../enum";
 import { includes, isEqual, isUndefined } from "lodash";
@@ -61,7 +61,7 @@ export const identityUpdateSchema = Joi.object<RequestData>({
   zoneInfo: JOI_ZONE_INFO.allow(null).optional(),
 });
 
-export const identityUpdateController: Controller<Context<RequestData>> = async (
+export const identityUpdateController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

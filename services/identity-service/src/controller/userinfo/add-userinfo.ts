@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
 import {
   AddUserinfoRequestBody,
@@ -46,7 +46,7 @@ export const addUserinfoSchema = Joi.object<RequestData>({
   zoneInfo: JOI_ZONE_INFO.optional(),
 });
 
-export const addUserinfoController: Controller<Context<RequestData>> = async (
+export const addUserinfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

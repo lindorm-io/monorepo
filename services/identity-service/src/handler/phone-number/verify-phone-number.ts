@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity, PhoneNumber } from "../../entity";
 
@@ -8,7 +8,10 @@ interface Options {
   phoneNumber: string;
 }
 
-export const verifyPhoneNumber = async (ctx: Context, options: Options): Promise<Identity> => {
+export const verifyPhoneNumber = async (
+  ctx: ServerKoaContext,
+  options: Options,
+): Promise<Identity> => {
   const {
     repository: { identityRepository, phoneNumberRepository },
   } = ctx;

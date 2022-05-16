@@ -1,11 +1,14 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 
 interface Options {
   identityId: string;
   identifier: string;
 }
 
-export const removeExternalIdentifier = async (ctx: Context, options: Options): Promise<void> => {
+export const removeExternalIdentifier = async (
+  ctx: ServerKoaContext,
+  options: Options,
+): Promise<void> => {
   const {
     repository: { externalIdentifierRepository },
   } = ctx;
