@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { get, isFunction } from "lodash";
 import {
-  CustomValidation,
+  BearerTokenCustomValidation,
   DefaultLindormBearerAuthKoaMiddleware,
   BearerAuthMiddlewareConfig,
 } from "../types";
@@ -30,7 +30,7 @@ export const bearerAuthMiddleware =
   (config: BearerAuthMiddlewareConfig) =>
   (
     options: BearerAuthOptions = {},
-    customValidation?: CustomValidation,
+    customValidation?: BearerTokenCustomValidation,
   ): DefaultLindormBearerAuthKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("auth");

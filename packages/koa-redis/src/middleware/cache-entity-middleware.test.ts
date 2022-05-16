@@ -3,7 +3,7 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
 import { cacheEntityMiddleware } from "./cache-entity-middleware";
 import { logger, TestCache, TestEntity } from "../test";
-import { CustomValidation } from "../types";
+import { CachedEntityCustomValidation } from "../types";
 
 const next = () => Promise.resolve();
 
@@ -42,7 +42,7 @@ describe("cacheMiddleware", () => {
   });
 
   test("should set entity on context and verify with custom validation callback", async () => {
-    const customValidation: CustomValidation = async (context, entity) => {
+    const customValidation: CachedEntityCustomValidation = async (context, entity) => {
       if (!entity) {
         throw new Error("message");
       }
@@ -118,7 +118,7 @@ describe("cacheMiddleware", () => {
   });
 
   test("should throw ClientError with custom validation callback", async () => {
-    const customValidation: CustomValidation = async (context, entity) => {
+    const customValidation: CachedEntityCustomValidation = async (context, entity) => {
       if (entity) {
         throw new Error("message");
       }

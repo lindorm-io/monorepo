@@ -1,6 +1,6 @@
 import { CacheBase } from "@lindorm-io/redis";
 import { ClientError } from "@lindorm-io/errors";
-import { CustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
+import { CachedEntityCustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
 import { camelCase, get, isFunction, isString } from "lodash";
 
@@ -11,7 +11,7 @@ interface MiddlewareOptions {
 
 export interface CacheEntityMiddlewareOptions {
   attributeKey?: string;
-  customValidation?: CustomValidation;
+  customValidation?: CachedEntityCustomValidation;
   optional?: boolean;
 }
 

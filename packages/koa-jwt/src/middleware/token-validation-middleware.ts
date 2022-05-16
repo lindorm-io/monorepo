@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import {
-  CustomValidation,
+  TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
   TokenValidationMiddlewareConfig,
 } from "../types";
@@ -35,7 +35,7 @@ export const tokenValidationMiddleware =
   (
     path: string,
     options: TokenValidationOptions = {},
-    customValidation?: CustomValidation,
+    customValidation?: TokenCustomValidation,
   ): DefaultLindormJwtKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("token");

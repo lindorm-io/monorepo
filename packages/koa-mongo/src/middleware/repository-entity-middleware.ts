@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { CustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
+import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { camelCase, get, isFunction, isString } from "lodash";
 
@@ -11,7 +11,7 @@ interface MiddlewareOptions {
 
 export interface RepositoryEntityMiddlewareOptions {
   attributeKey?: string;
-  customValidation?: CustomValidation;
+  customValidation?: StoredEntityCustomValidation;
   optional?: boolean;
 }
 

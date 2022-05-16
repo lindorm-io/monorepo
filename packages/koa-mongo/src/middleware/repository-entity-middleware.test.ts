@@ -3,7 +3,7 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
 import { logger, TestEntity, TestRepository } from "../test";
 import { repositoryEntityMiddleware } from "./repository-entity-middleware";
-import { CustomValidation } from "../types";
+import { StoredEntityCustomValidation } from "../types";
 
 const next = () => Promise.resolve();
 
@@ -45,7 +45,7 @@ describe("repositoryEntityMiddleware", () => {
   });
 
   test("should set entity on context and verify with custom validation callback", async () => {
-    const customValidation: CustomValidation = async (context, entity) => {
+    const customValidation: StoredEntityCustomValidation = async (context, entity) => {
       if (!entity) {
         throw new Error("message");
       }
@@ -144,7 +144,7 @@ describe("repositoryEntityMiddleware", () => {
   });
 
   test("should throw ClientError with custom validation callback", async () => {
-    const customValidation: CustomValidation = async (context, entity) => {
+    const customValidation: StoredEntityCustomValidation = async (context, entity) => {
       if (entity) {
         throw new Error("message");
       }
