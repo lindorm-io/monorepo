@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { GrantType } from "../../common";
 import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../test/data";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestAuthorizationSession,
@@ -18,32 +19,20 @@ import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_ARGON,
   TEST_REFRESH_SESSION_REPOSITORY,
-  getAxiosResponse,
   getTestRefreshToken,
-  setAxiosResponse,
   setupIntegration,
 } from "../../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
-
 describe("/oauth2/token", () => {
   beforeAll(setupIntegration);
+
+  nock("https://identity.test.lindorm.io")
+    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
+    .query(true)
+    .times(999)
+    .reply(200, TEST_GET_USERINFO_RESPONSE);
 
   test("POST / - AUTHORIZATION_CODE", async () => {
     const { code, codeChallenge, codeChallengeMethod, codeVerifier, nonce, state } = getTestData();
@@ -56,7 +45,7 @@ describe("/oauth2/token", () => {
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
       getTestBrowserSession({
-        identityId: randomUUID(),
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
       }),
     );
 
@@ -64,7 +53,7 @@ describe("/oauth2/token", () => {
       getTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
-        identityId: browserSession.identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: client.allowed.scopes,
         sessions: [browserSession.id],
       }),
@@ -79,7 +68,7 @@ describe("/oauth2/token", () => {
         codeChallengeMethod,
         browserSessionId: browserSession.id,
         consentSessionId: consentSession.id,
-        identityId: browserSession.identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         levelOfAssurance: browserSession.levelOfAssurance,
         nonce,
         scopes: consentSession.scopes,
@@ -87,9 +76,7 @@ describe("/oauth2/token", () => {
       }),
     );
 
-    setAxiosResponse("get", "identityClient", "/internal/userinfo/:id", TEST_GET_USERINFO_RESPONSE);
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/oauth2/token")
       .send({
         client_id: client.id,
@@ -118,7 +105,7 @@ describe("/oauth2/token", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/oauth2/token")
       .send({
         client_id: client.id,
@@ -146,7 +133,7 @@ describe("/oauth2/token", () => {
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
       getTestRefreshSession({
         clientId: client.id,
-        identityId: randomUUID(),
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         tokenId: randomUUID(),
       }),
     );
@@ -155,7 +142,7 @@ describe("/oauth2/token", () => {
       getTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
-        identityId: refreshSession.identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: client.allowed.scopes,
         sessions: [refreshSession.id],
       }),
@@ -165,12 +152,10 @@ describe("/oauth2/token", () => {
       id: refreshSession.tokenId,
       audiences: [client.id],
       sessionId: refreshSession.id,
-      subject: refreshSession.identityId,
+      subject: "d821cde6-250f-4918-ad55-877a7abf0271",
     });
 
-    setAxiosResponse("get", "identityClient", "/internal/userinfo/:id", TEST_GET_USERINFO_RESPONSE);
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/oauth2/token")
       .send({
         client_id: client.id,

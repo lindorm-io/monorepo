@@ -20,10 +20,18 @@ redis:
   port: 3502
 
 server:
+  domain: https://development.lindorm.io
   environment: development
+  issuer: https://oauth.development.lindorm.io
   host: http://localhost
   port: 3500
 
 services:
-  authentication_service: http://localhost:3100
-  identity_service: http://localhost:3300
+  authentication_service:
+    issuer: https://authentication.development.lindorm.io
+    host: http://localhost
+    port: 3100
+  identity_service:
+    issuer: https://identity.development.lindorm.io
+    host: http://localhost
+    port: 3300

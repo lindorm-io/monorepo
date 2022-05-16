@@ -1,9 +1,9 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { IssuerSignData } from "@lindorm-io/jwt";
 import { IdentityServiceClaims, SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 
 interface Options {
   claims: Partial<IdentityServiceClaims>;
@@ -12,7 +12,7 @@ interface Options {
 }
 
 export const createIdToken = (
-  ctx: Context,
+  ctx: ServerKoaContext,
   client: Client,
   session: BrowserSession | RefreshSession,
   options: Options,

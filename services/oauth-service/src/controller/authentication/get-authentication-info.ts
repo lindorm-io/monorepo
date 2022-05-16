@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { GetAuthenticationInfoResponseBody, JOI_GUID } from "../../common";
 import { isAuthenticationRequired } from "../../util";
 import { getExpires } from "@lindorm-io/core";
@@ -13,7 +13,7 @@ export const getAuthenticationInfoSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getAuthenticationInfoController: Controller<Context<RequestData>> = async (
+export const getAuthenticationInfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<GetAuthenticationInfoResponseBody> => {
   const {

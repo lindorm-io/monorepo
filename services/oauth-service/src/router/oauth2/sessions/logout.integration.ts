@@ -4,7 +4,7 @@ import { LogoutSessionType } from "../../../enum";
 import { SessionStatus } from "../../../common";
 import { createURL } from "@lindorm-io/core";
 import { getTestData } from "../../../test/data";
-import { koa } from "../../../server/koa";
+import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import { getTestBrowserSession, getTestClient, getTestLogoutSession } from "../../../test/entity";
 import {
@@ -39,7 +39,7 @@ describe("/oauth2/sessions/logout", () => {
     });
 
     const url = createURL("/oauth2/sessions/logout", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         clientId: client.id,
         idTokenHint: idToken,
@@ -49,12 +49,12 @@ describe("/oauth2/sessions/logout", () => {
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://authentication.test.api.lindorm.io");
+    expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oauth/logout");
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
@@ -92,7 +92,7 @@ describe("/oauth2/sessions/logout", () => {
     });
 
     const url = createURL("/oauth2/sessions/logout", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         clientId: client.id,
         idTokenHint: idToken,
@@ -102,12 +102,12 @@ describe("/oauth2/sessions/logout", () => {
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://authentication.test.api.lindorm.io");
+    expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oauth/logout");
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
@@ -138,17 +138,17 @@ describe("/oauth2/sessions/logout", () => {
     );
 
     const url = createURL("/oauth2/sessions/logout/verify", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         redirectUri: "https://test.client.lindorm.io/redirect",
         sessionId: logoutSession.id,
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.api.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
       ])
       .expect(302);
 

@@ -1,6 +1,6 @@
 import { RedisConnection } from "@lindorm-io/redis";
-import { configuration } from "../configuration";
-import { winston } from "../logger";
+import { configuration } from "../server/configuration";
+import { winston } from "../server/logger";
 
 export const redisConnection = new RedisConnection({
   host: configuration.redis.host,

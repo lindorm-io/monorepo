@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
+import { ServerKoaContext, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
 import { TokenType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { generateTokenResponse } from "./generate-token-response";
 import { getExpiryDate } from "@lindorm-io/core";
 import { includes } from "lodash";
@@ -9,7 +9,7 @@ import { isAfter } from "date-fns";
 import { randomUUID } from "crypto";
 
 export const handleRefreshTokenGrant = async (
-  ctx: Context<OAuthTokenRequestData>,
+  ctx: ServerKoaContext<OAuthTokenRequestData>,
 ): Promise<Partial<OAuthTokenResponseBody>> => {
   const {
     data: { refreshToken },

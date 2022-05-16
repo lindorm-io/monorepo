@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { setupIntegration } from "../../test/integration";
 import { GrantType, Scope } from "../../common";
 
@@ -10,12 +10,12 @@ describe("/.well-known", () => {
   beforeAll(setupIntegration);
 
   test("GET /openid-configuration", async () => {
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get("/.well-known/openid-configuration")
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      authorization_endpoint: "https://oauth.test.api.lindorm.io/oauth2/authorize",
+      authorization_endpoint: "https://oauth.test.lindorm.io/oauth2/authorize",
       backchannel_logout_session_supported: true,
       backchannel_logout_supported: true,
       claims_parameter_supported: false,
@@ -27,9 +27,9 @@ describe("/.well-known", () => {
       id_token_encryption_alg_values_supported: [],
       id_token_encryption_enc_values_supported: [],
       id_token_signing_alg_values_supported: ["ES512", "RS512"],
-      issuer: "https://oauth.test.api.lindorm.io",
-      jwks_uri: "https://oauth.test.api.lindorm.io/.well-known/jwks.json",
-      logout_endpoint: "https://oauth.test.api.lindorm.io/oauth2/sessions/logout",
+      issuer: "https://oauth.test.lindorm.io",
+      jwks_uri: "https://oauth.test.lindorm.io/.well-known/jwks.json",
+      logout_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/logout",
       request_parameter_supported: false,
       request_uri_parameter_supported: true,
       response_types_supported: [
@@ -41,7 +41,7 @@ describe("/.well-known", () => {
         "id_token token",
         "code id_token token",
       ],
-      revoke_endpoint: "https://oauth.test.api.lindorm.io/oauth2/sessions/revoke",
+      revoke_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/revoke",
       scopes_supported: [
         Scope.OPENID,
         Scope.ADDRESS,
@@ -58,16 +58,16 @@ describe("/.well-known", () => {
         Scope.OFFLINE_ACCESS,
       ],
       subject_types_supported: ["identity", "client"],
-      token_endpoint: "https://oauth.test.api.lindorm.io/oauth2/token",
+      token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
       token_endpoint_auth_methods_supported: [],
       token_endpoint_auth_signing_alg_values_supported: ["ES512", "RS512"],
-      tokeninfo_endpoint: "https://oauth.test.api.lindorm.io/tokeninfo",
-      userinfo_endpoint: "https://oauth.test.api.lindorm.io/userinfo",
+      tokeninfo_endpoint: "https://oauth.test.lindorm.io/tokeninfo",
+      userinfo_endpoint: "https://oauth.test.lindorm.io/userinfo",
     });
   });
 
   test("GET /jwks.json", async () => {
-    const response = await request(koa.callback()).get("/.well-known/jwks.json").expect(200);
+    const response = await request(server.callback()).get("/.well-known/jwks.json").expect(200);
 
     expect(response.body).toStrictEqual({
       keys: [

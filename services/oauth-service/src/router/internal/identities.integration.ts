@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { ClientType } from "../../common";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { randomUUID } from "crypto";
 import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../../test/entity";
 import {
@@ -63,7 +63,7 @@ describe("/internal/identities", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/internal/identities/${identityId}/sessions`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);

@@ -1,9 +1,9 @@
 import Joi from "joi";
 import { ALLOWED_ACR_VALUES } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { configuration } from "../../server/configuration";
 import { createAuthorizationVerifyRedirectUri } from "../../util";
 import { difference, includes } from "lodash";
 import { getExpiryDate } from "@lindorm-io/core";
@@ -28,7 +28,7 @@ export const confirmAuthenticationSchema = Joi.object<RequestData>({
   remember: Joi.boolean().required(),
 });
 
-export const confirmAuthenticationController: Controller<Context<RequestData>> = async (
+export const confirmAuthenticationController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseWithRedirectBody> => {
   const {

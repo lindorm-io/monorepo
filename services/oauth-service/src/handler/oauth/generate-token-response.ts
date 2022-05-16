@@ -1,6 +1,6 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { Scope } from "../../common";
 import { createAccessToken, createIdToken, createRefreshToken } from "../token";
 import { getIdentityUserinfo } from "../identity";
@@ -16,7 +16,7 @@ interface ResponseBody {
 }
 
 export const generateTokenResponse = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   client: Client,
   session: BrowserSession | RefreshSession,
   scopes: Array<string>,

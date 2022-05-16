@@ -63,11 +63,17 @@ interface Server {
   domain:      string;
   environment: string;
   host:        string;
+  issuer:      string;
   port:        number;
 }
 
 interface Services {
-  authentication_service: string;
-  identity_service:       string;
+  authentication_service: Service;
+  identity_service:       Service;
+}
+
+interface Service {
+  host:  string;
+  port:  number;
 }
 

@@ -1,8 +1,8 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 
-export const forgetIdentityController: Controller<Context> = async (ctx): ControllerResponse => {
+export const forgetIdentityController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     axios: { axiosClient },
     repository: {

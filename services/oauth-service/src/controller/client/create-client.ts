@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { Client } from "../../entity";
 import { ClientType, DisplayMode, JOI_GUID, LevelOfAssurance, ResponseMode } from "../../common";
-import { Context } from "../../types";
-import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { argon } from "../../instance";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
 
 interface RequestData {
@@ -30,7 +30,7 @@ export const createClientSchema = Joi.object<RequestData>({
   tenantId: JOI_GUID.required(),
 });
 
-export const createClientController: Controller<Context<RequestData>> = async (
+export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

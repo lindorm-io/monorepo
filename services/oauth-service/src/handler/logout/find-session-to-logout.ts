@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { BrowserSession, RefreshSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { ClientError } from "@lindorm-io/errors";
@@ -9,7 +9,10 @@ interface Result {
   type: LogoutSessionType;
 }
 
-export const findSessionToLogout = async (ctx: Context, sessionId: string): Promise<Result> => {
+export const findSessionToLogout = async (
+  ctx: ServerKoaContext,
+  sessionId: string,
+): Promise<Result> => {
   const {
     repository: { browserSessionRepository, refreshSessionRepository },
   } = ctx;

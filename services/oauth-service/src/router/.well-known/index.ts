@@ -1,12 +1,12 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { GrantType, ResponseType, Scope } from "../../common";
 import { HttpStatus, Router } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.get("/openid-configuration", async (ctx: Context): Promise<void> => {
+router.get("/openid-configuration", async (ctx: ServerKoaContext): Promise<void> => {
   ctx.body = {
     authorizationEndpoint: new URL("/oauth2/authorize", configuration.server.host).toString(),
     backchannelLogoutSessionSupported: true,
@@ -62,7 +62,7 @@ router.get("/openid-configuration", async (ctx: Context): Promise<void> => {
   ctx.status = HttpStatus.Success.OK;
 });
 
-router.get("/jwks.json", async (ctx: Context): Promise<void> => {
+router.get("/jwks.json", async (ctx: ServerKoaContext): Promise<void> => {
   ctx.body = { keys: ctx.keystore.getJWKS() };
   ctx.status = HttpStatus.Success.OK;
 });

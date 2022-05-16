@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { createAuthorizationVerifyRedirectUri, isConsentRequired } from "../../util";
 import { flatten, includes, uniq } from "lodash";
@@ -14,7 +14,7 @@ export const skipConsentSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const skipConsentController: Controller<Context<RequestData>> = async (
+export const skipConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseWithRedirectBody> => {
   const {

@@ -45,9 +45,14 @@ redis:
 server:
   domain: https://lindorm.io
   environment: development
-  host: localhost
+  issuer: https://oauth.lindorm.io
+  host: http://localhost
   port: 3000
 
 services:
-  authentication_service: localhost
-  identity_service: localhost
+  authentication_service:
+    issuer: https://authentication.lindorm.io
+    host: localhost
+  identity_service:
+    issuer: https://identity.lindorm.io
+    host: localhost

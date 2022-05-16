@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { ClientType } from "../../../common";
-import { koa } from "../../../server/koa";
+import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestClient,
@@ -14,32 +15,16 @@ import {
   TEST_CLIENT_CACHE,
   TEST_CONSENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
-  getAxiosResponse,
   getTestClientCredentials,
-  setAxiosResponse,
   setupIntegration,
 } from "../../../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
-
 describe("/internal/sessions/logout", () => {
   beforeAll(setupIntegration);
+
+  nock("https://test.client.lindorm.io").post("/logout/back-channel").times(999).reply(200);
 
   test("GET /:id", async () => {
     const client = await TEST_CLIENT_CACHE.create(
@@ -75,7 +60,7 @@ describe("/internal/sessions/logout", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/internal/sessions/logout/${logoutSession.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
@@ -132,21 +117,14 @@ describe("/internal/sessions/logout", () => {
       }),
     );
 
-    setAxiosResponse(
-      "get",
-      "axiosClient",
-      "https://test.client.lindorm.io/logout/back-channel",
-      {},
-    );
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .put(`/internal/sessions/logout/${logoutSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
     const url = new URL(response.body.redirect_to);
 
-    expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/logout/verify");
     expect(url.searchParams.get("session_id")).toStrictEqual(logoutSession.id);
     expect(url.searchParams.get("redirect_uri")).toStrictEqual(logoutSession.redirectUri);
@@ -186,7 +164,7 @@ describe("/internal/sessions/logout", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .put(`/internal/sessions/logout/${logoutSession.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);

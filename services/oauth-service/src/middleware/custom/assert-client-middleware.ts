@@ -1,11 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Middleware } from "@lindorm-io/koa";
+import { ServerKoaMiddleware } from "../../types";
 import { argon } from "../../instance";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";
 import { Client } from "../../entity";
 
-export const assertClientMiddleware: Middleware<Context> = async (ctx, next): Promise<void> => {
+export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Promise<void> => {
   const {
     cache: { clientCache },
     data,

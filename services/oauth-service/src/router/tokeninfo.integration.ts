@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../test/entity";
 import {
@@ -38,7 +38,7 @@ describe("/tokeninfo", () => {
       sessionId: browserSession.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/tokeninfo")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -55,7 +55,7 @@ describe("/tokeninfo", () => {
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
-      iss: "https://oauth.test.api.lindorm.io",
+      iss: "https://oauth.test.lindorm.io",
       jti: tokenId,
       loa: 2,
       nbf: 1609488000,
@@ -88,7 +88,7 @@ describe("/tokeninfo", () => {
       sessionId: refreshSession.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/tokeninfo")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -103,7 +103,7 @@ describe("/tokeninfo", () => {
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
-      iss: "https://oauth.test.api.lindorm.io",
+      iss: "https://oauth.test.lindorm.io",
       jti: tokenId,
       nbf: 1609488000,
       scope: [],

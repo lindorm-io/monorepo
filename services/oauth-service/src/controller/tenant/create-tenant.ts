@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { Context } from "../../types";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { Tenant } from "../../entity";
 
 interface RequestData {
@@ -17,7 +17,7 @@ export const createTenantSchema = Joi.object<RequestData>({
   subdomain: Joi.string().required(),
 });
 
-export const createTenantController: Controller<Context<RequestData>> = async (
+export const createTenantController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

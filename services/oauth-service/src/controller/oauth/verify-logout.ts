@@ -1,11 +1,11 @@
 import Joi from "joi";
 import { BROWSER_SESSION_COOKIE_NAME, LOGOUT_SESSION_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { LogoutSessionType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { includes } from "lodash";
 
@@ -19,7 +19,7 @@ export const oauthVerifyLogoutSchema = Joi.object<RequestData>({
   sessionId: JOI_GUID,
 });
 
-export const oauthVerifyLogoutController: Controller<Context<RequestData>> = async (
+export const oauthVerifyLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -43,7 +43,8 @@ export const oauthVerifyLogoutController: Controller<Context<RequestData>> = asy
   ) {
     return {
       redirect: createURL(configuration.redirect.logout, {
-        baseUrl: configuration.services.authentication_service,
+        host: configuration.services.authentication_service.host,
+        port: configuration.services.authentication_service.port,
         query: { sessionId: logoutSession.id },
       }),
     };

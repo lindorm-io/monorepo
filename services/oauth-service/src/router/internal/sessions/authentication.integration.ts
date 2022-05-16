@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { ClientType } from "../../../common";
-import { koa } from "../../../server/koa";
+import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestAuthorizationSession,
@@ -49,7 +49,7 @@ describe("/internal/sessions/authentication", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/internal/sessions/authentication/${authorizationSession.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
@@ -122,7 +122,7 @@ describe("/internal/sessions/authentication", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .put(`/internal/sessions/authentication/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
@@ -136,7 +136,7 @@ describe("/internal/sessions/authentication", () => {
 
     const url = new URL(response.body.redirect_to);
 
-    expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
     expect(url.searchParams.get("session_id")).toBe(authorizationSession.id);
     expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
@@ -160,7 +160,7 @@ describe("/internal/sessions/authentication", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .put(`/internal/sessions/authentication/${authorizationSession.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
@@ -206,14 +206,14 @@ describe("/internal/sessions/authentication", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .put(`/internal/sessions/authentication/${authorizationSession.id}/skip`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
     const url = new URL(response.body.redirect_to);
 
-    expect(url.origin).toBe("https://oauth.test.api.lindorm.io");
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
     expect(url.searchParams.get("session_id")).toBe(authorizationSession.id);
     expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);

@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
 import { TenantAttributes } from "../../entity";
 
@@ -14,7 +14,7 @@ export const getTenantInfoSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getTenantInfoController: Controller<Context<RequestData>> = async (
+export const getTenantInfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

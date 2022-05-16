@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { ClientAllowed, Context } from "../../types";
+import { ClientAllowed, ServerKoaController } from "../../types";
 import { ClientType, JOI_CLIENT_TYPE, JOI_GUID } from "../../common";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GRANT_TYPE, JOI_RESPONSE_TYPE } from "../../constant";
 import { isUndefined } from "lodash";
 
@@ -25,7 +25,7 @@ export const adminClientSchema = Joi.object<RequestData>({
   type: JOI_CLIENT_TYPE.optional(),
 });
 
-export const adminClientController: Controller<Context<RequestData>> = async (
+export const adminClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

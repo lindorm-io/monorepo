@@ -1,9 +1,9 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { BrowserSession, Client, ConsentSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 
 export const tryFindConsentSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   browserSession: BrowserSession | undefined,
   client: Client,
 ): Promise<ConsentSession | undefined> => {

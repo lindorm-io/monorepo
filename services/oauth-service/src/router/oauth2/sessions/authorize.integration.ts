@@ -1,10 +1,10 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
-import { IdentityPermission, ResponseMode, Scope, SessionStatus } from "../../../common";
+import { ResponseMode, Scope, SessionStatus } from "../../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../test/data";
 import { createURL } from "@lindorm-io/core";
-import { koa } from "../../../server/koa";
-import { randomUUID } from "crypto";
+import { server } from "../../../server/server";
 import {
   getTestAuthorizationSession,
   getTestBrowserSession,
@@ -12,8 +12,6 @@ import {
   getTestConsentSession,
 } from "../../../test/entity";
 import {
-  getAxiosResponse,
-  setAxiosResponse,
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
@@ -23,28 +21,16 @@ import {
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
-
 describe("/oauth2/sessions/verify", () => {
   beforeAll(setupIntegration);
 
-  test("GET /verify - QUERY", async () => {
-    const identityId = randomUUID();
+  nock("https://identity.test.lindorm.io")
+    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
+    .query(true)
+    .times(999)
+    .reply(200, TEST_GET_USERINFO_RESPONSE);
 
+  test("GET /verify - QUERY", async () => {
     const client = await TEST_CLIENT_CACHE.create(getTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
@@ -52,7 +38,7 @@ describe("/oauth2/sessions/verify", () => {
         acrValues: ["loa_3"],
         amrValues: ["email_otp", "phone_otp"],
         clients: [],
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         levelOfAssurance: 3,
       }),
     );
@@ -61,7 +47,7 @@ describe("/oauth2/sessions/verify", () => {
       getTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
         sessions: [browserSession.id],
       }),
@@ -74,27 +60,25 @@ describe("/oauth2/sessions/verify", () => {
         authenticationStatus: SessionStatus.CONFIRMED,
         consentStatus: SessionStatus.CONFIRMED,
         consentSessionId: consentSession.id,
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         promptModes: [],
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
       }),
     );
 
-    setAxiosResponse("get", "identityClient", "/internal/userinfo/:id", TEST_GET_USERINFO_RESPONSE);
-
     const url = createURL("/oauth2/sessions/authorize/verify", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         sessionId: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.api.lindorm.io; samesite=none`,
-        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.api.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
       ])
       .expect(302);
 
@@ -110,8 +94,6 @@ describe("/oauth2/sessions/verify", () => {
   });
 
   test("GET /verify - FORM_POST", async () => {
-    const identityId = randomUUID();
-
     const client = await TEST_CLIENT_CACHE.create(getTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
@@ -119,7 +101,7 @@ describe("/oauth2/sessions/verify", () => {
         acrValues: ["loa_3"],
         amrValues: ["email_otp", "phone_otp"],
         clients: [],
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         levelOfAssurance: 3,
       }),
     );
@@ -128,7 +110,7 @@ describe("/oauth2/sessions/verify", () => {
       getTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
         sessions: [browserSession.id],
       }),
@@ -141,36 +123,26 @@ describe("/oauth2/sessions/verify", () => {
         authenticationStatus: SessionStatus.CONFIRMED,
         consentStatus: SessionStatus.CONFIRMED,
         consentSessionId: consentSession.id,
-        identityId,
+        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         promptModes: [],
         responseMode: ResponseMode.FORM_POST,
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
       }),
     );
 
-    setAxiosResponse("get", "identityClient", "/internal/identities/:id/permissions", {
-      active: true,
-      permissions: [IdentityPermission.USER],
-    });
-
-    setAxiosResponse("get", "identityClient", "/internal/identities/:id/userinfo", {
-      sub: identityId,
-      ...TEST_GET_USERINFO_RESPONSE,
-    });
-
     const url = createURL("/oauth2/sessions/authorize/verify", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         sessionId: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.api.lindorm.io; samesite=none`,
-        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.api.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
       ])
       .expect(308);
 

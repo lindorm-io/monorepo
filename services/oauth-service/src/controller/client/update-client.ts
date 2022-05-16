@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { ClientDefaults, ClientExpiry, Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ClientDefaults, ClientExpiry, ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_DISPLAY_MODE, JOI_EXPIRY_REGEX, JOI_RESPONSE_MODE } from "../../constant";
 import { isUndefined } from "lodash";
 import {
@@ -48,7 +48,7 @@ export const updateClientSchema = Joi.object<RequestData>({
   scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).optional(),
 });
 
-export const updateClientController: Controller<Context<RequestData>> = async (
+export const updateClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

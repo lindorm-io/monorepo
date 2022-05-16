@@ -1,4 +1,4 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { ClientPermission, ClientScope } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -19,7 +19,7 @@ import {
   skipConsentSchema,
 } from "../../../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

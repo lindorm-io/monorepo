@@ -20,10 +20,13 @@ redis:
   port: 3502
 
 server:
+  domain: https://test.lindorm.io
   environment: test
-  host: https://oauth.test.api.lindorm.io
-  port: 3500
+  issuer: https://oauth.test.lindorm.io
+  host: https://oauth.test.lindorm.io
 
 services:
-  authentication_service: https://authentication.test.api.lindorm.io
-  identity_service: https://identity.test.api.lindorm.io
+  authentication_service:
+    host: https://authentication.test.lindorm.io
+  identity_service:
+    host: https://identity.test.lindorm.io

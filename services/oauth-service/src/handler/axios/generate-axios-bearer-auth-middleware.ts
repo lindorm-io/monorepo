@@ -1,11 +1,11 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 import { axiosBearerAuthMiddleware, AxiosMiddleware } from "@lindorm-io/axios";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 
 export const generateAxiosBearerAuthMiddleware = (
-  ctx: Context,
+  ctx: ServerKoaContext,
   permissions: Array<string>,
   scopes: Array<string>,
 ): AxiosMiddleware => {

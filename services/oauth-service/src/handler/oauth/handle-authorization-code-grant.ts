@@ -1,16 +1,16 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
 import { RefreshSession } from "../../entity";
 import { Scope } from "../../common";
 import { assertCodeChallenge } from "../../util";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { flatten, includes, uniq } from "lodash";
 import { generateTokenResponse } from "./generate-token-response";
 import { getExpiryDate } from "@lindorm-io/core";
 
 export const handleAuthorizationCodeGrant = async (
-  ctx: Context<OAuthTokenRequestData>,
+  ctx: ServerKoaContext<OAuthTokenRequestData>,
 ): Promise<Partial<OAuthTokenResponseBody>> => {
   const {
     cache: { authorizationSessionCache },

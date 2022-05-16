@@ -1,9 +1,9 @@
 import Joi from "joi";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { generateCallbackResponse, setBrowserSessionCookie } from "../../handler";
 import { includes } from "lodash";
@@ -19,7 +19,7 @@ export const oauthVerifyAuthorizationSchema = Joi.object<RequestData>({
   sessionId: JOI_GUID,
 });
 
-export const oauthVerifyAuthorizationController: Controller<Context<RequestData>> = async (
+export const oauthVerifyAuthorizationController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -49,7 +49,8 @@ export const oauthVerifyAuthorizationController: Controller<Context<RequestData>
   ) {
     return {
       redirect: createURL(configuration.redirect.login, {
-        baseUrl: configuration.services.authentication_service,
+        host: configuration.services.authentication_service.host,
+        port: configuration.services.authentication_service.port,
         query: { sessionId: authorizationSession.id },
       }),
     };
@@ -63,7 +64,8 @@ export const oauthVerifyAuthorizationController: Controller<Context<RequestData>
   ) {
     return {
       redirect: createURL(configuration.redirect.consent, {
-        baseUrl: configuration.services.authentication_service,
+        host: configuration.services.authentication_service.host,
+        port: configuration.services.authentication_service.port,
         query: { sessionId: authorizationSession.id },
       }),
     };

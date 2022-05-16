@@ -1,11 +1,11 @@
 import { TokenIssuer } from "@lindorm-io/jwt";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getTestKeystore } from "./test-keystore";
 import { logger } from "../logger";
 
 export const getTestJwt = (): TokenIssuer =>
   new TokenIssuer({
-    issuer: configuration.server.host,
+    issuer: configuration.server.issuer || configuration.server.host,
     keystore: getTestKeystore(),
     logger,
   });

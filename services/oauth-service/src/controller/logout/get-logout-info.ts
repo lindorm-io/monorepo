@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, GetLogoutSessionInfoResponseBody } from "../../common";
 import { getExpires } from "@lindorm-io/core";
 
@@ -12,7 +12,7 @@ export const getLogoutInfoSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getLogoutInfoController: Controller<Context<RequestData>> = async (
+export const getLogoutInfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<GetLogoutSessionInfoResponseBody> => {
   const {

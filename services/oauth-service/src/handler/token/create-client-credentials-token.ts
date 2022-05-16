@@ -1,11 +1,14 @@
 import { Client } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { IssuerSignData } from "@lindorm-io/jwt";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 
-export const createClientCredentialsToken = (ctx: Context, client: Client): IssuerSignData => {
+export const createClientCredentialsToken = (
+  ctx: ServerKoaContext,
+  client: Client,
+): IssuerSignData => {
   const { jwt } = ctx;
 
   return jwt.sign({

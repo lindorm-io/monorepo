@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import { JOI_GUID, JOI_JWT, GrantType } from "../../common";
 import { includes } from "lodash";
@@ -22,7 +22,7 @@ export const oauthTokenSchema = Joi.object({
   scope: Joi.string().optional(),
 });
 
-export const oauthTokenController: Controller<Context<OAuthTokenRequestData>> = async (
+export const oauthTokenController: ServerKoaController<OAuthTokenRequestData> = async (
   ctx,
 ): ControllerResponse<Partial<OAuthTokenResponseBody>> => {
   const {

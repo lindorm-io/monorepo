@@ -1,13 +1,12 @@
 import { BROWSER_SESSION_COOKIE_NAME } from "../../constant";
 import { BrowserSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaMiddleware } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { Middleware } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getExpiryDate } from "@lindorm-io/core";
 import { setBrowserSessionCookie } from "../../handler";
 
-export const browserSessionCookieMiddleware: Middleware<Context> = async (
+export const browserSessionCookieMiddleware: ServerKoaMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {

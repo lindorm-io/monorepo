@@ -1,11 +1,16 @@
 import { Axios } from "@lindorm-io/axios";
+import { Controller } from "@lindorm-io/koa";
 import { IdentityServiceClaims } from "../common";
-import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
-import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
-import { KoaContext } from "@lindorm-io/koa";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
+import { IssuerVerifyData } from "@lindorm-io/jwt";
+import {
+  LindormNodeServerAxios,
+  LindormNodeServerCache,
+  LindormNodeServerContext,
+  LindormNodeServerKoaContext,
+  LindormNodeServerKoaMiddleware,
+  LindormNodeServerRepository,
+  LindormNodeServerToken,
+} from "@lindorm-io/node-server";
 import {
   AuthorizationSession,
   BrowserSession,
@@ -28,47 +33,52 @@ import {
   TenantRepository,
 } from "../infrastructure";
 
-export interface Context<Body = Record<string, any>> extends KoaContext<Body> {
-  axios: {
-    axiosClient: Axios;
-    authenticationClient: Axios;
-    identityClient: Axios;
-  };
-  cache: {
-    authorizationSessionCache: AuthorizationSessionCache;
-    clientCache: ClientCache;
-    invalidTokenCache: InvalidTokenCache;
-    keyPairCache: KeyPairCache;
-    logoutSessionCache: LogoutSessionCache;
-  };
-  connection: {
-    mongo: MongoConnection;
-    redis: RedisConnection;
-  };
-  entity: {
-    authorizationSession: AuthorizationSession;
-    browserSession: BrowserSession;
-    client: Client;
-    consentSession: ConsentSession;
-    invalidToken: InvalidToken;
-    logoutSession: LogoutSession;
-    refreshSession: RefreshSession;
-    tenant: Tenant;
-  };
-  jwt: TokenIssuer;
-  keys: Array<KeyPair>;
-  keystore: Keystore;
-  repository: {
-    browserSessionRepository: BrowserSessionRepository;
-    clientRepository: ClientRepository;
-    consentSessionRepository: ConsentSessionRepository;
-    keyPairRepository: KeyPairRepository;
-    refreshSessionRepository: RefreshSessionRepository;
-    tenantRepository: TenantRepository;
-  };
-  token: {
-    bearerToken: IssuerVerifyData<never, never>;
-    idToken: IssuerVerifyData<never, IdentityServiceClaims>;
-    refreshToken: IssuerVerifyData<never, never>;
-  };
+interface ServerAxios extends LindormNodeServerAxios {
+  authenticationClient: Axios;
+  identityClient: Axios;
 }
+
+interface ServerCache extends LindormNodeServerCache {
+  authorizationSessionCache: AuthorizationSessionCache;
+  clientCache: ClientCache;
+  invalidTokenCache: InvalidTokenCache;
+  logoutSessionCache: LogoutSessionCache;
+}
+
+interface ServerEntity {
+  authorizationSession: AuthorizationSession;
+  browserSession: BrowserSession;
+  client: Client;
+  consentSession: ConsentSession;
+  invalidToken: InvalidToken;
+  logoutSession: LogoutSession;
+  refreshSession: RefreshSession;
+  tenant: Tenant;
+}
+
+interface ServerRepository extends LindormNodeServerRepository {
+  browserSessionRepository: BrowserSessionRepository;
+  clientRepository: ClientRepository;
+  consentSessionRepository: ConsentSessionRepository;
+  refreshSessionRepository: RefreshSessionRepository;
+  tenantRepository: TenantRepository;
+}
+
+interface ServerToken extends LindormNodeServerToken {
+  idToken: IssuerVerifyData<never, IdentityServiceClaims>;
+  refreshToken: IssuerVerifyData<never, never>;
+}
+
+interface Context extends LindormNodeServerContext {
+  axios: ServerAxios;
+  cache: ServerCache;
+  entity: ServerEntity;
+  repository: ServerRepository;
+  token: ServerToken;
+}
+
+export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+
+export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

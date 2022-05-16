@@ -1,11 +1,11 @@
 import { BrowserSession, Client, RefreshSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { IssuerSignData } from "@lindorm-io/jwt";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 
 export const createLogoutToken = (
-  ctx: Context,
+  ctx: ServerKoaContext,
   client: Client,
   session: BrowserSession | RefreshSession,
 ): IssuerSignData => {

@@ -1,9 +1,9 @@
 import { ClientPermission, ClientScope, GetUserinfoResponseBody } from "../../common";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { generateAxiosBearerAuthMiddleware } from "../axios";
 
 export const getIdentityUserinfo = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   identityId: string,
   scopes: Array<string>,
 ): Promise<GetUserinfoResponseBody> => {

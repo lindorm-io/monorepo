@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { getRandomString } from "@lindorm-io/core";
 import { argon } from "../../instance";
 
@@ -16,7 +16,7 @@ export const generateClientSecretSchema = Joi.object<RequestData>({
   id: Joi.string().required(),
 });
 
-export const generateClientSecretController: Controller<Context<RequestData>> = async (
+export const generateClientSecretController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

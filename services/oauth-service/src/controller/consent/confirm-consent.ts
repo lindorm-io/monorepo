@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { createAuthorizationVerifyRedirectUri } from "../../util";
 import { flatten, includes, uniq } from "lodash";
 import {
@@ -21,7 +21,7 @@ export const confirmConsentSchema = Joi.object<RequestData>({
   scopes: Joi.array().items(Joi.string()).required(),
 });
 
-export const confirmConsentController: Controller<Context<RequestData>> = async (
+export const confirmConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseWithRedirectBody> => {
   const {

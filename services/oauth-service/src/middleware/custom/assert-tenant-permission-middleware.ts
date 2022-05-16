@@ -1,9 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context } from "../../types";
-import { Middleware } from "@lindorm-io/koa";
+import { ServerKoaMiddleware } from "../../types";
 import { includes } from "lodash";
 
-export const assertTenantPermissionMiddleware: Middleware<Context> = async (
+export const assertTenantPermissionMiddleware: ServerKoaMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {

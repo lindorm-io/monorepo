@@ -1,9 +1,9 @@
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession } from "../../entity";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 
 export const setAuthorizationSessionCookie = (
-  ctx: Context,
+  ctx: ServerKoaContext,
   authorizationSession: AuthorizationSession,
 ): void => {
   ctx.setCookie(AUTHORIZATION_SESSION_COOKIE_NAME, authorizationSession.id, {

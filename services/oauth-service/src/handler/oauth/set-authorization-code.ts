@@ -1,10 +1,10 @@
 import { AuthorizationSession } from "../../entity";
-import { Context } from "../../types";
-import { configuration } from "../../configuration";
+import { ServerKoaContext } from "../../types";
+import { configuration } from "../../server/configuration";
 import { getExpires, getRandomString } from "@lindorm-io/core";
 
 export const setAuthorizationCode = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   authorizationSession: AuthorizationSession,
 ): Promise<AuthorizationSession> => {
   const {

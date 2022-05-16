@@ -1,10 +1,10 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { LogoutSession } from "../../entity";
 import { createLogoutToken } from "../token";
 import { handleConsentSessionOnLogout } from "./handle-consent-session-on-logout";
 
 export const handleRefreshSessionLogout = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   logoutSession: LogoutSession,
 ): Promise<void> => {
   const {

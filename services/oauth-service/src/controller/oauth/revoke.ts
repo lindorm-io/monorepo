@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { InvalidToken } from "../../entity";
 import { JOI_GUID, JOI_JWT } from "../../common";
 import { TokenType } from "../../enum";
@@ -17,7 +17,7 @@ export const oauthRevokeSchema = Joi.object({
   token: JOI_JWT.required(),
 });
 
-export const oauthRevokeController: Controller<Context<RequestData>> = async (
+export const oauthRevokeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

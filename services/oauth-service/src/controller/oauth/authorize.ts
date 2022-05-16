@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { configuration } from "../../configuration";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { configuration } from "../../server/configuration";
 import { createURL, getExpires, PKCEMethod } from "@lindorm-io/core";
 import { setAuthorizationSessionCookie, tryFindConsentSession } from "../../handler";
 import { uniq } from "lodash";
@@ -80,7 +80,7 @@ export const oauthAuthorizeSchema = Joi.object<RequestData>({
   uiLocales: Joi.string().optional(),
 });
 
-export const oauthAuthorizeController: Controller<Context<RequestData>> = async (
+export const oauthAuthorizeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -179,7 +179,8 @@ export const oauthAuthorizeController: Controller<Context<RequestData>> = async 
 
   return {
     redirect: createURL(configuration.redirect.login, {
-      baseUrl: configuration.services.authentication_service,
+      host: configuration.services.authentication_service.host,
+      port: configuration.services.authentication_service.port,
       query: {
         sessionId: authorizationSession.id,
       },

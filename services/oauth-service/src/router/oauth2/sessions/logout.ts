@@ -1,4 +1,4 @@
-import { Context } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import {
   clientEntityMiddleware,
   idTokenMiddleware,
@@ -19,7 +19,7 @@ import {
 } from "@lindorm-io/koa";
 import { ERROR_REDIRECT_URI } from "../../../constant";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

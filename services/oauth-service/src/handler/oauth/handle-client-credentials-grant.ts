@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { Context, OAuthTokenRequestData } from "../../types";
+import { ServerKoaContext, OAuthTokenRequestData } from "../../types";
 import { createClientCredentialsToken } from "../token";
 import { difference } from "lodash";
 
@@ -11,7 +11,7 @@ interface ResponseBody {
 }
 
 export const handleClientCredentialsGrant = async (
-  ctx: Context<OAuthTokenRequestData>,
+  ctx: ServerKoaContext<OAuthTokenRequestData>,
 ): Promise<ResponseBody> => {
   const {
     data: { scope },

@@ -1,9 +1,9 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { difference } from "lodash";
 import { BrowserSession, Client, RefreshSession } from "../../entity";
 
 export const handleConsentSessionOnLogout = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   client: Client,
   session: BrowserSession | RefreshSession,
 ): Promise<void> => {

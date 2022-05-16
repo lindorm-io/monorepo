@@ -1,5 +1,5 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { flatten, uniq } from "lodash";
 import {
   BrowserSessionAttributes,
@@ -15,7 +15,7 @@ interface ResponseBody {
   refreshSessions: Array<Partial<RefreshSessionAttributes>>;
 }
 
-export const sessioninfoController: Controller<Context> = async (
+export const sessioninfoController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

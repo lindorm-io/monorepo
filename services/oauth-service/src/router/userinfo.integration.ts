@@ -1,45 +1,27 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { TEST_GET_USERINFO_RESPONSE } from "../test/data";
-import { koa } from "../server/koa";
-import { randomUUID } from "crypto";
-import {
-  getAxiosResponse,
-  getTestAccessToken,
-  setAxiosResponse,
-  setupIntegration,
-} from "../test/integration";
+import { server } from "../server/server";
+import { getTestAccessToken, setupIntegration } from "../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
-
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
 
 describe("/userinfo", () => {
   beforeAll(setupIntegration);
 
+  nock("https://identity.test.lindorm.io")
+    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
+    .query(true)
+    .times(999)
+    .reply(200, TEST_GET_USERINFO_RESPONSE);
+
   test("GET /", async () => {
-    const identityId = randomUUID();
     const accessToken = await getTestAccessToken({
-      subject: identityId,
+      subject: "d821cde6-250f-4918-ad55-877a7abf0271",
     });
 
-    setAxiosResponse("get", "identityClient", "/internal/userinfo/:id", TEST_GET_USERINFO_RESPONSE);
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get("/userinfo")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);

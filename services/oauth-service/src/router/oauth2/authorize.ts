@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { ERROR_REDIRECT_URI } from "../../constant";
 import { oauthAuthorizeController, oauthAuthorizeSchema } from "../../controller";
 import {
@@ -14,7 +14,7 @@ import {
   useAssertion,
 } from "@lindorm-io/koa";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(

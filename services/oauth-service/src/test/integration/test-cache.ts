@@ -1,6 +1,6 @@
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
 import { redisConnection } from "../../instance";
-import { winston } from "../../logger";
+import { logger } from "../logger";
 import {
   AuthorizationSessionCache,
   ClientCache,
@@ -19,7 +19,6 @@ interface TestCache {
 export const getTestCache = async (): Promise<TestCache> => {
   await redisConnection.waitForConnection();
   const client = redisConnection.client();
-  const logger = winston;
 
   return {
     authorizationSessionCache: new AuthorizationSessionCache({ client, logger }),

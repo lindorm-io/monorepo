@@ -54,7 +54,7 @@ describe("oauthVerifyController", () => {
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
     expect(response.redirect.toString()).toBe(
-      "https://authentication.test.api.lindorm.io/oauth/logout?session_id=ba965b10-44b4-4ec0-b276-10ac52f9d43f",
+      "https://authentication.test.lindorm.io/oauth/logout?session_id=ba965b10-44b4-4ec0-b276-10ac52f9d43f",
     );
 
     expect(ctx.deleteCookie).not.toHaveBeenCalled();

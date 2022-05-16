@@ -1,4 +1,4 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { IdentityPermission } from "../../common";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import { updateTenantController, updateTenantSchema } from "../../controller";
@@ -8,7 +8,7 @@ import {
   tenantEntityMiddleware,
 } from "../../middleware";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.patch(

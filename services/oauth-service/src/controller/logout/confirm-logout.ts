@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { LogoutSessionType } from "../../enum";
 import { ClientError, ServerError } from "@lindorm-io/errors";
@@ -16,7 +16,7 @@ export const confirmLogoutSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const confirmLogoutController: Controller<Context<RequestData>> = async (
+export const confirmLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseWithRedirectBody> => {
   const {

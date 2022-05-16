@@ -1,6 +1,6 @@
 import { AuthorizationSession, BrowserSession, Client } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ResponseMode, ResponseType, Scope } from "../../common";
 import { createAccessToken, createIdToken } from "../token";
@@ -20,7 +20,7 @@ interface Data {
 }
 
 export const generateCallbackResponse = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   authSession: AuthorizationSession,
   browserSession: BrowserSession,
   client: Client,

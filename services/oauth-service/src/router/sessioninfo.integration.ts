@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestBrowserSession,
@@ -69,7 +69,7 @@ describe("/sessioninfo", () => {
       subject: identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get("/sessioninfo")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);

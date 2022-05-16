@@ -3,7 +3,7 @@ import request from "supertest";
 import { baseHash, createURL } from "@lindorm-io/core";
 import { getTestClient } from "../../test/entity";
 import { getTestData } from "../../test/data";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import { randomUUID } from "crypto";
 import {
   DisplayMode,
@@ -14,7 +14,6 @@ import {
   SessionStatus,
 } from "../../common";
 import {
-  getAxiosResponse,
   getTestIdToken,
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
@@ -22,22 +21,6 @@ import {
 } from "../../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
-
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
 
 describe("/oauth2/authorize", () => {
   beforeAll(setupIntegration);
@@ -61,7 +44,7 @@ describe("/oauth2/authorize", () => {
     const redirectData = baseHash(JSON.stringify({ string: "string", number: 123, boolean: true }));
 
     const url = createURL("/oauth2/authorize", {
-      baseUrl: "https://test.test",
+      host: "https://test.test",
       query: {
         acrValues: ["loa_3", "session_otp", "email_otp", "phone_otp"],
         authenticationId: "f4215681-c782-4251-b1bb-c145202c52da",
@@ -92,12 +75,12 @@ describe("/oauth2/authorize", () => {
       },
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://authentication.test.api.lindorm.io");
+    expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oauth/login");
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
@@ -138,8 +121,8 @@ describe("/oauth2/authorize", () => {
     );
 
     expect(response.headers["set-cookie"]).toEqual([
-      `lindorm_io_oauth_browser_session=${session.browserSessionId}; path=/; domain=https://lindorm.io; samesite=none`,
-      `lindorm_io_oauth_authorization_session=${session.id}; path=/; expires=Fri, 01 Jan 2021 08:30:00 GMT; domain=https://lindorm.io; samesite=none`,
+      `lindorm_io_oauth_browser_session=${session.browserSessionId}; path=/; domain=https://test.lindorm.io; samesite=none`,
+      `lindorm_io_oauth_authorization_session=${session.id}; path=/; expires=Fri, 01 Jan 2021 08:30:00 GMT; domain=https://test.lindorm.io; samesite=none`,
     ]);
   });
 });

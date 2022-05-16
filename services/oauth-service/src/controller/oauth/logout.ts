@@ -1,9 +1,9 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
 import { LogoutSession } from "../../entity";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { createURL, getExpires } from "@lindorm-io/core";
 import { findSessionToLogout, setLogoutSessionCookie } from "../../handler";
 
@@ -29,7 +29,7 @@ export const oauthLogoutSchema = Joi.object({
   state: Joi.string().optional(),
 });
 
-export const oauthLogoutController: Controller<Context<RequestData>> = async (
+export const oauthLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseQuery> => {
   const {
@@ -62,7 +62,8 @@ export const oauthLogoutController: Controller<Context<RequestData>> = async (
 
   return {
     redirect: createURL(configuration.redirect.logout, {
-      baseUrl: configuration.services.authentication_service,
+      host: configuration.services.authentication_service.host,
+      port: configuration.services.authentication_service.port,
       query: { sessionId: logoutSession.id },
     }),
   };

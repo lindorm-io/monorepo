@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
 import { isUndefined } from "lodash";
 
@@ -20,7 +20,7 @@ export const updateTenantSchema = Joi.object<RequestData>({
   subdomain: Joi.string().optional(),
 });
 
-export const updateTenantController: Controller<Context<RequestData>> = async (
+export const updateTenantController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

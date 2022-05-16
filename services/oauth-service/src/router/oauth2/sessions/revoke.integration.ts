@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { InvalidToken } from "../../../entity";
 import { getTestClient, getTestRefreshSession } from "../../../test/entity";
-import { koa } from "../../../server/koa";
+import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
   TEST_CLIENT_CACHE,
@@ -32,7 +32,7 @@ describe("/oauth2/sessions/revoke", () => {
       audiences: [client.id],
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .post("/oauth2/sessions/revoke")
       .send({
         client_id: client.id,
@@ -69,7 +69,7 @@ describe("/oauth2/sessions/revoke", () => {
       sessionId: refreshSession.id,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .post("/oauth2/sessions/revoke")
       .send({
         client_id: client.id,

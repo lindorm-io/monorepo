@@ -1,9 +1,9 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentityServiceClaims } from "../../common";
 import { getIdentityUserinfo } from "../../handler";
 
-export const userinfoController: Controller<Context> = async (
+export const userinfoController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<Partial<IdentityServiceClaims>> => {
   const {

@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { isAfter } from "date-fns";
 import { orderBy } from "lodash";
 import { GetIdentitySessionsResponseBody, IdentitySessionsData, JOI_GUID } from "../../common";
@@ -13,8 +13,8 @@ export const getIdentitySessionsSchema = Joi.object<IdentitySessionsRequestData>
   id: JOI_GUID.required(),
 });
 
-export const getIdentitySessionsController: Controller<
-  Context<IdentitySessionsRequestData>
+export const getIdentitySessionsController: ServerKoaController<
+  IdentitySessionsRequestData
 > = async (ctx): ControllerResponse<GetIdentitySessionsResponseBody> => {
   const {
     data: { id: identityId },

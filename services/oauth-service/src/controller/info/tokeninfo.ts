@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_JWT } from "../../common";
 import { TokenType } from "../../enum";
@@ -35,7 +35,7 @@ export const tokeninfoSchema = Joi.object<RequestData>({
   tokenTypeHint: Joi.string(),
 });
 
-export const tokeninfoController: Controller<Context<RequestData>> = async (
+export const tokeninfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

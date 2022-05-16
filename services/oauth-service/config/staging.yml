@@ -1,11 +1,15 @@
 server:
+  domain: https://staging.lindorm.io
   environment: staging
-  host: https://oauth.staging.api.lindorm.io
+  issuer: https://oauth.staging.lindorm.io
+  host: https://oauth.staging.lindorm.io
 
 redis:
   username: username
   password: password
 
 services:
-  authentication_service: https://authentication.staging.api.lindorm.io
-  identity_service: https://identity.staging.api.lindorm.io
+  authentication_service:
+    host: https://authentication.staging.lindorm.io
+  identity_service:
+    host: https://identity.staging.lindorm.io

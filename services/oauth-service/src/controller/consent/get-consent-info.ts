@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { GetConsentInfoResponseBody, JOI_GUID } from "../../common";
 import { isConsentRequired } from "../../util";
 import { getExpires } from "@lindorm-io/core";
@@ -13,7 +13,7 @@ export const getConsentInfoSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getConsentInfoController: Controller<Context<RequestData>> = async (
+export const getConsentInfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<GetConsentInfoResponseBody> => {
   const {
