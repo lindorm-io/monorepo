@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.2...@lindorm-io/koa@0.12.3) (2022-05-16)
+
+
+### Bug Fixes
+
+* fix faulty redirect error ([bd98fed](https://github.com/lindorm-io/monorepo/commit/bd98fed8d8a91769fa3fd57a351095b318db4302))
+* update log message ([931e6d8](https://github.com/lindorm-io/monorepo/commit/931e6d8e630b1248a847994199ce1674a2b5da7e))
+
+
+
+
+
 ## [0.12.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.1...@lindorm-io/koa@0.12.2) (2022-05-16)
 
 
