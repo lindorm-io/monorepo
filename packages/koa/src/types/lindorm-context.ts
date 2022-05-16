@@ -1,14 +1,14 @@
 import { Logger } from "@lindorm-io/winston";
 
 export interface DefaultLindormContext {
-  axios: Record<string, any>;
-  cache: Record<string, any>;
-  connection: Record<string, any>;
-  entity: Record<string, any>;
-  jwt: unknown;
-  keys: Array<unknown>;
-  keystore: unknown;
+  axios: any;
+  cache: any;
+  connection: any;
+  entity: any;
+  jwt: any;
+  keys: Array<any>;
+  keystore: any;
   logger: Logger;
-  repository: Record<string, any>;
-  token: Record<string, any>;
+  repository: any;
+  token: any;
 }

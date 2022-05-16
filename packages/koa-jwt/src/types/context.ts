@@ -1,4 +1,4 @@
-import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
+import { TokenIssuer } from "@lindorm-io/jwt";
 import { Keystore } from "@lindorm-io/key-pair";
 import {
   DefaultLindormContext,
@@ -11,7 +11,6 @@ import {
 export interface DefaultLindormJwtContext extends DefaultLindormContext {
   jwt: TokenIssuer;
   keystore: Keystore;
-  token: Record<string, IssuerVerifyData<unknown, unknown>>;
 }
 
 export type DefaultLindormJwtKoaMiddleware = DefaultLindormMiddleware<
