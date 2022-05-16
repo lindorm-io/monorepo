@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
 
 interface RequestData {
@@ -11,7 +11,7 @@ export const removeDeviceLinkSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const removeDeviceLinkController: Controller<Context<RequestData>> = async (
+export const removeDeviceLinkController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

@@ -1,10 +1,10 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { HttpStatus, Router } from "@lindorm-io/koa";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.get("/jwks.json", async (ctx: Context): Promise<void> => {
+router.get("/jwks.json", async (ctx: ServerKoaContext): Promise<void> => {
   ctx.body = {
     keys: ctx.keystore.getJWKS(),
   };

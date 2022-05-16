@@ -5,7 +5,7 @@ import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { getTestDeviceLink } from "../test/entity";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestAccessToken,
@@ -45,7 +45,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get("/device-links")
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
@@ -69,7 +69,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .delete(`/device-links/${deviceLink.id}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
@@ -91,7 +91,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/device-links/${deviceLink.id}`)
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
@@ -136,7 +136,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/device-links/${deviceLink.id}/biometry`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
@@ -172,7 +172,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/device-links/${deviceLink.id}/pincode`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
@@ -207,7 +207,7 @@ describe("/device-links", () => {
       subject: deviceLink.identityId,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .put(`/device-links/${deviceLink.id}/trusted`)
       .set("Authorization", `Bearer ${accessToken}`)
       .send({

@@ -2,5 +2,4 @@ export * from "./auth-middleware";
 export * from "./axios-middleware";
 export * from "./entity-middleware";
 export * from "./rate-limit-middleware";
-export * from "./server-middleware";
 export * from "./token-middleware";

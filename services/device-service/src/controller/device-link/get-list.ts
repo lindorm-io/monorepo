@@ -1,12 +1,12 @@
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { DeviceLinkAttributes } from "../../entity";
 
 interface ResponseBody {
   deviceLinks: Array<Partial<DeviceLinkAttributes>>;
 }
 
-export const getDeviceLinkListController: Controller<Context> = async (
+export const getDeviceLinkListController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

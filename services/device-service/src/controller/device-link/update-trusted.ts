@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_JWT } from "../../common";
 import { assertConfirmationTokenFactorLength } from "../../util";
 
@@ -14,7 +14,7 @@ export const updateDeviceLinkTrustedSchema = Joi.object<RequestData>({
   challengeConfirmationToken: JOI_JWT.required(),
 });
 
-export const updateDeviceLinkTrustedController: Controller<Context<RequestData>> = async (
+export const updateDeviceLinkTrustedController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

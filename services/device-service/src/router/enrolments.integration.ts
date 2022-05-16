@@ -4,7 +4,7 @@ import { CertificateMethod } from "../enum";
 import { SessionStatus } from "../common";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { getTestEnrolmentSession } from "../test/entity";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
   getTestAccessToken,
@@ -24,7 +24,7 @@ describe("/enrolments", () => {
       subject: randomUUID(),
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/enrolments")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -77,7 +77,7 @@ describe("/enrolments", () => {
       subject: session.identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post(`/enrolments/${session.id}/confirm`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -112,7 +112,7 @@ describe("/enrolments", () => {
       subject: session.identityId,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .post(`/enrolments/${session.id}/reject`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -137,7 +137,7 @@ describe("/enrolments", () => {
       subject: session.identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/enrolments/${session.id}/status`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")

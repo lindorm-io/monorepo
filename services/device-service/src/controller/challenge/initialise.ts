@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { ChallengeSession } from "../../entity";
 import { ChallengeStrategy, TokenType } from "../../enum";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_NONCE, SubjectHint } from "../../common";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getRandomString, stringToSeconds } from "@lindorm-io/core";
 import { sortedUniq } from "lodash";
 
@@ -33,7 +33,7 @@ export const initialiseChallengeSchema = Joi.object<RequestData>({
   scopes: Joi.array().items(Joi.string()).required(),
 });
 
-export const initialiseChallengeController: Controller<Context<RequestData>> = async (
+export const initialiseChallengeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

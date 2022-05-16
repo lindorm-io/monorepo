@@ -1,39 +1,34 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "../../common";
 import { getRandomString } from "@lindorm-io/core";
 import { getTestDeviceLink } from "../../test/entity";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,
-  clearAxios,
-  getAxiosResponse,
   getTestClientCredentials,
-  setAxiosResponse,
   setupIntegration,
 } from "../../test/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-  },
-}));
-
 describe("/internal/rdc", () => {
   beforeAll(setupIntegration);
-  afterEach(clearAxios);
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/oauth2/token")
+    .times(999)
+    .reply(200, {
+      accessToken: "accessToken",
+      expiresIn: 100,
+      scope: ["scope"],
+    });
+
+  nock("https://communication.test.lindorm.io")
+    .post("/internal/socket/emit")
+    .times(999)
+    .reply(200, {});
 
   test("POST /", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(await getTestDeviceLink());
@@ -51,9 +46,7 @@ describe("/internal/rdc", () => {
 
     const clientCredentials = getTestClientCredentials();
 
-    setAxiosResponse("POST", "communicationClient", "/internal/socket/emit", {});
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/internal/rdc")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({

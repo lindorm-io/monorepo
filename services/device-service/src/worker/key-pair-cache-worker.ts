@@ -1,11 +1,12 @@
-import { configuration } from "../configuration";
+import { configuration } from "../server/configuration";
 import { mongoConnection, redisConnection } from "../instance";
-import { winston } from "../logger";
+import { winston } from "../server/logger";
 import { keyPairJwksCacheWorker, keyPairMongoCacheWorker } from "@lindorm-io/koa-keystore";
 
 export const keyPairOAuthJwksWorker = keyPairJwksCacheWorker({
-  baseUrl: configuration.oauth.host,
   clientName: "OAuth",
+  host: configuration.services.oauth_service.host,
+  port: configuration.services.oauth_service.port,
   redisConnection,
   winston,
 });

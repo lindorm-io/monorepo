@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { getTestDeviceLink } from "../../test/entity";
-import { koa } from "../../server/koa";
+import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,
   getTestClientCredentials,
@@ -30,7 +30,7 @@ describe("/internal/identities", () => {
 
     const clientCredentials = getTestClientCredentials();
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/internal/identities/${deviceLink.identityId}/deviceLinks`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);

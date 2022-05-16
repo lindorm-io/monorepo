@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
 import { RdcSessionType } from "../../enum";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -16,7 +16,7 @@ export const rejectRdcSchema = Joi.object<RequestData>({
   rdcSessionToken: JOI_JWT.required(),
 });
 
-export const rejectRdcController: Controller<Context<RequestData>> = async (
+export const rejectRdcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

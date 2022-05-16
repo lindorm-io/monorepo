@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
   TEST_DEVICE_REPOSITORY,
@@ -35,7 +35,7 @@ describe("/identities", () => {
       subject: deviceLink.identityId,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/identities/${deviceLink.identityId}/rdc/pending`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")

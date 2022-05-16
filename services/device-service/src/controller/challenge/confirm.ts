@@ -1,12 +1,12 @@
 import Joi from "joi";
-import { ChallengeConfirmationTokenClaims, Context } from "../../types";
+import { ChallengeConfirmationTokenClaims, ServerKoaController } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
 import { JOI_GUID, JOI_JWT, SubjectHint } from "../../common";
 import { TokenType, ChallengeStrategy, Factor } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { CryptoLayered } from "@lindorm-io/crypto";
 
 interface RequestData {
@@ -40,7 +40,7 @@ export const confirmChallengeSchema = Joi.object<RequestData>({
   strategy: JOI_STRATEGY.required(),
 });
 
-export const confirmChallengeController: Controller<Context<RequestData>> = async (
+export const confirmChallengeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

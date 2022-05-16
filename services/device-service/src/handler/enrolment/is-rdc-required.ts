@@ -1,7 +1,10 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { difference, filter } from "lodash";
 
-export const isRdcRequired = async (ctx: Context, identityId: string): Promise<boolean> => {
+export const isRdcRequired = async (
+  ctx: ServerKoaContext,
+  identityId: string,
+): Promise<boolean> => {
   const {
     metadata: {
       device: { installationId, uniqueId },

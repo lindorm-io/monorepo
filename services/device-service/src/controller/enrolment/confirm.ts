@@ -1,13 +1,13 @@
 import Joi from "joi";
-import { ChallengeConfirmationTokenClaims, Context } from "../../types";
+import { ChallengeConfirmationTokenClaims, ServerKoaController } from "../../types";
 import { ChallengeStrategy, Factor, TokenType } from "../../enum";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { DeviceLink, DeviceLinkSalt } from "../../entity";
 import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
 import { JOI_GUID, JOI_JWT, SessionStatus, SubjectHint } from "../../common";
 import { assertCertificateChallenge } from "../../util";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
 import { includes } from "lodash";
 
@@ -34,7 +34,7 @@ export const confirmEnrolmentSchema = Joi.object<RequestData>({
   pincode: JOI_PINCODE.optional(),
 });
 
-export const confirmEnrolmentController: Controller<Context<RequestData>> = async (
+export const confirmEnrolmentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

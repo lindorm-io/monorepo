@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { TokenType } from "../../enum";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { difference } from "lodash";
@@ -42,7 +42,7 @@ export const acknowledgeRdcSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const acknowledgeRdcController: Controller<Context<RequestData>> = async (
+export const acknowledgeRdcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

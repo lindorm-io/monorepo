@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ClientScope, EmitSocketEventRequestData, RdcSessionMode } from "../../common";
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { RdcSession, RdcSessionAttributes } from "../../entity";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { getExpires } from "@lindorm-io/core";
@@ -11,7 +11,7 @@ interface Result {
 }
 
 export const createRdcSession = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   options: Partial<RdcSessionAttributes>,
 ): Promise<Result> => {
   const {

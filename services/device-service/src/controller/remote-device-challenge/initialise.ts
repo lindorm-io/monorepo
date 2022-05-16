@@ -1,9 +1,9 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { RdcSessionMode } from "../../common";
 import { RdcSessionType } from "../../enum";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { createRdcSession } from "../../handler";
 import { getExpiryDate } from "@lindorm-io/core";
 import {
@@ -42,7 +42,7 @@ export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>({
   tokenPayload: Joi.object().optional(),
 });
 
-export const initialiseRdcController: Controller<Context<InitialiseRdcSessionRequestData>> = async (
+export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRequestData> = async (
   ctx,
 ): ControllerResponse<InitialiseRdcSessionResponseBody> => {
   const {

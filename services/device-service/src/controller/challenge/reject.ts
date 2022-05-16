@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_JWT } from "../../common";
 
 interface RequestData {
@@ -13,7 +13,7 @@ export const rejectChallengeSchema = Joi.object<RequestData>({
   challengeSessionToken: JOI_JWT.required(),
 });
 
-export const rejectChallengeController: Controller<Context<RequestData>> = async (
+export const rejectChallengeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

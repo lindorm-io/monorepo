@@ -6,7 +6,6 @@ mongo:
   password: example
 
 oauth:
-  host: http://localhost:3500
   client_id: secret
   client_secret: secret
 
@@ -15,9 +14,18 @@ redis:
   port: 3302
 
 server:
+  domain: https://development.lindorm.io
   environment: development
+  issuer: https://device.development.lindorm.io
   host: http://localhost
   port: 3300
 
 services:
-  communication_service: http://localhost:3200
+  communication_service:
+    issuer: https://communication.development.lindorm.io
+    host: http://localhost
+    port: 3200
+  oauth_service:
+    issuer: https://oauth.development.lindorm.io
+    host: http://localhost
+    port: 3500

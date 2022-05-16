@@ -1,6 +1,5 @@
 export * from "./setup-integration";
 export * from "./sign-test-challenge";
-export * from "./test-axios";
 export * from "./test-cache";
 export * from "./test-jwt";
 export * from "./test-key-pair";

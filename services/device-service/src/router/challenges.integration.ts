@@ -4,7 +4,7 @@ import { ChallengeStrategy } from "../enum";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { getTestChallengeSession, getTestDeviceLink } from "../test/entity";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
   TEST_CHALLENGE_SESSION_CACHE,
@@ -35,7 +35,7 @@ describe("/challenges", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post("/challenges")
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-installation-id", deviceLink.installationId)
@@ -83,7 +83,7 @@ describe("/challenges", () => {
       sessionId: session.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post(`/challenges/${session.id}/confirm`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-installation-id", deviceLink.installationId)
@@ -131,7 +131,7 @@ describe("/challenges", () => {
       sessionId: session.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post(`/challenges/${session.id}/confirm`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-installation-id", deviceLink.installationId)
@@ -180,7 +180,7 @@ describe("/challenges", () => {
       sessionId: session.id,
     });
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post(`/challenges/${session.id}/confirm`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-installation-id", deviceLink.installationId)
@@ -217,7 +217,7 @@ describe("/challenges", () => {
       sessionId: session.id,
     });
 
-    await request(koa.callback())
+    await request(server.callback())
       .post(`/challenges/${session.id}/reject`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-installation-id", deviceLink.installationId)

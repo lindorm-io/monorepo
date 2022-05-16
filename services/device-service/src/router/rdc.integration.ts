@@ -1,16 +1,15 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { ChallengeStrategy, Factor } from "../enum";
 import { SessionStatus } from "../common";
 import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
-import { koa } from "../server/koa";
+import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
-  getAxiosResponse,
   getTestAccessToken,
   getTestChallengeConfirmationToken,
   getTestEdsToken,
-  setAxiosResponse,
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
@@ -18,27 +17,26 @@ import {
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/axios", () => ({
-  ...(jest.requireActual("@lindorm-io/axios") as Record<string, any>),
-  Axios: class Axios {
-    private readonly name: string;
-    public constructor(opts: any) {
-      this.name = opts.name;
-    }
-    public async get(path: string, args: any): Promise<any> {
-      return getAxiosResponse("GET", this.name, path, args);
-    }
-    public async post(path: string, args: any): Promise<any> {
-      return getAxiosResponse("POST", this.name, path, args);
-    }
-    public async request(method: string, path: string, args: any): Promise<any> {
-      return getAxiosResponse(method.toUpperCase(), this.name, path, args);
-    }
-  },
-}));
-
 describe("/rdc", () => {
   beforeAll(setupIntegration);
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/oauth2/token")
+    .times(999)
+    .reply(200, {
+      accessToken: "accessToken",
+      expiresIn: 100,
+      scope: ["scope"],
+    });
+
+  nock("https://communication.test.lindorm.io")
+    .post("/internal/socket/emit")
+    .times(999)
+    .reply(200, {});
+
+  nock("https://callback.lindorm.io").put("/confirm").times(999).reply(200, {});
+
+  nock("https://callback.lindorm.io").delete("/reject").times(999).reply(200, {});
 
   test("POST /:id/acknowledge", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
@@ -55,9 +53,7 @@ describe("/rdc", () => {
       subject: deviceLink.identityId,
     });
 
-    setAxiosResponse("POST", "communicationClient", "/internal/socket/emit", {});
-
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .post(`/rdc/${session.id}/acknowledge`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -122,9 +118,7 @@ describe("/rdc", () => {
       subject: deviceLink.identityId,
     });
 
-    setAxiosResponse("PUT", "axiosClient", "https://callback.lindorm.io/confirm", {});
-
-    await request(koa.callback())
+    await request(server.callback())
       .post(`/rdc/${session.id}/confirm`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -160,9 +154,7 @@ describe("/rdc", () => {
       subject: deviceLink.identityId,
     });
 
-    setAxiosResponse("DELETE", "axiosClient", "https://callback.lindorm.io/reject", {});
-
-    await request(koa.callback())
+    await request(server.callback())
       .post(`/rdc/${session.id}/reject`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
@@ -186,7 +178,7 @@ describe("/rdc", () => {
       }),
     );
 
-    const response = await request(koa.callback())
+    const response = await request(server.callback())
       .get(`/rdc/${session.id}/status`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
       .set("x-device-link-id", deviceLink.id)

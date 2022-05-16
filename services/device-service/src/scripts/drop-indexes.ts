@@ -1,5 +1,5 @@
 import { mongoQuery, QueryCallback } from "@lindorm-io/mongo";
-import { winston } from "../logger";
+import { winston } from "../server/logger";
 import { mongoConnection } from "../instance";
 
 const callback: QueryCallback = async ({ db }) => {

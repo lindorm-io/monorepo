@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_GUID, SessionStatus } from "../../common";
 
@@ -16,7 +16,7 @@ export const getEnrolmentStatusSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getEnrolmentStatusController: Controller<Context<RequestData>> = async (
+export const getEnrolmentStatusController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

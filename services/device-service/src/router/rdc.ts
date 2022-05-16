@@ -1,4 +1,4 @@
-import { Context } from "../types";
+import { ServerKoaContext } from "../types";
 import { IdentityPermission, SessionStatus } from "../common";
 import { includes } from "lodash";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
@@ -19,7 +19,7 @@ import {
   getRdcSessionStatusSchema,
 } from "../controller";
 
-const router = new Router<unknown, Context>();
+const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.post(

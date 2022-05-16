@@ -1,11 +1,11 @@
 import Joi from "joi";
 import { CertificateMethod, RdcSessionType, TokenType } from "../../enum";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { EnrolmentSession } from "../../entity";
 import { JOI_CERTIFICATE_METHOD } from "../../constant";
 import { RdcSessionMode, SessionStatus, SubjectHint } from "../../common";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { createRdcSession, isRdcRequired } from "../../handler";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomString } from "@lindorm-io/core";
@@ -40,7 +40,7 @@ export const initialiseEnrolmentSchema = Joi.object<RequestData>({
   systemName: Joi.string().required(),
 });
 
-export const initialiseEnrolmentController: Controller<Context<RequestData>> = async (
+export const initialiseEnrolmentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

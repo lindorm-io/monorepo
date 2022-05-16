@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { JOI_GUID, JOI_JWT } from "../../common";
 import { JOI_PINCODE } from "../../constant";
@@ -18,7 +18,7 @@ export const updateDeviceLinkPincodeSchema = Joi.object<RequestData>({
   pincode: JOI_PINCODE.required(),
 });
 
-export const updateDeviceLinkPincodeController: Controller<Context<RequestData>> = async (
+export const updateDeviceLinkPincodeController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

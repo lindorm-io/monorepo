@@ -1,6 +1,6 @@
 import { ChallengeStrategy, Factor, TokenType } from "../../enum";
 import { IssuerSignOptions } from "@lindorm-io/jwt";
-import { configuration } from "../../configuration";
+import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
 import { getTestDeviceLinkJwt, getTestJwt } from "./test-jwt";
 import { ClientPermission, ClientScope, IdentityPermission, SubjectHint } from "../../common";

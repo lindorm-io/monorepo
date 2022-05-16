@@ -1,8 +1,8 @@
-import { Context } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { RdcSession } from "../../entity";
 
 export const updateEnrolmentStatus = async (
-  ctx: Context,
+  ctx: ServerKoaContext,
   rdcSession: RdcSession,
 ): Promise<void> => {
   const {

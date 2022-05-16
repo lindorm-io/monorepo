@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { DeviceLinkAttributes } from "../../entity";
 import { JOI_GUID } from "../../common";
 
@@ -12,7 +12,7 @@ export const getDeviceLinkInfoSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const getDeviceLinkInfoController: Controller<Context<RequestData>> = async (
+export const getDeviceLinkInfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<Partial<DeviceLinkAttributes>> => {
   const {
