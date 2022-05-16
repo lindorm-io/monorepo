@@ -19,12 +19,12 @@ export const redirectErrorMiddleware =
 
       if (isURL(redirectUri)) {
         throw new RedirectError(err.message, {
-          code: err.code || err.data.code || "unexpected_error",
-          description: err.description || err.data.description,
+          code: err.code || err.data?.code || "unexpected_error",
+          description: err.description || err.data?.description,
           error: err,
           redirect: redirectUri,
-          uri: err.uri || err.data.uri,
-          state: err.state || err.data.state,
+          uri: err.uri || err.data?.uri,
+          state: err.state || err.data?.state,
         });
       }
 
