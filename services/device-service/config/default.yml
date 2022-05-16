@@ -24,13 +24,13 @@ server:
   domain: https://lindorm.io
   environment: development
   issuer: https://device.lindorm.io
-  host: localhost
+  host: http://localhost
   port: 3000
 
 services:
   communication_service:
     issuer: https://communication.lindorm.io
-    host: localhost
+    host: http://localhost
   oauth_service:
     issuer: https://oauth.lindorm.io
-    host: localhost
+    host: http://localhost

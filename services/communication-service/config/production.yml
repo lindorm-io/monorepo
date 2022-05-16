@@ -5,6 +5,7 @@ redis:
 server:
   domain: https://lindorm.io
   environment: production
+  issuer: https://communication.lindorm.io
   host: https://communication.lindorm.io
 
 services:
