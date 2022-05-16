@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { Context } from "../../types";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { EmitSocketEventRequestData } from "../../common";
+import { ServerKoaController } from "../../types";
 
 export const emitSocketEventSchema = Joi.object<EmitSocketEventRequestData>().keys({
   channels: Joi.object()
@@ -15,12 +15,28 @@ export const emitSocketEventSchema = Joi.object<EmitSocketEventRequestData>().ke
   event: Joi.string().required(),
 });
 
-export const emitSocketEventController: Controller<Context<EmitSocketEventRequestData>> = async (
+export const emitSocketEventController: ServerKoaController<EmitSocketEventRequestData> = async (
   ctx,
 ): ControllerResponse => {
-  const { data, logger } = ctx;
+  const {
+    connection: { io },
+    data: { channels, content, event },
+    logger,
+  } = ctx;
 
-  logger.debug("Emit Socket", data);
+  if (channels.identities?.length) {
+    io.to(channels.identities).emit(event, content);
+  }
+
+  if (channels.deviceLinks?.length) {
+    io.to(channels.deviceLinks).emit(event, content);
+  }
+
+  if (channels.sessions?.length) {
+    io.to(channels.sessions).emit(event, content);
+  }
+
+  logger.debug("Emit Socket", ctx.data);
 
   return {};
 };

@@ -1,5 +1,4 @@
 oauth:
-  host: https://oauth.test.api.lindorm.io
   client_id: secret
   client_secret: secret
 
@@ -8,6 +7,13 @@ redis:
   port: 3202
 
 server:
+  domain: https://test.lindorm.io
   environment: test
-  host: https://communication.test.api.lindorm.io
+  host: https://communication.test.lindorm.io
   port: 3200
+
+services:
+  device_service:
+    host: https://device.test.lindorm.io
+  oauth_service:
+    host: https://oauth.test.lindorm.io

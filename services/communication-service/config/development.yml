@@ -1,5 +1,4 @@
 oauth:
-  host: http://localhost:3500
   client_id: secret
   client_secret: secret
 
@@ -8,6 +7,18 @@ redis:
   port: 3202
 
 server:
+  domain: https://development.lindorm.io
   environment: development
+  issuer: https://communication.development.lindorm.io
   host: http://localhost
   port: 3200
+
+services:
+  device_service:
+    issuer: https://device.development.lindorm.io
+    host: http://localhost
+    port: 3300
+  oauth_service:
+    issuer: https://device.development.lindorm.io
+    host: http://localhost
+    port: 3500

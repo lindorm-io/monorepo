@@ -1,10 +1,14 @@
-oauth:
-  host: https://oauth.stage.api.lindorm.io
-
 redis:
   username: username
   password: password
 
 server:
+  domain: https://staging.lindorm.io
   environment: staging
-  host: https://communication.stage.api.lindorm.io
+  host: https://communication.staging.lindorm.io
+
+services:
+  device_service:
+    host: https://device.staging.lindorm.io
+  oauth_service:
+    host: https://oauth.staging.lindorm.io
