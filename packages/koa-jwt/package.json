@@ -19,19 +19,13 @@
   },
   "dependencies": {
     "@lindorm-io/core": "^0.4.0",
-    "@lindorm-io/errors": "^0.1.13"
-  },
-  "peerDependencies": {
-    "@lindorm-io/jwt": ">=0.6.0",
-    "@lindorm-io/key-pair": ">=0.3.5",
-    "@lindorm-io/koa": ">=0.7.2",
-    "@lindorm-io/winston": ">=0.1.8"
-  },
-  "devDependencies": {
+    "@lindorm-io/errors": "^0.1.13",
     "@lindorm-io/jwt": "^0.6.9",
     "@lindorm-io/key-pair": "^0.4.4",
     "@lindorm-io/koa": "^0.12.0",
-    "@lindorm-io/winston": "^0.2.1",
+    "@lindorm-io/winston": "^0.2.1"
+  },
+  "devDependencies": {
     "@types/express-useragent": "^1.0.2",
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.7",
