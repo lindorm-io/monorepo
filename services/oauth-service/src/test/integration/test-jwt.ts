@@ -5,7 +5,7 @@ import { logger } from "../logger";
 
 export const getTestJwt = (): TokenIssuer =>
   new TokenIssuer({
-    issuer: configuration.server.issuer || configuration.server.host,
+    issuer: configuration.server.issuer,
     keystore: getTestKeystore(),
     logger,
   });

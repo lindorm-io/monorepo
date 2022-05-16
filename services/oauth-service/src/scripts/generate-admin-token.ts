@@ -10,7 +10,7 @@ import { winston } from "../server/logger";
 
 (async (): Promise<void> => {
   try {
-    const issuer = configuration.server.host;
+    const issuer = configuration.server.issuer;
     await redisConnection.waitForConnection();
     const cache = new KeyPairCache({ client: redisConnection.client(), logger: winston });
     const keys = await cache.findMany({});

@@ -13,7 +13,7 @@ export const getTestJwt = (): TokenIssuer =>
 
 export const getTestDeviceLinkJwt = (): TokenIssuer =>
   new TokenIssuer({
-    issuer: configuration.server.issuer || configuration.server.host,
+    issuer: configuration.server.issuer,
     keystore: getTestKeystore(),
     logger,
   });

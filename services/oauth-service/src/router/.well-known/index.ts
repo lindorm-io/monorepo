@@ -20,7 +20,7 @@ router.get("/openid-configuration", async (ctx: ServerKoaContext): Promise<void>
     idTokenEncryptionAlgValuesSupported: [],
     idTokenEncryptionEncValuesSupported: [],
     idTokenSigningAlgValuesSupported: ["ES512", "RS512"],
-    issuer: configuration.server.host,
+    issuer: configuration.server.issuer,
     jwksUri: new URL("/.well-known/jwks.json", configuration.server.host).toString(),
     logoutEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
     requestParameterSupported: false,

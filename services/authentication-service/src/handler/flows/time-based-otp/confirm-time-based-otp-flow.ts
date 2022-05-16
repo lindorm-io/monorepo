@@ -41,7 +41,7 @@ export const confirmTimeBasedOtpFlow = async (
 
   const totpHandler = new TOTPHandler({
     aes: { secret: account.salt.aes },
-    issuer: configuration.server.host,
+    issuer: configuration.server.issuer,
   });
 
   await totpHandler.assert(totp, account.totp);

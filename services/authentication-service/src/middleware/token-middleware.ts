@@ -4,6 +4,6 @@ import { tokenValidationMiddleware } from "@lindorm-io/koa-jwt";
 
 export const flowTokenMiddleware = tokenValidationMiddleware({
   contextKey: "flowToken",
-  issuer: configuration.server.issuer || configuration.server.host,
+  issuer: configuration.server.issuer,
   types: [TokenType.FLOW_SESSION],
 });
