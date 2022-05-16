@@ -44,7 +44,7 @@ export class IntervalWorker extends EventEmitter {
     this.logger = options.logger.createChildLogger("interval-worker");
   }
 
-  public trigger(attempt = 1): void {
+  public trigger(attempt = 0): void {
     this.logger.debug("worker trigger");
 
     this.callback()
@@ -61,7 +61,14 @@ export class IntervalWorker extends EventEmitter {
         }
 
         if (attempt <= this.retry) {
-          sleep(250).then(() => this.trigger(attempt + 1));
+          const timeout = attempt * 250;
+          this.logger.debug("retrying", { attempt, timeout });
+          sleep(timeout).then(() => this.trigger(attempt + 1));
+        } else {
+          this.logger.debug("will not attempt any further retries", {
+            attempt,
+            maximum: this.retry,
+          });
         }
       });
   }
