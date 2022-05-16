@@ -7,5 +7,4 @@ export * from "./koa-context";
 export * from "./lindorm-context";
 export * from "./metadata";
 export * from "./socket";
-export * from "./socket-context";
 export * from "./util";

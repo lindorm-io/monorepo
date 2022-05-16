@@ -1,10 +1,10 @@
 import { DefaultLindormContext } from "./lindorm-context";
 import { ExtendedError } from "socket.io/dist/namespace";
-import { Socket } from "socket.io/dist/socket";
+import { Server, Socket } from "socket.io";
 
 export interface DefaultLindormSocket<
   Context extends DefaultLindormContext = DefaultLindormContext,
-  Data extends Record<string, any> = Record<string, any>,
+  Data = any,
 > extends Socket {
   ctx: Context;
   data: Data;
@@ -20,3 +20,5 @@ export type SocketMiddlewareNext = (err?: ExtendedError) => void;
 export type DefaultLindormSocketMiddleware<
   Socket extends DefaultLindormSocket = DefaultLindormSocket,
 > = (socket: Socket, next: SocketMiddlewareNext) => void;
+
+export type IOServer = Server;

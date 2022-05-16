@@ -6,7 +6,7 @@ import { LindormKoaMetadata, LindormKoaMetadataHeaders } from "./metadata";
 import { Metric } from "../class";
 import { RouterContext } from "koa-router";
 
-interface KoaContext<Data extends Record<string, any> = Record<string, any>> extends RouterContext {
+interface KoaContext<Data = any> extends RouterContext {
   data: Data;
   metadata: LindormKoaMetadata;
   metrics: Record<string, number>;
@@ -26,5 +26,5 @@ interface KoaContext<Data extends Record<string, any> = Record<string, any>> ext
 
 export type DefaultLindormKoaContext<
   Context extends DefaultLindormContext = DefaultLindormContext,
-  Data extends Record<string, any> = Record<string, any>,
+  Data = any,
 > = Context & KoaContext<Data>;

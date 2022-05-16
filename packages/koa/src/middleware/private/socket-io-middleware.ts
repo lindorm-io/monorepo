@@ -1,8 +1,7 @@
-import { Server } from "socket.io";
-import { DefaultLindormMiddleware } from "../../types";
+import { DefaultLindormMiddleware, IOServer } from "../../types";
 
 export const socketIoMiddleware =
-  (io: Server): DefaultLindormMiddleware =>
+  (io: IOServer): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     ctx.connection.io = io;
     await next();

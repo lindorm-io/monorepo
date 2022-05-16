@@ -1,10 +1,10 @@
 import {
+  DefaultLindormContext,
   DefaultLindormSocket,
-  DefaultLindormSocketContext,
   DefaultLindormSocketMiddleware,
 } from "../../types";
 
-interface CustomContext extends DefaultLindormSocketContext {
+interface CustomContext extends DefaultLindormContext {
   jwt: undefined;
   logger: undefined;
 }
