@@ -1,4 +1,1 @@
-export interface Credentials {
-  username: string;
-  password: string;
-}
+export * from "./credentials";
