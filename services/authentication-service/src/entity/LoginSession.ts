@@ -103,7 +103,7 @@ export class LoginSession
     this.amrValues = options.amrValues || [];
     this.country = options.country || null;
     this.deviceLinks = options.deviceLinks || [];
-    this.expires = options.expires || getExpiryDate(configuration.expiry.login_session);
+    this.expires = options.expires || getExpiryDate(configuration.defaults.login_session_expiry);
     this.identityId = options.identityId || null;
     this.levelOfAssurance = options.levelOfAssurance || 0;
     this.loginHint = options.loginHint || [];

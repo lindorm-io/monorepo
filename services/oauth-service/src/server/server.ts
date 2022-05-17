@@ -34,7 +34,7 @@ export const server = createNodeServer<ServerKoaContext>({
   isKeyPairCached: true,
   isKeyPairInRepository: true,
   issuer: configuration.server.issuer,
-  keys: configuration.cookies.keys,
+  keys: configuration.server.keys,
   logger: winston,
   middleware,
   mongoConnection,

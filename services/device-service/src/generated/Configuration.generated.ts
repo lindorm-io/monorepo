@@ -1,17 +1,17 @@
 export interface Configuration {
-  expiry:   Expiry;
-  mongo:    Mongo;
-  oauth:    Oauth;
-  redis:    Mongo;
-  server:   Server;
-  services: Services;
+  defaults:  Defaults;
+  mongo:     Mongo;
+  oauth:     Oauth;
+  redis:     Mongo;
+  server:    Server;
+  services:  Services;
 }
 
-interface Expiry {
-  challenge_confirmation_token:    string;
-  challenge_session:               string;
-  enrolment_session:               string;
-  remote_device_challenge_session: string;
+interface Defaults {
+  challenge_confirmation_token_expiry:    string;
+  challenge_session_expiry:               string;
+  enrolment_session_expiry:               string;
+  remote_device_challenge_session_expiry: string;
 }
 
 interface Mongo {

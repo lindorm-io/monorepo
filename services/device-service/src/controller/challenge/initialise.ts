@@ -55,7 +55,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   }
 
   const certificateChallenge = getRandomString(128);
-  const expiresIn = stringToSeconds(configuration.expiry.challenge_session);
+  const expiresIn = stringToSeconds(configuration.defaults.challenge_session_expiry);
 
   const session = await challengeSessionCache.create(
     new ChallengeSession({
@@ -72,7 +72,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
 
   const { token } = jwt.sign({
     audiences: [client.id],
-    expiry: configuration.expiry.challenge_session,
+    expiry: configuration.defaults.challenge_session_expiry,
     sessionId: session.id,
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,

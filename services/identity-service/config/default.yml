@@ -1,5 +1,5 @@
-expiry:
-  connect_identifier_session: 2 hours
+defaults:
+  connect_identifier_session_expiry: 2 hours
 
 mongo:
   host: localhost

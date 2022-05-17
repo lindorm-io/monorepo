@@ -72,7 +72,7 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
     confirmUri,
     expires: expiresAt
       ? new Date(expiresAt)
-      : getExpiryDate(configuration.expiry.remote_device_challenge_session),
+      : getExpiryDate(configuration.defaults.remote_device_challenge_session_expiry),
     factors,
     identityId,
     mode,

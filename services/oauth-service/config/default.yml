@@ -1,24 +1,19 @@
-client:
-  default_active_state: false
-  default_level_of_assurance: 1
-
-cookies:
-  keys:
-    - secret
-
-expiry:
-  access_token: 3 minutes
-  authorization_session: 30 minutes
-  browser_session: 20 hours
-  browser_session_remember: 30 days
-  client_credentials: 60 seconds
-  code_session: 60 seconds
-  id_token: 24 hours
-  logout_session: 60 seconds
-  refresh_session: 30 days
+defaults:
+  client_active_state: false
+  tenant_active_state: false
+  level_of_assurance: 1
+  access_token_expiry: 3 minutes
+  authorization_session_expiry: 30 minutes
+  browser_session_expiry: 20 hours
+  browser_session_remember_expiry: 30 days
+  client_credentials_expiry: 60 seconds
+  code_session_expiry: 60 seconds
+  id_token_expiry: 24 hours
+  logout_session_expiry: 60 seconds
+  refresh_session_expiry: 30 days
 
 frontend:
-  base_url: localhost
+  host: localhost
   routes:
     error: /error
 

@@ -76,7 +76,7 @@ export const confirmAuthenticationController: ServerKoaController<RequestData> =
   browserSession.amrValues = amrValues;
   browserSession.country = authorizationSession.country;
   browserSession.expires = remember
-    ? getExpiryDate(configuration.expiry.browser_session_remember)
+    ? getExpiryDate(configuration.defaults.browser_session_remember_expiry)
     : browserSession.expires;
   browserSession.identityId = identityId;
   browserSession.latestAuthentication = new Date();

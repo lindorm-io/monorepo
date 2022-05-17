@@ -66,7 +66,7 @@ export const getTestChallengeConfirmationToken = (
       factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
       strategy: ChallengeStrategy.PINCODE,
     },
-    expiry: configuration.expiry.challenge_confirmation_token,
+    expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: getRandomString(16),
     payload: { generated: true },
     scopes: ["test"],
@@ -85,7 +85,7 @@ export const getTestChallengeSessionToken = (
 ): string => {
   const { token } = getTestDeviceLinkJwt().sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
-    expiry: configuration.expiry.challenge_session,
+    expiry: configuration.defaults.challenge_session_expiry,
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
@@ -101,7 +101,7 @@ export const getTestEnrolmentSessionToken = (
 ): string => {
   const { token } = getTestDeviceLinkJwt().sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
-    expiry: configuration.expiry.enrolment_session,
+    expiry: configuration.defaults.enrolment_session_expiry,
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
@@ -115,7 +115,7 @@ export const getTestEnrolmentSessionToken = (
 export const getTestEdsToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
   const { token } = getTestDeviceLinkJwt().sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
-    expiry: configuration.expiry.remote_device_challenge_session,
+    expiry: configuration.defaults.remote_device_challenge_session_expiry,
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,

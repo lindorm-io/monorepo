@@ -57,7 +57,7 @@ export const createLoginSessionController: ServerKoaController<RequestData> = as
     repository: { accountRepository },
   } = ctx;
 
-  const { expires, expiresIn } = getExpires(configuration.expiry.login_session);
+  const { expires, expiresIn } = getExpires(configuration.defaults.login_session_expiry);
 
   let loginSession = new LoginSession({
     country,

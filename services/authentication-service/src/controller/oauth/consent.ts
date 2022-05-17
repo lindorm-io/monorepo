@@ -71,7 +71,8 @@ export const oauthConsentController: ServerKoaController<RequestData> = async (
 
   return {
     redirect: createURL(configuration.frontend.routes.consent, {
-      host: configuration.frontend.base_url,
+      host: configuration.frontend.host,
+      port: configuration.frontend.port,
       query: { displayMode, uiLocales },
     }),
   };

@@ -1,8 +1,8 @@
-expiry:
-  challenge_confirmation_token: 5 minutes
-  challenge_session: 5 minutes
-  enrolment_session: 15 minutes
-  remote_device_challenge_session: 15 minutes
+defaults:
+  challenge_confirmation_token_expiry: 5 minutes
+  challenge_session_expiry: 5 minutes
+  enrolment_session_expiry: 15 minutes
+  remote_device_challenge_session_expiry: 15 minutes
 
 mongo:
   host: localhost

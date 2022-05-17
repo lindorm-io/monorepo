@@ -108,7 +108,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
       factors,
       strategy,
     },
-    expiry: configuration.expiry.challenge_confirmation_token,
+    expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: challengeSession.nonce,
     payload: challengeSession.payload,
     scopes: challengeSession.scopes,

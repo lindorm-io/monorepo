@@ -1,9 +1,5 @@
-cookies:
-  keys:
-    - secret
-
 frontend:
-  base_url: https://frontend.url/
+  host: https://frontend.url/
 
 mongo:
   host: localhost
@@ -24,6 +20,8 @@ server:
   environment: test
   issuer: https://oauth.test.lindorm.io
   host: https://oauth.test.lindorm.io
+  keys:
+    - secret
 
 services:
   authentication_service:

@@ -13,7 +13,7 @@ export const generateAxiosBearerAuthMiddleware = (
 
   const { token } = jwt.sign({
     audiences: [configuration.oauth.client_id],
-    expiry: configuration.expiry.client_credentials,
+    expiry: configuration.defaults.client_credentials_expiry,
     permissions,
     scopes,
     subject: configuration.oauth.client_id,

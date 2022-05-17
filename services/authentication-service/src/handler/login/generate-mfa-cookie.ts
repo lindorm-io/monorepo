@@ -9,7 +9,7 @@ export const generateMfaCookie = async (ctx: ServerKoaContext, account: Account)
     cache: { mfaCookieSessionCache },
   } = ctx;
 
-  const { expiresIn } = getExpires(configuration.expiry.mfa_cookie);
+  const { expiresIn } = getExpires(configuration.defaults.mfa_cookie_expiry);
 
   const mfaCookieSession = await mfaCookieSessionCache.create(
     new MfaCookieSession({ identityId: account.id }),
@@ -17,6 +17,6 @@ export const generateMfaCookie = async (ctx: ServerKoaContext, account: Account)
   );
 
   ctx.setCookie(MFA_COOKIE_NAME, mfaCookieSession.id, {
-    expiry: getExpiryDate(configuration.expiry.mfa_cookie),
+    expiry: getExpiryDate(configuration.defaults.mfa_cookie_expiry),
   });
 };

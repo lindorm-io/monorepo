@@ -1,6 +1,5 @@
 export interface Configuration {
-  cookies:         Cookies;
-  expiry:          Expiry;
+  defaults:        Defaults;
   frontend:        Frontend;
   mongo:           Mongo;
   oauth:           Oauth;
@@ -10,21 +9,18 @@ export interface Configuration {
   services:        Services;
 }
 
-interface Cookies {
-  keys: string[];
-}
-
-interface Expiry {
-  browser_link_cookie: string;
-  consent_session:     string;
-  flow_session:        string;
-  login_session:       string;
-  mfa_cookie:          string;
+interface Defaults {
+  browser_link_cookie_expiry: string;
+  consent_session_expiry:     string;
+  flow_session_expiry:        string;
+  login_session_expiry:       string;
+  mfa_cookie_expiry:          string;
 }
 
 interface Frontend {
-  base_url: string;
-  routes:   Routes;
+  host:    string;
+  port:    number;
+  routes:  Routes;
 }
 
 interface Routes {
@@ -66,6 +62,7 @@ interface Server {
   environment: string;
   host:        string;
   issuer:      string;
+  keys:        string[];
   port:        number;
 }
 

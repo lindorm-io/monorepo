@@ -92,7 +92,9 @@ export const handleAuthorizationCodeGrant = async (
         acrValues: browserSession.acrValues,
         amrValues: browserSession.amrValues,
         clientId: client.id,
-        expires: getExpiryDate(client.expiry.refreshToken || configuration.expiry.refresh_session),
+        expires: getExpiryDate(
+          client.expiry.refreshToken || configuration.defaults.refresh_session_expiry,
+        ),
         identityId: browserSession.identityId,
         levelOfAssurance: browserSession.levelOfAssurance,
         nonce: browserSession.nonce,

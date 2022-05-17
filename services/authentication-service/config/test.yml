@@ -1,9 +1,5 @@
-cookies:
-  keys:
-    - secret
-
 frontend:
-  base_url: https://frontend.url/
+  host: https://frontend.url/
 
 mongo:
   host: localhost
@@ -61,6 +57,8 @@ server:
   issuer: https://authentication.test.lindorm.io
   host: https://authentication.test.lindorm.io
   port: 3100
+  keys:
+    - secret
 
 services:
   communication_service:

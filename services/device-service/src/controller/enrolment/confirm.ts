@@ -98,7 +98,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
       factors: [DeviceFactor.POSSESSION],
       strategy: ChallengeStrategy.IMPLICIT,
     },
-    expiry: configuration.expiry.challenge_confirmation_token,
+    expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: enrolmentSession.nonce,
     scopes: ["enrolment"],
     sessionId: enrolmentSession.id,

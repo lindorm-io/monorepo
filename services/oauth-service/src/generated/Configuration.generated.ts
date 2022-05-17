@@ -1,7 +1,5 @@
 export interface Configuration {
-  client:    Client;
-  cookies:   Cookies;
-  expiry:    Expiry;
+  defaults:  Defaults;
   frontend:  Frontend;
   mongo:     Mongo;
   oauth:     Oauth;
@@ -11,30 +9,25 @@ export interface Configuration {
   services:  Services;
 }
 
-interface Client {
-  default_active_state:       boolean;
-  default_level_of_assurance: number;
-}
-
-interface Cookies {
-  keys: string[];
-}
-
-interface Expiry {
-  access_token:             string;
-  authorization_session:    string;
-  browser_session:          string;
-  browser_session_remember: string;
-  client_credentials:       string;
-  code_session:             string;
-  id_token:                 string;
-  logout_session:           string;
-  refresh_session:          string;
+interface Defaults {
+  access_token_expiry:             string;
+  authorization_session_expiry:    string;
+  browser_session_expiry:          string;
+  browser_session_remember_expiry: string;
+  client_active_state:             boolean;
+  client_credentials_expiry:       string;
+  code_session_expiry:             string;
+  id_token_expiry:                 string;
+  level_of_assurance:              number;
+  logout_session_expiry:           string;
+  refresh_session_expiry:          string;
+  tenant_active_state:             boolean;
 }
 
 interface Frontend {
-  base_url: string;
-  routes:   Routes;
+  host:    string;
+  port:    number;
+  routes:  Routes;
 }
 
 interface Routes {
@@ -64,6 +57,7 @@ interface Server {
   environment: string;
   host:        string;
   issuer:      string;
+  keys:        string[];
   port:        number;
 }
 

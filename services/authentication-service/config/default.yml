@@ -1,16 +1,12 @@
-cookies:
-  keys:
-    - secret
-
-expiry:
-  browser_link_cookie: 100 years
-  consent_session: 30 minutes
-  flow_session: 15 minutes
-  login_session: 30 minutes
-  mfa_cookie: 75 minutes
+defaults:
+  browser_link_cookie_expiry: 100 years
+  consent_session_expiry: 30 minutes
+  flow_session_expiry: 15 minutes
+  login_session_expiry: 30 minutes
+  mfa_cookie_expiry: 75 minutes
 
 frontend:
-  base_url: localhost
+  host: http://localhost
   routes:
     consent: /consent
     error: /error
@@ -41,6 +37,8 @@ server:
   issuer: https://authentication.lindorm.io
   host: http://localhost
   port: 3000
+  keys:
+    - secret
 
 services:
   communication_service:

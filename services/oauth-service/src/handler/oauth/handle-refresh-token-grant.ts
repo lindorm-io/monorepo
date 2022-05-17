@@ -72,7 +72,7 @@ export const handleRefreshTokenGrant = async (
   }
 
   refreshSession.expires = getExpiryDate(
-    client.expiry.refreshToken || configuration.expiry.refresh_session,
+    client.expiry.refreshToken || configuration.defaults.refresh_session_expiry,
   );
 
   refreshSession.tokenId = randomUUID();

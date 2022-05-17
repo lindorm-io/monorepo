@@ -46,7 +46,8 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
       loginSessionId: loginSession.id,
       nonce: getRandomString(16),
       redirectUri: createURL("/sessions/login/oidc", {
-        host: configuration.frontend.base_url,
+        host: configuration.frontend.host,
+        port: configuration.frontend.port,
       }).toString(),
       scope: scope,
       state: getRandomString(48),

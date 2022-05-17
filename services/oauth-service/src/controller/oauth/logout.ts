@@ -42,7 +42,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
 
   const { session, type } = await findSessionToLogout(ctx, sessionId);
 
-  const { expires, expiresIn } = getExpires(configuration.expiry.logout_session);
+  const { expires, expiresIn } = getExpires(configuration.defaults.logout_session_expiry);
 
   const logoutSession = await logoutSessionCache.create(
     new LogoutSession({

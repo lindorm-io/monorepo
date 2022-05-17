@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { Client } from "../../entity";
 import { ClientType, DisplayMode, JOI_GUID, LevelOfAssurance, ResponseMode } from "../../common";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
@@ -44,10 +44,10 @@ export const createClientController: ServerKoaController<RequestData> = async (
 
   const client = await clientRepository.create(
     new Client({
-      active: configuration.client.default_active_state,
+      active: configuration.defaults.client_active_state,
       defaults: {
         displayMode: DisplayMode.PAGE,
-        levelOfAssurance: configuration.client.default_level_of_assurance as LevelOfAssurance,
+        levelOfAssurance: configuration.defaults.level_of_assurance as LevelOfAssurance,
         responseMode: ResponseMode.QUERY,
       },
       description,

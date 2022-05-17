@@ -68,7 +68,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const certificateChallenge = getRandomString(128);
 
-  const { expires, expiresIn } = getExpires(configuration.expiry.enrolment_session);
+  const { expires, expiresIn } = getExpires(configuration.defaults.enrolment_session_expiry);
 
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
   const nonce = getRandomString(16);
@@ -99,7 +99,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const { token } = jwt.sign({
     audiences: [clientId],
-    expiry: configuration.expiry.enrolment_session,
+    expiry: configuration.defaults.enrolment_session_expiry,
     sessionId: session.id,
     subject: identityId,
     subjectHint: SubjectHint.IDENTITY,

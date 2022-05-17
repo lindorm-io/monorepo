@@ -1,14 +1,14 @@
 export interface Configuration {
-  expiry:   Expiry;
-  mongo:    Mongo;
-  oauth:    Oauth;
-  redis:    Mongo;
-  server:   Server;
-  services: Services;
+  defaults:  Defaults;
+  mongo:     Mongo;
+  oauth:     Oauth;
+  redis:     Mongo;
+  server:    Server;
+  services:  Services;
 }
 
-interface Expiry {
-  connect_identifier_session: string;
+interface Defaults {
+  connect_identifier_session_expiry: string;
 }
 
 interface Mongo {

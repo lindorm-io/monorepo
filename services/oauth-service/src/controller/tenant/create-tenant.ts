@@ -2,6 +2,7 @@ import Joi from "joi";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { Tenant } from "../../entity";
+import { configuration } from "../../server/configuration";
 
 interface RequestData {
   name: string;
@@ -30,7 +31,7 @@ export const createTenantController: ServerKoaController<RequestData> = async (
 
   const tenant = await tenantRepository.create(
     new Tenant({
-      active: true,
+      active: configuration.defaults.tenant_active_state,
       administrators: [identityId],
       name,
       owner: identityId,

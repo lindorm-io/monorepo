@@ -113,7 +113,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const responseTypes = responseType.toLowerCase().split(" ") as Array<ResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
-  const { expires, expiresIn } = getExpires(configuration.expiry.authorization_session);
+  const { expires, expiresIn } = getExpires(configuration.defaults.authorization_session_expiry);
 
   const { authenticationMethods, levelOfAssurance } = filterAcrValues(
     acrValues,

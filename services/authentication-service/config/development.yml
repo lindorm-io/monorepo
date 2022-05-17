@@ -1,9 +1,6 @@
-cookies:
-  keys:
-    - secret
-
 frontend:
-  base_url: http://localhost:4000
+  host: http://localhost
+  port: 4000
 
 mongo:
   host: localhost
@@ -26,6 +23,8 @@ server:
   issuer: https://authentication.development.lindorm.io
   host: http://localhost
   port: 3100
+  keys:
+    - secret
 
 services:
   communication_service:

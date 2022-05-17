@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession, Identity } from "../../entity";
-import { ServerKoaContext } from "../../types";
 import { IdentifierType, SendEmailRequestData, SendSmsRequestData } from "../../common";
+import { ServerKoaContext } from "../../types";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
@@ -24,7 +24,7 @@ export const initialiseConnectSession = async (
 
   const { identifier, type } = options;
 
-  const expiresIn = stringToSeconds(configuration.expiry.connect_identifier_session);
+  const expiresIn = stringToSeconds(configuration.defaults.connect_identifier_session_expiry);
   const code = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
 
   const session = await connectSessionCache.create(

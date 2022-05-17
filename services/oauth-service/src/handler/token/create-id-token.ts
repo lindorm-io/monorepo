@@ -26,7 +26,7 @@ export const createIdToken = (
     authContextClass: session.acrValues,
     authMethodsReference: session.amrValues,
     claims: claims,
-    expiry: client.expiry.idToken || configuration.expiry.id_token,
+    expiry: client.expiry.idToken || configuration.defaults.id_token_expiry,
     levelOfAssurance: session.levelOfAssurance,
     nonce: options.nonce,
     scopes: options.scopes,

@@ -20,7 +20,7 @@ export const createAccessToken = (
 
   return jwt.sign({
     audiences: [client.id],
-    expiry: client.expiry.accessToken || configuration.expiry.access_token,
+    expiry: client.expiry.accessToken || configuration.defaults.access_token_expiry,
     levelOfAssurance: session.levelOfAssurance,
     permissions: options.permissions,
     scopes: options.scopes,

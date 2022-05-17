@@ -13,7 +13,7 @@ export const createClientCredentialsToken = (
 
   return jwt.sign({
     audiences: [client.id],
-    expiry: configuration.expiry.client_credentials,
+    expiry: configuration.defaults.client_credentials_expiry,
     permissions: client.permissions,
     scopes: client.allowed.scopes,
     subject: client.id,
