@@ -22,7 +22,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
     host,
     port,
     redisConnection,
-    retry = 3,
+    retry = 10,
     winston,
     workerInterval = "5 minutes",
   } = options;

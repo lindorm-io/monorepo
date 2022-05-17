@@ -20,7 +20,7 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
   const {
     mongoConnection,
     redisConnection,
-    retry = 3,
+    retry = 10,
     winston,
     workerInterval = "1 hours",
   } = options;
