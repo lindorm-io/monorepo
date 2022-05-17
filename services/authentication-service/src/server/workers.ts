@@ -1,4 +1,5 @@
 import { Environment, IntervalWorker } from "@lindorm-io/koa";
+import { configuration } from "./configuration";
 import {
   keyPairCacheWorker,
   keyPairCleanupWorker,
@@ -7,7 +8,6 @@ import {
   keyPairRotationWorker,
   oidcProvidersJwksWorkers,
 } from "../worker";
-import { configuration } from "./configuration";
 
 export const workers: Array<IntervalWorker> = [];
 

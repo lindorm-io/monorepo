@@ -1,13 +1,13 @@
 import { Environment } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
-import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { keyPairOAuthJwksWorker } from "../worker";
-import { winston } from "./logger";
 import { redisConnection } from "../instance";
+import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { socketListeners } from "./socket";
+import { winston } from "./logger";
+import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
   environment: configuration.server.environment as Environment,
@@ -18,7 +18,7 @@ export const server = createNodeServer<ServerKoaContext>({
   port: configuration.server.port,
   redisConnection,
   routerDirectory: join(__dirname, "..", "router"),
-  workers: configuration.server.environment !== Environment.TEST ? [keyPairOAuthJwksWorker] : [],
+  workers,
   setup: async (): Promise<void> => {
     await redisConnection.waitForConnection();
   },

@@ -24,6 +24,7 @@ export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
   port: configuration.services.device_service.port,
   clientName: "Device",
   redisConnection,
+  retry: 30,
   winston,
 });
 
@@ -32,6 +33,7 @@ export const keyPairOAuthJwksWorker = keyPairJwksCacheWorker({
   port: configuration.services.oauth_service.port,
   clientName: "OAuth",
   redisConnection,
+  retry: 30,
   winston,
 });
 
