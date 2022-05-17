@@ -1,6 +1,14 @@
+import { DefaultEventsMap } from "socket.io/dist/typed-events";
 import { DefaultLindormContext } from "./lindorm-context";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { Server, Socket } from "socket.io";
+
+export type IOServer<Data = any> = Server<
+  DefaultEventsMap,
+  DefaultEventsMap,
+  DefaultEventsMap,
+  Data
+>;
 
 export interface DefaultLindormSocket<
   Context extends DefaultLindormContext = DefaultLindormContext,
@@ -20,5 +28,3 @@ export type SocketMiddlewareNext = (err?: ExtendedError) => void;
 export type DefaultLindormSocketMiddleware<
   Socket extends DefaultLindormSocket = DefaultLindormSocket,
 > = (socket: Socket, next: SocketMiddlewareNext) => void;
-
-export type IOServer = Server;
