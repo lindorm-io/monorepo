@@ -1,7 +1,8 @@
 import { LogLevel } from "../enum";
 import { WinstonError } from "../error";
 import { WinstonInstance } from "./WinstonInstance";
-import { clone, isArray, isObject, isString } from "lodash";
+import { cloneDeep, get, isArray, isError, isObject, isString, set } from "lodash";
+import { defaultFilterCallback } from "../util";
 import {
   HttpTransportOptions,
   StreamTransportOptions,
@@ -14,26 +15,31 @@ import {
   LogDetails,
   SessionMetadata,
   LoggerTransportOptions,
+  Filter,
+  LoggerMessage,
 } from "../types";
 
 export class Logger {
   private readonly context: Array<string>;
+  private readonly filters: Array<Filter>;
   private readonly winston: WinstonInstance;
   private session: Record<string, any> | undefined;
 
   public constructor(options: LoggerOptions = {}) {
+    this.filters = options.filters || [];
+
     if (options.parent) {
-      this.context = clone(options.parent.context);
+      this.context = cloneDeep(options.parent.context);
       this.winston = options.parent.winston;
     } else {
       this.context = [];
-      this.winston = new WinstonInstance(options);
+      this.winston = new WinstonInstance();
     }
 
     if (options.session) {
       this.session = options.session;
     } else if (options.parent) {
-      this.session = clone(options.parent.session);
+      this.session = cloneDeep(options.parent.session);
     }
 
     this.addContext(options.context || []);
@@ -42,7 +48,7 @@ export class Logger {
   // public
 
   public error(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.ERROR,
       message,
       details: details || null,
@@ -52,7 +58,7 @@ export class Logger {
   }
 
   public warn(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.WARN,
       message,
       details: details || null,
@@ -62,7 +68,7 @@ export class Logger {
   }
 
   public info(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.INFO,
       message,
       details: details || null,
@@ -72,7 +78,7 @@ export class Logger {
   }
 
   public verbose(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.VERBOSE,
       message,
       details: details || null,
@@ -82,7 +88,7 @@ export class Logger {
   }
 
   public debug(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.DEBUG,
       message,
       details: details || null,
@@ -92,7 +98,7 @@ export class Logger {
   }
 
   public silly(message: string, details?: LogDetails): void {
-    this.winston.log({
+    this.log({
       level: LogLevel.SILLY,
       message,
       details: details || null,
@@ -133,7 +139,7 @@ export class Logger {
   }
 
   public addFilter(path: string, callback?: FilterCallback): void {
-    this.winston.addFilter(path, callback);
+    this.filters.push({ path, callback });
   }
 
   public setFocus(focus: string | null): void {
@@ -173,5 +179,33 @@ export class Logger {
     } else if (isString(context)) {
       this.context.push(context);
     }
+  }
+
+  private getFilteredDetails(details: LogDetails): LogDetails {
+    if (!isObject(details)) return details;
+    if (isError(details)) return details;
+
+    const data = cloneDeep(details);
+
+    for (const filter of this.filters) {
+      const item = get(data, filter.path);
+
+      if (!item) continue;
+
+      const callback = filter.callback || defaultFilterCallback;
+
+      set(data, filter.path, callback(item));
+    }
+
+    return data;
+  }
+
+  private log(options: LoggerMessage): void {
+    const { details, ...data } = options;
+
+    this.winston.log({
+      details: this.getFilteredDetails(details),
+      ...data,
+    });
   }
 }

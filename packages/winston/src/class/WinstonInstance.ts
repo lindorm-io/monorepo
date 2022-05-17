@@ -1,15 +1,7 @@
 import * as winston from "winston";
 import { LogLevel } from "../enum";
-import { cloneDeep, get, includes, isError, isObject, set } from "lodash";
-import { defaultFilterCallback, readableFormat } from "../util";
-import {
-  Filter,
-  LoggerMessage,
-  WinstonInstanceOptions,
-  FilterCallback,
-  LogDetails,
-  LoggerTransportOptions,
-} from "../types";
+import { LoggerMessage, LoggerTransportOptions } from "../types";
+import { readableFormat } from "../util";
 import {
   HttpTransportOptions,
   StreamTransportOptions,
@@ -17,12 +9,10 @@ import {
 } from "winston/lib/winston/transports";
 
 export class WinstonInstance {
-  private readonly filter: Array<Filter>;
   private readonly winston: winston.Logger;
   private focus: string | null;
 
-  public constructor(options: WinstonInstanceOptions = {}) {
-    this.filter = options.filter || [];
+  public constructor() {
     this.focus = null;
     this.winston = winston.createLogger();
   }
@@ -30,20 +20,16 @@ export class WinstonInstance {
   // public
 
   public log(options: LoggerMessage): void {
-    if (this.focus && options.context.length && !includes(options.context, this.focus)) return;
+    if (this.focus && options.context.length && !options.context.includes(this.focus)) return;
 
     this.winston.log({
       level: options.level,
       time: new Date(),
       message: options.message,
-      details: this.getFilteredDetails(options.details),
+      details: options.details,
       context: options.context,
       session: options.session,
     });
-  }
-
-  public addFilter(path: string, callback?: FilterCallback): void {
-    this.filter.push({ path, callback });
   }
 
   public setFocus(focus: string | null): void {
@@ -102,24 +88,5 @@ export class WinstonInstance {
 
   public addTransport(transport: any): void {
     this.winston.add(transport);
-  }
-
-  private getFilteredDetails(details: LogDetails): LogDetails {
-    if (!isObject(details)) return details;
-    if (isError(details)) return details;
-
-    const data = cloneDeep(details);
-
-    for (const filter of this.filter) {
-      const item = get(data, filter.path);
-
-      if (!item) continue;
-
-      const callback = filter.callback || defaultFilterCallback;
-
-      set(data, filter.path, callback(item));
-    }
-
-    return data;
   }
 }

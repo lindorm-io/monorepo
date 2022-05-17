@@ -20,12 +20,9 @@ export interface Filter {
   callback?: FilterCallback;
 }
 
-export interface WinstonInstanceOptions {
-  filter?: Array<Filter>;
-}
-
-export interface LoggerOptions extends WinstonInstanceOptions {
+export interface LoggerOptions {
   context?: ChildLoggerContext;
+  filters?: Array<Filter>;
   parent?: Logger;
   session?: Record<string, any>;
 }
