@@ -16,7 +16,7 @@ export const socketRepositoryMiddleware =
      * to ensure that all input at least attempts to be unique
      */
     // @ts-ignore
-    ctx.repository[repository] = new Repository({
+    socket.ctx.repository[repository] = new Repository({
       db: socket.ctx.connection.mongo.database(),
       logger: socket.ctx.logger,
     });

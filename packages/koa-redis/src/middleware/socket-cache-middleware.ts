@@ -17,7 +17,7 @@ export const socketCacheMiddleware =
      * to ensure that all input at least attempts to be unique
      */
     // @ts-ignore
-    ctx.cache[cache] = new Cache({
+    socket.ctx.cache[cache] = new Cache({
       client: socket.ctx.connection.redis.client(),
       expiresInSeconds: options?.expiresInSeconds,
       logger: socket.ctx.logger,
