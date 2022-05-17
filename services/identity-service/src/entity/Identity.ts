@@ -155,7 +155,15 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.namingSystem = options.namingSystem || NamingSystem.GIVEN_FAMILY;
     this.nationalIdentityNumber = options.nationalIdentityNumber || null;
     this.nickname = options.nickname || null;
-    this.permissions = options.permissions || [IdentityPermission.USER];
+    this.permissions = options.permissions || [
+      IdentityPermission.USER,
+      IdentityPermission.CLIENT_READ,
+      IdentityPermission.CLIENT_WRITE,
+      IdentityPermission.IDENTITY_READ,
+      IdentityPermission.IDENTITY_WRITE,
+      IdentityPermission.TENANT_READ,
+      IdentityPermission.TENANT_WRITE,
+    ];
     this.picture = options.picture || null;
     this.preferredAccessibility = options.preferredAccessibility || [];
     this.preferredUsername = options.preferredUsername || null;

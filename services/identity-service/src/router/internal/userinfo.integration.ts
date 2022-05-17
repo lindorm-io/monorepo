@@ -12,6 +12,7 @@ import {
   setupIntegration,
 } from "../../test/integration";
 import { Identity } from "../../entity";
+import { IdentityPermission } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -41,7 +42,15 @@ describe("/internal/userinfo", () => {
         sub: identity.id,
         updated_at: 1609488000,
       },
-      permissions: ["lindorm.io/any/identity/any:user"],
+      permissions: [
+        IdentityPermission.USER,
+        IdentityPermission.CLIENT_READ,
+        IdentityPermission.CLIENT_WRITE,
+        IdentityPermission.IDENTITY_READ,
+        IdentityPermission.IDENTITY_WRITE,
+        IdentityPermission.TENANT_READ,
+        IdentityPermission.TENANT_WRITE,
+      ],
     });
   });
 

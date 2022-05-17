@@ -14,6 +14,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -28,6 +34,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -42,6 +54,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -57,6 +75,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -71,6 +95,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -86,6 +116,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -115,6 +151,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -129,6 +171,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -143,6 +191,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;
@@ -156,6 +210,12 @@ Object {
   },
   "permissions": Array [
     "lindorm.io/any/identity/any:user",
+    "lindorm.io/oauth-service/identity/client:read",
+    "lindorm.io/oauth-service/identity/client:write",
+    "lindorm.io/identity-service/identity/identity:read",
+    "lindorm.io/identity-service/identity/identity:write",
+    "lindorm.io/oauth-service/identity/tenant:read",
+    "lindorm.io/oauth-service/identity/tenant:write",
   ],
 }
 `;

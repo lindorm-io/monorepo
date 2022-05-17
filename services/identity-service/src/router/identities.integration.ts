@@ -21,6 +21,7 @@ import {
   getTestAccessToken,
   setupIntegration,
 } from "../test/integration";
+import { IdentityPermission } from "../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -98,7 +99,15 @@ describe("/identities", () => {
         website: "https://website.url/",
         zone_info: "Europe/Stockholm",
       },
-      permissions: ["lindorm.io/any/identity/any:user"],
+      permissions: [
+        IdentityPermission.USER,
+        IdentityPermission.CLIENT_READ,
+        IdentityPermission.CLIENT_WRITE,
+        IdentityPermission.IDENTITY_READ,
+        IdentityPermission.IDENTITY_WRITE,
+        IdentityPermission.TENANT_READ,
+        IdentityPermission.TENANT_WRITE,
+      ],
     });
   });
 

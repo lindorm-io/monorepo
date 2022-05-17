@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`identityAdminController should update identity 1`] = `
+Array [
+  Array [
+    Object {
+      "active": true,
+      "address": Object {
+        "careOf": "careOf",
+        "country": "country",
+        "locality": "locality",
+        "postalCode": "postalCode",
+        "region": "region",
+        "streetAddress": Array [
+          "streetAddress1",
+          "streetAddress2",
+        ],
+      },
+      "birthDate": "2000-01-01",
+      "created": 2020-01-01T08:00:00.000Z,
+      "displayName": Object {
+        "name": null,
+        "number": null,
+      },
+      "familyName": "familyName",
+      "gender": "gender",
+      "givenName": "givenName",
+      "gravatarUri": "https://gravatar.url/",
+      "id": "identityId",
+      "locale": "sv-SE",
+      "middleName": "middleName",
+      "namingSystem": "given_family",
+      "nationalIdentityNumber": "480796381535",
+      "nickname": "nickname",
+      "permissions": Array [
+        "one",
+        "two",
+      ],
+      "picture": "https://picture.url/",
+      "preferredAccessibility": Array [
+        "setting1",
+        "setting2",
+        "setting3",
+      ],
+      "preferredUsername": "username",
+      "profile": "https://profile.url/",
+      "pronouns": "she/her",
+      "revision": 0,
+      "socialSecurityNumber": "200661435114",
+      "updated": 2020-01-01T08:00:00.000Z,
+      "username": "li61qVCuw8eMH6xq",
+      "version": 0,
+      "website": "https://website.url/",
+      "zoneInfo": "Europe/Stockholm",
+    },
+  ],
+]
+`;
