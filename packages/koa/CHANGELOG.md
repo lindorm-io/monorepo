@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.3...@lindorm-io/koa@0.12.4) (2022-05-17)
+
+
+### Bug Fixes
+
+* improve exported server type ([c4e1502](https://github.com/lindorm-io/monorepo/commit/c4e1502d3d6f7869ccb7571e5614115d9f2b1c5f))
+
+
+
+
+
 ## [0.12.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.2...@lindorm-io/koa@0.12.3) (2022-05-16)
 
 

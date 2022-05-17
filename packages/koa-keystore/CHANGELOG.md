@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.6.3...@lindorm-io/koa-keystore@0.6.4) (2022-05-17)
+
+
+### Bug Fixes
+
+* improve default retry amount for workers ([8db3939](https://github.com/lindorm-io/monorepo/commit/8db3939a827013ffcdb8f420d7192c3e1c00d579))
+
+
+
+
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.6.2...@lindorm-io/koa-keystore@0.6.3) (2022-05-16)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore
