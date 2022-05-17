@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.2.1...@lindorm-io/winston@0.2.2) (2022-05-17)
+
+
+### Bug Fixes
+
+* ensure logger does not affect input ([1a24ba7](https://github.com/lindorm-io/monorepo/commit/1a24ba72cabe0c35b6fbeb013400da547c86fed0))
+
+
+
+
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.2.0...@lindorm-io/winston@0.2.1) (2022-05-11)
 
 
