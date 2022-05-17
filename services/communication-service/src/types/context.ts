@@ -1,4 +1,4 @@
-import { Controller } from "@lindorm-io/koa";
+import { Controller, DefaultLindormSocket } from "@lindorm-io/koa";
 import {
   LindormNodeServerContext,
   LindormNodeServerKoaContext,
@@ -13,3 +13,5 @@ export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<
 export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;
+
+export type ServerSocket<Data = any> = DefaultLindormSocket<LindormNodeServerContext, Data>;

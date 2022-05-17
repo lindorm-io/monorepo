@@ -1,20 +1,17 @@
-import { Server } from "socket.io";
+import { IOServer } from "@lindorm-io/koa";
+import { ServerSocket } from "../types";
+import { joinDeviceChannel } from "../handler/socket";
 import { winston } from "./logger";
 
-export const socketListeners = (io: Server): void => {
-  io.on("connection", (socket) => {
+export const socketListeners = (io: IOServer): void => {
+  io.on("connection", (listener) => {
+    const socket = listener as ServerSocket;
     const logger = winston
       .createChildLogger(["socket-listeners"])
       .createSessionLogger({ sockedId: socket.id });
 
     logger.info("connection established");
 
-    socket.on("test", (...args) => {
-      logger.info("test event", { args });
-    });
-
-    socket.on("join_device_channel", (token) => {
-      logger.info("join device channel", { token });
-    });
+    joinDeviceChannel(socket);
   });
 };
