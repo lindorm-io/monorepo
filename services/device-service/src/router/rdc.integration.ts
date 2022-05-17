@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy, Factor } from "../enum";
+import { ChallengeStrategy, DeviceFactor } from "../enum";
 import { SessionStatus } from "../common";
 import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
 import { server } from "../server/server";
@@ -105,7 +105,7 @@ describe("/rdc", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
       nonce: session.nonce,

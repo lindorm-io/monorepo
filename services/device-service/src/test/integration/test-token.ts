@@ -1,10 +1,17 @@
-import { ChallengeStrategy, Factor, TokenType } from "../../enum";
 import { IssuerSignOptions } from "@lindorm-io/jwt";
+import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
 import { getTestDeviceLinkJwt, getTestJwt } from "./test-jwt";
-import { ClientPermission, ClientScope, IdentityPermission, SubjectHint } from "../../common";
-import { ChallengeConfirmationTokenClaims } from "../../types";
+import {
+  ChallengeConfirmationTokenClaims,
+  ChallengeStrategy,
+  ClientPermission,
+  ClientScope,
+  DeviceFactor,
+  IdentityPermission,
+  SubjectHint,
+} from "../../common";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
   const { token } = getTestJwt().sign({
@@ -56,7 +63,7 @@ export const getTestChallengeConfirmationToken = (
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
     claims: {
       deviceLinkId: "id",
-      factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+      factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
       strategy: ChallengeStrategy.PINCODE,
     },
     expiry: configuration.expiry.challenge_confirmation_token,

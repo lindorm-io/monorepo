@@ -1,5 +1,5 @@
 import { ChallengeSession, ChallengeSessionOptions } from "../../entity";
-import { ChallengeStrategy } from "../../enum";
+import { ChallengeStrategy } from "../../common";
 import { getRandomString } from "@lindorm-io/core";
 
 export const getTestChallengeSession = (

@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { VerifiedChallengeConfirmationToken } from "../types";
+import { VerifiedChallengeConfirmationToken } from "../common";
 
 export const assertConfirmationTokenFactorLength = (
   challengeConfirmationToken: VerifiedChallengeConfirmationToken,

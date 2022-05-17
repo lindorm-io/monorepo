@@ -1,8 +1,7 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
-import { RdcSessionType } from "../../enum";
+import { JOI_GUID, JOI_JWT, RdcSessionType, SessionStatus } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { updateEnrolmentStatus } from "../../handler";
 

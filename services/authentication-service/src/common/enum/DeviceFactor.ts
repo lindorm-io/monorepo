@@ -1,4 +1,4 @@
-export enum Factor {
+export enum DeviceFactor {
   INHERENCE = "inherence",
   KNOWLEDGE = "knowledge",
   POSSESSION = "possession",

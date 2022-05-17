@@ -1,7 +1,6 @@
 import Joi from "joi";
-import { ChallengeStrategy } from "../enum";
 import { JOI_CERTIFICATE_CHALLENGE, JOI_STRATEGY } from "../constant";
-import { JOI_GUID, JOI_NONCE } from "../common";
+import { JOI_GUID, JOI_NONCE, ChallengeStrategy } from "../common";
 import {
   EntityAttributes,
   EntityKeys,

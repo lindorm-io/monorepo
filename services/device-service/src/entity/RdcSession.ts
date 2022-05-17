@@ -1,10 +1,10 @@
 import Joi from "joi";
-import { RdcSessionType } from "../enum";
 import {
   JOI_GUID,
   JOI_NONCE,
   JOI_SESSION_STATUS,
   RdcSessionMode,
+  RdcSessionType,
   RequestMethod,
   SessionStatus,
 } from "../common";

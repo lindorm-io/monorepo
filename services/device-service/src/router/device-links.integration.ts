@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { ChallengeStrategy, Factor } from "../enum";
+import { ChallengeStrategy, DeviceFactor } from "../enum";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
@@ -129,7 +129,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
       sessionId: randomUUID(),
@@ -165,7 +165,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
       sessionId: randomUUID(),
@@ -200,7 +200,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [Factor.POSSESSION, Factor.KNOWLEDGE],
+        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
       sessionId: randomUUID(),

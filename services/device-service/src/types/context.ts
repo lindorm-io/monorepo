@@ -2,7 +2,7 @@ import { Axios } from "@lindorm-io/axios";
 import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
 import { Controller } from "@lindorm-io/koa";
 import { IssuerVerifyData } from "@lindorm-io/jwt";
-import { VerifiedChallengeConfirmationToken } from "./token";
+import { VerifiedChallengeConfirmationToken } from "../common/typing/token";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,

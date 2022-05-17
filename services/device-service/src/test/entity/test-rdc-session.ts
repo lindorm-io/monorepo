@@ -1,6 +1,5 @@
 import { RdcSession, RdcSessionOptions } from "../../entity";
-import { RdcSessionType } from "../../enum";
-import { SessionStatus, RdcSessionMode, RequestMethod } from "../../common";
+import { SessionStatus, RdcSessionMode, RdcSessionType, RequestMethod } from "../../common";
 import { getRandomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 

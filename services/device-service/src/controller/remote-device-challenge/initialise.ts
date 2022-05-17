@@ -1,8 +1,7 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { RdcSessionMode } from "../../common";
-import { RdcSessionType } from "../../enum";
+import { RdcSessionMode, RdcSessionType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createRdcSession } from "../../handler";
 import { getExpiryDate } from "@lindorm-io/core";

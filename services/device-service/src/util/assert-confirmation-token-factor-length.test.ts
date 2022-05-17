@@ -1,4 +1,4 @@
-import { Factor } from "../enum";
+import { DeviceFactor } from "../enum";
 import { assertConfirmationTokenFactorLength } from "./assert-confirmation-token-factor-length";
 
 describe("assertConfirmationTokenFactorLength", () => {
@@ -6,7 +6,7 @@ describe("assertConfirmationTokenFactorLength", () => {
 
   beforeEach(() => {
     token = {
-      claims: { factors: [Factor.POSSESSION, Factor.KNOWLEDGE] },
+      claims: { factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE] },
     };
   });
 

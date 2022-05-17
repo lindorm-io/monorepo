@@ -1,13 +1,20 @@
 import Joi from "joi";
-import { ChallengeConfirmationTokenClaims, ServerKoaController } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { CryptoLayered } from "@lindorm-io/crypto";
 import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
-import { JOI_GUID, JOI_JWT, SubjectHint } from "../../common";
-import { TokenType, ChallengeStrategy, Factor } from "../../enum";
+import { ServerKoaController } from "../../types";
+import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
-import { CryptoLayered } from "@lindorm-io/crypto";
+import {
+  ChallengeConfirmationTokenClaims,
+  ChallengeStrategy,
+  DeviceFactor,
+  JOI_GUID,
+  JOI_JWT,
+  SubjectHint,
+} from "../../common";
 
 interface RequestData {
   id: string;
@@ -61,7 +68,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     publicKey: deviceLink.publicKey,
   });
 
-  const factors: Array<Factor> = [Factor.POSSESSION];
+  const factors: Array<DeviceFactor> = [DeviceFactor.POSSESSION];
 
   const crypto = new CryptoLayered({
     aes: { secret: deviceLink.salt.aes },
@@ -74,12 +81,12 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
 
     case ChallengeStrategy.PINCODE:
       await crypto.assert(pincode, deviceLink.pincode);
-      factors.push(Factor.KNOWLEDGE);
+      factors.push(DeviceFactor.KNOWLEDGE);
       break;
 
     case ChallengeStrategy.BIOMETRY:
       await crypto.assert(biometry, deviceLink.biometry);
-      factors.push(Factor.INHERENCE);
+      factors.push(DeviceFactor.INHERENCE);
       break;
 
     default:

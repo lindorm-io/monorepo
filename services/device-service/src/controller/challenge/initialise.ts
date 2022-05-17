@@ -1,9 +1,9 @@
 import Joi from "joi";
 import { ChallengeSession } from "../../entity";
-import { ChallengeStrategy, TokenType } from "../../enum";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_NONCE, SubjectHint } from "../../common";
+import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint } from "../../common";
+import { ServerKoaController } from "../../types";
+import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { getRandomString, stringToSeconds } from "@lindorm-io/core";
 import { sortedUniq } from "lodash";

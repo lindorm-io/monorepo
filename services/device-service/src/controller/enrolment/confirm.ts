@@ -1,15 +1,23 @@
 import Joi from "joi";
-import { ChallengeConfirmationTokenClaims, ServerKoaController } from "../../types";
-import { ChallengeStrategy, Factor, TokenType } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { DeviceLink, DeviceLinkSalt } from "../../entity";
 import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
-import { JOI_GUID, JOI_JWT, SessionStatus, SubjectHint } from "../../common";
+import { ServerKoaController } from "../../types";
+import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
 import { includes } from "lodash";
+import {
+  ChallengeConfirmationTokenClaims,
+  ChallengeStrategy,
+  DeviceFactor,
+  JOI_GUID,
+  JOI_JWT,
+  SessionStatus,
+  SubjectHint,
+} from "../../common";
 
 interface RequestData {
   id: string;
@@ -87,7 +95,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     audiences: [clientId],
     claims: {
       deviceLinkId: deviceLink.id,
-      factors: [Factor.POSSESSION],
+      factors: [DeviceFactor.POSSESSION],
       strategy: ChallengeStrategy.IMPLICIT,
     },
     expiry: configuration.expiry.challenge_confirmation_token,

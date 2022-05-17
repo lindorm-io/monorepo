@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { CertificateMethod, ChallengeStrategy, RdcSessionType } from "../enum";
-import { RdcSessionMode, RequestMethod } from "../common";
+import { CertificateMethod } from "../enum";
+import { ChallengeStrategy, RdcSessionMode, RdcSessionType, RequestMethod } from "../common";
 
 export const JOI_BIOMETRY = Joi.string().base64().length(128);
 
