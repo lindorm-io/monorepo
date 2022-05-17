@@ -8,6 +8,5 @@ export const socketMongoMiddleware = (
   promisifyLindormSocketMiddleware(async (socket) => {
     await connection.waitForConnection();
     socket.ctx.connection.mongo = connection;
-
     socket.ctx.logger.debug("mongo connection added to context");
   });

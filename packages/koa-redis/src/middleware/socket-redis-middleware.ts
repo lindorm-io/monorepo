@@ -8,6 +8,5 @@ export const socketRedisMiddleware = (
   promisifyLindormSocketMiddleware(async (socket) => {
     await connection.waitForConnection();
     socket.ctx.connection.redis = connection;
-
     socket.ctx.logger.debug("redis connection added to context");
   });

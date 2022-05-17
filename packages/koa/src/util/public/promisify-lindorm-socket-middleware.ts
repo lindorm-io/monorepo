@@ -1,3 +1,4 @@
+import { getSocketError } from "./get-socket-error";
 import {
   DefaultLindormSocket,
   DefaultLindormSocketMiddleware,
@@ -13,5 +14,5 @@ export const promisifyLindormSocketMiddleware =
   (socket: Socket, next: SocketMiddlewareNext) => {
     promise(socket, options)
       .then(() => next())
-      .catch((err) => next(err));
+      .catch((err) => next(getSocketError(socket, err)));
   };
