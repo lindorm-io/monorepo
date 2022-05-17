@@ -8,6 +8,8 @@
     "build": "tsc -b",
     "clean": "rimraf dist node_modules",
     "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w src/generated",
+    "generate:admin": "node dist/bin/generate-admin-token",
+    "generate:admin:dev": "ts-node src/bin/generate-admin-token",
     "start": "node dist/server",
     "start:dev": "compd --file docker-compose.yml nodemon",
     "test": "yarn test:unit && yarn test:integration",
