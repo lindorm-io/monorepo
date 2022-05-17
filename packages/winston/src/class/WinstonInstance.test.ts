@@ -42,33 +42,4 @@ describe("WinstonInstance.ts", () => {
       time: expect.any(Date),
     });
   });
-
-  test("should add filter", () => {
-    winston.addFilter("filtered.path.message");
-    winston.log({
-      level: LogLevel.SILLY,
-      message: "message",
-      details: { mock: "details", filtered: { path: { message: "message" } } },
-      context: ["context"],
-      session: { mock: "session" },
-    });
-
-    expect(winstonLog).toHaveBeenCalledWith({
-      context: ["context"],
-      details: {
-        filtered: {
-          path: {
-            message: "[Filtered]",
-          },
-        },
-        mock: "details",
-      },
-      level: "silly",
-      message: "message",
-      session: {
-        mock: "session",
-      },
-      time: expect.any(Date),
-    });
-  });
 });

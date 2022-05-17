@@ -1,5 +1,13 @@
 import { Logger } from "./Logger";
 
+let winstonLog = jest.fn();
+
+jest.mock("winston", () => ({
+  createLogger: jest.fn(() => ({
+    log: winstonLog,
+  })),
+}));
+
 describe("Logger.ts", () => {
   let instance: Logger;
 
@@ -49,7 +57,27 @@ describe("Logger.ts", () => {
     expect(() => instance.addSessionMetadata({ data: "two" })).toThrow(Error);
   });
 
-  test("should add path to filter", () => {
-    instance.addFilter("meta.path.text");
+  test("should add filter", () => {
+    instance.addFilter("filtered.path.message");
+    instance.silly("message", {
+      mock: "details",
+      filtered: { path: { message: "message" } },
+    });
+
+    expect(winstonLog).toHaveBeenCalledWith({
+      context: [],
+      details: {
+        filtered: {
+          path: {
+            message: "[Filtered]",
+          },
+        },
+        mock: "details",
+      },
+      level: "silly",
+      message: "message",
+      session: {},
+      time: expect.any(Date),
+    });
   });
 });
