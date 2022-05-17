@@ -1,6 +1,6 @@
 import * as winston from "winston";
 import { LogLevel } from "../enum";
-import { clone, get, includes, isError, isObject, set } from "lodash";
+import { cloneDeep, get, includes, isError, isObject, set } from "lodash";
 import { defaultFilterCallback, readableFormat } from "../util";
 import {
   Filter,
@@ -108,18 +108,18 @@ export class WinstonInstance {
     if (!isObject(details)) return details;
     if (isError(details)) return details;
 
-    const result = clone(details);
+    const data = cloneDeep(details);
 
     for (const filter of this.filter) {
-      const data = get(details, filter.path);
+      const item = get(data, filter.path);
 
-      if (!data) continue;
+      if (!item) continue;
 
       const callback = filter.callback || defaultFilterCallback;
 
-      set(result, filter.path, callback(data));
+      set(data, filter.path, callback(item));
     }
 
-    return result;
+    return data;
   }
 }
