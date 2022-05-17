@@ -19,6 +19,6 @@ services:
     host: http://localhost
     port: 3300
   oauth_service:
-    issuer: https://device.development.lindorm.io
+    issuer: https://oauth.development.lindorm.io
     host: http://localhost
     port: 3500
