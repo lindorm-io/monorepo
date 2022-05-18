@@ -739,10 +739,10 @@
     lodash "^4.17.21"
     mongodb "^4.3.0"
 
-"@lindorm-io/node-server@^0.1.6":
-  version "0.1.6"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.1.6.tgz#47cceeb4bbdeeba4575782ea8d605f65546e765d"
-  integrity sha512-HNo0ENSfhly28n4I6xqJFFlqC425UCSnrJbIngEfB2tv+9VwO543osqqSKZazuMvTtMwJfPkKPNzH/dqG0jrCA==
+"@lindorm-io/node-server@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.2.0.tgz#85eedd64d7974218341ba812653ee3a9089b10cd"
+  integrity sha512-MIL5S2w4pJdyHeUP+aMvhdLvT77r6+iDE1I+9Z2IYl4kMwZTS/C1KOdh7/JPOrH7bI8cY4JrfUqBRo4TW3fueA==
   dependencies:
     "@lindorm-io/axios" "^0.3.3"
     "@lindorm-io/jwt" "^0.6.11"
