@@ -10,18 +10,14 @@ import {
 
 export class WinstonInstance {
   private readonly winston: winston.Logger;
-  private focus: string | null;
 
   public constructor() {
-    this.focus = null;
     this.winston = winston.createLogger();
   }
 
   // public
 
   public log(options: LoggerMessage): void {
-    if (this.focus && options.context.length && !options.context.includes(this.focus)) return;
-
     this.winston.log({
       level: options.level,
       time: new Date(),
@@ -30,10 +26,6 @@ export class WinstonInstance {
       context: options.context,
       session: options.session,
     });
-  }
-
-  public setFocus(focus: string | null): void {
-    this.focus = focus || null;
   }
 
   public addConsole(

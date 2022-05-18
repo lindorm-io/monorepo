@@ -25,7 +25,7 @@ describe("WinstonInstance.ts", () => {
       level: LogLevel.SILLY,
       message: "message",
       details: { mock: "details" },
-      context: ["context"],
+      context: { context: "context" },
       session: { mock: "session" },
     });
 

@@ -20,11 +20,11 @@ describe("Logger.ts", () => {
   });
 
   test("should be able to create a child logger with an array of context", () => {
-    instance.createChildLogger(["one", "two", "three"]);
+    instance.createChildLogger({ one: "one", two: "two", three: "three" });
   });
 
   test("should be able to create a child logger with a string context", () => {
-    instance.createChildLogger("string");
+    instance.createChildLogger({ string: "string" });
   });
 
   test("should be able to create a session logger with an object session", () => {

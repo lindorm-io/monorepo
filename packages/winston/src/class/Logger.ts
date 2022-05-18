@@ -1,7 +1,7 @@
 import { LogLevel } from "../enum";
 import { WinstonError } from "../error";
 import { WinstonInstance } from "./WinstonInstance";
-import { cloneDeep, get, isArray, isError, isObject, isString, set } from "lodash";
+import { cloneDeep, get, isError, isObject, merge, set } from "lodash";
 import { defaultFilterCallback } from "../util";
 import {
   HttpTransportOptions,
@@ -10,7 +10,6 @@ import {
 } from "winston/lib/winston/transports";
 import {
   LoggerOptions,
-  ChildLoggerContext,
   FilterCallback,
   LogDetails,
   SessionMetadata,
@@ -20,7 +19,7 @@ import {
 } from "../types";
 
 export class Logger {
-  private readonly context: Array<string>;
+  private readonly context: Record<string, string>;
   private readonly filters: Array<Filter>;
   private readonly winston: WinstonInstance;
   private session: Record<string, any> | undefined;
@@ -29,10 +28,10 @@ export class Logger {
     this.filters = options.filters || [];
 
     if (options.parent) {
-      this.context = cloneDeep(options.parent.context);
+      this.context = merge(cloneDeep(options.parent.context), options.context || {});
       this.winston = options.parent.winston;
     } else {
-      this.context = [];
+      this.context = options.context || {};
       this.winston = new WinstonInstance();
     }
 
@@ -41,8 +40,6 @@ export class Logger {
     } else if (options.parent) {
       this.session = cloneDeep(options.parent.session);
     }
-
-    this.addContext(options.context || []);
   }
 
   // public
@@ -107,8 +104,8 @@ export class Logger {
     });
   }
 
-  public createChildLogger(context: ChildLoggerContext): Logger {
-    if (!isString(context) && !isArray(context)) {
+  public createChildLogger(context: Record<string, string>): Logger {
+    if (!isObject(context)) {
       throw new WinstonError("Invalid logger context");
     }
 
@@ -142,10 +139,6 @@ export class Logger {
     this.filters.push({ path, callback });
   }
 
-  public setFocus(focus: string | null): void {
-    this.winston.setFocus(focus);
-  }
-
   public addConsole(
     level: LogLevel = LogLevel.DEBUG,
     options: Partial<LoggerTransportOptions> = {},
@@ -169,17 +162,11 @@ export class Logger {
     this.winston.addTransport(transport);
   }
 
-  // private
-
-  private addContext(context: ChildLoggerContext): void {
-    if (isArray(context)) {
-      for (const item of context) {
-        this.context.push(item);
-      }
-    } else if (isString(context)) {
-      this.context.push(context);
-    }
+  public setContext(key: string, value: string): void {
+    this.context[key] = value;
   }
+
+  // private
 
   private getFilteredDetails(details: LogDetails): LogDetails {
     if (!isObject(details)) return details;

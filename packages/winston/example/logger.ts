@@ -3,13 +3,12 @@ import { LindormError } from "@lindorm-io/errors";
 
 const logger = new Logger();
 
-const child1 = logger.createChildLogger(["context", "name"]);
-const session = child1.createSessionLogger({ id: "sessionId" });
-const child2 = logger.createChildLogger("other");
+logger.addConsole(LogLevel.INFO, { readable: true, colours: true, timestamp: true });
+
+const child1 = logger.createChildLogger({ parent: "logger" });
+const child2 = child1.createChildLogger({ parent: "child1" });
 
 const data = { one: 1, two: "two" };
-
-logger.addConsole(LogLevel.INFO, { readable: true, colours: true, timestamp: true });
 
 logger.verbose("this will be hidden because log level is info");
 
@@ -34,17 +33,9 @@ logger.error(
 
 logger.info("this will be displayed with a details object", { details: "data" });
 
-logger.setFocus("context");
+child1.info("this is a log from child 1");
 
-child1.info("this will be displayed because context includes the focused context");
-
-child2.info("this will not be displayed because its context does not include the focused context");
-
-session.info("this will be displayed because it is a child of child1");
-
-logger.setFocus(null);
-
-child2.info("this will be displayed because focus is restored to null");
+child2.info("this is a log from child 2");
 
 const logger2 = new Logger();
 
@@ -59,3 +50,11 @@ logger.addFilter("two");
 logger.info("this will be filtered", data);
 
 logger2.info("this will not be filtered", data);
+
+const logger3 = new Logger();
+
+logger3.addConsole(LogLevel.INFO);
+
+const session = logger3.createSessionLogger({ id: "session-id" });
+
+session.info("this is a log from session");

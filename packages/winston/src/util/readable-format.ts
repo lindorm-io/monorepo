@@ -69,8 +69,9 @@ export const readableFormat = (
     const level = formatLevel(info.level, colours);
     const message = levelColor(info.level, colours, info.message);
 
-    const context = info.context.length
-      ? colourise(chalk.black, colours, ` [ ${info.context.join(":")} ]`)
+    const contextValues = info.context ? Object.values(info.context) : [];
+    const context = contextValues.length
+      ? colourise(chalk.black, colours, ` [ ${contextValues.join(" | ")} ]`)
       : "";
 
     const content = `${level}${colon} ${message}${context}`;
