@@ -29,6 +29,11 @@ export const server = createNodeServer<ServerKoaContext>({
   redisConnection,
   repositories: [DeviceLinkRepository],
   routerDirectory: join(__dirname, "..", "router"),
+  services: Object.values(configuration.services).map((service) => ({
+    name: service.client_name,
+    host: service.host,
+    port: service.port,
+  })),
   workers,
 
   setup: async (): Promise<void> => {

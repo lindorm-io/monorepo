@@ -48,8 +48,10 @@ server:
 
 services:
   authentication_service:
+    client_name: authenticationClient
     issuer: https://authentication.lindorm.io
     host: localhost
   identity_service:
+    client_name: identityClient
     issuer: https://identity.lindorm.io
     host: localhost

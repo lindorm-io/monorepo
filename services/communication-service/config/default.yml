@@ -18,8 +18,10 @@ server:
 
 services:
   device_service:
+    client_name: deviceClient
     issuer: https://device.lindorm.io
     host: http://localhost
   oauth_service:
+    client_name: oauthClient
     issuer: https://oauth.lindorm.io
     host: http://localhost

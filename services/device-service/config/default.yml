@@ -31,8 +31,10 @@ server:
 
 services:
   communication_service:
+    client_name: communicationClient
     issuer: https://communication.lindorm.io
     host: http://localhost
   oauth_service:
+    client_name: oauthClient
     issuer: https://oauth.lindorm.io
     host: http://localhost

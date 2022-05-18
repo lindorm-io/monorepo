@@ -75,8 +75,9 @@ interface Services {
 }
 
 interface Service {
-  host:    string;
-  issuer:  string;
-  port:    number;
+  client_name:  string;
+  host:         string;
+  issuer:       string;
+  port:         number;
 }
 
