@@ -4,6 +4,7 @@ import { DefaultLindormSocketMiddleware, IOServer } from "./socket";
 import { Environment } from "../enum";
 import { IntervalWorker } from "../class";
 import { Logger } from "@lindorm-io/winston";
+import { ServerOptions } from "socket.io";
 
 export type SocketListeners = (io: IOServer) => void;
 
@@ -33,6 +34,7 @@ export interface KoaAppOptions<
   routerDirectory?: string;
   socket?: boolean;
   socketMiddleware?: Array<DefaultLindormSocketMiddleware>;
+  socketOptions?: Partial<ServerOptions>;
   workers?: Array<IntervalWorker>;
 
   // functions

@@ -77,7 +77,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
     if (options.socket) {
       this.logger.verbose("attaching socket.io server");
-      this.ioServer = new IOServer(this.httpServer);
+      this.ioServer = new IOServer(this.httpServer, options.socketOptions);
       this.middleware.push(socketIoMiddleware(this.ioServer));
 
       const socketMiddleware = [
