@@ -20,4 +20,5 @@ export interface CreateNodeServerOptions<
   redisConnection?: RedisConnection;
   repositories?: Array<typeof RepositoryBase>;
   services?: Array<Service>;
+  useSocketRedisAdapter?: boolean;
 }

@@ -1,7 +1,8 @@
 import { CreateNodeServerOptions, LindormNodeServerKoaContext } from "../types";
-import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
-import { socketTokenIssuerMiddleware, tokenIssuerMiddleware } from "@lindorm-io/koa-jwt";
 import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
+import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { socketTokenIssuerMiddleware, tokenIssuerMiddleware } from "@lindorm-io/koa-jwt";
 import {
   cacheMiddleware,
   redisMiddleware,
@@ -82,6 +83,15 @@ export const createNodeServer = <
       socketMiddleware.push(
         socketTokenIssuerMiddleware({ issuer: options.issuer || options.host }),
       );
+    }
+
+    if (options.useSocketRedisAdapter) {
+      options.socketOptions = {
+        adapter: createAdapter(
+          options.redisConnection.client().duplicate(),
+          options.redisConnection.client().duplicate(),
+        ),
+      };
     }
   }
 
