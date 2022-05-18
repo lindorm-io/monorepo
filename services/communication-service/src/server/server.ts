@@ -3,12 +3,12 @@ import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
+import { middleware } from "./middleware";
 import { redisConnection } from "../instance";
 import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { socketListeners } from "./socket";
 import { winston } from "./logger";
 import { workers } from "./workers";
-import { middleware } from "./middleware";
 
 export const server = createNodeServer<ServerKoaContext>({
   domain: configuration.server.domain,
@@ -41,4 +41,5 @@ export const server = createNodeServer<ServerKoaContext>({
     }),
   ],
   socketListeners,
+  useSocketRedisAdapter: true,
 });
