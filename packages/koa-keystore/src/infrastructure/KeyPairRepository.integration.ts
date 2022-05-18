@@ -24,10 +24,7 @@ describe("KeyPairRepository", () => {
 
     await connection.waitForConnection();
 
-    repository = new KeyPairRepository({
-      db: connection.database(),
-      logger,
-    });
+    repository = new KeyPairRepository({ connection, logger });
   });
 
   beforeEach(async () => {

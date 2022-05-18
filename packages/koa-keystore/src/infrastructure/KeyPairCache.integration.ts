@@ -22,10 +22,7 @@ describe("KeyPairCache", () => {
 
     await connection.waitForConnection();
 
-    cache = new KeyPairCache({
-      client: connection.client(),
-      logger,
-    });
+    cache = new KeyPairCache({ connection, logger });
   });
 
   beforeEach(async () => {

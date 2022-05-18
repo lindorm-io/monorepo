@@ -20,10 +20,8 @@ export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
-      await mongoConnection.waitForConnection();
-
       const repository = new KeyPairRepository({
-        db: mongoConnection.database(),
+        connection: mongoConnection,
         logger,
       });
 

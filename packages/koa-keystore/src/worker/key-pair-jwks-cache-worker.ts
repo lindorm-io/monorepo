@@ -46,7 +46,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
       await redisConnection.waitForConnection();
 
       const cache = new KeyPairCache({
-        client: redisConnection.client(),
+        connection: redisConnection,
         logger,
         expiresInSeconds,
       });

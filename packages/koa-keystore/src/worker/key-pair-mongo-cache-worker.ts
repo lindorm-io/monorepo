@@ -32,11 +32,8 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
-      await mongoConnection.waitForConnection();
-      await redisConnection.waitForConnection();
-
       const repository = new KeyPairRepository({
-        db: mongoConnection.database(),
+        connection: mongoConnection,
         logger,
       });
 
@@ -47,7 +44,7 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
       }
 
       const cache = new KeyPairCache({
-        client: redisConnection.client(),
+        connection: redisConnection,
         logger,
         expiresInSeconds,
       });
