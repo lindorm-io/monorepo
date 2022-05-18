@@ -6,9 +6,7 @@ import { redisConnection } from "../../instance";
 import { logger } from "./logger";
 
 export const getTokenIssuer = async (): Promise<TokenIssuer> => {
-  await redisConnection.waitForConnection();
-
-  const cache = new KeyPairCache({ client: redisConnection.client(), logger });
+  const cache = new KeyPairCache({ connection: redisConnection, logger });
   const keys = await cache.findMany({});
   const keystore = new Keystore({ keys });
 
