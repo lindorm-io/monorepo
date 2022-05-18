@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.1.6...@lindorm-io/node-server@0.2.0) (2022-05-18)
+
+
+### Features
+
+* add automatic axios middleware creation to node-server ([823b4a0](https://github.com/lindorm-io/monorepo/commit/823b4a0418bfb4c7a2ba26dbf877c01f52faa7af))
+
+
+
+
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.1.5...@lindorm-io/node-server@0.1.6) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/node-server
