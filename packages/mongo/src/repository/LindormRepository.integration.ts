@@ -26,7 +26,7 @@ describe("LindormRepository.ts", () => {
     await connection.waitForConnection();
 
     collection = await connection.collection("TestRepository");
-    repository = new TestRepository({ db: connection.database(), logger });
+    repository = new TestRepository({ connection, logger });
   });
 
   afterAll(async () => {

@@ -10,7 +10,7 @@ export const mongoQuery = async (
   try {
     await connection.waitForConnection();
 
-    await callback({ db: connection.database(), logger });
+    await callback({ connection, logger });
 
     logger.debug("mongo query success");
   } catch (err: any) {

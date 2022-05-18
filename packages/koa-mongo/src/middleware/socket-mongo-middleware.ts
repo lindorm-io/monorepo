@@ -1,12 +1,15 @@
 import { MongoConnection } from "@lindorm-io/mongo";
 import { DefaultLindormMongoSocketMiddleware } from "../types";
-import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
+import { getSocketError } from "@lindorm-io/koa";
 
-export const socketMongoMiddleware = (
-  connection: MongoConnection,
-): DefaultLindormMongoSocketMiddleware =>
-  promisifyLindormSocketMiddleware(async (socket) => {
-    await connection.waitForConnection();
-    socket.ctx.connection.mongo = connection;
-    socket.ctx.logger.debug("mongo connection added to context");
-  });
+export const socketMongoMiddleware =
+  (connection: MongoConnection): DefaultLindormMongoSocketMiddleware =>
+  (socket, next) => {
+    try {
+      socket.ctx.connection.mongo = connection;
+      socket.ctx.logger.debug("mongo connection added to context");
+      next();
+    } catch (err) {
+      next(getSocketError(socket, err));
+    }
+  };

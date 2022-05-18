@@ -19,7 +19,7 @@ export const repositoryMiddleware =
      */
     // @ts-ignore
     ctx.repository[repository] = new Repository({
-      db: ctx.connection.mongo.database(),
+      connection: ctx.connection.mongo,
       logger: ctx.logger,
     });
 

@@ -40,7 +40,7 @@ export abstract class MongoConnectionBase implements IMongoConnection {
       throw new Error("Collection could not be found. Call waitForConnection() first.");
     }
 
-    return await this.db.collection(collection);
+    return this.db.collection(collection);
   }
 
   public abstract connect(): Promise<void>;
@@ -60,23 +60,21 @@ export abstract class MongoConnectionBase implements IMongoConnection {
       await this.connect();
     }
 
-    const timeout = TIMEOUT;
-    let interval: NodeJS.Timer;
-    let time = 0;
-
     return new Promise((resolve, reject) => {
-      interval = setInterval(() => {
+      let current = 0;
+
+      const interval = setInterval(() => {
+        current += INTERVAL;
+
         if (this.mongo && this.db) {
           clearInterval(interval);
           resolve();
         }
 
-        if (time >= timeout) {
+        if (current >= TIMEOUT) {
           clearInterval(interval);
           reject(new Error("Unable to establish connection"));
         }
-
-        time += INTERVAL;
       }, INTERVAL);
     });
   }

@@ -19,7 +19,7 @@ export const socketRepositoryMiddleware =
        */
       // @ts-ignore
       socket.ctx.repository[repository] = new Repository({
-        db: socket.ctx.connection.mongo.database(),
+        connection: socket.ctx.connection.mongo,
         logger: socket.ctx.logger,
       });
 
