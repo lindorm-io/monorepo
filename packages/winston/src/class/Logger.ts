@@ -187,14 +187,14 @@ export class Logger {
     this.winston.add(transport);
   }
 
-  public setContext(context: Record<string, string>): void {
+  public addContext(context: Record<string, string>): void {
     if (!isObject(context)) {
       throw new Error("Invalid context");
     }
     this.context = merge(cloneDeep(this.context), context);
   }
 
-  public setSession(session: Record<string, any>): void {
+  public addSession(session: Record<string, any>): void {
     if (!isObject(session)) {
       throw new Error("Invalid session");
     }

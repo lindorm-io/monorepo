@@ -33,6 +33,10 @@ logger.error(
 
 logger.info("this will be displayed with a details object", { details: "data" });
 
+logger.addContext({ extra: "extra", stuff: "stuff" });
+
+logger.info("this will be displayed with a context object");
+
 child1.info("this is a log from child 1");
 
 child2.info("this is a log from child 2");
