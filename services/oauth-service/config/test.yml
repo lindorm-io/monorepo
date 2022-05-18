@@ -18,10 +18,12 @@ redis:
 server:
   domain: https://test.lindorm.io
   environment: test
-  issuer: https://oauth.test.lindorm.io
   host: https://oauth.test.lindorm.io
+  issuer: https://oauth.test.lindorm.io
   keys:
     - secret
+  port: 3500
+  workers: false
 
 services:
   authentication_service:

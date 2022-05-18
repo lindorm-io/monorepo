@@ -5,8 +5,9 @@ redis:
 server:
   domain: https://lindorm.io
   environment: production
-  issuer: https://identity.lindorm.io
   host: https://identity.lindorm.io
+  issuer: https://identity.lindorm.io
+  workers: true
 
 services:
   communication_service:

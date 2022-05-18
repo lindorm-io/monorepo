@@ -54,11 +54,12 @@ redis:
 server:
   domain: https://test.lindorm.io
   environment: test
-  issuer: https://authentication.test.lindorm.io
   host: https://authentication.test.lindorm.io
-  port: 3100
+  issuer: https://authentication.test.lindorm.io
   keys:
     - secret
+  port: 3100
+  workers: false
 
 services:
   communication_service:

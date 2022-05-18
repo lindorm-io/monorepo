@@ -9,9 +9,10 @@ redis:
 server:
   domain: https://test.lindorm.io
   environment: test
-  issuer: https://communication.test.lindorm.io
   host: https://communication.test.lindorm.io
+  issuer: https://communication.test.lindorm.io
   port: 3200
+  workers: false
 
 services:
   device_service:

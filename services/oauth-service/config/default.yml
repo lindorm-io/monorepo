@@ -40,9 +40,11 @@ redis:
 server:
   domain: https://lindorm.io
   environment: development
-  issuer: https://oauth.lindorm.io
   host: http://localhost
+  issuer: https://oauth.lindorm.io
+  keys: []
   port: 3000
+  workers: false
 
 services:
   authentication_service:

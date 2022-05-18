@@ -59,6 +59,7 @@ interface Server {
   issuer:      string;
   keys:        string[];
   port:        number;
+  workers:     boolean;
 }
 
 interface Services {

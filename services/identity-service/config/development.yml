@@ -16,9 +16,10 @@ oauth:
 server:
   domain: https://development.lindorm.io
   environment: development
-  issuer: https://identity.development.lindorm.io
   host: http://localhost
+  issuer: https://identity.development.lindorm.io
   port: 3400
+  workers: true
 
 services:
   communication_service:

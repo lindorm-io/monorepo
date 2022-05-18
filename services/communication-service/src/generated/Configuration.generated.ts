@@ -22,7 +22,9 @@ interface Server {
   environment: string;
   host:        string;
   issuer:      string;
+  keys:        any[];
   port:        number;
+  workers:     boolean;
 }
 
 interface Services {

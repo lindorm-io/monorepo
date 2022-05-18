@@ -16,9 +16,10 @@ redis:
 server:
   domain: https://development.lindorm.io
   environment: development
-  issuer: https://device.development.lindorm.io
   host: http://localhost
+  issuer: https://device.development.lindorm.io
   port: 3300
+  workers: true
 
 services:
   communication_service:

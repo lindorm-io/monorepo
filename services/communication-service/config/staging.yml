@@ -5,8 +5,9 @@ redis:
 server:
   domain: https://staging.lindorm.io
   environment: staging
-  issuer: https://communication.staging.lindorm.io
   host: https://communication.staging.lindorm.io
+  issuer: https://communication.staging.lindorm.io
+  workers: true
 
 services:
   device_service:
