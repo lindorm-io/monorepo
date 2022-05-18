@@ -1,5 +1,5 @@
 import { Logger } from "@lindorm-io/winston";
-import { Redis } from "ioredis";
+import { RedisConnection } from "../infrastructure";
 
 export interface ILindormCache<Interface, Entity> {
   create(entity: Entity, expiresInSeconds?: number): Promise<Entity>;
@@ -19,7 +19,7 @@ export interface LindormCacheFindOptions {
 }
 
 export interface CacheOptions {
-  client: Redis;
+  connection: RedisConnection;
   expiresInSeconds?: number;
   logger: Logger;
 }

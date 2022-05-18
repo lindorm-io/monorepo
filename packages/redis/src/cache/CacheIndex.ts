@@ -1,10 +1,12 @@
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
-import { RedisError } from "../error";
-import { Redis } from "ioredis";
-import { difference, snakeCase, uniq } from "lodash";
 import { Logger } from "@lindorm-io/winston";
+import { Redis } from "ioredis";
+import { RedisConnection } from "../infrastructure";
+import { RedisError } from "../error";
+import { difference, snakeCase, uniq } from "lodash";
 
 export class CacheIndex<Interface> implements ICacheBase {
+  private readonly connection: RedisConnection;
   private readonly client: Redis;
   private readonly logger: Logger;
   private readonly prefix: string;
@@ -12,7 +14,8 @@ export class CacheIndex<Interface> implements ICacheBase {
   public readonly indexKey: keyof Interface;
 
   public constructor(options: CacheIndexBaseOptions<Interface>) {
-    this.client = options.client;
+    this.connection = options.connection;
+    this.client = this.connection.client();
     this.indexKey = options.indexKey;
     this.prefix = snakeCase(options.prefix);
 
@@ -47,6 +50,8 @@ export class CacheIndex<Interface> implements ICacheBase {
     expiresInSeconds?: number,
   ): Promise<void> {
     const start = Date.now();
+
+    await this.connection.waitForConnection();
 
     let result: string | null;
 
@@ -90,6 +95,8 @@ export class CacheIndex<Interface> implements ICacheBase {
 
   private async getArray(key: string): Promise<Array<string>> {
     const start = Date.now();
+
+    await this.connection.waitForConnection();
 
     const indexKey = this.getKey(key);
     const result = await this.client.get(indexKey);

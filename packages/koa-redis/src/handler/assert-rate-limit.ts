@@ -18,9 +18,10 @@ export const assertRateLimit = async (
   } = ctx;
 
   const { expiresInSeconds, keyName, limit, value } = options;
-
   const key = getRateLimitKey(keyName, value);
-  const client = await redis.client();
+
+  await redis.waitForConnection();
+  const client = redis.client();
   const currentNum = await client.get(key);
 
   if (currentNum) {

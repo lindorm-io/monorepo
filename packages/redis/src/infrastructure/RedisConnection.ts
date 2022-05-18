@@ -19,10 +19,6 @@ export class RedisConnection implements IRedisConnection {
     return this.connection.client();
   }
 
-  public async connect(): Promise<void> {
-    return this.connection.connect();
-  }
-
   public async quit(): Promise<void> {
     return this.connection.quit();
   }

@@ -1,7 +1,7 @@
-import { Redis, RedisOptions } from "ioredis";
+import { INTERVAL, TIMEOUT } from "../constant";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
 import { Logger } from "@lindorm-io/winston";
-import { INTERVAL, TIMEOUT } from "../constant";
+import { Redis, RedisOptions } from "ioredis";
 
 export abstract class RedisConnectionBase implements IRedisConnection {
   protected readonly clientOptions: RedisOptions;
@@ -19,16 +19,16 @@ export abstract class RedisConnectionBase implements IRedisConnection {
 
   public client(): Redis {
     if (!this.redis) {
-      throw new Error("Client could not be found. Call connect() or waitForConnection() first.");
+      throw new Error("Redis Client could not be found");
     }
 
     return this.redis;
   }
 
-  public abstract connect(): Promise<void>;
-
   public async quit(): Promise<void> {
-    if (!this.redis) return;
+    if (!this.redis) {
+      throw new Error("Redis Client could not be found");
+    }
 
     await this.redis.quit();
   }
@@ -36,27 +36,21 @@ export abstract class RedisConnectionBase implements IRedisConnection {
   public async waitForConnection(): Promise<void> {
     if (this.connected) return;
 
-    if (!this.redis) {
-      await this.connect();
-    }
-
-    const timeout = TIMEOUT;
-    let interval: NodeJS.Timer;
-    let time = 0;
-
     return new Promise((resolve, reject) => {
-      interval = setInterval(() => {
+      let current = 0;
+
+      const interval = setInterval(() => {
+        current += INTERVAL;
+
         if (this.connected) {
           clearInterval(interval);
           resolve();
         }
 
-        if (time >= timeout) {
+        if (current >= TIMEOUT) {
           clearInterval(interval);
           reject(new Error("Unable to establish connection"));
         }
-
-        time += INTERVAL;
       }, INTERVAL);
     });
   }

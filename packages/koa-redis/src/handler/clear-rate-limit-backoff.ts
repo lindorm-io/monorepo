@@ -17,6 +17,7 @@ export const clearRateLimitBackoff = async (
   const { keyName, value } = options;
   const key = getRateLimitBackoffAttemptKey(keyName, value);
 
-  const client = await redis.client();
+  await redis.waitForConnection();
+  const client = redis.client();
   await client.del(key);
 };

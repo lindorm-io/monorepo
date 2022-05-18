@@ -36,7 +36,7 @@ export abstract class LindormCache<
     for (const attributeKey of options.indexedAttributes) {
       this.indices.push(
         new CacheIndex<Interface>({
-          client: options.client,
+          connection: options.connection,
           indexKey: attributeKey,
           logger: this.logger,
           prefix: options.entityName,
@@ -249,6 +249,10 @@ export abstract class LindormCache<
   }
 
   private async scanEntities(): Promise<Array<Entity>> {
+    const start = Date.now();
+
+    await this.connection.waitForConnection();
+
     let cursor = 0;
     let entityKeys: Array<string> = [];
 
@@ -258,6 +262,16 @@ export abstract class LindormCache<
       cursor = parseInt(cursorString, 10);
       entityKeys = flatten([entityKeys, keys]);
     } while (cursor !== 0);
+
+    this.logger.debug("scan entities", {
+      input: {
+        method: "scan",
+      },
+      result: {
+        success: !!entityKeys.length,
+        time: Date.now() - start,
+      },
+    });
 
     const results: Array<Entity> = [];
 
@@ -275,6 +289,8 @@ export abstract class LindormCache<
 
   private async getEntity(id: string): Promise<Entity | null> {
     const start = Date.now();
+
+    await this.connection.waitForConnection();
 
     const key = this.getKey(id);
     const result = await this.client.get(key);
@@ -304,6 +320,8 @@ export abstract class LindormCache<
     expiryMode?: string,
   ): Promise<void> {
     const start = Date.now();
+
+    await this.connection.waitForConnection();
 
     entity.updated = new Date();
 
@@ -355,6 +373,8 @@ export abstract class LindormCache<
 
   private async delEntity(entity: Entity): Promise<void> {
     const start = Date.now();
+
+    await this.connection.waitForConnection();
 
     const json = entity.toJSON();
     const key = this.getKey(json.id);

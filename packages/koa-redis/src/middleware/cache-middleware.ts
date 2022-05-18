@@ -20,7 +20,7 @@ export const cacheMiddleware =
      */
     // @ts-ignore
     ctx.cache[cache] = new Cache({
-      client: ctx.connection.redis.client(),
+      connection: ctx.connection.redis,
       expiresInSeconds: options?.expiresInSeconds,
       logger: ctx.logger,
     });

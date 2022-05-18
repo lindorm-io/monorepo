@@ -18,7 +18,8 @@ export const assertRateLimitBackoff = async (
   const { keyName, value } = options;
   const key = getRateLimitBackoffExpireKey(keyName, value);
 
-  const client = await redis.client();
+  await redis.waitForConnection();
+  const client = redis.client();
   const expireTTL = await client.ttl(key);
 
   if (expireTTL && expireTTL > 0) {

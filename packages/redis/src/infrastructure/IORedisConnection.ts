@@ -7,11 +7,6 @@ export class IORedisConnection extends RedisConnectionBase implements IRedisConn
     super(options);
 
     this.connected = false;
-  }
-
-  public async connect(): Promise<void> {
-    if (this.connected) return;
-
     this.redis = new IORedis(this.clientOptions);
 
     this.redis.on("connect", () => {

@@ -25,7 +25,7 @@ describe("LindormCache", () => {
     await connection.waitForConnection();
 
     redis = connection.client();
-    cache = new TestCache({ client: connection.client(), logger });
+    cache = new TestCache({ connection, logger });
   });
 
   afterAll(async () => {

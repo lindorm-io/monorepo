@@ -1,5 +1,5 @@
-import { Redis } from "ioredis";
 import { Logger } from "@lindorm-io/winston";
+import { RedisConnection } from "../infrastructure";
 
 export interface ICacheBase {
   get(key: string): Promise<Array<string>>;
@@ -8,7 +8,7 @@ export interface ICacheBase {
 }
 
 export interface CacheIndexBaseOptions<Interface> {
-  client: Redis;
+  connection: RedisConnection;
   indexKey: keyof Interface;
   logger: Logger;
   prefix: string;

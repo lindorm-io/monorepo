@@ -20,7 +20,7 @@ export const socketCacheMiddleware =
        */
       // @ts-ignore
       socket.ctx.cache[cache] = new Cache({
-        client: socket.ctx.connection.redis.client(),
+        connection: socket.ctx.connection.redis,
         expiresInSeconds: options?.expiresInSeconds,
         logger: socket.ctx.logger,
       });
