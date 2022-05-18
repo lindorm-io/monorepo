@@ -14,14 +14,9 @@ interface TestRepository {
   refreshSessionRepository: RefreshSessionRepository;
 }
 
-export const getTestRepository = async (): Promise<TestRepository> => {
-  await mongoConnection.waitForConnection();
-  const db = mongoConnection.database();
-
-  return {
-    browserSessionRepository: new BrowserSessionRepository({ db, logger }),
-    clientRepository: new ClientRepository({ db, logger }),
-    consentSessionRepository: new ConsentSessionRepository({ db, logger }),
-    refreshSessionRepository: new RefreshSessionRepository({ db, logger }),
-  };
-};
+export const getTestRepository = (): TestRepository => ({
+  browserSessionRepository: new BrowserSessionRepository({ connection: mongoConnection, logger }),
+  clientRepository: new ClientRepository({ connection: mongoConnection, logger }),
+  consentSessionRepository: new ConsentSessionRepository({ connection: mongoConnection, logger }),
+  refreshSessionRepository: new RefreshSessionRepository({ connection: mongoConnection, logger }),
+});

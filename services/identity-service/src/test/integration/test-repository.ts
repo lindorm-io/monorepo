@@ -16,15 +16,13 @@ interface TestRepository {
   phoneNumberRepository: PhoneNumberRepository;
 }
 
-export const getTestRepository = async (): Promise<TestRepository> => {
-  await mongoConnection.waitForConnection();
-  const db = mongoConnection.database();
-
-  return {
-    displayNameRepository: new DisplayNameRepository({ db, logger }),
-    emailRepository: new EmailRepository({ db, logger }),
-    identityRepository: new IdentityRepository({ db, logger }),
-    externalIdentifierRepository: new ExternalIdentifierRepository({ db, logger }),
-    phoneNumberRepository: new PhoneNumberRepository({ db, logger }),
-  };
-};
+export const getTestRepository = (): TestRepository => ({
+  displayNameRepository: new DisplayNameRepository({ connection: mongoConnection, logger }),
+  emailRepository: new EmailRepository({ connection: mongoConnection, logger }),
+  identityRepository: new IdentityRepository({ connection: mongoConnection, logger }),
+  externalIdentifierRepository: new ExternalIdentifierRepository({
+    connection: mongoConnection,
+    logger,
+  }),
+  phoneNumberRepository: new PhoneNumberRepository({ connection: mongoConnection, logger }),
+});

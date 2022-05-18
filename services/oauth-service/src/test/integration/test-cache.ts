@@ -16,15 +16,10 @@ interface TestCache {
   keyPairCache: KeyPairCache;
 }
 
-export const getTestCache = async (): Promise<TestCache> => {
-  await redisConnection.waitForConnection();
-  const client = redisConnection.client();
-
-  return {
-    authorizationSessionCache: new AuthorizationSessionCache({ client, logger }),
-    clientCache: new ClientCache({ client, logger }),
-    invalidTokenCache: new InvalidTokenCache({ client, logger }),
-    logoutSessionCache: new LogoutSessionCache({ client, logger }),
-    keyPairCache: new KeyPairCache({ client, logger }),
-  };
-};
+export const getTestCache = (): TestCache => ({
+  authorizationSessionCache: new AuthorizationSessionCache({ connection: redisConnection, logger }),
+  clientCache: new ClientCache({ connection: redisConnection, logger }),
+  invalidTokenCache: new InvalidTokenCache({ connection: redisConnection, logger }),
+  logoutSessionCache: new LogoutSessionCache({ connection: redisConnection, logger }),
+  keyPairCache: new KeyPairCache({ connection: redisConnection, logger }),
+});

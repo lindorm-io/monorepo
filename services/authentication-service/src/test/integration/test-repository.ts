@@ -1,19 +1,13 @@
 import { mongoConnection } from "../../instance";
-import { winston } from "../../server/logger";
 import { AccountRepository, BrowserLinkRepository } from "../../infrastructure";
+import { logger } from "../logger";
 
 interface TestRepository {
   accountRepository: AccountRepository;
   browserLinkRepository: BrowserLinkRepository;
 }
 
-export const getTestRepository = async (): Promise<TestRepository> => {
-  await mongoConnection.waitForConnection();
-  const db = mongoConnection.database();
-  const logger = winston;
-
-  return {
-    accountRepository: new AccountRepository({ db, logger }),
-    browserLinkRepository: new BrowserLinkRepository({ db, logger }),
-  };
-};
+export const getTestRepository = (): TestRepository => ({
+  accountRepository: new AccountRepository({ connection: mongoConnection, logger }),
+  browserLinkRepository: new BrowserLinkRepository({ connection: mongoConnection, logger }),
+});

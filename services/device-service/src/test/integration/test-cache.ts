@@ -1,6 +1,6 @@
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { logger } from "../logger";
 import { redisConnection } from "../../instance";
-import { winston } from "../../server/logger";
 import {
   ChallengeSessionCache,
   EnrolmentSessionCache,
@@ -14,18 +14,12 @@ interface TestCache {
   keyPairCache: KeyPairCache;
 }
 
-export const getTestCache = async (): Promise<TestCache> => {
-  await redisConnection.waitForConnection();
-  const client = redisConnection.client();
-  const logger = winston;
-
-  return {
-    challengeSessionCache: new ChallengeSessionCache({ client, logger }),
-    enrolmentSessionCache: new EnrolmentSessionCache({ client, logger }),
-    rdcSessionCache: new RdcSessionCache({
-      client,
-      logger,
-    }),
-    keyPairCache: new KeyPairCache({ client, logger }),
-  };
-};
+export const getTestCache = (): TestCache => ({
+  challengeSessionCache: new ChallengeSessionCache({ connection: redisConnection, logger }),
+  enrolmentSessionCache: new EnrolmentSessionCache({ connection: redisConnection, logger }),
+  rdcSessionCache: new RdcSessionCache({
+    connection: redisConnection,
+    logger,
+  }),
+  keyPairCache: new KeyPairCache({ connection: redisConnection, logger }),
+});

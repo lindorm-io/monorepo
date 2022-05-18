@@ -1,6 +1,6 @@
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { logger } from "../logger";
 import { redisConnection } from "../../instance";
-import { winston } from "../../server/logger";
 import {
   ConsentSessionCache,
   FlowSessionCache,
@@ -20,18 +20,15 @@ interface TestCache {
   oidcSessionCache: OidcSessionCache;
 }
 
-export const getTestCache = async (): Promise<TestCache> => {
-  await redisConnection.waitForConnection();
-  const client = redisConnection.client();
-  const logger = winston;
-
-  return {
-    consentSessionCache: new ConsentSessionCache({ client, logger }),
-    flowSessionCache: new FlowSessionCache({ client, logger }),
-    keyPairCache: new KeyPairCache({ client, logger }),
-    loginSessionCache: new LoginSessionCache({ client, logger }),
-    logoutSessionCache: new LogoutSessionCache({ client, logger }),
-    mfaCookieSessionCache: new MfaCookieSessionCache({ client, logger }),
-    oidcSessionCache: new OidcSessionCache({ client, logger }),
-  };
-};
+export const getTestCache = (): TestCache => ({
+  consentSessionCache: new ConsentSessionCache({ connection: redisConnection, logger }),
+  flowSessionCache: new FlowSessionCache({ connection: redisConnection, logger }),
+  keyPairCache: new KeyPairCache({ connection: redisConnection, logger }),
+  loginSessionCache: new LoginSessionCache({ connection: redisConnection, logger }),
+  logoutSessionCache: new LogoutSessionCache({ connection: redisConnection, logger }),
+  mfaCookieSessionCache: new MfaCookieSessionCache({
+    connection: redisConnection,
+    logger,
+  }),
+  oidcSessionCache: new OidcSessionCache({ connection: redisConnection, logger }),
+});

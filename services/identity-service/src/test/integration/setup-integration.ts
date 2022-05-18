@@ -19,14 +19,14 @@ export let TEST_EXTERNAL_IDENTIFIER_REPOSITORY: ExternalIdentifierRepository;
 export let TEST_PHONE_NUMBER_REPOSITORY: PhoneNumberRepository;
 
 export const setupIntegration = async (): Promise<void> => {
-  const { connectSessionCache, keyPairCache } = await getTestCache();
+  const { connectSessionCache, keyPairCache } = getTestCache();
   const {
     displayNameRepository,
     emailRepository,
     identityRepository,
     externalIdentifierRepository,
     phoneNumberRepository,
-  } = await getTestRepository();
+  } = getTestRepository();
 
   TEST_CONNECT_SESSION_CACHE = connectSessionCache;
 

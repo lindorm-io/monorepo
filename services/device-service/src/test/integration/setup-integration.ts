@@ -16,8 +16,8 @@ export let TEST_DEVICE_REPOSITORY: DeviceLinkRepository;
 
 export const setupIntegration = async (): Promise<void> => {
   const { challengeSessionCache, enrolmentSessionCache, rdcSessionCache, keyPairCache } =
-    await getTestCache();
-  const { deviceLinkRepository } = await getTestRepository();
+    getTestCache();
+  const { deviceLinkRepository } = getTestRepository();
 
   TEST_CHALLENGE_SESSION_CACHE = challengeSessionCache;
   TEST_ENROLMENT_SESSION_CACHE = enrolmentSessionCache;

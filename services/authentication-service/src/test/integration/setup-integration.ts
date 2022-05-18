@@ -33,8 +33,8 @@ export const setupIntegration = async (): Promise<void> => {
     logoutSessionCache,
     mfaCookieSessionCache,
     oidcSessionCache,
-  } = await getTestCache();
-  const { accountRepository, browserLinkRepository } = await getTestRepository();
+  } = getTestCache();
+  const { accountRepository, browserLinkRepository } = getTestRepository();
 
   TEST_CONSENT_SESSION_CACHE = consentSessionCache;
   TEST_FLOW_SESSION_CACHE = flowSessionCache;
