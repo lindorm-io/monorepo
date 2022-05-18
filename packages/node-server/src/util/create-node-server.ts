@@ -69,7 +69,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketCacheMiddleware(Cache));
     }
 
-    if (options.isKeyPairCached) {
+    if (options.isKeyPairCached !== false) {
       middleware.push(cacheMiddleware(KeyPairCache));
       socketMiddleware.push(socketCacheMiddleware(KeyPairCache));
 
@@ -85,7 +85,7 @@ export const createNodeServer = <
       );
     }
 
-    if (options.useSocketRedisAdapter) {
+    if (options.useSocketRedisAdapter !== false) {
       options.socketOptions = {
         adapter: createAdapter(
           options.redisConnection.client().duplicate(),

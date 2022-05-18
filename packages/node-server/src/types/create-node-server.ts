@@ -13,12 +13,12 @@ export interface CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
 > extends KoaAppOptions<Context> {
   caches?: Array<typeof CacheBase>;
-  isKeyPairCached?: boolean;
-  isKeyPairInRepository?: boolean;
+  isKeyPairCached?: boolean; // default: true
+  isKeyPairInRepository?: boolean; // default: false
   issuer?: string;
   mongoConnection?: MongoConnection;
   redisConnection?: RedisConnection;
   repositories?: Array<typeof RepositoryBase>;
   services?: Array<Service>;
-  useSocketRedisAdapter?: boolean;
+  useSocketRedisAdapter?: boolean; // default: true
 }
