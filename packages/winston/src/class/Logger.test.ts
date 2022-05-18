@@ -65,7 +65,7 @@ describe("Logger.ts", () => {
     });
 
     expect(winstonLog).toHaveBeenCalledWith({
-      context: [],
+      context: {},
       details: {
         filtered: {
           path: {

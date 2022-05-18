@@ -1,27 +1,28 @@
+import * as winston from "winston";
 import { LogLevel } from "../enum";
 import { WinstonError } from "../error";
-import { WinstonInstance } from "./WinstonInstance";
 import { cloneDeep, get, isError, isObject, merge, set } from "lodash";
-import { defaultFilterCallback } from "../util";
+import { defaultFilterCallback, readableFormat } from "../util";
 import {
+  FileTransportOptions,
   HttpTransportOptions,
   StreamTransportOptions,
-  FileTransportOptions,
 } from "winston/lib/winston/transports";
 import {
-  LoggerOptions,
+  Filter,
   FilterCallback,
   LogDetails,
-  SessionMetadata,
-  LoggerTransportOptions,
-  Filter,
   LoggerMessage,
+  LoggerOptions,
+  LoggerTransportOptions,
+  SessionMetadata,
 } from "../types";
 
 export class Logger {
-  private readonly context: Record<string, string>;
   private readonly filters: Array<Filter>;
-  private readonly winston: WinstonInstance;
+  private readonly winston: winston.Logger;
+
+  private context: Record<string, string>;
   private session: Record<string, any> | undefined;
 
   public constructor(options: LoggerOptions = {}) {
@@ -32,13 +33,13 @@ export class Logger {
       this.winston = options.parent.winston;
     } else {
       this.context = options.context || {};
-      this.winston = new WinstonInstance();
+      this.winston = winston.createLogger();
     }
 
     if (options.session) {
       this.session = options.session;
     } else if (options.parent) {
-      this.session = cloneDeep(options.parent.session);
+      this.session = merge(cloneDeep(options.parent.session), options.session || {});
     }
   }
 
@@ -117,10 +118,6 @@ export class Logger {
       throw new WinstonError("Invalid logger session");
     }
 
-    if (this.session) {
-      throw new WinstonError("Logger session already exists");
-    }
-
     return new Logger({ session, parent: this });
   }
 
@@ -143,27 +140,65 @@ export class Logger {
     level: LogLevel = LogLevel.DEBUG,
     options: Partial<LoggerTransportOptions> = {},
   ): void {
-    this.winston.addConsole(level, options);
+    this.winston.add(
+      new winston.transports.Console({
+        handleExceptions: true,
+        level,
+        format: options.readable
+          ? winston.format.printf((info) => readableFormat(info as LoggerMessage, options))
+          : winston.format.json(),
+      }),
+    );
   }
 
   public addFileTransport(level: LogLevel = LogLevel.DEBUG, options?: FileTransportOptions): void {
-    this.winston.addFileTransport(level, options);
+    this.winston.add(
+      new winston.transports.File({
+        handleExceptions: true,
+        maxsize: options?.maxsize || 5242880,
+        maxFiles: options?.maxFiles || 10,
+        ...options,
+        level,
+      }),
+    );
   }
 
   public addHttpTransport(level: LogLevel, options: HttpTransportOptions): void {
-    this.winston.addHttpTransport(level, options);
+    this.winston.add(
+      new winston.transports.Http({
+        handleExceptions: true,
+        ...options,
+        level,
+      }),
+    );
   }
 
   public addStreamTransport(level: LogLevel, options: StreamTransportOptions): void {
-    this.winston.addStreamTransport(level, options);
+    this.winston.add(
+      new winston.transports.Stream({
+        handleExceptions: true,
+        ...options,
+        level,
+      }),
+    );
   }
 
   public addTransport(transport: any): void {
-    this.winston.addTransport(transport);
+    this.winston.add(transport);
   }
 
-  public setContext(key: string, value: string): void {
-    this.context[key] = value;
+  public setContext(context: Record<string, string>): void {
+    if (!isObject(context)) {
+      throw new Error("Invalid context");
+    }
+    this.context = merge(cloneDeep(this.context), context);
+  }
+
+  public setSession(session: Record<string, any>): void {
+    if (!isObject(session)) {
+      throw new Error("Invalid session");
+    }
+    this.session = merge(cloneDeep(this.session), session);
   }
 
   // private
@@ -188,11 +223,13 @@ export class Logger {
   }
 
   private log(options: LoggerMessage): void {
-    const { details, ...data } = options;
-
     this.winston.log({
-      details: this.getFilteredDetails(details),
-      ...data,
+      context: options.context,
+      details: this.getFilteredDetails(options.details),
+      level: options.level,
+      message: options.message,
+      session: options.session,
+      time: new Date(),
     });
   }
 }
