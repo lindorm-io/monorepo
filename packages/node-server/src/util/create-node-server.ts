@@ -35,6 +35,15 @@ export const createNodeServer = <
     socketAxiosMiddleware({ clientName: "axiosClient" }),
   ];
 
+  for (const service of options.services || []) {
+    middleware.push(
+      axiosMiddleware({ clientName: service.name, host: service.host, port: service.port }),
+    );
+    socketMiddleware.push(
+      socketAxiosMiddleware({ clientName: service.name, host: service.host, port: service.port }),
+    );
+  }
+
   if (options.mongoConnection) {
     middleware.push(mongoMiddleware(options.mongoConnection));
     socketMiddleware.push(socketMongoMiddleware(options.mongoConnection));

@@ -3,6 +3,12 @@ import { KoaAppOptions } from "@lindorm-io/koa";
 import { CacheBase, RedisConnection } from "@lindorm-io/redis";
 import { MongoConnection, RepositoryBase } from "@lindorm-io/mongo";
 
+interface Service {
+  name: string;
+  host: string;
+  port: number | null;
+}
+
 export interface CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
 > extends KoaAppOptions<Context> {
@@ -13,4 +19,5 @@ export interface CreateNodeServerOptions<
   mongoConnection?: MongoConnection;
   redisConnection?: RedisConnection;
   repositories?: Array<typeof RepositoryBase>;
+  services?: Array<Service>;
 }
