@@ -9,10 +9,8 @@ const time = stringToMilliseconds("60 minutes");
 
 export const refreshSessionCleanupWorker = new IntervalWorker({
   callback: async (): Promise<void> => {
-    await mongoConnection.waitForConnection();
-
     const repository = new RefreshSessionRepository({
-      db: mongoConnection.database(),
+      connection: mongoConnection,
       logger,
     });
 

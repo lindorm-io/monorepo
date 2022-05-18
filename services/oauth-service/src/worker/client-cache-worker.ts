@@ -10,16 +10,13 @@ const time = stringToMilliseconds("60 minutes");
 
 export const clientCacheWorker = new IntervalWorker({
   callback: async (): Promise<void> => {
-    await mongoConnection.waitForConnection();
-    await redisConnection.waitForConnection();
-
     const repository = new ClientRepository({
-      db: mongoConnection.database(),
+      connection: mongoConnection,
       logger,
     });
 
     const cache = new ClientCache({
-      client: redisConnection.client(),
+      connection: redisConnection,
       expiresInSeconds,
       logger,
     });
