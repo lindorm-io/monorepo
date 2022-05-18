@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.6.6...@lindorm-io/koa-keystore@0.7.0) (2022-05-18)
+
+
+### Features
+
+* align keystore workers with new cache/repository options ([46f21a2](https://github.com/lindorm-io/monorepo/commit/46f21a2a13e23cd148cd7873389fa4a994db33f3))
+
+
+
+
+
 ## [0.6.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.6.5...@lindorm-io/koa-keystore@0.6.6) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore

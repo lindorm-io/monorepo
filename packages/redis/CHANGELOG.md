@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.6.7...@lindorm-io/redis@0.7.0) (2022-05-18)
+
+
+### Features
+
+* upgrade cache options to take entire connection object ([12ba2ef](https://github.com/lindorm-io/monorepo/commit/12ba2ef60234042875bf6818c4fd6b91362b28bf))
+
+
+
+
+
 ## [0.6.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.6.6...@lindorm-io/redis@0.6.7) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/redis

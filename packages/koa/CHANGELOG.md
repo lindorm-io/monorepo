@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.6...@lindorm-io/koa@0.12.7) (2022-05-18)
+
+
+### Bug Fixes
+
+* allow socket server options in koa ([da3f1f0](https://github.com/lindorm-io/monorepo/commit/da3f1f0d31c0754fd6121807199373e36cfaaeaa))
+
+
+
+
+
 ## [0.12.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.5...@lindorm-io/koa@0.12.6) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/koa

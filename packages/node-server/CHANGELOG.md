@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.2.0...@lindorm-io/node-server@0.3.0) (2022-05-18)
+
+
+### Features
+
+* add optional redis adapter to socket in node-server ([db880fe](https://github.com/lindorm-io/monorepo/commit/db880fe30157b90ad0d3aad050c82508f8c9347b))
+
+
+
+
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.1.6...@lindorm-io/node-server@0.2.0) (2022-05-18)
 
 

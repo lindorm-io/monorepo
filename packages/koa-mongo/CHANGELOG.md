@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.7.6...@lindorm-io/koa-mongo@0.8.0) (2022-05-18)
+
+
+### Features
+
+* upgrade repository options to take entire connection object ([947e478](https://github.com/lindorm-io/monorepo/commit/947e478a76473763cc6a9cd2de032ba15f9c7d2d))
+
+
+
+
+
 ## [0.7.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.7.5...@lindorm-io/koa-mongo@0.7.6) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/koa-mongo
