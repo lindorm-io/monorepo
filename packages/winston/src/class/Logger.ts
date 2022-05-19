@@ -1,8 +1,9 @@
 import * as winston from "winston";
 import { LogLevel } from "../enum";
 import { WinstonError } from "../error";
-import { cloneDeep, get, isError, isObject, merge, set } from "lodash";
+import { cloneDeep, flatten, get, isArray, isError, isObject, merge, set } from "lodash";
 import { defaultFilterCallback, readableFormat } from "../util";
+import { snakeArray } from "@lindorm-io/core";
 import {
   FileTransportOptions,
   HttpTransportOptions,
@@ -22,25 +23,16 @@ export class Logger {
   private readonly filters: Array<Filter>;
   private readonly winston: winston.Logger;
 
-  private context: Record<string, string>;
+  private context: Array<string>;
   private session: Record<string, any> | undefined;
 
   public constructor(options: LoggerOptions = {}) {
-    this.filters = options.filters || [];
+    const { context = [], filters = [], parent, session = {} } = options;
 
-    if (options.parent) {
-      this.context = merge(cloneDeep(options.parent.context), options.context || {});
-      this.winston = options.parent.winston;
-    } else {
-      this.context = options.context || {};
-      this.winston = winston.createLogger();
-    }
-
-    if (options.session) {
-      this.session = options.session;
-    } else if (options.parent) {
-      this.session = merge(cloneDeep(options.parent.session), options.session || {});
-    }
+    this.filters = filters;
+    this.context = parent ? flatten([parent.context, snakeArray(context)]) : snakeArray(context);
+    this.session = parent ? merge(cloneDeep(parent.session), session) : session;
+    this.winston = parent ? parent.winston : winston.createLogger();
   }
 
   // public
@@ -105,31 +97,18 @@ export class Logger {
     });
   }
 
-  public createChildLogger(context: Record<string, string>): Logger {
-    if (!isObject(context)) {
+  public createChildLogger(context: Array<string>): Logger {
+    if (!isArray(context)) {
       throw new WinstonError("Invalid logger context");
     }
-
     return new Logger({ context, parent: this });
   }
 
-  public createSessionLogger(session: Record<string, any>): Logger {
+  public createSessionLogger(session: SessionMetadata): Logger {
     if (!isObject(session)) {
       throw new WinstonError("Invalid logger session");
     }
-
     return new Logger({ session, parent: this });
-  }
-
-  public addSessionMetadata(metadata: SessionMetadata): void {
-    if (!this.session) {
-      throw new WinstonError("Logger session not found");
-    }
-
-    this.session = {
-      ...this.session,
-      metadata,
-    };
   }
 
   public addFilter(path: string, callback?: FilterCallback): void {
@@ -187,11 +166,11 @@ export class Logger {
     this.winston.add(transport);
   }
 
-  public addContext(context: Record<string, string>): void {
-    if (!isObject(context)) {
+  public addContext(context: Array<string>): void {
+    if (!isArray(context)) {
       throw new Error("Invalid context");
     }
-    this.context = merge(cloneDeep(this.context), context);
+    this.context = flatten([this.context, context]);
   }
 
   public addSession(session: Record<string, any>): void {

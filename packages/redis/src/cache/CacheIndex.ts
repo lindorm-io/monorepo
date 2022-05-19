@@ -19,7 +19,7 @@ export class CacheIndex<Interface> implements ICacheBase {
     this.indexKey = options.indexKey;
     this.prefix = snakeCase(options.prefix);
 
-    this.logger = options.logger.createChildLogger(["CacheIndex", options.indexKey as string]);
+    this.logger = options.logger.createChildLogger(["CacheIndex", options.indexKey.toString()]);
   }
 
   // public

@@ -26,7 +26,7 @@ export class TokenIssuer {
     this.clockTolerance = options.clockTolerance || 0;
     this.issuer = options.issuer;
     this.keystore = options.keystore;
-    this.logger = options.logger.createChildLogger("TokenIssuer");
+    this.logger = options.logger.createChildLogger(["TokenIssuer"]);
   }
 
   public sign<

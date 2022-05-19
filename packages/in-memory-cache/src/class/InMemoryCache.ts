@@ -156,7 +156,7 @@ export class InMemoryCache<Data> {
     try {
       this.logger.debug("Fetching data using fetchDataFunction");
       await this.fetchDataFunction({
-        logger: this.logger.createChildLogger("FetchDataFunction"),
+        logger: this.logger.createChildLogger(["fetchDataFunction"]),
         scan: this.getArray.bind(this),
         clear: this.clearState.bind(this),
         delete: this.delete.bind(this),

@@ -7,11 +7,11 @@ export type SessionMetadata = Record<string, string | number | boolean>;
 export type FilterCallback = (data: any) => string;
 
 export interface LoggerMessage extends TransformableInfo {
-  context: Record<string, string>;
+  context: Array<string>;
   details: LogDetails;
   level: LogLevel;
   message: string;
-  session: Record<string, any>;
+  session: SessionMetadata;
 }
 
 export interface Filter {
@@ -20,10 +20,10 @@ export interface Filter {
 }
 
 export interface LoggerOptions {
-  context?: Record<string, string>;
+  context?: Array<string>;
   filters?: Array<Filter>;
   parent?: Logger;
-  session?: Record<string, any>;
+  session?: SessionMetadata;
 }
 
 export interface LoggerTransportOptions {

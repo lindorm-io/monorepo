@@ -24,7 +24,7 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
       ...options.indices,
     ];
 
-    this.logger = options.logger.createChildLogger(["repository", this.collectionName]);
+    this.logger = options.logger.createChildLogger(["RepositoryBase", this.constructor.name]);
     this.promise = this.initialise;
   }
 

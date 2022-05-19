@@ -14,7 +14,7 @@ export abstract class RedisConnectionBase implements IRedisConnection {
 
     this.clientOptions = clientOptions;
     this.connected = false;
-    this.logger = winston.createChildLogger("RedisConnection");
+    this.logger = winston.createChildLogger(["RedisConnectionBase", this.constructor.name]);
   }
 
   public client(): Redis {

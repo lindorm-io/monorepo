@@ -25,7 +25,7 @@ export class Axios {
   public constructor(options: AxiosOptions) {
     this.port = options.port;
     this.host = options.host;
-    this.logger = options.logger.createChildLogger("Axios");
+    this.logger = options.logger.createChildLogger(["Axios", options.name]);
     this.middleware = options.middleware || [];
     this.name = options.name;
   }

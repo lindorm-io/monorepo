@@ -2,7 +2,7 @@ import { CacheBase } from "./CacheBase";
 import { CacheIndex } from "./CacheIndex";
 import { ILindormCache, LindormCacheFindOptions, LindormCacheOptions } from "../types";
 import { RedisError } from "../error";
-import { find, filter as _filter, flatten, snakeCase, uniqBy } from "lodash";
+import { find, filter as _filter, flatten, uniqBy, snakeCase } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import {
   EntityAttributes,
@@ -29,8 +29,6 @@ export abstract class LindormCache<
     super(options);
 
     this.prefix = snakeCase(options.entityName);
-    this.logger = this.logger.createChildLogger(options.entityName);
-
     this.indices = [];
 
     for (const attributeKey of options.indexedAttributes) {

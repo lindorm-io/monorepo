@@ -41,7 +41,7 @@ export class IntervalWorker extends EventEmitter {
     this.retry = options.retry;
     this.time = options.time;
 
-    this.logger = options.logger.createChildLogger("interval-worker");
+    this.logger = options.logger.createChildLogger(["IntervalWorker"]);
   }
 
   public trigger(attempt = 0): void {

@@ -13,6 +13,6 @@ export abstract class CacheBase {
     this.connection = options.connection;
     this.client = this.connection.client();
     this.expiresInSeconds = options.expiresInSeconds || undefined;
-    this.logger = options.logger.createChildLogger("CacheBase");
+    this.logger = options.logger.createChildLogger(["CacheBase", this.constructor.name]);
   }
 }

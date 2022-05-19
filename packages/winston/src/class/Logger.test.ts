@@ -20,11 +20,7 @@ describe("Logger.ts", () => {
   });
 
   test("should be able to create a child logger with an array of context", () => {
-    instance.createChildLogger({ one: "one", two: "two", three: "three" });
-  });
-
-  test("should be able to create a child logger with a string context", () => {
-    instance.createChildLogger({ string: "string" });
+    instance.createChildLogger(["one", "two", "three"]);
   });
 
   test("should be able to create a session logger with an object session", () => {
@@ -33,7 +29,7 @@ describe("Logger.ts", () => {
 
   test("should add metadata to session", () => {
     const session = instance.createSessionLogger({ id: "1" });
-    session.addSessionMetadata({ data: "two" });
+    session.addSession({ data: "two" });
   });
 
   test("should throw error when the context is wrong", () => {
@@ -46,17 +42,6 @@ describe("Logger.ts", () => {
     expect(() => instance.createSessionLogger(12345)).toThrow(Error);
   });
 
-  test("should throw error when session already exists", () => {
-    const session = instance.createSessionLogger({ id: "1" });
-
-    // @ts-ignore
-    expect(() => session.createSessionLogger({ id: "2" })).toThrow(Error);
-  });
-
-  test("should throw error when session does not exist", () => {
-    expect(() => instance.addSessionMetadata({ data: "two" })).toThrow(Error);
-  });
-
   test("should add filter", () => {
     instance.addFilter("filtered.path.message");
     instance.silly("message", {
@@ -65,7 +50,7 @@ describe("Logger.ts", () => {
     });
 
     expect(winstonLog).toHaveBeenCalledWith({
-      context: {},
+      context: [],
       details: {
         filtered: {
           path: {

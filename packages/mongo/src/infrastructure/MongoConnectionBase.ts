@@ -17,7 +17,7 @@ export abstract class MongoConnectionBase implements IMongoConnection {
 
     this.clientOptions = clientOptions;
     this.databaseName = database;
-    this.logger = winston.createChildLogger("MongoConnection");
+    this.logger = winston.createChildLogger(["MongoConnectionBase", this.constructor.name]);
     this.url = `mongodb://${host}:${port}/`;
   }
 

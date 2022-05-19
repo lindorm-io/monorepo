@@ -5,8 +5,8 @@ const logger = new Logger();
 
 logger.addConsole(LogLevel.INFO, { readable: true, colours: true, timestamp: true });
 
-const child1 = logger.createChildLogger({ parent: "logger" });
-const child2 = child1.createChildLogger({ parent: "child1" });
+const child1 = logger.createChildLogger(["logger"]);
+const child2 = child1.createChildLogger(["child1"]);
 
 const data = { one: 1, two: "two" };
 
@@ -33,7 +33,7 @@ logger.error(
 
 logger.info("this will be displayed with a details object", { details: "data" });
 
-logger.addContext({ extra: "extra", stuff: "stuff" });
+logger.addContext(["extra", "stuff"]);
 
 logger.info("this will be displayed with a context object");
 
