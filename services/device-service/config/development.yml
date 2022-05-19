@@ -6,8 +6,8 @@ mongo:
   password: example
 
 oauth:
-  client_id: id
-  client_secret: secret
+  client_id: 8da48653-ba29-416e-b882-393b60dce178
+  client_secret: X4P2a8llWDVJbtzRAVnHObcLyOMAe2vYa2GAs2kSNXonlRcWblDYU07bJxC20B8Co2PJKpTITUBs2hEOV90Vr4o5zKhYme067RortdPmGoVpa6neHqNDZGIF1YXVcp36
 
 redis:
   host: localhost

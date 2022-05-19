@@ -10,7 +10,7 @@ mongo:
   password: example
 
 oauth:
-  client_id: id
+  client_id: 6e4d37bf-6121-4851-9229-52ea6530a297
 
 redis:
   host: localhost

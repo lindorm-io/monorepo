@@ -10,8 +10,8 @@ redis:
   port: 3402
 
 oauth:
-  client_id: id
-  client_secret: secret
+  client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
+  client_secret: bAJL5tCZr5lWBmJieQKqyFN9mBf8qN1G00YlIlTMtURg3gxJyFUSHvNvCTje3rdXNTifCX4xZHXeX8hvcWjgpmaZv9dS79OX2wK25XCl3NCI7DTwHIrBzL1zzh6A2uOb
 
 server:
   domain: https://development.lindorm.io

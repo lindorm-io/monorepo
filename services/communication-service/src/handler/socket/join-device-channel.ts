@@ -1,6 +1,7 @@
 import { ServerSocket } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 import { ChallengeConfirmationTokenClaims } from "../../common";
+import { configuration } from "../../server/configuration";
 
 export const joinDeviceChannel = (socket: ServerSocket): ServerSocket =>
   socket.on("join_device_channel", (token: string) => {
@@ -12,7 +13,9 @@ export const joinDeviceChannel = (socket: ServerSocket): ServerSocket =>
       });
     }
 
-    const verified = jwt.verify<Record<string, any>, ChallengeConfirmationTokenClaims>(token);
+    const verified = jwt.verify<Record<string, any>, ChallengeConfirmationTokenClaims>(token, {
+      issuer: configuration.services.device_service.issuer,
+    });
 
     socket.join(verified.claims.deviceLinkId);
   });
