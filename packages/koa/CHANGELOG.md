@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.7...@lindorm-io/koa@0.12.8) (2022-05-19)
+
+
+### Bug Fixes
+
+* restore logger context methods ([6535fde](https://github.com/lindorm-io/monorepo/commit/6535fdeab9701bf7e3f6c8a60b46f9058ea02a17))
+
+
+
+
+
 ## [0.12.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.6...@lindorm-io/koa@0.12.7) (2022-05-18)
 
 

@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.3.0...@lindorm-io/winston@0.4.0) (2022-05-19)
+
+
+### Bug Fixes
+
+* restore logger context methods ([6535fde](https://github.com/lindorm-io/monorepo/commit/6535fdeab9701bf7e3f6c8a60b46f9058ea02a17))
+* update context/session methods ([6518c0a](https://github.com/lindorm-io/monorepo/commit/6518c0a4e1fc9befe7a6479fd20707606138c5b0))
+
+
+### Features
+
+* remove unnecessary winston instance class ([99f0e16](https://github.com/lindorm-io/monorepo/commit/99f0e1690b75ff31568bf749033d5387ac125a25))
+* replace context array with object ([d33d411](https://github.com/lindorm-io/monorepo/commit/d33d41159f85f502aed1bf1db6977642e329c618))
+
+
+
+
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.2.2...@lindorm-io/winston@0.3.0) (2022-05-17)
 
 

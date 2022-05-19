@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.7...@lindorm-io/in-memory-cache@0.1.8) (2022-05-19)
+
+
+### Bug Fixes
+
+* restore logger context methods ([6535fde](https://github.com/lindorm-io/monorepo/commit/6535fdeab9701bf7e3f6c8a60b46f9058ea02a17))
+
+
+
+
+
 ## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.6...@lindorm-io/in-memory-cache@0.1.7) (2022-05-17)
 
 **Note:** Version bump only for package @lindorm-io/in-memory-cache
