@@ -1,5 +1,5 @@
 oauth:
-  client_id: secret
+  client_id: id
   client_secret: secret
 
 redis:

@@ -10,7 +10,7 @@ redis:
   port: 3402
 
 oauth:
-  client_id: secret
+  client_id: id
   client_secret: secret
 
 server:

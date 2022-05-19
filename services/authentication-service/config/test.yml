@@ -9,7 +9,7 @@ mongo:
   password: example
 
 oauth:
-  client_id: secret
+  client_id: id
   client_secret: secret
 
 oidc_providers:
