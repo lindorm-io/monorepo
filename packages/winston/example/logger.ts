@@ -49,9 +49,13 @@ logger2.info("this will not have any colour", { details: "data" });
 
 logger2.info("data is not changed", data);
 
-logger.addFilter("two");
+logger.setFilter("two");
 
 logger.info("this will be filtered", data);
+
+logger.deleteFilter("two");
+
+logger.info("this will not be filtered", data);
 
 logger2.info("this will not be filtered", data);
 

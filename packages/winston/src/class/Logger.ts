@@ -1,6 +1,6 @@
 import * as winston from "winston";
 import { LogLevel } from "../enum";
-import { WinstonError } from "../error";
+import { LoggerError } from "../error";
 import { cloneDeep, flatten, get, isArray, isError, isObject, merge, set } from "lodash";
 import { defaultFilterCallback, readableFormat } from "../util";
 import { snakeArray } from "@lindorm-io/core";
@@ -10,7 +10,7 @@ import {
   StreamTransportOptions,
 } from "winston/lib/winston/transports";
 import {
-  Filter,
+  FilterRecord,
   FilterCallback,
   LogDetails,
   LoggerMessage,
@@ -20,17 +20,17 @@ import {
 } from "../types";
 
 export class Logger {
-  private readonly filters: Array<Filter>;
   private readonly winston: winston.Logger;
 
   private context: Array<string>;
+  private filters: FilterRecord;
   private session: Record<string, any> | undefined;
 
   public constructor(options: LoggerOptions = {}) {
-    const { context = [], filters = [], parent, session = {} } = options;
+    const { context = [], filters = {}, parent, session = {} } = options;
 
-    this.filters = filters;
     this.context = parent ? flatten([parent.context, snakeArray(context)]) : snakeArray(context);
+    this.filters = parent ? { ...parent.filters, ...filters } : filters;
     this.session = parent ? merge(cloneDeep(parent.session), session) : session;
     this.winston = parent ? parent.winston : winston.createLogger();
   }
@@ -99,20 +99,28 @@ export class Logger {
 
   public createChildLogger(context: Array<string>): Logger {
     if (!isArray(context)) {
-      throw new WinstonError("Invalid logger context");
+      throw new LoggerError("Invalid logger context");
     }
     return new Logger({ context, parent: this });
   }
 
   public createSessionLogger(session: SessionMetadata): Logger {
     if (!isObject(session)) {
-      throw new WinstonError("Invalid logger session");
+      throw new LoggerError("Invalid logger session");
     }
     return new Logger({ session, parent: this });
   }
 
-  public addFilter(path: string, callback?: FilterCallback): void {
-    this.filters.push({ path, callback });
+  public setFilter(path: string, callback?: FilterCallback): void {
+    this.filters[path] = callback || defaultFilterCallback;
+  }
+
+  public deleteFilter(path: string): void {
+    this.filters[path] = undefined;
+  }
+
+  public clearFilters(): void {
+    this.filters = {};
   }
 
   public addConsole(
@@ -170,7 +178,7 @@ export class Logger {
     if (!isArray(context)) {
       throw new Error("Invalid context");
     }
-    this.context = flatten([this.context, context]);
+    this.context = flatten([this.context, snakeArray(context)]);
   }
 
   public addSession(session: Record<string, any>): void {
@@ -188,14 +196,13 @@ export class Logger {
 
     const data = cloneDeep(details);
 
-    for (const filter of this.filters) {
-      const item = get(data, filter.path);
+    for (const [path, callback] of Object.entries(this.filters)) {
+      if (!callback) continue;
 
+      const item = get(data, path);
       if (!item) continue;
 
-      const callback = filter.callback || defaultFilterCallback;
-
-      set(data, filter.path, callback(item));
+      set(data, path, callback(item));
     }
 
     return data;

@@ -2,9 +2,10 @@ import { LogLevel } from "../enum";
 import { Logger } from "../class";
 import { TransformableInfo } from "logform";
 
+export type FilterCallback = (data: any) => string;
+export type FilterRecord = Record<string, FilterCallback>;
 export type LogDetails = Record<string, any> | Error | null;
 export type SessionMetadata = Record<string, string | number | boolean>;
-export type FilterCallback = (data: any) => string;
 
 export interface LoggerMessage extends TransformableInfo {
   context: Array<string>;
@@ -14,14 +15,9 @@ export interface LoggerMessage extends TransformableInfo {
   session: SessionMetadata;
 }
 
-export interface Filter {
-  path: string;
-  callback?: FilterCallback;
-}
-
 export interface LoggerOptions {
   context?: Array<string>;
-  filters?: Array<Filter>;
+  filters?: FilterRecord;
   parent?: Logger;
   session?: SessionMetadata;
 }

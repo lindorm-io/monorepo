@@ -1,1 +1,1 @@
-export * from "./WinstonError";
+export * from "./LoggerError";
