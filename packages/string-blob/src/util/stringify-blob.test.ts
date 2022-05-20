@@ -7,31 +7,31 @@ MockDate.set("2020-01-01T08:00:00.000Z");
 describe("stringifyBlob", () => {
   test("should create a text blob with json and meta values", () => {
     const blobObject: any = {
-      array: [
+      foo: [
         true,
         new Date(),
         12345,
         "string",
         {
-          array: [true, 123, "arr", null, undefined],
-          bool: false,
-          date: new Date(),
-          num: 123,
-          str: "str",
+          ipsum: [true, 123, "arr", null, undefined],
+          dolor: false,
+          sit: new Date(),
+          amet: 123,
+          consectetur: "str",
         },
       ],
-      boolean: true,
-      date: new Date(),
-      number: 12345,
-      object: {
-        a: "a",
-        b: 1,
-        c: null,
-        d: true,
-        e: [],
-        f: undefined,
+      bar: true,
+      baz: new Date(),
+      qux: 12345,
+      fred: {
+        adipiscing: "a",
+        elit: 1,
+        sed: null,
+        do: true,
+        eiusmod: [],
+        tempor: undefined,
       },
-      string: "string",
+      thud: "string",
     };
 
     expect(stringifyBlob(blobObject)).toMatchSnapshot();

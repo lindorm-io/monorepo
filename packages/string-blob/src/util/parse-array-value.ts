@@ -1,3 +1,4 @@
+import { MetaType } from "../enum";
 import { isArrayStrict, isObjectStrict } from "@lindorm-io/core";
 import { isBoolean } from "lodash";
 import { parseErrorValue } from "./parse-error-value";
@@ -13,19 +14,19 @@ export const parseArrayValue = (input: any, meta: Record<string, any>): Array<an
       result.push(parseObjectValue(value, meta[index]));
     } else if (isArrayStrict(meta[index])) {
       result.push(parseArrayValue(value, meta[index]));
-    } else if (meta[index] === "boolean") {
+    } else if (meta[index] === MetaType.BOOLEAN) {
       result.push(isBoolean(value) ? value : JSON.parse(value));
-    } else if (meta[index] === "date") {
+    } else if (meta[index] === MetaType.DATE) {
       result.push(new Date(value));
-    } else if (meta[index] === "error") {
+    } else if (meta[index] === MetaType.ERROR) {
       result.push(parseErrorValue(value));
-    } else if (meta[index] === "number") {
+    } else if (meta[index] === MetaType.NUMBER) {
       result.push(parseInt(value, 10));
-    } else if (meta[index] === "string") {
+    } else if (meta[index] === MetaType.STRING) {
       result.push(value);
-    } else if (meta[index] === "null") {
+    } else if (meta[index] === MetaType.NULL) {
       result.push(null);
-    } else if (meta[index] === "undefined") {
+    } else if (meta[index] === MetaType.UNDEFINED) {
       result.push(undefined);
     }
   }
