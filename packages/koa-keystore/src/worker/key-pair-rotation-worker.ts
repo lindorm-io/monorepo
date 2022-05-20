@@ -40,7 +40,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         logger,
       });
 
-      const keys = await repository.findMany({ expires: { $gt: new Date() } });
+      const keys = await repository.findMany({ expires: { $gt: new Date() }, type: keyType });
       const now = new Date();
 
       if (!keys.length) {
