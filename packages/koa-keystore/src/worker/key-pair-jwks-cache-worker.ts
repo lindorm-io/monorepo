@@ -43,8 +43,6 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
-      await redisConnection.waitForConnection();
-
       const cache = new KeyPairCache({
         connection: redisConnection,
         logger,

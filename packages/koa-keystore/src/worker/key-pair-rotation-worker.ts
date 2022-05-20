@@ -2,11 +2,12 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
-import { add, sub } from "date-fns";
+import { add } from "date-fns";
 import { generateKeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";
 import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/core";
 
 interface Options {
+  keyExpiry?: string;
   keyType?: KeyType;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
@@ -19,12 +20,13 @@ interface Options {
 
 export const keyPairRotationWorker = (options: Options): IntervalWorker => {
   const {
+    keyExpiry = "120 days",
     keyType = KeyType.EC,
     mongoConnection,
     namedCurve = NamedCurve.P521,
     passphrase = "",
     retry = 3,
-    rotationInterval = "90 days",
+    rotationInterval = "30 days",
     winston,
     workerInterval = "1 days",
   } = options;
@@ -39,6 +41,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
       });
 
       const keys = await repository.findMany({ expires: { $gt: new Date() } });
+      const now = new Date();
 
       if (!keys.length) {
         logger.warn("no valid keypair found", { keys });
@@ -49,35 +52,37 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           type: keyType,
         });
 
-        keyPair.expires = add(new Date(), stringToDurationObject(rotationInterval));
+        keyPair.allowed = now;
+        keyPair.expires = add(now, stringToDurationObject(keyExpiry));
 
-        logger.verbose("generating new keypair", {
+        logger.verbose("Adding KeyPair to repository", {
           id: keyPair.id,
+          allowed: keyPair.allowed,
           expires: keyPair.expires,
-          namedCurve: keyPair.namedCurve,
           type: keyPair.type,
         });
 
         await repository.create(keyPair);
       }
 
-      if (keys.length === 1) {
-        const next = keys[0];
+      if (keys.length < 2) {
+        const keyPair = await generateKeyPair({
+          namedCurve,
+          passphrase,
+          type: keyType,
+        });
 
-        if (next.expires) {
-          const keyPair = await generateKeyPair({
-            namedCurve,
-            passphrase,
-            type: keyType,
-          });
+        keyPair.allowed = add(now, stringToDurationObject(rotationInterval));
+        keyPair.expires = add(keyPair.allowed, stringToDurationObject(keyExpiry));
 
-          keyPair.allowed = sub(next.expires, stringToDurationObject("2 days"));
-          keyPair.expires = add(next.expires, stringToDurationObject(rotationInterval));
+        logger.verbose("Adding KeyPair to repository", {
+          id: keyPair.id,
+          allowed: keyPair.allowed,
+          expires: keyPair.expires,
+          type: keyPair.type,
+        });
 
-          await repository.create(keyPair);
-        } else {
-          logger.warn("keypair will never expire", next);
-        }
+        await repository.create(keyPair);
       }
     },
     logger,
