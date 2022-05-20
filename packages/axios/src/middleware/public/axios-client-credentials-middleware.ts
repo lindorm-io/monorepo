@@ -1,6 +1,6 @@
 import { Axios } from "../../class";
 import { AxiosMiddleware, AxiosRequest, OAuthTokenResponseData } from "../../types";
-import { difference } from "lodash";
+import { difference, flatten, uniq } from "lodash";
 import { getUnixTime } from "date-fns";
 import { MetadataHeader } from "../../enum";
 
@@ -46,7 +46,7 @@ export const axiosClientCredentialsMiddleware = (middlewareOptions: MiddlewareOp
             clientId,
             clientSecret,
             grantType,
-            scope: scopes.join(" "),
+            scope: uniq(flatten([bearerScopes, scopes])).join(" "),
           },
           headers: {
             [MetadataHeader.CLIENT_ID]: clientId,
@@ -55,7 +55,7 @@ export const axiosClientCredentialsMiddleware = (middlewareOptions: MiddlewareOp
           },
         });
 
-        bearerScopes = scope;
+        bearerScopes = uniq(flatten([bearerScopes, scope]));
         bearerTimeout = now + expiresIn - timeoutAdjustment;
         bearerToken = accessToken;
       }

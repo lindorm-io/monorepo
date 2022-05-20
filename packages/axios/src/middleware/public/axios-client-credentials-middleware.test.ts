@@ -22,15 +22,15 @@ describe("axiosClientCredentialsMiddleware", () => {
       middleware: [],
     });
 
-    request.mockResolvedValue({
+    request.mockImplementation(async (input) => ({
       status: 200,
       statusText: "OK",
       data: {
         accessToken: "jwt.jwt.jwt",
         expiresIn: 900,
-        scope: ["scope1", "scope2"],
+        scope: input.data.scope.split(" "),
       },
-    });
+    }));
 
     middleware = axiosClientCredentialsMiddleware({
       clientEnvironment: "clientEnvironment",
@@ -97,8 +97,7 @@ describe("axiosClientCredentialsMiddleware", () => {
       params: { params: true },
     });
 
-    expect(request.mock.calls[0]).not.toBeUndefined();
-    expect(request.mock.calls[1]).toBeUndefined();
+    expect(request.mock.calls).toMatchSnapshot();
   });
 
   test("should perform client credentials request when forced", async () => {
@@ -114,8 +113,7 @@ describe("axiosClientCredentialsMiddleware", () => {
       params: { params: true },
     });
 
-    expect(request.mock.calls[0]).not.toBeUndefined();
-    expect(request.mock.calls[1]).not.toBeUndefined();
+    expect(request.mock.calls).toMatchSnapshot();
   });
 
   test("should perform client credentials request on token timeout", async () => {
@@ -135,8 +133,7 @@ describe("axiosClientCredentialsMiddleware", () => {
 
     MockDate.set("2020-01-01T08:00:00.000Z");
 
-    expect(request.mock.calls[0]).not.toBeUndefined();
-    expect(request.mock.calls[1]).not.toBeUndefined();
+    expect(request.mock.calls).toMatchSnapshot();
   });
 
   test("should perform client credentials request on differing scope", async () => {
@@ -152,7 +149,28 @@ describe("axiosClientCredentialsMiddleware", () => {
       params: { params: true },
     });
 
-    expect(request.mock.calls[0]).not.toBeUndefined();
-    expect(request.mock.calls[1]).not.toBeUndefined();
+    expect(request.mock.calls).toMatchSnapshot();
+  });
+
+  test("should merge scopes from different requests", async () => {
+    await middleware(axios, ["scope1", "scope2"]).request({
+      data: { data: true },
+      headers: { headers: true },
+      params: { params: true },
+    });
+
+    await middleware(axios, ["scope3", "scope4"]).request({
+      data: { data: true },
+      headers: { headers: true },
+      params: { params: true },
+    });
+
+    await middleware(axios, ["scope1", "scope4"]).request({
+      data: { data: true },
+      headers: { headers: true },
+      params: { params: true },
+    });
+
+    expect(request.mock.calls).toMatchSnapshot();
   });
 });
