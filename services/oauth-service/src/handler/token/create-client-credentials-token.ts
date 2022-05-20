@@ -8,6 +8,7 @@ import { configuration } from "../../server/configuration";
 export const createClientCredentialsToken = (
   ctx: ServerKoaContext,
   client: Client,
+  scopes: Array<string>,
 ): IssuerSignData => {
   const { jwt } = ctx;
 
@@ -15,7 +16,7 @@ export const createClientCredentialsToken = (
     audiences: [client.id],
     expiry: configuration.defaults.client_credentials_expiry,
     permissions: client.permissions,
-    scopes: client.allowed.scopes,
+    scopes,
     subject: client.id,
     subjectHint: SubjectHint.CLIENT,
     type: TokenType.ACCESS,

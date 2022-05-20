@@ -42,12 +42,12 @@ export const handleClientCredentialsGrant = async (
     });
   }
 
-  const { token: accessToken, expiresIn } = createClientCredentialsToken(ctx, client);
+  const { token: accessToken, expiresIn } = createClientCredentialsToken(ctx, client, scopes);
 
   return {
     accessToken,
     expiresIn,
-    scope: client.allowed.scopes,
+    scope: scopes,
     tokenType: "Bearer",
   };
 };

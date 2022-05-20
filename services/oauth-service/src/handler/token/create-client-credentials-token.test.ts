@@ -13,12 +13,14 @@ describe("createClientCredentialsToken", () => {
       },
     };
 
-    client = getTestClient();
+    client = getTestClient({
+      id: "dd40c850-07bf-4553-9ad3-6278fce82c24",
+    });
   });
 
   test("should create client credentials token", () => {
-    expect(createClientCredentialsToken(ctx, client)).toBe("signed");
+    expect(createClientCredentialsToken(ctx, client, ["scope1", "scope2"])).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign.mock.calls).toMatchSnapshot();
   });
 });

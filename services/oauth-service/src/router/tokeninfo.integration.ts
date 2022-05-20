@@ -12,6 +12,7 @@ import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
 } from "../test/integration";
+import { Scope } from "../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -59,7 +60,7 @@ describe("/tokeninfo", () => {
       jti: tokenId,
       loa: 2,
       nbf: 1609488000,
-      scope: ["address", "email", "offline_access", "openid", "phone", "profile"],
+      scope: Object.values(Scope),
       sid: browserSession.id,
       sub: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
       token_type: "access_token",
