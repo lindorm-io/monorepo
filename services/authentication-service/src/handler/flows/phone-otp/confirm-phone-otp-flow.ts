@@ -2,7 +2,7 @@ import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { identityAuthenticateIdentifier } from "../../axios";
-import { findOrCreateAccount } from "../../account";
+import { createAccountSalt } from "../../account";
 
 interface Options {
   otp: string;
@@ -14,7 +14,10 @@ export const confirmPhoneOtpFlow = async (
   flowSession: FlowSession,
   options: Options,
 ): Promise<Account> => {
-  const { logger } = ctx;
+  const {
+    logger,
+    repository: { accountRepository },
+  } = ctx;
 
   const { otp } = options;
 
@@ -36,5 +39,5 @@ export const confirmPhoneOtpFlow = async (
 
   logger.debug("Resolving Account");
 
-  return findOrCreateAccount(ctx, identityId);
+  return accountRepository.findOrCreate({ id: identityId }, createAccountSalt(ctx));
 };

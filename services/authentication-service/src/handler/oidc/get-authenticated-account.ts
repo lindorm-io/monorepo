@@ -3,8 +3,8 @@ import { OpenIDClaims } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { find } from "lodash";
-import { findOrCreateAccount } from "../account";
 import { identityAuthenticateOidc, identityUpdateUserinfo } from "../axios";
+import { createAccountSalt } from "../account";
 
 interface Options {
   subject: string;
@@ -17,7 +17,10 @@ export const getAuthenticatedAccount = async (
   oidcSession: OidcSession,
   options: Options,
 ): Promise<Account> => {
-  const { logger } = ctx;
+  const {
+    logger,
+    repository: { accountRepository },
+  } = ctx;
 
   const { subject, claims } = options;
 
@@ -39,5 +42,5 @@ export const getAuthenticatedAccount = async (
     ...claims,
   });
 
-  return findOrCreateAccount(ctx, identityId);
+  return accountRepository.findOrCreate({ id: identityId }, createAccountSalt(ctx));
 };

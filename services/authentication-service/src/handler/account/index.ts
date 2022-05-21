@@ -1,1 +1,1 @@
-export * from "./find-or-create-account";
+export * from "./create-account-salt";

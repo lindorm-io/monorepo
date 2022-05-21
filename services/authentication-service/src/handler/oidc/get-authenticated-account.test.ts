@@ -2,7 +2,6 @@ import { Account, LoginSession, OidcSession } from "../../entity";
 import { getAuthenticatedAccount } from "./get-authenticated-account";
 import { logger } from "../../test/logger";
 import { getTestAccount, getTestLoginSession, getTestOidcSession } from "../../test/entity";
-import { findOrCreateAccount as _findOrCreateAccount } from "../account";
 import {
   identityAuthenticateOidc as _identityAuthenticateOidc,
   identityUpdateUserinfo as _identityUpdateUserinfo,
@@ -11,7 +10,6 @@ import {
 jest.mock("../account");
 jest.mock("../axios");
 
-const findOrCreateAccount = _findOrCreateAccount as jest.Mock;
 const identityAuthenticateOidc = _identityAuthenticateOidc as jest.Mock;
 const identityUpdateUserinfo = _identityUpdateUserinfo as jest.Mock;
 
@@ -22,7 +20,14 @@ describe("getAuthenticatedAccount", () => {
   let options: any;
 
   beforeEach(() => {
-    ctx = { logger };
+    ctx = {
+      logger,
+      repository: {
+        accountRepository: {
+          findOrCreate: jest.fn().mockImplementation((arg) => getTestAccount(arg)),
+        },
+      },
+    };
 
     loginSession = getTestLoginSession();
     oidcSession = getTestOidcSession();
@@ -32,7 +37,6 @@ describe("getAuthenticatedAccount", () => {
       claims: { claims: true },
     };
 
-    findOrCreateAccount.mockImplementation(async (arg) => getTestAccount(arg));
     identityAuthenticateOidc.mockResolvedValue({ identityId: "identityId" });
   });
 
