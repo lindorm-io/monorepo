@@ -1,7 +1,7 @@
 import { RepositoryBase } from "./RepositoryBase";
 import { RepositoryError } from "../error";
 import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
-import { ILindormRepository } from "../types";
+import { ILindormRepository, PostChangeCallback } from "../types";
 import {
   EntityAttributes,
   EntityNotCreatedError,
@@ -53,7 +53,7 @@ export abstract class LindormRepository<
     return amount;
   }
 
-  public async create(entity: Entity): Promise<Entity> {
+  public async create(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
     await entity.schemaValidation();
 
     const start = Date.now();
@@ -81,6 +81,10 @@ export abstract class LindormRepository<
         },
       });
 
+      if (callback) {
+        await callback(entity);
+      }
+
       return entity;
     } catch (err: any) {
       throw new EntityNotCreatedError("Unable to create entity", {
@@ -89,17 +93,20 @@ export abstract class LindormRepository<
     }
   }
 
-  public async createMany(entities: Array<Entity>): Promise<Array<Entity>> {
+  public async createMany(
+    entities: Array<Entity>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.create(entity));
+      promises.push(this.create(entity, callback));
     }
 
     return Promise.all(promises);
   }
 
-  public async destroy(entity: Entity): Promise<void> {
+  public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
     const start = Date.now();
 
     const { id } = entity.toJSON();
@@ -122,6 +129,10 @@ export abstract class LindormRepository<
           time: Date.now() - start,
         },
       });
+
+      if (callback) {
+        await callback(entity);
+      }
     } catch (err: any) {
       throw new EntityNotRemovedError("Unable to remove entity", {
         error: err,
@@ -230,12 +241,15 @@ export abstract class LindormRepository<
     return entities;
   }
 
-  public async findOrCreate(filter: Partial<Interface>): Promise<Entity> {
+  public async findOrCreate(
+    filter: Partial<Interface>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Entity> {
     try {
       return await this.find(filter);
     } catch (err: any) {
       if (err instanceof EntityNotFoundError) {
-        return await this.create(this.createEntity(filter as Interface));
+        return await this.create(this.createEntity(filter as Interface), callback);
       }
       throw err;
     }
@@ -255,7 +269,7 @@ export abstract class LindormRepository<
     }
   }
 
-  public async update(entity: Entity): Promise<Entity> {
+  public async update(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
     await entity.schemaValidation();
 
     const start = Date.now();
@@ -296,6 +310,10 @@ export abstract class LindormRepository<
         });
       }
 
+      if (callback) {
+        await callback(entity);
+      }
+
       return entity;
     } catch (err: any) {
       throw new EntityNotUpdatedError("Unable to update entity", {
@@ -304,11 +322,14 @@ export abstract class LindormRepository<
     }
   }
 
-  public async updateMany(entities: Array<Entity>): Promise<Array<Entity>> {
+  public async updateMany(
+    entities: Array<Entity>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.update(entity));
+      promises.push(this.update(entity, callback));
     }
 
     return Promise.all(promises);
