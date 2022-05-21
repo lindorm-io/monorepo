@@ -1,7 +1,7 @@
+import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
+import { PostChangeCallback } from "../types";
 import { RepositoryBase } from "./RepositoryBase";
 import { RepositoryError } from "../error";
-import { CountDocumentsOptions, DeleteOptions, Filter, FindOptions } from "mongodb";
-import { ILindormRepository, PostChangeCallback } from "../types";
 import {
   EntityAttributes,
   EntityNotCreatedError,
@@ -12,12 +12,9 @@ import {
 } from "@lindorm-io/entity";
 
 export abstract class LindormRepository<
-    Interface extends EntityAttributes,
-    Entity extends ILindormEntity<Interface>,
-  >
-  extends RepositoryBase<Interface>
-  implements ILindormRepository<Interface, Entity>
-{
+  Interface extends EntityAttributes,
+  Entity extends ILindormEntity<Interface>,
+> extends RepositoryBase<Interface> {
   // protected
 
   protected abstract createEntity(data: Interface): Entity;
