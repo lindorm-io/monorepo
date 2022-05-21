@@ -9,4 +9,6 @@ export enum ClientPermission {
   IDENTITY_PUBLIC = "lindorm.io/identity-service/client/public",
   OAUTH_CONFIDENTIAL = "lindorm.io/oauth-service/client/confidential",
   OAUTH_PUBLIC = "lindorm.io/oauth-service/client/public",
+  VAULT_CONFIDENTIAL = "lindorm.io/vault-service/client/confidential",
+  VAULT_PUBLIC = "lindorm.io/vault-service/client/public",
 }

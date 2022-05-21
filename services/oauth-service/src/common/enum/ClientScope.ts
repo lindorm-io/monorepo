@@ -20,4 +20,10 @@ export enum ClientScope {
   OAUTH_LOGOUT_WRITE = "lindorm.io/oauth-service/client/logout:write",
   OAUTH_TENANT_READ = "lindorm.io/oauth-service/client/tenant:read",
   OAUTH_TENANT_WRITE = "lindorm.io/oauth-service/client/tenant:write",
+  VAULT_ENCRYPTED_RECORD_READ = "lindorm.io/vault-service/client/encrypted-record:read",
+  VAULT_ENCRYPTED_RECORD_WRITE = "lindorm.io/vault-service/client/encrypted-record:write",
+  VAULT_JWKS_PRIVATE_READ = "lindorm.io/vault-service/client/jwks-private:read",
+  VAULT_JWKS_PUBLIC_READ = "lindorm.io/vault-service/client/jwks-public:read",
+  VAULT_PROTECTED_RECORD_READ = "lindorm.io/vault-service/client/protected-record:read",
+  VAULT_PROTECTED_RECORD_WRITE = "lindorm.io/vault-service/client/protected-record:write",
 }
