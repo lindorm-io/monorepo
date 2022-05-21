@@ -26,3 +26,5 @@ services:
     host: https://communication.test.lindorm.io
   oauth_service:
     host: https://oauth.test.lindorm.io
+  vault_service:
+    host: https://vault.test.lindorm.io

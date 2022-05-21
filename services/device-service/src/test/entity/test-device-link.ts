@@ -21,10 +21,6 @@ export const getTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): Dev
     installationId: randomUUID(),
     name: "Test DeviceLink Name",
     pincode: null,
-    salt: {
-      aes: "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC",
-      sha: "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC",
-    },
     publicKey:
       "-----BEGIN RSA PUBLIC KEY-----\n" +
       "MIGJAoGBAKdVz2lIbQi1YU3Z0qRizpV9gAMW9Kmwms4aP+r7CKcu4w9/fMcV4v6P\n" +

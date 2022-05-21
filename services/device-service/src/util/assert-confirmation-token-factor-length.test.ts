@@ -1,4 +1,4 @@
-import { DeviceFactor } from "../enum";
+import { DeviceFactor } from "../common";
 import { assertConfirmationTokenFactorLength } from "./assert-confirmation-token-factor-length";
 
 describe("assertConfirmationTokenFactorLength", () => {

@@ -14,3 +14,5 @@ services:
     host: https://communication.lindorm.io
   oauth_service:
     host: https://oauth.lindorm.io
+  vault_service:
+    host: https://oauth.lindorm.io

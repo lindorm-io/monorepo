@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { updateDeviceLinkPincodeController } from "./update-pincode";
 import { getTestDeviceLink } from "../../test/entity";
+import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -15,7 +16,10 @@ jest.mock("@lindorm-io/crypto", () => ({
     }
   },
 }));
+jest.mock("../../handler");
 jest.mock("../../util");
+
+const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
 describe("updateDeviceLinkPincodeController", () => {
   let ctx: any;
@@ -38,6 +42,11 @@ describe("updateDeviceLinkPincodeController", () => {
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };
+
+    vaultGetSalt.mockResolvedValue({
+      aes: "aes",
+      sha: "sha",
+    });
   });
 
   test("should resolve and update deviceLink pincode", async () => {

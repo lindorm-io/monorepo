@@ -1,4 +1,4 @@
-import { RdcSessionType } from "../../enum";
+import { RdcSessionType } from "../../common";
 import { confirmRdcController } from "./confirm";
 import { getTestRdcSession } from "../../test/entity";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";

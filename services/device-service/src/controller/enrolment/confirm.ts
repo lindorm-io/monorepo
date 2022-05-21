@@ -1,12 +1,13 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { DeviceLink, DeviceLinkSalt } from "../../entity";
+import { DeviceLink } from "../../entity";
+import { DeviceLinkSalt, ServerKoaController } from "../../types";
 import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
-import { ServerKoaController } from "../../types";
 import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
+import { createDeviceLinkCallback } from "../../handler";
 import { getRandomString } from "@lindorm-io/core";
 import { includes } from "lodash";
 import {
@@ -85,10 +86,10 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
       name: enrolmentSession.name,
       pincode: pincode ? await crypto.encrypt(pincode) : undefined,
       publicKey: enrolmentSession.publicKey,
-      salt,
       trusted,
       uniqueId: enrolmentSession.uniqueId,
     }),
+    createDeviceLinkCallback(ctx, salt),
   );
 
   const { expiresIn, token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({

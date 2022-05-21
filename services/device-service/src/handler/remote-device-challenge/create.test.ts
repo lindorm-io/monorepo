@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { RdcSessionMode } from "../../common";
-import { RdcSessionType } from "../../enum";
+import { RdcSessionMode, RdcSessionType } from "../../common";
 import { createRdcSession } from "./create";
 import { getTestDeviceLink } from "../../test/entity";
 

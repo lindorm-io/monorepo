@@ -1,4 +1,5 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { CertificateMethod } from "../enum";
 import { SessionStatus } from "../common";
@@ -18,6 +19,17 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("/enrolments", () => {
   beforeAll(setupIntegration);
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/oauth2/token")
+    .times(999)
+    .reply(200, {
+      accessToken: "accessToken",
+      expiresIn: 100,
+      scope: ["scope"],
+    });
+
+  nock("https://vault.test.lindorm.io").post("/internal/vault").times(999).reply(201);
 
   test("POST /", async () => {
     const accessToken = getTestAccessToken({

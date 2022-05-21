@@ -1,8 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy, DeviceFactor } from "../enum";
-import { SessionStatus } from "../common";
+import { ChallengeStrategy, DeviceFactor, SessionStatus } from "../common";
 import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";

@@ -5,6 +5,7 @@ import { CryptoLayered } from "@lindorm-io/crypto";
 import { JOI_BIOMETRY } from "../../constant";
 import { JOI_GUID, JOI_JWT } from "../../common";
 import { assertConfirmationTokenFactorLength } from "../../util";
+import { vaultGetSalt } from "../../handler";
 
 interface RequestData {
   id: string;
@@ -33,9 +34,10 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
 
   assertConfirmationTokenFactorLength(challengeConfirmationToken, 2);
 
+  const salt = await vaultGetSalt(ctx, deviceLink);
   const crypto = new CryptoLayered({
-    aes: { secret: deviceLink.salt.aes },
-    sha: { secret: deviceLink.salt.sha },
+    aes: { secret: salt.aes },
+    sha: { secret: salt.sha },
   });
 
   deviceLink.biometry = await crypto.encrypt(biometry);

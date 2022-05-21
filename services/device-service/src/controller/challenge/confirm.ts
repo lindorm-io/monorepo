@@ -7,6 +7,7 @@ import { ServerKoaController } from "../../types";
 import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
+import { vaultGetSalt } from "../../handler";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,
@@ -70,9 +71,10 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
 
   const factors: Array<DeviceFactor> = [DeviceFactor.POSSESSION];
 
+  const salt = await vaultGetSalt(ctx, deviceLink);
   const crypto = new CryptoLayered({
-    aes: { secret: deviceLink.salt.aes },
-    sha: { secret: deviceLink.salt.sha },
+    aes: { secret: salt.aes },
+    sha: { secret: salt.sha },
   });
 
   switch (strategy) {

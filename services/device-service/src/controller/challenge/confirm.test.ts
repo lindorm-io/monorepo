@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
-import { ChallengeStrategy } from "../../enum";
+import { ChallengeStrategy } from "../../common";
 import { confirmChallengeController } from "./confirm";
 import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
+import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,6 +22,7 @@ jest.mock("../../handler");
 jest.mock("../../util");
 
 const assertCertificateChallenge = _assertCertificateChallenge as jest.Mock;
+const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
 describe("confirmChallengeController", () => {
   let ctx: any;
@@ -62,6 +64,11 @@ describe("confirmChallengeController", () => {
         },
       },
     };
+
+    vaultGetSalt.mockResolvedValue({
+      aes: "aes",
+      sha: "sha",
+    });
   });
 
   afterEach(jest.clearAllMocks);

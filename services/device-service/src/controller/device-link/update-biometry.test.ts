@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { updateDeviceLinkBiometryController } from "./update-biometry";
 import { getTestDeviceLink } from "../../test/entity";
+import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -15,8 +16,10 @@ jest.mock("@lindorm-io/crypto", () => ({
     }
   },
 }));
-
+jest.mock("../../handler");
 jest.mock("../../util");
+
+const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
 describe("updateDeviceLinkBiometryController", () => {
   let ctx: any;
@@ -40,6 +43,11 @@ describe("updateDeviceLinkBiometryController", () => {
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };
+
+    vaultGetSalt.mockResolvedValue({
+      aes: "aes",
+      sha: "sha",
+    });
   });
 
   test("should resolve and update deviceLink biometry", async () => {

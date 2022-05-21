@@ -2,6 +2,7 @@ import { SessionStatus } from "../../common";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
 import { getTestEnrolmentSession } from "../../test/entity";
+import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -14,9 +15,11 @@ jest.mock("@lindorm-io/crypto", () => ({
     }
   },
 }));
+jest.mock("../../handler");
 jest.mock("../../util");
 
 const assertCertificateChallenge = _assertCertificateChallenge as jest.Mock;
+const createDeviceCallback = createDeviceLinkCallback as jest.Mock;
 
 describe("confirmEnrolmentController", () => {
   let ctx: any;
@@ -58,6 +61,8 @@ describe("confirmEnrolmentController", () => {
         },
       },
     };
+
+    createDeviceCallback.mockImplementation(() => "post-challenge-callback");
   });
 
   afterEach(jest.clearAllMocks);
@@ -93,6 +98,7 @@ describe("confirmEnrolmentController", () => {
       expect.objectContaining({
         trusted: true,
       }),
+      "post-challenge-callback",
     );
   });
 
@@ -111,6 +117,7 @@ describe("confirmEnrolmentController", () => {
       expect.objectContaining({
         trusted: false,
       }),
+      "post-challenge-callback",
     );
   });
 });

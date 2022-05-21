@@ -5,8 +5,8 @@ import {
   getDeviceLinkInfoController,
   getDeviceLinkListController,
   getDeviceLinkInfoSchema,
-  removeDeviceLinkController,
-  removeDeviceLinkSchema,
+  deleteDeviceLinkController,
+  deleteDeviceLinkSchema,
   updateDeviceLinkBiometryController,
   updateDeviceLinkBiometrySchema,
   updateDeviceLinkPincodeController,
@@ -48,7 +48,7 @@ router.get(
 router.delete(
   "/:id",
   paramsMiddleware,
-  useSchema(removeDeviceLinkSchema),
+  useSchema(deleteDeviceLinkSchema),
   deviceLinkEntityMiddleware("data.id"),
   useAssertion({
     fromPath: {
@@ -56,7 +56,7 @@ router.delete(
       actual: "token.bearerToken.subject",
     },
   }),
-  useController(removeDeviceLinkController),
+  useController(deleteDeviceLinkController),
 );
 
 router.put(

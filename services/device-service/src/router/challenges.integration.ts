@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { ChallengeStrategy } from "../enum";
+import { ChallengeStrategy } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { getTestChallengeSession, getTestDeviceLink } from "../test/entity";
@@ -13,12 +13,32 @@ import {
   setupIntegration,
   signTestChallenge,
 } from "../test/integration";
+import nock from "nock";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("/challenges", () => {
   const salt =
     "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/oauth2/token")
+    .times(999)
+    .reply(200, {
+      accessToken: "accessToken",
+      expiresIn: 100,
+      scope: ["scope"],
+    });
+
+  nock("https://vault.test.lindorm.io")
+    .get((uri) => uri.includes("/internal/vault"))
+    .times(999)
+    .reply(200, {
+      data: {
+        aes: salt,
+        sha: salt,
+      },
+    });
 
   const crypto = new CryptoLayered({
     aes: { secret: salt },

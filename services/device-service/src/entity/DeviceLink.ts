@@ -11,11 +11,6 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface DeviceLinkSalt {
-  aes: string;
-  sha: string;
-}
-
 export interface DeviceLinkAttributes extends EntityAttributes {
   active: boolean;
   biometry: string | null;
@@ -27,12 +22,14 @@ export interface DeviceLinkAttributes extends EntityAttributes {
   name: string | null;
   pincode: string | null;
   publicKey: string;
-  salt: DeviceLinkSalt;
   trusted: boolean;
   uniqueId: string;
 }
 
-export type DeviceLinkOptions = Optional<DeviceLinkAttributes, EntityKeys | "active" | "trusted">;
+export type DeviceLinkOptions = Optional<
+  DeviceLinkAttributes,
+  EntityKeys | "active" | "biometry" | "pincode" | "trusted"
+>;
 
 const schema = Joi.object<DeviceLinkAttributes>({
   ...JOI_ENTITY_BASE,
@@ -47,10 +44,6 @@ const schema = Joi.object<DeviceLinkAttributes>({
   name: Joi.string().allow(null).required(),
   pincode: Joi.string().base64().allow(null).required(),
   publicKey: Joi.string().required(),
-  salt: Joi.object({
-    aes: Joi.string().length(128).required(),
-    sha: Joi.string().length(128).required(),
-  }).required(),
   trusted: Joi.boolean().required(),
   uniqueId: JOI_GUID.required(),
 });
@@ -62,7 +55,6 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
   public readonly identityId: string;
   public readonly installationId: string;
   public readonly publicKey: string;
-  public readonly salt: DeviceLinkSalt;
   public readonly uniqueId: string;
 
   private _active: boolean;
@@ -80,7 +72,6 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
     this.identityId = options.identityId;
     this.installationId = options.installationId;
     this.publicKey = options.publicKey;
-    this.salt = options.salt;
     this.uniqueId = options.uniqueId;
 
     this._active = options.active === true;
@@ -152,7 +143,6 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
       name: this.name,
       pincode: this.pincode,
       publicKey: this.publicKey,
-      salt: this.salt,
       trusted: this.trusted,
       uniqueId: this.uniqueId,
     };

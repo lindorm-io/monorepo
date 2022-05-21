@@ -1,17 +1,18 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
+import { ServerKoaController } from "../../types";
+import { destroyDeviceLinkCallback } from "../../handler";
 
 interface RequestData {
   id: string;
 }
 
-export const removeDeviceLinkSchema = Joi.object<RequestData>({
+export const deleteDeviceLinkSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
 });
 
-export const removeDeviceLinkController: ServerKoaController<RequestData> = async (
+export const deleteDeviceLinkController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -19,7 +20,7 @@ export const removeDeviceLinkController: ServerKoaController<RequestData> = asyn
     repository: { deviceLinkRepository },
   } = ctx;
 
-  await deviceLinkRepository.destroy(deviceLink);
+  await deviceLinkRepository.destroy(deviceLink, destroyDeviceLinkCallback(ctx));
 
   return {
     body: {},

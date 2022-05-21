@@ -2,7 +2,7 @@ import { Axios } from "@lindorm-io/axios";
 import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
 import { Controller } from "@lindorm-io/koa";
 import { IssuerVerifyData } from "@lindorm-io/jwt";
-import { VerifiedChallengeConfirmationToken } from "../common/typing/token";
+import { VerifiedChallengeConfirmationToken } from "../common";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,
@@ -22,6 +22,7 @@ import {
 interface ServerAxios extends LindormNodeServerAxios {
   communicationClient: Axios;
   oauthClient: Axios;
+  vaultClient: Axios;
 }
 
 interface ServerCache extends LindormNodeServerCache {
