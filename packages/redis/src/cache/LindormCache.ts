@@ -70,14 +70,14 @@ export abstract class LindormCache<
     entities: Array<Entity>,
     expiresInSeconds?: number,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<Entity>> {
+  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.create(entity, expiresInSeconds, callback));
     }
 
-    return Promise.all(promises);
+    return Promise.allSettled<Entity>(promises);
   }
 
   public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
@@ -91,7 +91,7 @@ export abstract class LindormCache<
   public async destroyMany(
     filter: Partial<Interface>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<void>> {
+  ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
     const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
 
     if (!results.length) return;
@@ -102,7 +102,7 @@ export abstract class LindormCache<
       promises.push(this.destroy(entity, callback));
     }
 
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
   }
 
   public async find(
@@ -197,14 +197,14 @@ export abstract class LindormCache<
     entities: Array<Entity>,
     expiresInSeconds?: number,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<Entity>> {
+  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.update(entity, expiresInSeconds, callback));
     }
 
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
   }
 
   // private

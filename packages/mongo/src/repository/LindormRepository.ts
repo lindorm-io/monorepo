@@ -93,14 +93,14 @@ export abstract class LindormRepository<
   public async createMany(
     entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<Entity>> {
+  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.create(entity, callback));
     }
 
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
   }
 
   public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
@@ -322,13 +322,13 @@ export abstract class LindormRepository<
   public async updateMany(
     entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<Entity>> {
+  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.update(entity, callback));
     }
 
-    return Promise.all(promises);
+    return Promise.allSettled(promises);
   }
 }
