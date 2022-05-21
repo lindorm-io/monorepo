@@ -1,6 +1,11 @@
 import { CacheBase } from "./CacheBase";
 import { CacheIndex } from "./CacheIndex";
-import { ILindormCache, LindormCacheFindOptions, LindormCacheOptions } from "../types";
+import {
+  ILindormCache,
+  LindormCacheFindOptions,
+  LindormCacheOptions,
+  PostChangeCallback,
+} from "../types";
 import { RedisError } from "../error";
 import { find, filter as _filter, flatten, uniqBy, snakeCase } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
@@ -47,7 +52,11 @@ export abstract class LindormCache<
 
   // public
 
-  public async create(entity: Entity, expiresInSeconds?: number): Promise<Entity> {
+  public async create(
+    entity: Entity,
+    expiresInSeconds?: number,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Entity> {
     await entity.schemaValidation();
 
     try {
@@ -58,27 +67,39 @@ export abstract class LindormCache<
       });
     }
 
+    if (callback) {
+      await callback(entity);
+    }
+
     return entity;
   }
 
   public async createMany(
     entities: Array<Entity>,
     expiresInSeconds?: number,
+    callback?: PostChangeCallback<Entity>,
   ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.create(entity, expiresInSeconds));
+      promises.push(this.create(entity, expiresInSeconds, callback));
     }
 
     return Promise.all(promises);
   }
 
-  public async destroy(entity: Entity): Promise<void> {
+  public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
     await this.delEntity(entity);
+
+    if (callback) {
+      await callback(entity);
+    }
   }
 
-  public async destroyMany(filter: Partial<Interface>): Promise<Array<void>> {
+  public async destroyMany(
+    filter: Partial<Interface>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Array<void>> {
     const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
 
     if (!results.length) return;
@@ -86,7 +107,7 @@ export abstract class LindormCache<
     const promises = [];
 
     for (const entity of results) {
-      promises.push(this.destroy(entity));
+      promises.push(this.destroy(entity, callback));
     }
 
     return Promise.all(promises);
@@ -125,6 +146,7 @@ export abstract class LindormCache<
   public async findOrCreate(
     filter: Partial<Interface>,
     expiresInSeconds?: number,
+    callback?: PostChangeCallback<Entity>,
   ): Promise<Entity> {
     try {
       return await this.find(filter);
@@ -133,7 +155,7 @@ export abstract class LindormCache<
         throw err;
       }
 
-      return await this.create(this.createEntity(filter as Interface), expiresInSeconds);
+      return await this.create(this.createEntity(filter as Interface), expiresInSeconds, callback);
     }
   }
 
@@ -155,7 +177,11 @@ export abstract class LindormCache<
     return await this.client.ttl(this.getKey(entity.id));
   }
 
-  public async update(entity: Entity, expiresInSeconds?: number): Promise<Entity> {
+  public async update(
+    entity: Entity,
+    expiresInSeconds?: number,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Entity> {
     await entity.schemaValidation();
 
     entity.updated = new Date();
@@ -168,17 +194,22 @@ export abstract class LindormCache<
       });
     }
 
+    if (callback) {
+      await callback(entity);
+    }
+
     return entity;
   }
 
   public async updateMany(
     entities: Array<Entity>,
     expiresInSeconds?: number,
+    callback?: PostChangeCallback<Entity>,
   ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.update(entity, expiresInSeconds));
+      promises.push(this.update(entity, expiresInSeconds, callback));
     }
 
     return Promise.all(promises);
