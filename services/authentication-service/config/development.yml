@@ -44,3 +44,7 @@ services:
     issuer: https://oauth.development.lindorm.io
     host: http://localhost
     port: 3500
+  vault_service:
+    issuer: https://vault.development.lindorm.io
+    host: http://localhost
+    port: 3600

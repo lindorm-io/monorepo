@@ -36,6 +36,7 @@ interface ServerAxios extends LindormNodeServerAxios {
   deviceLinkClient: Axios;
   identityClient: Axios;
   oauthClient: Axios;
+  vaultClient: Axios;
 }
 
 interface ServerCache extends LindormNodeServerCache {

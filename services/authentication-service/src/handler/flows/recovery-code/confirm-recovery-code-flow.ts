@@ -2,6 +2,7 @@ import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { vaultGetSalt } from "../../axios";
 
 interface Options {
   code: string;
@@ -38,9 +39,10 @@ export const confirmRecoveryCodeFlow = async (
 
   logger.debug("Verifying Recovery Code");
 
+  const salt = await vaultGetSalt(ctx, account);
   const cryptoLayered = new CryptoLayered({
-    aes: { secret: account.salt.aes },
-    sha: { secret: account.salt.sha },
+    aes: { secret: salt.aes },
+    sha: { secret: salt.sha },
   });
 
   await cryptoLayered.assert(code, account.recoveryCode);

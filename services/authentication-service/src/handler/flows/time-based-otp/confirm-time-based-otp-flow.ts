@@ -3,6 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { TOTPHandler } from "../../../class";
 import { configuration } from "../../../server/configuration";
+import { vaultGetSalt } from "../../axios";
 
 interface Options {
   totp: string;
@@ -39,8 +40,10 @@ export const confirmTimeBasedOtpFlow = async (
 
   logger.debug("Verifying TOTP");
 
+  const salt = await vaultGetSalt(ctx, account);
+
   const totpHandler = new TOTPHandler({
-    aes: { secret: account.salt.aes },
+    aes: { secret: salt.aes },
     issuer: configuration.server.issuer,
   });
 

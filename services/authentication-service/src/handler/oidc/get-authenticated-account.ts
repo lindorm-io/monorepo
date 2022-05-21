@@ -1,8 +1,9 @@
 import { Account, LoginSession, OidcSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
 import { OpenIDClaims } from "../../common";
+import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { find } from "lodash";
+import { findOrCreateAccount } from "../account";
 import { identityAuthenticateOidc, identityUpdateUserinfo } from "../axios";
 
 interface Options {
@@ -16,10 +17,7 @@ export const getAuthenticatedAccount = async (
   oidcSession: OidcSession,
   options: Options,
 ): Promise<Account> => {
-  const {
-    logger,
-    repository: { accountRepository },
-  } = ctx;
+  const { logger } = ctx;
 
   const { subject, claims } = options;
 
@@ -41,5 +39,5 @@ export const getAuthenticatedAccount = async (
     ...claims,
   });
 
-  return await accountRepository.findOrCreate({ id: identityId });
+  return findOrCreateAccount(ctx, identityId);
 };

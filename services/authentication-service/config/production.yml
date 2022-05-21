@@ -16,3 +16,5 @@ services:
     host: https://identity.lindorm.io
   oauth_service:
     host: https://oauth.lindorm.io
+  vault_service:
+    host: https://vault.lindorm.io

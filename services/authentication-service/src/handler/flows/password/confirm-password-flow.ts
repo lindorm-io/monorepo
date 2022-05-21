@@ -2,7 +2,7 @@ import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { identityAuthenticateIdentifier } from "../../axios";
+import { identityAuthenticateIdentifier, vaultGetSalt } from "../../axios";
 
 interface Options {
   password: string;
@@ -43,9 +43,10 @@ export const confirmPasswordFlow = async (
 
   logger.debug("Verifying Password");
 
+  const salt = await vaultGetSalt(ctx, account);
   const cryptoLayered = new CryptoLayered({
-    aes: { secret: account.salt.aes },
-    sha: { secret: account.salt.sha },
+    aes: { secret: salt.aes },
+    sha: { secret: salt.sha },
   });
 
   await cryptoLayered.assert(password, account.password);

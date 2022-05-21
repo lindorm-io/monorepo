@@ -2,6 +2,7 @@ import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { identityAuthenticateIdentifier } from "../../axios";
+import { findOrCreateAccount } from "../../account";
 
 interface Options {
   code: string;
@@ -13,10 +14,7 @@ export const confirmEmailLinkFlow = async (
   flowSession: FlowSession,
   options: Options,
 ): Promise<Account> => {
-  const {
-    logger,
-    repository: { accountRepository },
-  } = ctx;
+  const { logger } = ctx;
 
   const { code } = options;
 
@@ -38,5 +36,5 @@ export const confirmEmailLinkFlow = async (
 
   logger.debug("Resolving Account");
 
-  return await accountRepository.findOrCreate({ id: identityId });
+  return findOrCreateAccount(ctx, identityId);
 };
