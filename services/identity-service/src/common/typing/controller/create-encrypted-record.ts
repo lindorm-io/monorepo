@@ -1,5 +1,5 @@
-export interface CreateEncryptedRecordRequestBody {
+export interface CreateEncryptedRecordRequestBody<Data = Record<string, string>> {
   id: string;
-  data: Record<string, string>;
-  expires: string | null;
+  data: Data;
+  expires?: string | null;
 }

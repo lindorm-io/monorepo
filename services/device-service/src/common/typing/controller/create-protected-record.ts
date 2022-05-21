@@ -1,7 +1,7 @@
-export interface CreateProtectedRecordRequestBody {
+export interface CreateProtectedRecordRequestBody<Data = Record<string, string>> {
   id: string;
-  data: Record<string, string>;
-  expires: string | null;
+  data: Data;
+  expires?: string | null;
 }
 
 export interface CreateProtectedRecordResponseBody {
