@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  vault_service_mongo:
+    image: mongo
+    container_name: vault_service_mongo
+    labels:
+      - mongo
+    ports:
+      - "3601:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+  vault_service_redis:
+    image: redis
+    container_name: vault_service_redis
+    labels:
+      - redis
+    ports:
+      - "3602:6379"

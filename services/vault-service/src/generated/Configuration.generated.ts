@@ -1,0 +1,50 @@
+export interface Configuration {
+  defaults:  Defaults;
+  mongo:     Mongo;
+  oauth:     Oauth;
+  redis:     Mongo;
+  server:    Server;
+  services:  Services;
+}
+
+interface Defaults {
+  challenge_confirmation_token_expiry:   string;
+  challenge_session_expiry:              string;
+  enrolment_session_expiry:              string;
+  remote_vault_challenge_session_expiry: string;
+}
+
+interface Mongo {
+  db_name:   string;
+  host:      string;
+  password:  string;
+  port:      number;
+  username:  string;
+}
+
+interface Oauth {
+  client_id:     string;
+  client_secret: string;
+}
+
+interface Server {
+  domain:      string;
+  environment: string;
+  host:        string;
+  issuer:      string;
+  keys:        any[];
+  port:        number;
+  workers:     boolean;
+}
+
+interface Services {
+  oauth_service: OauthService;
+}
+
+interface OauthService {
+  client_name:  string;
+  host:         string;
+  issuer:       string;
+  port:         number;
+}
+

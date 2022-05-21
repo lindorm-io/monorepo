@@ -1,0 +1,30 @@
+mongo:
+  host: localhost
+  port: 27017
+  db_name: vault
+  username: username
+  password: password
+
+oauth:
+  client_id: id
+  client_secret: secret
+
+redis:
+  host: localhost
+  port: 6379
+  username: username
+
+server:
+  domain: https://lindorm.io
+  environment: development
+  host: http://localhost
+  issuer: https://vault.lindorm.io
+  keys: []
+  port: 3000
+  workers: false
+
+services:
+  oauth_service:
+    client_name: oauthClient
+    issuer: https://oauth.lindorm.io
+    host: http://localhost

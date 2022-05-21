@@ -1,0 +1,14 @@
+redis:
+  username: username
+  password: password
+
+server:
+  domain: https://staging.lindorm.io
+  environment: staging
+  host: https://vault.staging.lindorm.io
+  issuer: https://vault.staging.lindorm.io
+  workers: true
+
+services:
+  oauth_service:
+    host: https://oauth.staging.lindorm.io

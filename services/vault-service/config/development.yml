@@ -1,0 +1,28 @@
+mongo:
+  host: localhost
+  port: 3601
+  db_name: vault
+  username: root
+  password: example
+
+oauth:
+  client_id: 8da48653-ba29-416e-b882-393b60dce178
+  client_secret: X4P2a8llWDVJbtzRAVnHObcLyOMAe2vYa2GAs2kSNXonlRcWblDYU07bJxC20B8Co2PJKpTITUBs2hEOV90Vr4o5zKhYme067RortdPmGoVpa6neHqNDZGIF1YXVcp36
+
+redis:
+  host: localhost
+  port: 3602
+
+server:
+  domain: https://development.lindorm.io
+  environment: development
+  host: http://localhost
+  issuer: https://vault.development.lindorm.io
+  port: 3600
+  workers: true
+
+services:
+  oauth_service:
+    issuer: https://oauth.development.lindorm.io
+    host: http://localhost
+    port: 3500
