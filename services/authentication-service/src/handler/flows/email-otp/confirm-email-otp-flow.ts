@@ -2,7 +2,7 @@ import { Account, LoginSession, FlowSession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { identityAuthenticateIdentifier } from "../../axios";
-import { createAccountSalt } from "../../account";
+import { createAccountCallback } from "../../account";
 
 interface Options {
   otp: string;
@@ -39,5 +39,5 @@ export const confirmEmailOtpFlow = async (
 
   logger.debug("Resolving Account");
 
-  return accountRepository.findOrCreate({ id: identityId }, createAccountSalt(ctx));
+  return accountRepository.findOrCreate({ id: identityId }, createAccountCallback(ctx));
 };

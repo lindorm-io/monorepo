@@ -5,6 +5,9 @@ import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 describe("/internal/jwks", () => {
   beforeAll(setupIntegration);
 

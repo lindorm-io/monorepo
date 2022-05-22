@@ -2,18 +2,17 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity } from "../entity";
+import { IdentityPermission } from "../common";
 import { getRandomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 import {
-  getTestDisplayName,
   getTestEmail,
   getTestIdentity,
   getTestExternalIdentifier,
   getTestPhoneNumber,
 } from "../test/entity";
 import {
-  TEST_DISPLAY_NAME_REPOSITORY,
   TEST_EMAIL_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
   TEST_EXTERNAL_IDENTIFIER_REPOSITORY,
@@ -21,9 +20,11 @@ import {
   getTestAccessToken,
   setupIntegration,
 } from "../test/integration";
-import { IdentityPermission } from "../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
 
 describe("/identities", () => {
   beforeAll(setupIntegration);
@@ -155,44 +156,6 @@ describe("/identities", () => {
         username: username,
         website: "https://website.url/new/",
         zoneInfo: "Europe/Berlin",
-      }),
-    );
-  });
-
-  test("DELETE /:id", async () => {
-    const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
-        id: randomUUID(),
-        displayName: {
-          name: "removeThisName",
-          number: 9999,
-        },
-      }),
-    );
-    await TEST_DISPLAY_NAME_REPOSITORY.create(
-      getTestDisplayName({
-        name: identity.displayName.name,
-        numbers: [identity.displayName.number],
-      }),
-    );
-
-    const accessToken = getTestAccessToken({
-      subject: identity.id,
-    });
-
-    await request(server.callback())
-      .delete(`/identities/${identity.id}/`)
-      .set("Authorization", `Bearer ${accessToken}`)
-      .expect(200);
-
-    await expect(TEST_IDENTITY_REPOSITORY.find({ id: identity.id })).rejects.toThrow(
-      EntityNotFoundError,
-    );
-    await expect(
-      TEST_DISPLAY_NAME_REPOSITORY.find({ name: identity.displayName.name }),
-    ).resolves.toStrictEqual(
-      expect.objectContaining({
-        numbers: [],
       }),
     );
   });

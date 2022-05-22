@@ -21,8 +21,8 @@ export const deleteTenantController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   await Promise.all([
-    clientRepository.destroyMany({ tenant: tenant.id }),
-    // clientCache.destroyMany({ tenant: tenant.id }),
+    clientRepository.deleteMany({ tenant: tenant.id }),
+    // clientCache.deleteMany({ tenant: tenant.id }),
     tenantRepository.destroy(tenant),
   ]);
 

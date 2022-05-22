@@ -12,6 +12,9 @@ import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 describe("/oauth", () => {
   const { expires, expiresIn } = getExpires(new Date("2021-01-01T08:30:00.000Z"));
 

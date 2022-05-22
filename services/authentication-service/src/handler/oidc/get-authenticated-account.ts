@@ -4,7 +4,7 @@ import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { find } from "lodash";
 import { identityAuthenticateOidc, identityUpdateUserinfo } from "../axios";
-import { createAccountSalt } from "../account";
+import { createAccountCallback } from "../account";
 
 interface Options {
   subject: string;
@@ -42,5 +42,5 @@ export const getAuthenticatedAccount = async (
     ...claims,
   });
 
-  return accountRepository.findOrCreate({ id: identityId }, createAccountSalt(ctx));
+  return accountRepository.findOrCreate({ id: identityId }, createAccountCallback(ctx));
 };

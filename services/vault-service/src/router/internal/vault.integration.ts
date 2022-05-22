@@ -14,6 +14,9 @@ import { baseHash } from "@lindorm-io/core";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 const getKey = (subjectHint: string, subject: string) => baseHash(`${subjectHint}:${subject}`);
 
 describe("/internal/vault", () => {

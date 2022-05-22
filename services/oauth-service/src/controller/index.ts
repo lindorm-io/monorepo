@@ -5,4 +5,5 @@ export * from "./identity";
 export * from "./info";
 export * from "./logout";
 export * from "./oauth";
+export * from "./rtbf";
 export * from "./tenant";

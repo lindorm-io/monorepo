@@ -17,6 +17,9 @@ import nock from "nock";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 describe("/device-links", () => {
   const salt =
     "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";

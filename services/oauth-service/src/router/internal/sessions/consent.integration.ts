@@ -20,6 +20,9 @@ import {
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 describe("/internal/sessions/consent", () => {
   beforeAll(setupIntegration);
 

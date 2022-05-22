@@ -20,6 +20,9 @@ import { IdentifierType } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.unmock("@lindorm-io/mongo");
+jest.unmock("@lindorm-io/redis");
+
 describe("/internal/identifiers", () => {
   let email: Email;
   let external: ExternalIdentifier;

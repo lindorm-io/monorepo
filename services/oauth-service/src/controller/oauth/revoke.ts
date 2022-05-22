@@ -34,7 +34,7 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
   await invalidTokenCache.create(new InvalidToken({ id }), expiresIn);
 
   if (type === TokenType.REFRESH) {
-    await refreshSessionRepository.destroyMany({ id: sessionId });
+    await refreshSessionRepository.deleteMany({ id: sessionId });
   }
 
   return {

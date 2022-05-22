@@ -20,7 +20,7 @@ const confirmPasswordFlow = _confirmPasswordFlow as jest.Mock;
 const generateMfaCookie = _generateMfaCookie as jest.Mock;
 const updateLoginSessionWithFlow = _updateLoginSessionWithFlow as jest.Mock;
 
-describe("DESCRIBE", () => {
+describe("confirmFlow", () => {
   let ctx: any;
 
   beforeEach(() => {

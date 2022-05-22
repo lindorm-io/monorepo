@@ -1,8 +1,8 @@
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 
-export const forgetIdentityController: ServerKoaController = async (ctx): ControllerResponse => {
+export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     axios: { axiosClient },
     repository: {
@@ -21,15 +21,15 @@ export const forgetIdentityController: ServerKoaController = async (ctx): Contro
   for (const client of clients) {
     if (!client.rtbfUri) continue;
 
-    await axiosClient.post(client.rtbfUri, {
+    await axiosClient.get(client.rtbfUri, {
       middleware: [axiosBearerAuthMiddleware(accessToken)],
       retry: 5,
     });
   }
 
-  await browserSessionRepository.destroyMany({ identityId: subject });
-  await consentSessionRepository.destroyMany({ identityId: subject });
-  await refreshSessionRepository.destroyMany({ identityId: subject });
+  await browserSessionRepository.deleteMany({ identityId: subject });
+  await consentSessionRepository.deleteMany({ identityId: subject });
+  await refreshSessionRepository.deleteMany({ identityId: subject });
 
   return {
     body: {},

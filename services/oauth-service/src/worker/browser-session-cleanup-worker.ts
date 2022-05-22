@@ -14,7 +14,7 @@ export const browserSessionCleanupWorker = new IntervalWorker({
       logger,
     });
 
-    await repository.destroyMany({ expires: { $lt: new Date() } });
+    await repository.deleteMany({ expires: { $lt: new Date() } });
   },
   logger,
   time: time,

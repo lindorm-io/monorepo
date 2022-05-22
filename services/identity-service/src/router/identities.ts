@@ -1,7 +1,7 @@
-import { ServerKoaContext } from "../types";
-import { Scope } from "../common";
-import { identityAuthMiddleware, identityEntityMiddleware } from "../middleware";
 import { Router, useController, paramsMiddleware, useSchema } from "@lindorm-io/koa";
+import { Scope } from "../common";
+import { ServerKoaContext } from "../types";
+import { identityAuthMiddleware, identityEntityMiddleware } from "../middleware";
 import {
   identifierRemoveController,
   identifierRemoveSchema,
@@ -9,8 +9,6 @@ import {
   identifierSetPrimarySchema,
   identityGetController,
   identityGetSchema,
-  identityRemoveController,
-  identityRemoveSchema,
   identityUpdateController,
   identityUpdateSchema,
 } from "../controller";
@@ -40,18 +38,6 @@ router.put(
   }),
   identityEntityMiddleware("data.id"),
   useController(identityUpdateController),
-);
-
-router.delete(
-  "/:id",
-  paramsMiddleware,
-  useSchema(identityRemoveSchema),
-  identityAuthMiddleware({
-    scopes: [Scope.OPENID],
-    fromPath: { subject: "data.id" },
-  }),
-  identityEntityMiddleware("data.id"),
-  useController(identityRemoveController),
 );
 
 router.delete(
