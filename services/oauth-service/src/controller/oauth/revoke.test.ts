@@ -23,7 +23,7 @@ describe("oauthRevokeController", () => {
       },
       repository: {
         refreshSessionRepository: {
-          destroyMany: jest.fn(),
+          deleteMany: jest.fn(),
         },
       },
     };
@@ -36,7 +36,7 @@ describe("oauthRevokeController", () => {
 
     expect(ctx.jwt.verify).toHaveBeenCalled();
     expect(ctx.cache.invalidTokenCache.create).toHaveBeenCalled();
-    expect(ctx.repository.refreshSessionRepository.destroyMany).not.toHaveBeenCalled();
+    expect(ctx.repository.refreshSessionRepository.deleteMany).not.toHaveBeenCalled();
   });
 
   test("should resolve for refresh token", async () => {
@@ -53,6 +53,6 @@ describe("oauthRevokeController", () => {
 
     expect(ctx.jwt.verify).toHaveBeenCalled();
     expect(ctx.cache.invalidTokenCache.create).toHaveBeenCalled();
-    expect(ctx.repository.refreshSessionRepository.destroyMany).toHaveBeenCalled();
+    expect(ctx.repository.refreshSessionRepository.deleteMany).toHaveBeenCalled();
   });
 });

@@ -11,7 +11,7 @@ describe("deleteTenantController", () => {
       },
       repository: {
         clientRepository: {
-          destroyMany: jest.fn(),
+          deleteMany: jest.fn(),
         },
         tenantRepository: {
           destroy: jest.fn(),
@@ -26,6 +26,6 @@ describe("deleteTenantController", () => {
     });
 
     expect(ctx.repository.tenantRepository.destroy).toHaveBeenCalled();
-    expect(ctx.repository.clientRepository.destroyMany).toHaveBeenCalled();
+    expect(ctx.repository.clientRepository.deleteMany).toHaveBeenCalled();
   });
 });
