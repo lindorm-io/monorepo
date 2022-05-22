@@ -52,6 +52,16 @@ describe("LindormCache", () => {
     await expect(redis.ttl(entityKey(entity))).resolves.toBe(900);
   });
 
+  test("should delete many", async () => {
+    const destroy1 = await cache.create(new TestEntity({ name: "destroy" }));
+    const destroy2 = await cache.create(new TestEntity({ name: "destroy" }));
+
+    await cache.deleteMany({ name: "destroy" });
+
+    await expect(redis.get(entityKey(destroy1))).resolves.toBe(null);
+    await expect(redis.get(entityKey(destroy2))).resolves.toBe(null);
+  });
+
   test("should destroy", async () => {
     await cache.destroy(entity);
 
@@ -62,7 +72,7 @@ describe("LindormCache", () => {
     const destroy1 = await cache.create(new TestEntity({ name: "destroy" }));
     const destroy2 = await cache.create(new TestEntity({ name: "destroy" }));
 
-    await cache.destroyMany({ name: "destroy" });
+    await cache.destroyMany([destroy1, destroy2]);
 
     await expect(redis.get(entityKey(destroy1))).resolves.toBe(null);
     await expect(redis.get(entityKey(destroy2))).resolves.toBe(null);

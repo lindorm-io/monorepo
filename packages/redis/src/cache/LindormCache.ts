@@ -77,7 +77,24 @@ export abstract class LindormCache<
       promises.push(this.create(entity, expiresInSeconds, callback));
     }
 
-    return Promise.allSettled<Entity>(promises);
+    return Promise.allSettled(promises);
+  }
+
+  public async deleteMany(
+    filter: Partial<Interface>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
+    const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
+
+    if (!results.length) return;
+
+    const promises = [];
+
+    for (const entity of results) {
+      promises.push(this.destroy(entity, callback));
+    }
+
+    return Promise.allSettled(promises);
   }
 
   public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
@@ -89,16 +106,12 @@ export abstract class LindormCache<
   }
 
   public async destroyMany(
-    filter: Partial<Interface>,
+    entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
-    const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
+    const promises: Array<Promise<void>> = [];
 
-    if (!results.length) return;
-
-    const promises = [];
-
-    for (const entity of results) {
+    for (const entity of entities) {
       promises.push(this.destroy(entity, callback));
     }
 
