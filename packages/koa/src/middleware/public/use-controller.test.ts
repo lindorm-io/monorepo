@@ -1,4 +1,4 @@
-import { Controller } from "../../types";
+import { Controller, ControllerResponse } from "../../types";
 import { HttpStatus } from "../../constant";
 import { createURL } from "@lindorm-io/core";
 import { logger } from "../../test";
@@ -19,32 +19,44 @@ describe("useController", () => {
   afterEach(jest.clearAllMocks);
 
   test("should resolve status and body", async () => {
-    const testController: Controller = async (ctx) => ({
+    const controller: Controller = async (): ControllerResponse => ({
       status: HttpStatus.Success.CREATED,
-      body: ctx.request.body,
+      body: { response: "body" },
     });
 
-    await expect(useController(testController)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.body).toStrictEqual({ string: "string" });
+    expect(ctx.body).toStrictEqual({ response: "body" });
     expect(ctx.status).toStrictEqual(201);
     expect(ctx.redirect).not.toHaveBeenCalled();
-    expect(ctx.getMetric).toHaveBeenCalledWith("testController");
   });
 
-  test("should automatically determine body", async () => {
-    const controller: Controller = async () => ({
+  test("should pass ctx into controller function", async () => {
+    const controller: Controller = async (ctx): ControllerResponse => ({
+      status: HttpStatus.Success.CREATED,
+      body: { ctx: ctx.request.body },
+    });
+
+    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+
+    expect(ctx.body).toStrictEqual({ ctx: { string: "string" } });
+    expect(ctx.status).toStrictEqual(201);
+    expect(ctx.redirect).not.toHaveBeenCalled();
+  });
+
+  test("should automatically set body", async () => {
+    const controller: Controller = async (): ControllerResponse => ({
       status: HttpStatus.Success.CREATED,
     });
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.body).toBeUndefined();
+    expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toStrictEqual(201);
   });
 
   test("should automatically determine status as OK", async () => {
-    const controller: Controller = async (ctx) => ({
+    const controller: Controller = async (ctx): ControllerResponse => ({
       body: ctx.request.body,
     });
 
@@ -54,8 +66,17 @@ describe("useController", () => {
     expect(ctx.status).toStrictEqual(200);
   });
 
-  test("should automatically determine status as NO_CONTENT", async () => {
-    const controller: Controller = async () => ({});
+  test("should automatically determine status as NO_CONTENT on empty object", async () => {
+    const controller: Controller = async (): ControllerResponse => ({});
+
+    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+
+    expect(ctx.body).toBeUndefined();
+    expect(ctx.status).toStrictEqual(204);
+  });
+
+  test("should automatically determine status as NO_CONTENT on void", async () => {
+    const controller: Controller = async (): ControllerResponse => {};
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();
 
@@ -64,7 +85,7 @@ describe("useController", () => {
   });
 
   test("should resolve redirect with URL", async () => {
-    const controller: Controller = async () => ({
+    const controller: Controller = async (): ControllerResponse => ({
       redirect: createURL("https://test.lindorm.io/:param/one", {
         params: {
           param: 1,
@@ -85,8 +106,8 @@ describe("useController", () => {
     );
   });
 
-  test("should resolve redirect with String", async () => {
-    const controller: Controller = async () => ({
+  test("should resolve redirect with string", async () => {
+    const controller: Controller = async (): ControllerResponse => ({
       redirect: "https://test.lindorm.io/",
     });
 
@@ -98,7 +119,7 @@ describe("useController", () => {
   });
 
   test("should resolve redirect with body", async () => {
-    const controller: Controller = async (ctx) => ({
+    const controller: Controller = async (ctx): ControllerResponse => ({
       redirect: "https://test.lindorm.io/",
       body: ctx.request.body,
     });
