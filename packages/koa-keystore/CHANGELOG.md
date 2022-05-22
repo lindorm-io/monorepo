@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.7.1...@lindorm-io/koa-keystore@0.7.2) (2022-05-22)
+
+
+### Bug Fixes
+
+* amend bug in key pair rotation worker ([e488f43](https://github.com/lindorm-io/monorepo/commit/e488f43785a053d3754ba847947484ea1bcdc20b))
+* update keystore workers with improved rotation ([cd8af5e](https://github.com/lindorm-io/monorepo/commit/cd8af5e5e70e674921ef2247b2357c67daea1108))
+* use delete many method in cleanup worker ([8e9918a](https://github.com/lindorm-io/monorepo/commit/8e9918a9401c734d2aa409f84d6dbf694128abd6))
+
+
+
+
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.7.0...@lindorm-io/koa-keystore@0.7.1) (2022-05-19)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore

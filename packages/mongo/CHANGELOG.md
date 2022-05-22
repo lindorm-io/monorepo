@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.8.1...@lindorm-io/mongo@0.9.0) (2022-05-22)
+
+
+### Bug Fixes
+
+* remove superfluous interfaces ([5ad0206](https://github.com/lindorm-io/monorepo/commit/5ad02066a82ad173f6e1e259c2cb0c6d34109e06))
+* utilise settled method from promise ([95648a9](https://github.com/lindorm-io/monorepo/commit/95648a99ec123e63cac305deb7d91d14acb59f29))
+
+
+### Features
+
+* add functionality to destroy many in repository ([e78bdfc](https://github.com/lindorm-io/monorepo/commit/e78bdfc740eaac6601f469de202e10ed0ead2e24))
+* add post change callback to methods in repository ([44cbda3](https://github.com/lindorm-io/monorepo/commit/44cbda34c074bed544b5b62c6106117f7bc99cc5))
+
+
+
+
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.8.0...@lindorm-io/mongo@0.8.1) (2022-05-19)
 
 

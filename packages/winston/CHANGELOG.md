@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.0...@lindorm-io/winston@0.4.1) (2022-05-22)
+
+
+### Bug Fixes
+
+* upgrade filter functionality in logger ([e6f752e](https://github.com/lindorm-io/monorepo/commit/e6f752ea87bed1ab118e95f3bd9691c2879e2862))
+
+
+
+
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.3.0...@lindorm-io/winston@0.4.0) (2022-05-19)
 
 

@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.7.1...@lindorm-io/redis@0.8.0) (2022-05-22)
+
+
+### Bug Fixes
+
+* remove superfluous interfaces ([5ad0206](https://github.com/lindorm-io/monorepo/commit/5ad02066a82ad173f6e1e259c2cb0c6d34109e06))
+* utilise settled method from promise ([95648a9](https://github.com/lindorm-io/monorepo/commit/95648a99ec123e63cac305deb7d91d14acb59f29))
+
+
+### Features
+
+* add functionality to destroy many in cache ([5a8f07f](https://github.com/lindorm-io/monorepo/commit/5a8f07f5a9066c553291baf3982e77e4fd567423))
+* add post change callback to methods in cache ([4dee3c6](https://github.com/lindorm-io/monorepo/commit/4dee3c6d4bf3e8efe35c68db26f9a92ef278b819))
+
+
+
+
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.7.0...@lindorm-io/redis@0.7.1) (2022-05-19)
 
 

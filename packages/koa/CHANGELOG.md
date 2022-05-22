@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.8...@lindorm-io/koa@0.12.9) (2022-05-22)
+
+
+### Bug Fixes
+
+* improve controller middleware to handle void response ([f18bfed](https://github.com/lindorm-io/monorepo/commit/f18bfed628ce93e19c0494ff67ac08b02dee8a74))
+
+
+
+
+
 ## [0.12.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.12.7...@lindorm-io/koa@0.12.8) (2022-05-19)
 
 
