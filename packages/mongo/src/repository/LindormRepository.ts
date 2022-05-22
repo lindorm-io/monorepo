@@ -103,6 +103,31 @@ export abstract class LindormRepository<
     return Promise.allSettled(promises);
   }
 
+  public async deleteMany(
+    filter: Partial<Filter<Interface>>,
+    options: DeleteOptions = {},
+  ): Promise<void> {
+    const start = Date.now();
+
+    await this.promise();
+
+    if (!this.collection) {
+      throw new RepositoryError("Collection not found");
+    }
+
+    const result = await this.collection.deleteMany(filter as Filter<any>, options);
+
+    this.logger.debug("deleteMany", {
+      input: {
+        filter,
+      },
+      result: {
+        ...result,
+        time: Date.now() - start,
+      },
+    });
+  }
+
   public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
     const start = Date.now();
 
@@ -138,28 +163,16 @@ export abstract class LindormRepository<
   }
 
   public async destroyMany(
-    filter: Partial<Filter<Interface>>,
-    options: DeleteOptions = {},
-  ): Promise<void> {
-    const start = Date.now();
+    entities: Array<Entity>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
+    const promises: Array<Promise<void>> = [];
 
-    await this.promise();
-
-    if (!this.collection) {
-      throw new RepositoryError("Collection not found");
+    for (const entity of entities) {
+      promises.push(this.destroy(entity, callback));
     }
 
-    const result = await this.collection.deleteMany(filter as Filter<any>, options);
-
-    this.logger.debug("deleteMany", {
-      input: {
-        filter,
-      },
-      result: {
-        ...result,
-        time: Date.now() - start,
-      },
-    });
+    return Promise.allSettled(promises);
   }
 
   public async find(

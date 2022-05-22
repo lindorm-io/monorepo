@@ -70,6 +70,16 @@ describe("LindormRepository.ts", () => {
     );
   });
 
+  test("should delete many entities", async () => {
+    await repository.create(new TestEntity({ name: "destroy-many" }));
+    await repository.create(new TestEntity({ name: "destroy-many" }));
+
+    await repository.deleteMany({ name: "destroy-many" });
+    const result = await repository.findMany({});
+
+    expect(filter(result, { name: "destroy-many" })).toStrictEqual([]);
+  });
+
   test("should destroy one entity", async () => {
     const destroy = await repository.create(new TestEntity({ name: "destroy" }));
 
@@ -80,13 +90,14 @@ describe("LindormRepository.ts", () => {
   });
 
   test("should destroy many entities", async () => {
-    await repository.create(new TestEntity({ name: "destroy-many" }));
-    await repository.create(new TestEntity({ name: "destroy-many" }));
+    const destroy1 = await repository.create(new TestEntity({ name: "destroy" }));
+    const destroy2 = await repository.create(new TestEntity({ name: "destroy" }));
 
-    await repository.destroyMany({ name: "destroy-many" });
+    await repository.destroyMany([destroy1, destroy2]);
     const result = await repository.findMany({});
 
-    expect(filter(result, { name: "destroy-many" })).toStrictEqual([]);
+    expect(filter(result, { id: destroy1.id })).toStrictEqual([]);
+    expect(filter(result, { id: destroy2.id })).toStrictEqual([]);
   });
 
   test("should find entity", async () => {
