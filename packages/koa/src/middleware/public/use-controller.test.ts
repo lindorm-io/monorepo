@@ -99,7 +99,7 @@ describe("useController", () => {
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.body).toBeUndefined();
+    expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toBe(302);
     expect(ctx.redirect).toHaveBeenCalledWith(
       "https://test.lindorm.io/1/one?query_one=string&two_number=22",
@@ -113,7 +113,7 @@ describe("useController", () => {
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.body).toBeUndefined();
+    expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toBe(302);
     expect(ctx.redirect).toHaveBeenCalledWith("https://test.lindorm.io/");
   });

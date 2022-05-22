@@ -16,15 +16,13 @@ export const useController =
       if (redirect) {
         ctx.redirect(redirect.toString());
 
-        ctx.body = body;
-
+        ctx.body = body || {};
         ctx.status = body
           ? HttpStatus.Redirection.PERMANENT_REDIRECT
           : HttpStatus.Redirection.FOUND;
       } else {
         ctx.body =
           !body && status !== undefined && status !== HttpStatus.Success.NO_CONTENT ? {} : body;
-
         ctx.status =
           body && !status
             ? HttpStatus.Success.OK
