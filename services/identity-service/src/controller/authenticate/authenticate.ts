@@ -51,12 +51,10 @@ export const authenticateIdentifierController: ServerKoaController<
 
   switch (type) {
     case IdentifierType.EMAIL:
-      await JOI_EMAIL.required().validateAsync(identifier);
       identity = await verifyEmail(ctx, { identityId, email: identifier });
       break;
 
     case IdentifierType.EXTERNAL:
-      await Joi.string().required().validateAsync(identifier);
       identity = await verifyExternalIdentifier(ctx, {
         identifier,
         identityId,
@@ -65,7 +63,6 @@ export const authenticateIdentifierController: ServerKoaController<
       break;
 
     case IdentifierType.NIN:
-      await Joi.string().required().validateAsync(identifier);
       identity = await verifyNationalIdentityNumber(ctx, {
         identityId,
         nationalIdentityNumber: identifier,
@@ -73,13 +70,14 @@ export const authenticateIdentifierController: ServerKoaController<
       break;
 
     case IdentifierType.PHONE:
-      await JOI_PHONE_NUMBER.required().validateAsync(identifier);
       identity = await verifyPhoneNumber(ctx, { identityId, phoneNumber: identifier });
       break;
 
     case IdentifierType.USERNAME:
-      await Joi.string().required().validateAsync(identifier);
-      identity = await identityRepository.find({ username: identifier });
+      identity = await identityRepository.find({
+        ...(identityId ? { id: identityId } : {}),
+        username: identifier,
+      });
       break;
 
     default:

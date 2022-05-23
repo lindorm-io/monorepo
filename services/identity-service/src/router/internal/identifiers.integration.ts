@@ -50,7 +50,7 @@ describe("/internal/identifiers", () => {
     );
   });
 
-  test("POST /verify", async () => {
+  test("POST /authenticate", async () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
@@ -67,7 +67,7 @@ describe("/internal/identifiers", () => {
     });
   });
 
-  test("POST /verify", async () => {
+  test("POST /authenticate", async () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
@@ -84,7 +84,7 @@ describe("/internal/identifiers", () => {
     });
   });
 
-  test("POST /verify", async () => {
+  test("POST /authenticate", async () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
@@ -102,7 +102,7 @@ describe("/internal/identifiers", () => {
     });
   });
 
-  test("POST /verify", async () => {
+  test("POST /authenticate", async () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
