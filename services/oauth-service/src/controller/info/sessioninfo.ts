@@ -78,12 +78,5 @@ export const sessioninfoController: ServerKoaController = async (
     });
   }
 
-  return {
-    body: {
-      browserSessions,
-      clients,
-      consentSessions,
-      refreshSessions,
-    },
-  };
+  return { body: { browserSessions, clients, consentSessions, refreshSessions } };
 };

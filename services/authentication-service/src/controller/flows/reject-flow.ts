@@ -26,6 +26,4 @@ export const rejectFlowController: ServerKoaController<RequestData> = async (
   flowSession.status = SessionStatus.REJECTED;
 
   await flowSessionCache.update(flowSession);
-
-  return {};
 };

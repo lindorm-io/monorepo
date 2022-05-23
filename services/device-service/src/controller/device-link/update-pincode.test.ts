@@ -50,9 +50,7 @@ describe("updateDeviceLinkPincodeController", () => {
   });
 
   test("should resolve and update deviceLink pincode", async () => {
-    await expect(updateDeviceLinkPincodeController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateDeviceLinkPincodeController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -64,9 +62,7 @@ describe("updateDeviceLinkPincodeController", () => {
   test("should resolve and update with deviceLink name", async () => {
     ctx.metadata.device.name = "name";
 
-    await expect(updateDeviceLinkPincodeController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateDeviceLinkPincodeController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

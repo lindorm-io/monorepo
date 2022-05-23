@@ -36,9 +36,7 @@ describe("identifierSetPrimaryController", () => {
   test("should resolve for EMAIL", async () => {
     ctx.data.type = IdentifierType.EMAIL;
 
-    await expect(identifierSetPrimaryController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierSetPrimaryController(ctx)).resolves.toBeUndefined();
 
     expect(setPrimaryEmail).toHaveBeenCalled();
   });
@@ -46,9 +44,7 @@ describe("identifierSetPrimaryController", () => {
   test("should resolve for PHONE_NUMBER", async () => {
     ctx.data.type = IdentifierType.PHONE;
 
-    await expect(identifierSetPrimaryController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierSetPrimaryController(ctx)).resolves.toBeUndefined();
 
     expect(setPrimaryPhoneNumber).toHaveBeenCalled();
   });

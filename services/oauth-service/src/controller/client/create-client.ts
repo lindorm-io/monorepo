@@ -64,10 +64,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
   await clientCache.create(client);
 
   return {
-    body: {
-      id: client.id,
-      secret,
-    },
+    body: { id: client.id, secret },
     status: HttpStatus.Success.CREATED,
   };
 };

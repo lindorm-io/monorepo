@@ -27,20 +27,12 @@ export const getEnrolmentStatusController: ServerKoaController<RequestData> = as
   try {
     const enrolment = await enrolmentSessionCache.find({ id });
 
-    return {
-      body: {
-        status: enrolment.status,
-      },
-    };
+    return { body: { status: enrolment.status } };
   } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;
     }
 
-    return {
-      body: {
-        status: SessionStatus.EXPIRED,
-      },
-    };
+    return { body: { status: SessionStatus.EXPIRED } };
   }
 };

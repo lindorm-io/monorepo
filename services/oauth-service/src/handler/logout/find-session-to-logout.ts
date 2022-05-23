@@ -20,10 +20,7 @@ export const findSessionToLogout = async (
   try {
     const session = await browserSessionRepository.find({ id: sessionId });
 
-    return {
-      session,
-      type: LogoutSessionType.BROWSER,
-    };
+    return { session, type: LogoutSessionType.BROWSER };
   } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;
@@ -33,10 +30,7 @@ export const findSessionToLogout = async (
   try {
     const session = await refreshSessionRepository.find({ id: sessionId });
 
-    return {
-      session,
-      type: LogoutSessionType.REFRESH,
-    };
+    return { session, type: LogoutSessionType.REFRESH };
   } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;

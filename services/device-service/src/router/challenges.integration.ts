@@ -252,6 +252,6 @@ describe("/challenges", () => {
       .send({
         challenge_session_token: challengeSessionToken,
       })
-      .expect(200);
+      .expect(204);
   });
 });

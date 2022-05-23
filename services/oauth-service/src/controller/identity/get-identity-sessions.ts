@@ -43,9 +43,5 @@ export const getIdentitySessionsController: ServerKoaController<
     sessions.push({ id: session.id, levelOfAssurance: session.levelOfAssurance });
   }
 
-  return {
-    body: {
-      sessions: orderBy(sessions, ["levelOfAssurance"], ["asc"]),
-    },
-  };
+  return { body: { sessions: orderBy(sessions, ["levelOfAssurance"], ["asc"]) } };
 };

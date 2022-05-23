@@ -139,7 +139,7 @@ describe("/identities", () => {
         website: "https://website.url/new/",
         zone_info: "Europe/Berlin",
       })
-      .expect(200);
+      .expect(204);
 
     await expect(TEST_IDENTITY_REPOSITORY.find({ id: identity.id })).resolves.toStrictEqual(
       expect.objectContaining({
@@ -185,7 +185,7 @@ describe("/identities", () => {
       .send({
         email: "remove-identity-email@lindorm.io",
       })
-      .expect(200);
+      .expect(204);
 
     await expect(
       TEST_EMAIL_REPOSITORY.find({ email: "remove-identity-email@lindorm.io" }),
@@ -217,7 +217,7 @@ describe("/identities", () => {
       .send({
         email: "primary-identity-email@lindorm.io",
       })
-      .expect(200);
+      .expect(204);
 
     await expect(
       TEST_EMAIL_REPOSITORY.find({ email: "primary-identity-email@lindorm.io" }),

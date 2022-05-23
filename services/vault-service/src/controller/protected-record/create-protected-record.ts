@@ -43,8 +43,5 @@ export const createProtectedRecordController: ServerKoaController<
     }),
   );
 
-  return {
-    body: { key },
-    status: HttpStatus.Success.CREATED,
-  };
+  return { body: { key }, status: HttpStatus.Success.CREATED };
 };

@@ -29,7 +29,5 @@ export const getDeviceLinkListController: ServerKoaController = async (
     });
   }
 
-  return {
-    body: { deviceLinks },
-  };
+  return { body: { deviceLinks } };
 };

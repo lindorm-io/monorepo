@@ -33,8 +33,5 @@ export const createEncryptedRecordController: ServerKoaController<
     }),
   );
 
-  return {
-    body: {},
-    status: HttpStatus.Success.CREATED,
-  };
+  return { status: HttpStatus.Success.CREATED };
 };

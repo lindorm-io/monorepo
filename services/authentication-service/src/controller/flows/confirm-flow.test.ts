@@ -64,7 +64,7 @@ describe("confirmFlow", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve Bank ID", async () => {
-    await expect(confirmFlowController(ctx)).resolves.toStrictEqual({});
+    await expect(confirmFlowController(ctx)).resolves.toBeUndefined();
 
     expect(confirmBankIdSeFlow).toHaveBeenCalled();
     expect(confirmPasswordFlow).not.toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe("confirmFlow", () => {
       type: FlowType.PASSWORD,
     });
 
-    await expect(confirmFlowController(ctx)).resolves.toStrictEqual({});
+    await expect(confirmFlowController(ctx)).resolves.toBeUndefined();
 
     expect(confirmPasswordFlow).toHaveBeenCalled();
     expect(confirmBankIdSeFlow).not.toHaveBeenCalled();
@@ -90,7 +90,7 @@ describe("confirmFlow", () => {
   test("should not generate mfa cookie", async () => {
     canFlowGenerateMfaCookie.mockImplementation(() => false);
 
-    await expect(confirmFlowController(ctx)).resolves.toStrictEqual({});
+    await expect(confirmFlowController(ctx)).resolves.toBeUndefined();
 
     expect(generateMfaCookie).not.toHaveBeenCalled();
   });

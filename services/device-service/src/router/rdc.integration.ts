@@ -131,7 +131,7 @@ describe("/rdc", () => {
         challenge_confirmation_token: challengeConfirmationToken,
         rdcSession_token: rdcSessionToken,
       })
-      .expect(202);
+      .expect(204);
   });
 
   test("POST /:id/reject", async () => {
@@ -166,7 +166,7 @@ describe("/rdc", () => {
       .send({
         rdcSession_token: rdcSessionToken,
       })
-      .expect(202);
+      .expect(204);
   });
 
   test("GET /:id/status", async () => {

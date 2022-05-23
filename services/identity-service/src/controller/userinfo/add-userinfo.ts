@@ -121,6 +121,4 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
   });
 
   await userinfoUsernameAdd(ctx, identity);
-
-  return {};
 };

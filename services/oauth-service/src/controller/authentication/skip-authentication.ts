@@ -44,7 +44,5 @@ export const skipAuthenticationController: ServerKoaController<RequestData> = as
 
   await authorizationSessionCache.update(authorizationSession);
 
-  return {
-    body: { redirectTo: createAuthorizationVerifyRedirectUri(authorizationSession) },
-  };
+  return { body: { redirectTo: createAuthorizationVerifyRedirectUri(authorizationSession) } };
 };

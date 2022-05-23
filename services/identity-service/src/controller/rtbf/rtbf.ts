@@ -21,6 +21,4 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
   await externalIdentifierRepository.deleteMany({ identityId: identity.id });
   await phoneNumberRepository.deleteMany({ identityId: identity.id });
   await identityRepository.destroy(identity);
-
-  return {};
 };

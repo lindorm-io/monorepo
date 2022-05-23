@@ -38,6 +38,4 @@ export const deleteEncryptedRecordController: ServerKoaController<RequestData> =
   }
 
   await encryptedRecordRepository.destroy(encryptedRecord);
-
-  return {};
 };

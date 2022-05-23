@@ -27,10 +27,7 @@ export const userinfoEmailGet = async (
 
     const { email, verified } = ordered[0];
 
-    return {
-      email,
-      emailVerified: verified,
-    };
+    return { email, emailVerified: verified };
   } catch (err: any) {
     return EMPTY;
   }

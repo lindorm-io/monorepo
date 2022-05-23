@@ -89,6 +89,4 @@ export const updateClientController: ServerKoaController<RequestData> = async (
 
   const updated = await clientRepository.update(client);
   await clientCache.update(updated);
-
-  return { body: {} };
 };

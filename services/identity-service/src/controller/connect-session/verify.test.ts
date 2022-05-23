@@ -30,9 +30,7 @@ describe("identifierConnectVerifyController", () => {
   test("should resolve for EMAIL", async () => {
     ctx.entity.connectSession.type = IdentifierType.EMAIL;
 
-    await expect(identifierConnectVerifyController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierConnectVerifyController(ctx)).resolves.toBeUndefined();
 
     expect(verifyEmailConnectSession).toHaveBeenCalled();
   });
@@ -40,9 +38,7 @@ describe("identifierConnectVerifyController", () => {
   test("should resolve for PHONE_NUMBER", async () => {
     ctx.entity.connectSession.type = IdentifierType.PHONE;
 
-    await expect(identifierConnectVerifyController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierConnectVerifyController(ctx)).resolves.toBeUndefined();
 
     expect(verifyPhoneNumberConnectSession).toHaveBeenCalled();
   });

@@ -37,10 +37,7 @@ describe("createEncryptedRecordController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(createEncryptedRecordController(ctx)).resolves.toStrictEqual({
-      body: {},
-      status: 201,
-    });
+    await expect(createEncryptedRecordController(ctx)).resolves.toStrictEqual({ status: 201 });
 
     expect(ctx.repository.encryptedRecordRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({

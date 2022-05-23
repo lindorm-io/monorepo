@@ -47,10 +47,5 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
     });
   }
 
-  return {
-    body: {
-      data: parseBlob(blob),
-      expires: encryptedRecord.expires,
-    },
-  };
+  return { body: { data: parseBlob(blob), expires: encryptedRecord.expires } };
 };

@@ -53,9 +53,5 @@ export const identifierConnectInitialiseController: ServerKoaController<RequestD
       throw new ClientError("Unexpected identifier type");
   }
 
-  return {
-    body: {
-      sessionId: session.id,
-    },
-  };
+  return { body: { sessionId: session.id } };
 };

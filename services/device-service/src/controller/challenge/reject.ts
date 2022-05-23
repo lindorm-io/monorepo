@@ -22,8 +22,4 @@ export const rejectChallengeController: ServerKoaController<RequestData> = async
   } = ctx;
 
   await challengeSessionCache.destroy(challengeSession);
-
-  return {
-    body: {},
-  };
 };

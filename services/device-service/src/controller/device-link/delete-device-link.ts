@@ -21,8 +21,4 @@ export const deleteDeviceLinkController: ServerKoaController<RequestData> = asyn
   } = ctx;
 
   await deviceLinkRepository.destroy(deviceLink, destroyDeviceLinkCallback(ctx));
-
-  return {
-    body: {},
-  };
 };

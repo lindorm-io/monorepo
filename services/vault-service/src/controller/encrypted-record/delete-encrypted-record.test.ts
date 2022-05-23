@@ -38,7 +38,7 @@ describe("deleteEncryptedRecordController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(deleteEncryptedRecordController(ctx)).resolves.toStrictEqual({});
+    await expect(deleteEncryptedRecordController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.encryptedRecordRepository.destroy).toHaveBeenCalled();
   });

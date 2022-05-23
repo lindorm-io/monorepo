@@ -18,7 +18,7 @@ describe("rejectChallengeController", () => {
   });
 
   test("should resolve with removed session", async () => {
-    await expect(rejectChallengeController(ctx)).resolves.toBeTruthy();
+    await expect(rejectChallengeController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.cache.challengeSessionCache.destroy).toHaveBeenCalled();
   });

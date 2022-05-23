@@ -94,6 +94,6 @@ describe("/identifiers", () => {
       .send({
         code: "secret",
       })
-      .expect(200);
+      .expect(204);
   });
 });

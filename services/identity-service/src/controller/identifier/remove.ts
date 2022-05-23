@@ -76,8 +76,4 @@ export const identifierRemoveController: ServerKoaController<RequestData> = asyn
     default:
       throw new ClientError("Unexpected identifier type");
   }
-
-  return {
-    body: {},
-  };
 };

@@ -139,7 +139,7 @@ describe("/enrolments", () => {
       .send({
         enrolment_session_token: enrolmentSessionToken,
       })
-      .expect(200);
+      .expect(204);
   });
 
   test("POST /:id/status", async () => {

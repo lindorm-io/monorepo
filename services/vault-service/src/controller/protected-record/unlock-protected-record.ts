@@ -63,10 +63,5 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  return {
-    body: {
-      data: parseBlob(blob),
-      expires: protectedRecord.expires,
-    },
-  };
+  return { body: { data: parseBlob(blob), expires: protectedRecord.expires } };
 };

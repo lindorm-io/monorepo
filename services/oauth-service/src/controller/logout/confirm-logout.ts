@@ -48,7 +48,5 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
 
   await logoutSessionCache.update(logoutSession);
 
-  return {
-    body: { redirectTo: createLogoutVerifyRedirectUri(logoutSession) },
-  };
+  return { body: { redirectTo: createLogoutVerifyRedirectUri(logoutSession) } };
 };

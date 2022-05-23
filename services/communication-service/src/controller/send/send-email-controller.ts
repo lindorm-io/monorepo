@@ -15,6 +15,4 @@ export const sendEmailController: ServerKoaController<SendEmailRequestData> = as
   const { data, logger } = ctx;
 
   logger.debug("Send Email", data);
-
-  return {};
 };

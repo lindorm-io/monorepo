@@ -25,6 +25,4 @@ export const deleteTenantController: ServerKoaController<RequestData> = async (
     // clientCache.deleteMany({ tenant: tenant.id }),
     tenantRepository.destroy(tenant),
   ]);
-
-  return { body: {} };
 };

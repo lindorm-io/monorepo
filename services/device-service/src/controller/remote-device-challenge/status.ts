@@ -27,20 +27,12 @@ export const getRdcSessionStatusController: ServerKoaController<RequestData> = a
   try {
     const rdcSession = await rdcSessionCache.find({ id });
 
-    return {
-      body: {
-        status: rdcSession.status,
-      },
-    };
+    return { body: { status: rdcSession.status } };
   } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;
     }
 
-    return {
-      body: {
-        status: SessionStatus.EXPIRED,
-      },
-    };
+    return { body: { status: SessionStatus.EXPIRED } };
   }
 };

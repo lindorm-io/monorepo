@@ -28,10 +28,7 @@ export const userinfoPhoneNumberGet = async (
 
     const { phoneNumber, verified } = ordered[0];
 
-    return {
-      phoneNumber,
-      phoneNumberVerified: verified,
-    };
+    return { phoneNumber, phoneNumberVerified: verified };
   } catch (err: any) {
     return EMPTY;
   }

@@ -44,8 +44,4 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
   deviceLink.name = name;
 
   await deviceLinkRepository.update(deviceLink);
-
-  return {
-    body: {},
-  };
 };

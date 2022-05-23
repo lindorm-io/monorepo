@@ -42,7 +42,7 @@ describe("/oauth2/sessions/revoke", () => {
         client_secret: "secret",
         token,
       })
-      .expect(200);
+      .expect(204);
 
     await expect(TEST_INVALID_TOKEN_CACHE.find({ id: tokenId })).resolves.toStrictEqual(
       expect.any(InvalidToken),
@@ -79,7 +79,7 @@ describe("/oauth2/sessions/revoke", () => {
         client_secret: "secret",
         token,
       })
-      .expect(200);
+      .expect(204);
 
     await expect(TEST_INVALID_TOKEN_CACHE.find({ id: tokenId })).resolves.toStrictEqual(
       expect.any(InvalidToken),

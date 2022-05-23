@@ -30,9 +30,7 @@ describe("oauthRevokeController", () => {
   });
 
   test("should resolve for access token", async () => {
-    await expect(oauthRevokeController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(oauthRevokeController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.jwt.verify).toHaveBeenCalled();
     expect(ctx.cache.invalidTokenCache.create).toHaveBeenCalled();
@@ -47,9 +45,7 @@ describe("oauthRevokeController", () => {
       type: "refresh_token",
     }));
 
-    await expect(oauthRevokeController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(oauthRevokeController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.jwt.verify).toHaveBeenCalled();
     expect(ctx.cache.invalidTokenCache.create).toHaveBeenCalled();

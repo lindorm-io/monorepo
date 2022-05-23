@@ -35,6 +35,4 @@ export const updateTenantController: ServerKoaController<RequestData> = async (
   if (!isUndefined(subdomain)) tenant.subdomain = subdomain;
 
   await tenantRepository.update(tenant);
-
-  return { body: {} };
 };

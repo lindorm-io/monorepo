@@ -28,9 +28,7 @@ describe("deleteDeviceLinkController", () => {
   });
 
   test("should resolve and remove deviceLink", async () => {
-    await expect(deleteDeviceLinkController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(deleteDeviceLinkController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.destroy).toHaveBeenCalled();
   });

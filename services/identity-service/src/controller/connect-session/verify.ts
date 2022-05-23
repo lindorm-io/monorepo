@@ -36,8 +36,4 @@ export const identifierConnectVerifyController: ServerKoaController<RequestData>
     default:
       throw new ClientError("Unexpected identifier type");
   }
-
-  return {
-    body: {},
-  };
 };

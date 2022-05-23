@@ -57,8 +57,4 @@ export const identifierSetPrimaryController: ServerKoaController<RequestData> = 
     default:
       throw new ClientError("Unexpected identifier type");
   }
-
-  return {
-    body: {},
-  };
 };

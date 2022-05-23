@@ -22,8 +22,4 @@ export const rejectEnrolmentController: ServerKoaController<RequestData> = async
   } = ctx;
 
   await enrolmentSessionCache.destroy(enrolmentSession);
-
-  return {
-    body: {},
-  };
 };

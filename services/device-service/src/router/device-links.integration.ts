@@ -100,7 +100,7 @@ describe("/device-links", () => {
     await request(server.callback())
       .delete(`/device-links/${deviceLink.id}`)
       .set("Authorization", `Bearer ${accessToken}`)
-      .expect(200);
+      .expect(204);
 
     await expect(TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id })).rejects.toThrow(
       EntityNotFoundError,
@@ -171,7 +171,7 @@ describe("/device-links", () => {
         challengeConfirmationToken,
         biometry: getRandomString(128),
       })
-      .expect(200);
+      .expect(204);
 
     const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
 
@@ -207,7 +207,7 @@ describe("/device-links", () => {
         challengeConfirmationToken,
         pincode: getRandomNumber(6).toString().padStart(6, "0"),
       })
-      .expect(200);
+      .expect(204);
 
     const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
 
@@ -241,7 +241,7 @@ describe("/device-links", () => {
       .send({
         challengeConfirmationToken,
       })
-      .expect(200);
+      .expect(204);
 
     const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
 

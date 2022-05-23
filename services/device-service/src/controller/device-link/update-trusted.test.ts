@@ -21,9 +21,7 @@ describe("updateDeviceLinkTrustedController", () => {
   });
 
   test("should resolve and update deviceLink trusted", async () => {
-    await expect(updateDeviceLinkTrustedController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateDeviceLinkTrustedController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

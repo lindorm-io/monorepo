@@ -12,6 +12,4 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
 
   const deviceLinks = await deviceLinkRepository.findMany({ identityId });
   await deviceLinkRepository.destroyMany(deviceLinks, destroyDeviceLinkCallback(ctx));
-
-  return {};
 };

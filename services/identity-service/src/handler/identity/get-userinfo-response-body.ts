@@ -19,11 +19,7 @@ export const getUserinfoResponseBody = async (
   };
 
   if (!includes(scopes, Scope.OPENID)) {
-    return {
-      active: identity.active,
-      claims,
-      permissions: identity.permissions,
-    };
+    return { active: identity.active, claims, permissions: identity.permissions };
   }
 
   let email: string;
@@ -93,9 +89,5 @@ export const getUserinfoResponseBody = async (
     }
   }
 
-  return {
-    active: identity.active,
-    claims,
-    permissions: identity.permissions,
-  };
+  return { active: identity.active, claims, permissions: identity.permissions };
 };

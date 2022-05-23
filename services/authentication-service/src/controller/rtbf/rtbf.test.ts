@@ -23,7 +23,7 @@ describe("rtbfController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(rtbfController(ctx)).resolves.toStrictEqual({});
+    await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.accountRepository.destroy).toHaveBeenCalled();
   });

@@ -156,6 +156,4 @@ export const confirmFlowController: ServerKoaController<RequestData> = async (
   if (canFlowGenerateMfaCookie(loginSession, flowSession.type)) {
     await generateMfaCookie(ctx, account);
   }
-
-  return {};
 };

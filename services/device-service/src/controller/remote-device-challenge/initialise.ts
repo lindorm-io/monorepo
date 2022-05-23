@@ -87,11 +87,5 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
     type: RdcSessionType.CALLBACK,
   });
 
-  return {
-    body: {
-      id,
-      expiresIn,
-    },
-    status: HttpStatus.Success.ACCEPTED,
-  };
+  return { body: { id, expiresIn }, status: HttpStatus.Success.ACCEPTED };
 };

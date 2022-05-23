@@ -53,7 +53,7 @@ describe("addUserinfoController", () => {
   });
 
   test("should update identity", async () => {
-    await expect(addUserinfoController(ctx)).resolves.toStrictEqual({});
+    await expect(addUserinfoController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

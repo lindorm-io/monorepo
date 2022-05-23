@@ -32,9 +32,5 @@ export const generateClientSecretController: ServerKoaController<RequestData> = 
   const updated = await clientRepository.update(client);
   await clientCache.update(updated);
 
-  return {
-    body: {
-      secret,
-    },
-  };
+  return { body: { secret } };
 };

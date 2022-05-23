@@ -30,8 +30,4 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
   await browserSessionRepository.deleteMany({ identityId: subject });
   await consentSessionRepository.deleteMany({ identityId: subject });
   await refreshSessionRepository.deleteMany({ identityId: subject });
-
-  return {
-    body: {},
-  };
 };

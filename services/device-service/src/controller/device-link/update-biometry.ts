@@ -44,8 +44,4 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
   deviceLink.name = name;
 
   await deviceLinkRepository.update(deviceLink);
-
-  return {
-    body: {},
-  };
 };

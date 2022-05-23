@@ -51,9 +51,7 @@ describe("updateDeviceLinkBiometryController", () => {
   });
 
   test("should resolve and update deviceLink biometry", async () => {
-    await expect(updateDeviceLinkBiometryController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateDeviceLinkBiometryController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -65,9 +63,7 @@ describe("updateDeviceLinkBiometryController", () => {
   test("should resolve and update with deviceLink name", async () => {
     ctx.metadata.device.name = "name";
 
-    await expect(updateDeviceLinkBiometryController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateDeviceLinkBiometryController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

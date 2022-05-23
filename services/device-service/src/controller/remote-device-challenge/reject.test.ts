@@ -30,10 +30,7 @@ describe("rejectRdcController", () => {
   });
 
   test("should resolve with rdc session [ CALLBACK ]", async () => {
-    await expect(rejectRdcController(ctx)).resolves.toStrictEqual({
-      body: {},
-      status: 202,
-    });
+    await expect(rejectRdcController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient.request).toHaveBeenCalled();
   });
@@ -43,7 +40,7 @@ describe("rejectRdcController", () => {
       type: RdcSessionType.ENROLMENT,
     });
 
-    await expect(rejectRdcController(ctx)).resolves.toBeTruthy();
+    await expect(rejectRdcController(ctx)).resolves.toBeUndefined();
 
     expect(updateEnrolmentStatus).toHaveBeenCalled();
   });

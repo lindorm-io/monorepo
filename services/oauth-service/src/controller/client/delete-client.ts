@@ -21,8 +21,4 @@ export const deleteClientController: ServerKoaController<RequestData> = async (
 
   await clientRepository.destroy(client);
   await clientCache.destroy(client);
-
-  return {
-    body: {},
-  };
 };

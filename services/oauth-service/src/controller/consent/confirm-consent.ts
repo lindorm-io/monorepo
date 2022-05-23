@@ -55,7 +55,5 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
 
   await authorizationSessionCache.update(authorizationSession);
 
-  return {
-    body: { redirectTo: createAuthorizationVerifyRedirectUri(authorizationSession) },
-  };
+  return { body: { redirectTo: createAuthorizationVerifyRedirectUri(authorizationSession) } };
 };

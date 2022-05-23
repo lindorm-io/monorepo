@@ -29,6 +29,4 @@ export const adminTenantController: ServerKoaController<RequestData> = async (
   if (!isUndefined(owner)) tenant.owner = owner;
 
   await tenantRepository.update(tenant);
-
-  return { body: {} };
 };

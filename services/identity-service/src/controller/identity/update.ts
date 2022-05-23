@@ -139,6 +139,4 @@ export const identityUpdateController: ServerKoaController<RequestData> = async 
   }
 
   await identityRepository.update(identity);
-
-  return { body: {} };
 };

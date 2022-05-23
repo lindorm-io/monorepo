@@ -32,9 +32,7 @@ describe("adminTenantController", () => {
   });
 
   test("should resolve updated tenant", async () => {
-    await expect(adminTenantController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(adminTenantController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.tenantRepository.update.mock.calls).toMatchSnapshot();
   });

@@ -33,6 +33,4 @@ export const identityAdminController: ServerKoaController<RequestData> = async (
   }
 
   await identityRepository.update(identity);
-
-  return { body: {} };
 };

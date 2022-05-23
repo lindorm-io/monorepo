@@ -122,10 +122,5 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
 
   await challengeSessionCache.destroy(challengeSession);
 
-  return {
-    body: {
-      challengeConfirmationToken: token,
-      expiresIn,
-    },
-  };
+  return { body: { challengeConfirmationToken: token, expiresIn } };
 };

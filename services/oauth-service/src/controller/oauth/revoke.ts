@@ -36,8 +36,4 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
   if (type === TokenType.REFRESH) {
     await refreshSessionRepository.deleteMany({ id: sessionId });
   }
-
-  return {
-    body: {},
-  };
 };

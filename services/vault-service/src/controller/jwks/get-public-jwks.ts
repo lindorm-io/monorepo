@@ -11,9 +11,5 @@ export const getPublicJwksController: ServerKoaController = async (
 ): ControllerResponse<ResponseBody> => {
   const { keystore } = ctx;
 
-  return {
-    body: {
-      keys: keystore.getJWKS(),
-    },
-  };
+  return { body: { keys: keystore.getJWKS() } };
 };

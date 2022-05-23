@@ -34,9 +34,7 @@ describe("identityAdminController", () => {
   });
 
   test("should update identity", async () => {
-    await expect(identityAdminController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identityAdminController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.identityRepository.update.mock.calls).toMatchSnapshot();
   });

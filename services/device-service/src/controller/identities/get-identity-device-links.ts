@@ -29,7 +29,5 @@ export const getIdentityDeviceLinksController: ServerKoaController = async (
 
   const deviceLinks = filtered.map((item) => item.id);
 
-  return {
-    body: { deviceLinks },
-  };
+  return { body: { deviceLinks } };
 };

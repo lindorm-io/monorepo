@@ -17,7 +17,7 @@ describe("rejectFlowController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(rejectFlowController(ctx)).resolves.toStrictEqual({});
+    await expect(rejectFlowController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.cache.flowSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({

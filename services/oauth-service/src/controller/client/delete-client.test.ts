@@ -23,9 +23,7 @@ describe("deleteClientController", () => {
   });
 
   test("should resolve destroyed client", async () => {
-    await expect(deleteClientController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(deleteClientController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.clientRepository.destroy).toHaveBeenCalled();
     expect(ctx.cache.clientCache.destroy).toHaveBeenCalled();

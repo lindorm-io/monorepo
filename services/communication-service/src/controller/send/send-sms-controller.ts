@@ -15,6 +15,4 @@ export const sendSmsController: ServerKoaController<SendSmsRequestData> = async 
   const { data, logger } = ctx;
 
   logger.debug("Send SMS", data);
-
-  return {};
 };

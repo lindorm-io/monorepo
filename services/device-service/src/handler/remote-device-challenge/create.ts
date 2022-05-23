@@ -107,8 +107,5 @@ export const createRdcSession = async (
     });
   }
 
-  return {
-    id,
-    expiresIn,
-  };
+  return { id, expiresIn };
 };

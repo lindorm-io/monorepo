@@ -21,9 +21,7 @@ describe("deleteTenantController", () => {
   });
 
   test("should resolve destroyed tenant", async () => {
-    await expect(deleteTenantController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(deleteTenantController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.tenantRepository.destroy).toHaveBeenCalled();
     expect(ctx.repository.clientRepository.deleteMany).toHaveBeenCalled();

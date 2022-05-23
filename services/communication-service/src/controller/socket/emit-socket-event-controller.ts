@@ -37,6 +37,4 @@ export const emitSocketEventController: ServerKoaController<EmitSocketEventReque
   }
 
   logger.debug("Emit Socket", ctx.data);
-
-  return {};
 };

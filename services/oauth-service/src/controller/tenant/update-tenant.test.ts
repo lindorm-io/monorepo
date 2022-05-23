@@ -34,9 +34,7 @@ describe("updateTenantController", () => {
   });
 
   test("should resolve updated tenant", async () => {
-    await expect(updateTenantController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(updateTenantController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.tenantRepository.update.mock.calls).toMatchSnapshot();
   });

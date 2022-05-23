@@ -39,9 +39,7 @@ describe("adminClientController", () => {
   });
 
   test("should resolve updated client", async () => {
-    await expect(adminClientController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(adminClientController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.clientRepository.update.mock.calls).toMatchSnapshot();
     expect(ctx.cache.clientCache.update.mock.calls).toMatchSnapshot();

@@ -28,7 +28,7 @@ describe("deleteProtectedRecordController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(deleteProtectedRecordController(ctx)).resolves.toStrictEqual({});
+    await expect(deleteProtectedRecordController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.protectedRecordRepository.destroy).toHaveBeenCalled();
   });

@@ -28,8 +28,4 @@ export const updateDeviceLinkTrustedController: ServerKoaController<RequestData>
   deviceLink.trusted = true;
 
   await deviceLinkRepository.update(deviceLink);
-
-  return {
-    body: {},
-  };
 };

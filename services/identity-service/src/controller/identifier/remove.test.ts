@@ -40,9 +40,7 @@ describe("identifierRemoveController", () => {
   test("should resolve for EMAIL", async () => {
     ctx.data.type = IdentifierType.EMAIL;
 
-    await expect(identifierRemoveController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierRemoveController(ctx)).resolves.toBeUndefined();
 
     expect(removeEmail).toHaveBeenCalled();
   });
@@ -50,9 +48,7 @@ describe("identifierRemoveController", () => {
   test("should resolve for PHONE_NUMBER", async () => {
     ctx.data.type = IdentifierType.PHONE;
 
-    await expect(identifierRemoveController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierRemoveController(ctx)).resolves.toBeUndefined();
 
     expect(removePhoneNumber).toHaveBeenCalled();
   });
@@ -60,9 +56,7 @@ describe("identifierRemoveController", () => {
   test("should resolve for OIDC", async () => {
     ctx.data.type = IdentifierType.EXTERNAL;
 
-    await expect(identifierRemoveController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identifierRemoveController(ctx)).resolves.toBeUndefined();
 
     expect(removeExternalIdentifier).toHaveBeenCalled();
   });

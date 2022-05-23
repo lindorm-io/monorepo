@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
-import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_JWT, RdcSessionType, SessionStatus } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { updateEnrolmentStatus } from "../../handler";
@@ -47,9 +47,4 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
   }
 
   await rdcSessionCache.update(rdcSession);
-
-  return {
-    body: {},
-    status: HttpStatus.Success.ACCEPTED,
-  };
 };

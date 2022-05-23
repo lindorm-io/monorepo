@@ -34,6 +34,4 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
   }
 
   await protectedRecordRepository.destroy(protectedRecord);
-
-  return {};
 };

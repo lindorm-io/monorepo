@@ -18,7 +18,7 @@ describe("rejectEnrolmentController", () => {
   });
 
   test("should resolve with removed session", async () => {
-    await expect(rejectEnrolmentController(ctx)).resolves.toBeTruthy();
+    await expect(rejectEnrolmentController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.cache.enrolmentSessionCache.destroy).toHaveBeenCalled();
   });

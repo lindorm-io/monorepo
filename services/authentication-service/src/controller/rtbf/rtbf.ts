@@ -9,6 +9,4 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
   } = ctx;
 
   await accountRepository.destroy(account, destroyAccountCallback(ctx));
-
-  return {};
 };

@@ -74,9 +74,7 @@ describe("identityUpdateController", () => {
   });
 
   test("should update identity", async () => {
-    await expect(identityUpdateController(ctx)).resolves.toStrictEqual({
-      body: {},
-    });
+    await expect(identityUpdateController(ctx)).resolves.toBeUndefined();
 
     expect(updateIdentityDisplayName).toHaveBeenCalled();
     expect(ctx.repository.identityRepository.update.mock.calls).toMatchSnapshot();
