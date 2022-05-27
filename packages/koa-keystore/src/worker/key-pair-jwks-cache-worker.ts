@@ -32,22 +32,23 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const time = workerIntervalInSeconds * 1000;
   const logger = winston.createChildLogger(["keyPairJwksCacheWorker"]);
 
-  logger.verbose("creating jwks cache worker", {
+  logger.debug("creating jwks cache worker", {
+    clientName,
     host,
     port,
-    clientName,
     workerInterval,
   });
 
-  const handler = new WebKeyHandler({ clientName, host, port, logger });
+  const handler = new WebKeyHandler({
+    host,
+    logger,
+    name: clientName,
+    port,
+  });
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
-      const cache = new KeyPairCache({
-        connection: redisConnection,
-        logger,
-        expiresInSeconds,
-      });
+      const cache = new KeyPairCache({ connection: redisConnection, expiresInSeconds, logger });
 
       const array = await handler.getKeys();
 

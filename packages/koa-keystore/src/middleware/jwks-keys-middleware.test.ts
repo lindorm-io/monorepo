@@ -32,8 +32,8 @@ describe("jwksKeysMiddleware", () => {
     await expect(
       jwksKeysMiddleware({
         host: "https://lindorm.io",
+        name: "clientName",
         port: 4000,
-        clientName: "clientName",
       })(ctx, next),
     ).resolves.toBeUndefined();
 

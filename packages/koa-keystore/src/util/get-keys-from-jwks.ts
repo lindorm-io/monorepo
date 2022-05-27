@@ -8,17 +8,17 @@ export const getKeysFromJwks = async (
   config: JwksKeysMiddlewareConfig,
 ): Promise<Array<KeyPair>> => {
   const handler = new WebKeyHandler({
-    clientName: config.clientName,
     host: config.host,
-    port: config.port,
     logger: ctx.logger,
+    name: config.name,
+    port: config.port,
   });
 
   const found = await handler.getKeys();
   const keys = flatten([ctx.keys, found]);
 
   ctx.logger.debug("keys found on client", {
-    clientName: config.clientName,
+    clientName: config.name,
     current: ctx.keys.length,
     found: found.length,
     host: config.host,

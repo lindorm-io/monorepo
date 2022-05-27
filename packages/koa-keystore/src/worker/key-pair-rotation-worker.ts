@@ -55,7 +55,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         keyPair.allowed = now;
         keyPair.expires = add(now, stringToDurationObject(keyExpiry));
 
-        logger.verbose("Adding KeyPair to repository", {
+        logger.debug("Adding KeyPair to repository", {
           id: keyPair.id,
           allowed: keyPair.allowed,
           expires: keyPair.expires,
@@ -75,7 +75,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         keyPair.allowed = add(now, stringToDurationObject(rotationInterval));
         keyPair.expires = add(keyPair.allowed, stringToDurationObject(keyExpiry));
 
-        logger.verbose("Adding KeyPair to repository", {
+        logger.debug("Adding KeyPair to repository", {
           id: keyPair.id,
           allowed: keyPair.allowed,
           expires: keyPair.expires,

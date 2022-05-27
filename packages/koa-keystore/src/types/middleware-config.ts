@@ -1,5 +1,5 @@
 export interface JwksKeysMiddlewareConfig {
-  clientName: string;
   host: string;
+  name: string;
   port?: number;
 }

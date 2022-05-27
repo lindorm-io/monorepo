@@ -32,9 +32,9 @@ describe("JWKSHandler.ts", () => {
 
     handler = new WebKeyHandler({
       host: "https://lindorm.io/",
-      port: 4000,
       logger,
-      clientName: "name",
+      name: "name",
+      port: 4000,
     });
   });
 
