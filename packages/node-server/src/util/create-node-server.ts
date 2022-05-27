@@ -2,6 +2,7 @@ import { CreateNodeServerOptions, LindormNodeServerKoaContext } from "../types";
 import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
 import { createAdapter } from "@socket.io/redis-adapter";
+import { createWellKnownJwksRouter } from "../router";
 import { socketTokenIssuerMiddleware, tokenIssuerMiddleware } from "@lindorm-io/koa-jwt";
 import {
   cacheMiddleware,
@@ -103,5 +104,14 @@ export const createNodeServer = <
     socketMiddleware.push(item);
   }
 
-  return new KoaApp<Context>({ ...options, middleware, socketMiddleware });
+  const koa = new KoaApp<Context>({ ...options, middleware, socketMiddleware });
+
+  if (options.keystore.exposePublic) {
+    koa.addRoute(
+      "/.well-known/jwks.json",
+      createWellKnownJwksRouter<Context>(options.keystore.exposeExternal),
+    );
+  }
+
+  return koa;
 };

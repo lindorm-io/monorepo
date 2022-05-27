@@ -9,6 +9,11 @@ interface Service {
   port: number | null;
 }
 
+interface Keystore {
+  exposeExternal?: boolean;
+  exposePublic?: boolean;
+}
+
 export interface CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
 > extends KoaAppOptions<Context> {
@@ -16,6 +21,7 @@ export interface CreateNodeServerOptions<
   isKeyPairCached?: boolean; // default: true
   isKeyPairInRepository?: boolean; // default: false
   issuer?: string;
+  keystore?: Keystore;
   mongoConnection?: MongoConnection;
   redisConnection?: RedisConnection;
   repositories?: Array<typeof RepositoryBase>;
