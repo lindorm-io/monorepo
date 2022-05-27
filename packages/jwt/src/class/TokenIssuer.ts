@@ -1,11 +1,11 @@
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { Logger } from "@lindorm-io/winston";
 import { TokenError } from "../error";
+import { assertClaimDifference, assertClaimEquals, assertClaimIncludes } from "../util/private";
 import { camelKeys, getExpires, snakeKeys, sortObjectKeys } from "@lindorm-io/core";
 import { decode, sign, verify } from "jsonwebtoken";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
-import { assertClaimDifference, assertClaimEquals, assertClaimIncludes } from "../util/private";
 import {
   IssuerDecodeData,
   IssuerOptions,
@@ -19,12 +19,14 @@ import {
 export class TokenIssuer {
   private readonly clockTolerance: number;
   private readonly issuer: string;
+  private readonly keyType: KeyType | undefined;
   private readonly keystore: Keystore;
   private readonly logger: Logger;
 
   public constructor(options: IssuerOptions) {
-    this.clockTolerance = options.clockTolerance || 0;
+    this.clockTolerance = options.clockTolerance || 500;
     this.issuer = options.issuer;
+    this.keyType = options.keyType;
     this.keystore = options.keystore;
     this.logger = options.logger.createChildLogger(["TokenIssuer"]);
   }
@@ -72,7 +74,7 @@ export class TokenIssuer {
       ...(options.claims ? snakeKeys(options.claims) : {}),
     };
 
-    const key = this.keystore.getSigningKey();
+    const key = this.keystore.getSigningKey(options.keyType || this.keyType);
 
     const privateKey = key.privateKey as string;
     const signingKey =

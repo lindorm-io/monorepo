@@ -1,3 +1,4 @@
+import { KeyType } from "@lindorm-io/key-pair";
 import { Expiry } from "@lindorm-io/core";
 
 export interface IssuerSignOptions<Payload, Claims> {
@@ -9,6 +10,7 @@ export interface IssuerSignOptions<Payload, Claims> {
   authorizedParty?: string;
   claims?: Claims;
   expiry: Expiry;
+  keyType?: KeyType;
   levelOfAssurance?: number;
   nonce?: string;
   notBefore?: Date;
