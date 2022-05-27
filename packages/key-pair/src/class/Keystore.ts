@@ -1,5 +1,6 @@
 import { JWK } from "../types";
 import { KeyPair } from "../entity";
+import { KeyType } from "../enum";
 import { KeystoreError } from "../error";
 import { filter, find, orderBy, uniqBy } from "lodash";
 import { isKeyExpired, isKeyPrivate, isKeyUsable } from "../util";
@@ -56,16 +57,19 @@ export class Keystore {
     return key;
   }
 
-  public getKeys(): Array<KeyPair> {
-    return filter(uniqBy(this.keys, "id"), isKeyUsable);
+  public getKeys(type?: KeyType): Array<KeyPair> {
+    const keys = filter(uniqBy(this.keys, "id"), isKeyUsable);
+    if (!type) return keys;
+
+    return filter(keys, { type });
   }
 
-  public getPrivateKeys(): Array<KeyPair> {
-    return orderBy(filter(this.getKeys(), isKeyPrivate), ["external"], ["asc"]);
+  public getPrivateKeys(type?: KeyType): Array<KeyPair> {
+    return orderBy(filter(this.getKeys(type), isKeyPrivate), ["external"], ["asc"]);
   }
 
-  public getSigningKey(): KeyPair {
-    const keys = this.getPrivateKeys();
+  public getSigningKey(type?: KeyType): KeyPair {
+    const keys = this.getPrivateKeys(type);
 
     if (!keys.length) {
       throw new KeystoreError("Private Keys could not be found", {

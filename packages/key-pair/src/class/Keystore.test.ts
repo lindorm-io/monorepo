@@ -2,20 +2,21 @@ import MockDate from "mockdate";
 import { Keystore } from "./Keystore";
 import {
   privateKey,
-  privateKeyExternal,
-  privateKeyRSA,
+  privateKeyCopy,
   privateKeyExpired,
   privateKeyExpires,
+  privateKeyExternal,
   privateKeyNotAllowed,
+  privateKeyRSA,
   publicKey,
-  publicKeyExternal,
-  publicKeyRSA,
+  publicKeyCopy,
   publicKeyExpired,
   publicKeyExpires,
+  publicKeyExternal,
   publicKeyNotAllowed,
-  privateKeyCopy,
-  publicKeyCopy,
+  publicKeyRSA,
 } from "../test";
+import { KeyType } from "../enum";
 
 MockDate.set("2021-02-01T08:00:00.000Z");
 
@@ -110,6 +111,19 @@ describe("Keystore.ts", () => {
     });
   });
 
+  describe("getKeys (with type)", () => {
+    test("should return all unique keys of type", () => {
+      expect(keystore.getKeys(KeyType.EC)).toStrictEqual([
+        publicKeyExpires,
+        publicKeyExternal,
+        publicKey,
+        privateKeyExpires,
+        privateKeyExternal,
+        privateKey,
+      ]);
+    });
+  });
+
   describe("getPrivateKeys", () => {
     test("should return all keys that are private", () => {
       expect(keystore.getPrivateKeys()).toStrictEqual([
@@ -121,9 +135,21 @@ describe("Keystore.ts", () => {
     });
   });
 
+  describe("getPrivateKeys (type)", () => {
+    test("should return all keys that are private of type", () => {
+      expect(keystore.getPrivateKeys(KeyType.RSA)).toStrictEqual([privateKeyRSA]);
+    });
+  });
+
   describe("getSigningKey", () => {
     test("should return the current key", () => {
       expect(keystore.getSigningKey()).toStrictEqual(privateKeyExpires);
+    });
+  });
+
+  describe("getSigningKey (type)", () => {
+    test("should return the current key of type", () => {
+      expect(keystore.getSigningKey(KeyType.RSA)).toStrictEqual(privateKeyRSA);
     });
   });
 
