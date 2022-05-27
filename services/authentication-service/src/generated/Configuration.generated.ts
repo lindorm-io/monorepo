@@ -72,6 +72,7 @@ interface Services {
   device_service:        Service;
   identity_service:      Service;
   oauth_service:         Service;
+  vault_service:         Service;
 }
 
 interface Service {
