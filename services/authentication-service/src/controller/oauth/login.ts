@@ -7,7 +7,7 @@ import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { assertPKCE, createURL } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
-import { filter, includes } from "lodash";
+import { filter, flatten, includes } from "lodash";
 import { isAuthenticationReadyToConfirm } from "../../util";
 import { randomUUID } from "crypto";
 import {
@@ -57,9 +57,12 @@ export const oauthLoginController: ServerKoaController<RequestData> = async (
   loginSession.identityId = loginSession.identityId || identityId;
   loginSession.loginHint = loginSession.loginHint || loginHint;
   loginSession.oauthSessionId = sessionId;
-  loginSession.requestedAuthenticationMethods = filter(authenticationMethods, (key) =>
-    includes(Object.values(FlowType), key),
-  );
+  loginSession.requestedAuthenticationMethods = flatten([
+    filter(authenticationMethods, (key) => includes(Object.values(FlowType), key)),
+    filter(authenticationMethods, (key) =>
+      configuration.oidc_providers.map((item) => `oidc_${item.key}`).includes(key),
+    ),
+  ]);
   loginSession.requestedLevelOfAssurance = levelOfAssurance;
 
   loginSession = await loginSessionCache.update(loginSession, expiresIn);

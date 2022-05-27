@@ -59,7 +59,15 @@ describe("oauthLoginController", () => {
       },
       requested: {
         authenticationId: null,
-        authenticationMethods: [FlowType.EMAIL_OTP, FlowType.PHONE_OTP, "unknown_method"],
+        authenticationMethods: [
+          FlowType.BANK_ID_SE,
+          FlowType.EMAIL_OTP,
+          FlowType.PHONE_OTP,
+          "oidc_apple",
+          "oidc_google",
+          "oidc_microsoft",
+          "unknown_method",
+        ],
         country: "country",
         levelOfAssurance: 4,
         pkceVerifier: null,
@@ -82,7 +90,14 @@ describe("oauthLoginController", () => {
     expect(ctx.cache.loginSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         expires: new Date("2022-01-01T08:00:00.000Z"),
-        requestedAuthenticationMethods: [FlowType.EMAIL_OTP, FlowType.PHONE_OTP],
+        requestedAuthenticationMethods: [
+          "bank_id_se",
+          "email_otp",
+          "phone_otp",
+          "oidc_apple",
+          "oidc_google",
+          "oidc_microsoft",
+        ],
       }),
       expect.any(Number),
     );
