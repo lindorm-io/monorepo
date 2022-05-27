@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { OIDC_SESSION_COOKIE_NAME } from "../../constant";
 import { OidcSession } from "../../entity";
@@ -34,6 +34,10 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
 
   if (!client_id) {
     throw new ClientError("Unable to find identity provider configuration");
+  }
+
+  if (!authorize_endpoint || !base_url || !response_type || !scope) {
+    throw new ServerError("Identity provider is not correctly initialized");
   }
 
   const { expiresIn } = getExpires(loginSession.expires);
