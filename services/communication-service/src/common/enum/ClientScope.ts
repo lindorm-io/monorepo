@@ -23,7 +23,6 @@ export enum ClientScope {
   VAULT_ENCRYPTED_RECORD_READ = "lindorm.io/vault-service/client/encrypted-record:read",
   VAULT_ENCRYPTED_RECORD_WRITE = "lindorm.io/vault-service/client/encrypted-record:write",
   VAULT_JWKS_PRIVATE_READ = "lindorm.io/vault-service/client/jwks-private:read",
-  VAULT_JWKS_PUBLIC_READ = "lindorm.io/vault-service/client/jwks-public:read",
   VAULT_PROTECTED_RECORD_READ = "lindorm.io/vault-service/client/protected-record:read",
   VAULT_PROTECTED_RECORD_WRITE = "lindorm.io/vault-service/client/protected-record:write",
 }

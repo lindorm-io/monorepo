@@ -13,7 +13,6 @@ export const getTestClientCredentials = (
       ClientScope.VAULT_ENCRYPTED_RECORD_READ,
       ClientScope.VAULT_ENCRYPTED_RECORD_WRITE,
       ClientScope.VAULT_JWKS_PRIVATE_READ,
-      ClientScope.VAULT_JWKS_PUBLIC_READ,
       ClientScope.VAULT_PROTECTED_RECORD_READ,
       ClientScope.VAULT_PROTECTED_RECORD_WRITE,
     ],
