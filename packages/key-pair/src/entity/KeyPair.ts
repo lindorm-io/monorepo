@@ -140,13 +140,14 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
 
     const keyOps = ["verify"];
 
-    if (isString(this.privateKey)) {
+    if (exposePrivateKey && isString(this.privateKey)) {
       keyOps.push("sign");
 
       if (this.type === KeyType.RSA && (this.passphrase?.length || 0) < 1) {
         keyOps.push("encrypt");
       }
     }
+
     if (this.type === KeyType.RSA) {
       keyOps.push("decrypt");
     }
