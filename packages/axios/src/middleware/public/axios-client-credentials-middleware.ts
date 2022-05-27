@@ -4,7 +4,7 @@ import { difference, flatten, uniq } from "lodash";
 import { getUnixTime } from "date-fns";
 import { MetadataHeader } from "../../enum";
 
-interface MiddlewareOptions {
+export interface AxiosClientCredentialsMiddlewareConfig {
   clientEnvironment: string;
   clientId: string;
   clientSecret: string;
@@ -14,7 +14,9 @@ interface MiddlewareOptions {
   timeoutAdjustment?: number;
 }
 
-export const axiosClientCredentialsMiddleware = (middlewareOptions: MiddlewareOptions) => {
+export const axiosClientCredentialsMiddleware = (
+  config: AxiosClientCredentialsMiddlewareConfig,
+) => {
   const {
     clientEnvironment,
     clientId,
@@ -23,7 +25,7 @@ export const axiosClientCredentialsMiddleware = (middlewareOptions: MiddlewareOp
     grantType = "client_credentials",
     path = "/oauth2/token",
     timeoutAdjustment = 5,
-  } = middlewareOptions;
+  } = config;
 
   let bearerScopes: Array<string> = [];
   let bearerTimeout = 0;
