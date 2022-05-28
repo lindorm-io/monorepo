@@ -5,6 +5,7 @@ export * from "./get-expires";
 export * from "./get-expiry-date";
 export * from "./random-number";
 export * from "./random-string";
+export * from "./sleep";
 export * from "./sort-object-keys";
 export * from "./strict-type";
 export * from "./string-comparison";

@@ -1,7 +1,6 @@
 import { InMemoryCache } from "./InMemoryCache";
 import { logger } from "../test";
-
-const sleep = (time: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, time));
+import { sleep } from "@lindorm-io/core";
 
 describe("InMemoryCache", () => {
   let cache: InMemoryCache<any>;

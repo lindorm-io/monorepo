@@ -1,6 +1,7 @@
 import Timeout = NodeJS.Timeout;
 import { EventEmitter } from "events";
 import { Logger } from "@lindorm-io/winston";
+import { sleep } from "@lindorm-io/core";
 
 type Callback = () => Promise<void>;
 type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
@@ -19,8 +20,6 @@ export enum IntervalWorkerEvent {
   SUCCESS = "interval_worker_success",
   ERROR = "interval_worker_error",
 }
-
-const sleep = (time: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, time));
 
 export class IntervalWorker extends EventEmitter {
   private readonly callback: Callback;

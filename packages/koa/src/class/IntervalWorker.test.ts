@@ -1,7 +1,6 @@
 import { IntervalWorker } from "./IntervalWorker";
 import { logger } from "../test";
-
-const sleep = (time: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, time));
+import { sleep } from "@lindorm-io/core";
 
 describe("IntervalWorker.ts", () => {
   let eventResult: any;
