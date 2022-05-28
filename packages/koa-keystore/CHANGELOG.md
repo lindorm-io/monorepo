@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.7.3...@lindorm-io/koa-keystore@0.8.0) (2022-05-28)
+
+
+### Bug Fixes
+
+* extend web key handler from axios options ([ac6284c](https://github.com/lindorm-io/monorepo/commit/ac6284cd8bab57a15992b4cc27d49d3d61886618))
+
+
+### Features
+
+* add worker to fetch private keys from vault ([e3ed8d8](https://github.com/lindorm-io/monorepo/commit/e3ed8d8a2d95fd9e9a377c5d36cf47697e357beb))
+
+
+
+
+
 ## [0.7.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.7.2...@lindorm-io/koa-keystore@0.7.3) (2022-05-22)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore

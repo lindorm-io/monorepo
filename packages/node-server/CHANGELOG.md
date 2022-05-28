@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.3.3...@lindorm-io/node-server@0.4.0) (2022-05-28)
+
+
+### Features
+
+* add .well-known/jwks.json route generation to node server package ([58293df](https://github.com/lindorm-io/monorepo/commit/58293dfb07e78779705304bc22e4f429f81d680d))
+* update options for node server ([6b443f6](https://github.com/lindorm-io/monorepo/commit/6b443f6b0c6b1f4aa0ae4d9c66282b76b4e554e0))
+
+
+
+
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.3.2...@lindorm-io/node-server@0.3.3) (2022-05-22)
 
 **Note:** Version bump only for package @lindorm-io/node-server

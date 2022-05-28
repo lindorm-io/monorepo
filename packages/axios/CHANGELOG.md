@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.5...@lindorm-io/axios@0.3.6) (2022-05-28)
+
+
+### Bug Fixes
+
+* expose axios client credentials middleware config ([2fbb839](https://github.com/lindorm-io/monorepo/commit/2fbb839710cd8aead49172631e014efa6db1302d))
+
+
+
+
+
 ## [0.3.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.4...@lindorm-io/axios@0.3.5) (2022-05-22)
 
 

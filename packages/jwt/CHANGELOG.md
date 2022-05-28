@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.13...@lindorm-io/jwt@0.6.14) (2022-05-28)
+
+
+### Bug Fixes
+
+* add key type options to token issuer ([26cc695](https://github.com/lindorm-io/monorepo/commit/26cc6952991b10c1d6c0ad99378de5fa10f3ab1e))
+
+
+
+
+
 ## [0.6.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.12...@lindorm-io/jwt@0.6.13) (2022-05-22)
 
 **Note:** Version bump only for package @lindorm-io/jwt

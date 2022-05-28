@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.4...@lindorm-io/key-pair@0.4.5) (2022-05-28)
+
+
+### Bug Fixes
+
+* add arguments to keystore methods for finding specific key types ([4a39071](https://github.com/lindorm-io/monorepo/commit/4a39071d6145b4073b9f758faeab364042563922))
+* key pair jwk should only add sign and encrypt when private key is present ([4a905e0](https://github.com/lindorm-io/monorepo/commit/4a905e07de0d8986f510856142d7f9d49057ed72))
+
+
+
+
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.3...@lindorm-io/key-pair@0.4.4) (2022-05-15)
 
 **Note:** Version bump only for package @lindorm-io/key-pair
