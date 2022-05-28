@@ -9,6 +9,7 @@
     "clean": "rimraf dist node_modules",
     "dev:generate:confirmation-token": "ts-node src/bin/generate-confirmation-token",
     "dev:generate:device": "ts-node src/bin/generate-device",
+    "docker:build": "docker build -t lindorm-io/device-service:latest .",
     "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w src/generated",
     "start": "node dist/server",
     "start:dev": "compd --file docker-compose.yml nodemon",

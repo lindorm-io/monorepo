@@ -9,6 +9,7 @@
     "clean": "rimraf dist node_modules",
     "dev:bootstrap": "ts-node src/bin/bootstrap-dev",
     "dev:generate:admin": "ts-node src/bin/generate-admin-token acbfce9e-072b-450f-b451-5915cdd17a33",
+    "docker:build": "docker build -t lindorm-io/oauth-service:latest .",
     "generate:admin": "node dist/bin/generate-admin-token",
     "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w src/generated",
     "start": "node dist/server",
