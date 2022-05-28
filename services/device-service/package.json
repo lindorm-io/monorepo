@@ -27,22 +27,22 @@
     "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {
-    "@lindorm-io/axios": "^0.3.5",
+    "@lindorm-io/axios": "^0.3.6",
     "@lindorm-io/core": "^0.4.0",
     "@lindorm-io/crypto": "^0.1.10",
     "@lindorm-io/entity": "^0.3.3",
     "@lindorm-io/errors": "^0.1.13",
-    "@lindorm-io/jwt": "^0.6.13",
-    "@lindorm-io/key-pair": "^0.4.4",
+    "@lindorm-io/jwt": "^0.6.14",
+    "@lindorm-io/key-pair": "^0.4.5",
     "@lindorm-io/koa": "^0.12.10",
-    "@lindorm-io/koa-axios": "^0.1.10",
-    "@lindorm-io/koa-bearer-auth": "^0.3.10",
-    "@lindorm-io/koa-jwt": "^0.5.10",
-    "@lindorm-io/koa-keystore": "^0.7.3",
+    "@lindorm-io/koa-axios": "^0.1.11",
+    "@lindorm-io/koa-bearer-auth": "^0.3.11",
+    "@lindorm-io/koa-jwt": "^0.5.11",
+    "@lindorm-io/koa-keystore": "^0.8.0",
     "@lindorm-io/koa-mongo": "^0.8.3",
     "@lindorm-io/koa-redis": "^0.6.3",
     "@lindorm-io/mongo": "^0.9.0",
-    "@lindorm-io/node-server": "^0.3.3",
+    "@lindorm-io/node-server": "^0.4.0",
     "@lindorm-io/redis": "^0.8.0",
     "@lindorm-io/winston": "^0.4.1",
     "joi": "^17.5.0",
@@ -72,8 +72,8 @@
     "nodemon": "^2.0.16",
     "rimraf": "^3.0.2",
     "supertest": "^6.2.3",
-    "ts-jest": "^28.0.2",
+    "ts-jest": "^28.0.3",
     "ts-node": "^10.8.0",
-    "typescript": "^4.6.4"
+    "typescript": "^4.7.2"
   }
 }
