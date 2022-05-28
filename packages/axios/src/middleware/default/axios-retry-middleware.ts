@@ -2,7 +2,7 @@ import { AxiosMiddleware } from "../../types";
 
 export const axiosRetryMiddleware: AxiosMiddleware = {
   retry: async (error, options): Promise<boolean> => {
-    if (!options.retry || options.retry < 1) return false;
+    if (!options.retry || options.attempt > options.retry) return false;
 
     switch (error.statusCode) {
       case 500:

@@ -3,7 +3,7 @@ import { IAxiosRequestError } from "../error";
 import { Logger } from "@lindorm-io/winston";
 import { axiosCaseSwitchMiddleware, axiosRetryMiddleware } from "../middleware/default";
 import { convertError, convertResponse, logAxiosError, logAxiosResponse } from "../util";
-import { createURL } from "@lindorm-io/core";
+import { createURL, sleep } from "@lindorm-io/core";
 import { getResponseTime } from "../util/get-response-time";
 import { startsWith } from "lodash";
 import {
@@ -182,6 +182,7 @@ export class Axios {
   ): Promise<AxiosResponse<Data>> {
     const start = Date.now();
 
+    options.attempt = options.attempt || 1;
     options.retry = options.retry || 0;
 
     const { auth, method, path } = await this.configMiddleware(config, options);
@@ -226,7 +227,8 @@ export class Axios {
       });
 
       if (await this.retryMiddleware(err, options)) {
-        return this.createRequest(config, { ...options, retry: options.retry - 1 });
+        await sleep(options.attempt * 100);
+        return this.createRequest(config, { ...options, attempt: options.attempt + 1 });
       }
 
       throw await this.errorMiddleware(convertError(err), options);
