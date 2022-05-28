@@ -96,7 +96,7 @@ describe("oauthAuthorizeController", () => {
   });
 
   test("should resolve with redirect to login URL", async () => {
-    const response = await oauthAuthorizeController(ctx);
+    const response = (await oauthAuthorizeController(ctx)) as any;
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
 

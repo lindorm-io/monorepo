@@ -1,8 +1,8 @@
 import { IntervalWorker } from "@lindorm-io/koa";
 import { configuration } from "../server/configuration";
-import { winston } from "../server/logger";
-import { mongoConnection, redisConnection } from "../instance";
 import { keyPairJwksCacheWorker, keyPairMongoCacheWorker } from "@lindorm-io/koa-keystore";
+import { mongoConnection, redisConnection } from "../instance";
+import { winston } from "../server/logger";
 
 export const oidcProvidersJwksWorkers: Array<IntervalWorker> = [];
 

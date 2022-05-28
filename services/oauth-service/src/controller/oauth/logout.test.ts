@@ -45,13 +45,13 @@ describe("oauthLogoutController", () => {
   });
 
   test("should resolve URL", async () => {
-    const result = await oauthLogoutController(ctx);
+    const response = (await oauthLogoutController(ctx)) as any;
 
-    expect(result).toStrictEqual({
+    expect(response).toStrictEqual({
       redirect: expect.any(URL),
     });
 
-    const url = result.redirect as URL;
+    const url = response.redirect as URL;
 
     expect(url.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 

@@ -25,7 +25,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should resolve redirect uri", async () => {
-    const response = await oauthVerifyLogoutController(ctx);
+    const response = (await oauthVerifyLogoutController(ctx)) as any;
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
     expect(response.redirect.toString()).toBe(
@@ -50,7 +50,7 @@ describe("oauthVerifyController", () => {
   test("should resolve redirect to /logout", async () => {
     ctx.entity.logoutSession.status = SessionStatus.PENDING;
 
-    const response = await oauthVerifyLogoutController(ctx);
+    const response = (await oauthVerifyLogoutController(ctx)) as any;
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
     expect(response.redirect.toString()).toBe(

@@ -51,7 +51,6 @@ Object {
         "lindorm.io/vault-service/client/encrypted-record:read",
         "lindorm.io/vault-service/client/encrypted-record:write",
         "lindorm.io/vault-service/client/jwks-private:read",
-        "lindorm.io/vault-service/client/jwks-public:read",
         "lindorm.io/vault-service/client/protected-record:read",
         "lindorm.io/vault-service/client/protected-record:write",
       ],

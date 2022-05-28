@@ -57,7 +57,7 @@ describe("oauthVerifyController", () => {
   test("should resolve redirect to /login", async () => {
     ctx.entity.authorizationSession.authenticationStatus = SessionStatus.PENDING;
 
-    const response = await oauthVerifyAuthorizationController(ctx);
+    const response = (await oauthVerifyAuthorizationController(ctx)) as any;
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
     expect(response.redirect.toString()).toBe(
@@ -70,7 +70,7 @@ describe("oauthVerifyController", () => {
   test("should resolve redirect to /consent", async () => {
     ctx.entity.authorizationSession.consentStatus = SessionStatus.PENDING;
 
-    const response = await oauthVerifyAuthorizationController(ctx);
+    const response = (await oauthVerifyAuthorizationController(ctx)) as any;
 
     expect(response.redirect).toStrictEqual(expect.any(URL));
     expect(response.redirect.toString()).toBe(

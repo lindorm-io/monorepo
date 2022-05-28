@@ -14,9 +14,12 @@ export const server = createNodeServer<ServerKoaContext>({
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
-  isKeyPairCached: true,
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
+  keystore: {
+    exposePublic: true,
+    keyPairCache: true,
+  },
   logger: winston,
   middleware,
   port: configuration.server.port,

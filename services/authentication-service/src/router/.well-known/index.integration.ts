@@ -22,7 +22,7 @@ describe("/.well-known", () => {
           created_at: 1577865600,
           crv: "P-521",
           expires_at: 1641024000,
-          key_ops: ["sign", "verify"],
+          key_ops: ["verify"],
           kid: expect.any(String),
           kty: "EC",
           use: "sig",

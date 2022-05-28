@@ -6,7 +6,7 @@ import { configuration } from "../../server/configuration";
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.get("/openid-configuration", async (ctx: ServerKoaContext): Promise<void> => {
+router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
   ctx.body = {
     authorizationEndpoint: new URL("/oauth2/authorize", configuration.server.host).toString(),
     backchannelLogoutSessionSupported: true,
@@ -59,10 +59,5 @@ router.get("/openid-configuration", async (ctx: ServerKoaContext): Promise<void>
     tokeninfoEndpoint: new URL("/tokeninfo", configuration.server.host).toString(),
     userinfoEndpoint: new URL("/userinfo", configuration.server.host).toString(),
   };
-  ctx.status = HttpStatus.Success.OK;
-});
-
-router.get("/jwks.json", async (ctx: ServerKoaContext): Promise<void> => {
-  ctx.body = { keys: ctx.keystore.getJWKS() };
   ctx.status = HttpStatus.Success.OK;
 });

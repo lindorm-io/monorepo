@@ -10,13 +10,15 @@ import { winston } from "./logger";
 import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
-  isKeyPairCached: true,
-  isKeyPairInRepository: true,
   issuer: configuration.server.issuer,
+  keystore: {
+    exposePublic: true,
+    keyPairCache: true,
+    keyPairRepository: true,
+  },
   logger: winston,
   middleware,
   mongoConnection,
