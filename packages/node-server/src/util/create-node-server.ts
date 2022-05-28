@@ -55,7 +55,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketRepositoryMiddleware(Repository));
     }
 
-    if (options.isKeyPairInRepository) {
+    if (options.keystore?.keyPairRepository) {
       middleware.push(repositoryMiddleware(KeyPairRepository));
       socketMiddleware.push(socketRepositoryMiddleware(KeyPairRepository));
     }
@@ -70,7 +70,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketCacheMiddleware(Cache));
     }
 
-    if (options.isKeyPairCached !== false) {
+    if (options.keystore?.keyPairCache !== false) {
       middleware.push(cacheMiddleware(KeyPairCache));
       socketMiddleware.push(socketCacheMiddleware(KeyPairCache));
 
@@ -106,10 +106,10 @@ export const createNodeServer = <
 
   const koa = new KoaApp<Context>({ ...options, middleware, socketMiddleware });
 
-  if (options.keystore.exposePublic) {
+  if (options.keystore?.exposePublic) {
     koa.addRoute(
       "/.well-known/jwks.json",
-      createWellKnownJwksRouter<Context>(options.keystore.exposeExternal),
+      createWellKnownJwksRouter<Context>(options.keystore?.exposeExternal),
     );
   }
 

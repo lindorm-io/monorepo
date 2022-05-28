@@ -12,14 +12,14 @@ interface Service {
 interface Keystore {
   exposeExternal?: boolean;
   exposePublic?: boolean;
+  keyPairCache?: boolean; // default: true
+  keyPairRepository?: boolean; // default: false
 }
 
 export interface CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
 > extends KoaAppOptions<Context> {
   caches?: Array<typeof CacheBase>;
-  isKeyPairCached?: boolean; // default: true
-  isKeyPairInRepository?: boolean; // default: false
   issuer?: string;
   keystore?: Keystore;
   mongoConnection?: MongoConnection;
