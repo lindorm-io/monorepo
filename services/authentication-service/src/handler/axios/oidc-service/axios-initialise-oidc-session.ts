@@ -23,7 +23,7 @@ export const axiosInitialiseOidcSession = async (
       host: configuration.server.host,
       port: configuration.server.port,
     }).toString(),
-    expires: loginSession.expires.toISOString(),
+    expiresAt: loginSession.expires.toISOString(),
     loginHint: loginSession.loginHint.length ? loginSession.loginHint[0] : undefined,
     provider,
   };

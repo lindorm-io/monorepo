@@ -1,22 +1,18 @@
+import { ServerError } from "@lindorm-io/errors";
 import { getTestAccount, getTestLoginSession } from "../../test/entity";
 import { isAuthenticationReadyToConfirm as _isAuthenticationReadyToConfirm } from "../../util";
 import { logger } from "../../test/logger";
 import { loginOidcCallbackController } from "./login-oidc-callback";
 import {
   axiosGetOidcSession as _axiosGetOidcSession,
-  identityAuthenticateOidc as _identityAuthenticateOidc,
-  identityUpdateUserinfo as _identityUpdateUserinfo,
   oauthConfirmAuthentication as _oauthConfirmAuthentication,
   resolveAllowedFlows as _resolveAllowedFlows,
 } from "../../handler";
-import { ServerError } from "@lindorm-io/errors";
 
 jest.mock("../../handler");
 jest.mock("../../util");
 
 const axiosGetOidcSession = _axiosGetOidcSession as jest.Mock;
-const identityAuthenticateOidc = _identityAuthenticateOidc as jest.Mock;
-const identityUpdateUserinfo = _identityUpdateUserinfo as jest.Mock;
 const isAuthenticationReadyToConfirm = _isAuthenticationReadyToConfirm as jest.Mock;
 const oauthConfirmAuthentication = _oauthConfirmAuthentication as jest.Mock;
 const resolveAllowedFlows = _resolveAllowedFlows as jest.Mock;
@@ -47,12 +43,8 @@ describe("loginOidcCallbackController", () => {
     };
 
     axiosGetOidcSession.mockResolvedValue({
-      claims: { given_name: "given" },
-      providerHost: "https://apple.com",
-      providerName: "apple",
-    });
-    identityAuthenticateOidc.mockResolvedValue({
       identityId: "a1dc8f26-3e52-4424-9a8a-d0b94818b99f",
+      provider: "apple",
     });
     isAuthenticationReadyToConfirm.mockImplementation(() => false);
     oauthConfirmAuthentication.mockResolvedValue({ redirectTo: "oauthConfirmAuthentication" });
@@ -65,8 +57,6 @@ describe("loginOidcCallbackController", () => {
     });
 
     expect(axiosGetOidcSession).toHaveBeenCalled();
-    expect(identityAuthenticateOidc).toHaveBeenCalled();
-    expect(identityUpdateUserinfo).toHaveBeenCalled();
     expect(oauthConfirmAuthentication).not.toHaveBeenCalled();
 
     expect(ctx.cache.loginSessionCache.update).toHaveBeenCalledWith(

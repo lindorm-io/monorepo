@@ -10,10 +10,12 @@ interface RequestData {
   rdcSessionToken: string;
 }
 
-export const rejectRdcSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  rdcSessionToken: JOI_JWT.required(),
-});
+export const rejectRdcSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    rdcSessionToken: JOI_JWT.required(),
+  })
+  .required();
 
 export const rejectRdcController: ServerKoaController<RequestData> = async (
   ctx,

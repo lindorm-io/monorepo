@@ -12,9 +12,11 @@ interface ResponseBody {
   status: SessionStatus;
 }
 
-export const getEnrolmentStatusSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getEnrolmentStatusSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getEnrolmentStatusController: ServerKoaController<RequestData> = async (
   ctx,

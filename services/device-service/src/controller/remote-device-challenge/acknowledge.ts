@@ -38,9 +38,11 @@ interface ResponseBody {
   };
 }
 
-export const acknowledgeRdcSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const acknowledgeRdcSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const acknowledgeRdcController: ServerKoaController<RequestData> = async (
   ctx,

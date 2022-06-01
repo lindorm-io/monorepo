@@ -29,16 +29,18 @@ interface ResponseBody {
   externalChallengeRequired: boolean;
 }
 
-export const initialiseEnrolmentSchema = Joi.object<RequestData>({
-  brand: Joi.string().required(),
-  buildId: Joi.string().required(),
-  buildNumber: Joi.string().required(),
-  certificateMethod: JOI_CERTIFICATE_METHOD.required(),
-  macAddress: Joi.string().required(),
-  model: Joi.string().required(),
-  publicKey: Joi.string().required(),
-  systemName: Joi.string().required(),
-});
+export const initialiseEnrolmentSchema = Joi.object<RequestData>()
+  .keys({
+    brand: Joi.string().required(),
+    buildId: Joi.string().required(),
+    buildNumber: Joi.string().required(),
+    certificateMethod: JOI_CERTIFICATE_METHOD.required(),
+    macAddress: Joi.string().required(),
+    model: Joi.string().required(),
+    publicKey: Joi.string().required(),
+    systemName: Joi.string().required(),
+  })
+  .required();
 
 export const initialiseEnrolmentController: ServerKoaController<RequestData> = async (
   ctx,

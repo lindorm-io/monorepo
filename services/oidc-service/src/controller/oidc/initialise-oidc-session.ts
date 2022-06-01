@@ -11,7 +11,7 @@ import {
 export const initialiseOidcSessionSchema = Joi.object<InitialiseOidcSessionRequestData>()
   .keys({
     callbackUri: Joi.string().uri().required(),
-    expires: Joi.string().required(),
+    expiresAt: Joi.string().required(),
     identityId: JOI_GUID.optional(),
     loginHint: Joi.string().optional(),
     provider: Joi.string().required(),
@@ -22,12 +22,12 @@ export const initialiseOidcSessionController: ServerKoaController<
   InitialiseOidcSessionRequestData
 > = async (ctx): ControllerResponse<InitialiseOidcSessionResponseBody> => {
   const {
-    data: { callbackUri, expires, identityId, loginHint, provider },
+    data: { callbackUri, expiresAt, identityId, loginHint, provider },
   } = ctx;
 
   const url = await createOidcSession(ctx, {
     callbackUri,
-    expires: new Date(expires),
+    expires: new Date(expiresAt),
     identityId,
     loginHint,
     provider,

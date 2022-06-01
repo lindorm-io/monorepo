@@ -8,9 +8,11 @@ interface RequestData {
   id: string;
 }
 
-export const getDeviceLinkInfoSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getDeviceLinkInfoSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getDeviceLinkInfoController: ServerKoaController<RequestData> = async (
   ctx,

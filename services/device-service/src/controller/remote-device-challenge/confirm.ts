@@ -12,11 +12,13 @@ interface RequestData {
   rdcSessionToken: string;
 }
 
-export const confirmRdcSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  challengeConfirmationToken: JOI_JWT.required(),
-  rdcSessionToken: JOI_JWT.required(),
-});
+export const confirmRdcSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    challengeConfirmationToken: JOI_JWT.required(),
+    rdcSessionToken: JOI_JWT.required(),
+  })
+  .required();
 
 export const confirmRdcController: ServerKoaController<RequestData> = async (
   ctx,

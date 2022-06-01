@@ -8,9 +8,11 @@ interface RequestData {
   id: string;
 }
 
-export const deleteDeviceLinkSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const deleteDeviceLinkSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const deleteDeviceLinkController: ServerKoaController<RequestData> = async (
   ctx,

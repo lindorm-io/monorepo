@@ -35,13 +35,15 @@ interface ResponseBody {
   trusted: boolean;
 }
 
-export const confirmEnrolmentSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  biometry: JOI_BIOMETRY.optional(),
-  certificateVerifier: Joi.string().base64().required(),
-  enrolmentSessionToken: JOI_JWT.required(),
-  pincode: JOI_PINCODE.optional(),
-});
+export const confirmEnrolmentSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    biometry: JOI_BIOMETRY.optional(),
+    certificateVerifier: Joi.string().base64().required(),
+    enrolmentSessionToken: JOI_JWT.required(),
+    pincode: JOI_PINCODE.optional(),
+  })
+  .required();
 
 export const confirmEnrolmentController: ServerKoaController<RequestData> = async (
   ctx,

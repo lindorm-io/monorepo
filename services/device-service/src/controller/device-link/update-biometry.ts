@@ -13,11 +13,13 @@ interface RequestData {
   biometry: string;
 }
 
-export const updateDeviceLinkBiometrySchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  challengeConfirmationToken: JOI_JWT.required(),
-  biometry: JOI_BIOMETRY.required(),
-});
+export const updateDeviceLinkBiometrySchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    challengeConfirmationToken: JOI_JWT.required(),
+    biometry: JOI_BIOMETRY.required(),
+  })
+  .required();
 
 export const updateDeviceLinkBiometryController: ServerKoaController<RequestData> = async (
   ctx,

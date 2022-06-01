@@ -8,10 +8,12 @@ interface RequestData {
   challengeSessionToken: string;
 }
 
-export const rejectChallengeSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  challengeSessionToken: JOI_JWT.required(),
-});
+export const rejectChallengeSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    challengeSessionToken: JOI_JWT.required(),
+  })
+  .required();
 
 export const rejectChallengeController: ServerKoaController<RequestData> = async (
   ctx,

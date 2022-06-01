@@ -18,28 +18,30 @@ import {
   JOI_NONCE,
 } from "../../common";
 
-export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>({
-  clientId: JOI_GUID.required(),
-  confirmMethod: JOI_RDC_CONFIRM_METHOD.optional(),
-  confirmPayload: Joi.object().optional(),
-  confirmUri: Joi.string().uri().required(),
-  expiresAt: Joi.string().optional(),
-  factors: JOI_FACTORS.optional(),
-  identityId: Joi.when("mode", {
-    is: RdcSessionMode.PUSH_NOTIFICATION,
-    then: JOI_GUID.required(),
-    otherwise: JOI_GUID.optional(),
-  }),
-  mode: JOI_RDC_MODE.required(),
-  nonce: JOI_NONCE.required(),
-  rejectMethod: JOI_RDC_REJECT_METHOD.optional(),
-  rejectPayload: Joi.object().optional(),
-  rejectUri: Joi.string().uri().required(),
-  scopes: Joi.array().items(Joi.string()).optional(),
-  templateName: Joi.string().required(),
-  templateParameters: Joi.object().optional(),
-  tokenPayload: Joi.object().optional(),
-});
+export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>()
+  .keys({
+    clientId: JOI_GUID.required(),
+    confirmMethod: JOI_RDC_CONFIRM_METHOD.optional(),
+    confirmPayload: Joi.object().optional(),
+    confirmUri: Joi.string().uri().required(),
+    expiresAt: Joi.string().optional(),
+    factors: JOI_FACTORS.optional(),
+    identityId: Joi.when("mode", {
+      is: RdcSessionMode.PUSH_NOTIFICATION,
+      then: JOI_GUID.required(),
+      otherwise: JOI_GUID.optional(),
+    }),
+    mode: JOI_RDC_MODE.required(),
+    nonce: JOI_NONCE.required(),
+    rejectMethod: JOI_RDC_REJECT_METHOD.optional(),
+    rejectPayload: Joi.object().optional(),
+    rejectUri: Joi.string().uri().required(),
+    scopes: Joi.array().items(Joi.string()).optional(),
+    templateName: Joi.string().required(),
+    templateParameters: Joi.object().optional(),
+    tokenPayload: Joi.object().optional(),
+  })
+  .required();
 
 export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRequestData> = async (
   ctx,

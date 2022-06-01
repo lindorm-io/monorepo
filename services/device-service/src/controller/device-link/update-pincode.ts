@@ -13,11 +13,13 @@ interface RequestData {
   pincode: string;
 }
 
-export const updateDeviceLinkPincodeSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  challengeConfirmationToken: JOI_JWT.required(),
-  pincode: JOI_PINCODE.required(),
-});
+export const updateDeviceLinkPincodeSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    challengeConfirmationToken: JOI_JWT.required(),
+    pincode: JOI_PINCODE.required(),
+  })
+  .required();
 
 export const updateDeviceLinkPincodeController: ServerKoaController<RequestData> = async (
   ctx,

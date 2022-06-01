@@ -18,9 +18,11 @@ interface ResponseBody {
   sessions: Array<Session>;
 }
 
-export const getPendingRdcSessionsSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getPendingRdcSessionsSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getPendingRdcSessionsController: ServerKoaController = async (
   ctx,

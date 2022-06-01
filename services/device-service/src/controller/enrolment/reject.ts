@@ -8,10 +8,12 @@ interface RequestData {
   enrolmentSessionToken: string;
 }
 
-export const rejectEnrolmentSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  enrolmentSessionToken: JOI_JWT.required(),
-});
+export const rejectEnrolmentSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    enrolmentSessionToken: JOI_JWT.required(),
+  })
+  .required();
 
 export const rejectEnrolmentController: ServerKoaController<RequestData> = async (
   ctx,

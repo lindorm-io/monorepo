@@ -1,6 +1,6 @@
 export interface InitialiseOidcSessionRequestData {
   callbackUri: string;
-  expires: string;
+  expiresAt: string;
   identityId?: string;
   loginHint?: string;
   provider: string;

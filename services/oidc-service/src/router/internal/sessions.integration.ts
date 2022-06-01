@@ -24,7 +24,7 @@ describe("/internal/sessions", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         callback_uri: "https://test.lindorm.io/callback",
-        expires: "2021-01-02T08:00:00.000+05:00",
+        expires_at: "2021-01-02T08:00:00.000+05:00",
         identity_id: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
         login_hint: "test@lindorm.io",
         provider: "microsoft",

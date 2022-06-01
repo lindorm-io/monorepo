@@ -24,14 +24,16 @@ interface ResponseBody {
   strategies: Array<ChallengeStrategy>;
 }
 
-export const initialiseChallengeSchema = Joi.object<RequestData>({
-  clientId: JOI_GUID.required(),
-  deviceLinkId: JOI_GUID.required(),
-  identityId: JOI_GUID.required(),
-  nonce: JOI_NONCE.required(),
-  payload: Joi.object().required(),
-  scopes: Joi.array().items(Joi.string()).required(),
-});
+export const initialiseChallengeSchema = Joi.object<RequestData>()
+  .keys({
+    clientId: JOI_GUID.required(),
+    deviceLinkId: JOI_GUID.required(),
+    identityId: JOI_GUID.required(),
+    nonce: JOI_NONCE.required(),
+    payload: Joi.object().required(),
+    scopes: Joi.array().items(Joi.string()).required(),
+  })
+  .required();
 
 export const initialiseChallengeController: ServerKoaController<RequestData> = async (
   ctx,

@@ -31,22 +31,24 @@ interface ResponseBody {
   expiresIn: number;
 }
 
-export const confirmChallengeSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  biometry: Joi.when("strategy", {
-    is: ChallengeStrategy.BIOMETRY,
-    then: JOI_BIOMETRY.required(),
-    otherwise: Joi.forbidden(),
-  }),
-  certificateVerifier: Joi.string().base64().required(),
-  challengeSessionToken: JOI_JWT.required(),
-  pincode: Joi.when("strategy", {
-    is: ChallengeStrategy.PINCODE,
-    then: JOI_PINCODE.required(),
-    otherwise: Joi.forbidden(),
-  }),
-  strategy: JOI_STRATEGY.required(),
-});
+export const confirmChallengeSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    biometry: Joi.when("strategy", {
+      is: ChallengeStrategy.BIOMETRY,
+      then: JOI_BIOMETRY.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    certificateVerifier: Joi.string().base64().required(),
+    challengeSessionToken: JOI_JWT.required(),
+    pincode: Joi.when("strategy", {
+      is: ChallengeStrategy.PINCODE,
+      then: JOI_PINCODE.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    strategy: JOI_STRATEGY.required(),
+  })
+  .required();
 
 export const confirmChallengeController: ServerKoaController<RequestData> = async (
   ctx,

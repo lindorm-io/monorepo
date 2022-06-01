@@ -9,10 +9,12 @@ interface RequestData {
   challengeConfirmationToken: string;
 }
 
-export const updateDeviceLinkTrustedSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  challengeConfirmationToken: JOI_JWT.required(),
-});
+export const updateDeviceLinkTrustedSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    challengeConfirmationToken: JOI_JWT.required(),
+  })
+  .required();
 
 export const updateDeviceLinkTrustedController: ServerKoaController<RequestData> = async (
   ctx,
