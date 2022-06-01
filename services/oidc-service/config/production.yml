@@ -1,0 +1,16 @@
+redis:
+  username: username
+  password: password
+
+server:
+  domain: https://lindorm.io
+  environment: production
+  host: https://oidc.lindorm.io
+  issuer: https://oidc.lindorm.io
+  workers: true
+
+services:
+  identity_service:
+    host: https://identity.lindorm.io
+  oauth_service:
+    host: https://oauth.lindorm.io

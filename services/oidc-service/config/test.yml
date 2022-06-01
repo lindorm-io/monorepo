@@ -1,0 +1,53 @@
+oauth:
+  client_id: id
+  client_secret: secret
+
+oidc_providers:
+  - key: apple
+    authorize_endpoint: /authorize
+    base_url: https://apple.com/
+    client_id: apple_client_id
+    client_secret: apple_client_secret
+    response_type: code
+    scope: openid email
+    token_endpoint: /token
+    token_issuer: https://jwt.apple.com
+    userinfo_endpoint: /userinfo
+  - key: google
+    authorize_endpoint: /authorize
+    base_url: https://google.com/
+    client_id: google_client_id
+    client_secret: google_client_secret
+    response_type: id_token
+    scope: openid address email phone profile
+    token_endpoint: /token
+    token_issuer: https://jwt.google.com
+    userinfo_endpoint: /userinfo
+  - key: microsoft
+    authorize_endpoint: /authorize
+    base_url: https://microsoft.com/
+    client_id: microsoft_client_id
+    client_secret: microsoft_client_secret
+    response_type: token
+    scope: openid profile
+    token_endpoint: /token
+    token_issuer: https://jwt.microsoft.com
+    userinfo_endpoint: /userinfo
+
+redis:
+  host: localhost
+  port: 3602
+
+server:
+  domain: https://test.lindorm.io
+  environment: test
+  host: https://oidc.test.lindorm.io
+  issuer: https://oidc.test.lindorm.io
+  port: 3600
+  workers: false
+
+services:
+  identity_service:
+    host: https://identity.test.lindorm.io
+  oauth_service:
+    host: https://oauth.test.lindorm.io

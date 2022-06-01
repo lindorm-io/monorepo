@@ -1,0 +1,25 @@
+oauth:
+  client_id: 3e0ab7aa-f445-4031-ad27-d87ff23d2ce2
+  client_secret: 5NTac6bAnSNAWnMh0pCjABmlv1ca6LUml88gaQrQrBU3aNS6W6LpJp9r3ViclTe8
+
+redis:
+  host: localhost
+  port: 3602
+
+server:
+  domain: https://development.lindorm.io
+  environment: development
+  host: http://localhost
+  issuer: https://oidc.development.lindorm.io
+  port: 3600
+  workers: true
+
+services:
+  identity_service:
+    issuer: https://identity.development.lindorm.io
+    host: http://localhost
+    port: 3400
+  oauth_service:
+    issuer: https://oauth.development.lindorm.io
+    host: http://localhost
+    port: 3500

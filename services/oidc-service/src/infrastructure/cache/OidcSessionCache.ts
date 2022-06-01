@@ -6,7 +6,7 @@ export class OidcSessionCache extends LindormCache<OidcSessionAttributes, OidcSe
     super({
       ...options,
       entityName: "OidcSession",
-      indexedAttributes: [],
+      indexedAttributes: ["state"],
     });
   }
 

@@ -1,0 +1,33 @@
+import Joi from "joi";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { GetOidcSessionResponseBody, JOI_GUID } from "../../common";
+import { ServerKoaController } from "../../types";
+
+interface RequestData {
+  id: string;
+}
+
+export const getOidcSessionSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
+
+export const getOidcSessionController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<GetOidcSessionResponseBody> => {
+  const {
+    entity: { oidcSession },
+  } = ctx;
+
+  const { identityId, provider, verified } = oidcSession;
+
+  if (!verified) {
+    throw new ClientError("Session not verified");
+  }
+
+  return {
+    body: { identityId, provider },
+  };
+};
