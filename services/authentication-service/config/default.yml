@@ -57,6 +57,10 @@ services:
     client_name: oauthClient
     issuer: https://oauth.lindorm.io
     host: http://localhost
+  oidc_service:
+    client_name: oidcClient
+    issuer: https://oidc.lindorm.io
+    host: http://localhost
   vault_service:
     client_name: vaultClient
     issuer: https://vault.lindorm.io

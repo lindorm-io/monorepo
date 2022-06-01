@@ -11,7 +11,7 @@ mongo:
 
 oauth:
   client_id: f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f
-  client_secret: JnywQD4xI1r0TtZNHSXpXFiZQbknHRGMpMGuPsILR3OYTtQDEUrb5KtQzu8BhbWhYYjtew49yN3VsFa38SkWDZ4CxgcOtfj6MNiCmFBRdzfAOkk4fJS1he11ViDEYTXp
+  client_secret: kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E
 
 redis:
   host: localhost
@@ -44,7 +44,11 @@ services:
     issuer: https://oauth.development.lindorm.io
     host: http://localhost
     port: 3500
+  oidc_service:
+    issuer: https://oidc.development.lindorm.io
+    host: http://localhost
+    port: 3600
   vault_service:
     issuer: https://vault.development.lindorm.io
     host: http://localhost
-    port: 3600
+    port: 3700
