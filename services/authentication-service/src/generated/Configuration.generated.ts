@@ -44,17 +44,8 @@ interface Oauth {
 }
 
 interface OidcProvider {
-  authorize_endpoint: string;
-  base_url:           string;
-  client_id:          string;
-  client_secret:      string;
-  key:                string;
-  loa_value:          number;
-  response_type:      string;
-  scope:              string;
-  token_endpoint:     string;
-  token_issuer:       string;
-  userinfo_endpoint:  string;
+  key:       string;
+  loa_value: number;
 }
 
 interface Server {
@@ -72,6 +63,7 @@ interface Services {
   device_service:        Service;
   identity_service:      Service;
   oauth_service:         Service;
+  oidc_service:          Service;
   vault_service:         Service;
 }
 

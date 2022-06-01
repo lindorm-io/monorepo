@@ -1,2 +1,2 @@
-export * from "./initialise-oidc";
-export * from "./verify-oidc";
+export * from "./initialise-login-oidc";
+export * from "./login-oidc-callback";

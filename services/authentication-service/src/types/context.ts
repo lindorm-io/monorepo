@@ -17,7 +17,6 @@ import {
   MfaCookieSession,
   LoginSession,
   ConsentSession,
-  OidcSession,
   LogoutSession,
 } from "../entity";
 import {
@@ -27,7 +26,6 @@ import {
   MfaCookieSessionCache,
   LoginSessionCache,
   ConsentSessionCache,
-  OidcSessionCache,
   LogoutSessionCache,
 } from "../infrastructure";
 
@@ -36,6 +34,7 @@ interface ServerAxios extends LindormNodeServerAxios {
   deviceLinkClient: Axios;
   identityClient: Axios;
   oauthClient: Axios;
+  oidcClient: Axios;
   vaultClient: Axios;
 }
 
@@ -45,7 +44,6 @@ interface ServerCache extends LindormNodeServerCache {
   loginSessionCache: LoginSessionCache;
   logoutSessionCache: LogoutSessionCache;
   mfaCookieSessionCache: MfaCookieSessionCache;
-  oidcSessionCache: OidcSessionCache;
 }
 
 interface ServerEntity {
@@ -56,7 +54,6 @@ interface ServerEntity {
   loginSession: LoginSession;
   logoutSession: LogoutSession;
   mfaCookieSession: MfaCookieSession;
-  oidcSession: OidcSession;
 }
 
 interface ServerRepository extends LindormNodeServerRepository {

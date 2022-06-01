@@ -1,5 +1,4 @@
 import { Environment } from "@lindorm-io/koa";
-import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
@@ -16,18 +15,15 @@ import {
   LoginSessionCache,
   LogoutSessionCache,
   MfaCookieSessionCache,
-  OidcSessionCache,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
   caches: [
     ConsentSessionCache,
     FlowSessionCache,
-    KeyPairCache,
     LoginSessionCache,
     LogoutSessionCache,
     MfaCookieSessionCache,
-    OidcSessionCache,
   ],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
@@ -44,7 +40,7 @@ export const server = createNodeServer<ServerKoaContext>({
   mongoConnection,
   port: configuration.server.port,
   redisConnection,
-  repositories: [AccountRepository, BrowserLinkRepository, KeyPairRepository],
+  repositories: [AccountRepository, BrowserLinkRepository],
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({
     name: service.client_name,

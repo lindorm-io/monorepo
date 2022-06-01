@@ -6,7 +6,6 @@ import {
   keyPairDeviceJwksWorker,
   keyPairOAuthJwksWorker,
   keyPairRotationWorker,
-  oidcProvidersJwksWorkers,
 } from "../worker";
 
 export const workers: Array<IntervalWorker> = [];
@@ -18,8 +17,4 @@ if (configuration.server.workers) {
 
   workers.push(keyPairOAuthJwksWorker);
   workers.push(keyPairDeviceJwksWorker);
-
-  for (const worker of oidcProvidersJwksWorkers) {
-    workers.push(worker);
-  }
 }
