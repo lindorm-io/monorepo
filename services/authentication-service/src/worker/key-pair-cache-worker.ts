@@ -31,7 +31,7 @@ export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
 export const keyPairOAuthJwksWorker = keyPairJwksCacheWorker({
   host: configuration.services.oauth_service.host,
   port: configuration.services.oauth_service.port,
-  clientName: "OAuth",
+  clientName: "oauthClient",
   redisConnection,
   retry: 30,
   winston,
