@@ -9,11 +9,13 @@ interface RequestData {
   permissions: Array<IdentityPermission>;
 }
 
-export const identityAdminSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  active: Joi.boolean().optional(),
-  permissions: Joi.array().items(Joi.string()).optional(),
-});
+export const identityAdminSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    active: Joi.boolean().optional(),
+    permissions: Joi.array().items(Joi.string()).optional(),
+  })
+  .required();
 
 export const identityAdminController: ServerKoaController<RequestData> = async (
   ctx,

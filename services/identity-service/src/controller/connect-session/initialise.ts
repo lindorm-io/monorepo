@@ -1,16 +1,15 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ConnectSession } from "../../entity";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType } from "../../common";
-import { JOI_EMAIL, JOI_GUID, JOI_PHONE_NUMBER } from "../../common";
+import { JOI_EMAIL, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
+import { ServerKoaController } from "../../types";
 import { initialiseEmailConnectSession, initialisePhoneNumberConnectSession } from "../../handler";
 
 interface RequestData {
   identifier: string;
-  identityId: string;
   type: IdentifierType;
 }
 
@@ -19,7 +18,6 @@ interface ResponseBody {
 }
 
 export const identifierConnectInitialiseSchema = Joi.object<RequestData>({
-  identityId: JOI_GUID.required(),
   identifier: Joi.when("type", {
     switch: [
       { is: IdentifierType.EMAIL, then: JOI_EMAIL.required() },

@@ -8,9 +8,11 @@ interface RequestData {
   id: string;
 }
 
-export const identityGetSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const identityGetSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const identityGetController: ServerKoaController<RequestData> = async (
   ctx,

@@ -4,10 +4,12 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { GetUserinfoRequestBody, GetUserinfoResponseBody, JOI_GUID } from "../../common";
 import { getUserinfoResponseBody } from "../../handler";
 
-export const getUserinfoSchema = Joi.object<GetUserinfoRequestBody>({
-  id: JOI_GUID.required(),
-  scope: Joi.string().required(),
-});
+export const getUserinfoSchema = Joi.object<GetUserinfoRequestBody>()
+  .keys({
+    id: JOI_GUID.required(),
+    scope: Joi.string().required(),
+  })
+  .required();
 
 export const getUserinfoController: ServerKoaController<GetUserinfoRequestBody> = async (
   ctx,

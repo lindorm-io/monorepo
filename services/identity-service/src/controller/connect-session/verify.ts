@@ -11,10 +11,12 @@ interface RequestData {
   code: string;
 }
 
-export const identifierConnectVerifySchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  code: Joi.string().required(),
-});
+export const identifierConnectVerifySchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    code: Joi.string().required(),
+  })
+  .required();
 
 export const identifierConnectVerifyController: ServerKoaController<RequestData> = async (
   ctx,

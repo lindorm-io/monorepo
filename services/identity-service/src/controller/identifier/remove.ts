@@ -17,31 +17,33 @@ interface RequestData {
   provider: string;
 }
 
-export const identifierRemoveSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  type: JOI_IDENTIFIER_TYPE.required(),
+export const identifierRemoveSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    type: JOI_IDENTIFIER_TYPE.required(),
 
-  email: Joi.when("type", {
-    is: IdentifierType.EMAIL,
-    then: JOI_EMAIL.required(),
-    otherwise: Joi.forbidden(),
-  }),
-  identifier: Joi.when("type", {
-    is: IdentifierType.EXTERNAL,
-    then: Joi.string().required(),
-    otherwise: Joi.forbidden(),
-  }),
-  phoneNumber: Joi.when("type", {
-    is: IdentifierType.PHONE,
-    then: JOI_PHONE_NUMBER.required(),
-    otherwise: Joi.forbidden(),
-  }),
-  provider: Joi.when("type", {
-    is: IdentifierType.EXTERNAL,
-    then: Joi.string().uri().required(),
-    otherwise: Joi.forbidden(),
-  }),
-});
+    email: Joi.when("type", {
+      is: IdentifierType.EMAIL,
+      then: JOI_EMAIL.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    identifier: Joi.when("type", {
+      is: IdentifierType.EXTERNAL,
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    phoneNumber: Joi.when("type", {
+      is: IdentifierType.PHONE,
+      then: JOI_PHONE_NUMBER.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    provider: Joi.when("type", {
+      is: IdentifierType.EXTERNAL,
+      then: Joi.string().uri().required(),
+      otherwise: Joi.forbidden(),
+    }),
+  })
+  .required();
 
 export const identifierRemoveController: ServerKoaController<RequestData> = async (
   ctx,

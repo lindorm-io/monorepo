@@ -20,31 +20,34 @@ interface RequestData extends AddUserinfoRequestBody {
   id: string;
 }
 
-export const addUserinfoSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
+export const addUserinfoSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
 
-  provider: Joi.string().uri().required(),
-  sub: Joi.string().required(),
-  updatedAt: Joi.number().required(),
+    provider: Joi.string().uri().required(),
+    sub: Joi.string().required(),
+    updatedAt: Joi.number().required(),
 
-  address: JOI_OPENID_ADDRESS.optional(),
-  birthDate: JOI_BIRTHDATE.optional(),
-  email: JOI_EMAIL.optional(),
-  emailVerified: Joi.boolean().optional(),
-  familyName: Joi.string().optional(),
-  gender: Joi.string().optional(),
-  givenName: Joi.string().optional(),
-  locale: JOI_LOCALE.optional(),
-  middleName: Joi.string().optional(),
-  nickname: Joi.string().optional(),
-  phoneNumber: JOI_PHONE_NUMBER.optional(),
-  phoneNumberVerified: Joi.boolean().optional(),
-  picture: Joi.string().uri().optional(),
-  preferredUsername: Joi.string().optional(),
-  profile: Joi.string().uri().optional(),
-  website: Joi.string().uri().optional(),
-  zoneInfo: JOI_ZONE_INFO.optional(),
-});
+    address: JOI_OPENID_ADDRESS.optional(),
+    birthDate: JOI_BIRTHDATE.optional(),
+    email: JOI_EMAIL.optional(),
+    emailVerified: Joi.boolean().optional(),
+    familyName: Joi.string().optional(),
+    gender: Joi.string().optional(),
+    givenName: Joi.string().optional(),
+    locale: JOI_LOCALE.optional(),
+    middleName: Joi.string().optional(),
+    nickname: Joi.string().optional(),
+    phoneNumber: JOI_PHONE_NUMBER.optional(),
+    phoneNumberVerified: Joi.boolean().optional(),
+    picture: Joi.string().uri().optional(),
+    preferredUsername: Joi.string().optional(),
+    profile: Joi.string().uri().optional(),
+    website: Joi.string().uri().optional(),
+    zoneInfo: JOI_ZONE_INFO.optional(),
+  })
+  .unknown(true)
+  .required();
 
 export const addUserinfoController: ServerKoaController<RequestData> = async (
   ctx,

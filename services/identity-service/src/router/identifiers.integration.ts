@@ -57,7 +57,6 @@ describe("/identifiers", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
         identifier: "new-identity-email@lindorm.io",
-        identityId: identity.id,
         type: IdentifierType.EMAIL,
       })
       .expect(200);

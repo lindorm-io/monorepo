@@ -1,6 +1,6 @@
 import { getTestJwt } from "./test-jwt";
 import { IssuerSignOptions } from "@lindorm-io/jwt";
-import { ClientPermission, ClientScope, Scope } from "../../common";
+import { ClientPermission, ClientScope, IdentityPermission, Scope } from "../../common";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
   const jwt = getTestJwt();
@@ -9,7 +9,7 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
     audiences: ["0438487d-0cf0-4399-b3d3-c2876db14ca6"],
     authMethodsReference: ["email"],
     expiry: "10 seconds",
-    permissions: ["permission"],
+    permissions: [IdentityPermission.USER],
     scopes: [
       Scope.OPENID,
       Scope.ACCESSIBILITY,

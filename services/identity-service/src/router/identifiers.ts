@@ -11,20 +11,19 @@ import {
   identifierConnectVerifyController,
   identifierConnectVerifySchema,
 } from "../controller";
-import { Scope } from "../common";
+import { IdentityPermission, Scope } from "../common";
 
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.post(
   "/connect",
-  paramsMiddleware,
   useSchema(identifierConnectInitialiseSchema),
   identityAuthMiddleware({
+    permissions: [IdentityPermission.USER],
     scopes: [Scope.OPENID],
-    fromPath: { subject: "data.identityId" },
   }),
-  identityEntityMiddleware("data.identityId"),
+  identityEntityMiddleware("token.bearerToken.subject"),
   useController(identifierConnectInitialiseController),
 );
 

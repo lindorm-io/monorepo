@@ -15,21 +15,23 @@ interface RequestData {
   phoneNumber: string;
 }
 
-export const identifierSetPrimarySchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  type: JOI_IDENTIFIER_TYPE.required(),
+export const identifierSetPrimarySchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    type: JOI_IDENTIFIER_TYPE.required(),
 
-  email: Joi.when("type", {
-    is: IdentifierType.EMAIL,
-    then: JOI_EMAIL.required(),
-    otherwise: Joi.forbidden(),
-  }),
-  phoneNumber: Joi.when("type", {
-    is: IdentifierType.PHONE,
-    then: JOI_PHONE_NUMBER.required(),
-    otherwise: Joi.forbidden(),
-  }),
-});
+    email: Joi.when("type", {
+      is: IdentifierType.EMAIL,
+      then: JOI_EMAIL.required(),
+      otherwise: Joi.forbidden(),
+    }),
+    phoneNumber: Joi.when("type", {
+      is: IdentifierType.PHONE,
+      then: JOI_PHONE_NUMBER.required(),
+      otherwise: Joi.forbidden(),
+    }),
+  })
+  .required();
 
 export const identifierSetPrimaryController: ServerKoaController<RequestData> = async (
   ctx,

@@ -37,29 +37,31 @@ interface RequestData {
   zoneInfo: string;
 }
 
-export const identityUpdateSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  address: JOI_IDENTITY_ADDRESS.optional(),
-  birthDate: JOI_BIRTHDATE.allow(null).optional(),
-  displayName: JOI_IDENTITY_DISPLAY_NAME.optional(),
-  familyName: Joi.string().allow(null).optional(),
-  gender: Joi.string().allow(null).optional(),
-  givenName: Joi.string().allow(null).optional(),
-  gravatarUri: Joi.string().uri().allow(null).optional(),
-  locale: JOI_LOCALE.allow(null).optional(),
-  middleName: Joi.string().allow(null).optional(),
-  namingSystem: JOI_NAMING_SYSTEM.optional(),
-  nationalIdentityNumber: Joi.string().allow(null).optional(),
-  nickname: Joi.string().allow(null).optional(),
-  picture: Joi.string().uri().allow(null).optional(),
-  preferredAccessibility: Joi.array().items(Joi.string()).optional(),
-  profile: Joi.string().uri().allow(null).optional(),
-  pronouns: Joi.string().allow(null).optional(),
-  socialSecurityNumber: Joi.string().allow(null).optional(),
-  username: Joi.string().lowercase().allow(null).optional(),
-  website: Joi.string().uri().allow(null).optional(),
-  zoneInfo: JOI_ZONE_INFO.allow(null).optional(),
-});
+export const identityUpdateSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    address: JOI_IDENTITY_ADDRESS.optional(),
+    birthDate: JOI_BIRTHDATE.allow(null).optional(),
+    displayName: JOI_IDENTITY_DISPLAY_NAME.optional(),
+    familyName: Joi.string().allow(null).optional(),
+    gender: Joi.string().allow(null).optional(),
+    givenName: Joi.string().allow(null).optional(),
+    gravatarUri: Joi.string().uri().allow(null).optional(),
+    locale: JOI_LOCALE.allow(null).optional(),
+    middleName: Joi.string().allow(null).optional(),
+    namingSystem: JOI_NAMING_SYSTEM.optional(),
+    nationalIdentityNumber: Joi.string().allow(null).optional(),
+    nickname: Joi.string().allow(null).optional(),
+    picture: Joi.string().uri().allow(null).optional(),
+    preferredAccessibility: Joi.array().items(Joi.string()).optional(),
+    profile: Joi.string().uri().allow(null).optional(),
+    pronouns: Joi.string().allow(null).optional(),
+    socialSecurityNumber: Joi.string().allow(null).optional(),
+    username: Joi.string().lowercase().allow(null).optional(),
+    website: Joi.string().uri().allow(null).optional(),
+    zoneInfo: JOI_ZONE_INFO.allow(null).optional(),
+  })
+  .required();
 
 export const identityUpdateController: ServerKoaController<RequestData> = async (
   ctx,
