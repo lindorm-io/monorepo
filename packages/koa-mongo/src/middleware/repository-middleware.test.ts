@@ -1,5 +1,5 @@
 import { Metric } from "@lindorm-io/koa";
-import { TestRepository } from "../test";
+import { TestRepository } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/winston";
 import { repositoryMiddleware } from "./repository-middleware";
 

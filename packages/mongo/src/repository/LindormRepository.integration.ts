@@ -1,7 +1,7 @@
 import { Collection } from "mongodb";
 import { MongoConnection } from "../infrastructure";
 import { TestEntity } from "@lindorm-io/entity";
-import { TestRepository } from "../test";
+import { TestRepository } from "../mocks";
 import { createMockLogger } from "@lindorm-io/winston";
 import { filter } from "lodash";
 import { randomUUID } from "crypto";
