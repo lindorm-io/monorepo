@@ -10,8 +10,9 @@ import {
   StreamTransportOptions,
 } from "winston/lib/winston/transports";
 import {
-  FilterRecord,
   FilterCallback,
+  FilterRecord,
+  ILogger,
   LogDetails,
   LoggerMessage,
   LoggerOptions,
@@ -19,7 +20,7 @@ import {
   SessionMetadata,
 } from "../types";
 
-export class Logger {
+export class Logger implements ILogger {
   private readonly winston: winston.Logger;
 
   private context: Array<string>;
