@@ -1,5 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
-import { getTestKeyPairEC, getTestKeyPairRSA, logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 import { jwksKeysMiddleware } from "./jwks-keys-middleware";
 
 const keyRSA = getTestKeyPairRSA();
@@ -15,9 +16,10 @@ jest.mock("../class", () => ({
 const next = () => Promise.resolve();
 
 describe("jwksKeysMiddleware", () => {
-  const keyEC = getTestKeyPairEC();
-
   let ctx: any;
+
+  const keyEC = getTestKeyPairEC();
+  const logger = createMockLogger();
 
   beforeEach(async () => {
     ctx = {

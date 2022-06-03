@@ -1,13 +1,13 @@
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
   mongoConnection: MongoConnection;
   retry?: number;
-  winston: Logger;
+  winston: ILogger;
   workerInterval?: string;
 }
 

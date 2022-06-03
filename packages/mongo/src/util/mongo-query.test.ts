@@ -1,6 +1,6 @@
-import { mongoQuery } from "./mongo-query";
-import { logger } from "../test";
 import { MongoConnection } from "../infrastructure";
+import { createMockLogger } from "@lindorm-io/winston";
+import { mongoQuery } from "./mongo-query";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mock = require("mongo-mock");
@@ -8,6 +8,8 @@ const mock = require("mongo-mock");
 describe("mongoQuery", () => {
   let connection: MongoConnection;
   let callback: any;
+
+  const logger = createMockLogger();
 
   beforeAll(async () => {
     connection = new MongoConnection({

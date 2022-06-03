@@ -1,14 +1,14 @@
 import { Collection, Db, IndexSpecification } from "mongodb";
 import { EntityAttributes } from "@lindorm-io/entity";
 import { IndexOptions, LindormRepositoryOptions } from "../types";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { MongoConnection } from "../infrastructure";
 
 export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected readonly collectionName: string;
   protected readonly connection: MongoConnection;
   protected readonly indices: Array<IndexOptions<Interface>>;
-  protected readonly logger: Logger;
+  protected readonly logger: ILogger;
   protected collection: Collection | undefined;
   protected db: Db;
   protected promise: () => Promise<void>;

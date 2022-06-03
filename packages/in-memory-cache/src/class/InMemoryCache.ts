@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { isAfter, addSeconds } from "date-fns";
 import {
   FetchDataFunction,
@@ -15,7 +15,7 @@ export class InMemoryCache<Data> {
   private readonly intervalTimeout: number;
   private readonly ttl: number;
   private fetching: boolean;
-  private logger: Logger;
+  private logger: ILogger;
   private state: Map<string, Data>;
   private timestamp: Date | undefined;
 

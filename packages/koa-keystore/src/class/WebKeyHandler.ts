@@ -1,7 +1,7 @@
 import { Axios, AxiosOptions } from "@lindorm-io/axios";
 import { JWK } from "@lindorm-io/key-pair";
 import { KeyPair } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { WebKeyHandlerError } from "../error";
 
 export interface WebKeyHandlerOptions extends AxiosOptions {
@@ -14,7 +14,7 @@ interface Response {
 
 export class WebKeyHandler {
   private readonly axios: Axios;
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
   private readonly path: string;
 
   public constructor(options: WebKeyHandlerOptions) {

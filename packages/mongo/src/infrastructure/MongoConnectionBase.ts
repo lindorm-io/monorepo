@@ -1,12 +1,12 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from "mongodb";
 import { IMongoConnection, MongoConnectionOptions } from "../types";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { INTERVAL, TIMEOUT } from "../constant";
 
 export abstract class MongoConnectionBase implements IMongoConnection {
   protected readonly clientOptions: MongoClientOptions;
   protected readonly databaseName: string;
-  protected readonly logger: Logger;
+  protected readonly logger: ILogger;
   protected readonly url: string;
 
   protected db: Db | undefined;

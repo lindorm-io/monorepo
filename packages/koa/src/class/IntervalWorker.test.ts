@@ -1,12 +1,13 @@
 import { IntervalWorker } from "./IntervalWorker";
-import { logger } from "../test";
 import { sleep } from "@lindorm-io/core";
+import { createMockLogger } from "@lindorm-io/winston";
 
 describe("IntervalWorker.ts", () => {
   let eventResult: any;
   let worker: IntervalWorker;
-
   let callback: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     eventResult = {};

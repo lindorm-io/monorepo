@@ -1,11 +1,13 @@
 import { Controller, ControllerResponse } from "../../types";
 import { HttpStatus } from "../../constant";
 import { createURL } from "@lindorm-io/core";
-import { logger } from "../../test";
 import { useController } from "./use-controller";
+import { createMockLogger } from "@lindorm-io/winston";
 
 describe("useController", () => {
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     ctx = {

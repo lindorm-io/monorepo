@@ -1,14 +1,16 @@
 import { Metric } from "@lindorm-io/koa";
 import { cacheKeysMiddleware } from "./cache-keys-middleware";
-import { getTestKeyPairEC, getTestKeyPairRSA, logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 
 const next = () => Promise.resolve();
 
 describe("cacheKeysMiddleware", () => {
+  let ctx: any;
+
+  const logger = createMockLogger();
   const keyEC = getTestKeyPairEC();
   const keyRSA = getTestKeyPairRSA();
-
-  let ctx: any;
 
   beforeEach(async () => {
     ctx = {

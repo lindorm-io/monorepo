@@ -1,11 +1,14 @@
 import { Metric } from "@lindorm-io/koa";
+import { TestCache } from "../test";
 import { cacheMiddleware } from "./cache-middleware";
-import { logger, TestCache } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 
 const next = () => Promise.resolve();
 
 describe("cacheMiddleware", () => {
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     ctx = {

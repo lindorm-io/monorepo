@@ -1,8 +1,8 @@
 import axios from "axios";
 import { Axios } from "./Axios";
 import { AxiosRequestError } from "../error";
-import { logger } from "../test";
 import { axiosBasicAuthMiddleware, axiosBearerAuthMiddleware } from "../middleware/public";
+import { createMockLogger } from "@lindorm-io/winston";
 
 jest.mock("axios");
 
@@ -17,6 +17,8 @@ const mocked = {
 
 describe("Axios", () => {
   let handler: Axios;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     handler = new Axios({

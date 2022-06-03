@@ -1,6 +1,6 @@
 import Timeout = NodeJS.Timeout;
 import { EventEmitter } from "events";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { sleep } from "@lindorm-io/core";
 
 type Callback = () => Promise<void>;
@@ -8,7 +8,7 @@ type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
 
 interface Options {
   callback: Callback;
-  logger: Logger;
+  logger: ILogger;
   retry?: number;
   onError?: OnError;
   time: number;
@@ -24,7 +24,7 @@ export enum IntervalWorkerEvent {
 export class IntervalWorker extends EventEmitter {
   private readonly callback: Callback;
   private readonly onError: OnError | undefined;
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
   private readonly retry: number | undefined;
   private readonly time: number;
 

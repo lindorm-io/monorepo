@@ -1,9 +1,11 @@
 import { InMemoryCache } from "./InMemoryCache";
-import { logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { sleep } from "@lindorm-io/core";
 
 describe("InMemoryCache", () => {
   let cache: InMemoryCache<any>;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     cache = new InMemoryCache<any>({

@@ -1,7 +1,7 @@
-import { Logger, LogLevel } from "@lindorm-io/winston";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
 import { TestCache, TestEntity } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 
 const entityKey = (entity: any): string => `entity::test_entity::${entity.id}`;
@@ -12,10 +12,9 @@ describe("LindormCache", () => {
   let entity: TestEntity;
   let redis: Redis;
 
-  beforeAll(async () => {
-    const logger = new Logger();
-    logger.addConsole(LogLevel.ERROR);
+  const logger = createMockLogger();
 
+  beforeAll(async () => {
     connection = new RedisConnection({
       host: "localhost",
       port: 6379,

@@ -1,5 +1,5 @@
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { TokenError } from "../error";
 import { assertClaimDifference, assertClaimEquals, assertClaimIncludes } from "../util/private";
 import { camelKeys, getExpires, snakeKeys, sortObjectKeys } from "@lindorm-io/core";
@@ -21,7 +21,7 @@ export class TokenIssuer {
   private readonly issuer: string;
   private readonly keyType: KeyType | undefined;
   private readonly keystore: Keystore;
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
 
   public constructor(options: IssuerOptions) {
     this.clockTolerance = options.clockTolerance || 500;

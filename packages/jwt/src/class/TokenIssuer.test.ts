@@ -4,7 +4,8 @@ import { Keystore } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
 import { TokenIssuer } from "./TokenIssuer";
 import { baseParse } from "@lindorm-io/core";
-import { getTestKeyPairEC, getTestKeyPairRSA, logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 import { getUnixTime } from "date-fns";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -16,6 +17,8 @@ describe("TokenIssuer", () => {
   let issuer: any;
   let optionsMin: IssuerSignOptions<any, any>;
   let optionsFull: IssuerSignOptions<any, any>;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     issuer = "issuer";

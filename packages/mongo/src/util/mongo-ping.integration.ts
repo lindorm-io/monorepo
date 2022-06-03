@@ -1,15 +1,13 @@
 import { mongoPing } from "./mongo-ping";
 import { MongoConnection } from "../infrastructure";
-import { Logger, LogLevel } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/winston";
 
 describe("mongo-query.ts", () => {
   let connection: MongoConnection;
-  let logger: Logger;
+
+  const logger = createMockLogger();
 
   beforeAll(async () => {
-    logger = new Logger();
-    logger.addConsole(LogLevel.ERROR);
-
     connection = new MongoConnection({
       host: "localhost",
       port: 27017,

@@ -1,11 +1,14 @@
 import { Metric } from "@lindorm-io/koa";
-import { logger, TestRepository } from "../test";
+import { TestRepository } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { repositoryMiddleware } from "./repository-middleware";
 
 const next = () => Promise.resolve();
 
 describe("repositoryMiddleware", () => {
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     ctx = {

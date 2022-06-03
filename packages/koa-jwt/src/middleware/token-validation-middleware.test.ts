@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
-import { getTestJwt, logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestJwt } from "../test";
 import { tokenValidationMiddleware } from "./token-validation-middleware";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -14,6 +15,8 @@ describe("tokenValidationMiddleware", () => {
   let optionsPath: any;
   let path: string;
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     const jwt = getTestJwt();

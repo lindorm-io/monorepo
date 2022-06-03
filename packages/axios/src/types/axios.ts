@@ -1,11 +1,11 @@
 import { AxiosBasicCredentials as BasicCredentials, Method } from "axios";
 import { AxiosMiddleware } from "./middleware";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 
 export interface AxiosOptions {
   host?: string;
   port?: number;
-  logger: Logger;
+  logger: ILogger;
   middleware?: Array<AxiosMiddleware>;
   name?: string;
 }

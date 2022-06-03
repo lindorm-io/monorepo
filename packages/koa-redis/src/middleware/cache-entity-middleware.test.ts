@@ -1,9 +1,10 @@
+import { CachedEntityCustomValidation } from "../types";
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
+import { TestCache, TestEntity } from "../test";
 import { cacheEntityMiddleware } from "./cache-entity-middleware";
-import { logger, TestCache, TestEntity } from "../test";
-import { CachedEntityCustomValidation } from "../types";
+import { createMockLogger } from "@lindorm-io/winston";
 
 const next = () => Promise.resolve();
 
@@ -12,6 +13,8 @@ describe("cacheMiddleware", () => {
   let options: any;
   let ctx: any;
   let path: string;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     middlewareOptions = {};

@@ -1,7 +1,7 @@
 import { Collection } from "mongodb";
-import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "../infrastructure";
 import { TestEntity, TestRepository } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { filter } from "lodash";
 import { randomUUID } from "crypto";
 
@@ -11,10 +11,9 @@ describe("LindormRepository.ts", () => {
   let collection: Collection;
   let repository: TestRepository;
 
-  beforeAll(async () => {
-    const logger = new Logger();
-    logger.addConsole(LogLevel.ERROR);
+  const logger = createMockLogger();
 
+  beforeAll(async () => {
     connection = new MongoConnection({
       host: "localhost",
       port: 27017,

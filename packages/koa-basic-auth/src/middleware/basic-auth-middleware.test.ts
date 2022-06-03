@@ -2,13 +2,15 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
 import { baseHash } from "@lindorm-io/core";
 import { basicAuthMiddleware } from "./basic-auth-middleware";
-import { logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 
 const next = () => Promise.resolve();
 
 describe("basicAuthMiddleware", () => {
   let options: any;
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     options = {

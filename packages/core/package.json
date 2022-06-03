@@ -20,8 +20,7 @@
   "dependencies": {
     "@lindorm-io/errors": "^0.1.13",
     "date-fns": "^2.26.0",
-    "lodash": "^4.17.21",
-    "random-number-csprng": "^1.0.2"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.182",

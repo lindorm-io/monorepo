@@ -1,10 +1,11 @@
 import MockDate from "mockdate";
 import { Algorithm, KeyPair, Keystore, KeyType, NamedCurve } from "@lindorm-io/key-pair";
-import { getTestKeystore, logger } from "../test";
-import { tokenIssuerMiddleware } from "./token-issuer-middleware";
-import { TokenIssuer } from "@lindorm-io/jwt";
 import { Metric } from "@lindorm-io/koa";
 import { ServerError } from "@lindorm-io/errors";
+import { TokenIssuer } from "@lindorm-io/jwt";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestKeystore } from "../test";
+import { tokenIssuerMiddleware } from "./token-issuer-middleware";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -13,6 +14,8 @@ const next = () => Promise.resolve();
 describe("tokenIssuerMiddleware", () => {
   let ctx: any;
   let options: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     options = {

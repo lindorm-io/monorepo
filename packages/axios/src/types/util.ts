@@ -1,4 +1,4 @@
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 
 export interface ResponseTime {
   axios: number;
@@ -7,7 +7,7 @@ export interface ResponseTime {
 }
 
 export interface LogOptions {
-  logger: Logger;
+  logger: ILogger;
   name: string | null;
   time: ResponseTime;
 }

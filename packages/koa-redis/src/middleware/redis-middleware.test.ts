@@ -1,5 +1,5 @@
 import { Metric } from "@lindorm-io/koa";
-import { logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { redisMiddleware } from "./redis-middleware";
 
 const next = () => Promise.resolve();
@@ -16,6 +16,8 @@ class RedisConnection {
 describe("redisMiddleware", () => {
   let ctx: any;
   let connection: any;
+
+  const logger = createMockLogger();
 
   beforeEach(async () => {
     connection = new RedisConnection();

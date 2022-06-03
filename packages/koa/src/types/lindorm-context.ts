@@ -1,4 +1,4 @@
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 
 export interface DefaultLindormContext {
   axios: any;
@@ -8,7 +8,7 @@ export interface DefaultLindormContext {
   jwt: any;
   keys: Array<any>;
   keystore: any;
-  logger: Logger;
+  logger: ILogger;
   repository: any;
   token: any;
 }

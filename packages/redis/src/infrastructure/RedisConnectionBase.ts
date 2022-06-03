@@ -1,11 +1,11 @@
 import { INTERVAL, TIMEOUT } from "../constant";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { Redis, RedisOptions } from "ioredis";
 
 export abstract class RedisConnectionBase implements IRedisConnection {
   protected readonly clientOptions: RedisOptions;
-  protected readonly logger: Logger;
+  protected readonly logger: ILogger;
   protected connected: boolean;
   protected redis: Redis | undefined;
 

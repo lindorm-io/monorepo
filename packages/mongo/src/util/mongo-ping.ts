@@ -1,7 +1,7 @@
 import { MongoConnection } from "../infrastructure";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 
-export const mongoPing = async (connection: MongoConnection, logger: Logger): Promise<boolean> => {
+export const mongoPing = async (connection: MongoConnection, logger: ILogger): Promise<boolean> => {
   try {
     await connection.client().connect();
 

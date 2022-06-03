@@ -24,10 +24,10 @@
     "@lindorm-io/key-pair": "^0.4.5",
     "@lindorm-io/koa": "^0.12.10",
     "@lindorm-io/koa-jwt": "^0.5.11",
-    "@lindorm-io/winston": "^0.4.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@lindorm-io/winston": "^0.4.1",
     "@types/express-useragent": "^1.0.2",
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.7",

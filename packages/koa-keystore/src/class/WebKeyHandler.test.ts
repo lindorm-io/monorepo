@@ -1,6 +1,6 @@
 import { WebKeyHandler } from "./WebKeyHandler";
 import { WebKeyHandlerError } from "../error";
-import { logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 
 let keys: Array<any> = [];
 
@@ -14,6 +14,8 @@ jest.mock("@lindorm-io/axios", () => ({
 
 describe("JWKSHandler.ts", () => {
   let handler: WebKeyHandler;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     keys = [

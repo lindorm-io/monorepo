@@ -1,13 +1,15 @@
 import RedisMock from "ioredis-mock";
+import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { clearRateLimitBackoff } from "./clear-rate-limit-backoff";
-import { logger } from "../test";
-import { Redis } from "ioredis";
+import { createMockLogger } from "@lindorm-io/winston";
 
 describe("clearRateLimitBackoff", () => {
   let connection: RedisConnection;
   let ctx: any;
   let options: any;
+
+  const logger = createMockLogger();
 
   beforeEach(async () => {
     connection = new RedisConnection({

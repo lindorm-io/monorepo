@@ -1,6 +1,6 @@
 import axios, { AxiosResponse as Response, Method } from "axios";
 import { IAxiosRequestError } from "../error";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { axiosCaseSwitchMiddleware, axiosRetryMiddleware } from "../middleware/default";
 import { convertError, convertResponse, logAxiosError, logAxiosResponse } from "../util";
 import { createURL, sleep } from "@lindorm-io/core";
@@ -18,7 +18,7 @@ import {
 export class Axios {
   private readonly host: string | undefined;
   private readonly port: number | undefined;
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
   private readonly middleware: Array<AxiosMiddleware>;
   private readonly name: string | undefined;
 

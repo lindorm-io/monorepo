@@ -19,10 +19,10 @@
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.3.6",
-    "@lindorm-io/koa": "^0.12.10",
-    "@lindorm-io/winston": "^0.4.1"
+    "@lindorm-io/koa": "^0.12.10"
   },
   "devDependencies": {
+    "@lindorm-io/winston": "^0.4.1",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0"
   }

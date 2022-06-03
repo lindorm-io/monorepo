@@ -3,14 +3,16 @@ import { ClientError } from "@lindorm-io/errors";
 import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimit } from "./assert-rate-limit";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getRateLimitKey } from "../util";
-import { logger } from "../test";
 
 describe("assertRateLimit", () => {
   let connection: RedisConnection;
   let redis: Redis;
   let ctx: any;
   let options: any;
+
+  const logger = createMockLogger();
 
   beforeAll(async () => {
     connection = new RedisConnection({

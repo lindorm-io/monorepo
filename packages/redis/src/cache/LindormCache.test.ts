@@ -1,8 +1,9 @@
 import RedisMock from "ioredis-mock";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
-import { logger, TestCache, TestEntity } from "../test";
+import { TestCache, TestEntity } from "../test";
 import { randomUUID } from "crypto";
+import { createMockLogger } from "@lindorm-io/winston";
 
 const entityKey = (entity: any): string => `entity::test_entity::${entity.id}`;
 
@@ -11,6 +12,8 @@ describe("LindormCache", () => {
   let connection: RedisConnection;
   let entity: TestEntity;
   let redis: Redis;
+
+  const logger = createMockLogger();
 
   beforeAll(async () => {
     connection = new RedisConnection({

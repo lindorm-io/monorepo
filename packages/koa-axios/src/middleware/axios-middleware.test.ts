@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { Axios } from "@lindorm-io/axios";
 import { MetadataHeader } from "@lindorm-io/koa";
 import { axiosMiddleware } from "./axios-middleware";
-import { logger } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
@@ -11,6 +11,8 @@ const next = jest.fn();
 describe("axiosMiddleware", () => {
   let options: any;
   let ctx: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     options = {

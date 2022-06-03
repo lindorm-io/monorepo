@@ -3,14 +3,16 @@ import { ClientError } from "@lindorm-io/errors";
 import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimitBackoff } from "./assert-rate-limit-backoff";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getRateLimitBackoffExpireKey } from "../util";
-import { logger } from "../test";
 
 describe("assertRateLimitBackoff", () => {
   let connection: RedisConnection;
   let redis: Redis;
   let ctx: any;
   let options: any;
+
+  const logger = createMockLogger();
 
   beforeEach(async () => {
     connection = new RedisConnection({

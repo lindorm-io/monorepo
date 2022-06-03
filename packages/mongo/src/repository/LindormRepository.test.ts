@@ -1,8 +1,8 @@
 import { Collection } from "mongodb";
 import { MongoConnection } from "../infrastructure";
 import { TestEntity, TestRepository } from "../test";
+import { createMockLogger } from "@lindorm-io/winston";
 import { filter } from "lodash";
-import { logger } from "../test";
 import { randomUUID } from "crypto";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -13,6 +13,8 @@ describe("LindormRepository.ts", () => {
   let entity: TestEntity;
   let collection: Collection;
   let repository: TestRepository;
+
+  const logger = createMockLogger();
 
   beforeAll(async () => {
     connection = new MongoConnection({

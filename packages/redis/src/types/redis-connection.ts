@@ -1,4 +1,4 @@
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { Redis, RedisOptions } from "ioredis";
 
 export interface IRedisConnection {
@@ -7,6 +7,6 @@ export interface IRedisConnection {
 }
 
 export interface RedisConnectionOptions extends RedisOptions {
-  winston: Logger;
+  winston: ILogger;
   customClient?: Redis;
 }

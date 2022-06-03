@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import axios from "axios";
 import { Axios } from "../../class";
 import { axiosClientCredentialsMiddleware } from "./axios-client-credentials-middleware";
-import { logger } from "../../test";
+import { createMockLogger } from "@lindorm-io/winston";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
@@ -13,6 +13,8 @@ const request = axios.request as jest.Mock;
 describe("axiosClientCredentialsMiddleware", () => {
   let axios: Axios;
   let middleware: any;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     axios = new Axios({

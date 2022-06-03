@@ -1,10 +1,10 @@
+import { ILogger } from "@lindorm-io/winston";
 import { MongoConnection } from "../infrastructure";
 import { QueryCallback } from "../types";
-import { Logger } from "@lindorm-io/winston";
 
 export const mongoQuery = async (
   connection: MongoConnection,
-  logger: Logger,
+  logger: ILogger,
   callback: QueryCallback,
 ): Promise<void> => {
   try {

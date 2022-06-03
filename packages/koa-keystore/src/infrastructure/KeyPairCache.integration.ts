@@ -1,8 +1,8 @@
 import { Algorithm, KeyPair, KeyType } from "@lindorm-io/key-pair";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairCache } from "./KeyPairCache";
-import { Logger, LogLevel } from "@lindorm-io/winston";
 import { RedisConnection } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 
 describe("KeyPairCache", () => {
@@ -10,10 +10,9 @@ describe("KeyPairCache", () => {
   let connection: RedisConnection;
   let entity: KeyPair;
 
-  beforeAll(async () => {
-    const logger = new Logger();
-    logger.addConsole(LogLevel.ERROR);
+  const logger = createMockLogger();
 
+  beforeAll(async () => {
     connection = new RedisConnection({
       host: "localhost",
       port: 6379,

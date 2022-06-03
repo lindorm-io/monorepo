@@ -1,7 +1,7 @@
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { Keystore } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { RedisConnection } from "@lindorm-io/redis";
 import { WebKeyHandler } from "../class";
 import { stringToSeconds } from "@lindorm-io/core";
@@ -12,7 +12,7 @@ interface Options {
   port?: number;
   redisConnection: RedisConnection;
   retry?: number;
-  winston: Logger;
+  winston: ILogger;
   workerInterval?: string;
 }
 

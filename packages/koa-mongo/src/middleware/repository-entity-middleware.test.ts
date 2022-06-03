@@ -1,9 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
-import { logger, TestEntity, TestRepository } from "../test";
+import { TestEntity, TestRepository } from "../test";
 import { repositoryEntityMiddleware } from "./repository-entity-middleware";
 import { StoredEntityCustomValidation } from "../types";
+import { createMockLogger } from "@lindorm-io/winston";
 
 const next = () => Promise.resolve();
 
@@ -12,6 +13,8 @@ describe("repositoryEntityMiddleware", () => {
   let options: any;
   let ctx: any;
   let path: string;
+
+  const logger = createMockLogger();
 
   beforeEach(() => {
     middlewareOptions = {};

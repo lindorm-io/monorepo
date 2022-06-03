@@ -3,7 +3,7 @@ import { DefaultLindormMiddleware } from "./koa";
 import { DefaultLindormSocketMiddleware, IOServer } from "./socket";
 import { Environment } from "../enum";
 import { IntervalWorker } from "../class";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { ServerOptions } from "socket.io";
 
 export type SocketListeners = (io: IOServer) => void;
@@ -23,7 +23,7 @@ export interface KoaAppOptions<
 > {
   // required
   host: string;
-  logger: Logger;
+  logger: ILogger;
   port: number;
 
   // optional

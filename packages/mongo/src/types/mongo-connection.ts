@@ -1,5 +1,5 @@
 import { Collection, Db, MongoClient, MongoClientOptions } from "mongodb";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 
 export interface IMongoConnection {
   client(): MongoClient;
@@ -18,5 +18,5 @@ export interface MongoOptions extends MongoClientOptions {
 export interface MongoConnectionOptions extends MongoOptions {
   customClient?: typeof MongoClient;
   database: string;
-  winston: Logger;
+  winston: ILogger;
 }

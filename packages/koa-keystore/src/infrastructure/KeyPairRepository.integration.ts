@@ -1,8 +1,8 @@
-import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Algorithm, KeyPair, KeyType } from "@lindorm-io/key-pair";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairRepository } from "./KeyPairRepository";
-import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 
 describe("KeyPairRepository", () => {
@@ -10,10 +10,9 @@ describe("KeyPairRepository", () => {
   let connection: MongoConnection;
   let entity: KeyPair;
 
-  beforeAll(async () => {
-    const logger = new Logger();
-    logger.addConsole(LogLevel.ERROR);
+  const logger = createMockLogger();
 
+  beforeAll(async () => {
     connection = new MongoConnection({
       host: "localhost",
       port: 27017,
