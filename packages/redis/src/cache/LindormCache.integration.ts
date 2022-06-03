@@ -1,6 +1,6 @@
 import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
-import { TestCache } from "../test";
+import { TestCache } from "../mocks";
 import { TestEntity } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";

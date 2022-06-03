@@ -2,8 +2,8 @@ import { CachedEntityCustomValidation } from "../types";
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
-import { TestCache } from "../test";
 import { cacheEntityMiddleware } from "./cache-entity-middleware";
+import { createMockCache, TestCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 
 const next = () => Promise.resolve();
@@ -21,9 +21,7 @@ describe("cacheMiddleware", () => {
     options = {};
     ctx = {
       cache: {
-        testCache: {
-          find: jest.fn().mockResolvedValue(new TestEntity()),
-        },
+        testCache: createMockCache(),
       },
       entity: {},
       logger,

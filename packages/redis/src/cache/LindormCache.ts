@@ -1,6 +1,6 @@
 import { CacheBase } from "./CacheBase";
 import { CacheIndex } from "./CacheIndex";
-import { LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
+import { ICache, LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
 import { RedisError } from "../error";
 import { find, filter as _filter, flatten, uniqBy, snakeCase } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
@@ -14,9 +14,12 @@ import {
 } from "@lindorm-io/entity";
 
 export abstract class LindormCache<
-  Interface extends EntityAttributes,
-  Entity extends ILindormEntity<Interface>,
-> extends CacheBase {
+    Interface extends EntityAttributes,
+    Entity extends ILindormEntity<Interface>,
+  >
+  extends CacheBase
+  implements ICache<Interface, Entity>
+{
   protected prefix: string;
   protected indices: Array<CacheIndex<Interface>>;
 
