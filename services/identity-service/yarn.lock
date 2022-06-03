@@ -4274,7 +4274,7 @@ quote-stream@^1.0.1, quote-stream@~1.0.2:
 random-number-csprng@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/random-number-csprng/-/random-number-csprng-1.0.2.tgz#fcd120e62dffc2c07674c7c3fe01e16b25f73a26"
-  integrity sha1-/NEg5i3/wsB2dMfD/gHhayX3OiY=
+  integrity sha512-Gb7ZsEXfz6d9xAMCUg2tD0ouRZMOZRRvLsRoUyPlVS4/pNwO31IA88yAx6AEYXon/LzogWJdsCRwFQaFlQTaHw==
   dependencies:
     bluebird "^3.3.3"
     create-error "^0.3.1"

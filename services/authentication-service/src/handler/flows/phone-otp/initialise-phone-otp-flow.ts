@@ -1,9 +1,9 @@
-import { LoginSession, FlowSession } from "../../../entity";
 import { ClientScope, SendSmsRequestData } from "../../../common";
+import { LoginSession, FlowSession } from "../../../entity";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getExpires } from "@lindorm-io/core";
-import { getRandomNumberAsync } from "@lindorm-io/core";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { getRandomNumberAsync } from "../../../util";
 
 interface Options extends FlowHandlerInitialiseOptions {
   phoneNumber: string;

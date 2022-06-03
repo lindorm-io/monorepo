@@ -1,9 +1,9 @@
-import { LoginSession, FlowSession } from "../../../entity";
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { getRandomNumberAsync } from "@lindorm-io/core";
+import { getRandomNumberAsync } from "../../../util";
 
 type Options = FlowHandlerInitialiseOptions;
 

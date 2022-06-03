@@ -6,3 +6,4 @@ export * from "./get-prioritized-flow";
 export * from "./is-authentication-ready-to-confirm";
 export * from "./is-polling-required";
 export * from "./is-token-returned";
+export * from "./random-number";

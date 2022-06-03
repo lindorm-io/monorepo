@@ -5,7 +5,8 @@ import { ServerKoaContext } from "../../types";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
-import { getRandomNumberAsync, stringToSeconds } from "@lindorm-io/core";
+import { getRandomNumberAsync } from "../../util";
+import { stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
   identifier: string;
