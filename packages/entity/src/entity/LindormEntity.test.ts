@@ -1,46 +1,8 @@
 import Joi from "joi";
 import MockDate from "mockdate";
-import { LindormEntity } from "./LindormEntity";
-import { ILindormEntity, EntityAttributes, EntityOptions } from "../types";
-import { JOI_ENTITY_BASE } from "../schema";
+import { TestEntity } from "../mocks";
 
 MockDate.set("2020-01-01T10:00:00.000Z");
-
-interface TestEntityAttributes extends EntityAttributes {
-  name: string;
-}
-
-interface TestEntityOptions extends EntityOptions {
-  name: string;
-}
-
-interface ITestEntity extends ILindormEntity<TestEntityAttributes> {}
-
-const schema = Joi.object({
-  ...JOI_ENTITY_BASE,
-  name: Joi.string().required(),
-});
-
-class TestEntity extends LindormEntity<TestEntityAttributes> implements ITestEntity {
-  public readonly name: string;
-
-  constructor(options: TestEntityOptions) {
-    super(options);
-
-    this.name = options.name;
-  }
-
-  async schemaValidation() {
-    return await schema.validateAsync(this.toJSON());
-  }
-
-  toJSON() {
-    return {
-      ...this.defaultJSON(),
-      name: this.name,
-    };
-  }
-}
 
 describe("LindormEntity", () => {
   let entity: TestEntity;

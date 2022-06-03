@@ -1,9 +1,10 @@
 import RedisMock from "ioredis-mock";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
-import { TestCache, TestEntity } from "../test";
-import { randomUUID } from "crypto";
+import { TestCache } from "../test";
+import { TestEntity } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/winston";
+import { randomUUID } from "crypto";
 
 const entityKey = (entity: any): string => `entity::test_entity::${entity.id}`;
 
@@ -37,7 +38,7 @@ describe("LindormCache", () => {
   });
 
   beforeEach(async () => {
-    entity = await cache.create(new TestEntity());
+    entity = await cache.create(new TestEntity({ name: "test-entity-name" }));
   });
 
   test("should create", async () => {
@@ -47,10 +48,10 @@ describe("LindormCache", () => {
   });
 
   test("should create with expiry", async () => {
-    entity = await cache.create(new TestEntity(), 900);
+    entity = await cache.create(new TestEntity({ name: "expiry" }), 900);
 
     await expect(redis.get(entityKey(entity))).resolves.toStrictEqual(
-      expect.stringMatching(/"name":"test-entity-name"/),
+      expect.stringMatching(/"name":"expiry"/),
     );
     await expect(redis.ttl(entityKey(entity))).resolves.toBe(900);
   });

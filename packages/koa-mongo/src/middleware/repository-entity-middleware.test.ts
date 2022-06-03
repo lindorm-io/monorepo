@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
-import { EntityNotFoundError } from "@lindorm-io/entity";
+import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
-import { TestEntity, TestRepository } from "../test";
-import { repositoryEntityMiddleware } from "./repository-entity-middleware";
 import { StoredEntityCustomValidation } from "../types";
+import { TestRepository } from "../test";
 import { createMockLogger } from "@lindorm-io/winston";
+import { repositoryEntityMiddleware } from "./repository-entity-middleware";
 
 const next = () => Promise.resolve();
 
@@ -25,7 +25,7 @@ describe("repositoryEntityMiddleware", () => {
       metrics: {},
       repository: {
         testRepository: {
-          find: jest.fn().mockResolvedValue(new TestEntity({})),
+          find: jest.fn().mockResolvedValue(new TestEntity()),
         },
       },
       request: { body: { identifier: "identifier" } },

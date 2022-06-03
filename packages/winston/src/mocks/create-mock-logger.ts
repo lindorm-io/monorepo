@@ -1,23 +1,33 @@
-import { ILogger } from "../types";
 import { FilterCallback, LogDetails, LoggerTransportOptions, SessionMetadata } from "../types";
+import { ILogger } from "../types";
 import { LogLevel } from "../enum";
 
 export const createMockLogger = (): ILogger => ({
-  error: (message: string, details?: LogDetails): void => undefined,
-  warn: (message: string, details?: LogDetails): void => undefined,
-  info: (message: string, details?: LogDetails): void => undefined,
-  verbose: (message: string, details?: LogDetails): void => undefined,
-  debug: (message: string, details?: LogDetails): void => undefined,
-  silly: (message: string, details?: LogDetails): void => undefined,
+  error: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
+  warn: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
+  info: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
+  verbose: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
+  debug: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
+  silly: jest.fn().mockImplementation((message: string, details?: LogDetails): void => undefined),
 
-  createChildLogger: (context: Array<string>): ILogger => createMockLogger(),
-  createSessionLogger: (session: SessionMetadata): ILogger => createMockLogger(),
+  createChildLogger: jest
+    .fn()
+    .mockImplementation((context: Array<string>): ILogger => createMockLogger()),
+  createSessionLogger: jest
+    .fn()
+    .mockImplementation((session: SessionMetadata): ILogger => createMockLogger()),
 
-  addConsole: (level: LogLevel, options: Partial<LoggerTransportOptions>): void => undefined,
-  addContext: (context: Array<string>): void => undefined,
-  addSession: (session: Record<string, any>): void => undefined,
+  addConsole: jest
+    .fn()
+    .mockImplementation(
+      (level: LogLevel, options: Partial<LoggerTransportOptions>): void => undefined,
+    ),
+  addContext: jest.fn().mockImplementation((context: Array<string>): void => undefined),
+  addSession: jest.fn().mockImplementation((session: Record<string, any>): void => undefined),
 
-  setFilter: (path: string, callback?: FilterCallback): void => undefined,
-  deleteFilter: (path: string): void => undefined,
-  clearFilters: (): void => undefined,
+  setFilter: jest
+    .fn()
+    .mockImplementation((path: string, callback?: FilterCallback): void => undefined),
+  deleteFilter: jest.fn().mockImplementation((path: string): void => undefined),
+  clearFilters: jest.fn().mockImplementation((): void => undefined),
 });
