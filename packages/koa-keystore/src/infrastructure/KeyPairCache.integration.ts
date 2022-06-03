@@ -1,9 +1,15 @@
-import { Algorithm, KeyPair, KeyType } from "@lindorm-io/key-pair";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairCache } from "./KeyPairCache";
 import { RedisConnection } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
+import {
+  Algorithm,
+  KeyPair,
+  KeyType,
+  createTestKeyPair,
+  createTestKeyPairRSA,
+} from "@lindorm-io/key-pair";
+import { randomUUID } from "crypto";
 
 describe("KeyPairCache", () => {
   let cache: KeyPairCache;
@@ -25,7 +31,7 @@ describe("KeyPairCache", () => {
   });
 
   beforeEach(async () => {
-    entity = await cache.create(getTestKeyPairEC());
+    entity = await cache.create(createTestKeyPair({ id: randomUUID() }));
   });
 
   afterAll(async () => {
@@ -57,7 +63,7 @@ describe("KeyPairCache", () => {
   });
 
   test("should find many", async () => {
-    const keyRSA = await cache.create(getTestKeyPairRSA());
+    const keyRSA = await cache.create(createTestKeyPairRSA());
 
     await expect(cache.findMany({})).resolves.toStrictEqual(
       expect.arrayContaining([entity, keyRSA]),

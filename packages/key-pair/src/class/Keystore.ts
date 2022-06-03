@@ -5,7 +5,7 @@ import { KeystoreError } from "../error";
 import { filter, find, orderBy, uniqBy } from "lodash";
 import { isKeyExpired, isKeyPrivate, isKeyUsable } from "../util";
 
-interface Options {
+export interface KeystoreOptions {
   keys: Array<KeyPair>;
 }
 
@@ -22,7 +22,7 @@ interface TTL {
 export class Keystore {
   private readonly keys: Array<KeyPair>;
 
-  public constructor(options: Options) {
+  public constructor(options: KeystoreOptions) {
     const keys = options.keys;
 
     if (!keys.length) {

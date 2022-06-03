@@ -1,5 +1,5 @@
-import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { ILogger } from "@lindorm-io/winston";
+import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
 import { assertClaimDifference, assertClaimEquals, assertClaimIncludes } from "../util/private";
 import { camelKeys, getExpires, snakeKeys, sortObjectKeys } from "@lindorm-io/core";

@@ -1,7 +1,6 @@
-import { Keystore } from "@lindorm-io/key-pair";
 import { Metric } from "@lindorm-io/koa";
+import { createTestKeyPairEC, createTestKeyPairRSA, Keystore } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
 import { keystoreMiddleware } from "./keystore-middleware";
 
 const next = () => Promise.resolve();
@@ -10,8 +9,8 @@ describe("keystoreMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
-  const keyEC = getTestKeyPairEC();
-  const keyRSA = getTestKeyPairRSA();
+  const keyEC = createTestKeyPairEC();
+  const keyRSA = createTestKeyPairRSA();
 
   beforeEach(() => {
     ctx = {

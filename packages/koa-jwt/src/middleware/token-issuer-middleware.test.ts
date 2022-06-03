@@ -1,11 +1,17 @@
 import MockDate from "mockdate";
-import { Algorithm, KeyPair, Keystore, KeyType, NamedCurve } from "@lindorm-io/key-pair";
 import { Metric } from "@lindorm-io/koa";
 import { ServerError } from "@lindorm-io/errors";
 import { TokenIssuer } from "@lindorm-io/jwt";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeystore } from "../test";
 import { tokenIssuerMiddleware } from "./token-issuer-middleware";
+import {
+  Algorithm,
+  createTestKeystore,
+  KeyPair,
+  Keystore,
+  KeyType,
+  NamedCurve,
+} from "@lindorm-io/key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -23,7 +29,7 @@ describe("tokenIssuerMiddleware", () => {
     };
 
     ctx = {
-      keystore: getTestKeystore(),
+      keystore: createTestKeystore(),
       metrics: {},
       logger,
     };

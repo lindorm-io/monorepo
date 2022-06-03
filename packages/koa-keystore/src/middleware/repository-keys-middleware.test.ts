@@ -1,6 +1,7 @@
 import { Metric } from "@lindorm-io/koa";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { repositoryKeysMiddleware } from "./repository-keys-middleware";
 
 const next = () => Promise.resolve();
@@ -9,8 +10,8 @@ describe("repositoryKeysMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
-  const keyEC = getTestKeyPairEC();
-  const keyRSA = getTestKeyPairRSA();
+  const keyEC = createTestKeyPairEC();
+  const keyRSA = createTestKeyPairRSA();
 
   beforeEach(async () => {
     ctx = {
@@ -18,9 +19,7 @@ describe("repositoryKeysMiddleware", () => {
       logger,
       metrics: {},
       repository: {
-        keyPairRepository: {
-          findMany: jest.fn().mockResolvedValue([keyRSA]),
-        },
+        keyPairRepository: createMockRepository(() => keyRSA),
       },
     };
     ctx.getMetric = (key: string) => new Metric(ctx, key);

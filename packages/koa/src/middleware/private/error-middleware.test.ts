@@ -1,5 +1,6 @@
 import { RedirectError, ServerError } from "@lindorm-io/errors";
 import { errorMiddleware } from "./error-middleware";
+import { createMockLogger } from "@lindorm-io/winston";
 
 describe("errorMiddleware", () => {
   let ctx: any;
@@ -10,9 +11,7 @@ describe("errorMiddleware", () => {
       app: {
         emit: jest.fn(),
       },
-      logger: {
-        error: jest.fn(),
-      },
+      logger: createMockLogger(),
       redirect: jest.fn(),
     };
     next = () =>

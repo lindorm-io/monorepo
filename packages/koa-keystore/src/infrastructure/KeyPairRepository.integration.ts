@@ -1,9 +1,15 @@
-import { Algorithm, KeyPair, KeyType } from "@lindorm-io/key-pair";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairRepository } from "./KeyPairRepository";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
+import {
+  Algorithm,
+  KeyPair,
+  KeyType,
+  createTestKeyPair,
+  createTestKeyPairRSA,
+} from "@lindorm-io/key-pair";
+import { randomUUID } from "crypto";
 
 describe("KeyPairRepository", () => {
   let repository: KeyPairRepository;
@@ -27,7 +33,7 @@ describe("KeyPairRepository", () => {
   });
 
   beforeEach(async () => {
-    entity = await repository.create(getTestKeyPairEC());
+    entity = await repository.create(createTestKeyPair({ id: randomUUID() }));
   });
 
   afterAll(async () => {
@@ -59,7 +65,7 @@ describe("KeyPairRepository", () => {
   });
 
   test("should find many", async () => {
-    const keyRSA = await repository.create(getTestKeyPairRSA());
+    const keyRSA = await repository.create(createTestKeyPairRSA());
 
     await expect(repository.findMany({})).resolves.toStrictEqual(
       expect.arrayContaining([entity, keyRSA]),

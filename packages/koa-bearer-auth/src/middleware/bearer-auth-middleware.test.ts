@@ -2,8 +2,8 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
 import { bearerAuthMiddleware } from "./bearer-auth-middleware";
+import { createTestJwt } from "@lindorm-io/jwt";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestJwt } from "../test";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,7 +18,7 @@ describe("bearerAuthMiddleware", () => {
   const logger = createMockLogger();
 
   beforeEach(() => {
-    const jwt = getTestJwt();
+    const jwt = createTestJwt();
     const { token } = jwt.sign({
       audiences: ["444a9836-d2c9-470e-9270-071bfcb61346"],
       expiry: "99 seconds",

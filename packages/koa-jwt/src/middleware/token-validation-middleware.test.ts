@@ -2,8 +2,8 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestJwt } from "../test";
 import { tokenValidationMiddleware } from "./token-validation-middleware";
+import { createTestJwt } from "@lindorm-io/jwt";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -19,7 +19,7 @@ describe("tokenValidationMiddleware", () => {
   const logger = createMockLogger();
 
   beforeEach(() => {
-    const jwt = getTestJwt();
+    const jwt = createTestJwt();
     const { token } = jwt.sign({
       audiences: ["45270e26-3d10-4827-9b79-10cbd9d426bc"],
       expiry: "99 seconds",

@@ -1,9 +1,28 @@
 import MockDate from "mockdate";
 import { KeyPair } from "./KeyPair";
 import { Algorithm, KeyType, NamedCurve } from "../enum";
-import { privateKey, privateKeyRSAPassphrase } from "../test";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
+
+const privateKey = new KeyPair({
+  id: "privateKey",
+  algorithms: [Algorithm.ES512],
+  created: new Date("2020-01-02T01:00:00.000Z"),
+  namedCurve: NamedCurve.P521,
+  privateKey: "privateKey-private-key",
+  publicKey: "privateKey-public-key",
+  type: KeyType.EC,
+});
+
+const privateKeyRSAPassphrase = new KeyPair({
+  id: "privateKeyRSAWithPasscode",
+  algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
+  created: new Date("2020-01-04T01:00:00.000Z"),
+  passphrase: "privateKeyRSAWithPasscode-passphrase",
+  privateKey: "privateKeyRSAWithPasscode-private-key",
+  publicKey: "privateKeyRSAWithPasscode-public-key",
+  type: KeyType.RSA,
+});
 
 jest.mock("../util", () => ({
   decodeKeys: () => ({

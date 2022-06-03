@@ -1,11 +1,16 @@
-import { Algorithm, KeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";
+import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { KeyPair } from "../entity";
+import { KeyPairOptions } from "../entity";
 
-export const getTestKeyPairEC = (): KeyPair =>
+export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
     id: "7531da89-12e9-403e-925a-5da49100635c",
     algorithms: [Algorithm.ES512],
     allowed: new Date("2020-01-01T08:00:00.000Z"),
     created: new Date("2020-01-01T08:00:00.000Z"),
+    expires: new Date("2029-01-01T08:00:00.000Z"),
+    updated: new Date("2021-01-01T10:00:00.000Z"),
+    external: false,
     namedCurve: NamedCurve.P521,
     privateKey:
       "-----BEGIN PRIVATE KEY-----\n" +
@@ -24,14 +29,20 @@ export const getTestKeyPairEC = (): KeyPair =>
       "OQLhJKj4uO0wPYgkmFU=\n" +
       "-----END PUBLIC KEY-----\n",
     type: KeyType.EC,
+    ...options,
   });
 
-export const getTestKeyPairRSA = (): KeyPair =>
+export const createTestKeyPair = createTestKeyPairEC;
+
+export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
-    id: "3f6ab288-7e0e-48b5-90ab-4684257ebe5e",
+    id: "e6301473-e347-4035-8084-8645d034e4a3",
     algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
     allowed: new Date("2020-01-01T08:00:00.000Z"),
     created: new Date("2020-01-01T08:00:00.000Z"),
+    expires: new Date("2029-01-01T08:00:00.000Z"),
+    updated: new Date("2021-01-01T09:00:00.000Z"),
+    external: false,
     passphrase: "",
     privateKey:
       "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" +
@@ -59,4 +70,5 @@ export const getTestKeyPairRSA = (): KeyPair =>
       "tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=\n" +
       "-----END RSA PUBLIC KEY-----\n",
     type: KeyType.RSA,
+    ...options,
   });

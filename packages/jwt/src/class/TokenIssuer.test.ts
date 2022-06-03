@@ -1,27 +1,26 @@
 import MockDate from "mockdate";
 import { IssuerSignOptions } from "../types";
-import { Keystore } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
 import { TokenIssuer } from "./TokenIssuer";
 import { baseParse } from "@lindorm-io/core";
-import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
+import { createTestJwt } from "../mocks";
 import { getUnixTime } from "date-fns";
+import {
+  createTestKeyPairEC,
+  createTestKeyPairRSA,
+  createTestKeystore,
+} from "@lindorm-io/key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 const parseTokenData = (token: string): any => JSON.parse(baseParse(token.split(".")[1]));
 
 describe("TokenIssuer", () => {
-  let handler: TokenIssuer;
-  let issuer: any;
+  let tokenIssuer: TokenIssuer;
   let optionsMin: IssuerSignOptions<any, any>;
   let optionsFull: IssuerSignOptions<any, any>;
 
-  const logger = createMockLogger();
-
   beforeEach(() => {
-    issuer = "issuer";
     optionsMin = {
       audiences: ["audience"],
       expiry: "10 seconds",
@@ -49,28 +48,24 @@ describe("TokenIssuer", () => {
       type: "type",
       username: "username",
     };
-    handler = new TokenIssuer({
-      issuer,
-      keystore: new Keystore({ keys: [getTestKeyPairEC()] }),
-      logger,
-    });
+    tokenIssuer = createTestJwt();
   });
 
   afterEach(jest.clearAllMocks);
 
   describe("RS512", () => {
     beforeEach(() => {
-      handler = new TokenIssuer({
-        issuer,
-        keystore: new Keystore({ keys: [getTestKeyPairRSA()] }),
-        logger,
+      tokenIssuer = createTestJwt({
+        keystore: createTestKeystore({
+          keys: [createTestKeyPairRSA()],
+        }),
       });
     });
 
     test("should sign/verify", () => {
-      const { id, token } = handler.sign(optionsMin);
+      const { id, token } = tokenIssuer.sign(optionsMin);
 
-      expect(handler.verify(token)).toStrictEqual(
+      expect(tokenIssuer.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
           token,
@@ -84,17 +79,17 @@ describe("TokenIssuer", () => {
 
   describe("ES512", () => {
     beforeEach(() => {
-      handler = new TokenIssuer({
-        issuer,
-        keystore: new Keystore({ keys: [getTestKeyPairEC()] }),
-        logger,
+      tokenIssuer = createTestJwt({
+        keystore: createTestKeystore({
+          keys: [createTestKeyPairEC()],
+        }),
       });
     });
 
     test("should sign/verify", () => {
-      const { id, token } = handler.sign(optionsMin);
+      const { id, token } = tokenIssuer.sign(optionsMin);
 
-      expect(handler.verify(token)).toStrictEqual(
+      expect(tokenIssuer.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
           token,
@@ -107,7 +102,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should create", () => {
-    expect(handler.sign(optionsMin)).toStrictEqual({
+    expect(tokenIssuer.sign(optionsMin)).toStrictEqual({
       id: expect.any(String),
       expires: expect.any(Date),
       expiresIn: 10,
@@ -117,7 +112,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should decode", () => {
-    const { id, token } = handler.sign(optionsFull);
+    const { id, token } = tokenIssuer.sign(optionsFull);
 
     expect(TokenIssuer.decode(token)).toStrictEqual({
       id,
@@ -149,119 +144,119 @@ describe("TokenIssuer", () => {
   });
 
   test("should verify audience", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         audience: "audience",
       }),
     ).toBeTruthy();
   });
 
   test("should verify audiences", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         audiences: ["audience"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify issuer", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         issuer: "issuer",
       }),
     ).toBeTruthy();
   });
 
   test("should verify max age", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         maxAge: "90 minutes",
       }),
     ).toBeTruthy();
   });
 
   test("should verify nonce", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         nonce: "bed190d568a5456bb15a39cf71d72022",
       }),
     ).toBeTruthy();
   });
 
   test("should verify permissions", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         permissions: ["permission1", "permission2"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify scopes", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         scopes: ["scope"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify subject", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         subject: "subject",
       }),
     ).toBeTruthy();
   });
 
   test("should verify subjects", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         subjects: ["subject", "extra", "other"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify subject hint", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         subjectHint: "hint",
       }),
     ).toBeTruthy();
   });
 
   test("should verify types", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         types: ["other", "extra", "type"],
       }),
     ).toBeTruthy();
   });
 
   test("should return all signed values", () => {
-    const { id, token } = handler.sign(optionsFull);
+    const { id, token } = tokenIssuer.sign(optionsFull);
 
-    expect(handler.verify(token)).toStrictEqual({
+    expect(tokenIssuer.verify(token)).toStrictEqual({
       id,
       active: true,
       audiences: ["audience"],
@@ -291,9 +286,9 @@ describe("TokenIssuer", () => {
   });
 
   test("should return default values", () => {
-    const { id, token } = handler.sign(optionsMin);
+    const { id, token } = tokenIssuer.sign(optionsMin);
 
-    expect(handler.verify(token)).toStrictEqual({
+    expect(tokenIssuer.verify(token)).toStrictEqual({
       id: id,
       active: true,
       audiences: ["audience"],
@@ -323,7 +318,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should store token claims in snake_case and decode to camelCase", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       ...optionsMin,
       claims: {
         caseOne: 1,
@@ -344,7 +339,7 @@ describe("TokenIssuer", () => {
       }),
     );
 
-    expect(handler.verify(token)).toStrictEqual(
+    expect(tokenIssuer.verify(token)).toStrictEqual(
       expect.objectContaining({
         claims: {
           caseFive: true,
@@ -358,7 +353,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should store token payload in snake_case and decode to camelCase", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       ...optionsMin,
       payload: {
         caseOne: 1,
@@ -381,7 +376,7 @@ describe("TokenIssuer", () => {
       }),
     );
 
-    expect(handler.verify(token)).toStrictEqual(
+    expect(tokenIssuer.verify(token)).toStrictEqual(
       expect.objectContaining({
         payload: {
           caseFive: true,
@@ -395,7 +390,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept string as expiry", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       audiences: optionsFull.audiences,
       expiry: "10 seconds",
       subject: optionsFull.subject,
@@ -412,7 +407,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept number as expiry", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       audiences: optionsFull.audiences,
       expiry: 1609488010,
       subject: optionsFull.subject,
@@ -429,7 +424,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept Date as expiry", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       audiences: optionsFull.audiences,
       expiry: new Date("2021-12-12 12:00:00"),
       subject: optionsFull.subject,
@@ -446,83 +441,83 @@ describe("TokenIssuer", () => {
   });
 
   test("should reject missing permission", () => {
-    const { token } = handler.sign({ ...optionsFull, permissions: [] });
+    const { token } = tokenIssuer.sign({ ...optionsFull, permissions: [] });
 
     expect(() =>
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         permissions: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid permission", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(() =>
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         permissions: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject missing scope", () => {
-    const { token } = handler.sign({ ...optionsFull, scopes: [] });
+    const { token } = tokenIssuer.sign({ ...optionsFull, scopes: [] });
 
     expect(() =>
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         scopes: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid scope", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(() =>
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         scopes: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid type", () => {
-    const { token } = handler.sign(optionsFull);
+    const { token } = tokenIssuer.sign(optionsFull);
 
     expect(() =>
-      handler.verify(token, {
+      tokenIssuer.verify(token, {
         types: ["wrong-type"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject expired", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       ...optionsFull,
       expiry: new Date("2021-01-01T08:10:00.000Z"),
     });
 
     MockDate.set("2022-01-01T08:10:00.000Z");
 
-    expect(() => handler.verify(token)).toThrow(TokenError);
+    expect(() => tokenIssuer.verify(token)).toThrow(TokenError);
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });
 
   test("should not reject expired when clock tolerance is enabled", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       ...optionsFull,
       expiry: new Date("2021-01-01T08:10:00.000Z"),
     });
 
     MockDate.set("2021-01-01T08:10:04.999Z");
 
-    expect(handler.verify(token, { clockTolerance: 5 })).toBeTruthy();
+    expect(tokenIssuer.verify(token, { clockTolerance: 5 })).toBeTruthy();
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });
 
   test("should reject token not yet valid", () => {
-    const { token } = handler.sign({
+    const { token } = tokenIssuer.sign({
       ...optionsFull,
       notBefore: new Date("2021-01-01T09:00:00.000Z"),
       expiry: new Date("2021-01-01T10:00:00.000Z"),
@@ -530,7 +525,7 @@ describe("TokenIssuer", () => {
 
     MockDate.set("2022-01-01T08:30:00.000Z");
 
-    expect(() => handler.verify(token)).toThrow(TokenError);
+    expect(() => tokenIssuer.verify(token)).toThrow(TokenError);
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });

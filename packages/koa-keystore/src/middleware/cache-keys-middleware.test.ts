@@ -1,7 +1,8 @@
 import { Metric } from "@lindorm-io/koa";
 import { cacheKeysMiddleware } from "./cache-keys-middleware";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestKeyPairEC, getTestKeyPairRSA } from "../test";
+import { createMockCache } from "@lindorm-io/redis";
 
 const next = () => Promise.resolve();
 
@@ -9,15 +10,13 @@ describe("cacheKeysMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
-  const keyEC = getTestKeyPairEC();
-  const keyRSA = getTestKeyPairRSA();
+  const keyEC = createTestKeyPairEC();
+  const keyRSA = createTestKeyPairRSA();
 
   beforeEach(async () => {
     ctx = {
       cache: {
-        keyPairCache: {
-          findMany: jest.fn().mockResolvedValue([keyRSA]),
-        },
+        keyPairCache: createMockCache(() => keyRSA),
       },
       keys: [keyEC],
       logger,
