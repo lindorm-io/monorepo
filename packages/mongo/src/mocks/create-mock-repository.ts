@@ -1,10 +1,11 @@
-import { EntityOptions, ILindormEntity, TestEntity } from "@lindorm-io/entity";
+import { ILindormEntity, TestEntity } from "@lindorm-io/entity";
 import { IRepository } from "../types";
 
-type CreateEntityCallback = (options?: EntityOptions) => ILindormEntity<any>;
+type CreateEntityCallback = (options?: any) => ILindormEntity<any>;
 
 export const createMockRepository = (
-  createEntityCallback: CreateEntityCallback = (options) => new TestEntity(options),
+  createEntityCallback: CreateEntityCallback = (options): ILindormEntity<any> =>
+    new TestEntity(options),
 ): IRepository<any, any> => ({
   count: jest.fn().mockImplementation(async () => 1),
   create: jest.fn().mockImplementation(async (entity) => entity),

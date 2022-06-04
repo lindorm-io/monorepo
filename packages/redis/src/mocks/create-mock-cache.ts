@@ -1,10 +1,11 @@
-import { EntityOptions, ILindormEntity, TestEntity } from "@lindorm-io/entity";
+import { ILindormEntity, TestEntity } from "@lindorm-io/entity";
 import { ICache } from "../types";
 
-type CreateEntityCallback = (options?: EntityOptions) => ILindormEntity<any>;
+type CreateEntityCallback = (options?: any) => ILindormEntity<any>;
 
 export const createMockCache = (
-  createEntityCallback: CreateEntityCallback = (options) => new TestEntity(options),
+  createEntityCallback: CreateEntityCallback = (options): ILindormEntity<any> =>
+    new TestEntity(options),
 ): ICache<any, any> => ({
   create: jest.fn().mockImplementation(async (entity) => entity),
   createMany: jest.fn().mockImplementation(async (entities) => entities),
