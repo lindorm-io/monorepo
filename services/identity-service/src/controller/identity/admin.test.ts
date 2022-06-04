@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestIdentity } from "../../test/entity";
 import { identityAdminController } from "./admin";
-import { logger } from "../../test/logger";
 
 MockDate.set("2020-01-01T08:00:00.000");
 
@@ -24,7 +24,7 @@ describe("identityAdminController", () => {
           username: "li61qVCuw8eMH6xq",
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
         identityRepository: {
           update: jest.fn(),

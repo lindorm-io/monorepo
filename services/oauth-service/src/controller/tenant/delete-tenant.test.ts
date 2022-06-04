@@ -1,3 +1,4 @@
+import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteTenantController } from "./delete-tenant";
 import { getTestTenant } from "../../test/entity";
 
@@ -10,12 +11,8 @@ describe("deleteTenantController", () => {
         tenant: getTestTenant(),
       },
       repository: {
-        clientRepository: {
-          deleteMany: jest.fn(),
-        },
-        tenantRepository: {
-          destroy: jest.fn(),
-        },
+        clientRepository: createMockRepository(),
+        tenantRepository: createMockRepository(),
       },
     };
   });

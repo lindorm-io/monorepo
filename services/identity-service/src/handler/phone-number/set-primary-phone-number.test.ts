@@ -1,6 +1,6 @@
 import { PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { setPrimaryPhoneNumber } from "./set-primary-phone-number";
-import { logger } from "../../test/logger";
 
 describe("setPrimaryPhoneNumber", () => {
   const phone1 = new PhoneNumber({
@@ -21,7 +21,7 @@ describe("setPrimaryPhoneNumber", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           find: jest.fn().mockResolvedValueOnce(phone1).mockResolvedValueOnce(phone2),

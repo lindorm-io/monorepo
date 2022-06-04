@@ -2,9 +2,10 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestAuthorizationSession, getTestBrowserSession } from "../../test/entity";
-import { logger } from "../../test/logger";
 import { skipAuthenticationController } from "./skip-authentication";
+import { createMockCache } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,9 +19,7 @@ describe("skipAuthenticationController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn().mockImplementation(async (item) => item),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       entity: {
         authorizationSession: getTestAuthorizationSession({
@@ -28,7 +27,7 @@ describe("skipAuthenticationController", () => {
         }),
         browserSession: getTestBrowserSession(),
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     createAuthorizationVerifyRedirectUri.mockImplementation(() => "redirect-uri");

@@ -1,8 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
 import { IdentifierType } from "../../common";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestIdentity } from "../../test/entity";
 import { identifierSetPrimaryController } from "./set-primary";
-import { logger } from "../../test/logger";
 import {
   setPrimaryEmail as _setPrimaryEmail,
   setPrimaryPhoneNumber as _setPrimaryPhoneNumber,
@@ -29,7 +29,7 @@ describe("identifierSetPrimaryController", () => {
       entity: {
         identity: getTestIdentity({ id: "identityId" }),
       },
-      logger,
+      logger: createMockLogger(),
     };
   });
 

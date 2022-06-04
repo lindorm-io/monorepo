@@ -1,5 +1,6 @@
-import { rejectChallengeController } from "./reject";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestChallengeSession } from "../../test/entity";
+import { rejectChallengeController } from "./reject";
 
 describe("rejectChallengeController", () => {
   let ctx: any;
@@ -7,9 +8,7 @@ describe("rejectChallengeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        challengeSessionCache: {
-          destroy: jest.fn(),
-        },
+        challengeSessionCache: createMockCache(),
       },
       entity: {
         challengeSession: getTestChallengeSession(),

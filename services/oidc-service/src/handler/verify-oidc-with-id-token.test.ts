@@ -1,7 +1,7 @@
-import { verifyOidcWithIdToken } from "./verify-oidc-with-id-token";
-import { logger } from "../test/logger";
-import { getTestOidcSession } from "../test/entity";
 import { ServerError } from "@lindorm-io/errors";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestOidcSession } from "../test/entity";
+import { verifyOidcWithIdToken } from "./verify-oidc-with-id-token";
 
 describe("verifyOidcWithIdToken", () => {
   let ctx: any;
@@ -14,7 +14,7 @@ describe("verifyOidcWithIdToken", () => {
           .fn()
           .mockImplementation(() => ({ subject: "sub", claims: { given_name: "given" } })),
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     oidcSession = getTestOidcSession();

@@ -3,8 +3,10 @@ import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { confirmAuthenticationController } from "./confirm-authentication";
 import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestAuthorizationSession, getTestBrowserSession } from "../../test/entity";
-import { logger } from "../../test/logger";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,9 +20,7 @@ describe("confirmAuthenticationController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn().mockImplementation(async (item) => item),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       data: {
         acrValues: ["loa_3"],
@@ -37,11 +37,9 @@ describe("confirmAuthenticationController", () => {
           identityId: null,
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
-        browserSessionRepository: {
-          update: jest.fn().mockImplementation(async (item) => item),
-        },
+        browserSessionRepository: createMockRepository(),
       },
     };
 

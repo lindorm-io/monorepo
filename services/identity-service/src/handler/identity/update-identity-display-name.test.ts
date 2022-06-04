@@ -1,5 +1,5 @@
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestDisplayName, getTestIdentity } from "../../test/entity";
-import { logger } from "../../test/logger";
 import { updateIdentityDisplayName } from "./update-identity-display-name";
 
 jest.mock("@lindorm-io/core", () => ({
@@ -13,7 +13,7 @@ describe("updateIdentityDisplayName", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         displayNameRepository: {
           find: jest.fn().mockImplementation(async (options) =>

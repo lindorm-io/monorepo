@@ -1,7 +1,5 @@
-import { IssuerSignOptions, TokenIssuer } from "@lindorm-io/jwt";
-import { getTestJwt } from "./test-jwt";
-import { getTestKeystore } from "./test-keystore";
-import { logger } from "../logger";
+import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { configuration } from "../../server/configuration";
 import {
   ClientPermission,
   ClientScope,
@@ -11,7 +9,9 @@ import {
 } from "../../common";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
     authContextClass: ["loa_2", "email_otp", "phone_otp"],
     authMethodsReference: ["email_otp", "phone_otp"],
@@ -32,7 +32,9 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 export const getTestClientCredentials = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
     expiry: "10 seconds",
     permissions: [ClientPermission.OIDC_CONFIDENTIAL, ClientPermission.OIDC_PUBLIC],
@@ -48,12 +50,9 @@ export const getTestClientCredentials = (
 export const getTestGoogleIdToken = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const issuer = new TokenIssuer({
+  const { token } = createTestJwt({
     issuer: "https://jwt.google.com",
-    keystore: getTestKeystore(),
-    logger,
-  });
-  const { token } = issuer.sign({
+  }).sign({
     audiences: ["google_client_id"],
     claims: {
       given_name: "given",

@@ -1,5 +1,6 @@
-import { updateDeviceLinkTrustedController } from "./update-trusted";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestDeviceLink } from "../../test/entity";
+import { updateDeviceLinkTrustedController } from "./update-trusted";
 
 jest.mock("../../util");
 
@@ -12,9 +13,7 @@ describe("updateDeviceLinkTrustedController", () => {
         deviceLink: await getTestDeviceLink(),
       },
       repository: {
-        deviceLinkRepository: {
-          update: jest.fn(),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

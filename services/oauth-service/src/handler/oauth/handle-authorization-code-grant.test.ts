@@ -2,6 +2,8 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { Scope } from "../../common";
 import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 import {
@@ -28,16 +30,16 @@ describe("handleAuthorizationCodeGrant", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          find: jest.fn().mockResolvedValue(
-            getTestAuthorizationSession({
-              clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
-              redirectUri: "https://test.client.lindorm.io/redirect",
-              scopes: [Scope.OPENID],
-            }),
-          ),
-          destroy: jest.fn(),
-        },
+        authorizationSessionCache: createMockCache((options) =>
+          getTestAuthorizationSession({
+            browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
+            clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
+            consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
+            redirectUri: "https://test.client.lindorm.io/redirect",
+            scopes: [Scope.OPENID],
+            ...options,
+          }),
+        ),
       },
       data: {
         code: "code",
@@ -50,26 +52,20 @@ describe("handleAuthorizationCodeGrant", () => {
         }),
       },
       repository: {
-        browserSessionRepository: {
-          find: jest.fn().mockResolvedValue(
-            getTestBrowserSession({
-              id: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
-            }),
-          ),
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
-        consentSessionRepository: {
-          find: jest.fn().mockResolvedValue(
-            getTestConsentSession({
-              id: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
-              sessions: ["36b51c4b-b13d-4a58-81fd-ce8c09a9b362"],
-            }),
-          ),
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
-        refreshSessionRepository: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        browserSessionRepository: createMockRepository((options) =>
+          getTestBrowserSession({
+            id: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
+            ...options,
+          }),
+        ),
+        consentSessionRepository: createMockRepository((options) =>
+          getTestConsentSession({
+            id: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
+            sessions: ["36b51c4b-b13d-4a58-81fd-ce8c09a9b362"],
+            ...options,
+          }),
+        ),
+        refreshSessionRepository: createMockRepository(),
       },
     };
   });
@@ -89,7 +85,9 @@ describe("handleAuthorizationCodeGrant", () => {
   test("should resolve with refresh session", async () => {
     ctx.cache.authorizationSessionCache.find.mockResolvedValue(
       getTestAuthorizationSession({
+        browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
         clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
+        consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
         redirectUri: "https://test.client.lindorm.io/redirect",
         scopes: [Scope.OFFLINE_ACCESS],
       }),

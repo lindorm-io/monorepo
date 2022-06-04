@@ -1,6 +1,6 @@
-import { IssuerSignOptions } from "@lindorm-io/jwt";
-import { getTestJwt } from "./test-jwt";
 import { TokenType } from "../../enum";
+import { configuration } from "../../server/configuration";
+import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
 import {
   IdentityServiceClaims,
   ClientPermission,
@@ -11,7 +11,9 @@ import {
 } from "../../common";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["3c12edf7-2e1d-4df2-a199-3226e36f84a4"],
     authContextClass: ["loa_2", "email_otp", "phone_otp"],
     authMethodsReference: ["email_otp", "phone_otp"],
@@ -32,7 +34,9 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 export const getTestClientCredentials = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
     expiry: "10 seconds",
     permissions: Object.values(ClientPermission),
@@ -49,7 +53,9 @@ export const getTestClientCredentials = (
 export const getTestIdToken = (
   options: Partial<IssuerSignOptions<any, Partial<IdentityServiceClaims>>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["7c79844e-2006-4d7c-a49e-ece40225361c"],
     authContextClass: ["loa_3", "email_otp", "phone_otp"],
     authMethodsReference: ["email_otp", "phone_otp"],
@@ -69,7 +75,9 @@ export const getTestIdToken = (
 };
 
 export const getTestRefreshToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     id: "8543b130-1db1-4d9b-8d43-44687199e84f",
     audiences: ["d507c23e-7db1-44e0-b5a2-ee53bd9d8d09"],
     expiry: "10 seconds",

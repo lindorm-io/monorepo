@@ -1,3 +1,4 @@
+import { createMockRepository } from "@lindorm-io/mongo";
 import { createTenantController } from "./create-tenant";
 
 describe("createTenantController", () => {
@@ -10,9 +11,7 @@ describe("createTenantController", () => {
         subdomain: "subdomain",
       },
       repository: {
-        tenantRepository: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        tenantRepository: createMockRepository(),
       },
       token: {
         bearerToken: { subject: "identityId" },

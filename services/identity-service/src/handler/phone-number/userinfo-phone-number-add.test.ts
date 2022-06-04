@@ -1,7 +1,7 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { userinfoPhoneNumberAdd } from "./userinfo-phone-number-add";
-import { logger } from "../../test/logger";
 
 describe("userinfoPhoneNumberAdd", () => {
   const phone1 = new PhoneNumber({
@@ -16,7 +16,7 @@ describe("userinfoPhoneNumberAdd", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           count: jest.fn().mockResolvedValue(0),

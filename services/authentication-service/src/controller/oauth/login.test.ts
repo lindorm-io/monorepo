@@ -2,9 +2,10 @@ import MockDate from "mockdate";
 import { FlowType } from "../../enum";
 import { SessionStatus } from "../../common";
 import { assertPKCE as _assertPKCE, getExpires } from "@lindorm-io/core";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestLoginSession } from "../../test/entity";
 import { isAuthenticationReadyToConfirm as _isAuthenticationReadyToConfirm } from "../../util";
-import { logger } from "../../test/logger";
 import { oauthLoginController } from "./login";
 import {
   oauthConfirmAuthentication as _oauthConfirmAuthentication,
@@ -34,13 +35,10 @@ describe("oauthLoginController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          findOrCreate: jest.fn().mockImplementation((arg) => getTestLoginSession(arg)),
-          update: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        loginSessionCache: createMockCache((options) => getTestLoginSession(options)),
       },
       data: { sessionId: "sessionId" },
-      logger,
+      logger: createMockLogger(),
       setCookie: jest.fn(),
     };
 

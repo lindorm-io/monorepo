@@ -1,8 +1,9 @@
 import { Account, FlowSession, LoginSession } from "../../entity";
-import { updateLoginSessionWithFlow } from "./update-login-session-with-flow";
-import { resolveAllowedFlows as _resolveAllowedFlows } from "./resolve-allowed-flows";
 import { calculateLevelOfAssurance as _calculateLevelOfAssurance } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestAccount, getTestFlowSession, getTestLoginSession } from "../../test/entity";
+import { resolveAllowedFlows as _resolveAllowedFlows } from "./resolve-allowed-flows";
+import { updateLoginSessionWithFlow } from "./update-login-session-with-flow";
 
 jest.mock("../../util");
 jest.mock("./resolve-allowed-flows");
@@ -19,9 +20,7 @@ describe("updateLoginSessionWithFlow", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          update: jest.fn().mockImplementation((item) => item),
-        },
+        loginSessionCache: createMockCache(),
       },
     };
 

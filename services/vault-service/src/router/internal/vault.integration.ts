@@ -2,6 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { CryptoAES } from "@lindorm-io/crypto";
 import { EncryptedRecord } from "../../entity";
+import { baseHash } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
 import { stringifyBlob } from "@lindorm-io/string-blob";
@@ -10,7 +11,6 @@ import {
   setupIntegration,
   TEST_ENCRYPTED_RECORD_REPOSITORY,
 } from "../../test/integration";
-import { baseHash } from "@lindorm-io/core";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

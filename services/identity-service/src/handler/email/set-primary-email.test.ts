@@ -1,6 +1,6 @@
 import { Email } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { setPrimaryEmail } from "./set-primary-email";
-import { logger } from "../../test/logger";
 
 describe("setPrimaryEmail", () => {
   const email1 = new Email({
@@ -21,7 +21,7 @@ describe("setPrimaryEmail", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           find: jest.fn().mockResolvedValueOnce(email1).mockResolvedValueOnce(email2),

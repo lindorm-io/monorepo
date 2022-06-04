@@ -1,5 +1,5 @@
 import { PhoneNumber } from "../../entity";
-import { logger } from "../../test/logger";
+import { createMockLogger } from "@lindorm-io/winston";
 import { userinfoPhoneNumberGet } from "./userinfo-phone-number-get";
 
 describe("userinfoPhoneNumberGet", () => {
@@ -43,7 +43,7 @@ describe("userinfoPhoneNumberGet", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           findMany: jest.fn().mockResolvedValue([]),

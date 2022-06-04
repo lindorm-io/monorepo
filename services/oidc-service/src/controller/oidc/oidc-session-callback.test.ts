@@ -1,5 +1,6 @@
-import { oidcSessionCallbackController } from "./oidc-session-callback";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestOidcSession } from "../../test/entity";
+import { oidcSessionCallbackController } from "./oidc-session-callback";
 import {
   axiosAuthenticateOidcIdentity as _axiosAuthenticateOidcIdentity,
   axiosUpdateIdentityUserinfo as _axiosUpdateIdentityUserinfo,
@@ -22,9 +23,7 @@ describe("oidcSessionCallbackController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        oidcSessionCache: {
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        oidcSessionCache: createMockCache(),
       },
       data: {
         accessToken: "access.jwt.jwt",

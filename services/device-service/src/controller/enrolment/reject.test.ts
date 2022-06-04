@@ -1,3 +1,4 @@
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestEnrolmentSession } from "../../test/entity";
 import { rejectEnrolmentController } from "./reject";
 
@@ -7,9 +8,7 @@ describe("rejectEnrolmentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        enrolmentSessionCache: {
-          destroy: jest.fn(),
-        },
+        enrolmentSessionCache: createMockCache(),
       },
       entity: {
         enrolmentSession: getTestEnrolmentSession(),

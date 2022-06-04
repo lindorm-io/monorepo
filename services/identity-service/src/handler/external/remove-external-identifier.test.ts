@@ -1,6 +1,6 @@
 import { ExternalIdentifier } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { removeExternalIdentifier } from "./remove-external-identifier";
-import { logger } from "../../test/logger";
 
 describe("removeExternalIdentifier", () => {
   const identifier1 = new ExternalIdentifier({
@@ -14,7 +14,7 @@ describe("removeExternalIdentifier", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         externalIdentifierRepository: {
           find: jest.fn().mockResolvedValue(identifier1),

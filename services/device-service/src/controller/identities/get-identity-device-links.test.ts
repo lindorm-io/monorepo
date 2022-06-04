@@ -1,5 +1,5 @@
-import { getTestDeviceLink } from "../../test/entity";
 import { getIdentityDeviceLinksController } from "./get-identity-device-links";
+import { getTestDeviceLink } from "../../test/entity";
 
 describe("getIdentityDeviceLinksController", () => {
   let ctx: any;

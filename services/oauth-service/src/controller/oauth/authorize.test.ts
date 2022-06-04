@@ -1,5 +1,7 @@
 import MockDate from "mockdate";
 import { DisplayMode, PromptMode, ResponseMode, ResponseType } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
+import { getTestBrowserSession, getTestClient, getTestConsentSession } from "../../test/entity";
 import { oauthAuthorizeController } from "./authorize";
 import {
   setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
@@ -10,7 +12,6 @@ import {
   isAuthenticationRequired as _isAuthenticationRequired,
   isConsentRequired as _isConsentRequired,
 } from "../../util";
-import { getTestBrowserSession, getTestClient, getTestConsentSession } from "../../test/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -29,9 +30,7 @@ describe("oauthAuthorizeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          create: jest.fn().mockImplementation((entity: any) => entity),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       data: {
         acrValues: "3 phone_otp session_otp email_otp",

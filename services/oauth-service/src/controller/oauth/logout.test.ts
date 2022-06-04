@@ -5,6 +5,7 @@ import {
   findSessionToLogout as _findSessionToLogout,
   setLogoutSessionCookie as _setLogoutSessionCookie,
 } from "../../handler";
+import { createMockCache } from "@lindorm-io/redis";
 
 jest.mock("../../handler");
 
@@ -17,9 +18,7 @@ describe("oauthLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        logoutSessionCache: createMockCache(),
       },
       data: {
         redirectUri: "https://logout-redirect.uri/callback",

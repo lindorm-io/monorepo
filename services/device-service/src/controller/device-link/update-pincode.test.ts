@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
-import { updateDeviceLinkPincodeController } from "./update-pincode";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestDeviceLink } from "../../test/entity";
+import { updateDeviceLinkPincodeController } from "./update-pincode";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -36,9 +37,7 @@ describe("updateDeviceLinkPincodeController", () => {
         device: { name: null },
       },
       repository: {
-        deviceLinkRepository: {
-          update: jest.fn(),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

@@ -1,6 +1,7 @@
+import { createMockCache } from "@lindorm-io/redis";
+import { getTestLoginSession } from "../../test/entity";
 import { handleFlowInitialisation as _handleFlowInitialisation } from "../../handler";
 import { initialiseFlowController } from "./initialise-flow";
-import { getTestLoginSession } from "../../test/entity";
 
 jest.mock("../../handler");
 
@@ -12,9 +13,7 @@ describe("initialiseFlowController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          update: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        loginSessionCache: createMockCache(),
       },
       data: {
         email: "email",

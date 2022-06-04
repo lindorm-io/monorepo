@@ -1,6 +1,8 @@
 import MockDate from "mockdate";
-import { updateTenantController } from "./update-tenant";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestTenant } from "../../test/entity";
+import { updateTenantController } from "./update-tenant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -10,9 +12,7 @@ describe("updateTenantController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        tenantCache: {
-          update: jest.fn(),
-        },
+        tenantCache: createMockCache(),
       },
       data: {
         administrators: ["78024d32-488c-458e-9f5c-d4a15c83759c"],
@@ -24,11 +24,7 @@ describe("updateTenantController", () => {
         tenant: getTestTenant({ id: "612edde0-2679-47b1-8fad-d01c8a7570b6" }),
       },
       repository: {
-        tenantRepository: {
-          update: jest
-            .fn()
-            .mockImplementation(async (entity) => ({ ...entity, version: (entity.version += 1) })),
-        },
+        tenantRepository: createMockRepository(),
       },
     };
   });

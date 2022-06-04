@@ -1,8 +1,7 @@
-import { IssuerSignOptions } from "@lindorm-io/jwt";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
+import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
 import { getRandomString } from "@lindorm-io/core";
-import { getTestDeviceLinkJwt, getTestJwt } from "./test-jwt";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,
@@ -14,7 +13,9 @@ import {
 } from "../../common";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     id: "a7534836-65f2-4e04-9f16-b5afebdcdd71",
     audiences: ["0438487d-0cf0-4399-b3d3-c2876db14ca6"],
     authMethodsReference: ["email"],
@@ -26,14 +27,15 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
     type: TokenType.ACCESS_TOKEN,
     ...options,
   });
-
   return token;
 };
 
 export const getTestClientCredentials = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
     expiry: "10 seconds",
     permissions: [ClientPermission.DEVICE_CONFIDENTIAL, ClientPermission.IDENTITY_CONFIDENTIAL],
@@ -47,7 +49,6 @@ export const getTestClientCredentials = (
     type: TokenType.ACCESS_TOKEN,
     ...options,
   });
-
   return token;
 };
 
@@ -56,10 +57,9 @@ export const getTestChallengeConfirmationToken = (
     IssuerSignOptions<Record<string, unknown>, ChallengeConfirmationTokenClaims>
   > = {},
 ): string => {
-  const { token } = getTestDeviceLinkJwt().sign<
-    Record<string, unknown>,
-    ChallengeConfirmationTokenClaims
-  >({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
     claims: {
       deviceLinkId: "id",
@@ -76,14 +76,15 @@ export const getTestChallengeConfirmationToken = (
     type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
     ...options,
   });
-
   return token;
 };
 
 export const getTestChallengeSessionToken = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestDeviceLinkJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
     expiry: configuration.defaults.challenge_session_expiry,
     sessionId: "id",
@@ -92,14 +93,15 @@ export const getTestChallengeSessionToken = (
     type: TokenType.CHALLENGE_SESSION_TOKEN,
     ...options,
   });
-
   return token;
 };
 
 export const getTestEnrolmentSessionToken = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestDeviceLinkJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
     expiry: configuration.defaults.enrolment_session_expiry,
     sessionId: "id",
@@ -108,12 +110,13 @@ export const getTestEnrolmentSessionToken = (
     type: TokenType.ENROLMENT_SESSION_TOKEN,
     ...options,
   });
-
   return token;
 };
 
-export const getTestEdsToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const { token } = getTestDeviceLinkJwt().sign({
+export const getTestRdcToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
     expiry: configuration.defaults.remote_device_challenge_session_expiry,
     sessionId: "id",
@@ -122,6 +125,5 @@ export const getTestEdsToken = (options: Partial<IssuerSignOptions<any, any>> = 
     type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION_TOKEN,
     ...options,
   });
-
   return token;
 };

@@ -1,13 +1,15 @@
 import MockDate from "mockdate";
-import { skipConsentController } from "./skip-consent";
+import { SessionStatus } from "../../common";
 import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
+import { skipConsentController } from "./skip-consent";
 import {
   getTestAuthorizationSession,
   getTestBrowserSession,
   getTestConsentSession,
 } from "../../test/entity";
-import { logger } from "../../test/logger";
-import { SessionStatus } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,9 +23,7 @@ describe("skipConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn(),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       entity: {
         authorizationSession: getTestAuthorizationSession({
@@ -38,11 +38,9 @@ describe("skipConsentController", () => {
           sessions: [],
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
-        consentSessionRepository: {
-          update: jest.fn(),
-        },
+        consentSessionRepository: createMockRepository(),
       },
     };
 

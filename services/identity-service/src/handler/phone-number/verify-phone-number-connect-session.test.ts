@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { verifyPhoneNumberConnectSession } from "./verify-phone-number-connect-session";
-import { logger } from "../../test/logger";
 
 jest.mock("../../instance", () => ({
   argon: {
@@ -22,7 +22,7 @@ describe("connectPhoneNumberVerify", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           find: jest.fn().mockResolvedValue(phone1),

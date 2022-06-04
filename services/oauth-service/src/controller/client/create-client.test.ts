@@ -1,4 +1,6 @@
 import { createClientController } from "./create-client";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestTenant } from "../../test/entity";
 
 jest.mock("@lindorm-io/core", () => ({
@@ -18,9 +20,7 @@ describe("createClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        clientCache: createMockCache(),
       },
       data: {
         description: "description",
@@ -33,9 +33,7 @@ describe("createClientController", () => {
         tenant: getTestTenant(),
       },
       repository: {
-        clientRepository: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        clientRepository: createMockRepository(),
       },
     };
   });

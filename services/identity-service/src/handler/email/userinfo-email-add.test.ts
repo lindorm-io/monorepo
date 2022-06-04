@@ -1,7 +1,7 @@
-import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Email } from "../../entity";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { userinfoEmailAdd } from "./userinfo-email-add";
-import { logger } from "../../test/logger";
 
 describe("userinfoEmailAdd", () => {
   const email1 = new Email({
@@ -16,7 +16,7 @@ describe("userinfoEmailAdd", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           count: jest.fn().mockResolvedValue(0),

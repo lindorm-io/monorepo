@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
+import { SessionStatus } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestAuthorizationSession } from "../../test/entity";
 import { rejectConsentController } from "./reject-consent";
-import { logger } from "../../test/logger";
-import { SessionStatus } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -12,14 +13,12 @@ describe("rejectConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn(),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       entity: {
         authorizationSession: getTestAuthorizationSession(),
       },
-      logger,
+      logger: createMockLogger(),
     };
   });
 

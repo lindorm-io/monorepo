@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { ClientType, SessionStatus } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
 import { getExpires } from "@lindorm-io/core";
 import { oauthConsentController } from "./consent";
 import {
@@ -24,9 +25,7 @@ describe("oauthConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        consentSessionCache: {
-          create: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        consentSessionCache: createMockCache(),
       },
       data: { sessionId: "sessionId" },
       setCookie: jest.fn(),

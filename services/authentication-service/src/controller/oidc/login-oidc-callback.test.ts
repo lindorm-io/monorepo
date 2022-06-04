@@ -1,7 +1,9 @@
 import { ServerError } from "@lindorm-io/errors";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestAccount, getTestLoginSession } from "../../test/entity";
 import { isAuthenticationReadyToConfirm as _isAuthenticationReadyToConfirm } from "../../util";
-import { logger } from "../../test/logger";
 import { loginOidcCallbackController } from "./login-oidc-callback";
 import {
   axiosGetOidcSession as _axiosGetOidcSession,
@@ -23,21 +25,17 @@ describe("loginOidcCallbackController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        loginSessionCache: createMockCache(),
       },
       data: {
         sessionId: "c2da005c-017a-430e-adb5-e1bda6f4b615",
       },
-      logger,
+      logger: createMockLogger(),
       entity: {
         loginSession: getTestLoginSession(),
       },
       repository: {
-        accountRepository: {
-          findOrCreate: jest.fn().mockImplementation(async (options) => getTestAccount(options)),
-        },
+        accountRepository: createMockRepository((options) => getTestAccount(options)),
       },
       deleteCookie: jest.fn(),
     };

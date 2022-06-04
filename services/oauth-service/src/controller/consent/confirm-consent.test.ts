@@ -1,13 +1,15 @@
 import MockDate from "mockdate";
+import { SessionStatus } from "../../common";
 import { confirmConsentController } from "./confirm-consent";
 import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 import {
   getTestAuthorizationSession,
   getTestBrowserSession,
   getTestConsentSession,
 } from "../../test/entity";
-import { logger } from "../../test/logger";
-import { SessionStatus } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,9 +23,7 @@ describe("confirmConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn(),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       data: {
         audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
@@ -42,11 +42,9 @@ describe("confirmConsentController", () => {
           sessions: [],
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
-        consentSessionRepository: {
-          update: jest.fn(),
-        },
+        consentSessionRepository: createMockRepository(),
       },
     };
 

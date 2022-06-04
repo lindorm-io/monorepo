@@ -1,4 +1,5 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
+import { createMockCache } from "@lindorm-io/redis";
 import { getRdcSessionStatusController } from "./status";
 import { getTestRdcSession } from "../../test/entity";
 
@@ -8,9 +9,7 @@ describe("getRdcSessionStatusController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        rdcSessionCache: {
-          find: jest.fn().mockResolvedValue(getTestRdcSession()),
-        },
+        rdcSessionCache: createMockCache((options) => getTestRdcSession(options)),
       },
       data: {
         id: "id",

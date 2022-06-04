@@ -1,4 +1,5 @@
 import { acknowledgeRdcController } from "./acknowledge";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestRdcSession } from "../../test/entity";
 
 jest.mock("../../middleware");
@@ -15,9 +16,7 @@ describe("acknowledgeRdcController", () => {
         oauthClient: {},
       },
       cache: {
-        rdcSessionCache: {
-          update: jest.fn(),
-        },
+        rdcSessionCache: createMockCache(),
       },
       entity: {
         rdcSession: getTestRdcSession({

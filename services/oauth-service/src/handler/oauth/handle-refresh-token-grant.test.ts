@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
-import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 import { getTestClient, getTestConsentSession, getTestRefreshSession } from "../../test/entity";
+import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,23 +31,19 @@ describe("handleAuthorizationCodeGrant", () => {
         })),
       },
       repository: {
-        consentSessionRepository: {
-          find: jest.fn().mockResolvedValue(
-            getTestConsentSession({
-              sessions: ["5a43fe88-9a27-4e00-a0ec-f10b1464e949"],
-            }),
-          ),
-        },
-        refreshSessionRepository: {
-          find: jest.fn().mockResolvedValue(
-            getTestRefreshSession({
-              id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
-              tokenId: "e7d6e7a0-cc25-4a4b-b9aa-6a2019e75d56",
-            }),
-          ),
-          update: jest.fn(),
-          destroy: jest.fn(),
-        },
+        consentSessionRepository: createMockRepository((options) =>
+          getTestConsentSession({
+            sessions: ["5a43fe88-9a27-4e00-a0ec-f10b1464e949"],
+            ...options,
+          }),
+        ),
+        refreshSessionRepository: createMockRepository((options) =>
+          getTestRefreshSession({
+            id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
+            tokenId: "e7d6e7a0-cc25-4a4b-b9aa-6a2019e75d56",
+            ...options,
+          }),
+        ),
       },
     };
   });

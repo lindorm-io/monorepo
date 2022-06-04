@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
-import { initialiseChallengeController } from "./initialise";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
+import { initialiseChallengeController } from "./initialise";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -15,9 +16,7 @@ describe("initialiseChallengeController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        challengeSessionCache: {
-          create: jest.fn().mockResolvedValue(getTestChallengeSession()),
-        },
+        challengeSessionCache: createMockCache((options) => getTestChallengeSession(options)),
       },
       data: {
         clientId: "bcfcc919-b9af-4d4e-a9db-d35059994f22",

@@ -1,5 +1,4 @@
-import { IssuerSignOptions } from "@lindorm-io/jwt";
-import { getTestJwt } from "./test-jwt";
+import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { SubjectHint } from "../../common";
@@ -7,7 +6,9 @@ import { SubjectHint } from "../../common";
 export const getTestChallengeConfirmationToken = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.device_service.issuer,
+  }).sign({
     audiences: ["ab3ef107-dcff-445b-b4f4-cec7ba9aee5c"],
     claims: {
       deviceLinkId: "caf67914-cc7a-41a3-bf8b-c5ca208594cf",
@@ -24,14 +25,15 @@ export const getTestChallengeConfirmationToken = (
     type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
     ...options,
   });
-
   return token;
 };
 
 export const getTestFlowSessionToken = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
     audiences: [configuration.oauth.client_id],
     expiry: new Date("2022-01-01T08:00:00.000Z"),
     subject: "5050be1c-4ca7-433e-a2b9-b671b5b42a86",
@@ -39,6 +41,5 @@ export const getTestFlowSessionToken = (
     type: TokenType.FLOW_SESSION,
     ...options,
   });
-
   return token;
 };

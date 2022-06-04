@@ -1,5 +1,6 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { SessionStatus } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
 import { getFlowStatusController } from "./get-flow-status";
 import { getTestFlowSession } from "../../test/entity";
 
@@ -9,9 +10,7 @@ describe("getFlowStatusController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: {
-          find: jest.fn().mockResolvedValue(getTestFlowSession()),
-        },
+        flowSessionCache: createMockCache((options) => getTestFlowSession(options)),
       },
       data: { id: "id" },
     };

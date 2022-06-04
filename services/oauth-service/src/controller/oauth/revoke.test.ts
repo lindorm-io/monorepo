@@ -1,4 +1,6 @@
 import { oauthRevokeController } from "./revoke";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 
 describe("oauthRevokeController", () => {
   let ctx: any;
@@ -6,9 +8,7 @@ describe("oauthRevokeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        invalidTokenCache: {
-          create: jest.fn(),
-        },
+        invalidTokenCache: createMockCache(),
       },
       data: {
         token: "jwt.jwt.jwt",
@@ -22,9 +22,7 @@ describe("oauthRevokeController", () => {
         })),
       },
       repository: {
-        refreshSessionRepository: {
-          deleteMany: jest.fn(),
-        },
+        refreshSessionRepository: createMockRepository(),
       },
     };
   });

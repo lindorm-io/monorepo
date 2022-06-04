@@ -1,6 +1,7 @@
-import { AuthorizationSession } from "../../entity";
-import { getTestAuthorizationSession } from "../../test/entity";
 import MockDate from "mockdate";
+import { AuthorizationSession } from "../../entity";
+import { createMockCache } from "@lindorm-io/redis";
+import { getTestAuthorizationSession } from "../../test/entity";
 import { setAuthorizationCode } from "./set-authorization-code";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -12,9 +13,7 @@ describe("setAuthorizationCode", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        authorizationSessionCache: createMockCache(),
       },
     };
 

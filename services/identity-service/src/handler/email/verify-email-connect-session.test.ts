@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { Email } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { verifyEmailConnectSession } from "./verify-email-connect-session";
-import { logger } from "../../test/logger";
 
 jest.mock("../../instance", () => ({
   argon: {
@@ -22,7 +22,7 @@ describe("verifyEmailConnectSession", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           find: jest.fn().mockResolvedValue(email1),

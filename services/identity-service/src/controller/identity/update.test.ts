@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
 import { Scope } from "../../common";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestIdentity } from "../../test/entity";
 import { identityUpdateController } from "./update";
-import { logger } from "../../test/logger";
 import { updateIdentityDisplayName as _updateIdentityDisplayName } from "../../handler";
 
 MockDate.set("2020-01-01T08:00:00.000");
@@ -50,7 +50,7 @@ describe("identityUpdateController", () => {
           id: "identityId",
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
         identityRepository: {
           update: jest.fn(),

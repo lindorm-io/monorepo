@@ -1,4 +1,5 @@
 import MockDate from "mockdate";
+import { createMockCache } from "@lindorm-io/redis";
 import { initialiseEnrolmentController } from "./initialise";
 import {
   createRdcSession as _createRdcSession,
@@ -26,9 +27,7 @@ describe("initialiseEnrolmentController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        enrolmentSessionCache: {
-          create: jest.fn().mockImplementation(async (arg: any) => arg),
-        },
+        enrolmentSessionCache: createMockCache(),
       },
       data: {
         brand: "brand",

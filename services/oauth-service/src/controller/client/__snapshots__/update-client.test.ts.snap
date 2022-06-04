@@ -109,7 +109,7 @@ Array [
       "tenant": "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
       "type": "confidential",
       "updated": 2021-01-01T08:00:00.000Z,
-      "version": 1,
+      "version": 0,
     },
   ],
 ]
@@ -224,7 +224,7 @@ Array [
       "tenant": "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
       "type": "confidential",
       "updated": 2021-01-01T08:00:00.000Z,
-      "version": 1,
+      "version": 0,
     },
   ],
 ]

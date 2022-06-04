@@ -1,8 +1,8 @@
+import { ClientError } from "@lindorm-io/errors";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { Identity } from "../../entity";
 import { getTestIdentity } from "../../test/entity";
 import { verifyNationalIdentityNumber } from "./verify-national-identity-number";
-import { Identity } from "../../entity";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { ClientError } from "@lindorm-io/errors";
 
 describe("verifyNationalIdentityNumber", () => {
   let ctx: any;

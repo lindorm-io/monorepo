@@ -1,6 +1,7 @@
-import { rtbfController } from "./rtbf";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
 import { getTestDeviceLink } from "../../test/entity";
+import { rtbfController } from "./rtbf";
 
 jest.mock("../../handler");
 
@@ -12,10 +13,7 @@ describe("rtbfController", () => {
   beforeEach(() => {
     ctx = {
       repository: {
-        deviceLinkRepository: {
-          findMany: jest.fn().mockResolvedValue([getTestDeviceLink()]),
-          destroyMany: jest.fn(),
-        },
+        deviceLinkRepository: createMockRepository((options) => getTestDeviceLink(options)),
       },
       token: {
         bearerToken: {

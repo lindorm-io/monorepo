@@ -1,7 +1,7 @@
-import { verifyOidcWithAccessToken } from "./verify-oidc-with-access-token";
-import { logger } from "../test/logger";
-import { getTestOidcSession } from "../test/entity";
 import { ServerError } from "@lindorm-io/errors";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestOidcSession } from "../test/entity";
+import { verifyOidcWithAccessToken } from "./verify-oidc-with-access-token";
 
 describe("verifyOidcWithAccessToken", () => {
   let ctx: any;
@@ -14,7 +14,7 @@ describe("verifyOidcWithAccessToken", () => {
           get: jest.fn().mockResolvedValue({ data: { sub: "sub", claim: true } }),
         },
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     oidcSession = getTestOidcSession();

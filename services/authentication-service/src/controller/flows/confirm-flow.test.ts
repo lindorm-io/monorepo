@@ -3,13 +3,14 @@ import { FlowType } from "../../enum";
 import { SessionStatus } from "../../common";
 import { canFlowGenerateMfaCookie as _canFlowGenerateMfaCookie } from "../../util";
 import { confirmFlowController } from "./confirm-flow";
+import { createMockCache } from "@lindorm-io/redis";
+import { getTestAccount, getTestFlowSession, getTestLoginSession } from "../../test/entity";
 import {
   confirmBankIdSeFlow as _confirmBankIdSeFlow,
   confirmPasswordFlow as _confirmPasswordFlow,
   generateMfaCookie as _generateMfaCookie,
   updateLoginSessionWithFlow as _updateLoginSessionWithFlow,
 } from "../../handler";
-import { getTestAccount, getTestFlowSession, getTestLoginSession } from "../../test/entity";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -26,9 +27,7 @@ describe("confirmFlow", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: {
-          update: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        flowSessionCache: createMockCache(),
       },
       data: {
         challengeConfirmationToken: "challengeConfirmationToken",

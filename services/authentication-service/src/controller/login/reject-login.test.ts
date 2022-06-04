@@ -1,3 +1,4 @@
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestLoginSession } from "../../test/entity";
 import { oauthRejectAuthentication as _oauthRejectAuthentication } from "../../handler";
 import { rejectLoginController } from "./reject-login";
@@ -12,11 +13,11 @@ describe("rejectLoginController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          destroy: jest.fn(),
-        },
+        loginSessionCache: createMockCache(),
       },
-      entity: { loginSession: getTestLoginSession() },
+      entity: {
+        loginSession: getTestLoginSession(),
+      },
       deleteCookie: jest.fn(),
     };
 

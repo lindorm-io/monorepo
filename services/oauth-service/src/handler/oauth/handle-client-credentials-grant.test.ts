@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
+import { createClientCredentialsToken as _createClientCredentialsToken } from "../token";
 import { getTestClient } from "../../test/entity";
 import { handleClientCredentialsGrant } from "./handle-client-credentials-grant";
-import { createClientCredentialsToken as _createClientCredentialsToken } from "../token";
 
 jest.mock("../token");
 

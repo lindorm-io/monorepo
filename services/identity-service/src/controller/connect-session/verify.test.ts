@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { IdentifierType } from "../../common";
+import { createMockLogger } from "@lindorm-io/winston";
 import { identifierConnectVerifyController } from "./verify";
-import { logger } from "../../test/logger";
 import {
   verifyEmailConnectSession as _verifyEmailConnectSession,
   verifyPhoneNumberConnectSession as _verifyPhoneNumberConnectSession,
@@ -23,7 +23,7 @@ describe("identifierConnectVerifyController", () => {
       entity: {
         connectSession: { type: "type" },
       },
-      logger,
+      logger: createMockLogger(),
     };
   });
 

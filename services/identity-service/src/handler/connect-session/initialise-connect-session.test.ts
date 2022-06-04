@@ -1,8 +1,8 @@
-import { clientCredentialsMiddleware as _clientCredentialsMiddleware } from "../../middleware";
-import { initialiseConnectSession } from "./initialise-connect-session";
 import { ConnectSession, Identity } from "../../entity";
-import { getTestIdentity } from "../../test/entity";
 import { IdentifierType } from "../../common";
+import { clientCredentialsMiddleware as _clientCredentialsMiddleware } from "../../middleware";
+import { getTestIdentity } from "../../test/entity";
+import { initialiseConnectSession } from "./initialise-connect-session";
 
 jest.mock("../../middleware");
 

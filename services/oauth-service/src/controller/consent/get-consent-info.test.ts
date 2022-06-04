@@ -1,4 +1,7 @@
 import MockDate from "mockdate";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getConsentInfoController } from "./get-consent-info";
 import { isConsentRequired as _isConsentRequired } from "../../util";
 import {
@@ -7,7 +10,6 @@ import {
   getTestClient,
   getTestConsentSession,
 } from "../../test/entity";
-import { logger } from "../../test/logger";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,9 +23,7 @@ describe("getConsentInfoController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: {
-          update: jest.fn(),
-        },
+        authorizationSessionCache: createMockCache(),
       },
       entity: {
         authorizationSession: getTestAuthorizationSession({
@@ -36,15 +36,14 @@ describe("getConsentInfoController", () => {
           id: "a8fbad57-e43a-4e05-b4c8-7607348bd5b7",
         }),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
-        consentSessionRepository: {
-          findOrCreate: jest.fn().mockResolvedValue(
-            getTestConsentSession({
-              id: "e53fb80d-9bcd-4cb7-aa0c-7b365ef2578f",
-            }),
-          ),
-        },
+        consentSessionRepository: createMockRepository((options) =>
+          getTestConsentSession({
+            id: "e53fb80d-9bcd-4cb7-aa0c-7b365ef2578f",
+            ...options,
+          }),
+        ),
       },
     };
 

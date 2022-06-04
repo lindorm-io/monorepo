@@ -1,8 +1,10 @@
 import { SessionStatus } from "../../common";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
-import { getTestEnrolmentSession } from "../../test/entity";
 import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
+import { getTestEnrolmentSession } from "../../test/entity";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -27,9 +29,7 @@ describe("confirmEnrolmentController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        enrolmentSessionCache: {
-          destroy: jest.fn(),
-        },
+        enrolmentSessionCache: createMockCache(),
       },
       data: {
         biometry: "biometry",
@@ -51,9 +51,7 @@ describe("confirmEnrolmentController", () => {
         },
       },
       repository: {
-        deviceLinkRepository: {
-          create: jest.fn().mockImplementation(async (arg: any) => arg),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
       token: {
         bearerToken: {

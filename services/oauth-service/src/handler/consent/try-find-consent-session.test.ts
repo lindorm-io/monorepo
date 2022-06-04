@@ -2,6 +2,7 @@ import { BrowserSession, Client, ConsentSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { tryFindConsentSession } from "./try-find-consent-session";
 import { getTestBrowserSession, getTestClient, getTestConsentSession } from "../../test/entity";
+import { createMockRepository } from "@lindorm-io/mongo";
 
 describe("tryFindConsentSession", () => {
   let ctx: any;
@@ -11,9 +12,7 @@ describe("tryFindConsentSession", () => {
   beforeEach(() => {
     ctx = {
       repository: {
-        consentSessionRepository: {
-          findOrCreate: jest.fn().mockResolvedValue(getTestConsentSession()),
-        },
+        consentSessionRepository: createMockRepository((options) => getTestConsentSession(options)),
       },
     };
 

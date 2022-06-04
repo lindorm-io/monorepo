@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteDeviceLinkController } from "./delete-device-link";
-import { getTestDeviceLink } from "../../test/entity";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
+import { getTestDeviceLink } from "../../test/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,9 +19,7 @@ describe("deleteDeviceLinkController", () => {
         deviceLink: await getTestDeviceLink(),
       },
       repository: {
-        deviceLinkRepository: {
-          destroy: jest.fn(),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
     };
 

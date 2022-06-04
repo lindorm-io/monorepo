@@ -1,4 +1,5 @@
 import MockDate from "mockdate";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { createProtectedRecordController } from "./create-protected-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -23,9 +24,7 @@ describe("createProtectedRecordController", () => {
         expires: "2021-02-01T08:00:00.000+02:00",
       },
       repository: {
-        protectedRecordRepository: {
-          create: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        protectedRecordRepository: createMockRepository(),
       },
       token: {
         bearerToken: {

@@ -1,11 +1,12 @@
 import MockDate from "mockdate";
+import { ClientType } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
 import { getExpires } from "@lindorm-io/core";
 import { oauthLogoutController } from "./logout";
 import {
   oauthConfirmLogout as _oauthConfirmLogout,
   oauthGetLogoutSessionInfo as _oauthGetLogoutSessionInfo,
 } from "../../handler";
-import { ClientType } from "../../common";
 
 MockDate.set("2020-01-01T08:00:15.000");
 
@@ -21,9 +22,7 @@ describe("oauthLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: {
-          create: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        logoutSessionCache: createMockCache(),
       },
       data: { sessionId: "sessionId" },
       setCookie: jest.fn(),

@@ -1,12 +1,12 @@
+import { createMockLogger } from "@lindorm-io/winston";
 import { getConnectedProviders } from "./get-connected-providers";
-import { logger } from "../../test/logger";
 
 describe("getConnectedProviders", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         externalIdentifierRepository: {
           findMany: jest

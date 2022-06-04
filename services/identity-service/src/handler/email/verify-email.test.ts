@@ -1,16 +1,16 @@
+import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity, Email } from "../../entity";
-import { verifyEmail } from "./verify-email";
-import { logger } from "../../test/logger";
-import { ClientError } from "@lindorm-io/errors";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestIdentity } from "../../test/entity";
+import { verifyEmail } from "./verify-email";
 
 describe("verifyEmail", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           create: jest.fn(),

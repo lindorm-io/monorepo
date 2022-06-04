@@ -1,8 +1,10 @@
 import MockDate from "mockdate";
 import { ChallengeStrategy } from "../../common";
-import { confirmChallengeController } from "./confirm";
-import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
+import { confirmChallengeController } from "./confirm";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
+import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -30,9 +32,7 @@ describe("confirmChallengeController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        challengeSessionCache: {
-          destroy: jest.fn(),
-        },
+        challengeSessionCache: createMockCache(),
       },
       data: {
         certificateVerifier: "certificateVerifier",
@@ -59,9 +59,7 @@ describe("confirmChallengeController", () => {
         },
       },
       repository: {
-        deviceLinkRepository: {
-          update: jest.fn().mockImplementation(async (item) => item),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
     };
 

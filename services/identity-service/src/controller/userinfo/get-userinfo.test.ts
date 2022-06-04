@@ -1,8 +1,8 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
 import { getTestIdentity } from "../../test/entity";
-import { getUserinfoResponseBody as _getUserinfoResponseBody } from "../../handler";
 import { getUserinfoController } from "./get-userinfo";
+import { getUserinfoResponseBody as _getUserinfoResponseBody } from "../../handler";
 
 jest.mock("../../handler");
 

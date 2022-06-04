@@ -1,5 +1,5 @@
-import { initialiseOidcSessionController } from "./initialise-oidc-session";
 import { createOidcSession as _createOidcSession } from "../../handler";
+import { initialiseOidcSessionController } from "./initialise-oidc-session";
 
 jest.mock("../../handler");
 

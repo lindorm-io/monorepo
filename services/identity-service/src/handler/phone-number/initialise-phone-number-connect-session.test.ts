@@ -2,10 +2,10 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestIdentity } from "../../test/entity";
 import { initialiseConnectSession as _initialiseConnectSession } from "../connect-session";
 import { initialisePhoneNumberConnectSession } from "./initialise-phone-number-connect-session";
-import { logger } from "../../test/logger";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,7 +27,7 @@ describe("initialisePhoneNumberConnectSession", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           find: jest.fn().mockResolvedValue(phoneNumber1),

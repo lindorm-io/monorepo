@@ -1,6 +1,6 @@
 import { BrowserSession, Client } from "../../entity";
-import { getTestBrowserSession, getTestClient } from "../../test/entity";
 import { createLogoutToken } from "./create-logout-token";
+import { getTestBrowserSession, getTestClient } from "../../test/entity";
 
 describe("createLogoutToken", () => {
   let ctx: any;

@@ -1,13 +1,13 @@
-import { userinfoUsernameAdd } from "./userinfo-username-add";
 import { Identity } from "../../entity";
-import { logger } from "../../test/logger";
+import { createMockLogger } from "@lindorm-io/winston";
+import { userinfoUsernameAdd } from "./userinfo-username-add";
 
 describe("userinfoUsernameAdd", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         identityRepository: {
           update: jest.fn(),

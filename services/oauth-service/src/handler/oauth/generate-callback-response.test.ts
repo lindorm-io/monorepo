@@ -4,12 +4,12 @@ import { TEST_GET_USERINFO_RESPONSE } from "../../test/data";
 import { createAccessToken as _createAccessToken, createIdToken as _createIdToken } from "../token";
 import { generateCallbackResponse } from "./generate-callback-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
+import { setAuthorizationCode as _setAuthorizationCode } from "./set-authorization-code";
 import {
   getTestAuthorizationSession,
   getTestBrowserSession,
   getTestClient,
 } from "../../test/entity";
-import { setAuthorizationCode as _setAuthorizationCode } from "./set-authorization-code";
 
 jest.mock("../identity");
 jest.mock("../token");

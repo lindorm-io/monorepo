@@ -4,12 +4,13 @@ import { LogoutSessionType } from "../../enum";
 import { SessionStatus } from "../../common";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyRedirectUri as _createLogoutVerifyRedirectUri } from "../../util";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestLogoutSession } from "../../test/entity";
-import { logger } from "../../test/logger";
 import {
   handleBrowserSessionLogout as _handleBrowserSessionLogout,
   handleRefreshSessionLogout as _handleRefreshSessionLogout,
 } from "../../handler";
+import { createMockCache } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -26,16 +27,14 @@ describe("confirmLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: {
-          update: jest.fn(),
-        },
+        logoutSessionCache: createMockCache(),
       },
       entity: {
         logoutSession: getTestLogoutSession({
           sessionType: LogoutSessionType.BROWSER,
         }),
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     createLogoutVerifyRedirectUri.mockImplementation(() => "redirect-uri");

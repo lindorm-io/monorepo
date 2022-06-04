@@ -1,6 +1,7 @@
+import { confirmConsentController } from "./confirm-consent";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestConsentSession } from "../../test/entity";
 import { oauthConfirmConsent as _oauthConfirmConsent } from "../../handler";
-import { confirmConsentController } from "./confirm-consent";
 
 jest.mock("../../handler");
 
@@ -12,15 +13,15 @@ describe("confirmConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        consentSessionCache: {
-          destroy: jest.fn(),
-        },
+        consentSessionCache: createMockCache(),
       },
       data: {
         audiences: ["audience"],
         scopes: ["scope"],
       },
-      entity: { consentSession: getTestConsentSession() },
+      entity: {
+        consentSession: getTestConsentSession(),
+      },
       deleteCookie: jest.fn(),
     };
 

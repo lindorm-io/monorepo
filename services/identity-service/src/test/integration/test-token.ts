@@ -1,10 +1,11 @@
-import { getTestJwt } from "./test-jwt";
-import { IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
 import { ClientPermission, ClientScope, IdentityPermission, Scope } from "../../common";
+import { configuration } from "../../server/configuration";
 
 export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
-  const jwt = getTestJwt();
-  const { token } = jwt.sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     id: "a7534836-65f2-4e04-9f16-b5afebdcdd71",
     audiences: ["0438487d-0cf0-4399-b3d3-c2876db14ca6"],
     authMethodsReference: ["email"],
@@ -33,7 +34,9 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 export const getTestClientCredentials = (
   options: Partial<IssuerSignOptions<any, any>> = {},
 ): string => {
-  const { token } = getTestJwt().sign({
+  const { token } = createTestJwt({
+    issuer: configuration.services.oauth_service.issuer,
+  }).sign({
     audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
     expiry: "10 seconds",
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
@@ -48,6 +51,5 @@ export const getTestClientCredentials = (
     type: "access_token",
     ...options,
   });
-
   return token;
 };

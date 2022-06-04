@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity, ExternalIdentifier } from "../../entity";
-import { logger } from "../../test/logger";
+import { createMockLogger } from "@lindorm-io/winston";
 import { verifyExternalIdentifier } from "./verify-external-identifier";
 
 describe("verifyExternalIdentifier", () => {
@@ -9,7 +9,7 @@ describe("verifyExternalIdentifier", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         identityRepository: {
           create: jest.fn().mockResolvedValue(

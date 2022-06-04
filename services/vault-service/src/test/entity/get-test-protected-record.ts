@@ -8,6 +8,5 @@ export const getTestProtectedRecord = (
     owner: "9168f571-2f25-4960-a585-330d1a07c094",
     ownerType: "client",
     protectedData: "protected-data",
-
     ...options,
   });

@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { Email } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { removeEmail } from "./remove-email";
-import { logger } from "../../test/logger";
 
 describe("removeEmail", () => {
   const email1 = new Email({
@@ -16,7 +16,7 @@ describe("removeEmail", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           find: jest.fn().mockResolvedValue(email1),

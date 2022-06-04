@@ -1,3 +1,5 @@
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteClientController } from "./delete-client";
 import { getTestClient } from "../../test/entity";
 
@@ -7,17 +9,13 @@ describe("deleteClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: {
-          destroy: jest.fn(),
-        },
+        clientCache: createMockCache(),
       },
       entity: {
         client: getTestClient(),
       },
       repository: {
-        clientRepository: {
-          destroy: jest.fn(),
-        },
+        clientRepository: createMockRepository(),
       },
     };
   });

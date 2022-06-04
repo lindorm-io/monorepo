@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
-import { updateDeviceLinkBiometryController } from "./update-biometry";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestDeviceLink } from "../../test/entity";
+import { updateDeviceLinkBiometryController } from "./update-biometry";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -37,9 +38,7 @@ describe("updateDeviceLinkBiometryController", () => {
         device: { name: null },
       },
       repository: {
-        deviceLinkRepository: {
-          update: jest.fn(),
-        },
+        deviceLinkRepository: createMockRepository(),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

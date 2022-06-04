@@ -1,6 +1,8 @@
 import MockDate from "mockdate";
 import { ClientPermission, ClientType, GrantType, ResponseType, Scope } from "../../common";
 import { adminClientController } from "./admin-client";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestClient } from "../../test/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -11,9 +13,7 @@ describe("adminClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: {
-          update: jest.fn(),
-        },
+        clientCache: createMockCache(),
       },
       data: {
         active: false,
@@ -29,11 +29,7 @@ describe("adminClientController", () => {
         client: getTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),
       },
       repository: {
-        clientRepository: {
-          update: jest
-            .fn()
-            .mockImplementation(async (entity) => ({ ...entity, version: (entity.version += 1) })),
-        },
+        clientRepository: createMockRepository(),
       },
     };
   });

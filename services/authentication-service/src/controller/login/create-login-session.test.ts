@@ -1,4 +1,6 @@
 import { createLoginSessionController } from "./create-login-session";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestAccount } from "../../test/entity";
 import {
   handleFlowInitialisation as _handleFlowInitialisation,
@@ -16,9 +18,7 @@ describe("createLoginSessionController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          create: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        loginSessionCache: createMockCache(),
       },
       data: {
         country: "country",
@@ -32,9 +32,7 @@ describe("createLoginSessionController", () => {
         username: "username",
       },
       repository: {
-        accountRepository: {
-          tryFind: jest.fn().mockResolvedValue(getTestAccount()),
-        },
+        accountRepository: createMockRepository((options) => getTestAccount(options)),
       },
     };
 

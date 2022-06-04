@@ -1,4 +1,5 @@
 import { SessionStatus } from "../../common";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestFlowSession } from "../../test/entity";
 import { rejectFlowController } from "./reject-flow";
 
@@ -8,11 +9,11 @@ describe("rejectFlowController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: {
-          update: jest.fn().mockImplementation(async (arg) => arg),
-        },
+        flowSessionCache: createMockCache(),
       },
-      entity: { flowSession: getTestFlowSession() },
+      entity: {
+        flowSession: getTestFlowSession(),
+      },
     };
   });
 

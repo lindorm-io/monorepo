@@ -1,8 +1,8 @@
 import { CryptoArgon } from "@lindorm-io/crypto";
-import { getTestCache } from "./test-cache";
-import { getTestKeyPairEC } from "./test-key-pair";
-import { getTestRepository } from "./test-repository";
-import { argon } from "../../instance";
+import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { argon, mongoConnection, redisConnection } from "../../instance";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createTestKeyPair } from "@lindorm-io/key-pair";
 import {
   AuthorizationSessionCache,
   ClientCache,
@@ -27,31 +27,35 @@ export let TEST_REFRESH_SESSION_REPOSITORY: RefreshSessionRepository;
 export let TEST_ARGON: CryptoArgon;
 
 export const setupIntegration = async (): Promise<void> => {
-  const {
-    authorizationSessionCache,
-    clientCache,
-    invalidTokenCache,
-    keyPairCache,
-    logoutSessionCache,
-  } = getTestCache();
-  const {
-    browserSessionRepository,
-    clientRepository,
-    consentSessionRepository,
-    refreshSessionRepository,
-  } = getTestRepository();
+  const logger = createMockLogger();
 
-  TEST_AUTHORIZATION_SESSION_CACHE = authorizationSessionCache;
-  TEST_CLIENT_CACHE = clientCache;
-  TEST_INVALID_TOKEN_CACHE = invalidTokenCache;
-  TEST_LOGOUT_SESSION_CACHE = logoutSessionCache;
+  TEST_AUTHORIZATION_SESSION_CACHE = new AuthorizationSessionCache({
+    connection: redisConnection,
+    logger,
+  });
+  TEST_CLIENT_CACHE = new ClientCache({ connection: redisConnection, logger });
+  TEST_INVALID_TOKEN_CACHE = new InvalidTokenCache({ connection: redisConnection, logger });
+  TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
 
-  TEST_BROWSER_SESSION_REPOSITORY = browserSessionRepository;
-  TEST_CLIENT_REPOSITORY = clientRepository;
-  TEST_CONSENT_SESSION_REPOSITORY = consentSessionRepository;
-  TEST_REFRESH_SESSION_REPOSITORY = refreshSessionRepository;
+  TEST_BROWSER_SESSION_REPOSITORY = new BrowserSessionRepository({
+    connection: mongoConnection,
+    logger,
+  });
+  TEST_CLIENT_REPOSITORY = new ClientRepository({ connection: mongoConnection, logger });
+  TEST_CONSENT_SESSION_REPOSITORY = new ConsentSessionRepository({
+    connection: mongoConnection,
+    logger,
+  });
+  TEST_REFRESH_SESSION_REPOSITORY = new RefreshSessionRepository({
+    connection: mongoConnection,
+    logger,
+  });
 
   TEST_ARGON = argon;
 
-  await keyPairCache.create(getTestKeyPairEC());
+  const keyPairCache = new KeyPairCache({
+    connection: redisConnection,
+    logger,
+  });
+  await keyPairCache.create(createTestKeyPair());
 };

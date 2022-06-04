@@ -18,10 +18,10 @@ describe("/.well-known", () => {
       keys: [
         {
           alg: "ES512",
-          allowed_from: 1577869200,
+          allowed_from: 1577865600,
           created_at: 1577865600,
           crv: "P-521",
-          expires_at: 1641024000,
+          expires_at: 1861948800,
           key_ops: ["verify"],
           kid: expect.any(String),
           kty: "EC",

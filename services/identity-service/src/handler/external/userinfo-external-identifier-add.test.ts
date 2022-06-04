@@ -1,7 +1,7 @@
-import { ExternalIdentifier } from "../../entity";
-import { userinfoExternalIdentifierAdd } from "./userinfo-external-identifier-add";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { logger } from "../../test/logger";
+import { ExternalIdentifier } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
+import { userinfoExternalIdentifierAdd } from "./userinfo-external-identifier-add";
 
 describe("userinfoExternalIdentifierAdd", () => {
   const identifier1 = new ExternalIdentifier({
@@ -15,7 +15,7 @@ describe("userinfoExternalIdentifierAdd", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         externalIdentifierRepository: {
           create: jest.fn().mockImplementation(async (entity: any) => entity),

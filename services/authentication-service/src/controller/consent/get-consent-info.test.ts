@@ -6,7 +6,9 @@ describe("getConsentInfoController", () => {
 
   beforeEach(() => {
     ctx = {
-      entity: { consentSession: getTestConsentSession() },
+      entity: {
+        consentSession: getTestConsentSession(),
+      },
     };
   });
 

@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { removePhoneNumber } from "./remove-phone-number";
-import { logger } from "../../test/logger";
 
 describe("removePhoneNumber", () => {
   const phone1 = new PhoneNumber({
@@ -16,7 +16,7 @@ describe("removePhoneNumber", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           find: jest.fn().mockResolvedValue(phone1),

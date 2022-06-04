@@ -1,7 +1,7 @@
-import { verifyOidcWithCode } from "./verify-oidc-with-code";
-import { logger } from "../test/logger";
-import { getTestOidcSession } from "../test/entity";
 import { ServerError } from "@lindorm-io/errors";
+import { createMockLogger } from "@lindorm-io/winston";
+import { getTestOidcSession } from "../test/entity";
+import { verifyOidcWithCode } from "./verify-oidc-with-code";
 
 describe("verifyOidcWithCode", () => {
   let ctx: any;
@@ -15,7 +15,7 @@ describe("verifyOidcWithCode", () => {
           get: jest.fn().mockResolvedValue({ data: { sub: "sub", claim: true } }),
         },
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     oidcSession = getTestOidcSession();

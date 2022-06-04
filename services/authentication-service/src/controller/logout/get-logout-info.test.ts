@@ -6,7 +6,9 @@ describe("getLogoutInfoController", () => {
 
   beforeEach(() => {
     ctx = {
-      entity: { logoutSession: getTestLogoutSession() },
+      entity: {
+        logoutSession: getTestLogoutSession(),
+      },
     };
   });
 

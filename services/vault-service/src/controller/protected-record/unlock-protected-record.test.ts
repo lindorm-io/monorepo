@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestProtectedRecord } from "../../test/entity";
-import { unlockProtectedRecordController } from "./unlock-protected-record";
 import { isAfter as _isAfter } from "date-fns";
+import { unlockProtectedRecordController } from "./unlock-protected-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,9 +35,7 @@ describe("unlockProtectedRecordController", () => {
         protectedRecord: getTestProtectedRecord(),
       },
       repository: {
-        protectedRecordRepository: {
-          destroy: jest.fn().mockResolvedValue(undefined),
-        },
+        protectedRecordRepository: createMockRepository(),
       },
       token: {
         bearerToken: {

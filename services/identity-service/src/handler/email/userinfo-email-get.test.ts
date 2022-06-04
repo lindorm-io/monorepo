@@ -1,5 +1,5 @@
 import { Email } from "../../entity";
-import { logger } from "../../test/logger";
+import { createMockLogger } from "@lindorm-io/winston";
 import { userinfoEmailGet } from "./userinfo-email-get";
 
 describe("userinfoEmailGet", () => {
@@ -43,7 +43,7 @@ describe("userinfoEmailGet", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         emailRepository: {
           findMany: jest.fn().mockResolvedValue([]),

@@ -1,5 +1,6 @@
 import { RdcSessionType } from "../../common";
 import { confirmRdcController } from "./confirm";
+import { createMockCache } from "@lindorm-io/redis";
 import { getTestRdcSession } from "../../test/entity";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
 
@@ -20,9 +21,7 @@ describe("confirmRdcController", () => {
         oauthClient: {},
       },
       cache: {
-        rdcSessionCache: {
-          update: jest.fn(),
-        },
+        rdcSessionCache: createMockCache(),
       },
       entity: {
         rdcSession: getTestRdcSession(),

@@ -1,5 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteEncryptedRecordController } from "./delete-encrypted-record";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
 import { getTestEncryptedRecord } from "../../test/entity";
@@ -28,9 +29,7 @@ describe("deleteEncryptedRecordController", () => {
         encryptedRecord: getTestEncryptedRecord(),
       },
       repository: {
-        encryptedRecordRepository: {
-          destroy: jest.fn().mockResolvedValue(undefined),
-        },
+        encryptedRecordRepository: createMockRepository(),
       },
     };
 

@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
-import { logger } from "../../test/logger";
 import { addUserinfoController } from "./add-userinfo";
+import { createMockLogger } from "@lindorm-io/winston";
 
 jest.mock("../../handler", () => ({
   userinfoEmailAdd: jest.fn().mockImplementation(async () => {}),
@@ -43,7 +43,7 @@ describe("addUserinfoController", () => {
       entity: {
         identity: new Identity({}),
       },
-      logger,
+      logger: createMockLogger(),
       repository: {
         identityRepository: {
           update: jest.fn(),

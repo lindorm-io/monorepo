@@ -2,6 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { axiosInitialiseOidcSession as _axiosInitialiseOidcSession } from "../../handler";
 import { getTestLoginSession } from "../../test/entity";
 import { initialiseLoginOidcController } from "./initialise-login-oidc";
+import { createMockCache } from "@lindorm-io/redis";
 
 jest.mock("../../handler");
 
@@ -13,9 +14,7 @@ describe("initialiseLoginOidcController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: {
-          update: jest.fn().mockImplementation(async (entity) => entity),
-        },
+        loginSessionCache: createMockCache(),
       },
       data: {
         provider: "apple",

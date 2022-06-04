@@ -1,8 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
 import { IdentifierType } from "../../common";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestConnectSession, getTestIdentity } from "../../test/entity";
 import { identifierConnectInitialiseController } from "./initialise";
-import { logger } from "../../test/logger";
 import {
   initialiseEmailConnectSession as _initialiseEmailConnectSession,
   initialisePhoneNumberConnectSession as _initialisePhoneNumberConnectSession,
@@ -26,7 +26,7 @@ describe("identifierConnectInitialiseController", () => {
       entity: {
         identity: getTestIdentity({ id: "identityId" }),
       },
-      logger,
+      logger: createMockLogger(),
     };
 
     initialiseEmailConnectSession.mockResolvedValue(

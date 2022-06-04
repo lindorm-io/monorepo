@@ -1,9 +1,10 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestAuthorizationSession } from "../../test/entity";
-import { logger } from "../../test/logger";
 import { rejectLogoutController } from "./reject-logout";
+import { createMockCache } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -13,14 +14,12 @@ describe("rejectLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: {
-          update: jest.fn(),
-        },
+        logoutSessionCache: createMockCache(),
       },
       entity: {
         logoutSession: getTestAuthorizationSession(),
       },
-      logger,
+      logger: createMockLogger(),
     };
   });
 

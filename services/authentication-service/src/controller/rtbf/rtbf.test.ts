@@ -1,6 +1,7 @@
 import { getTestAccount } from "../../test/entity";
 import { rtbfController } from "./rtbf";
 import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
+import { createMockRepository } from "@lindorm-io/mongo";
 
 jest.mock("../../handler");
 
@@ -11,11 +12,11 @@ describe("rtbfController", () => {
 
   beforeEach(() => {
     ctx = {
-      entity: { account: getTestAccount() },
+      entity: {
+        account: getTestAccount(),
+      },
       repository: {
-        accountRepository: {
-          destroy: jest.fn(),
-        },
+        accountRepository: createMockRepository(),
       },
     };
 

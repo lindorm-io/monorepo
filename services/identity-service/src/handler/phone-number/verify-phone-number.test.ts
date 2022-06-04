@@ -1,15 +1,15 @@
+import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity, PhoneNumber } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { verifyPhoneNumber } from "./verify-phone-number";
-import { logger } from "../../test/logger";
-import { ClientError } from "@lindorm-io/errors";
 
 describe("verifyPhoneNumber", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         phoneNumberRepository: {
           create: jest.fn(),

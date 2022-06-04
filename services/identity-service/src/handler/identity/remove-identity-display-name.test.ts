@@ -1,5 +1,5 @@
+import { createMockLogger } from "@lindorm-io/winston";
 import { getTestDisplayName, getTestIdentity } from "../../test/entity";
-import { logger } from "../../test/logger";
 import { removeIdentityDisplayName } from "./remove-identity-display-name";
 
 describe("removeIdentityDisplayName", () => {
@@ -7,7 +7,7 @@ describe("removeIdentityDisplayName", () => {
 
   beforeEach(() => {
     ctx = {
-      logger,
+      logger: createMockLogger(),
       repository: {
         displayNameRepository: {
           find: jest.fn().mockResolvedValue(

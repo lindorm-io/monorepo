@@ -1,6 +1,8 @@
 import MockDate from "mockdate";
 import { DisplayMode, ResponseMode, Scope } from "../../common";
 import { SCOPE_OPENID } from "../../constant";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { getTestClient } from "../../test/entity";
 import { updateClientController } from "./update-client";
 
@@ -12,9 +14,7 @@ describe("updateClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: {
-          update: jest.fn(),
-        },
+        clientCache: createMockCache(),
       },
       data: {
         defaults: {
@@ -41,11 +41,7 @@ describe("updateClientController", () => {
         client: getTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),
       },
       repository: {
-        clientRepository: {
-          update: jest
-            .fn()
-            .mockImplementation(async (entity) => ({ ...entity, version: (entity.version += 1) })),
-        },
+        clientRepository: createMockRepository(),
       },
     };
   });

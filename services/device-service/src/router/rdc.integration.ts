@@ -8,7 +8,7 @@ import { randomUUID } from "crypto";
 import {
   getTestAccessToken,
   getTestChallengeConfirmationToken,
-  getTestEdsToken,
+  getTestRdcToken,
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
@@ -96,7 +96,7 @@ describe("/rdc", () => {
       }),
     );
 
-    const rdcSessionToken = getTestEdsToken({
+    const rdcSessionToken = getTestRdcToken({
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
@@ -144,7 +144,7 @@ describe("/rdc", () => {
       }),
     );
 
-    const rdcSessionToken = getTestEdsToken({
+    const rdcSessionToken = getTestRdcToken({
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
