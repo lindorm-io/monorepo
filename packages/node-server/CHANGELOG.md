@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.0...@lindorm-io/node-server@0.4.1) (2022-06-04)
+
+
+### Bug Fixes
+
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.3.3...@lindorm-io/node-server@0.4.0) (2022-05-28)
 
 

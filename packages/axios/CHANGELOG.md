@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.6...@lindorm-io/axios@0.3.7) (2022-06-04)
+
+
+### Bug Fixes
+
+* improve retry logic in axios with sleep ([8045452](https://github.com/lindorm-io/monorepo/commit/804545235f5d08a4c69eb60afb00db03a050c1dc))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 ## [0.3.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.5...@lindorm-io/axios@0.3.6) (2022-05-28)
 
 

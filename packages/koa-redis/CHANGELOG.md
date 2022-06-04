@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.3...@lindorm-io/koa-redis@0.6.4) (2022-06-04)
+
+
+### Bug Fixes
+
+* add mock cache creator ([e44e758](https://github.com/lindorm-io/monorepo/commit/e44e758abc6da16fa7d546a0c9b2e76d9b6c47a8))
+* export test entity ([d4fa371](https://github.com/lindorm-io/monorepo/commit/d4fa371dbfa3c566574cd71319fd259832c0abcb))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.2...@lindorm-io/koa-redis@0.6.3) (2022-05-22)
 
 **Note:** Version bump only for package @lindorm-io/koa-redis

@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.0...@lindorm-io/mongo@0.9.1) (2022-06-04)
+
+
+### Bug Fixes
+
+* add mock repository creator ([043fcb4](https://github.com/lindorm-io/monorepo/commit/043fcb4fab26a11789384355615f46729b4c09ea))
+* export test entity ([d4fa371](https://github.com/lindorm-io/monorepo/commit/d4fa371dbfa3c566574cd71319fd259832c0abcb))
+* simplify mocks ([d9307c5](https://github.com/lindorm-io/monorepo/commit/d9307c5f0d32d6b76462d90631eaf5e22cd18526))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.8.1...@lindorm-io/mongo@0.9.0) (2022-05-22)
 
 

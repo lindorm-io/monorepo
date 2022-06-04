@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.1...@lindorm-io/winston@0.4.2) (2022-06-04)
+
+
+### Bug Fixes
+
+* add core package to winston ([92bb387](https://github.com/lindorm-io/monorepo/commit/92bb387a9e09a67cb17d0d436e522f2034d7972b))
+* create mock logger in winston package ([8e55d53](https://github.com/lindorm-io/monorepo/commit/8e55d532c6a2ebb9e91dfdd08be27299f7e11735))
+* define logger interface in winston ([a018f4f](https://github.com/lindorm-io/monorepo/commit/a018f4ffbc6e6fcb6198c743bc872384303c3163))
+* export test entity ([d4fa371](https://github.com/lindorm-io/monorepo/commit/d4fa371dbfa3c566574cd71319fd259832c0abcb))
+* remove unnecessary implementations from mock logger ([adc4a5f](https://github.com/lindorm-io/monorepo/commit/adc4a5fa164157efc71bf39baca276dc3d0f6783))
+
+
+
+
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.0...@lindorm-io/winston@0.4.1) (2022-05-22)
 
 

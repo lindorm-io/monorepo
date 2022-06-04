@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.9...@lindorm-io/in-memory-cache@0.2.0) (2022-06-04)
+
+
+### Bug Fixes
+
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+### Features
+
+* export sleep from core ([a7cdaeb](https://github.com/lindorm-io/monorepo/commit/a7cdaeb35a01a78777e8900ea59fc070c8582387))
+
+
+
+
+
 ## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.1.8...@lindorm-io/in-memory-cache@0.1.9) (2022-05-22)
 
 **Note:** Version bump only for package @lindorm-io/in-memory-cache

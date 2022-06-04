@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.5...@lindorm-io/key-pair@0.4.6) (2022-06-04)
+
+
+### Bug Fixes
+
+* create mocks for keys, keystore, jwt ([af1d2aa](https://github.com/lindorm-io/monorepo/commit/af1d2aad2d298d79e1ae3124fc33e67718d2a1a6))
+
+
+
+
+
 ## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.4...@lindorm-io/key-pair@0.4.5) (2022-05-28)
 
 

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.14...@lindorm-io/jwt@0.6.15) (2022-06-04)
+
+
+### Bug Fixes
+
+* create mocks for keys, keystore, jwt ([af1d2aa](https://github.com/lindorm-io/monorepo/commit/af1d2aad2d298d79e1ae3124fc33e67718d2a1a6))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 ## [0.6.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.13...@lindorm-io/jwt@0.6.14) (2022-05-28)
 
 

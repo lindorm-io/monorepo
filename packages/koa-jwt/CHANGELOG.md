@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.11...@lindorm-io/koa-jwt@0.5.12) (2022-06-04)
+
+
+### Bug Fixes
+
+* create mocks for keys, keystore, jwt ([af1d2aa](https://github.com/lindorm-io/monorepo/commit/af1d2aad2d298d79e1ae3124fc33e67718d2a1a6))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 ## [0.5.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.10...@lindorm-io/koa-jwt@0.5.11) (2022-05-28)
 
 **Note:** Version bump only for package @lindorm-io/koa-jwt

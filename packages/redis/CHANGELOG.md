@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.8.0...@lindorm-io/redis@0.8.1) (2022-06-04)
+
+
+### Bug Fixes
+
+* add mock cache creator ([e44e758](https://github.com/lindorm-io/monorepo/commit/e44e758abc6da16fa7d546a0c9b2e76d9b6c47a8))
+* export test entity ([d4fa371](https://github.com/lindorm-io/monorepo/commit/d4fa371dbfa3c566574cd71319fd259832c0abcb))
+* simplify mocks ([d9307c5](https://github.com/lindorm-io/monorepo/commit/d9307c5f0d32d6b76462d90631eaf5e22cd18526))
+* use mock logger in all packages ([bf8fad5](https://github.com/lindorm-io/monorepo/commit/bf8fad573b00ea1d475063dae01522aa0b73ff8b))
+
+
+
+
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.7.1...@lindorm-io/redis@0.8.0) (2022-05-22)
 
 
