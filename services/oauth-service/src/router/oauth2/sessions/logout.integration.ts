@@ -3,17 +3,21 @@ import request from "supertest";
 import { LogoutSessionType } from "../../../enum";
 import { SessionStatus } from "../../../common";
 import { createURL } from "@lindorm-io/core";
-import { getTestData } from "../../../test/data";
+import { getTestData } from "../../../fixtures/data";
 import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
-import { getTestBrowserSession, getTestClient, getTestLogoutSession } from "../../../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestLogoutSession,
+} from "../../../fixtures/entity";
 import {
   getTestIdToken,
   setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
   TEST_LOGOUT_SESSION_CACHE,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,10 +31,10 @@ describe("/oauth2/sessions/logout", () => {
     const { state } = getTestData();
     const identityId = randomUUID();
 
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: randomUUID(),
       }),
     );
@@ -80,10 +84,10 @@ describe("/oauth2/sessions/logout", () => {
     const { state } = getTestData();
     const identityId = randomUUID();
 
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const refreshSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: randomUUID(),
       }),
     );
@@ -130,10 +134,10 @@ describe("/oauth2/sessions/logout", () => {
   });
 
   test("GET /verify", async () => {
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      getTestLogoutSession({
+      createTestLogoutSession({
         clientId: client.id,
         sessionType: LogoutSessionType.BROWSER,
         status: SessionStatus.CONFIRMED,

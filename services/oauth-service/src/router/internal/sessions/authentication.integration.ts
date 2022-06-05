@@ -4,17 +4,17 @@ import { ClientType } from "../../../common";
 import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-} from "../../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+} from "../../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
   setupIntegration,
   getTestClientCredentials,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,7 +28,7 @@ describe("/internal/sessions/authentication", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -39,11 +39,11 @@ describe("/internal/sessions/authentication", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({ identityId }),
+      createTestBrowserSession({ identityId }),
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         authenticationId: "6eecdda6-5f59-44c9-86da-2f9aed8989a2",
         browserSessionId: browserSession.id,
         clientId: client.id,
@@ -98,7 +98,7 @@ describe("/internal/sessions/authentication", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -109,7 +109,7 @@ describe("/internal/sessions/authentication", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         acrValues: [],
         amrValues: [],
         identityId: null,
@@ -119,7 +119,7 @@ describe("/internal/sessions/authentication", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         clientId: client.id,
         browserSessionId: browserSession.id,
       }),
@@ -147,7 +147,7 @@ describe("/internal/sessions/authentication", () => {
 
   test("PUT /:id/authenticate/reject", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -158,7 +158,7 @@ describe("/internal/sessions/authentication", () => {
     });
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         clientId: client.id,
       }),
     );
@@ -178,7 +178,7 @@ describe("/internal/sessions/authentication", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -189,7 +189,7 @@ describe("/internal/sessions/authentication", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         acrValues: ["loa_2"],
         amrValues: ["email_otp", "phone_otp"],
         country: "se",
@@ -200,7 +200,7 @@ describe("/internal/sessions/authentication", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         country: "se",

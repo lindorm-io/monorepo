@@ -1,5 +1,5 @@
 import { Account } from "../../entity";
-import { getTestAccount } from "../../test/entity";
+import { createTestAccount } from "../../fixtures/entity";
 import { getValidIdentitySessions } from "./get-valid-identity-sessions";
 import { oauthGetIdentitySessions as _oauthGetIdentitySessions } from "../axios";
 
@@ -14,7 +14,7 @@ describe("getValidIdentitySessions", () => {
   beforeEach(() => {
     ctx = {};
 
-    account = getTestAccount();
+    account = createTestAccount();
 
     oauthGetIdentitySessions.mockResolvedValue({
       sessions: [

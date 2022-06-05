@@ -1,18 +1,18 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertAuthorizeScope } from "./assert-authorize-scope";
-import { getTestAuthorizationSession, getTestClient } from "../../test/entity";
+import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 
 describe("assertAuthorizeScope", () => {
   let authorizationSession: AuthorizationSession;
   let client: Client;
 
   beforeEach(() => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       scopes: ["scope1", "scope2"],
     });
 
-    client = getTestClient();
+    client = createTestClient();
 
     client.allowed = {
       ...client.allowed,

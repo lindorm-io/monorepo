@@ -9,6 +9,7 @@ import {
   oauthGetConsentInfo as _oauthGetConsentInfo,
   oauthSkipConsent as _oauthSkipConsent,
 } from "../../handler";
+import { createTestConsentSession } from "../../fixtures/entity";
 
 MockDate.set("2020-01-01T08:00:15.000");
 
@@ -25,7 +26,7 @@ describe("oauthConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        consentSessionCache: createMockCache(),
+        consentSessionCache: createMockCache(createTestConsentSession),
       },
       data: { sessionId: "sessionId" },
       setCookie: jest.fn(),

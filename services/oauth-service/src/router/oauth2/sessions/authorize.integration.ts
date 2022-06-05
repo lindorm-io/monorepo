@@ -2,22 +2,22 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ResponseMode, Scope, SessionStatus } from "../../../common";
-import { TEST_GET_USERINFO_RESPONSE } from "../../../test/data";
+import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
 import { createURL } from "@lindorm-io/core";
 import { server } from "../../../server/server";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-} from "../../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../../fixtures/entity";
 import {
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
   TEST_CONSENT_SESSION_REPOSITORY,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,10 +34,10 @@ describe("/oauth2/sessions/verify", () => {
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
   test("GET /verify - QUERY", async () => {
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         acrValues: ["loa_3"],
         amrValues: ["email_otp", "phone_otp"],
         clients: [],
@@ -47,7 +47,7 @@ describe("/oauth2/sessions/verify", () => {
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
@@ -57,7 +57,7 @@ describe("/oauth2/sessions/verify", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         authenticationStatus: SessionStatus.CONFIRMED,
@@ -97,10 +97,10 @@ describe("/oauth2/sessions/verify", () => {
   });
 
   test("GET /verify - FORM_POST", async () => {
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         acrValues: ["loa_3"],
         amrValues: ["email_otp", "phone_otp"],
         clients: [],
@@ -110,7 +110,7 @@ describe("/oauth2/sessions/verify", () => {
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
@@ -120,7 +120,7 @@ describe("/oauth2/sessions/verify", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         authenticationStatus: SessionStatus.CONFIRMED,

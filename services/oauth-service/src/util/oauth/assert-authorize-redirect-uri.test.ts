@@ -1,18 +1,18 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertAuthorizeRedirectUri } from "./assert-authorize-redirect-uri";
-import { getTestAuthorizationSession, getTestClient } from "../../test/entity";
+import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 
 describe("assertAuthorizeRedirectUri", () => {
   let authorizationSession: AuthorizationSession;
   let client: Client;
 
   beforeEach(() => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       redirectUri: "REDIRECT1",
     });
 
-    client = getTestClient();
+    client = createTestClient();
 
     client.redirectUris = ["REDIRECT1"];
   });

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { assertTenantPermissionMiddleware } from "./assert-tenant-permission-middleware";
-import { getTestTenant } from "../../test/entity";
+import { createTestTenant } from "../../fixtures/entity";
 import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -12,7 +12,7 @@ describe("assertTenantPermissionMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      entity: { tenant: getTestTenant() },
+      entity: { tenant: createTestTenant() },
       token: {
         bearerToken: { subject: "0bbfd773-7eed-402b-83f3-916288ff978c" },
       },

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { Scope } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { identityUpdateController } from "./update";
 import { updateIdentityDisplayName as _updateIdentityDisplayName } from "../../handler";
 
@@ -46,7 +46,7 @@ describe("identityUpdateController", () => {
         zoneInfo: "new-zoneInfo",
       },
       entity: {
-        identity: getTestIdentity({
+        identity: createTestIdentity({
           id: "identityId",
         }),
       },

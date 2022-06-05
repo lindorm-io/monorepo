@@ -2,7 +2,11 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
-import { getTestClient, getTestConsentSession, getTestRefreshSession } from "../../test/entity";
+import {
+  createTestClient,
+  createTestConsentSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -20,7 +24,7 @@ describe("handleAuthorizationCodeGrant", () => {
     ctx = {
       data: { refreshToken: "jwt.jwt.jwt" },
       entity: {
-        client: getTestClient({
+        client: createTestClient({
           id: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
         }),
       },
@@ -32,14 +36,13 @@ describe("handleAuthorizationCodeGrant", () => {
       },
       repository: {
         consentSessionRepository: createMockRepository((options) =>
-          getTestConsentSession({
+          createTestConsentSession({
             sessions: ["5a43fe88-9a27-4e00-a0ec-f10b1464e949"],
             ...options,
           }),
         ),
         refreshSessionRepository: createMockRepository((options) =>
-          getTestRefreshSession({
-            id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
+          createTestRefreshSession({
             tokenId: "e7d6e7a0-cc25-4a4b-b9aa-6a2019e75d56",
             ...options,
           }),
@@ -61,7 +64,7 @@ describe("handleAuthorizationCodeGrant", () => {
 
   test("should reject on consumed session", async () => {
     ctx.repository.refreshSessionRepository.find.mockResolvedValue(
-      getTestRefreshSession({
+      createTestRefreshSession({
         id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
         tokenId: "52522c99-1274-4967-a3a3-f5de3587e325",
         expires: new Date("1999-01-01T08:00:00.000Z"),
@@ -73,7 +76,7 @@ describe("handleAuthorizationCodeGrant", () => {
 
   test("should reject on missing consent", async () => {
     ctx.repository.consentSessionRepository.find.mockResolvedValue(
-      getTestConsentSession({
+      createTestConsentSession({
         sessions: ["6c1c1cbd-8b7e-4ea8-b7b0-a5a6a5ddaa6f"],
       }),
     );

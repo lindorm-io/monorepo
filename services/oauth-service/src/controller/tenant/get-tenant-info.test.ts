@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getTenantInfoController } from "./get-tenant-info";
-import { getTestTenant } from "../../test/entity";
+import { createTestTenant } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -10,7 +10,7 @@ describe("getTenantInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        tenant: getTestTenant(),
+        tenant: createTestTenant(),
       },
     };
   });

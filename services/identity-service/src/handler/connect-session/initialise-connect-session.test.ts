@@ -1,7 +1,7 @@
 import { ConnectSession, Identity } from "../../entity";
 import { IdentifierType } from "../../common";
 import { clientCredentialsMiddleware as _clientCredentialsMiddleware } from "../../middleware";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { initialiseConnectSession } from "./initialise-connect-session";
 
 jest.mock("../../middleware");
@@ -28,7 +28,7 @@ describe("initialiseConnectSession", () => {
       },
     };
 
-    identity = getTestIdentity();
+    identity = createTestIdentity();
 
     options = {
       identifier: "identifier",

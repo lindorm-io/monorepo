@@ -4,7 +4,11 @@ import { SessionStatus } from "../../common";
 import { canFlowGenerateMfaCookie as _canFlowGenerateMfaCookie } from "../../util";
 import { confirmFlowController } from "./confirm-flow";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestAccount, getTestFlowSession, getTestLoginSession } from "../../test/entity";
+import {
+  createTestAccount,
+  createTestFlowSession,
+  createTestLoginSession,
+} from "../../fixtures/entity";
 import {
   confirmBankIdSeFlow as _confirmBankIdSeFlow,
   confirmPasswordFlow as _confirmPasswordFlow,
@@ -27,7 +31,7 @@ describe("confirmFlow", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: createMockCache(),
+        flowSessionCache: createMockCache(createTestFlowSession),
       },
       data: {
         challengeConfirmationToken: "challengeConfirmationToken",
@@ -37,10 +41,10 @@ describe("confirmFlow", () => {
         totp: "totp",
       },
       entity: {
-        loginSession: getTestLoginSession({
+        loginSession: createTestLoginSession({
           identityId: "aeaec2bd-897b-4b74-bca0-db2559853ce1",
         }),
-        flowSession: getTestFlowSession({
+        flowSession: createTestFlowSession({
           type: FlowType.BANK_ID_SE,
         }),
       },
@@ -48,12 +52,12 @@ describe("confirmFlow", () => {
 
     canFlowGenerateMfaCookie.mockImplementation(() => true);
     confirmBankIdSeFlow.mockResolvedValue(
-      getTestAccount({
+      createTestAccount({
         id: "aeaec2bd-897b-4b74-bca0-db2559853ce1",
       }),
     );
     confirmPasswordFlow.mockResolvedValue(
-      getTestAccount({
+      createTestAccount({
         id: "aeaec2bd-897b-4b74-bca0-db2559853ce1",
       }),
     );
@@ -76,7 +80,7 @@ describe("confirmFlow", () => {
   });
 
   test("should resolve Password", async () => {
-    ctx.entity.flowSession = getTestFlowSession({
+    ctx.entity.flowSession = createTestFlowSession({
       type: FlowType.PASSWORD,
     });
 
@@ -96,7 +100,7 @@ describe("confirmFlow", () => {
 
   test("should throw on invalid account id", async () => {
     confirmBankIdSeFlow.mockResolvedValue(
-      getTestAccount({
+      createTestAccount({
         id: "dea98c3e-6048-4d78-9c22-dca901f7b31e",
       }),
     );

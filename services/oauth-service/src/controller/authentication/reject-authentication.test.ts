@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectAuthenticationController } from "./reject-authentication";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -14,10 +14,10 @@ describe("rejectAuthenticationController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession(),
+        authorizationSession: createTestAuthorizationSession(),
       },
       logger: createMockLogger(),
     };

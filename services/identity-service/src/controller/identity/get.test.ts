@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { getUserinfoResponseBody as _getUserinfoResponseBody } from "../../handler";
 import { identityGetController } from "./get";
 
@@ -14,7 +14,7 @@ describe("identityGetController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        identity: getTestIdentity(),
+        identity: createTestIdentity(),
       },
       token: {
         bearerToken: {

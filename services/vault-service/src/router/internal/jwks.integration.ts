@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { getTestClientCredentials, setupIntegration } from "../../test/integration";
+import { getTestClientCredentials, setupIntegration } from "../../fixtures/integration";
 import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");

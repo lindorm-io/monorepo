@@ -1,5 +1,5 @@
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestLogoutSession } from "../../test/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 import { oauthRejectLogout as _oauthRejectLogout } from "../../handler";
 import { rejectLogoutController } from "./reject-logout";
 
@@ -13,10 +13,10 @@ describe("rejectLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       entity: {
-        logoutSession: getTestLogoutSession(),
+        logoutSession: createTestLogoutSession(),
       },
       deleteCookie: jest.fn(),
     };

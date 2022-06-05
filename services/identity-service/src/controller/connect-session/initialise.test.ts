@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { IdentifierType } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestConnectSession, getTestIdentity } from "../../test/entity";
+import { createTestConnectSession, createTestIdentity } from "../../fixtures/entity";
 import { identifierConnectInitialiseController } from "./initialise";
 import {
   initialiseEmailConnectSession as _initialiseEmailConnectSession,
@@ -24,18 +24,18 @@ describe("identifierConnectInitialiseController", () => {
         type: "type",
       },
       entity: {
-        identity: getTestIdentity({ id: "identityId" }),
+        identity: createTestIdentity({ id: "identityId" }),
       },
       logger: createMockLogger(),
     };
 
     initialiseEmailConnectSession.mockResolvedValue(
-      getTestConnectSession({
+      createTestConnectSession({
         id: "4b55a038-3615-444f-9221-d9086b564427",
       }),
     );
     initialisePhoneNumberConnectSession.mockResolvedValue(
-      getTestConnectSession({
+      createTestConnectSession({
         id: "86f78995-6511-4fab-b9e4-574e2f2e3c13",
       }),
     );

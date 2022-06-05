@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
+import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -8,7 +8,7 @@ import {
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
   getTestAccessToken,
   setupIntegration,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -19,16 +19,16 @@ describe("/identities", () => {
   beforeAll(setupIntegration);
 
   test("POST /:id/rdc/pending", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
     const session1 = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id, randomUUID(), randomUUID()],
         expires: new Date("2021-01-01T08:15:00.000Z"),
         identityId: deviceLink.identityId,
       }),
     );
     const session2 = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id, randomUUID(), randomUUID()],
         expires: new Date("2021-01-01T08:20:00.000Z"),
         identityId: deviceLink.identityId,

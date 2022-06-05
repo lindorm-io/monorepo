@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm-io/errors";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestOidcSession } from "../test/entity";
+import { createTestOidcSession } from "../fixtures/entity";
 import { verifyOidcWithIdToken } from "./verify-oidc-with-id-token";
 
 describe("verifyOidcWithIdToken", () => {
@@ -17,7 +17,7 @@ describe("verifyOidcWithIdToken", () => {
       logger: createMockLogger(),
     };
 
-    oidcSession = getTestOidcSession();
+    oidcSession = createTestOidcSession();
   });
 
   test("should resolve", async () => {
@@ -28,7 +28,7 @@ describe("verifyOidcWithIdToken", () => {
   });
 
   test("should throw on invalid provider", async () => {
-    oidcSession = getTestOidcSession({
+    oidcSession = createTestOidcSession({
       provider: "wrong",
     });
 

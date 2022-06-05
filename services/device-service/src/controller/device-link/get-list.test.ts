@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getDeviceLinkListController } from "./get-list";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -12,8 +12,8 @@ describe("getDeviceLinkListController", () => {
       repository: {
         deviceLinkRepository: {
           findMany: async () => [
-            await getTestDeviceLink({ id: "ded67066-ba3a-4898-b537-de12d4b7f86d" }),
-            await getTestDeviceLink({ id: "616b4b54-608f-4e88-805e-a43dd2b2ecc4" }),
+            await createTestDeviceLink({ id: "ded67066-ba3a-4898-b537-de12d4b7f86d" }),
+            await createTestDeviceLink({ id: "616b4b54-608f-4e88-805e-a43dd2b2ecc4" }),
           ],
         },
       },

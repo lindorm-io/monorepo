@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { createClientCredentialsToken as _createClientCredentialsToken } from "../token";
-import { getTestClient } from "../../test/entity";
+import { createTestClient } from "../../fixtures/entity";
 import { handleClientCredentialsGrant } from "./handle-client-credentials-grant";
 
 jest.mock("../token");
@@ -16,7 +16,7 @@ describe("handleAuthorizationCodeGrant", () => {
         scope: "address email offline_access openid phone profile",
       },
       entity: {
-        client: getTestClient({
+        client: createTestClient({
           id: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
         }),
       },

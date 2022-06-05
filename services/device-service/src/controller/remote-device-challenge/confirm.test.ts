@@ -1,7 +1,7 @@
 import { RdcSessionType } from "../../common";
 import { confirmRdcController } from "./confirm";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestRdcSession } from "../../test/entity";
+import { createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
 
 jest.mock("../../handler");
@@ -21,10 +21,10 @@ describe("confirmRdcController", () => {
         oauthClient: {},
       },
       cache: {
-        rdcSessionCache: createMockCache(),
+        rdcSessionCache: createMockCache(createTestRdcSession),
       },
       entity: {
-        rdcSession: getTestRdcSession(),
+        rdcSession: createTestRdcSession(),
       },
       token: {
         challengeConfirmationToken: {
@@ -44,7 +44,7 @@ describe("confirmRdcController", () => {
   });
 
   test("should resolve with rdc session [ ENROLMENT ]", async () => {
-    ctx.entity.rdcSession = getTestRdcSession({
+    ctx.entity.rdcSession = createTestRdcSession({
       type: RdcSessionType.ENROLMENT,
     });
 

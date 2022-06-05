@@ -7,11 +7,12 @@ import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,7 +32,7 @@ describe("handleAuthorizationCodeGrant", () => {
     ctx = {
       cache: {
         authorizationSessionCache: createMockCache((options) =>
-          getTestAuthorizationSession({
+          createTestAuthorizationSession({
             browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
             clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
             consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
@@ -47,25 +48,19 @@ describe("handleAuthorizationCodeGrant", () => {
         redirectUri: "https://test.client.lindorm.io/redirect",
       },
       entity: {
-        client: getTestClient({
+        client: createTestClient({
           id: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
         }),
       },
       repository: {
-        browserSessionRepository: createMockRepository((options) =>
-          getTestBrowserSession({
-            id: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
-            ...options,
-          }),
-        ),
+        browserSessionRepository: createMockRepository(createTestBrowserSession),
         consentSessionRepository: createMockRepository((options) =>
-          getTestConsentSession({
-            id: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
+          createTestConsentSession({
             sessions: ["36b51c4b-b13d-4a58-81fd-ce8c09a9b362"],
             ...options,
           }),
         ),
-        refreshSessionRepository: createMockRepository(),
+        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
   });
@@ -84,7 +79,7 @@ describe("handleAuthorizationCodeGrant", () => {
 
   test("should resolve with refresh session", async () => {
     ctx.cache.authorizationSessionCache.find.mockResolvedValue(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
         clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
         consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
@@ -105,7 +100,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid client id", async () => {
-    ctx.entity.client = getTestClient({
+    ctx.entity.client = createTestClient({
       id: "70d3cd6b-0bd1-424c-8bf4-59f94d5876c5",
     });
 
@@ -120,7 +115,7 @@ describe("handleAuthorizationCodeGrant", () => {
 
   test("should throw on invalid authentication", async () => {
     ctx.repository.browserSessionRepository.find.mockResolvedValue(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: null,
       }),
     );
@@ -130,7 +125,7 @@ describe("handleAuthorizationCodeGrant", () => {
 
   test("should throw on invalid consent", async () => {
     ctx.repository.consentSessionRepository.find.mockResolvedValue(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         audiences: [],
       }),
     );

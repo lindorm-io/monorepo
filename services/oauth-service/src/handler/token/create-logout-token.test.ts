@@ -1,6 +1,6 @@
 import { BrowserSession, Client } from "../../entity";
 import { createLogoutToken } from "./create-logout-token";
-import { getTestBrowserSession, getTestClient } from "../../test/entity";
+import { createTestBrowserSession, createTestClient } from "../../fixtures/entity";
 
 describe("createLogoutToken", () => {
   let ctx: any;
@@ -14,10 +14,10 @@ describe("createLogoutToken", () => {
       },
     };
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       id: "58c9e5aa-c576-43a5-97a1-9bde154eda75",
     });
-    client = getTestClient({
+    client = createTestClient({
       id: "a95372ca-c721-4c53-8ac3-c16d61943b21",
     });
   });

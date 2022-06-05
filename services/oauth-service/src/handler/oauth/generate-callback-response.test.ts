@@ -1,15 +1,15 @@
 import { AuthorizationSession, BrowserSession, Client } from "../../entity";
 import { ResponseMode, ResponseType } from "../../common";
-import { TEST_GET_USERINFO_RESPONSE } from "../../test/data";
+import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { createAccessToken as _createAccessToken, createIdToken as _createIdToken } from "../token";
 import { generateCallbackResponse } from "./generate-callback-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
 import { setAuthorizationCode as _setAuthorizationCode } from "./set-authorization-code";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+} from "../../fixtures/entity";
 
 jest.mock("../identity");
 jest.mock("../token");
@@ -29,11 +29,11 @@ describe("generateCallbackResponse", () => {
   beforeEach(() => {
     ctx = {};
 
-    browserSession = getTestBrowserSession();
+    browserSession = createTestBrowserSession();
 
-    authorizationSession = getTestAuthorizationSession({ code: null, redirectData: null });
+    authorizationSession = createTestAuthorizationSession({ code: null, redirectData: null });
 
-    client = getTestClient();
+    client = createTestClient();
 
     createAccessToken.mockImplementation(() => ({
       token: "access.token.jwt",
@@ -53,7 +53,7 @@ describe("generateCallbackResponse", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve state on form post", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseMode: ResponseMode.FORM_POST,
@@ -71,7 +71,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri on fragment", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseMode: ResponseMode.FRAGMENT,
@@ -86,7 +86,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri on query", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseMode: ResponseMode.QUERY,
@@ -101,7 +101,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri with code", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseTypes: [ResponseType.CODE],
@@ -117,7 +117,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri with access token", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseTypes: [ResponseType.TOKEN],
@@ -133,7 +133,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri with id token", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       redirectData: null,
       responseTypes: [ResponseType.ID_TOKEN],
@@ -147,7 +147,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve callback uri with redirect data", async () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       responseMode: ResponseMode.QUERY,
       responseTypes: [],

@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { GrantType } from "../../common";
-import { getTestClient } from "../../test/entity";
+import { createTestClient } from "../../fixtures/entity";
 import { oauthTokenController } from "./token";
 
 jest.mock("../../handler", () => ({
@@ -18,7 +18,7 @@ describe("oauthTokenController", () => {
         grantType: GrantType.AUTHORIZATION_CODE,
       },
       entity: {
-        client: getTestClient(),
+        client: createTestClient(),
       },
     };
   });
@@ -46,7 +46,7 @@ describe("oauthTokenController", () => {
   });
 
   test("should reject on invalid grant type", async () => {
-    ctx.entity.client = getTestClient({
+    ctx.entity.client = createTestClient({
       allowed: {
         ...ctx.entity.client,
         grantTypes: [GrantType.CLIENT_CREDENTIALS],

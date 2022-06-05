@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteDeviceLinkController } from "./delete-device-link";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -16,10 +16,10 @@ describe("deleteDeviceLinkController", () => {
   beforeEach(async () => {
     ctx = {
       entity: {
-        deviceLink: await getTestDeviceLink(),
+        deviceLink: createTestDeviceLink(),
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
     };
 

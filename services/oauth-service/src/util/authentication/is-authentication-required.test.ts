@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { PromptMode, SessionStatus } from "../../common";
-import { getTestAuthorizationSession, getTestBrowserSession } from "../../test/entity";
+import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { isAuthenticationRequired } from "./is-authentication-required";
 import { isAuthenticationRequiredByMaxAge as _isAuthenticationRequiredByMaxAge } from "./is-authentication-required-by-max-age";
 
@@ -16,14 +16,14 @@ describe("isAuthenticationRequired", () => {
   let browserSession: BrowserSession;
 
   beforeEach(() => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       authenticationMethods: ["amr1"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       levelOfAssurance: 1,
       promptModes: [PromptMode.NONE],
     });
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -35,7 +35,7 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should not require login when authentication is confirmed", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       authenticationStatus: SessionStatus.CONFIRMED,
     });
 
@@ -47,7 +47,7 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by cookie data", () => {
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: [],
       amrValues: [],
       identityId: null,
@@ -59,14 +59,14 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by identityId", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       identityId: "f78288ca-8753-420a-9db6-2775c4baf982",
       authenticationMethods: [],
       levelOfAssurance: 1,
       promptModes: [],
     });
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -78,7 +78,7 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by country", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       country: "SE",
       authenticationMethods: [],
@@ -86,7 +86,7 @@ describe("isAuthenticationRequired", () => {
       promptModes: [],
     });
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
       country: "US",
@@ -99,14 +99,14 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by level of assurance", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       authenticationMethods: [],
       idTokenHint: null,
       identityId: null,
       levelOfAssurance: 4,
       promptModes: [],
     });
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -118,14 +118,14 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by authentication methods", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       authenticationMethods: ["amr1", "amr2", "amr3"],
       idTokenHint: null,
       identityId: null,
       levelOfAssurance: 3,
       promptModes: [],
     });
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -137,7 +137,7 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by prompt", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       authenticationMethods: [],
       idTokenHint: null,
       identityId: null,

@@ -1,5 +1,5 @@
 import { getIdentityDeviceLinksController } from "./get-identity-device-links";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 
 describe("getIdentityDeviceLinksController", () => {
   let ctx: any;
@@ -12,17 +12,17 @@ describe("getIdentityDeviceLinksController", () => {
       repository: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
-            getTestDeviceLink({
+            createTestDeviceLink({
               id: "3d9da7e5-ab8b-485d-8081-acc9249ac5fd",
             }),
-            getTestDeviceLink({
+            createTestDeviceLink({
               id: "dfe43191-cfc7-4420-b281-a839a3ba2ea9",
             }),
-            getTestDeviceLink({
+            createTestDeviceLink({
               id: "b91606fa-b522-4dcb-93bd-e436b2cf301d",
               active: false,
             }),
-            getTestDeviceLink({
+            createTestDeviceLink({
               id: "24017a7c-d0f5-44da-94a3-5afbcb5f6e1b",
               trusted: false,
             }),

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { logoutSessionCookieMiddleware } from "./logout-session-cookie-middleware";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { AuthorizationSession } from "../../entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -18,7 +18,7 @@ describe("logoutSessionCookieMiddleware", () => {
       cache: {
         logoutSessionCache: {
           find: jest.fn().mockResolvedValue(
-            getTestAuthorizationSession({
+            createTestAuthorizationSession({
               id: "0a4fb70a-b0ed-4c3e-bc99-cdfd50a5faf4",
             }),
           ),

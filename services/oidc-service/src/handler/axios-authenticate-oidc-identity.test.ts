@@ -1,5 +1,5 @@
 import { axiosAuthenticateOidcIdentity } from "./axios-authenticate-oidc-identity";
-import { getTestOidcSession } from "../test/entity";
+import { createTestOidcSession } from "../fixtures/entity";
 
 describe("axiosAuthenticateOidcIdentity", () => {
   let ctx: any;
@@ -15,7 +15,7 @@ describe("axiosAuthenticateOidcIdentity", () => {
       },
     };
 
-    oidcSession = getTestOidcSession();
+    oidcSession = createTestOidcSession();
   });
 
   test("should resolve", async () => {

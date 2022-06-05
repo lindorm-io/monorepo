@@ -4,7 +4,7 @@ import request from "supertest";
 import { CertificateMethod } from "../enum";
 import { SessionStatus } from "../common";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
-import { getTestEnrolmentSession } from "../test/entity";
+import { createTestEnrolmentSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -13,7 +13,7 @@ import {
   setupIntegration,
   signTestChallenge,
   TEST_ENROLMENT_SESSION_CACHE,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -76,7 +76,7 @@ describe("/enrolments", () => {
 
   test("POST /:id/confirm", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
-      getTestEnrolmentSession({
+      createTestEnrolmentSession({
         status: SessionStatus.SKIP,
       }),
     );
@@ -118,7 +118,7 @@ describe("/enrolments", () => {
   });
 
   test("POST /:id/reject", async () => {
-    const session = await TEST_ENROLMENT_SESSION_CACHE.create(getTestEnrolmentSession());
+    const session = await TEST_ENROLMENT_SESSION_CACHE.create(createTestEnrolmentSession());
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
       sessionId: session.id,
       subject: session.identityId,
@@ -144,7 +144,7 @@ describe("/enrolments", () => {
 
   test("POST /:id/status", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
-      getTestEnrolmentSession({
+      createTestEnrolmentSession({
         status: SessionStatus.PENDING,
       }),
     );

@@ -1,5 +1,5 @@
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestOidcSession } from "../../test/entity";
+import { createTestOidcSession } from "../../fixtures/entity";
 import { oidcSessionCallbackController } from "./oidc-session-callback";
 import {
   axiosAuthenticateOidcIdentity as _axiosAuthenticateOidcIdentity,
@@ -23,7 +23,7 @@ describe("oidcSessionCallbackController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        oidcSessionCache: createMockCache(),
+        oidcSessionCache: createMockCache(createTestOidcSession),
       },
       data: {
         accessToken: "access.jwt.jwt",
@@ -31,7 +31,7 @@ describe("oidcSessionCallbackController", () => {
         idToken: "id.jwt.jwt",
       },
       entity: {
-        oidcSession: getTestOidcSession({
+        oidcSession: createTestOidcSession({
           id: "72c66ab0-fba7-4efa-97b8-9359460aff04",
         }),
       },
@@ -68,7 +68,7 @@ describe("oidcSessionCallbackController", () => {
   });
 
   test("should resolve code", async () => {
-    ctx.entity.oidcSession = getTestOidcSession({
+    ctx.entity.oidcSession = createTestOidcSession({
       provider: "apple",
     });
 
@@ -78,7 +78,7 @@ describe("oidcSessionCallbackController", () => {
   });
 
   test("should resolve id_token", async () => {
-    ctx.entity.oidcSession = getTestOidcSession({
+    ctx.entity.oidcSession = createTestOidcSession({
       provider: "google",
     });
 
@@ -88,7 +88,7 @@ describe("oidcSessionCallbackController", () => {
   });
 
   test("should resolve token", async () => {
-    ctx.entity.oidcSession = getTestOidcSession({
+    ctx.entity.oidcSession = createTestOidcSession({
       provider: "microsoft",
     });
 

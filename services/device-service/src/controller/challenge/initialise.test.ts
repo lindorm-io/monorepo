@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
+import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
 import { initialiseChallengeController } from "./initialise";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -16,7 +16,7 @@ describe("initialiseChallengeController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        challengeSessionCache: createMockCache((options) => getTestChallengeSession(options)),
+        challengeSessionCache: createMockCache(createTestChallengeSession),
       },
       data: {
         clientId: "bcfcc919-b9af-4d4e-a9db-d35059994f22",
@@ -25,7 +25,7 @@ describe("initialiseChallengeController", () => {
         scopes: ["test_scope"],
       },
       entity: {
-        deviceLink: await getTestDeviceLink({
+        deviceLink: await createTestDeviceLink({
           pincode: "pincode-signature",
           biometry: "biometry-signature",
         }),

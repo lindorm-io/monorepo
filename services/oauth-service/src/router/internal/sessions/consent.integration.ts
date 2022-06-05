@@ -4,11 +4,11 @@ import { ClientType } from "../../../common";
 import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-} from "../../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
@@ -16,7 +16,7 @@ import {
   TEST_CONSENT_SESSION_REPOSITORY,
   setupIntegration,
   getTestClientCredentials,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,7 +30,7 @@ describe("/internal/sessions/consent", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -41,11 +41,11 @@ describe("/internal/sessions/consent", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({ identityId }),
+      createTestBrowserSession({ identityId }),
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         audiences: [client.id],
         browserSessionId: browserSession.id,
         clientId: client.id,
@@ -102,7 +102,7 @@ describe("/internal/sessions/consent", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -113,13 +113,13 @@ describe("/internal/sessions/consent", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId,
       }),
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [],
         clientId: client.id,
         identityId,
@@ -129,7 +129,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         consentSessionId: consentSession.id,
@@ -156,7 +156,7 @@ describe("/internal/sessions/consent", () => {
 
   test("PUT /:id/consent/reject", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -167,7 +167,7 @@ describe("/internal/sessions/consent", () => {
     });
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         clientId: client.id,
       }),
     );
@@ -187,7 +187,7 @@ describe("/internal/sessions/consent", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -198,13 +198,13 @@ describe("/internal/sessions/consent", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId,
       }),
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId,
@@ -214,7 +214,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         consentSessionId: consentSession.id,

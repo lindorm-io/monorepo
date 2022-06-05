@@ -1,7 +1,11 @@
 import { BrowserSession, Client, ConsentSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { tryFindConsentSession } from "./try-find-consent-session";
-import { getTestBrowserSession, getTestClient, getTestConsentSession } from "../../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 import { createMockRepository } from "@lindorm-io/mongo";
 
 describe("tryFindConsentSession", () => {
@@ -12,15 +16,15 @@ describe("tryFindConsentSession", () => {
   beforeEach(() => {
     ctx = {
       repository: {
-        consentSessionRepository: createMockRepository((options) => getTestConsentSession(options)),
+        consentSessionRepository: createMockRepository(createTestConsentSession),
       },
     };
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       identityId: "972568e4-aa8d-41cb-a814-061ca7765f8b",
     });
 
-    client = getTestClient({
+    client = createTestClient({
       id: "4b5a1aab-9153-430c-bcf0-864180127b2a",
     });
   });
@@ -34,7 +38,7 @@ describe("tryFindConsentSession", () => {
   });
 
   test("should resolve nothing when identity id is not set", async () => {
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       identityId: null,
     });
 

@@ -1,5 +1,6 @@
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTenantController } from "./create-tenant";
+import { createTestTenant } from "../../fixtures/entity";
 
 describe("createTenantController", () => {
   let ctx: any;
@@ -11,7 +12,7 @@ describe("createTenantController", () => {
         subdomain: "subdomain",
       },
       repository: {
-        tenantRepository: createMockRepository(),
+        tenantRepository: createMockRepository(createTestTenant),
       },
       token: {
         bearerToken: { subject: "identityId" },

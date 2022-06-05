@@ -1,7 +1,7 @@
 import { Account } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { generateMfaCookie } from "./generate-mfa-cookie";
-import { getTestAccount } from "../../test/entity";
+import { createTestAccount, createTestMfaCookieSession } from "../../fixtures/entity";
 
 describe("generateMfaCookie", () => {
   let ctx: any;
@@ -11,11 +11,11 @@ describe("generateMfaCookie", () => {
     ctx = {
       setCookie: jest.fn(),
       cache: {
-        mfaCookieSessionCache: createMockCache(),
+        mfaCookieSessionCache: createMockCache(createTestMfaCookieSession),
       },
     };
 
-    account = getTestAccount();
+    account = createTestAccount();
   });
 
   test("should resolve", async () => {

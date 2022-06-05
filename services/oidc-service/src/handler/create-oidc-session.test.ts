@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { createMockCache } from "@lindorm-io/redis";
 import { createOidcSession } from "./create-oidc-session";
-import { OidcSession } from "../entity";
+import { createTestOidcSession } from "../fixtures/entity";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
@@ -12,7 +12,7 @@ describe("createOidcSession", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        oidcSessionCache: createMockCache((options: any) => new OidcSession(options)),
+        oidcSessionCache: createMockCache(createTestOidcSession),
       },
     };
 

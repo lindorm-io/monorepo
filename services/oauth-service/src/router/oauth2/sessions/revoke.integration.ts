@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { InvalidToken } from "../../../entity";
-import { getTestClient, getTestRefreshSession } from "../../../test/entity";
+import { createTestClient, createTestRefreshSession } from "../../../fixtures/entity";
 import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -12,7 +12,7 @@ import {
   setupIntegration,
   TEST_INVALID_TOKEN_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,7 +24,7 @@ describe("/oauth2/sessions/revoke", () => {
 
   test("POST / - ACCESS", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
     );
@@ -51,7 +51,7 @@ describe("/oauth2/sessions/revoke", () => {
 
   test("POST / - REFRESH", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
     );
@@ -59,7 +59,7 @@ describe("/oauth2/sessions/revoke", () => {
     const tokenId = randomUUID();
 
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client.id,
         identityId: randomUUID(),
         tokenId,

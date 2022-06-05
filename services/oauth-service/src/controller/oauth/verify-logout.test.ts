@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LogoutSessionType } from "../../enum";
 import { SessionStatus } from "../../common";
-import { getTestLogoutSession } from "../../test/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 import { oauthVerifyLogoutController } from "./verify-logout";
 
 describe("oauthVerifyController", () => {
@@ -15,7 +15,7 @@ describe("oauthVerifyController", () => {
         redirectUri: "https://test.client.lindorm.io/redirect",
       },
       entity: {
-        logoutSession: getTestLogoutSession({
+        logoutSession: createTestLogoutSession({
           id: "ba965b10-44b4-4ec0-b276-10ac52f9d43f",
           status: SessionStatus.CONFIRMED,
           sessionType: LogoutSessionType.REFRESH,
@@ -36,7 +36,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should delete browser session cookie", async () => {
-    ctx.entity.logoutSession = getTestLogoutSession({
+    ctx.entity.logoutSession = createTestLogoutSession({
       id: "ba965b10-44b4-4ec0-b276-10ac52f9d43f",
       status: SessionStatus.CONFIRMED,
       sessionType: LogoutSessionType.BROWSER,

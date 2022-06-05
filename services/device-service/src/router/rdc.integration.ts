@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ChallengeStrategy, DeviceFactor, SessionStatus } from "../common";
-import { getTestDeviceLink, getTestRdcSession } from "../test/entity";
+import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -12,7 +12,7 @@ import {
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -41,10 +41,10 @@ describe("/rdc", () => {
   nock("https://callback.lindorm.io").delete("/reject").times(999).reply(200, {});
 
   test("POST /:id/acknowledge", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id, randomUUID(), randomUUID()],
         expires: new Date("2021-01-01T08:15:00.000Z"),
         identityId: deviceLink.identityId,
@@ -87,10 +87,10 @@ describe("/rdc", () => {
   });
 
   test("POST /:id/confirm", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id],
         identityId: deviceLink.identityId,
       }),
@@ -135,10 +135,10 @@ describe("/rdc", () => {
   });
 
   test("POST /:id/reject", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id],
         identityId: deviceLink.identityId,
       }),
@@ -170,10 +170,10 @@ describe("/rdc", () => {
   });
 
   test("GET /:id/status", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
-      getTestRdcSession({
+      createTestRdcSession({
         deviceLinks: [deviceLink.id],
         identityId: deviceLink.identityId,
         status: SessionStatus.PENDING,

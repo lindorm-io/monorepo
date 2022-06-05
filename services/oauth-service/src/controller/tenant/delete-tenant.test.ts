@@ -1,6 +1,6 @@
 import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteTenantController } from "./delete-tenant";
-import { getTestTenant } from "../../test/entity";
+import { createTestClient, createTestTenant } from "../../fixtures/entity";
 
 describe("deleteTenantController", () => {
   let ctx: any;
@@ -8,11 +8,11 @@ describe("deleteTenantController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        tenant: getTestTenant(),
+        tenant: createTestTenant(),
       },
       repository: {
-        clientRepository: createMockRepository(),
-        tenantRepository: createMockRepository(),
+        clientRepository: createMockRepository(createTestClient),
+        tenantRepository: createMockRepository(createTestTenant),
       },
     };
   });

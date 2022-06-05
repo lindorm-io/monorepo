@@ -1,6 +1,7 @@
 import { oauthRevokeController } from "./revoke";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
+import { createTestInvalidToken, createTestRefreshSession } from "../../fixtures/entity";
 
 describe("oauthRevokeController", () => {
   let ctx: any;
@@ -8,7 +9,7 @@ describe("oauthRevokeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        invalidTokenCache: createMockCache(),
+        invalidTokenCache: createMockCache(createTestInvalidToken),
       },
       data: {
         token: "jwt.jwt.jwt",
@@ -22,7 +23,7 @@ describe("oauthRevokeController", () => {
         })),
       },
       repository: {
-        refreshSessionRepository: createMockRepository(),
+        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
   });

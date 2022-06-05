@@ -1,5 +1,5 @@
 import { Account, LoginSession } from "../../entity";
-import { getTestAccount, getTestLoginSession } from "../../test/entity";
+import { createTestAccount, createTestLoginSession } from "../../fixtures/entity";
 import { calculateAllowedFlows } from "./calculate-allowed-flows";
 
 describe("calculateAllowedFlows", () => {
@@ -12,7 +12,7 @@ describe("calculateAllowedFlows", () => {
       getCookie: jest.fn(),
     };
 
-    loginSession = getTestLoginSession();
+    loginSession = createTestLoginSession();
   });
 
   describe("with no amr values", () => {
@@ -41,7 +41,7 @@ describe("calculateAllowedFlows", () => {
 
   describe("with one amr value", () => {
     test("should resolve all basic flows", async () => {
-      loginSession = getTestLoginSession({
+      loginSession = createTestLoginSession({
         amrValues: ["email_otp"],
         levelOfAssurance: 1,
       });
@@ -57,7 +57,7 @@ describe("calculateAllowedFlows", () => {
     });
 
     test("should resolve flows with cookies", async () => {
-      loginSession = getTestLoginSession({
+      loginSession = createTestLoginSession({
         amrValues: ["email_otp"],
         levelOfAssurance: 1,
       });
@@ -72,12 +72,12 @@ describe("calculateAllowedFlows", () => {
 
   describe("with one amr value & account", () => {
     test("should resolve time based otp", async () => {
-      loginSession = getTestLoginSession({
+      loginSession = createTestLoginSession({
         amrValues: ["email_otp"],
         levelOfAssurance: 1,
       });
 
-      account = getTestAccount();
+      account = createTestAccount();
 
       expect(calculateAllowedFlows(ctx, loginSession, account)).toStrictEqual(
         expect.arrayContaining(["time_based_otp"]),

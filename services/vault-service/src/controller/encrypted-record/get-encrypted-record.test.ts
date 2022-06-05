@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { getEncryptedRecordController } from "./get-encrypted-record";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
-import { getTestEncryptedRecord } from "../../test/entity";
+import { createTestEncryptedRecord } from "../../fixtures/entity";
 import { isAfter as _isAfter } from "date-fns";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -32,10 +32,10 @@ describe("getEncryptedRecordController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        encryptedRecord: getTestEncryptedRecord(),
+        encryptedRecord: createTestEncryptedRecord(),
       },
       repository: {
-        encryptedRecordRepository: createMockRepository(),
+        encryptedRecordRepository: createMockRepository(createTestEncryptedRecord),
       },
     };
 

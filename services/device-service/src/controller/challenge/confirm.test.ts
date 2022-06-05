@@ -4,7 +4,7 @@ import { assertCertificateChallenge as _assertCertificateChallenge } from "../..
 import { confirmChallengeController } from "./confirm";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestChallengeSession, getTestDeviceLink } from "../../test/entity";
+import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -32,7 +32,7 @@ describe("confirmChallengeController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        challengeSessionCache: createMockCache(),
+        challengeSessionCache: createMockCache(createTestChallengeSession),
       },
       data: {
         certificateVerifier: "certificateVerifier",
@@ -41,8 +41,8 @@ describe("confirmChallengeController", () => {
         strategy: ChallengeStrategy.IMPLICIT,
       },
       entity: {
-        challengeSession: getTestChallengeSession(),
-        deviceLink: await getTestDeviceLink({
+        challengeSession: createTestChallengeSession(),
+        deviceLink: createTestDeviceLink({
           pincode: "pincode-signature",
           biometry: "biometry-signature",
         }),
@@ -59,7 +59,7 @@ describe("confirmChallengeController", () => {
         },
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
     };
 

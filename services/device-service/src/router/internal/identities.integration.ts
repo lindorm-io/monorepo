@@ -1,12 +1,12 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -17,16 +17,16 @@ describe("/internal/identities", () => {
   beforeAll(setupIntegration);
 
   test("GET /:id/deviceLinks", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink({}));
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
 
     const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         identityId: deviceLink.identityId,
       }),
     );
 
     const deviceLink3 = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         identityId: deviceLink.identityId,
       }),
     );

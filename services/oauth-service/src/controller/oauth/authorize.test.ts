@@ -1,7 +1,12 @@
 import MockDate from "mockdate";
 import { DisplayMode, PromptMode, ResponseMode, ResponseType } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestBrowserSession, getTestClient, getTestConsentSession } from "../../test/entity";
+import {
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 import { oauthAuthorizeController } from "./authorize";
 import {
   setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
@@ -30,7 +35,7 @@ describe("oauthAuthorizeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       data: {
         acrValues: "3 phone_otp session_otp email_otp",
@@ -54,11 +59,11 @@ describe("oauthAuthorizeController", () => {
         uiLocales: "en-GB en-US",
       },
       entity: {
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           id: "eaad7806-26c8-4c53-9db4-298ebea677c7",
           nonce: "6LN9WV959LfBXLk1",
         }),
-        client: getTestClient({
+        client: createTestClient({
           id: "3bfc20bd-0f18-4717-b535-ffb4a071deba",
         }),
       },
@@ -90,7 +95,7 @@ describe("oauthAuthorizeController", () => {
     isConsentRequired.mockImplementation(() => true);
     isAuthenticationRequired.mockImplementation(() => true);
     tryFindConsentSession.mockResolvedValue(
-      getTestConsentSession({ id: "e7511e5c-e2d9-46c8-bffd-5c47dacc8b10" }),
+      createTestConsentSession({ id: "e7511e5c-e2d9-46c8-bffd-5c47dacc8b10" }),
     );
   });
 

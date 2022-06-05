@@ -1,5 +1,5 @@
 import { userinfoController } from "./userinfo";
-import { TEST_GET_USERINFO_RESPONSE } from "../../test/data";
+import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../../handler";
 
 jest.mock("../../handler");

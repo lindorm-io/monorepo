@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestProtectedRecord } from "../../test/entity";
+import { createTestProtectedRecord } from "../../fixtures/entity";
 import { isAfter as _isAfter } from "date-fns";
 import { unlockProtectedRecordController } from "./unlock-protected-record";
 
@@ -32,7 +32,7 @@ describe("unlockProtectedRecordController", () => {
         key: "key",
       },
       entity: {
-        protectedRecord: getTestProtectedRecord(),
+        protectedRecord: createTestProtectedRecord(),
       },
       repository: {
         protectedRecordRepository: createMockRepository(),

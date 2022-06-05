@@ -4,7 +4,7 @@ import { ChallengeStrategy, DeviceFactor } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
-import { getTestDeviceLink } from "../test/entity";
+import { createTestDeviceLink } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -12,7 +12,7 @@ import {
   getTestChallengeConfirmationToken,
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
-} from "../test/integration";
+} from "../fixtures/integration";
 import nock from "nock";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -56,10 +56,10 @@ describe("/device-links", () => {
   beforeAll(setupIntegration);
 
   test("GET /", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink({}));
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
 
     const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         identityId: deviceLink.identityId,
         deviceMetadata: {
           ...deviceLink.deviceMetadata,
@@ -91,7 +91,7 @@ describe("/device-links", () => {
   });
 
   test("DELETE /:id", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const accessToken = getTestAccessToken({
       subject: deviceLink.identityId,
@@ -109,7 +109,7 @@ describe("/device-links", () => {
 
   test("GET /:id", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt("123456"),
       }),
@@ -145,7 +145,7 @@ describe("/device-links", () => {
 
   test("PUT /:id/biometry", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt("123456"),
       }),
@@ -180,7 +180,7 @@ describe("/device-links", () => {
 
   test("PUT /:id/pincode", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt("123456"),
       }),
@@ -216,7 +216,7 @@ describe("/device-links", () => {
 
   test("PUT /:id/trusted", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      await getTestDeviceLink({
+      await createTestDeviceLink({
         trusted: false,
       }),
     );

@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import {
   TEST_EMAIL_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
@@ -10,7 +10,7 @@ import {
   TEST_PHONE_NUMBER_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 import { Identity } from "../../entity";
 import { IdentityPermission } from "../../common";
 
@@ -24,7 +24,7 @@ describe("/internal/userinfo", () => {
 
   test("GET /:id", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
+      createTestIdentity({
         displayName: {
           name: getRandomString(12),
           number: getRandomNumber(4),

@@ -2,16 +2,16 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { GrantType } from "../../common";
-import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../test/data";
+import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../fixtures/data";
 import { server } from "../../server/server";
 import { randomUUID } from "crypto";
 import {
-  getTestAuthorizationSession,
-  getTestClient,
-  getTestConsentSession,
-  getTestBrowserSession,
-  getTestRefreshSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestClient,
+  createTestConsentSession,
+  createTestBrowserSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_CACHE,
@@ -21,7 +21,7 @@ import {
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestRefreshToken,
   setupIntegration,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -41,19 +41,19 @@ describe("/oauth2/token", () => {
     const { code, codeChallenge, codeChallengeMethod, codeVerifier, nonce, state } = getTestData();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
     );
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
       }),
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
@@ -63,7 +63,7 @@ describe("/oauth2/token", () => {
     );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      getTestAuthorizationSession({
+      createTestAuthorizationSession({
         audiences: [client.id],
         clientId: client.id,
         code,
@@ -103,7 +103,7 @@ describe("/oauth2/token", () => {
 
   test("POST / - CLIENT_CREDENTIALS", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
     );
@@ -128,13 +128,13 @@ describe("/oauth2/token", () => {
 
   test("POST / - REFRESH_TOKEN", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
     );
 
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         tokenId: randomUUID(),
@@ -142,7 +142,7 @@ describe("/oauth2/token", () => {
     );
 
     await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",

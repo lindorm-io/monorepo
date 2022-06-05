@@ -1,6 +1,10 @@
 import { Client } from "../../entity";
 import { createAccessToken } from "./create-access-token";
-import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 describe("createAccessToken", () => {
   let ctx: any;
@@ -14,13 +18,13 @@ describe("createAccessToken", () => {
       },
     };
 
-    client = getTestClient();
+    client = createTestClient();
     scopes = ["scope1", "scope2"];
   });
 
   test("should create access token for browser session", () => {
     expect(
-      createAccessToken(ctx, client, getTestBrowserSession(), {
+      createAccessToken(ctx, client, createTestBrowserSession(), {
         permissions: [],
         scopes,
       }),
@@ -31,7 +35,7 @@ describe("createAccessToken", () => {
 
   test("should create access token for refresh session", () => {
     expect(
-      createAccessToken(ctx, client, getTestRefreshSession(), {
+      createAccessToken(ctx, client, createTestRefreshSession(), {
         permissions: [],
         scopes,
       }),

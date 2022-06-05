@@ -1,9 +1,9 @@
 import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestConsentSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 import { isConsentRequired } from "./is-consent-required";
 import { SessionStatus } from "../../common";
 
@@ -13,16 +13,16 @@ describe("isConsentRequired", () => {
   let consentSession: ConsentSession;
 
   beforeEach(() => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       clientId: "client1",
       scopes: ["scope1", "scope2"],
     });
 
-    browserSession = getTestBrowserSession({
+    browserSession = createTestBrowserSession({
       id: "0d8143ae-b105-4989-9118-0663aa4d58f8",
     });
 
-    consentSession = getTestConsentSession({
+    consentSession = createTestConsentSession({
       identityId: "account1",
       audiences: ["client1", "client2"],
       scopes: ["scope1", "scope2", "scope3"],
@@ -31,7 +31,7 @@ describe("isConsentRequired", () => {
   });
 
   test("should not require consent when consent is confirmed", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       consentStatus: SessionStatus.CONFIRMED,
     });
 
@@ -43,7 +43,7 @@ describe("isConsentRequired", () => {
   });
 
   test("should require consent when required by browser session", () => {
-    consentSession = getTestConsentSession({
+    consentSession = createTestConsentSession({
       identityId: null,
       audiences: [],
       scopes: [],
@@ -53,7 +53,7 @@ describe("isConsentRequired", () => {
   });
 
   test("should require consent when required by audience", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       clientId: "client3",
     });
 
@@ -61,7 +61,7 @@ describe("isConsentRequired", () => {
   });
 
   test("should require consent when required by scope", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       clientId: "client1",
       scopes: ["scope4"],
     });

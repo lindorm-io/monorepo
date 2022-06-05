@@ -9,7 +9,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
   TEST_PROTECTED_RECORD_REPOSITORY,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

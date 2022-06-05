@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { Email } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { initialiseConnectSession as _initialiseConnectSession } from "../connect-session";
 import { initialiseEmailConnectSession } from "./initialise-email-connect-session";
 
@@ -36,7 +36,7 @@ describe("initialiseEmailConnectSession", () => {
       },
     };
 
-    identity = getTestIdentity();
+    identity = createTestIdentity();
 
     initialiseConnectSession.mockResolvedValue("connect-session");
   });

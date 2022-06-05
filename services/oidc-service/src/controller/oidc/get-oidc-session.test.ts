@@ -1,5 +1,5 @@
 import { getOidcSessionController } from "./get-oidc-session";
-import { getTestOidcSession } from "../../test/entity";
+import { createTestOidcSession } from "../../fixtures/entity";
 
 describe("getOidcSessionController", () => {
   let ctx: any;
@@ -7,7 +7,7 @@ describe("getOidcSessionController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        oidcSession: getTestOidcSession({
+        oidcSession: createTestOidcSession({
           identityId: "identity",
           verified: true,
         }),

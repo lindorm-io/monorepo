@@ -1,12 +1,12 @@
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
-import { getTestLoginSession } from "../test/entity";
+import { createTestLoginSession } from "../fixtures/entity";
 import { FlowType } from "../enum";
 
 describe("calculateLevelOfAssurance", () => {
   test("should resolve with max value", () => {
     expect(
       calculateLevelOfAssurance(
-        getTestLoginSession({
+        createTestLoginSession({
           amrValues: [FlowType.EMAIL_OTP, FlowType.PHONE_OTP, FlowType.MFA_COOKIE],
         }),
       ),
@@ -16,7 +16,7 @@ describe("calculateLevelOfAssurance", () => {
   test("should resolve with value for EMAIL_OTP", () => {
     expect(
       calculateLevelOfAssurance(
-        getTestLoginSession({
+        createTestLoginSession({
           amrValues: [FlowType.EMAIL_OTP],
         }),
       ),
@@ -26,7 +26,7 @@ describe("calculateLevelOfAssurance", () => {
   test("should resolve with value for BANK_ID_SE", () => {
     expect(
       calculateLevelOfAssurance(
-        getTestLoginSession({
+        createTestLoginSession({
           amrValues: [FlowType.BANK_ID_SE],
         }),
       ),
@@ -36,7 +36,7 @@ describe("calculateLevelOfAssurance", () => {
   test("should resolve with value for oidc_apple", () => {
     expect(
       calculateLevelOfAssurance(
-        getTestLoginSession({
+        createTestLoginSession({
           amrValues: ["oidc_apple"],
         }),
       ),
@@ -46,7 +46,7 @@ describe("calculateLevelOfAssurance", () => {
   test("should resolve with value for oidc_google", () => {
     expect(
       calculateLevelOfAssurance(
-        getTestLoginSession({
+        createTestLoginSession({
           amrValues: ["oidc_google"],
         }),
       ),

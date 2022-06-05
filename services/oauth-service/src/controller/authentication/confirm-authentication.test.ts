@@ -6,7 +6,7 @@ import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedir
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestAuthorizationSession, getTestBrowserSession } from "../../test/entity";
+import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -20,7 +20,7 @@ describe("confirmAuthenticationController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       data: {
         acrValues: ["loa_3"],
@@ -30,16 +30,16 @@ describe("confirmAuthenticationController", () => {
         remember: true,
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "49a746bf-eb34-41e8-ac8d-11716a5b76a1",
         }),
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           identityId: null,
         }),
       },
       logger: createMockLogger(),
       repository: {
-        browserSessionRepository: createMockRepository(),
+        browserSessionRepository: createMockRepository(createTestBrowserSession),
       },
     };
 

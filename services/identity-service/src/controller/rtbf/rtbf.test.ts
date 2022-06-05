@@ -1,4 +1,4 @@
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { removeIdentityDisplayName as _removeIdentityDisplayName } from "../../handler";
 import { rtbfController } from "./rtbf";
 
@@ -12,7 +12,7 @@ describe("rtbfController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        identity: getTestIdentity({
+        identity: createTestIdentity({
           displayName: {
             name: "name",
             number: 1234,

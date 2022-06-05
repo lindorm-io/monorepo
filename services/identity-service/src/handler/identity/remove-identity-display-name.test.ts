@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestDisplayName, getTestIdentity } from "../../test/entity";
+import { createTestDisplayName, createTestIdentity } from "../../fixtures/entity";
 import { removeIdentityDisplayName } from "./remove-identity-display-name";
 
 describe("removeIdentityDisplayName", () => {
@@ -11,7 +11,7 @@ describe("removeIdentityDisplayName", () => {
       repository: {
         displayNameRepository: {
           find: jest.fn().mockResolvedValue(
-            getTestDisplayName({
+            createTestDisplayName({
               name: "displayName",
               numbers: [1234],
             }),
@@ -26,7 +26,7 @@ describe("removeIdentityDisplayName", () => {
     await expect(
       removeIdentityDisplayName(
         ctx,
-        getTestIdentity({
+        createTestIdentity({
           displayName: {
             name: "displayName",
             number: 1234,

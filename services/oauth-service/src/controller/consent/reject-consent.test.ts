@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectConsentController } from "./reject-consent";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -13,10 +13,10 @@ describe("rejectConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession(),
+        authorizationSession: createTestAuthorizationSession(),
       },
       logger: createMockLogger(),
     };

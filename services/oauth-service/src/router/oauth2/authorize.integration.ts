@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { baseHash, createURL } from "@lindorm-io/core";
-import { getTestClient } from "../../test/entity";
-import { getTestData } from "../../test/data";
+import { createTestClient } from "../../fixtures/entity";
+import { getTestData } from "../../fixtures/data";
 import { server } from "../../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -18,7 +18,7 @@ import {
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_CACHE,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,7 +31,7 @@ describe("/oauth2/authorize", () => {
   test("GET /", async () => {
     const { codeChallenge, codeChallengeMethod, nonce, state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const identityId = randomUUID();
     const idToken = getTestIdToken({

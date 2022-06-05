@@ -4,7 +4,7 @@ import { SessionStatus } from "../../common";
 import { assertPKCE as _assertPKCE, getExpires } from "@lindorm-io/core";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestLoginSession } from "../../test/entity";
+import { createTestLoginSession } from "../../fixtures/entity";
 import { isAuthenticationReadyToConfirm as _isAuthenticationReadyToConfirm } from "../../util";
 import { oauthLoginController } from "./login";
 import {
@@ -35,7 +35,7 @@ describe("oauthLoginController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache((options) => getTestLoginSession(options)),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
       data: { sessionId: "sessionId" },
       logger: createMockLogger(),

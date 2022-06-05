@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { axiosInitialiseOidcSession as _axiosInitialiseOidcSession } from "../../handler";
-import { getTestLoginSession } from "../../test/entity";
+import { createTestLoginSession } from "../../fixtures/entity";
 import { initialiseLoginOidcController } from "./initialise-login-oidc";
 import { createMockCache } from "@lindorm-io/redis";
 
@@ -14,14 +14,14 @@ describe("initialiseLoginOidcController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache(),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
       data: {
         provider: "apple",
         remember: true,
       },
       entity: {
-        loginSession: getTestLoginSession({
+        loginSession: createTestLoginSession({
           allowedOidc: ["apple"],
         }),
       },

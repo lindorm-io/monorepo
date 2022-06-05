@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getClientInfoController } from "./get-client-info";
-import { getTestClient } from "../../test/entity";
+import { createTestClient } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -10,7 +10,7 @@ describe("getClientInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        client: getTestClient(),
+        client: createTestClient(),
       },
     };
   });

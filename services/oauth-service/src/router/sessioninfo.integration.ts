@@ -3,11 +3,11 @@ import request from "supertest";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-  getTestRefreshSession,
-} from "../test/entity";
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+  createTestRefreshSession,
+} from "../fixtures/entity";
 import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
@@ -15,7 +15,7 @@ import {
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -29,40 +29,40 @@ describe("/sessioninfo", () => {
     const identityId = randomUUID();
 
     const client1 = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         name: "client1",
       }),
     );
 
     const client2 = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         name: "client2",
       }),
     );
 
     await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         clients: [client1.id],
         identityId,
       }),
     );
 
     await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client2.id,
         identityId,
       }),
     );
 
     await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         clientId: client1.id,
         identityId,
       }),
     );
 
     await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         clientId: client2.id,
         identityId,
       }),

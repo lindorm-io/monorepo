@@ -2,11 +2,11 @@ import { Client } from "../../entity";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { handleConsentSessionOnLogout } from "./handle-consent-session-on-logout";
 import {
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-  getTestRefreshSession,
-} from "../../test/entity";
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 describe("handleConsentSessionOnLogout", () => {
   let ctx: any;
@@ -16,7 +16,7 @@ describe("handleConsentSessionOnLogout", () => {
     ctx = {
       repository: {
         consentSessionRepository: createMockRepository((options) =>
-          getTestConsentSession({
+          createTestConsentSession({
             sessions: [
               "1a6e07af-6f12-4e0f-b590-d4c1f5ab8c73",
               "215fead5-b07c-4ccf-b54a-e7bf419427e6",
@@ -27,7 +27,7 @@ describe("handleConsentSessionOnLogout", () => {
       },
     };
 
-    client = getTestClient();
+    client = createTestClient();
   });
 
   test("should resolve with updated consent session for browser session", async () => {
@@ -35,7 +35,7 @@ describe("handleConsentSessionOnLogout", () => {
       handleConsentSessionOnLogout(
         ctx,
         client,
-        getTestBrowserSession({
+        createTestBrowserSession({
           id: "1a6e07af-6f12-4e0f-b590-d4c1f5ab8c73",
         }),
       ),
@@ -49,7 +49,7 @@ describe("handleConsentSessionOnLogout", () => {
       handleConsentSessionOnLogout(
         ctx,
         client,
-        getTestRefreshSession({
+        createTestRefreshSession({
           id: "1a6e07af-6f12-4e0f-b590-d4c1f5ab8c73",
         }),
       ),
@@ -60,7 +60,7 @@ describe("handleConsentSessionOnLogout", () => {
 
   test("should resolve with destroyed consent session", async () => {
     ctx.repository.consentSessionRepository.find.mockResolvedValue(
-      getTestConsentSession({
+      createTestConsentSession({
         sessions: ["1a6e07af-6f12-4e0f-b590-d4c1f5ab8c73"],
       }),
     );
@@ -69,7 +69,7 @@ describe("handleConsentSessionOnLogout", () => {
       handleConsentSessionOnLogout(
         ctx,
         client,
-        getTestBrowserSession({
+        createTestBrowserSession({
           id: "1a6e07af-6f12-4e0f-b590-d4c1f5ab8c73",
         }),
       ),

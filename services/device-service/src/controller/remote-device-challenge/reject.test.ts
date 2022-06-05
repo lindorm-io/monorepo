@@ -1,6 +1,6 @@
 import { RdcSessionType } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestRdcSession } from "../../test/entity";
+import { createTestRdcSession } from "../../fixtures/entity";
 import { rejectRdcController } from "./reject";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
 
@@ -20,10 +20,10 @@ describe("rejectRdcController", () => {
         oauthClient: {},
       },
       cache: {
-        rdcSessionCache: createMockCache(),
+        rdcSessionCache: createMockCache(createTestRdcSession),
       },
       entity: {
-        rdcSession: getTestRdcSession(),
+        rdcSession: createTestRdcSession(),
       },
     };
   });
@@ -35,7 +35,7 @@ describe("rejectRdcController", () => {
   });
 
   test("should resolve with rdc session [ ENROLMENT ]", async () => {
-    ctx.entity.rdcSession = getTestRdcSession({
+    ctx.entity.rdcSession = createTestRdcSession({
       type: RdcSessionType.ENROLMENT,
     });
 

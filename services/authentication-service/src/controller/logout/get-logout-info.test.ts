@@ -1,5 +1,5 @@
 import { getLogoutInfoController } from "./get-logout-info";
-import { getTestLogoutSession } from "../../test/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 
 describe("getLogoutInfoController", () => {
   let ctx: any;
@@ -7,7 +7,7 @@ describe("getLogoutInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        logoutSession: getTestLogoutSession(),
+        logoutSession: createTestLogoutSession(),
       },
     };
   });

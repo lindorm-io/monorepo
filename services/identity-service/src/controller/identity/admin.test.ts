@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { identityAdminController } from "./admin";
 
 MockDate.set("2020-01-01T08:00:00.000");
@@ -15,7 +15,7 @@ describe("identityAdminController", () => {
         permissions: ["one", "two"],
       },
       entity: {
-        identity: getTestIdentity({
+        identity: createTestIdentity({
           id: "identityId",
           active: false,
           permissions: [],

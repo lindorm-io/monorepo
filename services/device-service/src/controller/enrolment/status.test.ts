@@ -1,7 +1,7 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { getEnrolmentStatusController } from "./status";
-import { getTestRdcSession } from "../../test/entity";
+import { createTestRdcSession } from "../../fixtures/entity";
 
 describe("getEnrolmentStatusController", () => {
   let ctx: any;
@@ -9,7 +9,7 @@ describe("getEnrolmentStatusController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        enrolmentSessionCache: createMockCache((options) => getTestRdcSession(options)),
+        enrolmentSessionCache: createMockCache(createTestRdcSession),
       },
       data: {
         id: "id",

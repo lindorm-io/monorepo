@@ -2,7 +2,11 @@ import { BrowserSession, Client } from "../../entity";
 import { Scope } from "../../common";
 import { generateTokenResponse } from "./generate-token-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
-import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 import {
   createAccessToken as _createAccessToken,
   createIdToken as _createIdToken,
@@ -26,9 +30,9 @@ describe("generateTokenResponse", () => {
   beforeEach(() => {
     ctx = {};
 
-    browserSession = getTestBrowserSession();
+    browserSession = createTestBrowserSession();
 
-    client = getTestClient();
+    client = createTestClient();
 
     scopes = [];
 
@@ -79,7 +83,7 @@ describe("generateTokenResponse", () => {
     scopes = [Scope.OFFLINE_ACCESS];
 
     await expect(
-      generateTokenResponse(ctx, client, getTestRefreshSession(), scopes),
+      generateTokenResponse(ctx, client, createTestRefreshSession(), scopes),
     ).resolves.toStrictEqual({
       accessToken: "access.token.jwt",
       expiresIn: 999,

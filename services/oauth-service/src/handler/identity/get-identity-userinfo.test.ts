@@ -1,5 +1,5 @@
 import { Scope } from "../../common";
-import { TEST_GET_USERINFO_RESPONSE } from "../../test/data";
+import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { getIdentityUserinfo } from "./get-identity-userinfo";
 
 jest.mock("../axios");

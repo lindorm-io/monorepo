@@ -2,7 +2,7 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { getFlowStatusController } from "./get-flow-status";
-import { getTestFlowSession } from "../../test/entity";
+import { createTestFlowSession } from "../../fixtures/entity";
 
 describe("getFlowStatusController", () => {
   let ctx: any;
@@ -10,7 +10,7 @@ describe("getFlowStatusController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: createMockCache((options) => getTestFlowSession(options)),
+        flowSessionCache: createMockCache(createTestFlowSession),
       },
       data: { id: "id" },
     };

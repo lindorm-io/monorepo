@@ -1,5 +1,5 @@
 import { getConsentInfoController } from "./get-consent-info";
-import { getTestConsentSession } from "../../test/entity";
+import { createTestConsentSession } from "../../fixtures/entity";
 
 describe("getConsentInfoController", () => {
   let ctx: any;
@@ -7,7 +7,7 @@ describe("getConsentInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        consentSession: getTestConsentSession(),
+        consentSession: createTestConsentSession(),
       },
     };
   });

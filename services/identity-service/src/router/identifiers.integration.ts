@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { ConnectSession, Email } from "../entity";
 import { IdentifierType } from "../common";
-import { getTestConnectSession, getTestEmail, getTestIdentity } from "../test/entity";
+import { createTestConnectSession, createTestEmail, createTestIdentity } from "../fixtures/entity";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 import {
@@ -12,7 +12,7 @@ import {
   setupIntegration,
   TEST_IDENTITY_REPOSITORY,
   getTestAccessToken,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -43,7 +43,7 @@ describe("/identifiers", () => {
 
   test("POST /connect", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
+      createTestIdentity({
         id: randomUUID(),
       }),
     );
@@ -72,12 +72,12 @@ describe("/identifiers", () => {
 
   test("POST /connect/:id/verify", async () => {
     const email = await TEST_EMAIL_REPOSITORY.create(
-      getTestEmail({
+      createTestEmail({
         verified: false,
       }),
     );
     const session = await TEST_CONNECT_SESSION_CACHE.create(
-      await getTestConnectSession({
+      await createTestConnectSession({
         identifier: email.email,
         identityId: email.identityId,
       }),

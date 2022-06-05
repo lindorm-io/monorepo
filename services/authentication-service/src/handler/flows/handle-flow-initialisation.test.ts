@@ -1,6 +1,6 @@
 import { FlowType } from "../../enum";
 import { LoginSession } from "../../entity";
-import { getTestLoginSession } from "../../test/entity";
+import { createTestLoginSession } from "../../fixtures/entity";
 import { handleFlowInitialisation } from "./handle-flow-initialisation";
 import {
   isPollingRequired as _isPollingRequired,
@@ -36,7 +36,7 @@ describe("handleFlowInitialisation", () => {
       },
     };
 
-    loginSession = getTestLoginSession();
+    loginSession = createTestLoginSession();
 
     options = {
       email: "email",

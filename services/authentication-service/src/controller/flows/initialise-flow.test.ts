@@ -1,5 +1,5 @@
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestLoginSession } from "../../test/entity";
+import { createTestLoginSession } from "../../fixtures/entity";
 import { handleFlowInitialisation as _handleFlowInitialisation } from "../../handler";
 import { initialiseFlowController } from "./initialise-flow";
 
@@ -13,7 +13,7 @@ describe("initialiseFlowController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache(),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
       data: {
         email: "email",
@@ -24,7 +24,7 @@ describe("initialiseFlowController", () => {
         username: "username",
       },
       entity: {
-        loginSession: getTestLoginSession(),
+        loginSession: createTestLoginSession(),
       },
     };
 

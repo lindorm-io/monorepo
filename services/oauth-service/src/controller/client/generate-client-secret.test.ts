@@ -1,7 +1,7 @@
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { generateClientSecretController } from "./generate-client-secret";
-import { getTestClient } from "../../test/entity";
+import { createTestClient } from "../../fixtures/entity";
 
 jest.mock("@lindorm-io/core", () => ({
   ...(jest.requireActual("@lindorm-io/core") as object),
@@ -20,13 +20,13 @@ describe("generateClientSecretController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: createMockCache(),
+        clientCache: createMockCache(createTestClient),
       },
       entity: {
-        client: getTestClient(),
+        client: createTestClient(),
       },
       repository: {
-        clientRepository: createMockRepository(),
+        clientRepository: createMockRepository(createTestClient),
       },
     };
   });

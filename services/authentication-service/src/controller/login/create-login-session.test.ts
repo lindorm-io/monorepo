@@ -1,7 +1,7 @@
 import { createLoginSessionController } from "./create-login-session";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestAccount } from "../../test/entity";
+import { createTestAccount, createTestLoginSession } from "../../fixtures/entity";
 import {
   handleFlowInitialisation as _handleFlowInitialisation,
   resolveAllowedFlows as _resolveAllowedFlows,
@@ -18,7 +18,7 @@ describe("createLoginSessionController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache(),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
       data: {
         country: "country",
@@ -32,7 +32,7 @@ describe("createLoginSessionController", () => {
         username: "username",
       },
       repository: {
-        accountRepository: createMockRepository((options) => getTestAccount(options)),
+        accountRepository: createMockRepository(createTestAccount),
       },
     };
 

@@ -2,10 +2,10 @@ import MockDate from "mockdate";
 import { getAuthenticationInfoController } from "./get-authentication-info";
 import { isAuthenticationRequired as _isAuthenticationRequired } from "../../util";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -19,13 +19,13 @@ describe("getAuthenticationInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "896f2d7b-2205-42b4-b1c6-ec2ac2d22895",
         }),
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           id: "baa9910c-06e0-4d8b-a46d-870d8aa90218",
         }),
-        client: getTestClient({
+        client: createTestClient({
           id: "a8fbad57-e43a-4e05-b4c8-7607348bd5b7",
         }),
       },

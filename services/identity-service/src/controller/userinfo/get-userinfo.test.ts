@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { getUserinfoController } from "./get-userinfo";
 import { getUserinfoResponseBody as _getUserinfoResponseBody } from "../../handler";
 
@@ -17,7 +17,7 @@ describe("getUserinfoController", () => {
         scope: [Scope.OPENID, Scope.EMAIL].join(" "),
       },
       entity: {
-        identity: getTestIdentity(),
+        identity: createTestIdentity(),
       },
     };
 

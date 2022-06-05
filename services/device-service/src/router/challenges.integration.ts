@@ -3,7 +3,7 @@ import request from "supertest";
 import { ChallengeStrategy } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
-import { getTestChallengeSession, getTestDeviceLink } from "../test/entity";
+import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
@@ -12,7 +12,7 @@ import {
   getTestChallengeSessionToken,
   setupIntegration,
   signTestChallenge,
-} from "../test/integration";
+} from "../fixtures/integration";
 import nock from "nock";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -52,7 +52,7 @@ describe("/challenges", () => {
 
   test("POST /", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt("123456"),
       }),
@@ -87,13 +87,13 @@ describe("/challenges", () => {
 
   test("POST /:id/confirm [ IMPLICIT ]", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt("123456"),
       }),
     );
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
-      getTestChallengeSession({
+      createTestChallengeSession({
         id: randomUUID(),
         deviceLinkId: deviceLink.id,
       }),
@@ -132,14 +132,14 @@ describe("/challenges", () => {
     const biometry = getRandomString(128);
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt(biometry),
         pincode: await crypto.encrypt("123456"),
       }),
     );
 
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
-      getTestChallengeSession({
+      createTestChallengeSession({
         id: randomUUID(),
         deviceLinkId: deviceLink.id,
       }),
@@ -181,14 +181,14 @@ describe("/challenges", () => {
     const pincode = getRandomNumber(6).toString().padStart(6, "0");
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
-      getTestDeviceLink({
+      createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
         pincode: await crypto.encrypt(pincode),
       }),
     );
 
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
-      getTestChallengeSession({
+      createTestChallengeSession({
         id: randomUUID(),
         deviceLinkId: deviceLink.id,
       }),
@@ -227,10 +227,10 @@ describe("/challenges", () => {
   });
 
   test("POST /:id/reject", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(getTestDeviceLink({}));
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
 
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
-      getTestChallengeSession({
+      createTestChallengeSession({
         id: randomUUID(),
         deviceLinkId: deviceLink.id,
       }),

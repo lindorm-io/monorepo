@@ -5,11 +5,11 @@ import { createMockRepository } from "@lindorm-io/mongo";
 import { getConsentInfoController } from "./get-consent-info";
 import { isConsentRequired as _isConsentRequired } from "../../util";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -23,27 +23,22 @@ describe("getConsentInfoController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "896f2d7b-2205-42b4-b1c6-ec2ac2d22895",
         }),
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           id: "baa9910c-06e0-4d8b-a46d-870d8aa90218",
         }),
-        client: getTestClient({
+        client: createTestClient({
           id: "a8fbad57-e43a-4e05-b4c8-7607348bd5b7",
         }),
       },
       logger: createMockLogger(),
       repository: {
-        consentSessionRepository: createMockRepository((options) =>
-          getTestConsentSession({
-            id: "e53fb80d-9bcd-4cb7-aa0c-7b365ef2578f",
-            ...options,
-          }),
-        ),
+        consentSessionRepository: createMockRepository(createTestConsentSession),
       },
     };
 

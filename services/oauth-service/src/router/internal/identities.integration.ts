@@ -3,14 +3,18 @@ import request from "supertest";
 import { ClientType } from "../../common";
 import { server } from "../../server/server";
 import { randomUUID } from "crypto";
-import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
   setupIntegration,
   getTestClientCredentials,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,7 +28,7 @@ describe("/internal/identities", () => {
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -35,7 +39,7 @@ describe("/internal/identities", () => {
     });
 
     const session1 = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         clients: [client.id],
         identityId,
         levelOfAssurance: 1,
@@ -43,7 +47,7 @@ describe("/internal/identities", () => {
     );
 
     const session2 = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         clients: [client.id],
         identityId,
         levelOfAssurance: 2,
@@ -51,7 +55,7 @@ describe("/internal/identities", () => {
     );
 
     const session3 = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client.id,
         identityId,
         levelOfAssurance: 3,
@@ -59,7 +63,7 @@ describe("/internal/identities", () => {
     );
 
     const session4 = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client.id,
         identityId,
         levelOfAssurance: 4,

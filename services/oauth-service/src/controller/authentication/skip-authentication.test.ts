@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { createAuthorizationVerifyRedirectUri as _createAuthorizationVerifyRedirectUri } from "../../util";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestAuthorizationSession, getTestBrowserSession } from "../../test/entity";
+import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { skipAuthenticationController } from "./skip-authentication";
 import { createMockCache } from "@lindorm-io/redis";
 
@@ -19,13 +19,13 @@ describe("skipAuthenticationController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "49a746bf-eb34-41e8-ac8d-11716a5b76a1",
         }),
-        browserSession: getTestBrowserSession(),
+        browserSession: createTestBrowserSession(),
       },
       logger: createMockLogger(),
     };

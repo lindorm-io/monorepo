@@ -1,6 +1,6 @@
 import { Client } from "../../entity";
 import { createRefreshToken } from "./create-refresh-token";
-import { getTestClient, getTestRefreshSession } from "../../test/entity";
+import { createTestClient, createTestRefreshSession } from "../../fixtures/entity";
 
 describe("createRefreshToken", () => {
   let ctx: any;
@@ -13,11 +13,11 @@ describe("createRefreshToken", () => {
       },
     };
 
-    client = getTestClient();
+    client = createTestClient();
   });
 
   test("should create refresh token", () => {
-    expect(createRefreshToken(ctx, client, getTestRefreshSession())).toBe("signed");
+    expect(createRefreshToken(ctx, client, createTestRefreshSession())).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalled();
   });

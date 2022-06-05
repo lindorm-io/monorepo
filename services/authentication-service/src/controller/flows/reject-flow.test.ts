@@ -1,6 +1,6 @@
 import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestFlowSession } from "../../test/entity";
+import { createTestFlowSession } from "../../fixtures/entity";
 import { rejectFlowController } from "./reject-flow";
 
 describe("rejectFlowController", () => {
@@ -9,10 +9,10 @@ describe("rejectFlowController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: createMockCache(),
+        flowSessionCache: createMockCache(createTestFlowSession),
       },
       entity: {
-        flowSession: getTestFlowSession(),
+        flowSession: createTestFlowSession(),
       },
     };
   });

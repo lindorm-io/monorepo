@@ -1,7 +1,7 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
 import { getConnectedProviders as _getConnectedProviders } from "../external";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { getUserinfoResponseBody } from "./get-userinfo-response-body";
 import { userinfoEmailGet as _userinfoEmailGet } from "../email";
 import { userinfoPhoneNumberGet as _userinfoPhoneNumberGet } from "../phone-number";
@@ -30,7 +30,7 @@ describe("getUserinfoResponseBody", () => {
 
   beforeEach(() => {
     ctx = {};
-    identity = getTestIdentity({
+    identity = createTestIdentity({
       id: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
       nationalIdentityNumber: "619492152033",
       socialSecurityNumber: "279708557743",

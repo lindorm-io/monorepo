@@ -3,10 +3,10 @@ import nock from "nock";
 import request from "supertest";
 import { ClientType, SessionStatus } from "../common";
 import { FlowType } from "../enum";
-import { TEST_LOGIN_SESSION_CACHE, setupIntegration } from "../test/integration";
+import { TEST_LOGIN_SESSION_CACHE, setupIntegration } from "../fixtures/integration";
 import { createURL, getExpires } from "@lindorm-io/core";
-import { getTestData } from "../test/data";
-import { getTestLoginSession } from "../test/entity";
+import { getTestData } from "../fixtures/data";
+import { createTestLoginSession } from "../fixtures/entity";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 
@@ -295,7 +295,7 @@ describe("/oauth", () => {
     const { pkceChallenge, pkceMethod, pkceVerifier } = getTestData();
 
     const loginSession = await TEST_LOGIN_SESSION_CACHE.create(
-      getTestLoginSession({
+      createTestLoginSession({
         amrValues: [FlowType.DEVICE_CHALLENGE],
         expires,
         identityId: randomUUID(),

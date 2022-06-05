@@ -1,7 +1,7 @@
 import { createClientController } from "./create-client";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestTenant } from "../../test/entity";
+import { createTestClient, createTestTenant } from "../../fixtures/entity";
 
 jest.mock("@lindorm-io/core", () => ({
   ...(jest.requireActual("@lindorm-io/core") as object),
@@ -20,7 +20,7 @@ describe("createClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: createMockCache(),
+        clientCache: createMockCache(createTestClient),
       },
       data: {
         description: "description",
@@ -30,10 +30,10 @@ describe("createClientController", () => {
         redirectUris: ["redirectUri"],
       },
       entity: {
-        tenant: getTestTenant(),
+        tenant: createTestTenant(),
       },
       repository: {
-        clientRepository: createMockRepository(),
+        clientRepository: createMockRepository(createTestClient),
       },
     };
   });

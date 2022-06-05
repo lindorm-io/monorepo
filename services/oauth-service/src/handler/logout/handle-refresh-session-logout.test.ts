@@ -1,7 +1,11 @@
 import { LogoutSession } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestRefreshSession, getTestClient, getTestLogoutSession } from "../../test/entity";
+import {
+  createTestRefreshSession,
+  createTestClient,
+  createTestLogoutSession,
+} from "../../fixtures/entity";
 import { handleRefreshSessionLogout } from "./handle-refresh-session-logout";
 
 jest.mock("./handle-consent-session-on-logout");
@@ -22,14 +26,14 @@ describe("handleRefreshSessionLogout", () => {
         },
       },
       cache: {
-        clientCache: createMockCache((options) => getTestClient(options)),
+        clientCache: createMockCache(createTestClient),
       },
       repository: {
-        refreshSessionRepository: createMockRepository((options) => getTestRefreshSession(options)),
+        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
 
-    logoutSession = getTestLogoutSession();
+    logoutSession = createTestLogoutSession();
   });
 
   test("should resolve", async () => {

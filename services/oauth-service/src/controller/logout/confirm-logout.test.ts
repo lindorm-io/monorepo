@@ -5,7 +5,7 @@ import { SessionStatus } from "../../common";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyRedirectUri as _createLogoutVerifyRedirectUri } from "../../util";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestLogoutSession } from "../../test/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 import {
   handleBrowserSessionLogout as _handleBrowserSessionLogout,
   handleRefreshSessionLogout as _handleRefreshSessionLogout,
@@ -27,10 +27,10 @@ describe("confirmLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       entity: {
-        logoutSession: getTestLogoutSession({
+        logoutSession: createTestLogoutSession({
           sessionType: LogoutSessionType.BROWSER,
         }),
       },
@@ -54,7 +54,7 @@ describe("confirmLogoutController", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    ctx.entity.logoutSession = getTestLogoutSession({
+    ctx.entity.logoutSession = createTestLogoutSession({
       sessionType: LogoutSessionType.REFRESH,
     });
 

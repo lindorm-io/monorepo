@@ -2,18 +2,18 @@ import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ResponseType } from "../../common";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
-import { getTestAuthorizationSession, getTestClient } from "../../test/entity";
+import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 
 describe("assertAuthorizeResponseType", () => {
   let authorizationSession: AuthorizationSession;
   let client: Client;
 
   beforeEach(() => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       responseTypes: [ResponseType.CODE],
     });
 
-    client = getTestClient();
+    client = createTestClient();
 
     client.allowed = {
       ...client.allowed,
@@ -26,7 +26,7 @@ describe("assertAuthorizeResponseType", () => {
   });
 
   test("should throw on invalid response type", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       responseTypes: [ResponseType.TOKEN],
     });
 
@@ -34,7 +34,7 @@ describe("assertAuthorizeResponseType", () => {
   });
 
   test("should throw on invalid request data", () => {
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       codeChallenge: null,
       codeChallengeMethod: null,
       responseTypes: [ResponseType.CODE],

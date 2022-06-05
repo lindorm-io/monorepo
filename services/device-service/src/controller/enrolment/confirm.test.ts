@@ -4,7 +4,7 @@ import { confirmEnrolmentController } from "./confirm";
 import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestEnrolmentSession } from "../../test/entity";
+import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -29,7 +29,7 @@ describe("confirmEnrolmentController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        enrolmentSessionCache: createMockCache(),
+        enrolmentSessionCache: createMockCache(createTestEnrolmentSession),
       },
       data: {
         biometry: "biometry",
@@ -37,7 +37,7 @@ describe("confirmEnrolmentController", () => {
         pincode: "pincode",
       },
       entity: {
-        enrolmentSession: getTestEnrolmentSession(),
+        enrolmentSession: createTestEnrolmentSession(),
       },
       jwt: {
         sign: jest.fn().mockImplementation(() => ({
@@ -51,7 +51,7 @@ describe("confirmEnrolmentController", () => {
         },
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -82,7 +82,7 @@ describe("confirmEnrolmentController", () => {
   });
 
   test("should resolve enrolment session with trusted deviceLink", async () => {
-    ctx.entity.enrolmentSession = getTestEnrolmentSession({
+    ctx.entity.enrolmentSession = createTestEnrolmentSession({
       status: SessionStatus.CONFIRMED,
     });
 
@@ -101,7 +101,7 @@ describe("confirmEnrolmentController", () => {
   });
 
   test("should resolve enrolment session with non-trusted deviceLink", async () => {
-    ctx.entity.enrolmentSession = getTestEnrolmentSession({
+    ctx.entity.enrolmentSession = createTestEnrolmentSession({
       status: SessionStatus.PENDING,
     });
 

@@ -1,5 +1,5 @@
 import { SessionStatus } from "../../common";
-import { getTestEnrolmentSession, getTestRdcSession } from "../../test/entity";
+import { createTestEnrolmentSession, createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus } from "./update-enrolment-status";
 
 describe("updateEnrolmentStatus", () => {
@@ -11,7 +11,7 @@ describe("updateEnrolmentStatus", () => {
       cache: {
         enrolmentSessionCache: {
           find: jest.fn().mockResolvedValue(
-            getTestEnrolmentSession({
+            createTestEnrolmentSession({
               status: SessionStatus.PENDING,
             }),
           ),
@@ -19,7 +19,7 @@ describe("updateEnrolmentStatus", () => {
         },
       },
     };
-    rdc = getTestRdcSession({
+    rdc = createTestRdcSession({
       status: SessionStatus.CONFIRMED,
     });
   });

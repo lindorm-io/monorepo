@@ -16,5 +16,11 @@
     "target": "ESNEXT"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.fixture.ts", "**/*.integration.ts", "**/*.test.ts"]
+  "exclude": [
+    "__mocks__/**/*",
+    "fixtures/**/*",
+    "**/*.fixture.ts",
+    "**/*.integration.ts",
+    "**/*.test.ts"
+  ]
 }

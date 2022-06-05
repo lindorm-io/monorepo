@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkPincodeController } from "./update-pincode";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
@@ -31,13 +31,13 @@ describe("updateDeviceLinkPincodeController", () => {
         pincode: "new-pincode",
       },
       entity: {
-        deviceLink: await getTestDeviceLink(),
+        deviceLink: createTestDeviceLink(),
       },
       metadata: {
         device: { name: null },
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

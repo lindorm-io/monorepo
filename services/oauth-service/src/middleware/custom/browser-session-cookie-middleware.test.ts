@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { browserSessionCookieMiddleware } from "./browser-session-cookie-middleware";
-import { getTestBrowserSession } from "../../test/entity";
+import { createTestBrowserSession } from "../../fixtures/entity";
 import { setBrowserSessionCookie as _setBrowserSessionCookie } from "../../handler";
 import { BrowserSession } from "../../entity";
 
@@ -22,7 +22,7 @@ describe("browserSessionCookieMiddleware", () => {
       entity: {},
       repository: {
         browserSessionRepository: {
-          find: jest.fn().mockResolvedValue(getTestBrowserSession()),
+          find: jest.fn().mockResolvedValue(createTestBrowserSession()),
           create: jest.fn().mockImplementation(async (entity) => entity),
           update: jest.fn().mockImplementation(async (entity) => entity),
         },

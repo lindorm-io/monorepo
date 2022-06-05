@@ -1,6 +1,6 @@
 import { Account } from "../../entity";
 import { deviceLinkGetIdentityDeviceLinks as _deviceLinkGetIdentityDeviceLinks } from "../axios";
-import { getTestAccount } from "../../test/entity";
+import { createTestAccount } from "../../fixtures/entity";
 import { getValidIdentityDeviceLinks } from "./get-valid-identity-device-links";
 
 jest.mock("../axios");
@@ -14,7 +14,7 @@ describe("getValidIdentityDeviceLinks", () => {
   beforeEach(() => {
     ctx = {};
 
-    account = getTestAccount();
+    account = createTestAccount();
 
     deviceLinkGetIdentityDeviceLinks.mockResolvedValue({
       deviceLinks: ["7873e4ba-318c-4889-ab32-eb8297094aa1", "a63b4c2c-7e6b-490d-998c-8d471143d631"],

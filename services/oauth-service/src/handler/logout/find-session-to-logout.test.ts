@@ -2,7 +2,7 @@ import { BrowserSession, RefreshSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { findSessionToLogout } from "./find-session-to-logout";
-import { getTestBrowserSession, getTestRefreshSession } from "../../test/entity";
+import { createTestBrowserSession, createTestRefreshSession } from "../../fixtures/entity";
 
 describe("findSessionToLogout", () => {
   let ctx: any;
@@ -10,8 +10,8 @@ describe("findSessionToLogout", () => {
   beforeEach(() => {
     ctx = {
       repository: {
-        browserSessionRepository: createMockRepository((options) => getTestBrowserSession(options)),
-        refreshSessionRepository: createMockRepository((options) => getTestRefreshSession(options)),
+        browserSessionRepository: createMockRepository(createTestBrowserSession),
+        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
   });

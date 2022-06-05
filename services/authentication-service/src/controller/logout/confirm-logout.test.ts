@@ -1,6 +1,6 @@
 import { confirmLogoutController } from "./confirm-logout";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestLogoutSession } from "../../test/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 import { oauthConfirmLogout as _oauthConfirmLogout } from "../../handler";
 
 jest.mock("../../handler");
@@ -13,10 +13,10 @@ describe("confirmLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       entity: {
-        logoutSession: getTestLogoutSession(),
+        logoutSession: createTestLogoutSession(),
       },
       deleteCookie: jest.fn(),
     };

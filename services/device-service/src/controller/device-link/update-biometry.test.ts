@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkBiometryController } from "./update-biometry";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
@@ -31,14 +31,14 @@ describe("updateDeviceLinkBiometryController", () => {
         biometry: "new-biometry",
       },
       entity: {
-        deviceLink: await getTestDeviceLink(),
+        deviceLink: createTestDeviceLink(),
       },
       metadata: {
         agent: { os: null },
         device: { name: null },
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

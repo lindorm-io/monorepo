@@ -5,11 +5,11 @@ import { ClientType } from "../../../common";
 import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
 import {
-  getTestClient,
-  getTestConsentSession,
-  getTestBrowserSession,
-  getTestLogoutSession,
-} from "../../../test/entity";
+  createTestClient,
+  createTestConsentSession,
+  createTestBrowserSession,
+  createTestLogoutSession,
+} from "../../../fixtures/entity";
 import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
@@ -17,7 +17,7 @@ import {
   TEST_LOGOUT_SESSION_CACHE,
   getTestClientCredentials,
   setupIntegration,
-} from "../../../test/integration";
+} from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,7 +31,7 @@ describe("/internal/sessions/logout", () => {
 
   test("GET /:id", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -42,7 +42,7 @@ describe("/internal/sessions/logout", () => {
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: randomUUID(),
@@ -51,13 +51,13 @@ describe("/internal/sessions/logout", () => {
     );
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: consentSession.identityId,
       }),
     );
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      getTestLogoutSession({
+      createTestLogoutSession({
         clientId: client.id,
         sessionId: browserSession.id,
       }),
@@ -87,7 +87,7 @@ describe("/internal/sessions/logout", () => {
 
   test("PUT /:id/confirm", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -98,7 +98,7 @@ describe("/internal/sessions/logout", () => {
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: randomUUID(),
@@ -107,14 +107,14 @@ describe("/internal/sessions/logout", () => {
     );
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         clients: [client.id],
         identityId: consentSession.identityId,
       }),
     );
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      getTestLogoutSession({
+      createTestLogoutSession({
         clientId: client.id,
         sessionId: browserSession.id,
       }),
@@ -135,7 +135,7 @@ describe("/internal/sessions/logout", () => {
 
   test("PUT /:id/reject", async () => {
     const client = await TEST_CLIENT_CACHE.create(
-      getTestClient({
+      createTestClient({
         type: ClientType.CONFIDENTIAL,
       }),
     );
@@ -146,7 +146,7 @@ describe("/internal/sessions/logout", () => {
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      getTestConsentSession({
+      createTestConsentSession({
         audiences: [client.id],
         clientId: client.id,
         identityId: randomUUID(),
@@ -155,13 +155,13 @@ describe("/internal/sessions/logout", () => {
     );
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: consentSession.identityId,
       }),
     );
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      getTestLogoutSession({
+      createTestLogoutSession({
         clientId: client.id,
         sessionId: browserSession.id,
       }),

@@ -7,11 +7,11 @@ import { getRandomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 import {
-  getTestEmail,
-  getTestIdentity,
+  createTestEmail,
+  createTestIdentity,
   getTestExternalIdentifier,
-  getTestPhoneNumber,
-} from "../test/entity";
+  createTestPhoneNumber,
+} from "../fixtures/entity";
 import {
   TEST_EMAIL_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
@@ -19,7 +19,7 @@ import {
   TEST_PHONE_NUMBER_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,12 +31,12 @@ describe("/identities", () => {
 
   test("GET /:id", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
+      createTestIdentity({
         id: randomUUID(),
       }),
     );
     const email = await TEST_EMAIL_REPOSITORY.create(
-      getTestEmail({
+      createTestEmail({
         identityId: identity.id,
       }),
     );
@@ -46,7 +46,7 @@ describe("/identities", () => {
       }),
     );
     const phone = await TEST_PHONE_NUMBER_REPOSITORY.create(
-      getTestPhoneNumber({
+      createTestPhoneNumber({
         identityId: identity.id,
       }),
     );
@@ -162,13 +162,13 @@ describe("/identities", () => {
 
   test("DELETE /:id/identifiers/:type", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
+      createTestIdentity({
         id: randomUUID(),
       }),
     );
 
     await TEST_EMAIL_REPOSITORY.create(
-      getTestEmail({
+      createTestEmail({
         identityId: identity.id,
         email: "remove-identity-email@lindorm.io",
         primary: false,
@@ -194,13 +194,13 @@ describe("/identities", () => {
 
   test("PUT /:id/identifiers/:type/set-primary", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
-      getTestIdentity({
+      createTestIdentity({
         id: randomUUID(),
       }),
     );
 
     await TEST_EMAIL_REPOSITORY.create(
-      getTestEmail({
+      createTestEmail({
         identityId: identity.id,
         email: "primary-identity-email@lindorm.io",
         primary: false,

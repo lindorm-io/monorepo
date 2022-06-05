@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { authorizationSessionCookieMiddleware } from "./authorization-session-cookie-middleware";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { AuthorizationSession } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
 
@@ -17,12 +17,7 @@ describe("authorizationSessionCookieMiddleware", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache((options) =>
-          getTestAuthorizationSession({
-            id: "0a4fb70a-b0ed-4c3e-bc99-cdfd50a5faf4",
-            ...options,
-          }),
-        ),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       getCookie: jest.fn().mockImplementation(() => "0a4fb70a-b0ed-4c3e-bc99-cdfd50a5faf4"),
       setCookie: jest.fn(),

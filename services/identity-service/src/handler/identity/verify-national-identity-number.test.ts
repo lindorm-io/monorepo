@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity } from "../../entity";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { verifyNationalIdentityNumber } from "./verify-national-identity-number";
 
 describe("verifyNationalIdentityNumber", () => {
@@ -13,7 +13,7 @@ describe("verifyNationalIdentityNumber", () => {
         identityRepository: {
           create: jest.fn().mockImplementation(async (entity) => entity),
           find: jest.fn().mockResolvedValue(
-            getTestIdentity({
+            createTestIdentity({
               id: "583cc391-d983-474e-b078-607c157e4c95",
             }),
           ),

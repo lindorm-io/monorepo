@@ -6,11 +6,11 @@ import {
   setBrowserSessionCookie as _setBrowserSessionCookie,
 } from "../../handler";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestClient,
-  getTestConsentSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 
 jest.mock("../../handler");
 
@@ -28,17 +28,17 @@ describe("oauthVerifyController", () => {
         redirectUri: "https://test.client.lindorm.io/redirect",
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "ba965b10-44b4-4ec0-b276-10ac52f9d43f",
           authenticationStatus: SessionStatus.CONFIRMED,
           browserSessionId: "dc91dd1a-e3b0-4103-80a2-62c42071c502",
           consentStatus: SessionStatus.CONFIRMED,
         }),
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           id: "dc91dd1a-e3b0-4103-80a2-62c42071c502",
         }),
-        client: getTestClient(),
-        consentSession: getTestConsentSession(),
+        client: createTestClient(),
+        consentSession: createTestConsentSession(),
       },
     };
 

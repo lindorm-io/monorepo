@@ -1,7 +1,7 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { getRdcSessionStatusController } from "./status";
-import { getTestRdcSession } from "../../test/entity";
+import { createTestRdcSession } from "../../fixtures/entity";
 
 describe("getRdcSessionStatusController", () => {
   let ctx: any;
@@ -9,7 +9,7 @@ describe("getRdcSessionStatusController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        rdcSessionCache: createMockCache((options) => getTestRdcSession(options)),
+        rdcSessionCache: createMockCache(createTestRdcSession),
       },
       data: {
         id: "id",

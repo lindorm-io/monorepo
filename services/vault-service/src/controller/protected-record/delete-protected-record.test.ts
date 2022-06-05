@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteProtectedRecordController } from "./delete-protected-record";
-import { getTestProtectedRecord } from "../../test/entity";
+import { createTestProtectedRecord } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -12,7 +12,7 @@ describe("deleteProtectedRecordController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        protectedRecord: getTestProtectedRecord(),
+        protectedRecord: createTestProtectedRecord(),
       },
       repository: {
         protectedRecordRepository: createMockRepository(),

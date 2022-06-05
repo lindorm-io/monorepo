@@ -7,6 +7,7 @@ import {
   oauthConfirmLogout as _oauthConfirmLogout,
   oauthGetLogoutSessionInfo as _oauthGetLogoutSessionInfo,
 } from "../../handler";
+import { createTestLogoutSession } from "../../fixtures/entity";
 
 MockDate.set("2020-01-01T08:00:15.000");
 
@@ -22,7 +23,7 @@ describe("oauthLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       data: { sessionId: "sessionId" },
       setCookie: jest.fn(),

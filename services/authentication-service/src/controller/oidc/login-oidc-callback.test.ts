@@ -2,7 +2,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestAccount, getTestLoginSession } from "../../test/entity";
+import { createTestAccount, createTestLoginSession } from "../../fixtures/entity";
 import { isAuthenticationReadyToConfirm as _isAuthenticationReadyToConfirm } from "../../util";
 import { loginOidcCallbackController } from "./login-oidc-callback";
 import {
@@ -25,17 +25,17 @@ describe("loginOidcCallbackController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache(),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
       data: {
         sessionId: "c2da005c-017a-430e-adb5-e1bda6f4b615",
       },
       logger: createMockLogger(),
       entity: {
-        loginSession: getTestLoginSession(),
+        loginSession: createTestLoginSession(),
       },
       repository: {
-        accountRepository: createMockRepository((options) => getTestAccount(options)),
+        accountRepository: createMockRepository(createTestAccount),
       },
       deleteCookie: jest.fn(),
     };

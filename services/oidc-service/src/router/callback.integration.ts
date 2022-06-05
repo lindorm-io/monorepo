@@ -2,13 +2,13 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { createURL, getRandomString } from "@lindorm-io/core";
-import { getTestOidcSession } from "../test/entity";
+import { createTestOidcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import {
   getTestGoogleIdToken,
   setupIntegration,
   TEST_OIDC_SESSION_CACHE,
-} from "../test/integration";
+} from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -53,7 +53,7 @@ describe("/callback", () => {
 
   test("GET / - code", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
-      getTestOidcSession({
+      createTestOidcSession({
         provider: "apple",
         nonce: getRandomString(16),
         state: getRandomString(48),
@@ -87,7 +87,7 @@ describe("/callback", () => {
 
   test("GET / - id_token", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
-      getTestOidcSession({
+      createTestOidcSession({
         provider: "google",
         nonce: getRandomString(16),
         state: getRandomString(48),
@@ -121,7 +121,7 @@ describe("/callback", () => {
 
   test("GET / - token", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
-      getTestOidcSession({
+      createTestOidcSession({
         provider: "microsoft",
         nonce: getRandomString(16),
         state: getRandomString(48),

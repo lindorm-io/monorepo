@@ -1,6 +1,6 @@
 import { Account, LoginSession } from "../../entity";
 import { calculateAllowedFlows as _calculateAllowedFlows } from "./calculate-allowed-flows";
-import { getTestAccount, getTestLoginSession } from "../../test/entity";
+import { createTestAccount, createTestLoginSession } from "../../fixtures/entity";
 import { getValidIdentityDeviceLinks as _getValidIdentityDeviceLinks } from "./get-valid-identity-device-links";
 import { getValidIdentitySessions as _getValidIdentitySessions } from "./get-valid-identity-sessions";
 import { resolveAllowedFlows } from "./resolve-allowed-flows";
@@ -21,9 +21,9 @@ describe("resolveAllowedFlows", () => {
   beforeEach(() => {
     ctx = {};
 
-    account = getTestAccount();
+    account = createTestAccount();
 
-    loginSession = getTestLoginSession({
+    loginSession = createTestLoginSession({
       deviceLinks: [],
       sessions: [],
     });

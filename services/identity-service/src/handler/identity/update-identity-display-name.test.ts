@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestDisplayName, getTestIdentity } from "../../test/entity";
+import { createTestDisplayName, createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityDisplayName } from "./update-identity-display-name";
 
 jest.mock("@lindorm-io/core", () => ({
@@ -17,13 +17,13 @@ describe("updateIdentityDisplayName", () => {
       repository: {
         displayNameRepository: {
           find: jest.fn().mockImplementation(async (options) =>
-            getTestDisplayName({
+            createTestDisplayName({
               numbers: [1234, 2345, 3456, 4567, 5678, 6789],
               ...options,
             }),
           ),
           findOrCreate: jest.fn().mockImplementation(async (options) =>
-            getTestDisplayName({
+            createTestDisplayName({
               numbers: [1234, 2345, 3456, 4567, 5678, 6789],
               ...options,
             }),
@@ -32,7 +32,7 @@ describe("updateIdentityDisplayName", () => {
         },
       },
     };
-    identity = getTestIdentity({
+    identity = createTestIdentity({
       displayName: {
         name: "oldName",
         number: 1234,

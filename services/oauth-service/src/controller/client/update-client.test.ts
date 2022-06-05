@@ -3,7 +3,7 @@ import { DisplayMode, ResponseMode, Scope } from "../../common";
 import { SCOPE_OPENID } from "../../constant";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestClient } from "../../test/entity";
+import { createTestClient } from "../../fixtures/entity";
 import { updateClientController } from "./update-client";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -14,7 +14,7 @@ describe("updateClientController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: createMockCache(),
+        clientCache: createMockCache(createTestClient),
       },
       data: {
         defaults: {
@@ -38,10 +38,10 @@ describe("updateClientController", () => {
         scopeDescriptions: [SCOPE_OPENID],
       },
       entity: {
-        client: getTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),
+        client: createTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),
       },
       repository: {
-        clientRepository: createMockRepository(),
+        clientRepository: createMockRepository(createTestClient),
       },
     };
   });

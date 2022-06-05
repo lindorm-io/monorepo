@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { adminTenantController } from "./admin-tenant";
-import { getTestTenant } from "../../test/entity";
+import { createTestTenant } from "../../fixtures/entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 
@@ -12,17 +12,17 @@ describe("adminTenantController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        tenantCache: createMockCache(),
+        tenantCache: createMockCache(createTestTenant),
       },
       data: {
         active: false,
         owner: "d7dc7f9f-90f8-4853-9695-933bdff59aff",
       },
       entity: {
-        tenant: getTestTenant({ id: "612edde0-2679-47b1-8fad-d01c8a7570b6" }),
+        tenant: createTestTenant({ id: "612edde0-2679-47b1-8fad-d01c8a7570b6" }),
       },
       repository: {
-        tenantRepository: createMockRepository(),
+        tenantRepository: createMockRepository(createTestTenant),
       },
     };
   });

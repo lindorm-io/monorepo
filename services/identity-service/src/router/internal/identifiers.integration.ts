@@ -3,11 +3,11 @@ import request from "supertest";
 import { Email, Identity, ExternalIdentifier, PhoneNumber } from "../../entity";
 import { server } from "../../server/server";
 import {
-  getTestEmail,
-  getTestIdentity,
+  createTestEmail,
+  createTestIdentity,
   getTestExternalIdentifier,
-  getTestPhoneNumber,
-} from "../../test/entity";
+  createTestPhoneNumber,
+} from "../../fixtures/entity";
 import {
   TEST_EMAIL_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
@@ -15,7 +15,7 @@ import {
   TEST_PHONE_NUMBER_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 import { IdentifierType } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -32,9 +32,9 @@ describe("/internal/identifiers", () => {
   beforeAll(async () => {
     await setupIntegration();
 
-    identity = await TEST_IDENTITY_REPOSITORY.create(getTestIdentity());
+    identity = await TEST_IDENTITY_REPOSITORY.create(createTestIdentity());
     email = await TEST_EMAIL_REPOSITORY.create(
-      getTestEmail({
+      createTestEmail({
         identityId: identity.id,
       }),
     );
@@ -44,7 +44,7 @@ describe("/internal/identifiers", () => {
       }),
     );
     phone = await TEST_PHONE_NUMBER_REPOSITORY.create(
-      getTestPhoneNumber({
+      createTestPhoneNumber({
         identityId: identity.id,
       }),
     );

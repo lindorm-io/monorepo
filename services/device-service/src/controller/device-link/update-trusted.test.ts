@@ -1,5 +1,5 @@
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkTrustedController } from "./update-trusted";
 
 jest.mock("../../util");
@@ -10,10 +10,10 @@ describe("updateDeviceLinkTrustedController", () => {
   beforeEach(async () => {
     ctx = {
       entity: {
-        deviceLink: await getTestDeviceLink(),
+        deviceLink: createTestDeviceLink(),
       },
       repository: {
-        deviceLinkRepository: createMockRepository(),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };

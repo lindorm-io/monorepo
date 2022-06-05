@@ -1,9 +1,9 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { TEST_GET_USERINFO_RESPONSE } from "../test/data";
+import { TEST_GET_USERINFO_RESPONSE } from "../fixtures/data";
 import { server } from "../server/server";
-import { getTestAccessToken, setupIntegration } from "../test/integration";
+import { getTestAccessToken, setupIntegration } from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

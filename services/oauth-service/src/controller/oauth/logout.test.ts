@@ -1,11 +1,15 @@
 import { LogoutSessionType } from "../../enum";
-import { getTestClient, getTestBrowserSession } from "../../test/entity";
 import { oauthLogoutController } from "./logout";
+import { createMockCache } from "@lindorm-io/redis";
+import {
+  createTestClient,
+  createTestBrowserSession,
+  createTestLogoutSession,
+} from "../../fixtures/entity";
 import {
   findSessionToLogout as _findSessionToLogout,
   setLogoutSessionCookie as _setLogoutSessionCookie,
 } from "../../handler";
-import { createMockCache } from "@lindorm-io/redis";
 
 jest.mock("../../handler");
 
@@ -18,14 +22,14 @@ describe("oauthLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       data: {
         redirectUri: "https://logout-redirect.uri/callback",
         state: "76d3d90c16bee315",
       },
       entity: {
-        client: getTestClient(),
+        client: createTestClient(),
       },
       request: {
         originalUrl: "/oauth2/sessions/logout?query=query",
@@ -38,7 +42,7 @@ describe("oauthLogoutController", () => {
     };
 
     findSessionToLogout.mockResolvedValue({
-      session: getTestBrowserSession(),
+      session: createTestBrowserSession(),
       type: LogoutSessionType.BROWSER,
     });
   });

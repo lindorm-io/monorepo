@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { RdcSessionMode, RdcSessionType } from "../../common";
 import { createRdcSession } from "./create";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,10 +30,10 @@ describe("createRdcSession", () => {
       repository: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
-            await getTestDeviceLink({
+            await createTestDeviceLink({
               id: "86593641-5f30-47fd-9890-db02796a4b44",
             }),
-            await getTestDeviceLink({
+            await createTestDeviceLink({
               id: "8372ef57-973a-4528-83f9-6e9de13a865d",
             }),
           ]),

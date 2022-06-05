@@ -2,7 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity, Email } from "../../entity";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { verifyEmail } from "./verify-email";
 
 describe("verifyEmail", () => {
@@ -26,7 +26,7 @@ describe("verifyEmail", () => {
         identityRepository: {
           create: jest.fn().mockImplementation(async (entity) => entity),
           find: jest.fn().mockResolvedValue(
-            getTestIdentity({
+            createTestIdentity({
               id: "42d1a64f-1fa9-4466-9a03-572f1232872b",
             }),
           ),

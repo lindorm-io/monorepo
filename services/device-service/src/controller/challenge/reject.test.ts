@@ -1,5 +1,5 @@
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestChallengeSession } from "../../test/entity";
+import { createTestChallengeSession } from "../../fixtures/entity";
 import { rejectChallengeController } from "./reject";
 
 describe("rejectChallengeController", () => {
@@ -8,10 +8,10 @@ describe("rejectChallengeController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        challengeSessionCache: createMockCache(),
+        challengeSessionCache: createMockCache(createTestChallengeSession),
       },
       entity: {
-        challengeSession: getTestChallengeSession(),
+        challengeSession: createTestChallengeSession(),
       },
     };
   });

@@ -1,4 +1,4 @@
-import { getTestAccount } from "../../test/entity";
+import { createTestAccount } from "../../fixtures/entity";
 import { rtbfController } from "./rtbf";
 import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -13,10 +13,10 @@ describe("rtbfController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        account: getTestAccount(),
+        account: createTestAccount(),
       },
       repository: {
-        accountRepository: createMockRepository(),
+        accountRepository: createMockRepository(createTestAccount),
       },
     };
 

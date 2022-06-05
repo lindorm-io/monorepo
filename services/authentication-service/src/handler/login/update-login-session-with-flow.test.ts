@@ -1,7 +1,11 @@
 import { Account, FlowSession, LoginSession } from "../../entity";
 import { calculateLevelOfAssurance as _calculateLevelOfAssurance } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestAccount, getTestFlowSession, getTestLoginSession } from "../../test/entity";
+import {
+  createTestAccount,
+  createTestFlowSession,
+  createTestLoginSession,
+} from "../../fixtures/entity";
 import { resolveAllowedFlows as _resolveAllowedFlows } from "./resolve-allowed-flows";
 import { updateLoginSessionWithFlow } from "./update-login-session-with-flow";
 
@@ -20,19 +24,19 @@ describe("updateLoginSessionWithFlow", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        loginSessionCache: createMockCache(),
+        loginSessionCache: createMockCache(createTestLoginSession),
       },
     };
 
-    account = getTestAccount({
+    account = createTestAccount({
       id: "e917469f-a4dc-4886-b7f5-aa8d49809907",
     });
 
-    loginSession = getTestLoginSession({
+    loginSession = createTestLoginSession({
       identityId: null,
     });
 
-    flowSession = getTestFlowSession();
+    flowSession = createTestFlowSession();
 
     calculateLevelOfAssurance.mockImplementation(() => 3);
     resolveAllowedFlows.mockImplementation(async (_1, arg) => arg);

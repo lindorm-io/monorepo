@@ -5,6 +5,7 @@ import {
   createRdcSession as _createRdcSession,
   isRdcRequired as _isRdcRequired,
 } from "../../handler";
+import { createTestEnrolmentSession } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,7 +28,7 @@ describe("initialiseEnrolmentController", () => {
   beforeEach(async () => {
     ctx = {
       cache: {
-        enrolmentSessionCache: createMockCache(),
+        enrolmentSessionCache: createMockCache(createTestEnrolmentSession),
       },
       data: {
         brand: "brand",

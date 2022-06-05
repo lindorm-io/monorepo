@@ -2,7 +2,11 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
-import { getTestBrowserSession, getTestClient, getTestRefreshSession } from "../test/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../fixtures/entity";
 import {
   TEST_CLIENT_CACHE,
   getTestClientCredentials,
@@ -11,7 +15,7 @@ import {
   getTestAccessToken,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
-} from "../test/integration";
+} from "../fixtures/integration";
 import { Scope } from "../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -23,14 +27,14 @@ describe("/tokeninfo", () => {
   beforeAll(setupIntegration);
 
   test("POST / - ACCESS", async () => {
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
     const clientCredentials = getTestClientCredentials({
       audiences: [client.id],
       subject: client.id,
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      getTestBrowserSession({
+      createTestBrowserSession({
         identityId: randomUUID(),
       }),
     );
@@ -71,7 +75,7 @@ describe("/tokeninfo", () => {
   });
 
   test("POST / - REFRESH", async () => {
-    const client = await TEST_CLIENT_CACHE.create(getTestClient());
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
     const clientCredentials = getTestClientCredentials({
       audiences: [client.id],
       subject: client.id,
@@ -80,7 +84,7 @@ describe("/tokeninfo", () => {
     const tokenId = randomUUID();
 
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      getTestRefreshSession({
+      createTestRefreshSession({
         clientId: client.id,
         tokenId,
       }),

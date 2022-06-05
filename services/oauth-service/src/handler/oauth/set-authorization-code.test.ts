@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { AuthorizationSession } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { setAuthorizationCode } from "./set-authorization-code";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -13,11 +13,11 @@ describe("setAuthorizationCode", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
     };
 
-    authorizationSession = getTestAuthorizationSession({
+    authorizationSession = createTestAuthorizationSession({
       code: null,
       expires: new Date("2021-01-01T08:15:00.000Z"),
     });

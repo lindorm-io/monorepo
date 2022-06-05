@@ -1,6 +1,6 @@
 import { createMockRepository } from "@lindorm-io/mongo";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { rtbfController } from "./rtbf";
 
 jest.mock("../../handler");
@@ -13,7 +13,7 @@ describe("rtbfController", () => {
   beforeEach(() => {
     ctx = {
       repository: {
-        deviceLinkRepository: createMockRepository((options) => getTestDeviceLink(options)),
+        deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {

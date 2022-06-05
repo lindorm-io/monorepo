@@ -1,6 +1,10 @@
 import { Client } from "../../entity";
 import { createIdToken } from "./create-id-token";
-import { getTestClient, getTestBrowserSession, getTestRefreshSession } from "../../test/entity";
+import {
+  createTestClient,
+  createTestBrowserSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 describe("createIdToken", () => {
   let ctx: any;
@@ -14,13 +18,13 @@ describe("createIdToken", () => {
       },
     };
 
-    client = getTestClient();
+    client = createTestClient();
     scopes = ["scope1", "scope2"];
   });
 
   test("should create id token for browser session", async () => {
     await expect(
-      createIdToken(ctx, client, getTestBrowserSession(), {
+      createIdToken(ctx, client, createTestBrowserSession(), {
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
         scopes,
@@ -32,7 +36,7 @@ describe("createIdToken", () => {
 
   test("should create id token for refresh session", async () => {
     await expect(
-      createIdToken(ctx, client, getTestRefreshSession(), {
+      createIdToken(ctx, client, createTestRefreshSession(), {
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
         scopes,

@@ -1,9 +1,9 @@
 import { calculateAllowedOidcProviders } from "./calculate-allowed-oidc-providers";
-import { getTestLoginSession } from "../test/entity";
+import { createTestLoginSession } from "../fixtures/entity";
 
 describe("calculateAllowedOidcProviders", () => {
   test("should resolve all OIDC providers", async () => {
-    expect(calculateAllowedOidcProviders(getTestLoginSession())).toStrictEqual([
+    expect(calculateAllowedOidcProviders(createTestLoginSession())).toStrictEqual([
       "apple",
       "google",
       "microsoft",
@@ -12,7 +12,7 @@ describe("calculateAllowedOidcProviders", () => {
 
   test("should resolve some OIDC providers", async () => {
     expect(
-      calculateAllowedOidcProviders(getTestLoginSession({ amrValues: ["oidc_apple"] })),
+      calculateAllowedOidcProviders(createTestLoginSession({ amrValues: ["oidc_apple"] })),
     ).toStrictEqual(["google", "microsoft"]);
   });
 });

@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestAuthorizationSession } from "../../test/entity";
+import { createTestAuthorizationSession, createTestLogoutSession } from "../../fixtures/entity";
 import { rejectLogoutController } from "./reject-logout";
 import { createMockCache } from "@lindorm-io/redis";
 
@@ -14,10 +14,10 @@ describe("rejectLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        logoutSessionCache: createMockCache(),
+        logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       entity: {
-        logoutSession: getTestAuthorizationSession(),
+        logoutSession: createTestAuthorizationSession(),
       },
       logger: createMockLogger(),
     };

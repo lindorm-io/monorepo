@@ -3,13 +3,13 @@ import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "../../common";
 import { getRandomString } from "@lindorm-io/core";
-import { getTestDeviceLink } from "../../test/entity";
+import { createTestDeviceLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,10 +34,10 @@ describe("/internal/rdc", () => {
     .reply(200, {});
 
   test("POST /", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(await getTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_REPOSITORY.create(await createTestDeviceLink());
 
     await TEST_DEVICE_REPOSITORY.create(
-      await getTestDeviceLink({
+      await createTestDeviceLink({
         identityId: deviceLink.identityId,
         deviceMetadata: {
           ...deviceLink.deviceMetadata,

@@ -1,6 +1,6 @@
 import { LoginSession } from "../../entity";
 import { getCurrentFlowSession } from "./get-current-flow-session";
-import { getTestFlowSession, getTestLoginSession } from "../../test/entity";
+import { createTestFlowSession, createTestLoginSession } from "../../fixtures/entity";
 
 describe("getCurrentFlowSession", () => {
   let ctx: any;
@@ -11,11 +11,11 @@ describe("getCurrentFlowSession", () => {
       cache: {
         flowSessionCache: {
           findMany: jest.fn().mockResolvedValue([
-            getTestFlowSession({
+            createTestFlowSession({
               id: "1",
               created: new Date("2021-01-01T08:00:00.000Z"),
             }),
-            getTestFlowSession({
+            createTestFlowSession({
               id: "2",
               created: new Date("2021-01-01T08:00:15.000Z"),
             }),
@@ -24,7 +24,7 @@ describe("getCurrentFlowSession", () => {
       },
     };
 
-    loginSession = getTestLoginSession();
+    loginSession = createTestLoginSession();
   });
 
   test("should resolve with most recently created flow session", async () => {

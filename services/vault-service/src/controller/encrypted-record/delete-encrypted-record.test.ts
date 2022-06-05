@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { deleteEncryptedRecordController } from "./delete-encrypted-record";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
-import { getTestEncryptedRecord } from "../../test/entity";
+import { createTestEncryptedRecord } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -26,10 +26,10 @@ describe("deleteEncryptedRecordController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        encryptedRecord: getTestEncryptedRecord(),
+        encryptedRecord: createTestEncryptedRecord(),
       },
       repository: {
-        encryptedRecordRepository: createMockRepository(),
+        encryptedRecordRepository: createMockRepository(createTestEncryptedRecord),
       },
     };
 

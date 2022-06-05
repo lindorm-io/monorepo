@@ -6,10 +6,10 @@ import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { skipConsentController } from "./skip-consent";
 import {
-  getTestAuthorizationSession,
-  getTestBrowserSession,
-  getTestConsentSession,
-} from "../../test/entity";
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestConsentSession,
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -23,16 +23,16 @@ describe("skipConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache(),
+        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: getTestAuthorizationSession({
+        authorizationSession: createTestAuthorizationSession({
           id: "49a746bf-eb34-41e8-ac8d-11716a5b76a1",
         }),
-        browserSession: getTestBrowserSession({
+        browserSession: createTestBrowserSession({
           id: "8ecbb9dc-5952-4036-b95a-3219394cd2a6",
         }),
-        consentSession: getTestConsentSession({
+        consentSession: createTestConsentSession({
           audiences: [],
           scopes: [],
           sessions: [],
@@ -40,7 +40,7 @@ describe("skipConsentController", () => {
       },
       logger: createMockLogger(),
       repository: {
-        consentSessionRepository: createMockRepository(),
+        consentSessionRepository: createMockRepository(createTestConsentSession),
       },
     };
 

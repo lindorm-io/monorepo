@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { IdentifierType } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
-import { getTestIdentity } from "../../test/entity";
+import { createTestIdentity } from "../../fixtures/entity";
 import { identifierRemoveController } from "./remove";
 import {
   removeEmail as _removeEmail,
@@ -31,7 +31,7 @@ describe("identifierRemoveController", () => {
         type: "type",
       },
       entity: {
-        identity: getTestIdentity({ id: "identityId" }),
+        identity: createTestIdentity({ id: "identityId" }),
       },
       logger: createMockLogger(),
     };

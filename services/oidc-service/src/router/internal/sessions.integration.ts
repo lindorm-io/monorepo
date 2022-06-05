@@ -4,9 +4,9 @@ import {
   getTestClientCredentials,
   setupIntegration,
   TEST_OIDC_SESSION_CACHE,
-} from "../../test/integration";
+} from "../../fixtures/integration";
 import { server } from "../../server/server";
-import { getTestOidcSession } from "../../test/entity";
+import { createTestOidcSession } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -49,7 +49,7 @@ describe("/internal/sessions", () => {
 
   test("GET /:id", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
-      getTestOidcSession({
+      createTestOidcSession({
         identityId: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
         provider: "google",
         verified: true,

@@ -1,4 +1,4 @@
-import { getTestConsentSession } from "../../test/entity";
+import { createTestConsentSession } from "../../fixtures/entity";
 import { oauthRejectConsent as _oauthRejectConsent } from "../../handler";
 import { rejectConsentController } from "./reject-consent";
 import { createMockCache } from "@lindorm-io/redis";
@@ -13,10 +13,10 @@ describe("rejectConsentController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        consentSessionCache: createMockCache(),
+        consentSessionCache: createMockCache(createTestConsentSession),
       },
       entity: {
-        consentSession: getTestConsentSession(),
+        consentSession: createTestConsentSession(),
       },
       deleteCookie: jest.fn(),
     };
