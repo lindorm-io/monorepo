@@ -2,8 +2,15 @@ import { Identity } from "../../entity";
 import { addUserinfoController } from "./add-userinfo";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
+import {
+  addAddressFromUserinfo as _addAddressFromUserinfo,
+  addIdentifierFromUserinfo as _addIdentifierFromUserinfo,
+} from "../../handler";
 
 jest.mock("../../handler");
+
+const addAddressFromUserinfo = _addAddressFromUserinfo as jest.Mock;
+const addIdentifierFromUserinfo = _addIdentifierFromUserinfo as jest.Mock;
 
 describe("addUserinfoController", () => {
   let ctx: any;
@@ -52,14 +59,6 @@ describe("addUserinfoController", () => {
     expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: true,
-        address: {
-          careOf: null,
-          country: "country",
-          locality: "locality",
-          postalCode: "postalCode",
-          region: "region",
-          streetAddress: ["streetAddress 1", "streetAddress 2"],
-        },
         birthDate: "birthDate",
         displayName: {
           name: null,
@@ -87,5 +86,8 @@ describe("addUserinfoController", () => {
         zoneInfo: "zoneInfo",
       }),
     );
+
+    expect(addAddressFromUserinfo).toHaveBeenCalled();
+    expect(addIdentifierFromUserinfo).toHaveBeenCalledTimes(3);
   });
 });

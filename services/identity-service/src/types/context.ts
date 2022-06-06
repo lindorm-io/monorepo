@@ -1,5 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
-import { ConnectSession, DisplayName, Identity, Identifier } from "../entity";
+import { ConnectSession, DisplayName, Identity, Identifier, Address } from "../entity";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -10,6 +10,7 @@ import {
   LindormNodeServerRepository,
 } from "@lindorm-io/node-server";
 import {
+  AddressRepository,
   ConnectSessionCache,
   DisplayNameRepository,
   IdentifierRepository,
@@ -26,6 +27,7 @@ interface ServerCache extends LindormNodeServerCache {
 }
 
 interface ServerEntity {
+  address: Address;
   connectSession: ConnectSession;
   displayName: DisplayName;
   identifier: Identifier;
@@ -33,6 +35,7 @@ interface ServerEntity {
 }
 
 interface ServerRepository extends LindormNodeServerRepository {
+  addressRepository: AddressRepository;
   displayNameRepository: DisplayNameRepository;
   identifierRepository: IdentifierRepository;
   identityRepository: IdentityRepository;

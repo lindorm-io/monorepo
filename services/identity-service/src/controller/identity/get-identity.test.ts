@@ -3,6 +3,7 @@ import { Scope } from "../../common";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { getIdentityController } from "./get-identity";
 import {
+  createTestAddress,
   createTestEmailIdentifier,
   createTestExternalIdentifier,
   createTestIdentity,
@@ -22,6 +23,7 @@ describe("getIdentityController", () => {
         }),
       },
       repository: {
+        addressRepository: createMockRepository(createTestAddress),
         identifierRepository: createMockRepository(createTestEmailIdentifier),
       },
       token: {
@@ -38,6 +40,12 @@ describe("getIdentityController", () => {
 
   test("should resolve all", async () => {
     ctx.token.bearerToken.scopes = Object.values(Scope);
+
+    ctx.repository.addressRepository.findMany.mockResolvedValue([
+      createTestAddress({
+        id: "43064e3a-ee96-4ad9-afd4-e5517b23873b",
+      }),
+    ]);
 
     ctx.repository.identifierRepository.findMany.mockResolvedValue([
       createTestEmailIdentifier({

@@ -8,6 +8,7 @@ import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
 import { workers } from "./workers";
 import {
+  AddressRepository,
   ConnectSessionCache,
   DisplayNameRepository,
   IdentifierRepository,
@@ -29,7 +30,12 @@ export const server = createNodeServer<ServerKoaContext>({
   mongoConnection,
   port: configuration.server.port,
   redisConnection,
-  repositories: [DisplayNameRepository, IdentifierRepository, IdentityRepository],
+  repositories: [
+    AddressRepository,
+    DisplayNameRepository,
+    IdentifierRepository,
+    IdentityRepository,
+  ],
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({
     name: service.client_name,

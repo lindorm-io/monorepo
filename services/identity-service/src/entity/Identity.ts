@@ -1,10 +1,8 @@
 import Joi from "joi";
-import { IdentityAddress } from "../types";
 import { NamingSystem } from "../enum";
 import { IdentityPermission, JOI_LOCALE } from "../common";
 import {
   JOI_BIRTHDATE,
-  JOI_IDENTITY_ADDRESS,
   JOI_IDENTITY_DISPLAY_NAME,
   JOI_NAMING_SYSTEM,
   JOI_ZONE_INFO,
@@ -24,7 +22,6 @@ export interface IdentityDisplayName {
 
 export interface IdentityAttributes extends EntityAttributes {
   active: boolean;
-  address: IdentityAddress;
   birthDate: string;
   displayName: IdentityDisplayName;
   familyName: string;
@@ -54,7 +51,6 @@ export type IdentityOptions = Optional<
   IdentityAttributes,
   | EntityKeys
   | "active"
-  | "address"
   | "birthDate"
   | "displayName"
   | "familyName"
@@ -84,7 +80,6 @@ const schema = Joi.object<IdentityAttributes>({
   ...JOI_ENTITY_BASE,
 
   active: Joi.boolean().required(),
-  address: JOI_IDENTITY_ADDRESS.required(),
   birthDate: JOI_BIRTHDATE.allow(null).required(),
   displayName: JOI_IDENTITY_DISPLAY_NAME.required(),
   familyName: Joi.string().allow(null).required(),
@@ -112,7 +107,6 @@ const schema = Joi.object<IdentityAttributes>({
 
 export class Identity extends LindormEntity<IdentityAttributes> {
   public active: boolean;
-  public address: IdentityAddress;
   public birthDate: string;
   public displayName: IdentityDisplayName;
   public familyName: string;
@@ -141,14 +135,6 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     super(options);
 
     this.active = options.active !== false;
-    this.address = {
-      careOf: options.address?.careOf || null,
-      country: options.address?.country || null,
-      locality: options.address?.locality || null,
-      postalCode: options.address?.postalCode || null,
-      region: options.address?.region || null,
-      streetAddress: options.address?.streetAddress || [],
-    };
     this.birthDate = options.birthDate || null;
     this.displayName = {
       name: options.displayName?.name || null,
@@ -194,7 +180,6 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       ...this.defaultJSON(),
 
       active: this.active,
-      address: this.address,
       birthDate: this.birthDate,
       displayName: this.displayName,
       familyName: this.familyName,

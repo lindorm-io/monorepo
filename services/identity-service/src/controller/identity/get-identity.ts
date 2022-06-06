@@ -2,14 +2,19 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType, Scope } from "../../common";
 import { ServerKoaController } from "../../types";
-import { getDisplayName, getListOfConnectedProviders, getName } from "../../util";
-import { getIdentifiersList } from "../../util/get-identifiers-list";
 import { includes } from "lodash";
+import {
+  getAddressList,
+  getDisplayName,
+  getIdentifiersList,
+  getListOfConnectedProviders,
+  getName,
+} from "../../util";
 
 export const getIdentityController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     entity: { identity },
-    repository: { identifierRepository },
+    repository: { addressRepository, identifierRepository },
     token: {
       bearerToken: { scopes },
     },
@@ -27,6 +32,7 @@ export const getIdentityController: ServerKoaController = async (ctx): Controlle
     });
   }
 
+  const addresses = await addressRepository.findMany({ identityId: identity.id });
   const identifiers = await identifierRepository.findMany({ identityId: identity.id });
 
   for (const scope of scopes.sort()) {
@@ -36,7 +42,7 @@ export const getIdentityController: ServerKoaController = async (ctx): Controlle
         break;
 
       case Scope.ADDRESS:
-        body.address = identity.address;
+        body.addresses = getAddressList(addresses);
         break;
 
       case Scope.CONNECTED_PROVIDERS:

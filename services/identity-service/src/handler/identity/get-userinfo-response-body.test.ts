@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
-import { createTestIdentity } from "../../fixtures/entity";
+import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import { getIdentifierUserinfo as _getIdentifierUserinfo } from "../identifier";
 import { getUserinfoResponseBody } from "./get-userinfo-response-body";
 import {
@@ -8,6 +8,7 @@ import {
   getDisplayName as _getDisplayName,
   getName as _getName,
 } from "../../util";
+import { createMockRepository } from "@lindorm-io/mongo";
 
 jest.mock("../../util");
 jest.mock("../identifier");
@@ -23,7 +24,12 @@ describe("getUserinfoResponseBody", () => {
   let scopes: Array<Scope>;
 
   beforeEach(() => {
-    ctx = {};
+    ctx = {
+      repository: {
+        addressRepository: createMockRepository(createTestAddress),
+      },
+    };
+
     identity = createTestIdentity({
       id: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
       nationalIdentityNumber: "619492152033",
@@ -31,6 +37,7 @@ describe("getUserinfoResponseBody", () => {
       updated: new Date("2020-08-08T08:00:00.000Z"),
       username: "bFp3ihd84Ps8Ocjf",
     });
+
     scopes = [Scope.OPENID];
 
     getAddress.mockImplementation(() => "getAddress");

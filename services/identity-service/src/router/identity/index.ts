@@ -1,13 +1,13 @@
+import { IdentityPermission, Scope } from "../../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { IdentityPermission, Scope } from "../common";
-import { ServerKoaContext } from "../types";
-import { identityAuthMiddleware, identityEntityMiddleware } from "../middleware";
+import { ServerKoaContext } from "../../types";
+import { identityAuthMiddleware, identityEntityMiddleware } from "../../middleware";
 import { useController, useSchema } from "@lindorm-io/koa";
 import {
   getIdentityController,
   updateIdentityController,
   updateIdentitySchema,
-} from "../controller";
+} from "../../controller";
 
 const router = new Router<unknown, ServerKoaContext>();
 export default router;

@@ -18,13 +18,6 @@ describe("updateIdentityController", () => {
   beforeEach(() => {
     ctx = {
       data: {
-        address: {
-          country: "new-country",
-          locality: "new-locality",
-          postalCode: "new-postalCode",
-          region: "new-region",
-          streetAddress: ["new-streetAddress"],
-        },
         birthDate: "new-birthDate",
         displayName: "new-displayName",
         familyName: "new-familyName",

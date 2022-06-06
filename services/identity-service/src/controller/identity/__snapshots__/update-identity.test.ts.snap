@@ -5,15 +5,6 @@ Array [
   Array [
     Object {
       "active": true,
-      "address": Object {
-        "country": "new-country",
-        "locality": "new-locality",
-        "postalCode": "new-postalCode",
-        "region": "new-region",
-        "streetAddress": Array [
-          "new-streetAddress",
-        ],
-      },
       "birthDate": "new-birthDate",
       "created": 2020-01-01T08:00:00.000Z,
       "displayName": Object {

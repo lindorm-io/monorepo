@@ -1,10 +1,20 @@
-import { Identity } from "../entity";
+import { Address } from "../entity";
 import { IdentityServiceAddress } from "../common";
 
-export const getAddress = (identity: Identity): IdentityServiceAddress => {
-  const {
-    address: { careOf, country, locality, postalCode, region, streetAddress },
-  } = identity.toJSON();
+const EMPTY: IdentityServiceAddress = {
+  formatted: null,
+  streetAddress: null,
+  careOf: null,
+  postalCode: null,
+  locality: null,
+  region: null,
+  country: null,
+};
+
+export const getAddress = (address: Address | undefined): IdentityServiceAddress => {
+  if (!address) return EMPTY;
+
+  const { careOf, country, locality, postalCode, region, streetAddress } = address.toJSON();
 
   const formatted: Array<string> = [];
 

@@ -11,6 +11,10 @@ export const getUserinfoResponseBody = async (
   identity: Identity,
   scopes: Array<string>,
 ): Promise<GetUserinfoResponseBody> => {
+  const {
+    repository: { addressRepository },
+  } = ctx;
+
   const claims: Partial<IdentityServiceClaims> = {
     sub: identity.id,
     updatedAt: getUnixTime(identity.updated),
@@ -20,6 +24,10 @@ export const getUserinfoResponseBody = async (
     return { active: identity.active, claims, permissions: identity.permissions };
   }
 
+  const primaryAddress = await addressRepository.tryFind({
+    identityId: identity.id,
+    primary: true,
+  });
   const identifierUserinfo = await getIdentifierUserinfo(ctx, identity);
 
   for (const scope of scopes.sort()) {
@@ -29,7 +37,7 @@ export const getUserinfoResponseBody = async (
         break;
 
       case Scope.ADDRESS:
-        claims.address = getAddress(identity);
+        claims.address = getAddress(primaryAddress);
         break;
 
       case Scope.CONNECTED_PROVIDERS:

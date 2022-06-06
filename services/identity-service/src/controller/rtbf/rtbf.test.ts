@@ -21,6 +21,7 @@ describe("rtbfController", () => {
         }),
       },
       repository: {
+        addressRepository: createMockRepository(),
         identifierRepository: createMockRepository(),
         identityRepository: createMockRepository(),
       },
@@ -33,6 +34,7 @@ describe("rtbfController", () => {
     await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
     expect(removeIdentityDisplayName).toHaveBeenCalled();
+    expect(ctx.repository.addressRepository.deleteMany).toHaveBeenCalled();
     expect(ctx.repository.identifierRepository.deleteMany).toHaveBeenCalled();
     expect(ctx.repository.identityRepository.destroy).toHaveBeenCalled();
   });

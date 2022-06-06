@@ -3,7 +3,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_LOCALE, Scope } from "../../common";
 import { NamingSystem } from "../../enum";
 import { ServerKoaController, IdentityAddress } from "../../types";
-import { includes, isEqual, isUndefined } from "lodash";
+import { includes, isUndefined } from "lodash";
 import { updateIdentityDisplayName } from "../../handler";
 import {
   JOI_BIRTHDATE,
@@ -66,7 +66,6 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
 ): ControllerResponse => {
   const {
     data: {
-      address,
       birthDate,
       displayName,
       familyName,
@@ -96,10 +95,6 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
 
   if (includes(scopes, Scope.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
     identity.preferredAccessibility = preferredAccessibility;
-  }
-
-  if (includes(scopes, Scope.ADDRESS) && address && !isEqual(address, identity.address)) {
-    identity.address = address;
   }
 
   if (includes(scopes, Scope.NATIONAL_IDENTITY_NUMBER) && !isUndefined(nationalIdentityNumber)) {

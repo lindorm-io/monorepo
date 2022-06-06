@@ -1,20 +1,22 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { Identity } from "../entity";
+import { Identity } from "../../entity";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
-import { server } from "../server/server";
+import { server } from "../../server/server";
 import {
   getTestAccessToken,
   setupIntegration,
+  TEST_ADDRESS_REPOSITORY,
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
-} from "../fixtures/integration";
+} from "../../fixtures/integration";
 import {
+  createTestAddress,
   createTestEmailIdentifier,
   createTestExternalIdentifier,
   createTestIdentity,
   createTestPhoneIdentifier,
-} from "../fixtures/entity";
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,6 +36,12 @@ describe("/identity", () => {
       }),
     );
 
+    const address = await TEST_ADDRESS_REPOSITORY.create(
+      createTestAddress({
+        identityId: identity.id,
+      }),
+    );
+
     const email = await TEST_IDENTIFIER_REPOSITORY.create(
       createTestEmailIdentifier({
         identityId: identity.id,
@@ -43,6 +51,7 @@ describe("/identity", () => {
     const phone = await TEST_IDENTIFIER_REPOSITORY.create(
       createTestPhoneIdentifier({
         identityId: identity.id,
+        verified: false,
       }),
     );
 
@@ -63,14 +72,18 @@ describe("/identity", () => {
 
     expect(response.body).toStrictEqual({
       active: true,
-      address: {
-        care_of: "careOf",
-        country: "country",
-        locality: "locality",
-        postal_code: "postalCode",
-        region: "region",
-        street_address: ["streetAddress1", "streetAddress2"],
-      },
+      addresses: [
+        {
+          id: address.id,
+          careOf: "Gustav Torsson",
+          country: "Sweden",
+          label: "work",
+          locality: "Stockholm",
+          postalCode: "12345",
+          region: "Stockholm",
+          streetAddress: ["Long Street Name 12", "Second Row"],
+        },
+      ],
       birth_date: "2000-01-01",
       connected_providers: [external.provider],
       display_name: `${identity.displayName.name}#${identity.displayName.number
@@ -79,22 +92,22 @@ describe("/identity", () => {
       emails: [
         {
           id: email.id,
-          label: email.label,
-          primary: email.primary,
+          label: "home",
+          primary: true,
           value: email.identifier,
-          verified: email.verified,
+          verified: true,
         },
       ],
-      family_name: "familyName",
-      gender: "gender",
-      given_name: "givenName",
+      family_name: "Torsson",
+      gender: "Female",
+      given_name: "Alexandra",
       gravatar_uri: "https://gravatar.url/",
       locale: "sv-SE",
-      middle_name: "middleName",
-      name: "givenName familyName",
+      middle_name: "Rio",
+      name: "Alexandra Torsson",
       national_identity_number: identity.nationalIdentityNumber,
       national_identity_number_verified: true,
-      nickname: "nickname",
+      nickname: "Wheat",
       permissions: [
         "lindorm.io/any/identity/any:user",
         "lindorm.io/oauth-service/identity/client:read",
@@ -107,15 +120,15 @@ describe("/identity", () => {
       phone_numbers: [
         {
           id: phone.id,
-          label: phone.label,
-          primary: phone.primary,
+          label: "home",
+          primary: true,
           value: phone.identifier,
-          verified: phone.verified,
+          verified: false,
         },
       ],
       picture: "https://picture.url/",
       preferred_accessibility: ["setting1", "setting2", "setting3"],
-      preferred_username: "username",
+      preferred_username: "rio_wheat",
       profile: "https://profile.url/",
       pronouns: "she/her",
       social_security_number: identity.socialSecurityNumber,

@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { addIdentifierFromUserinfo } from "../../handler";
+import { addAddressFromUserinfo, addIdentifierFromUserinfo } from "../../handler";
 import {
   AddUserinfoRequestBody,
   IdentifierType,
@@ -72,16 +72,6 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
     repository: { identityRepository },
   } = ctx;
 
-  identity.address = {
-    careOf: identity.address.careOf || null,
-    country: identity.address.country || address?.country,
-    locality: identity.address.locality || address?.locality,
-    postalCode: identity.address.postalCode || address?.postalCode,
-    region: identity.address.region || address?.region,
-    streetAddress: identity.address.streetAddress.length
-      ? identity.address.streetAddress
-      : address?.streetAddress.split("\n"),
-  };
   identity.birthDate = identity.birthDate || birthDate;
   identity.familyName = identity.familyName || familyName;
   identity.gender = identity.gender || gender;
@@ -97,6 +87,10 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
   identity.zoneInfo = identity.zoneInfo || zoneInfo;
 
   await identityRepository.update(identity);
+
+  if (address) {
+    await addAddressFromUserinfo(ctx, identity, address);
+  }
 
   if (email) {
     await addIdentifierFromUserinfo(ctx, identity, {

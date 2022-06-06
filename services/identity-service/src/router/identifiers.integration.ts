@@ -82,6 +82,7 @@ describe("/identity", () => {
     const email = await TEST_IDENTIFIER_REPOSITORY.create(
       createTestEmailIdentifier({
         identityId: identity.id,
+        primary: false,
       }),
     );
 
