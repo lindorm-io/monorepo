@@ -1,4 +1,4 @@
-import { ClientScope, SendSmsRequestData } from "../../../common";
+import { ClientScope, SendCodeRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -36,16 +36,17 @@ export const initialisePhoneOtpFlow = async (
 
   const { expiresIn } = getExpires(flowSession.expires);
 
-  const data: SendSmsRequestData = {
+  const data: SendCodeRequestData = {
     content: {
       expiresIn,
       otp: flowSession.otp,
     },
-    template: "auth-phone-otp",
+    template: "authentication-phone-otp-flow",
     to: phoneNumber,
+    type: "phone",
   };
 
-  await communicationClient.post("/internal/send/sms", {
+  await communicationClient.post("/internal/send/otp", {
     data,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),

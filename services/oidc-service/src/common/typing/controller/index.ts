@@ -15,6 +15,5 @@ export * from "./get-oidc-session";
 export * from "./get-userinfo";
 export * from "./initialise-oidc-session";
 export * from "./initialise-rdc-session";
-export * from "./send-email-controller";
-export * from "./send-sms-controller";
+export * from "./send-code-controller";
 export * from "./unlock-protected-record";

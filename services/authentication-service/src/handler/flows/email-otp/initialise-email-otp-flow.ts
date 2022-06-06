@@ -1,4 +1,4 @@
-import { ClientScope, SendEmailRequestData } from "../../../common";
+import { ClientScope, SendCodeRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -36,16 +36,17 @@ export const initialiseEmailOtpFlow = async (
 
   const { expiresIn } = getExpires(flowSession.expires);
 
-  const data: SendEmailRequestData = {
+  const data: SendCodeRequestData = {
     content: {
       expiresIn,
       otp: flowSession.otp,
     },
-    template: "auth-email-otp",
+    template: "authentication-email-otp-flow",
     to: email,
+    type: "email",
   };
 
-  await communicationClient.post("/internal/send/email", {
+  await communicationClient.post("/internal/send/otp", {
     data,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),

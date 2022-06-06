@@ -16,7 +16,9 @@ export interface IdentityServiceClaims extends OpenIDClaims {
   // private
   connectedProviders: Array<string>;
   nationalIdentityNumber: string;
+  nationalIdentityNumberVerified: boolean;
   preferredAccessibility: Array<string>;
   socialSecurityNumber: string;
+  socialSecurityNumberVerified: boolean;
   username: string;
 }

@@ -13,6 +13,5 @@ export * from "./get-identity-sessions";
 export * from "./get-logout-info";
 export * from "./get-userinfo";
 export * from "./initialise-rdc-session";
-export * from "./send-email-controller";
-export * from "./send-sms-controller";
+export * from "./send-code-controller";
 export * from "./unlock-protected-record";
