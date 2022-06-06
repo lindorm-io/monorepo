@@ -18,6 +18,10 @@ import {
   verifyIdentifierConnectSessionController,
   verifyIdentifierConnectSessionSchema,
 } from "../controller";
+import {
+  setIdentifierLabelController,
+  setIdentifierLabelSchema,
+} from "../controller/identifier/set-identifier-label";
 
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
@@ -51,6 +55,17 @@ router.post(
   connectSessionEntityMiddleware("data.id"),
   identifierEntityMiddleware("entity.connectSession.identifierId"),
   useController(verifyIdentifierConnectSessionController),
+);
+
+router.post(
+  "/set-label",
+  useSchema(setIdentifierLabelSchema),
+  identityAuthMiddleware({
+    permissions: [IdentityPermission.USER],
+    scopes: [Scope.OPENID],
+  }),
+  identityEntityMiddleware("token.bearerToken.subject"),
+  useController(setIdentifierLabelController),
 );
 
 router.post(

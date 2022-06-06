@@ -78,9 +78,11 @@ describe("/identity", () => {
         .padStart(4, "0")}`,
       emails: [
         {
-          email: email.identifier,
-          primary: true,
-          verified: true,
+          id: email.id,
+          label: email.label,
+          primary: email.primary,
+          value: email.identifier,
+          verified: email.verified,
         },
       ],
       family_name: "familyName",
@@ -90,7 +92,7 @@ describe("/identity", () => {
       locale: "sv-SE",
       middle_name: "middleName",
       name: "givenName familyName",
-      national_identity_number: `${identity.nationalIdentityNumber}`,
+      national_identity_number: identity.nationalIdentityNumber,
       national_identity_number_verified: true,
       nickname: "nickname",
       permissions: [
@@ -104,9 +106,11 @@ describe("/identity", () => {
       ],
       phone_numbers: [
         {
-          phone: phone.identifier,
-          primary: true,
-          verified: true,
+          id: phone.id,
+          label: phone.label,
+          primary: phone.primary,
+          value: phone.identifier,
+          verified: phone.verified,
         },
       ],
       picture: "https://picture.url/",
@@ -114,9 +118,9 @@ describe("/identity", () => {
       preferred_username: "username",
       profile: "https://profile.url/",
       pronouns: "she/her",
-      social_security_number: `${identity.socialSecurityNumber}`,
+      social_security_number: identity.socialSecurityNumber,
       social_security_number_verified: true,
-      username: `${identity.username}`,
+      username: identity.username,
       website: "https://website.url/",
       zone_info: "Europe/Stockholm",
     });

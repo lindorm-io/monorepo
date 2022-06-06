@@ -90,12 +90,13 @@ describe("/identity", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
         identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
+        label: "label",
         type: IdentifierType.EMAIL,
       })
       .expect(204);
   });
 
-  test("POST /connect", async () => {
+  test("POST /connect/:id/verify", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
@@ -124,6 +125,39 @@ describe("/identity", () => {
       .post(`/identifier/connect/${connectSession.id}/verify`)
       .send({
         code,
+      })
+      .expect(204);
+  });
+
+  test("POST /set-label", async () => {
+    const identity = await TEST_IDENTITY_REPOSITORY.create(
+      createTestIdentity({
+        displayName: {
+          name: getRandomString(10),
+          number: getRandomNumber(4),
+        },
+      }),
+    );
+
+    const phone = await TEST_IDENTIFIER_REPOSITORY.create(
+      createTestPhoneIdentifier({
+        identityId: identity.id,
+        label: "home",
+        primary: false,
+      }),
+    );
+
+    const accessToken = getTestAccessToken({
+      subject: identity.id,
+    });
+
+    await request(server.callback())
+      .post("/identifier/set-label")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        identifier: phone.identifier,
+        label: "work",
+        type: phone.type,
       })
       .expect(204);
   });

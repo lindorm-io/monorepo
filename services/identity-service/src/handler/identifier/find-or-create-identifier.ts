@@ -8,11 +8,12 @@ import { isIdentifierStoredSeparately } from "../../util";
 
 interface Options {
   identifier: string;
+  label?: string;
   provider?: string;
   type: IdentifierType;
 }
 
-export const getIdentifierEntity = async (
+export const findOrCreateIdentifier = async (
   ctx: ServerKoaContext,
   identity: Identity,
   options: Options,
@@ -21,7 +22,7 @@ export const getIdentifierEntity = async (
     repository: { identifierRepository },
   } = ctx;
 
-  const { identifier, type } = options;
+  const { identifier, label, type } = options;
   const provider = options.provider || configuration.server.domain;
 
   if (!isIdentifierStoredSeparately(type)) {
@@ -41,6 +42,7 @@ export const getIdentifierEntity = async (
       new Identifier({
         identifier,
         identityId: identity.id,
+        label,
         primary: false,
         provider,
         type,

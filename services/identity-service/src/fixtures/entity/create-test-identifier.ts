@@ -8,6 +8,7 @@ export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = 
   new Identifier({
     identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
     identityId: randomUUID(),
+    label: "home",
     primary: true,
     provider: configuration.server.domain,
     type: IdentifierType.EMAIL,
@@ -21,6 +22,7 @@ export const createTestExternalIdentifier = (
   new Identifier({
     identifier: getRandomString(32),
     identityId: randomUUID(),
+    label: "home",
     primary: false,
     provider: "https://login.apple.com/",
     type: IdentifierType.EXTERNAL,
@@ -32,6 +34,7 @@ export const createTestPhoneIdentifier = (options: Partial<IdentifierOptions> = 
   new Identifier({
     identifier: `+4670${getRandomNumber(7)}`,
     identityId: randomUUID(),
+    label: "home",
     primary: true,
     provider: configuration.server.domain,
     type: IdentifierType.PHONE,

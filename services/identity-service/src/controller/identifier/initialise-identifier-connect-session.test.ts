@@ -5,7 +5,7 @@ import {
   createTestIdentity,
 } from "../../fixtures/entity";
 import {
-  getIdentifierEntity as _getIdentifierEntity,
+  findOrCreateIdentifier as _getIdentifierEntity,
   initialiseConnectSession as _initialiseConnectSession,
   sendConnectSessionMessage as _sendConnectSessionMessage,
 } from "../../handler";
@@ -24,6 +24,7 @@ describe("initialiseIdentifierConnectSessionController", () => {
     ctx = {
       data: {
         identifier: "identifier",
+        label: "label",
         type: "type",
       },
       entity: {

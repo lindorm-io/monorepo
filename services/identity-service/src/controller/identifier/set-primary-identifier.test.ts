@@ -2,11 +2,14 @@ import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
+import { findVerifiedIdentifier as _findVerifiedIdentifier } from "../../handler";
 import { isPrimaryUsedByIdentifier as _isPrimaryUsedByIdentifier } from "../../util";
 import { setPrimaryIdentifierController } from "./set-primary-identifier";
 
+jest.mock("../../handler");
 jest.mock("../../util");
 
+const findVerifiedIdentifier = _findVerifiedIdentifier as jest.Mock;
 const isPrimaryUsedByIdentifier = _isPrimaryUsedByIdentifier as jest.Mock;
 
 describe("setPrimaryIdentifierController", () => {
@@ -27,13 +30,12 @@ describe("setPrimaryIdentifierController", () => {
       },
     };
 
+    findVerifiedIdentifier.mockResolvedValue(createTestEmailIdentifier());
     isPrimaryUsedByIdentifier.mockImplementation(() => true);
   });
 
   test("should resolve", async () => {
-    ctx.repository.identifierRepository.find
-      .mockRejectedValue(new EntityNotFoundError("message"))
-      .mockResolvedValueOnce(createTestEmailIdentifier());
+    ctx.repository.identifierRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(setPrimaryIdentifierController(ctx)).resolves.toBeUndefined();
 
@@ -53,16 +55,6 @@ describe("setPrimaryIdentifierController", () => {
 
   test("should reject invalid identifier type", async () => {
     isPrimaryUsedByIdentifier.mockImplementation(() => false);
-
-    await expect(setPrimaryIdentifierController(ctx)).rejects.toThrow(ClientError);
-  });
-
-  test("should reject unverified identifier", async () => {
-    ctx.repository.identifierRepository.find.mockResolvedValue(
-      createTestEmailIdentifier({
-        verified: false,
-      }),
-    );
 
     await expect(setPrimaryIdentifierController(ctx)).rejects.toThrow(ClientError);
   });

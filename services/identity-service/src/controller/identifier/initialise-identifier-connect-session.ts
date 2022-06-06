@@ -6,7 +6,7 @@ import { JOI_IDENTIFIER_TYPE } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { getRandomString } from "@lindorm-io/core";
 import {
-  getIdentifierEntity,
+  findOrCreateIdentifier,
   initialiseConnectSession,
   sendConnectSessionMessage,
 } from "../../handler";
@@ -14,6 +14,7 @@ import { ClientError } from "@lindorm-io/errors";
 
 interface RequestData {
   identifier: string;
+  label?: string;
   type: IdentifierType;
 }
 
@@ -25,6 +26,7 @@ export const initialiseIdentifierConnectSessionSchema = Joi.object<RequestData>(
     ],
     otherwise: Joi.forbidden(),
   }),
+  label: Joi.string().allow(null).optional(),
   type: JOI_IDENTIFIER_TYPE.required(),
 });
 
@@ -32,12 +34,13 @@ export const initialiseIdentifierConnectSessionController: ServerKoaController<
   RequestData
 > = async (ctx): ControllerResponse => {
   const {
-    data: { identifier, type },
+    data: { identifier, label, type },
     entity: { identity },
   } = ctx;
 
-  const identifierEntity = await getIdentifierEntity(ctx, identity, {
+  const identifierEntity = await findOrCreateIdentifier(ctx, identity, {
     identifier,
+    label,
     type,
   });
 

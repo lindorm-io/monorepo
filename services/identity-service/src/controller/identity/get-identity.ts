@@ -1,9 +1,10 @@
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType, Scope } from "../../common";
 import { ServerKoaController } from "../../types";
-import { filter, includes } from "lodash";
 import { getDisplayName, getListOfConnectedProviders, getName } from "../../util";
-import { ClientError } from "@lindorm-io/errors";
+import { getIdentifiersList } from "../../util/get-identifiers-list";
+import { includes } from "lodash";
 
 export const getIdentityController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
@@ -43,11 +44,7 @@ export const getIdentityController: ServerKoaController = async (ctx): Controlle
         break;
 
       case Scope.EMAIL:
-        body.emails = filter(identifiers, { type: IdentifierType.EMAIL }).map((item) => ({
-          email: item.identifier,
-          primary: item.primary,
-          verified: item.verified,
-        }));
+        body.emails = getIdentifiersList(identifiers, IdentifierType.EMAIL);
         break;
 
       case Scope.NATIONAL_IDENTITY_NUMBER:
@@ -56,11 +53,7 @@ export const getIdentityController: ServerKoaController = async (ctx): Controlle
         break;
 
       case Scope.PHONE:
-        body.phoneNumbers = filter(identifiers, { type: IdentifierType.PHONE }).map((item) => ({
-          phone: item.identifier,
-          primary: item.primary,
-          verified: item.verified,
-        }));
+        body.phoneNumbers = getIdentifiersList(identifiers, IdentifierType.PHONE);
         break;
 
       case Scope.PROFILE:

@@ -1,22 +1,19 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { Identifier } from "../../entity";
 import { IdentifierType } from "../../common";
 import { JOI_EMAIL, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { findVerifiedIdentifier } from "../../handler";
-import { isPrimaryUsedByIdentifier } from "../../util";
 
 interface RequestData {
   identifier: string;
+  label: string | null;
   provider?: string;
   type: IdentifierType;
 }
 
-export const setPrimaryIdentifierSchema = Joi.object<RequestData>()
+export const setIdentifierLabelSchema = Joi.object<RequestData>()
   .keys({
     identifier: Joi.when("type", {
       switch: [
@@ -26,6 +23,7 @@ export const setPrimaryIdentifierSchema = Joi.object<RequestData>()
       ],
       otherwise: Joi.forbidden(),
     }),
+    label: Joi.string().allow(null).required(),
     provider: Joi.when("type", {
       is: IdentifierType.EXTERNAL,
       then: Joi.string().uri().required(),
@@ -35,18 +33,14 @@ export const setPrimaryIdentifierSchema = Joi.object<RequestData>()
   })
   .required();
 
-export const setPrimaryIdentifierController: ServerKoaController<RequestData> = async (
+export const setIdentifierLabelController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    data: { identifier, provider, type },
+    data: { identifier, label, provider, type },
     entity: { identity },
     repository: { identifierRepository },
   } = ctx;
-
-  if (!isPrimaryUsedByIdentifier(type)) {
-    throw new ClientError("Invalid identifier type");
-  }
 
   const identifierEntity = await findVerifiedIdentifier(ctx, identity, {
     identifier,
@@ -54,28 +48,7 @@ export const setPrimaryIdentifierController: ServerKoaController<RequestData> = 
     type,
   });
 
-  const updates: Array<Identifier> = [];
+  identifierEntity.label = label;
 
-  try {
-    const current = await identifierRepository.find({
-      identityId: identifierEntity.identityId,
-      primary: identifierEntity.primary,
-      provider: identifierEntity.provider,
-      type: identifierEntity.type,
-    });
-
-    current.primary = false;
-
-    updates.push(current);
-  } catch (err) {
-    if (!(err instanceof EntityNotFoundError)) {
-      throw err;
-    }
-  }
-
-  identifierEntity.primary = true;
-
-  updates.push(identifierEntity);
-
-  await identifierRepository.updateMany(updates);
+  await identifierRepository.update(identifierEntity);
 };

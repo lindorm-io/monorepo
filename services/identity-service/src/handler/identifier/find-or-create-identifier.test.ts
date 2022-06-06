@@ -1,17 +1,17 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identifier, Identity } from "../../entity";
 import { IdentifierType } from "../../common";
+import { ServerError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
-import { getIdentifierEntity } from "./get-identifier-entity";
+import { findOrCreateIdentifier } from "./find-or-create-identifier";
 import { isIdentifierStoredSeparately as _isIdentifierStoredSeparately } from "../../util";
-import { ServerError } from "@lindorm-io/errors";
 
 jest.mock("../../util");
 
 const isIdentifierStoredSeparately = _isIdentifierStoredSeparately as jest.Mock;
 
-describe("getIdentifierEntity", () => {
+describe("findOrCreateIdentifier", () => {
   let ctx: any;
   let identity: Identity;
 
@@ -29,8 +29,9 @@ describe("getIdentifierEntity", () => {
 
   test("should resolve found identifier", async () => {
     await expect(
-      getIdentifierEntity(ctx, identity, {
+      findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
+        label: "label",
         type: IdentifierType.EMAIL,
       }),
     ).resolves.toStrictEqual(expect.any(Identifier));
@@ -40,8 +41,9 @@ describe("getIdentifierEntity", () => {
     ctx.repository.identifierRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(
-      getIdentifierEntity(ctx, identity, {
+      findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
+        label: "label",
         type: IdentifierType.EMAIL,
       }),
     ).resolves.toStrictEqual(expect.any(Identifier));
@@ -53,8 +55,9 @@ describe("getIdentifierEntity", () => {
     isIdentifierStoredSeparately.mockImplementation(() => false);
 
     await expect(
-      getIdentifierEntity(ctx, identity, {
+      findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
+        label: "label",
         type: IdentifierType.EMAIL,
       }),
     ).rejects.toThrow(ServerError);

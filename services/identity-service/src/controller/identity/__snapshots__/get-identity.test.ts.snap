@@ -23,18 +23,24 @@ Object {
     "displayName": null,
     "emails": Array [
       Object {
-        "email": "one@lindorm.io",
+        "id": "28d53d56-c26e-4c80-bfe6-2f0ca15f9ed5",
+        "label": "home",
         "primary": false,
+        "value": "one@lindorm.io",
         "verified": true,
       },
       Object {
-        "email": "two@lindorm.io",
+        "id": "b843a4db-8098-47bb-9cdb-76eee2fbb037",
+        "label": "home",
         "primary": true,
+        "value": "two@lindorm.io",
         "verified": true,
       },
       Object {
-        "email": "three@lindorm.io",
+        "id": "6a168fdc-4581-4f34-8a49-c9896cb2d577",
+        "label": "home",
         "primary": false,
+        "value": "three@lindorm.io",
         "verified": true,
       },
     ],
@@ -59,13 +65,17 @@ Object {
     ],
     "phoneNumbers": Array [
       Object {
-        "phone": "+46701000001",
+        "id": "2f9027ab-041c-4485-aded-46654feaa5e2",
+        "label": "home",
         "primary": false,
+        "value": "+46701000001",
         "verified": false,
       },
       Object {
-        "phone": "+46701000002",
+        "id": "f505d41b-2913-437b-bfcf-b76003328aad",
+        "label": "home",
         "primary": true,
+        "value": "+46701000002",
         "verified": false,
       },
     ],
