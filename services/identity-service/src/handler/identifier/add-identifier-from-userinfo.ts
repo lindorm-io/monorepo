@@ -5,9 +5,8 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { getRandomString } from "@lindorm-io/core";
-import { initialiseConnectSession } from "./initialise-connect-session";
+import { initialiseConnectSession, sendConnectSessionMessage } from "../sessions";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
-import { sendConnectSessionMessage } from "./send-connect-session-message";
 
 interface Options {
   identifier: string;

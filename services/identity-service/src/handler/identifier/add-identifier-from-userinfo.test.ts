@@ -5,20 +5,21 @@ import { ServerError } from "@lindorm-io/errors";
 import { addIdentifierFromUserinfo } from "./add-identifier-from-userinfo";
 import { createMockRepository } from "@lindorm-io/mongo";
 import {
+  initialiseConnectSession as _initialiseConnectSession,
+  sendConnectSessionMessage as _sendConnectSessionMessage,
+} from "../sessions";
+import {
   createTestConnectSession,
   createTestEmailIdentifier,
   createTestIdentity,
 } from "../../fixtures/entity";
-import { initialiseConnectSession as _initialiseConnectSession } from "./initialise-connect-session";
-import { sendConnectSessionMessage as _sendConnectSessionMessage } from "./send-connect-session-message";
 import {
   isIdentifierStoredSeparately as _isIdentifierStoredSeparately,
   isPrimaryUsedByIdentifier as _isPrimaryUsedByIdentifier,
 } from "../../util";
 
 jest.mock("../../util");
-jest.mock("./initialise-connect-session");
-jest.mock("./send-connect-session-message");
+jest.mock("../sessions");
 
 const isIdentifierStoredSeparately = _isIdentifierStoredSeparately as jest.Mock;
 const isPrimaryUsedByIdentifier = _isPrimaryUsedByIdentifier as jest.Mock;
