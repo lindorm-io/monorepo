@@ -1,2 +1,2 @@
-export * from "./send-email-controller";
-export * from "./send-sms-controller";
+export * from "./send-code-controller";
+export * from "./send-otp-controller";

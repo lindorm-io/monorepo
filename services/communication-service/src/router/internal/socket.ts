@@ -9,10 +9,10 @@ export default router;
 
 router.get(
   "/emit",
+  useSchema(emitSocketEventSchema),
   clientAuthMiddleware({
     permissions: [ClientPermission.COMMUNICATION_CONFIDENTIAL],
     scopes: [ClientScope.COMMUNICATION_EVENT_EMIT],
   }),
-  useSchema(emitSocketEventSchema),
   useController(emitSocketEventController),
 );
