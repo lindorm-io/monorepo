@@ -1,7 +1,7 @@
 import { OpenIDAddress, OpenIDClaims } from "./openid";
 
 export interface IdentityServiceAddress extends OpenIDAddress {
-  careOf: string;
+  careOf: string | null;
 }
 
 export interface IdentityServiceClaims extends OpenIDClaims {
@@ -9,16 +9,16 @@ export interface IdentityServiceClaims extends OpenIDClaims {
   address: IdentityServiceAddress;
 
   // profile
-  displayName: string;
-  gravatarUri: string;
-  pronouns: string;
+  displayName: string | null;
+  gravatarUri: string | null;
+  pronouns: string | null;
 
   // private
   connectedProviders: Array<string>;
-  nationalIdentityNumber: string;
+  nationalIdentityNumber: string | null;
   nationalIdentityNumberVerified: boolean;
   preferredAccessibility: Array<string>;
-  socialSecurityNumber: string;
+  socialSecurityNumber: string | null;
   socialSecurityNumberVerified: boolean;
-  username: string;
+  username: string | null;
 }
