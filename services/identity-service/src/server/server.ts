@@ -10,10 +10,8 @@ import { workers } from "./workers";
 import {
   ConnectSessionCache,
   DisplayNameRepository,
-  EmailRepository,
-  ExternalIdentifierRepository,
+  IdentifierRepository,
   IdentityRepository,
-  PhoneNumberRepository,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
@@ -31,13 +29,7 @@ export const server = createNodeServer<ServerKoaContext>({
   mongoConnection,
   port: configuration.server.port,
   redisConnection,
-  repositories: [
-    DisplayNameRepository,
-    EmailRepository,
-    ExternalIdentifierRepository,
-    IdentityRepository,
-    PhoneNumberRepository,
-  ],
+  repositories: [DisplayNameRepository, IdentifierRepository, IdentityRepository],
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({
     name: service.client_name,

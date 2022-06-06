@@ -1,18 +1,18 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
+import { IdentifierType, IdentityPermission, Scope } from "../../common";
+import { Identity } from "../../entity";
+import { createTestIdentity } from "../../fixtures/entity";
+import { find } from "lodash";
 import { getRandomNumber, getRandomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
-import { createTestIdentity } from "../../fixtures/entity";
 import {
-  TEST_EMAIL_REPOSITORY,
-  TEST_IDENTITY_REPOSITORY,
-  TEST_EXTERNAL_IDENTIFIER_REPOSITORY,
-  TEST_PHONE_NUMBER_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
+  TEST_IDENTIFIER_REPOSITORY,
+  TEST_IDENTITY_REPOSITORY,
 } from "../../fixtures/integration";
-import { Identity } from "../../entity";
-import { IdentityPermission } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,6 +21,20 @@ jest.unmock("@lindorm-io/redis");
 
 describe("/internal/userinfo", () => {
   beforeAll(setupIntegration);
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/oauth2/token")
+    .times(999)
+    .reply(200, {
+      access_token: "accessToken",
+      expires_in: 100,
+      scope: ["scope"],
+    });
+
+  nock("https://communication.test.lindorm.io")
+    .post("/internal/send/code")
+    .times(999)
+    .reply(200, {});
 
   test("GET /:id", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
@@ -35,15 +49,53 @@ describe("/internal/userinfo", () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
-      .get(`/internal/userinfo/${identity.id}?scope=openid`)
+      .get(`/internal/userinfo/${identity.id}?scope=${Object.values(Scope).join("+")}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
       active: true,
       claims: {
+        address: {
+          care_of: "careOf",
+          country: "country",
+          formatted: "streetAddress1\nstreetAddress2\npostalCode locality\nregion\ncountry",
+          locality: "locality",
+          postal_code: "postalCode",
+          region: "region",
+          street_address: "streetAddress1\nstreetAddress2",
+        },
+        birth_date: "2000-01-01",
+        connected_providers: [],
+        display_name: `${identity.displayName.name}#${identity.displayName.number
+          .toString()
+          .padStart(4, "0")}`,
+        email: null,
+        email_verified: false,
+        family_name: "familyName",
+        gender: "gender",
+        given_name: "givenName",
+        gravatar_uri: "https://gravatar.url/",
+        locale: "sv-SE",
+        middle_name: "middleName",
+        name: "givenName familyName",
+        national_identity_number: identity.nationalIdentityNumber,
+        national_identity_number_verified: true,
+        nickname: "nickname",
+        phone_number: null,
+        phone_number_verified: false,
+        picture: "https://picture.url/",
+        preferred_accessibility: ["setting1", "setting2", "setting3"],
+        preferred_username: "username",
+        profile: "https://profile.url/",
+        pronouns: "she/her",
+        social_security_number: identity.socialSecurityNumber,
+        social_security_number_verified: true,
         sub: identity.id,
         updated_at: 1609488000,
+        username: identity.username,
+        website: "https://website.url/",
+        zone_info: "Europe/Stockholm",
       },
       permissions: [
         IdentityPermission.USER,
@@ -104,33 +156,23 @@ describe("/internal/userinfo", () => {
       })
       .expect(204);
 
-    await expect(TEST_EMAIL_REPOSITORY.find({ identityId: identity.id })).resolves.toStrictEqual(
+    const identifiers = await TEST_IDENTIFIER_REPOSITORY.findMany({ identityId: identity.id });
+
+    expect(find(identifiers, { type: IdentifierType.EMAIL })).toStrictEqual(
       expect.objectContaining({
-        email: email,
-        identityId: identity.id,
-        primary: true,
-        verified: false,
+        identifier: email,
       }),
     );
 
-    await expect(
-      TEST_PHONE_NUMBER_REPOSITORY.find({ identityId: identity.id }),
-    ).resolves.toStrictEqual(
-      expect.objectContaining({
-        phoneNumber: phone,
-        identityId: identity.id,
-        primary: true,
-        verified: false,
-      }),
-    );
-
-    await expect(
-      TEST_EXTERNAL_IDENTIFIER_REPOSITORY.find({ identityId: identity.id }),
-    ).resolves.toStrictEqual(
+    expect(find(identifiers, { type: IdentifierType.EXTERNAL })).toStrictEqual(
       expect.objectContaining({
         identifier: sub,
-        identityId: identity.id,
-        provider: "https://github.com/",
+      }),
+    );
+
+    expect(find(identifiers, { type: IdentifierType.PHONE })).toStrictEqual(
+      expect.objectContaining({
+        identifier: phone,
       }),
     );
 

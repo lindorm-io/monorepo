@@ -48,7 +48,9 @@ exports[`getUserinfoResponseBody should resolve CONNECTED_PROVIDERS 1`] = `
 Object {
   "active": true,
   "claims": Object {
-    "connectedProviders": "getConnectedProviders",
+    "connectedProviders": Array [
+      "provider",
+    ],
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
@@ -68,8 +70,8 @@ exports[`getUserinfoResponseBody should resolve EMAIL 1`] = `
 Object {
   "active": true,
   "claims": Object {
-    "email": undefined,
-    "emailVerified": undefined,
+    "email": "email",
+    "emailVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
@@ -90,6 +92,7 @@ Object {
   "active": true,
   "claims": Object {
     "nationalIdentityNumber": "619492152033",
+    "nationalIdentityNumberVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
@@ -109,8 +112,8 @@ exports[`getUserinfoResponseBody should resolve PHONE 1`] = `
 Object {
   "active": true,
   "claims": Object {
-    "phoneNumber": undefined,
-    "phoneNumberVerified": undefined,
+    "phoneNumber": "phone",
+    "phoneNumberVerified": false,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
@@ -166,6 +169,7 @@ Object {
   "active": true,
   "claims": Object {
     "socialSecurityNumber": "279708557743",
+    "socialSecurityNumberVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },

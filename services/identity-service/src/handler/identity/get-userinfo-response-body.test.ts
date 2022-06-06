@@ -1,10 +1,8 @@
 import { Identity } from "../../entity";
 import { Scope } from "../../common";
-import { getConnectedProviders as _getConnectedProviders } from "../external";
 import { createTestIdentity } from "../../fixtures/entity";
+import { getIdentifierUserinfo as _getIdentifierUserinfo } from "../identifier";
 import { getUserinfoResponseBody } from "./get-userinfo-response-body";
-import { userinfoEmailGet as _userinfoEmailGet } from "../email";
-import { userinfoPhoneNumberGet as _userinfoPhoneNumberGet } from "../phone-number";
 import {
   getAddress as _getAddress,
   getDisplayName as _getDisplayName,
@@ -12,16 +10,12 @@ import {
 } from "../../util";
 
 jest.mock("../../util");
-jest.mock("../email");
-jest.mock("../external");
-jest.mock("../phone-number");
+jest.mock("../identifier");
 
 const getAddress = _getAddress as jest.Mock;
-const getConnectedProviders = _getConnectedProviders as jest.Mock;
 const getDisplayName = _getDisplayName as jest.Mock;
+const getIdentifierUserinfo = _getIdentifierUserinfo as jest.Mock;
 const getName = _getName as jest.Mock;
-const userinfoEmailGet = _userinfoEmailGet as jest.Mock;
-const userinfoPhoneNumberGet = _userinfoPhoneNumberGet as jest.Mock;
 
 describe("getUserinfoResponseBody", () => {
   let ctx: any;
@@ -40,11 +34,15 @@ describe("getUserinfoResponseBody", () => {
     scopes = [Scope.OPENID];
 
     getAddress.mockImplementation(() => "getAddress");
-    getConnectedProviders.mockResolvedValue("getConnectedProviders");
     getDisplayName.mockImplementation(() => "getDisplayName");
+    getIdentifierUserinfo.mockResolvedValue({
+      connectedProviders: ["provider"],
+      email: "email",
+      emailVerified: true,
+      phoneNumber: "phone",
+      phoneNumberVerified: false,
+    });
     getName.mockImplementation(() => "getName");
-    userinfoEmailGet.mockResolvedValue("userinfoEmailGet");
-    userinfoPhoneNumberGet.mockResolvedValue("userinfoPhoneNumberGet");
   });
 
   test("should resolve basic data", async () => {

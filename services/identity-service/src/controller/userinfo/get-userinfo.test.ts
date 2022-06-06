@@ -21,11 +21,13 @@ describe("getUserinfoController", () => {
       },
     };
 
-    getUserinfoResponseBody.mockResolvedValue("body");
+    getUserinfoResponseBody.mockResolvedValue("getUserinfoResponseBody");
   });
 
   test("should resolve with basic userinfo", async () => {
-    await expect(getUserinfoController(ctx)).resolves.toMatchSnapshot();
+    await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
+      body: "getUserinfoResponseBody",
+    });
 
     expect(getUserinfoResponseBody).toHaveBeenCalledWith(ctx, expect.any(Identity), [
       Scope.OPENID,

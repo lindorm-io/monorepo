@@ -35,6 +35,7 @@ export interface IdentityAttributes extends EntityAttributes {
   middleName: string;
   namingSystem: string;
   nationalIdentityNumber: string;
+  nationalIdentityNumberVerified: boolean;
   nickname: string;
   permissions: Array<string>;
   picture: string;
@@ -43,6 +44,7 @@ export interface IdentityAttributes extends EntityAttributes {
   profile: string;
   pronouns: string;
   socialSecurityNumber: string;
+  socialSecurityNumberVerified: boolean;
   username: string;
   website: string;
   zoneInfo: string;
@@ -63,6 +65,7 @@ export type IdentityOptions = Optional<
   | "middleName"
   | "namingSystem"
   | "nationalIdentityNumber"
+  | "nationalIdentityNumberVerified"
   | "nickname"
   | "permissions"
   | "picture"
@@ -71,6 +74,7 @@ export type IdentityOptions = Optional<
   | "profile"
   | "pronouns"
   | "socialSecurityNumber"
+  | "socialSecurityNumberVerified"
   | "username"
   | "website"
   | "zoneInfo"
@@ -91,6 +95,7 @@ const schema = Joi.object<IdentityAttributes>({
   middleName: Joi.string().allow(null).required(),
   namingSystem: JOI_NAMING_SYSTEM.required(),
   nationalIdentityNumber: Joi.string().allow(null).required(),
+  nationalIdentityNumberVerified: Joi.boolean().required(),
   nickname: Joi.string().allow(null).required(),
   permissions: Joi.array().items(Joi.string()).required(),
   picture: Joi.string().uri().allow(null).required(),
@@ -99,6 +104,7 @@ const schema = Joi.object<IdentityAttributes>({
   profile: Joi.string().uri().allow(null).required(),
   pronouns: Joi.string().allow(null).required(),
   socialSecurityNumber: Joi.string().allow(null).required(),
+  socialSecurityNumberVerified: Joi.boolean().required(),
   username: Joi.string().lowercase().allow(null).required(),
   website: Joi.string().uri().allow(null).required(),
   zoneInfo: JOI_ZONE_INFO.allow(null).required(),
@@ -117,6 +123,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public middleName: string;
   public namingSystem: string;
   public nationalIdentityNumber: string;
+  public nationalIdentityNumberVerified: boolean;
   public nickname: string;
   public permissions: Array<string>;
   public picture: string;
@@ -125,6 +132,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public profile: string;
   public pronouns: string;
   public socialSecurityNumber: string;
+  public socialSecurityNumberVerified: boolean;
   public username: string;
   public website: string;
   public zoneInfo: string;
@@ -154,6 +162,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.middleName = options.middleName || null;
     this.namingSystem = options.namingSystem || NamingSystem.GIVEN_FAMILY;
     this.nationalIdentityNumber = options.nationalIdentityNumber || null;
+    this.nationalIdentityNumberVerified = options.nationalIdentityNumberVerified === true;
     this.nickname = options.nickname || null;
     this.permissions = options.permissions || [
       IdentityPermission.USER,
@@ -170,6 +179,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.profile = options.profile || null;
     this.pronouns = options.pronouns || null;
     this.socialSecurityNumber = options.socialSecurityNumber || null;
+    this.socialSecurityNumberVerified = options.socialSecurityNumberVerified === true;
     this.username = options.username || null;
     this.website = options.website || null;
     this.zoneInfo = options.zoneInfo || null;
@@ -195,6 +205,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       middleName: this.middleName,
       namingSystem: this.namingSystem,
       nationalIdentityNumber: this.nationalIdentityNumber,
+      nationalIdentityNumberVerified: this.nationalIdentityNumberVerified,
       nickname: this.nickname,
       permissions: this.permissions,
       picture: this.picture,
@@ -203,6 +214,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       profile: this.profile,
       pronouns: this.pronouns,
       socialSecurityNumber: this.socialSecurityNumber,
+      socialSecurityNumberVerified: this.socialSecurityNumberVerified,
       username: this.username,
       website: this.website,
       zoneInfo: this.zoneInfo,

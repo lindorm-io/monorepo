@@ -1,0 +1,105 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getIdentityController should resolve all 1`] = `
+Object {
+  "body": Object {
+    "active": true,
+    "address": Object {
+      "careOf": "careOf",
+      "country": "country",
+      "locality": "locality",
+      "postalCode": "postalCode",
+      "region": "region",
+      "streetAddress": Array [
+        "streetAddress1",
+        "streetAddress2",
+      ],
+    },
+    "birthDate": "2000-01-01",
+    "connectedProviders": Array [
+      "https://one.com",
+      "https://two.com",
+    ],
+    "displayName": null,
+    "emails": Array [
+      Object {
+        "email": "one@lindorm.io",
+        "primary": false,
+        "verified": true,
+      },
+      Object {
+        "email": "two@lindorm.io",
+        "primary": true,
+        "verified": true,
+      },
+      Object {
+        "email": "three@lindorm.io",
+        "primary": false,
+        "verified": true,
+      },
+    ],
+    "familyName": "familyName",
+    "gender": "gender",
+    "givenName": "givenName",
+    "gravatarUri": "https://gravatar.url/",
+    "locale": "sv-SE",
+    "middleName": "middleName",
+    "name": "givenName familyName",
+    "nationalIdentityNumber": "368366220087",
+    "nationalIdentityNumberVerified": true,
+    "nickname": "nickname",
+    "permissions": Array [
+      "lindorm.io/any/identity/any:user",
+      "lindorm.io/oauth-service/identity/client:read",
+      "lindorm.io/oauth-service/identity/client:write",
+      "lindorm.io/identity-service/identity/identity:read",
+      "lindorm.io/identity-service/identity/identity:write",
+      "lindorm.io/oauth-service/identity/tenant:read",
+      "lindorm.io/oauth-service/identity/tenant:write",
+    ],
+    "phoneNumbers": Array [
+      Object {
+        "phone": "+46701000001",
+        "primary": false,
+        "verified": false,
+      },
+      Object {
+        "phone": "+46701000002",
+        "primary": true,
+        "verified": false,
+      },
+    ],
+    "picture": "https://picture.url/",
+    "preferredAccessibility": Array [
+      "setting1",
+      "setting2",
+      "setting3",
+    ],
+    "preferredUsername": "username",
+    "profile": "https://profile.url/",
+    "pronouns": "she/her",
+    "socialSecurityNumber": "587690345469",
+    "socialSecurityNumberVerified": true,
+    "username": "GHGB2KHAv8vRCd4N",
+    "website": "https://website.url/",
+    "zoneInfo": "Europe/Stockholm",
+  },
+}
+`;
+
+exports[`getIdentityController should resolve openid 1`] = `
+Object {
+  "body": Object {
+    "active": true,
+    "permissions": Array [
+      "lindorm.io/any/identity/any:user",
+      "lindorm.io/oauth-service/identity/client:read",
+      "lindorm.io/oauth-service/identity/client:write",
+      "lindorm.io/identity-service/identity/identity:read",
+      "lindorm.io/identity-service/identity/identity:write",
+      "lindorm.io/oauth-service/identity/tenant:read",
+      "lindorm.io/oauth-service/identity/tenant:write",
+    ],
+  },
+}
+`;

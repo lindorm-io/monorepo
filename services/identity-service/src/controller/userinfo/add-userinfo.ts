@@ -1,20 +1,16 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
+import { ServerKoaController } from "../../types";
+import { addIdentifierFromUserinfo } from "../../handler";
 import {
   AddUserinfoRequestBody,
+  IdentifierType,
   JOI_EMAIL,
   JOI_GUID,
   JOI_LOCALE,
   JOI_PHONE_NUMBER,
 } from "../../common";
-import {
-  userinfoEmailAdd,
-  userinfoExternalIdentifierAdd,
-  userinfoPhoneNumberAdd,
-  userinfoUsernameAdd,
-} from "../../handler";
 
 interface RequestData extends AddUserinfoRequestBody {
   id: string;
@@ -76,8 +72,6 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
     repository: { identityRepository },
   } = ctx;
 
-  const { id: identityId } = identity;
-
   identity.address = {
     careOf: identity.address.careOf || null,
     country: identity.address.country || address?.country,
@@ -98,30 +92,29 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
   identity.picture = identity.picture || picture;
   identity.profile = identity.profile || profile;
   identity.preferredUsername = identity.preferredUsername || preferredUsername;
+  identity.username = identity.username || identity.preferredUsername;
   identity.website = identity.website || website;
   identity.zoneInfo = identity.zoneInfo || zoneInfo;
 
   await identityRepository.update(identity);
 
   if (email) {
-    await userinfoEmailAdd(ctx, {
-      identityId,
-      email,
+    await addIdentifierFromUserinfo(ctx, identity, {
+      identifier: email,
+      type: IdentifierType.EMAIL,
     });
   }
 
   if (phoneNumber) {
-    await userinfoPhoneNumberAdd(ctx, {
-      identityId,
-      phoneNumber,
+    await addIdentifierFromUserinfo(ctx, identity, {
+      identifier: phoneNumber,
+      type: IdentifierType.PHONE,
     });
   }
 
-  await userinfoExternalIdentifierAdd(ctx, {
-    identityId,
+  await addIdentifierFromUserinfo(ctx, identity, {
     identifier: sub,
     provider,
+    type: IdentifierType.EXTERNAL,
   });
-
-  await userinfoUsernameAdd(ctx, identity);
 };

@@ -1,6 +1,5 @@
 import Joi from "joi";
-import { JOI_ARGON_STRING, JOI_EMAIL, JOI_GUID } from "../common";
-import { JOI_IDENTIFIER_TYPE } from "../constant";
+import { JOI_ARGON_STRING, JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -11,9 +10,8 @@ import {
 
 export interface ConnectSessionAttributes extends EntityAttributes {
   code: string;
-  identifier: string;
-  identityId: string;
-  type: string;
+  expires: Date;
+  identifierId: string;
 }
 
 export type ConnectSessionOptions = Optional<ConnectSessionAttributes, EntityKeys>;
@@ -22,24 +20,21 @@ const schema = Joi.object<ConnectSessionAttributes>({
   ...JOI_ENTITY_BASE,
 
   code: JOI_ARGON_STRING.required(),
-  identifier: JOI_EMAIL.required(),
-  identityId: JOI_GUID.required(),
-  type: JOI_IDENTIFIER_TYPE.required(),
+  expires: Joi.date().required(),
+  identifierId: JOI_GUID.required(),
 });
 
 export class ConnectSession extends LindormEntity<ConnectSessionAttributes> {
   public readonly code: string;
-  public readonly identifier: string;
-  public readonly identityId: string;
-  public readonly type: string;
+  public readonly expires: Date;
+  public readonly identifierId: string;
 
   public constructor(options: ConnectSessionOptions) {
     super(options);
 
     this.code = options.code;
-    this.identifier = options.identifier;
-    this.identityId = options.identityId;
-    this.type = options.type;
+    this.expires = options.expires;
+    this.identifierId = options.identifierId;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -51,9 +46,8 @@ export class ConnectSession extends LindormEntity<ConnectSessionAttributes> {
       ...this.defaultJSON(),
 
       code: this.code,
-      identifier: this.identifier,
-      identityId: this.identityId,
-      type: this.type,
+      expires: this.expires,
+      identifierId: this.identifierId,
     };
   }
 }

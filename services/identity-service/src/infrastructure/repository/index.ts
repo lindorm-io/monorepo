@@ -1,5 +1,3 @@
 export * from "./DisplayNameRepository";
-export * from "./EmailRepository";
-export * from "./ExternalIdentifierRepository";
+export * from "./IdentifierRepository";
 export * from "./IdentityRepository";
-export * from "./PhoneNumberRepository";

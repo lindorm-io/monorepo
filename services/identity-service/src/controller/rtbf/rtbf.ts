@@ -5,20 +5,13 @@ import { removeIdentityDisplayName } from "../../handler";
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     entity: { identity },
-    repository: {
-      emailRepository,
-      identityRepository,
-      externalIdentifierRepository,
-      phoneNumberRepository,
-    },
+    repository: { identifierRepository, identityRepository },
   } = ctx;
 
   if (identity.displayName.name) {
     await removeIdentityDisplayName(ctx, identity);
   }
 
-  await emailRepository.deleteMany({ identityId: identity.id });
-  await externalIdentifierRepository.deleteMany({ identityId: identity.id });
-  await phoneNumberRepository.deleteMany({ identityId: identity.id });
+  await identifierRepository.deleteMany({ identityId: identity.id });
   await identityRepository.destroy(identity);
 };

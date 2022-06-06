@@ -1,12 +1,10 @@
-import { ServerKoaContext } from "../../types";
 import { GetUserinfoResponseBody, IdentityServiceClaims, Scope } from "../../common";
 import { Identity } from "../../entity";
+import { ServerKoaContext } from "../../types";
 import { getAddress, getDisplayName, getName } from "../../util";
-import { getConnectedProviders } from "../external";
+import { getIdentifierUserinfo } from "../identifier";
 import { getUnixTime } from "date-fns";
 import { includes } from "lodash";
-import { userinfoEmailGet } from "../email";
-import { userinfoPhoneNumberGet } from "../phone-number";
 
 export const getUserinfoResponseBody = async (
   ctx: ServerKoaContext,
@@ -22,10 +20,7 @@ export const getUserinfoResponseBody = async (
     return { active: identity.active, claims, permissions: identity.permissions };
   }
 
-  let email: string;
-  let emailVerified: boolean;
-  let phoneNumber: string;
-  let phoneNumberVerified: boolean;
+  const identifierUserinfo = await getIdentifierUserinfo(ctx, identity);
 
   for (const scope of scopes.sort()) {
     switch (scope) {
@@ -38,23 +33,22 @@ export const getUserinfoResponseBody = async (
         break;
 
       case Scope.CONNECTED_PROVIDERS:
-        claims.connectedProviders = await getConnectedProviders(ctx, identity.id);
+        claims.connectedProviders = identifierUserinfo.connectedProviders;
         break;
 
       case Scope.EMAIL:
-        ({ email, emailVerified } = await userinfoEmailGet(ctx, identity.id));
-        claims.email = email;
-        claims.emailVerified = emailVerified;
+        claims.email = identifierUserinfo.email;
+        claims.emailVerified = identifierUserinfo.emailVerified;
         break;
 
       case Scope.NATIONAL_IDENTITY_NUMBER:
         claims.nationalIdentityNumber = identity.nationalIdentityNumber;
+        claims.nationalIdentityNumberVerified = identity.nationalIdentityNumberVerified;
         break;
 
       case Scope.PHONE:
-        ({ phoneNumber, phoneNumberVerified } = await userinfoPhoneNumberGet(ctx, identity.id));
-        claims.phoneNumber = phoneNumber;
-        claims.phoneNumberVerified = phoneNumberVerified;
+        claims.phoneNumber = identifierUserinfo.phoneNumber;
+        claims.phoneNumberVerified = identifierUserinfo.phoneNumberVerified;
         break;
 
       case Scope.PROFILE:
@@ -78,6 +72,7 @@ export const getUserinfoResponseBody = async (
 
       case Scope.SOCIAL_SECURITY_NUMBER:
         claims.socialSecurityNumber = identity.socialSecurityNumber;
+        claims.socialSecurityNumberVerified = identity.socialSecurityNumberVerified;
         break;
 
       case Scope.USERNAME:

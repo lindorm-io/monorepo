@@ -1,13 +1,9 @@
 import { Identity } from "../../entity";
 import { addUserinfoController } from "./add-userinfo";
 import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 
-jest.mock("../../handler", () => ({
-  userinfoEmailAdd: jest.fn().mockImplementation(async () => {}),
-  userinfoExternalIdentifierAdd: jest.fn().mockImplementation(async () => {}),
-  userinfoPhoneNumberAdd: jest.fn().mockImplementation(async () => {}),
-  userinfoUsernameAdd: jest.fn().mockImplementation(async () => {}),
-}));
+jest.mock("../../handler");
 
 describe("addUserinfoController", () => {
   let ctx: any;
@@ -45,9 +41,7 @@ describe("addUserinfoController", () => {
       },
       logger: createMockLogger(),
       repository: {
-        identityRepository: {
-          update: jest.fn(),
-        },
+        identityRepository: createMockRepository(),
       },
     };
   });
@@ -57,6 +51,7 @@ describe("addUserinfoController", () => {
 
     expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        active: true,
         address: {
           careOf: null,
           country: "country",
@@ -77,12 +72,17 @@ describe("addUserinfoController", () => {
         locale: "locale",
         middleName: "middleName",
         namingSystem: "given_family",
+        nationalIdentityNumber: null,
+        nationalIdentityNumberVerified: false,
         nickname: "nickname",
         picture: "picture",
+        preferredAccessibility: [],
         preferredUsername: "preferredUsername",
         profile: "profile",
         pronouns: null,
-        username: null,
+        socialSecurityNumber: null,
+        socialSecurityNumberVerified: false,
+        username: "preferredUsername",
         website: "website",
         zoneInfo: "zoneInfo",
       }),

@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetUserinfoRequestBody, GetUserinfoResponseBody, JOI_GUID } from "../../common";
+import { ServerKoaController } from "../../types";
 import { getUserinfoResponseBody } from "../../handler";
 
 export const getUserinfoSchema = Joi.object<GetUserinfoRequestBody>()

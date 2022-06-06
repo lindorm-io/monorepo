@@ -1,3 +1,3 @@
-export * from "./admin";
-export * from "./get";
-export * from "./update";
+export * from "./identity-admin";
+export * from "./get-identity";
+export * from "./update-identity";

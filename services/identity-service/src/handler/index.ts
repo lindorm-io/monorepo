@@ -1,5 +1,2 @@
-export * from "./email";
-export * from "./external";
+export * from "./identifier";
 export * from "./identity";
-export * from "./phone-number";
-export * from "./username";

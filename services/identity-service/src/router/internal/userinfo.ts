@@ -19,7 +19,6 @@ router.get(
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
     scopes: [ClientScope.IDENTITY_IDENTITY_READ],
   }),
-
   useSchema(getUserinfoSchema),
   identityEntityMiddleware("data.id"),
   useController(getUserinfoController),
@@ -32,7 +31,6 @@ router.put(
     permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
     scopes: [ClientScope.IDENTITY_IDENTITY_WRITE],
   }),
-
   useSchema(addUserinfoSchema),
   identityEntityMiddleware("data.id"),
   useController(addUserinfoController),

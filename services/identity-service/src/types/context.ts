@@ -1,4 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
+import { ConnectSession, DisplayName, Identity, Identifier } from "../entity";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -9,20 +10,10 @@ import {
   LindormNodeServerRepository,
 } from "@lindorm-io/node-server";
 import {
-  ConnectSession,
-  DisplayName,
-  Email,
-  Identity,
-  ExternalIdentifier,
-  PhoneNumber,
-} from "../entity";
-import {
   ConnectSessionCache,
   DisplayNameRepository,
-  EmailRepository,
-  ExternalIdentifierRepository,
+  IdentifierRepository,
   IdentityRepository,
-  PhoneNumberRepository,
 } from "../infrastructure";
 
 interface ServerAxios extends LindormNodeServerAxios {
@@ -37,18 +28,14 @@ interface ServerCache extends LindormNodeServerCache {
 interface ServerEntity {
   connectSession: ConnectSession;
   displayName: DisplayName;
-  email: Email;
-  externalIdentifier: ExternalIdentifier;
+  identifier: Identifier;
   identity: Identity;
-  phoneNumber: PhoneNumber;
 }
 
 interface ServerRepository extends LindormNodeServerRepository {
   displayNameRepository: DisplayNameRepository;
-  emailRepository: EmailRepository;
-  externalIdentifierRepository: ExternalIdentifierRepository;
+  identifierRepository: IdentifierRepository;
   identityRepository: IdentityRepository;
-  phoneNumberRepository: PhoneNumberRepository;
 }
 
 interface Context extends LindormNodeServerContext {
