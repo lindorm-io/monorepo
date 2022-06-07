@@ -1,4 +1,6 @@
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createTestKeyPair } from "@lindorm-io/key-pair";
 import { mongoConnection, redisConnection } from "../../instance";
 import {
   AccountRepository,
@@ -9,8 +11,6 @@ import {
   LogoutSessionCache,
   MfaCookieSessionCache,
 } from "../../infrastructure";
-import { createMockLogger } from "@lindorm-io/winston";
-import { createTestKeyPair } from "@lindorm-io/key-pair";
 
 export let TEST_CONSENT_SESSION_CACHE: ConsentSessionCache;
 export let TEST_FLOW_SESSION_CACHE: FlowSessionCache;
