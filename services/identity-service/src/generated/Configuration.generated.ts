@@ -1,5 +1,6 @@
 export interface Configuration {
   defaults:  Defaults;
+  frontend:  Frontend;
   mongo:     Mongo;
   oauth:     Oauth;
   redis:     Mongo;
@@ -9,6 +10,16 @@ export interface Configuration {
 
 interface Defaults {
   connect_identifier_session_expiry: string;
+}
+
+interface Frontend {
+  host:    string;
+  port:    number;
+  routes:  Routes;
+}
+
+interface Routes {
+  connect_callback: string;
 }
 
 interface Mongo {

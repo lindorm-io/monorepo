@@ -8,6 +8,7 @@ defaults:
 frontend:
   host: http://localhost
   routes:
+    code_callback: /code/callback
     consent: /consent
     error: /error
     login: /login

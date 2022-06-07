@@ -24,10 +24,11 @@ interface Frontend {
 }
 
 interface Routes {
-  consent: string;
-  error:   string;
-  login:   string;
-  logout:  string;
+  code_callback: string;
+  consent:       string;
+  error:         string;
+  login:         string;
+  logout:        string;
 }
 
 interface Mongo {

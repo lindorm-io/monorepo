@@ -1,9 +1,11 @@
-import { LoginSession, FlowSession } from "../../../entity";
 import { ClientScope, SendCodeRequestData } from "../../../common";
-import { clientCredentialsMiddleware } from "../../../middleware";
-import { getExpires } from "@lindorm-io/core";
-import { getRandomString } from "@lindorm-io/core";
+import { LoginSession, FlowSession } from "../../../entity";
 import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { argon } from "../../../instance";
+import { clientCredentialsMiddleware } from "../../../middleware";
+import { configuration } from "../../../server/configuration";
+import { createURL } from "@lindorm-io/core";
+import { getRandomString } from "@lindorm-io/core";
 
 interface Options extends FlowHandlerInitialiseOptions {
   email: string;
@@ -30,17 +32,24 @@ export const initialiseEmailLinkFlow = async (
     flowToken,
   });
 
-  flowSession.code = getRandomString(64);
+  const code = getRandomString(64);
+  flowSession.code = await argon.encrypt(code);
 
   await flowSessionCache.update(flowSession);
 
-  const { expiresIn } = getExpires(flowSession.expires);
+  const url = createURL(configuration.frontend.routes.code_callback, {
+    host: configuration.frontend.host,
+    port: configuration.frontend.port,
+    query: {
+      code,
+      token: flowToken,
+    },
+  });
 
   const data: SendCodeRequestData = {
     content: {
-      code: flowSession.code,
-      expiresIn,
-      flowToken,
+      expires: flowSession.expires,
+      url: url.toString(),
     },
     template: "authentication-email-link-flow",
     to: email,

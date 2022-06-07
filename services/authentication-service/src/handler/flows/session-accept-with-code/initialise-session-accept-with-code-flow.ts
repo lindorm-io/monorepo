@@ -1,9 +1,10 @@
-import { LoginSession, FlowSession } from "../../../entity";
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
+import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomString } from "@lindorm-io/core";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
 
 type Options = FlowHandlerInitialiseOptions;
 
@@ -38,14 +39,15 @@ export const initialiseSessionAcceptWithCodeFlow = async (
     });
   }
 
-  flowSession.code = `${getRandomString(4)}-${getRandomString(4)}`.toUpperCase();
+  const code = `${getRandomString(4)}-${getRandomString(4)}`.toUpperCase();
+  flowSession.code = await argon.encrypt(code);
 
   await flowSessionCache.update(flowSession);
 
   const data: EmitSocketEventRequestData = {
     channels: { sessions: loginSession.sessions },
     content: { id: flowSession.id, flowToken },
-    event: "authentication:session-code",
+    event: "authentication-service:session-accept-with-code-flow",
   };
 
   await communicationClient.post("/internal/socket/emit", {
@@ -53,5 +55,5 @@ export const initialiseSessionAcceptWithCodeFlow = async (
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 
-  return { displayCode: flowSession.code };
+  return { displayCode: code };
 };

@@ -1,6 +1,11 @@
 defaults:
   connect_identifier_session_expiry: 2 hours
 
+frontend:
+  host: http://localhost
+  routes:
+    connect_callback: /connect/callback
+
 mongo:
   host: localhost
   port: 27017

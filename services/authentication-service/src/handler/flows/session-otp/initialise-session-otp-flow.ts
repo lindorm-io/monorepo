@@ -2,6 +2,7 @@ import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomNumberAsync } from "../../../util";
 
@@ -34,14 +35,15 @@ export const initialiseSessionOtpFlow = async (
     });
   }
 
-  flowSession.otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
+  const otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
+  flowSession.otp = await argon.encrypt(otp);
 
   await flowSessionCache.update(flowSession);
 
   const data: EmitSocketEventRequestData = {
     channels: { sessions: loginSession.sessions },
-    content: { otp: flowSession.otp },
-    event: "authentication:session-otp",
+    content: { otp },
+    event: "authentication-service:session-otp-flow",
   };
 
   await communicationClient.post("/internal/socket/emit", {

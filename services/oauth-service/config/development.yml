@@ -1,6 +1,6 @@
 frontend:
   host: http://localhost
-  port: 4000
+  port: 4500
 
 mongo:
   host: localhost

@@ -1,8 +1,8 @@
 import { ClientScope, SendCodeRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { getExpires } from "@lindorm-io/core";
 import { getRandomNumberAsync } from "../../../util";
 
 interface Options extends FlowHandlerInitialiseOptions {
@@ -30,16 +30,15 @@ export const initialiseEmailOtpFlow = async (
     flowToken,
   });
 
-  flowSession.otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
+  const otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
+  flowSession.otp = await argon.encrypt(otp);
 
   await flowSessionCache.update(flowSession);
 
-  const { expiresIn } = getExpires(flowSession.expires);
-
   const data: SendCodeRequestData = {
     content: {
-      expiresIn,
-      otp: flowSession.otp,
+      expires: flowSession.expires,
+      otp,
     },
     template: "authentication-email-otp-flow",
     to: email,

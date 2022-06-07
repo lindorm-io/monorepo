@@ -24,7 +24,9 @@ describe("sendConnectSessionMessage", () => {
     };
 
     identifier = createTestPhoneIdentifier();
-    connectSession = createTestConnectSession();
+    connectSession = createTestConnectSession({
+      id: "4ccac677-8a15-40a2-a19e-f094e1710eb0",
+    });
 
     isIdentifierStoredSeparately.mockImplementation(() => true);
   });
@@ -37,11 +39,10 @@ describe("sendConnectSessionMessage", () => {
     expect(ctx.axios.communicationClient.post).toHaveBeenCalledWith("/internal/send/code", {
       data: {
         content: {
-          code: "code",
           expires: new Date("2029-01-01T08:00:00.000Z"),
-          sessionId: connectSession.id,
+          url: "https://frontend.url/connect/callback?code=code&session_id=4ccac677-8a15-40a2-a19e-f094e1710eb0",
         },
-        template: "identifier-connect-session-phone",
+        template: "identifier-connect-session",
         to: identifier.identifier,
         type: "phone",
       },
