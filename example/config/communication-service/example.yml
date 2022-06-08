@@ -4,21 +4,21 @@ oauth:
 
 redis:
   host: localhost
-  port: 3202
+  port: 6379
 
 server:
   domain: https://development.lindorm.io
   issuer: https://communication.development.lindorm.io
-  host: http://localhost
-  port: 3200
+  host: http://communication-service
+  port: 3000
   workers: true
 
 services:
   device_service:
     issuer: https://device.development.lindorm.io
-    host: http://localhost
-    port: 3300
+    host: http://device-service
+    port: 3000
   oauth_service:
     issuer: https://oauth.development.lindorm.io
-    host: http://localhost
-    port: 3500
+    host: http://oauth-service
+    port: 3000

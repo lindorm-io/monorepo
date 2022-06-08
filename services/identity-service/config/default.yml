@@ -25,8 +25,8 @@ redis:
 server:
   domain: https://lindorm.io
   environment: development
-  host: http://localhost
   issuer: https://identity.lindorm.io
+  host: http://localhost
   keys: []
   port: 3000
   workers: false

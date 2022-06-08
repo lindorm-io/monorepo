@@ -47,6 +47,7 @@ RUN adduser -S nodejs -u 1001
 
 USER nodejs
 
+VOLUME config-volume
 COPY config config
 COPY package.json package.json
 COPY --from=dependencies /app/node_modules node_modules

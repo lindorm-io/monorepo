@@ -4,13 +4,13 @@ frontend:
 
 mongo:
   host: localhost
-  port: 3401
+  port: 27017
   username: root
   password: example
 
 redis:
   host: localhost
-  port: 3402
+  port: 6379
 
 oauth:
   client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
@@ -19,16 +19,16 @@ oauth:
 server:
   domain: https://development.lindorm.io
   issuer: https://identity.development.lindorm.io
-  host: http://localhost
-  port: 3400
+  host: http://identity-service
+  port: 3000
   workers: true
 
 services:
   communication_service:
     issuer: https://communication.development.lindorm.io
-    host: http://localhost
-    port: 3200
+    host: http://communication-service
+    port: 3000
   oauth_service:
     issuer: https://oauth.development.lindorm.io
-    host: http://localhost
-    port: 3500
+    host: http://oauth-service
+    port: 3000

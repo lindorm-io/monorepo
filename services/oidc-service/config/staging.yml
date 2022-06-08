@@ -4,9 +4,8 @@ redis:
 
 server:
   domain: https://staging.lindorm.io
-  environment: staging
-  host: https://oidc.staging.lindorm.io
   issuer: https://oidc.staging.lindorm.io
+  host: https://oidc.staging.lindorm.io
   workers: true
 
 services:

@@ -1,6 +1,6 @@
 mongo:
   host: localhost
-  port: 3701
+  port: 27017
   username: root
   password: example
 
@@ -10,17 +10,17 @@ oauth:
 
 redis:
   host: localhost
-  port: 3702
+  port: 6379
 
 server:
   domain: https://development.lindorm.io
   issuer: https://vault.development.lindorm.io
-  host: http://localhost
-  port: 3700
+  host: http://vault-service
+  port: 3000
   workers: true
 
 services:
   oauth_service:
     issuer: https://oauth.development.lindorm.io
-    host: http://localhost
-    port: 3500
+    host: http://oauth-service
+    port: 3000

@@ -1,7 +1,6 @@
 mongo:
   host: localhost
   port: 3701
-  db_name: vault
   username: root
   password: example
 
@@ -15,9 +14,8 @@ redis:
 
 server:
   domain: https://test.lindorm.io
-  environment: test
-  host: https://vault.test.lindorm.io
   issuer: https://vault.test.lindorm.io
+  host: https://vault.test.lindorm.io
   port: 3700
   workers: false
 

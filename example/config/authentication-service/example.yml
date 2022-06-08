@@ -3,8 +3,8 @@ frontend:
   port: 4100
 
 mongo:
-  host: localhost
-  port: 3101
+  host: mongo
+  port: 27017
   username: root
   password: example
 
@@ -13,40 +13,40 @@ oauth:
   client_secret: kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E
 
 redis:
-  host: localhost
-  port: 3102
+  host: redis
+  port: 6379
 
 server:
   domain: https://development.lindorm.io
   issuer: https://authentication.development.lindorm.io
-  host: http://localhost
+  host: http://authentication-service
   keys:
     - secret
-  port: 3100
+  port: 3000
   workers: true
 
 services:
   communication_service:
     issuer: https://communication.development.lindorm.io
-    host: http://localhost
-    port: 3200
+    host: http://communication-service
+    port: 3000
   device_service:
     issuer: https://device.development.lindorm.io
-    host: http://localhost
-    port: 3300
+    host: http://device-service
+    port: 3000
   identity_service:
     issuer: https://identity.development.lindorm.io
-    host: http://localhost
-    port: 3400
+    host: http://identity-service
+    port: 3000
   oauth_service:
     issuer: https://oauth.development.lindorm.io
-    host: http://localhost
-    port: 3500
+    host: http://oauth-service
+    port: 3000
   oidc_service:
     issuer: https://oidc.development.lindorm.io
-    host: http://localhost
-    port: 3600
+    host: http://oidc-service
+    port: 3000
   vault_service:
     issuer: https://vault.development.lindorm.io
-    host: http://localhost
-    port: 3700
+    host: http://vault-service
+    port: 3000

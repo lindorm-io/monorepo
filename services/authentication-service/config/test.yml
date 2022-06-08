@@ -4,7 +4,6 @@ frontend:
 mongo:
   host: localhost
   port: 3101
-  db_name: authentication
   username: root
   password: example
 
@@ -26,9 +25,8 @@ redis:
 
 server:
   domain: https://test.lindorm.io
-  environment: test
-  host: https://authentication.test.lindorm.io
   issuer: https://authentication.test.lindorm.io
+  host: https://authentication.test.lindorm.io
   keys:
     - secret
   port: 3100

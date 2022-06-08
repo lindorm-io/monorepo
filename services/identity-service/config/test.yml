@@ -4,7 +4,6 @@ frontend:
 mongo:
   host: localhost
   port: 3401
-  db_name: identity
   username: root
   password: example
 
@@ -18,9 +17,8 @@ redis:
 
 server:
   domain: https://test.lindorm.io
-  environment: test
-  host: https://identity.test.lindorm.io
   issuer: https://identity.test.lindorm.io
+  host: https://identity.test.lindorm.io
   port: 3400
   workers: false
 

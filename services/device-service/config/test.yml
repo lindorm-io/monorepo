@@ -1,7 +1,6 @@
 mongo:
   host: localhost
   port: 3301
-  db_name: device
   username: root
   password: example
 
@@ -15,9 +14,8 @@ redis:
 
 server:
   domain: https://test.lindorm.io
-  environment: test
-  host: https://device.test.lindorm.io
   issuer: https://device.test.lindorm.io
+  host: https://device.test.lindorm.io
   port: 3300
   workers: false
 

@@ -4,9 +4,8 @@ redis:
 
 server:
   domain: https://lindorm.io
-  environment: production
-  host: https://vault.lindorm.io
   issuer: https://vault.lindorm.io
+  host: https://vault.lindorm.io
   workers: true
 
 services:
