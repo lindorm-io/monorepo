@@ -45,21 +45,21 @@ export const confirmPasswordBrowserLinkFlow = async (
   logger.debug("Verifying Password");
 
   const salt = await vaultGetSalt(ctx, account);
-  const cryptoLayered = new CryptoLayered({
+  const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },
   });
 
-  await cryptoLayered.assert(password, account.password);
+  await crypto.assert(password, account.password);
 
   logger.debug("Verifying Cookie");
 
   const cookieId = ctx.getCookie(BROWSER_LINK_COOKIE_NAME);
-  const browserSession = await browserLinkRepository.find({ id: cookieId });
+  const browserLink = await browserLinkRepository.find({ id: cookieId });
 
-  if (identityId !== browserSession.identityId) {
+  if (identityId !== browserLink.identityId) {
     throw new ClientError("Invalid Cookie", {
-      description: "Invalid Identity ID",
+      description: "Invalid Browser Link",
     });
   }
 

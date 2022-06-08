@@ -41,7 +41,6 @@ export const confirmTimeBasedOtpFlow = async (
   logger.debug("Verifying TOTP");
 
   const salt = await vaultGetSalt(ctx, account);
-
   const totpHandler = new TOTPHandler({
     aes: { secret: salt.aes },
     issuer: configuration.server.issuer,

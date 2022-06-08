@@ -40,12 +40,12 @@ export const confirmRecoveryCodeFlow = async (
   logger.debug("Verifying Recovery Code");
 
   const salt = await vaultGetSalt(ctx, account);
-  const cryptoLayered = new CryptoLayered({
+  const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },
   });
 
-  await cryptoLayered.assert(code, account.recoveryCode);
+  await crypto.assert(code, account.recoveryCode);
 
   account.recoveryCode = null;
 

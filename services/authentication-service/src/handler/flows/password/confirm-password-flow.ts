@@ -44,12 +44,12 @@ export const confirmPasswordFlow = async (
   logger.debug("Verifying Password");
 
   const salt = await vaultGetSalt(ctx, account);
-  const cryptoLayered = new CryptoLayered({
+  const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },
   });
 
-  await cryptoLayered.assert(password, account.password);
+  await crypto.assert(password, account.password);
 
   return account;
 };
