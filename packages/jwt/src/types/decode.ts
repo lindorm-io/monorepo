@@ -1,5 +1,6 @@
-export interface IssuerDecodedClaims<Payload, Claims> {
+export interface JwtDecodedClaims<Payload, Claims> {
   id: string;
+  adjustedAccessLevel: number | null;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;
@@ -18,7 +19,7 @@ export interface IssuerDecodedClaims<Payload, Claims> {
   username: string | null;
 }
 
-export interface IssuerDecodeData<Payload, Claims> extends IssuerDecodedClaims<Payload, Claims> {
+export interface JwtDecodeData<Payload, Claims> extends JwtDecodedClaims<Payload, Claims> {
   active: boolean;
   expires: number;
   expiresIn: number;

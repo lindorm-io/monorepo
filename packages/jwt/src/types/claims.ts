@@ -9,6 +9,7 @@ export interface DefaultClaims {
 }
 
 export interface StandardClaims extends DefaultClaims {
+  aal?: number; // adjusted access level
   acr?: Array<string>; // authentication context class reference
   amr?: Array<string>; // authentication methods reference
   auth_time?: number; // time when authentication was performed

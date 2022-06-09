@@ -1,9 +1,11 @@
-export interface IssuerVerifyOptions {
+export interface JwtVerifyOptions {
+  adjustedAccessLevel: number;
   audience: string;
   audiences: Array<string>;
   authorizedParty: string;
   clockTolerance: number;
   issuer: string;
+  levelOfAssurance: number;
   maxAge: string;
   nonce: string;
   permissions: Array<string>;
@@ -14,9 +16,10 @@ export interface IssuerVerifyOptions {
   types: Array<string>;
 }
 
-export interface IssuerVerifyData<Payload, Claims> {
+export interface JwtVerifyData<Payload, Claims> {
   id: string;
   active: boolean;
+  adjustedAccessLevel: number | null;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;

@@ -1,1 +1,1 @@
-export * from "./TokenIssuer";
+export * from "./JWT";

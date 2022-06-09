@@ -1,5 +1,5 @@
 export * from "./claims";
 export * from "./decode";
-export * from "./issuer";
+export * from "./jwt";
 export * from "./sign";
 export * from "./verify";

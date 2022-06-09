@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
-import { IssuerSignOptions } from "../types";
+import { JwtSignOptions } from "../types";
 import { TokenError } from "../error";
-import { TokenIssuer } from "./TokenIssuer";
+import { JWT } from "./JWT";
 import { baseParse } from "@lindorm-io/core";
 import { createTestJwt } from "../mocks";
 import { getUnixTime } from "date-fns";
@@ -15,10 +15,10 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 const parseTokenData = (token: string): any => JSON.parse(baseParse(token.split(".")[1]));
 
-describe("TokenIssuer", () => {
-  let tokenIssuer: TokenIssuer;
-  let optionsMin: IssuerSignOptions<any, any>;
-  let optionsFull: IssuerSignOptions<any, any>;
+describe("JWT", () => {
+  let jwt: JWT;
+  let optionsMin: JwtSignOptions<any, any>;
+  let optionsFull: JwtSignOptions<any, any>;
 
   beforeEach(() => {
     optionsMin = {
@@ -29,6 +29,7 @@ describe("TokenIssuer", () => {
     };
     optionsFull = {
       id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
+      adjustedAccessLevel: 3,
       audiences: ["audience"],
       authContextClass: ["acr"],
       authMethodsReference: ["amr"],
@@ -48,14 +49,14 @@ describe("TokenIssuer", () => {
       type: "type",
       username: "username",
     };
-    tokenIssuer = createTestJwt();
+    jwt = createTestJwt();
   });
 
   afterEach(jest.clearAllMocks);
 
   describe("RS512", () => {
     beforeEach(() => {
-      tokenIssuer = createTestJwt({
+      jwt = createTestJwt({
         keystore: createTestKeystore({
           keys: [createTestKeyPairRSA()],
         }),
@@ -63,9 +64,9 @@ describe("TokenIssuer", () => {
     });
 
     test("should sign/verify", () => {
-      const { id, token } = tokenIssuer.sign(optionsMin);
+      const { id, token } = jwt.sign(optionsMin);
 
-      expect(tokenIssuer.verify(token)).toStrictEqual(
+      expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
           token,
@@ -79,7 +80,7 @@ describe("TokenIssuer", () => {
 
   describe("ES512", () => {
     beforeEach(() => {
-      tokenIssuer = createTestJwt({
+      jwt = createTestJwt({
         keystore: createTestKeystore({
           keys: [createTestKeyPairEC()],
         }),
@@ -87,9 +88,9 @@ describe("TokenIssuer", () => {
     });
 
     test("should sign/verify", () => {
-      const { id, token } = tokenIssuer.sign(optionsMin);
+      const { id, token } = jwt.sign(optionsMin);
 
-      expect(tokenIssuer.verify(token)).toStrictEqual(
+      expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
           token,
@@ -102,7 +103,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should create", () => {
-    expect(tokenIssuer.sign(optionsMin)).toStrictEqual({
+    expect(jwt.sign(optionsMin)).toStrictEqual({
       id: expect.any(String),
       expires: expect.any(Date),
       expiresIn: 10,
@@ -112,11 +113,12 @@ describe("TokenIssuer", () => {
   });
 
   test("should decode", () => {
-    const { id, token } = tokenIssuer.sign(optionsFull);
+    const { id, token } = jwt.sign(optionsFull);
 
-    expect(TokenIssuer.decode(token)).toStrictEqual({
+    expect(JWT.decode(token)).toStrictEqual({
       id,
       active: true,
+      adjustedAccessLevel: 3,
       audiences: ["audience"],
       authContextClass: ["acr"],
       authMethodsReference: ["amr"],
@@ -143,122 +145,143 @@ describe("TokenIssuer", () => {
     });
   });
 
-  test("should verify audience", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+  test("should verify adjusted access level", () => {
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
+        adjustedAccessLevel: 3,
+      }),
+    ).toBeTruthy();
+  });
+
+  test("should verify audience", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(
+      jwt.verify(token, {
         audience: "audience",
       }),
     ).toBeTruthy();
   });
 
   test("should verify audiences", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         audiences: ["audience"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify issuer", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         issuer: "issuer",
       }),
     ).toBeTruthy();
   });
 
   test("should verify max age", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         maxAge: "90 minutes",
       }),
     ).toBeTruthy();
   });
 
   test("should verify nonce", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         nonce: "bed190d568a5456bb15a39cf71d72022",
       }),
     ).toBeTruthy();
   });
 
-  test("should verify permissions", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+  test("should verify level of assurance", () => {
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
+        levelOfAssurance: 3,
+      }),
+    ).toBeTruthy();
+  });
+
+  test("should verify permissions", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(
+      jwt.verify(token, {
         permissions: ["permission1", "permission2"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify scopes", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         scopes: ["scope"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify subject", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         subject: "subject",
       }),
     ).toBeTruthy();
   });
 
   test("should verify subjects", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         subjects: ["subject", "extra", "other"],
       }),
     ).toBeTruthy();
   });
 
   test("should verify subject hint", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         subjectHint: "hint",
       }),
     ).toBeTruthy();
   });
 
   test("should verify types", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         types: ["other", "extra", "type"],
       }),
     ).toBeTruthy();
   });
 
   test("should return all signed values", () => {
-    const { id, token } = tokenIssuer.sign(optionsFull);
+    const { id, token } = jwt.sign(optionsFull);
 
-    expect(tokenIssuer.verify(token)).toStrictEqual({
+    expect(jwt.verify(token)).toStrictEqual({
       id,
       active: true,
+      adjustedAccessLevel: 3,
       audiences: ["audience"],
       authContextClass: ["acr"],
       authMethodsReference: ["amr"],
@@ -286,11 +309,12 @@ describe("TokenIssuer", () => {
   });
 
   test("should return default values", () => {
-    const { id, token } = tokenIssuer.sign(optionsMin);
+    const { id, token } = jwt.sign(optionsMin);
 
-    expect(tokenIssuer.verify(token)).toStrictEqual({
+    expect(jwt.verify(token)).toStrictEqual({
       id: id,
       active: true,
+      adjustedAccessLevel: null,
       audiences: ["audience"],
       authContextClass: [],
       authMethodsReference: [],
@@ -318,7 +342,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should store token claims in snake_case and decode to camelCase", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       ...optionsMin,
       claims: {
         caseOne: 1,
@@ -339,7 +363,7 @@ describe("TokenIssuer", () => {
       }),
     );
 
-    expect(tokenIssuer.verify(token)).toStrictEqual(
+    expect(jwt.verify(token)).toStrictEqual(
       expect.objectContaining({
         claims: {
           caseFive: true,
@@ -353,7 +377,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should store token payload in snake_case and decode to camelCase", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       ...optionsMin,
       payload: {
         caseOne: 1,
@@ -376,7 +400,7 @@ describe("TokenIssuer", () => {
       }),
     );
 
-    expect(tokenIssuer.verify(token)).toStrictEqual(
+    expect(jwt.verify(token)).toStrictEqual(
       expect.objectContaining({
         payload: {
           caseFive: true,
@@ -390,7 +414,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept string as expiry", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       audiences: optionsFull.audiences,
       expiry: "10 seconds",
       subject: optionsFull.subject,
@@ -407,7 +431,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept number as expiry", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       audiences: optionsFull.audiences,
       expiry: 1609488010,
       subject: optionsFull.subject,
@@ -424,7 +448,7 @@ describe("TokenIssuer", () => {
   });
 
   test("should accept Date as expiry", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       audiences: optionsFull.audiences,
       expiry: new Date("2021-12-12 12:00:00"),
       subject: optionsFull.subject,
@@ -441,83 +465,83 @@ describe("TokenIssuer", () => {
   });
 
   test("should reject missing permission", () => {
-    const { token } = tokenIssuer.sign({ ...optionsFull, permissions: [] });
+    const { token } = jwt.sign({ ...optionsFull, permissions: [] });
 
     expect(() =>
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         permissions: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid permission", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(() =>
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         permissions: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject missing scope", () => {
-    const { token } = tokenIssuer.sign({ ...optionsFull, scopes: [] });
+    const { token } = jwt.sign({ ...optionsFull, scopes: [] });
 
     expect(() =>
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         scopes: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid scope", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(() =>
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         scopes: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject invalid type", () => {
-    const { token } = tokenIssuer.sign(optionsFull);
+    const { token } = jwt.sign(optionsFull);
 
     expect(() =>
-      tokenIssuer.verify(token, {
+      jwt.verify(token, {
         types: ["wrong-type"],
       }),
     ).toThrow(TokenError);
   });
 
   test("should reject expired", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       ...optionsFull,
       expiry: new Date("2021-01-01T08:10:00.000Z"),
     });
 
     MockDate.set("2022-01-01T08:10:00.000Z");
 
-    expect(() => tokenIssuer.verify(token)).toThrow(TokenError);
+    expect(() => jwt.verify(token)).toThrow(TokenError);
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });
 
   test("should not reject expired when clock tolerance is enabled", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       ...optionsFull,
       expiry: new Date("2021-01-01T08:10:00.000Z"),
     });
 
     MockDate.set("2021-01-01T08:10:04.999Z");
 
-    expect(tokenIssuer.verify(token, { clockTolerance: 5 })).toBeTruthy();
+    expect(jwt.verify(token, { clockTolerance: 5 })).toBeTruthy();
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });
 
   test("should reject token not yet valid", () => {
-    const { token } = tokenIssuer.sign({
+    const { token } = jwt.sign({
       ...optionsFull,
       notBefore: new Date("2021-01-01T09:00:00.000Z"),
       expiry: new Date("2021-01-01T10:00:00.000Z"),
@@ -525,7 +549,7 @@ describe("TokenIssuer", () => {
 
     MockDate.set("2022-01-01T08:30:00.000Z");
 
-    expect(() => tokenIssuer.verify(token)).toThrow(TokenError);
+    expect(() => jwt.verify(token)).toThrow(TokenError);
 
     MockDate.set("2021-01-01T08:00:00.000Z");
   });

@@ -1,40 +1,45 @@
 import { ILogger } from "@lindorm-io/winston";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
-import { assertClaimDifference, assertClaimEquals, assertClaimIncludes } from "../util/private";
 import { camelKeys, getExpires, snakeKeys, sortObjectKeys } from "@lindorm-io/core";
 import { decode, sign, verify } from "jsonwebtoken";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 import {
-  IssuerDecodeData,
-  IssuerOptions,
-  IssuerSignData,
-  IssuerSignOptions,
-  IssuerVerifyData,
-  IssuerVerifyOptions,
+  assertClaimDifference,
+  assertClaimEquals,
+  assertClaimIncludes,
+  assertGreaterOrEqual,
+} from "../util/private";
+import {
+  JwtDecodeData,
+  JwtOptions,
+  JwtSignData,
+  JwtSignOptions,
+  JwtVerifyData,
+  JwtVerifyOptions,
   StandardClaims,
 } from "../types";
 
-export class TokenIssuer {
+export class JWT {
   private readonly clockTolerance: number;
   private readonly issuer: string;
   private readonly keyType: KeyType | undefined;
   private readonly keystore: Keystore;
   private readonly logger: ILogger;
 
-  public constructor(options: IssuerOptions) {
+  public constructor(options: JwtOptions) {
     this.clockTolerance = options.clockTolerance || 500;
     this.issuer = options.issuer;
     this.keyType = options.keyType;
     this.keystore = options.keystore;
-    this.logger = options.logger.createChildLogger(["TokenIssuer"]);
+    this.logger = options.logger.createChildLogger(["jwt"]);
   }
 
   public sign<
     Payload extends Record<string, any> = Record<string, any>,
     Claims extends Record<string, any> = Record<string, any>,
-  >(options: IssuerSignOptions<Payload, Claims>): IssuerSignData {
+  >(options: JwtSignOptions<Payload, Claims>): JwtSignData {
     const id = options.id || randomUUID();
 
     const { expires, expiresIn, expiresUnix, now, nowUnix } = getExpires(options.expiry);
@@ -55,6 +60,7 @@ export class TokenIssuer {
       token_type: options.type,
 
       // optional claims
+      ...(options.adjustedAccessLevel ? { aal: options.adjustedAccessLevel } : {}),
       ...(options.authContextClass ? { acr: options.authContextClass } : {}),
       ...(options.authMethodsReference ? { amr: options.authMethodsReference } : {}),
       ...(options.authTime ? { auth_time: options.authTime } : {}),
@@ -97,17 +103,19 @@ export class TokenIssuer {
   public verify<
     Payload extends Record<string, any> = Record<string, any>,
     Claims extends Record<string, any> = Record<string, any>,
-  >(token: string, options: Partial<IssuerVerifyOptions> = {}): IssuerVerifyData<Payload, Claims> {
+  >(token: string, options: Partial<JwtVerifyOptions> = {}): JwtVerifyData<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
-    const { keyId, ...claims } = TokenIssuer.decode<Payload, Claims>(token);
+    const { keyId, ...claims } = JWT.decode<Payload, Claims>(token);
     const { algorithms, publicKey } = this.keystore.getKey(keyId);
     const {
+      adjustedAccessLevel,
       audience,
       audiences,
       authorizedParty,
       clockTolerance,
       issuer = this.issuer,
+      levelOfAssurance,
       maxAge,
       nonce,
       permissions,
@@ -133,12 +141,20 @@ export class TokenIssuer {
       throw new TokenError("Invalid token", { error: err });
     }
 
+    if (adjustedAccessLevel) {
+      assertGreaterOrEqual(adjustedAccessLevel, claims.adjustedAccessLevel, "aal");
+    }
+
     if (audiences) {
       assertClaimDifference(audiences, claims.audiences, "aud");
     }
 
     if (authorizedParty) {
       assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
+    }
+
+    if (levelOfAssurance) {
+      assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
     }
 
     if (permissions) {
@@ -172,7 +188,7 @@ export class TokenIssuer {
   public static decode<
     Payload extends Record<string, any> = Record<string, any>,
     Claims extends Record<string, any> = Record<string, any>,
-  >(token: string): IssuerDecodeData<Payload, Claims> {
+  >(token: string): JwtDecodeData<Payload, Claims> {
     const {
       header: { kid: keyId },
       payload: object,
@@ -183,6 +199,7 @@ export class TokenIssuer {
 
     const now = getUnixTime(new Date());
     const {
+      aal,
       acr,
       amr,
       aud,
@@ -209,6 +226,7 @@ export class TokenIssuer {
     return {
       id: jti,
       active: iat <= now && nbf <= now && exp >= now,
+      adjustedAccessLevel: aal || null,
       audiences: aud,
       authContextClass: acr || [],
       authMethodsReference: amr || [],
