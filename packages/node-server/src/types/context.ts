@@ -32,7 +32,7 @@ export interface LindormNodeServerRepository {
 }
 
 export interface LindormNodeServerToken {
-  bearerToken: JwtVerifyData<unknown, unknown>;
+  bearerToken: JwtVerifyData;
 }
 
 export interface LindormNodeServerContext extends DefaultLindormContext {
