@@ -2,6 +2,7 @@ import { AuthorizationSession, BrowserSession } from "../../entity";
 import { PromptMode, SessionStatus } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { difference, includes } from "lodash";
+import { getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isAuthenticationRequiredByMaxAge } from "./is-authentication-required-by-max-age";
 
 export const isAuthenticationRequired = (
@@ -48,7 +49,7 @@ export const isAuthenticationRequired = (
     return true;
   }
 
-  if (authorizationSession.levelOfAssurance > browserSession.levelOfAssurance) {
+  if (authorizationSession.levelOfAssurance > getAdjustedAccessLevel(browserSession)) {
     return true;
   }
 

@@ -3,12 +3,15 @@ import { AuthorizationSession, BrowserSession } from "../../entity";
 import { PromptMode, SessionStatus } from "../../common";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { isAuthenticationRequired } from "./is-authentication-required";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isAuthenticationRequiredByMaxAge as _isAuthenticationRequiredByMaxAge } from "./is-authentication-required-by-max-age";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.mock("../get-adjusted-access-level");
 jest.mock("./is-authentication-required-by-max-age");
 
+const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
 const isAuthenticationRequiredByMaxAge = _isAuthenticationRequiredByMaxAge as jest.Mock;
 
 describe("isAuthenticationRequired", () => {
@@ -31,6 +34,7 @@ describe("isAuthenticationRequired", () => {
       levelOfAssurance: 4,
     });
 
+    getAdjustedAccessLevel.mockImplementation(() => 4);
     isAuthenticationRequiredByMaxAge.mockImplementation(() => false);
   });
 
@@ -47,6 +51,8 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by cookie data", () => {
+    getAdjustedAccessLevel.mockImplementation(() => 1);
+
     browserSession = createTestBrowserSession({
       acrValues: [],
       amrValues: [],
@@ -99,6 +105,8 @@ describe("isAuthenticationRequired", () => {
   });
 
   test("should require login when required by level of assurance", () => {
+    getAdjustedAccessLevel.mockImplementation(() => 3);
+
     authorizationSession = createTestAuthorizationSession({
       authenticationMethods: [],
       idTokenHint: null,
@@ -106,6 +114,7 @@ describe("isAuthenticationRequired", () => {
       levelOfAssurance: 4,
       promptModes: [],
     });
+
     browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
@@ -125,6 +134,7 @@ describe("isAuthenticationRequired", () => {
       levelOfAssurance: 3,
       promptModes: [],
     });
+
     browserSession = createTestBrowserSession({
       acrValues: ["acr1"],
       amrValues: ["amr1"],
