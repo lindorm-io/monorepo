@@ -1,6 +1,6 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { IssuerSignData } from "@lindorm-io/jwt";
+import { JwtSignData } from "@lindorm-io/jwt";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
@@ -15,7 +15,7 @@ export const createAccessToken = (
   client: Client,
   session: BrowserSession | RefreshSession,
   options: Options,
-): IssuerSignData => {
+): JwtSignData => {
   const { jwt } = ctx;
 
   return jwt.sign({

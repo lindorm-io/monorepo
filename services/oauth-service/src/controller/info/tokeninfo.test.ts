@@ -10,7 +10,7 @@ const decode = jest.fn();
 
 jest.mock("@lindorm-io/jwt", () => ({
   ...(jest.requireActual("@lindorm-io/jwt") as object),
-  TokenIssuer: {
+  JWT: {
     decode: (...args: any) => decode(args),
   },
 }));

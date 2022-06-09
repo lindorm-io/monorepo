@@ -1,6 +1,6 @@
 import { Client, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { IssuerSignData } from "@lindorm-io/jwt";
+import { JwtSignData } from "@lindorm-io/jwt";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 
@@ -8,7 +8,7 @@ export const createRefreshToken = (
   ctx: ServerKoaContext,
   client: Client,
   refreshSession: RefreshSession,
-): IssuerSignData => {
+): JwtSignData => {
   const { jwt } = ctx;
 
   return jwt.sign({

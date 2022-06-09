@@ -1,4 +1,4 @@
-import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { configuration } from "../../server/configuration";
 import {
   ClientPermission,
@@ -8,7 +8,7 @@ import {
   SubjectHint,
 } from "../../common";
 
-export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
   }).sign({
@@ -30,7 +30,7 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 };
 
 export const getTestClientCredentials = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
@@ -47,9 +47,7 @@ export const getTestClientCredentials = (
   return token;
 };
 
-export const getTestGoogleIdToken = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
-): string => {
+export const getTestGoogleIdToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: "https://jwt.google.com",
   }).sign({

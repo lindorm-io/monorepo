@@ -1,6 +1,6 @@
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
-import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import {
   IdentityServiceClaims,
   ClientPermission,
@@ -10,7 +10,7 @@ import {
   SubjectHint,
 } from "../../common";
 
-export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
@@ -32,7 +32,7 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 };
 
 export const getTestClientCredentials = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -51,7 +51,7 @@ export const getTestClientCredentials = (
 };
 
 export const getTestIdToken = (
-  options: Partial<IssuerSignOptions<any, Partial<IdentityServiceClaims>>> = {},
+  options: Partial<JwtSignOptions<any, Partial<IdentityServiceClaims>>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -74,7 +74,7 @@ export const getTestIdToken = (
   return token;
 };
 
-export const getTestRefreshToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestRefreshToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({

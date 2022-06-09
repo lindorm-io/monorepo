@@ -1,7 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
 import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
 import { Controller } from "@lindorm-io/koa";
-import { IssuerVerifyData } from "@lindorm-io/jwt";
+import { JwtVerifyData } from "@lindorm-io/jwt";
 import { VerifiedChallengeConfirmationToken } from "../common";
 import {
   LindormNodeServerAxios,
@@ -44,9 +44,9 @@ interface ServerRepository extends LindormNodeServerRepository {
 
 interface ServerToken extends LindormNodeServerToken {
   challengeConfirmationToken: VerifiedChallengeConfirmationToken;
-  challengeSessionToken: IssuerVerifyData<never, never>;
-  rdcSessionToken: IssuerVerifyData<any, any>;
-  enrolmentSessionToken: IssuerVerifyData<never, never>;
+  challengeSessionToken: JwtVerifyData;
+  rdcSessionToken: JwtVerifyData<Record<string, any>, Record<string, any>>;
+  enrolmentSessionToken: JwtVerifyData;
 }
 
 interface Context extends LindormNodeServerContext {

@@ -1,6 +1,6 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { IssuerSignData } from "@lindorm-io/jwt";
+import { JwtSignData } from "@lindorm-io/jwt";
 import { IdentityServiceClaims, SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
@@ -16,7 +16,7 @@ export const createIdToken = (
   client: Client,
   session: BrowserSession | RefreshSession,
   options: Options,
-): IssuerSignData => {
+): JwtSignData => {
   const { jwt } = ctx;
 
   const { sub, updatedAt, ...claims } = options.claims;

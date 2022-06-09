@@ -1,6 +1,8 @@
 import { Axios } from "@lindorm-io/axios";
-import { IssuerVerifyData } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
+import { JwtVerifyData } from "@lindorm-io/jwt";
+import { OidcSession } from "../entity";
+import { OidcSessionCache } from "../infrastructure";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,
@@ -9,8 +11,6 @@ import {
   LindormNodeServerKoaMiddleware,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
-import { OidcSession } from "../entity";
-import { OidcSessionCache } from "../infrastructure";
 
 interface ServerAxios extends LindormNodeServerAxios {
   identityClient: Axios;
@@ -26,7 +26,7 @@ interface ServerEntity {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  oidcSessionToken: IssuerVerifyData<never, never>;
+  oidcSessionToken: JwtVerifyData;
 }
 
 interface Context extends LindormNodeServerContext {

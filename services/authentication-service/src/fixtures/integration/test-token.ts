@@ -1,10 +1,10 @@
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
-import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 
 export const getTestChallengeConfirmationToken = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.device_service.issuer,
@@ -29,7 +29,7 @@ export const getTestChallengeConfirmationToken = (
 };
 
 export const getTestFlowSessionToken = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,

@@ -1,7 +1,7 @@
 import { IdentityPermission, Scope, SubjectHint } from "../common";
 import { TokenType } from "../enum";
 import { getClients } from "./util/get-clients";
-import { getTokenIssuer } from "./util/get-token-issuer";
+import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
 import { randomUUID } from "crypto";
 
@@ -9,7 +9,7 @@ const main = async (): Promise<void> => {
   const [id] = process.argv.slice(2);
 
   const clients = await getClients();
-  const jwt = await getTokenIssuer();
+  const jwt = await getJwt();
 
   const { token } = jwt.sign({
     audiences: clients.map((item) => item.id),

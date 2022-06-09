@@ -1,6 +1,6 @@
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
-import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getRandomString } from "@lindorm-io/core";
 import {
   ChallengeConfirmationTokenClaims,
@@ -12,7 +12,7 @@ import {
   SubjectHint,
 } from "../../common";
 
-export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
   }).sign({
@@ -31,7 +31,7 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 };
 
 export const getTestClientCredentials = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
@@ -53,9 +53,7 @@ export const getTestClientCredentials = (
 };
 
 export const getTestChallengeConfirmationToken = (
-  options: Partial<
-    IssuerSignOptions<Record<string, unknown>, ChallengeConfirmationTokenClaims>
-  > = {},
+  options: Partial<JwtSignOptions<Record<string, unknown>, ChallengeConfirmationTokenClaims>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -80,7 +78,7 @@ export const getTestChallengeConfirmationToken = (
 };
 
 export const getTestChallengeSessionToken = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -97,7 +95,7 @@ export const getTestChallengeSessionToken = (
 };
 
 export const getTestEnrolmentSessionToken = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -113,7 +111,7 @@ export const getTestEnrolmentSessionToken = (
   return token;
 };
 
-export const getTestRdcToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestRdcToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({

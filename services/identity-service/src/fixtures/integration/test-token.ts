@@ -1,8 +1,8 @@
 import { ClientPermission, ClientScope, IdentityPermission, Scope } from "../../common";
 import { configuration } from "../../server/configuration";
-import { createTestJwt, IssuerSignOptions } from "@lindorm-io/jwt";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 
-export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>> = {}): string => {
+export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
   }).sign({
@@ -21,7 +21,7 @@ export const getTestAccessToken = (options: Partial<IssuerSignOptions<any, any>>
 };
 
 export const getTestClientCredentials = (
-  options: Partial<IssuerSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,

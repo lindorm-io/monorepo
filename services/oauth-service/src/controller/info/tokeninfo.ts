@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_JWT } from "../../common";
 import { TokenType } from "../../enum";
-import { TokenError, TokenIssuer } from "@lindorm-io/jwt";
+import { TokenError, JWT } from "@lindorm-io/jwt";
 
 interface RequestData {
   token: string;
@@ -61,7 +61,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
     subject,
     type,
     username,
-  } = TokenIssuer.decode(token);
+  } = JWT.decode(token);
 
   let verifiedToken = false;
   let invalidToken = false;

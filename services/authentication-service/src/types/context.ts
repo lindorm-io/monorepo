@@ -1,5 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
-import { IssuerVerifyData } from "@lindorm-io/jwt";
+import { JwtVerifyData } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -62,8 +62,8 @@ interface ServerRepository extends LindormNodeServerRepository {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  challengeConfirmationToken: IssuerVerifyData<unknown, unknown>;
-  flowToken: IssuerVerifyData<never, never>;
+  challengeConfirmationToken: JwtVerifyData;
+  flowToken: JwtVerifyData;
 }
 
 interface Context extends LindormNodeServerContext {

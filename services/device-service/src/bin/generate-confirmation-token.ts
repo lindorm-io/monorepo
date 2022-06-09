@@ -1,6 +1,6 @@
 import { TokenType } from "../enum";
 import { configuration } from "../server/configuration";
-import { getTokenIssuer } from "./util/get-token-issuer";
+import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
 import {
   ChallengeConfirmationTokenClaims,
@@ -10,7 +10,7 @@ import {
 } from "../common";
 
 const main = async (): Promise<void> => {
-  const jwt = await getTokenIssuer();
+  const jwt = await getJwt();
 
   const { token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
     audiences: [],

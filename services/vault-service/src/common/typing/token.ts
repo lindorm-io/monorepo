@@ -1,5 +1,5 @@
 import { ChallengeStrategy, DeviceFactor } from "../enum";
-import { IssuerVerifyData } from "@lindorm-io/jwt";
+import { JwtVerifyData } from "@lindorm-io/jwt";
 
 export type ChallengeConfirmationTokenPayload = Record<string, unknown>;
 
@@ -9,7 +9,7 @@ export interface ChallengeConfirmationTokenClaims {
   strategy: ChallengeStrategy;
 }
 
-export type VerifiedChallengeConfirmationToken = IssuerVerifyData<
+export type VerifiedChallengeConfirmationToken = JwtVerifyData<
   ChallengeConfirmationTokenPayload,
   ChallengeConfirmationTokenClaims
 >;
