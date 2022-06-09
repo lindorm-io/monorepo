@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.12...@lindorm-io/koa-bearer-auth@0.3.13) (2022-06-09)
+
+
+### Bug Fixes
+
+* align koa middleware with changes in jwt ([ea7df3c](https://github.com/lindorm-io/monorepo/commit/ea7df3c989c71806d55277a058881024b13d8869))
+
+
+
+
+
 ## [0.3.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.11...@lindorm-io/koa-bearer-auth@0.3.12) (2022-06-04)
 
 

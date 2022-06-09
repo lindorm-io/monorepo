@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.12...@lindorm-io/koa-jwt@0.5.13) (2022-06-09)
+
+
+### Bug Fixes
+
+* align koa middleware with changes in jwt ([ea7df3c](https://github.com/lindorm-io/monorepo/commit/ea7df3c989c71806d55277a058881024b13d8869))
+
+
+
+
+
 ## [0.5.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.11...@lindorm-io/koa-jwt@0.5.12) (2022-06-04)
 
 

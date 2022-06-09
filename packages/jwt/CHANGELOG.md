@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.15...@lindorm-io/jwt@0.7.0) (2022-06-09)
+
+
+### Features
+
+* update jwt package with new name and claims ([16de7c2](https://github.com/lindorm-io/monorepo/commit/16de7c2cc05b93f9d795601d102089966bded551))
+
+
+
+
+
 ## [0.6.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.14...@lindorm-io/jwt@0.6.15) (2022-06-04)
 
 

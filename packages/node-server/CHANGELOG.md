@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.1...@lindorm-io/node-server@0.4.2) (2022-06-09)
+
+
+### Bug Fixes
+
+* align koa middleware with changes in jwt ([ea7df3c](https://github.com/lindorm-io/monorepo/commit/ea7df3c989c71806d55277a058881024b13d8869))
+
+
+
+
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.0...@lindorm-io/node-server@0.4.1) (2022-06-04)
 
 
