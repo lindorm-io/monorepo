@@ -98,6 +98,7 @@ export const handleAuthorizationCodeGrant = async (
         identityId: browserSession.identityId,
         levelOfAssurance: browserSession.levelOfAssurance,
         nonce: browserSession.nonce,
+        previousRefreshSessionId: authorizationSession.refreshSessionId,
         uiLocales: browserSession.uiLocales,
       }),
     );

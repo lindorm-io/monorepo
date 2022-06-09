@@ -59,6 +59,7 @@ export interface AuthorizationSessionAttributes extends EntityAttributes {
   promptModes: Array<PromptMode>;
   redirectData: string;
   redirectUri: string;
+  refreshSessionId: string;
   responseMode: ResponseMode;
   responseTypes: Array<ResponseType>;
   scopes: Array<string>;
@@ -90,6 +91,7 @@ export type AuthorizationSessionOptions = Optional<
   | "pkceVerifier"
   | "promptModes"
   | "redirectData"
+  | "refreshSessionId"
   | "responseMode"
   | "scopes"
   | "uiLocales"
@@ -123,6 +125,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>({
   promptModes: Joi.array().items(JOI_PROMPT_MODE).required(),
   redirectData: Joi.string().base64().allow(null).required(),
   redirectUri: Joi.string().uri().required(),
+  refreshSessionId: JOI_GUID.allow(null).required(),
   responseMode: JOI_RESPONSE_MODE.required(),
   responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).required(),
   scopes: Joi.array().items(Joi.string().lowercase()).required(),
@@ -150,6 +153,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly promptModes: Array<PromptMode>;
   public readonly redirectData: string | null;
   public readonly redirectUri: string;
+  public readonly refreshSessionId: string;
   public readonly responseMode: ResponseMode;
   public readonly responseTypes: Array<ResponseType>;
   public readonly scopes: Array<string>;
@@ -191,6 +195,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;
     this.redirectUri = options.redirectUri;
+    this.refreshSessionId = options.refreshSessionId || null;
     this.responseMode = options.responseMode || ResponseMode.QUERY;
     this.responseTypes = options.responseTypes;
     this.scopes = options.scopes || [];
@@ -231,6 +236,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       promptModes: this.promptModes,
       redirectData: this.redirectData,
       redirectUri: this.redirectUri,
+      refreshSessionId: this.refreshSessionId,
       responseMode: this.responseMode,
       responseTypes: this.responseTypes,
       scopes: this.scopes,

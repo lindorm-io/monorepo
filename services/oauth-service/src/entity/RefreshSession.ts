@@ -1,7 +1,13 @@
 import Joi from "joi";
 import { getRandomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
-import { JOI_GUID, JOI_LOCALE, JOI_NONCE, LevelOfAssurance } from "../common";
+import {
+  JOI_GUID,
+  JOI_LEVEL_OF_ASSURANCE,
+  JOI_LOCALE,
+  JOI_NONCE,
+  LevelOfAssurance,
+} from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -16,15 +22,22 @@ export interface RefreshSessionAttributes extends EntityAttributes {
   clientId: string;
   expires: Date;
   identityId: string;
+  latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
   nonce: string;
+  previousRefreshSessionId: string;
   tokenId: string;
   uiLocales: Array<string>;
 }
 
 export type RefreshSessionOptions = Optional<
   RefreshSessionAttributes,
-  EntityKeys | "nonce" | "tokenId" | "uiLocales"
+  | EntityKeys
+  | "latestAuthentication"
+  | "nonce"
+  | "previousRefreshSessionId"
+  | "tokenId"
+  | "uiLocales"
 >;
 
 const schema = Joi.object<RefreshSessionAttributes>({
@@ -35,8 +48,10 @@ const schema = Joi.object<RefreshSessionAttributes>({
   clientId: JOI_GUID.required(),
   expires: Joi.date().required(),
   identityId: JOI_GUID.required(),
-  levelOfAssurance: Joi.number().required(),
+  latestAuthentication: Joi.date().required(),
+  levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
   nonce: JOI_NONCE.required(),
+  previousRefreshSessionId: JOI_GUID.allow(null).required(),
   tokenId: JOI_GUID.required(),
   uiLocales: Joi.array().items(JOI_LOCALE).required(),
 });
@@ -48,9 +63,11 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
   public readonly identityId: string;
   public readonly levelOfAssurance: LevelOfAssurance;
   public readonly nonce: string;
+  public readonly previousRefreshSessionId: string;
   public readonly uiLocales: Array<string>;
 
   public expires: Date;
+  public latestAuthentication: Date;
   public tokenId: string;
 
   public constructor(options: RefreshSessionOptions) {
@@ -61,8 +78,10 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
     this.clientId = options.clientId;
     this.expires = options.expires;
     this.identityId = options.identityId;
+    this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
     this.nonce = options.nonce || getRandomString(16);
+    this.previousRefreshSessionId = options.previousRefreshSessionId || null;
     this.tokenId = options.tokenId || randomUUID();
     this.uiLocales = options.uiLocales || [];
   }
@@ -80,8 +99,10 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
       clientId: this.clientId,
       expires: this.expires,
       identityId: this.identityId,
+      latestAuthentication: this.latestAuthentication,
       levelOfAssurance: this.levelOfAssurance,
       nonce: this.nonce,
+      previousRefreshSessionId: this.previousRefreshSessionId,
       tokenId: this.tokenId,
       uiLocales: this.uiLocales,
     };

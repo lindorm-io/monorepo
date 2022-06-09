@@ -23,7 +23,7 @@ export const handleRefreshTokenGrant = async (
     types: [TokenType.REFRESH],
   });
 
-  const refreshSession = await refreshSessionRepository.find({
+  let refreshSession = await refreshSessionRepository.find({
     id: sessionId,
     clientId: client.id,
   });
@@ -77,7 +77,7 @@ export const handleRefreshTokenGrant = async (
 
   refreshSession.tokenId = randomUUID();
 
-  await refreshSessionRepository.update(refreshSession);
+  refreshSession = await refreshSessionRepository.update(refreshSession);
 
   return generateTokenResponse(ctx, client, refreshSession, consentSession.scopes);
 };

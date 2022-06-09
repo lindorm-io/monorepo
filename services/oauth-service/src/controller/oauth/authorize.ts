@@ -1,11 +1,15 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL, getExpires, PKCEMethod } from "@lindorm-io/core";
-import { setAuthorizationSessionCookie, tryFindConsentSession } from "../../handler";
 import { uniq } from "lodash";
+import {
+  setAuthorizationSessionCookie,
+  tryFindConsentSession,
+  tryFindRefreshSession,
+} from "../../handler";
 import {
   DisplayMode,
   JOI_COUNTRY_CODE,
@@ -122,6 +126,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   );
 
   const consentSession = await tryFindConsentSession(ctx, browserSession, client);
+  const refreshSession = await tryFindRefreshSession(ctx, idToken);
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     audiences: idToken ? idToken.audiences : [client.id],
@@ -151,6 +156,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     promptModes: prompts,
     redirectData,
     redirectUri,
+    refreshSessionId: refreshSession?.id,
     responseMode: responseMode || client.defaults.responseMode,
     responseTypes,
     scopes,

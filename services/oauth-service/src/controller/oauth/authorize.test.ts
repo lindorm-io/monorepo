@@ -1,16 +1,18 @@
 import MockDate from "mockdate";
 import { DisplayMode, PromptMode, ResponseMode, ResponseType } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
+import { oauthAuthorizeController } from "./authorize";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestConsentSession,
+  createTestRefreshSession,
 } from "../../fixtures/entity";
-import { oauthAuthorizeController } from "./authorize";
 import {
   setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
   tryFindConsentSession as _tryFindConsentSession,
+  tryFindRefreshSession as _tryFindRefreshSession,
 } from "../../handler";
 import {
   filterAcrValues as _filterAcrValues,
@@ -28,6 +30,7 @@ const isAuthenticationRequired = _isAuthenticationRequired as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
 const tryFindConsentSession = _tryFindConsentSession as jest.Mock;
+const tryFindRefreshSession = _tryFindRefreshSession as jest.Mock;
 
 describe("oauthAuthorizeController", () => {
   let ctx: any;
@@ -96,6 +99,9 @@ describe("oauthAuthorizeController", () => {
     isAuthenticationRequired.mockImplementation(() => true);
     tryFindConsentSession.mockResolvedValue(
       createTestConsentSession({ id: "e7511e5c-e2d9-46c8-bffd-5c47dacc8b10" }),
+    );
+    tryFindRefreshSession.mockResolvedValue(
+      createTestRefreshSession({ id: "a6b12333-1cb6-46e4-801d-96fc6d040aa6" }),
     );
   });
 
@@ -200,6 +206,7 @@ describe("oauthAuthorizeController", () => {
         pkceVerifier: null,
         promptModes: [],
         redirectUri: "https://test.lindorm.io/redirect",
+        refreshSessionId: "a6b12333-1cb6-46e4-801d-96fc6d040aa6",
         responseMode: "query",
         responseTypes: ["code"],
         scopes: ["openid", "offline_access"],

@@ -2,18 +2,16 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
+import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 import {
   createTestClient,
   createTestConsentSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
-import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("./generate-token-response", () => ({
-  generateTokenResponse: jest.fn().mockResolvedValue("body-response"),
-}));
+jest.mock("./generate-token-response");
 
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
 
@@ -49,6 +47,8 @@ describe("handleAuthorizationCodeGrant", () => {
         ),
       },
     };
+
+    generateTokenResponse.mockResolvedValue("body-response");
   });
 
   test("should resolve", async () => {

@@ -4,4 +4,5 @@ export * from "./cookies";
 export * from "./identity";
 export * from "./logout";
 export * from "./oauth";
+export * from "./refresh";
 export * from "./token";
