@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.7.0...@lindorm-io/jwt@0.7.1) (2022-06-09)
+
+
+### Bug Fixes
+
+* improve typing for jwt ([7eca3f8](https://github.com/lindorm-io/monorepo/commit/7eca3f8f0c4c04428db2c691e467e182e12f95e2))
+
+
+
+
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.6.15...@lindorm-io/jwt@0.7.0) (2022-06-09)
 
 

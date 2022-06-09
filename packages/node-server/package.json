@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/node-server",
   "description": "Lindorm Node Server",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,11 +19,11 @@
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.3.7",
-    "@lindorm-io/jwt": "^0.7.0",
+    "@lindorm-io/jwt": "^0.7.1",
     "@lindorm-io/key-pair": "^0.4.6",
     "@lindorm-io/koa": "^0.13.0",
     "@lindorm-io/koa-axios": "^0.1.12",
-    "@lindorm-io/koa-jwt": "^0.5.13",
+    "@lindorm-io/koa-jwt": "^0.5.14",
     "@lindorm-io/koa-keystore": "^0.8.1",
     "@lindorm-io/koa-mongo": "^0.8.4",
     "@lindorm-io/koa-redis": "^0.6.4",

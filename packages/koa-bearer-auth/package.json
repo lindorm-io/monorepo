@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-bearer-auth",
   "description": "Bearer Auth middleware for @lindorm-io/koa applications",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,10 +20,10 @@
   "dependencies": {
     "@lindorm-io/core": "^0.5.0",
     "@lindorm-io/errors": "^0.1.13",
-    "@lindorm-io/jwt": "^0.7.0",
+    "@lindorm-io/jwt": "^0.7.1",
     "@lindorm-io/key-pair": "^0.4.6",
     "@lindorm-io/koa": "^0.13.0",
-    "@lindorm-io/koa-jwt": "^0.5.13",
+    "@lindorm-io/koa-jwt": "^0.5.14",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
