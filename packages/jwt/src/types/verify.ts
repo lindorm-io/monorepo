@@ -16,7 +16,7 @@ export interface JwtVerifyOptions {
   types: Array<string>;
 }
 
-export interface JwtVerifyData<Payload, Claims> {
+export interface JwtVerifyData<Payload = never, Claims = never> {
   id: string;
   active: boolean;
   adjustedAccessLevel: number | null;

@@ -1,7 +1,7 @@
 import { KeyType } from "@lindorm-io/key-pair";
 import { Expiry } from "@lindorm-io/core";
 
-export interface JwtSignOptions<Payload, Claims> {
+export interface JwtSignOptions<Payload = never, Claims = never> {
   id?: string;
   adjustedAccessLevel?: number;
   audiences: Array<string>;

@@ -36,10 +36,9 @@ export class JWT {
     this.logger = options.logger.createChildLogger(["jwt"]);
   }
 
-  public sign<
-    Payload extends Record<string, any> = Record<string, any>,
-    Claims extends Record<string, any> = Record<string, any>,
-  >(options: JwtSignOptions<Payload, Claims>): JwtSignData {
+  public sign<Payload = Record<string, any>, Claims = Record<string, any>>(
+    options: JwtSignOptions<Payload, Claims>,
+  ): JwtSignData {
     const id = options.id || randomUUID();
 
     const { expires, expiresIn, expiresUnix, now, nowUnix } = getExpires(options.expiry);
@@ -100,10 +99,10 @@ export class JWT {
     };
   }
 
-  public verify<
-    Payload extends Record<string, any> = Record<string, any>,
-    Claims extends Record<string, any> = Record<string, any>,
-  >(token: string, options: Partial<JwtVerifyOptions> = {}): JwtVerifyData<Payload, Claims> {
+  public verify<Payload = Record<string, any>, Claims = Record<string, any>>(
+    token: string,
+    options: Partial<JwtVerifyOptions> = {},
+  ): JwtVerifyData<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
     const { keyId, ...claims } = JWT.decode<Payload, Claims>(token);
@@ -185,10 +184,9 @@ export class JWT {
     };
   }
 
-  public static decode<
-    Payload extends Record<string, any> = Record<string, any>,
-    Claims extends Record<string, any> = Record<string, any>,
-  >(token: string): JwtDecodeData<Payload, Claims> {
+  public static decode<Payload = Record<string, any>, Claims = Record<string, any>>(
+    token: string,
+  ): JwtDecodeData<Payload, Claims> {
     const {
       header: { kid: keyId },
       payload: object,
