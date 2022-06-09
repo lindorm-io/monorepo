@@ -1,9 +1,10 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
-import { JwtSignData } from "@lindorm-io/jwt";
 import { IdentityServiceClaims, SubjectHint } from "../../common";
+import { JwtSignData } from "@lindorm-io/jwt";
+import { ServerKoaContext } from "../../types";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
+import { getUnixTime } from "date-fns";
 
 interface Options {
   claims: Partial<IdentityServiceClaims>;
@@ -25,6 +26,7 @@ export const createIdToken = (
     audiences: [client.id],
     authContextClass: session.acrValues,
     authMethodsReference: session.amrValues,
+    authTime: getUnixTime(session.latestAuthentication),
     claims: claims,
     expiry: client.expiry.idToken || configuration.defaults.id_token_expiry,
     levelOfAssurance: session.levelOfAssurance,

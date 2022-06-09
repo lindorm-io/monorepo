@@ -1,9 +1,11 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { ServerKoaContext } from "../../types";
 import { SubjectHint } from "../../common";
 import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
+import { getAdjustedAccessLevel } from "../../util";
+import { getUnixTime } from "date-fns";
 
 interface Options {
   permissions: Array<string>;
@@ -19,7 +21,9 @@ export const createAccessToken = (
   const { jwt } = ctx;
 
   return jwt.sign({
+    adjustedAccessLevel: getAdjustedAccessLevel(session),
     audiences: [client.id],
+    authTime: getUnixTime(session.latestAuthentication),
     expiry: client.expiry.accessToken || configuration.defaults.access_token_expiry,
     levelOfAssurance: session.levelOfAssurance,
     permissions: options.permissions,
