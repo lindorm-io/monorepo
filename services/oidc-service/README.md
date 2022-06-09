@@ -1,3 +1,5 @@
 # @lindorm-io/oidc-service
 
-OIDC Service
+# Swimlanes
+
+- [Authentication using OIDC with lindorm.io](https://swimlanes.io/u/9uyMcHXMX)
