@@ -1,5 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
-import { IssuerVerifyData, TokenIssuer } from "@lindorm-io/jwt";
+import { JwtVerifyData, JWT } from "@lindorm-io/jwt";
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
 import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { MongoConnection } from "@lindorm-io/mongo";
@@ -32,14 +32,14 @@ export interface LindormNodeServerRepository {
 }
 
 export interface LindormNodeServerToken {
-  bearerToken: IssuerVerifyData<unknown, unknown>;
+  bearerToken: JwtVerifyData<unknown, unknown>;
 }
 
 export interface LindormNodeServerContext extends DefaultLindormContext {
   axios: LindormNodeServerAxios;
   cache: LindormNodeServerCache;
   connection: LindormNodeServerConnection;
-  jwt: TokenIssuer;
+  jwt: JWT;
   keys: Array<KeyPair>;
   keystore: Keystore;
   repository: LindormNodeServerRepository;

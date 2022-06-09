@@ -1,3 +1,3 @@
-export * from "./socket-token-issuer-middleware";
-export * from "./token-issuer-middleware";
+export * from "./jwt-middleware";
+export * from "./socket-jwt-middleware";
 export * from "./token-validation-middleware";

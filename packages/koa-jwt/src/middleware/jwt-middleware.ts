@@ -1,16 +1,16 @@
 import { DefaultLindormJwtKoaMiddleware } from "../types";
-import { getTokenIssuer } from "../util";
+import { getJwt } from "../util";
 
 interface Options {
   issuer: string;
 }
 
-export const tokenIssuerMiddleware =
+export const jwtMiddleware =
   (options: Options): DefaultLindormJwtKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("jwt");
 
-    ctx.jwt = getTokenIssuer(ctx, options.issuer);
+    ctx.jwt = getJwt(ctx, options.issuer);
 
     metric.end();
 

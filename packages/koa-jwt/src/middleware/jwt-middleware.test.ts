@@ -1,9 +1,9 @@
 import MockDate from "mockdate";
+import { JWT } from "@lindorm-io/jwt";
 import { Metric } from "@lindorm-io/koa";
 import { ServerError } from "@lindorm-io/errors";
-import { TokenIssuer } from "@lindorm-io/jwt";
 import { createMockLogger } from "@lindorm-io/winston";
-import { tokenIssuerMiddleware } from "./token-issuer-middleware";
+import { jwtMiddleware } from "./jwt-middleware";
 import {
   Algorithm,
   createTestKeystore,
@@ -17,7 +17,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 const next = () => Promise.resolve();
 
-describe("tokenIssuerMiddleware", () => {
+describe("jwtMiddleware", () => {
   let ctx: any;
   let options: any;
 
@@ -37,16 +37,16 @@ describe("tokenIssuerMiddleware", () => {
   });
 
   test("should set issuer on context", async () => {
-    await expect(tokenIssuerMiddleware(options)(ctx, next)).resolves.toBeUndefined();
+    await expect(jwtMiddleware(options)(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.jwt).toStrictEqual(expect.any(TokenIssuer));
+    expect(ctx.jwt).toStrictEqual(expect.any(JWT));
     expect(ctx.metrics.jwt).toStrictEqual(expect.any(Number));
   });
 
   test("should throw InvalidKeystoreError", async () => {
     ctx.keystore = undefined;
 
-    await expect(tokenIssuerMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
+    await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
   });
 
   test("should throw EmptyKeystoreError", async () => {
@@ -64,6 +64,6 @@ describe("tokenIssuerMiddleware", () => {
       ],
     });
 
-    await expect(tokenIssuerMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
+    await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
   });
 });

@@ -1,4 +1,4 @@
-import { TokenIssuer } from "@lindorm-io/jwt";
+import { JWT } from "@lindorm-io/jwt";
 import { Keystore } from "@lindorm-io/key-pair";
 import {
   DefaultLindormContext,
@@ -9,7 +9,7 @@ import {
 } from "@lindorm-io/koa";
 
 export interface DefaultLindormJwtContext extends DefaultLindormContext {
-  jwt: TokenIssuer;
+  jwt: JWT;
   keystore: Keystore;
 }
 

@@ -7,9 +7,11 @@ export const socketBearerAuthMiddleware =
   (socket, next) => {
     try {
       const {
+        adjustedAccessLevel,
         clockTolerance,
         contextKey = "bearerToken",
         issuer,
+        levelOfAssurance,
         maxAge,
         subjectHint,
         types,
@@ -26,8 +28,10 @@ export const socketBearerAuthMiddleware =
 
       try {
         const verified = socket.ctx.jwt.verify(token, {
+          adjustedAccessLevel,
           clockTolerance,
           issuer,
+          levelOfAssurance,
           maxAge,
           subjectHint,
           types: types || ["access_token"],

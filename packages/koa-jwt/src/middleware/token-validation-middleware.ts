@@ -1,15 +1,17 @@
 import { ClientError } from "@lindorm-io/errors";
+import { get, isFunction, isString } from "lodash";
 import {
   TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
   TokenValidationMiddlewareConfig,
 } from "../types";
-import { get, isFunction, isString } from "lodash";
 
 export interface TokenValidationOptions {
+  adjustedAccessLevel?: number;
   audience?: string;
   audiences?: Array<string>;
   authorizedParty?: string;
+  levelOfAssurance?: number;
   nonce?: string;
   permissions?: Array<string>;
   scopes?: Array<string>;
@@ -42,9 +44,11 @@ export const tokenValidationMiddleware =
 
     const { clockTolerance, contextKey, issuer, maxAge, subjectHint, types } = config;
     const {
+      adjustedAccessLevel,
       audience,
       audiences,
       authorizedParty,
+      levelOfAssurance,
       nonce,
       permissions,
       scopes,
@@ -63,6 +67,7 @@ export const tokenValidationMiddleware =
       }
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
+        adjustedAccessLevel,
         audience: fromPath?.audience ? get(ctx, fromPath.audience) : audience,
         audiences: fromPath?.audiences ? get(ctx, fromPath.audiences) : audiences,
         authorizedParty: fromPath?.authorizedParty
@@ -70,6 +75,7 @@ export const tokenValidationMiddleware =
           : authorizedParty,
         clockTolerance,
         issuer,
+        levelOfAssurance,
         maxAge,
         nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : nonce,
         permissions: fromPath?.permissions ? get(ctx, fromPath.permissions) : permissions,

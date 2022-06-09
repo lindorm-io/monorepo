@@ -7,8 +7,10 @@ import {
 } from "../types";
 
 export interface BearerAuthOptions {
+  adjustedAccessLevel?: number;
   audience?: string;
   audiences?: Array<string>;
+  levelOfAssurance?: number;
   nonce?: string;
   permissions?: Array<string>;
   scopes?: Array<string>;
@@ -36,9 +38,11 @@ export const bearerAuthMiddleware =
     const metric = ctx.getMetric("auth");
 
     const {
+      adjustedAccessLevel,
       clockTolerance,
       contextKey = "bearerToken",
       issuer,
+      levelOfAssurance,
       maxAge,
       subjectHint,
       types,
@@ -56,17 +60,19 @@ export const bearerAuthMiddleware =
       }
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
+        adjustedAccessLevel,
         audience: fromPath?.audience ? get(ctx, fromPath.audience) : audience,
         audiences: fromPath?.audiences ? get(ctx, fromPath.audiences) : audiences,
         clockTolerance,
         issuer,
+        levelOfAssurance,
         maxAge,
         nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : nonce,
         permissions: fromPath?.permissions ? get(ctx, fromPath.permissions) : permissions,
         scopes: fromPath?.scopes ? get(ctx, fromPath.scopes) : scopes,
         subject: fromPath?.subject ? get(ctx, fromPath.subject) : subject,
-        subjects: fromPath?.subjects ? get(ctx, fromPath.subjects) : subjects,
         subjectHint,
+        subjects: fromPath?.subjects ? get(ctx, fromPath.subjects) : subjects,
         types: types || ["access_token"],
       });
 

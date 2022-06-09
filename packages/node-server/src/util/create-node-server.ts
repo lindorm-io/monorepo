@@ -3,7 +3,7 @@ import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { createWellKnownJwksRouter } from "../router";
-import { socketTokenIssuerMiddleware, tokenIssuerMiddleware } from "@lindorm-io/koa-jwt";
+import { socketJwtMiddleware, jwtMiddleware } from "@lindorm-io/koa-jwt";
 import {
   cacheMiddleware,
   redisMiddleware,
@@ -80,10 +80,8 @@ export const createNodeServer = <
       middleware.push(keystoreMiddleware);
       socketMiddleware.push(socketKeystoreMiddleware);
 
-      middleware.push(tokenIssuerMiddleware({ issuer: options.issuer || options.host }));
-      socketMiddleware.push(
-        socketTokenIssuerMiddleware({ issuer: options.issuer || options.host }),
-      );
+      middleware.push(jwtMiddleware({ issuer: options.issuer || options.host }));
+      socketMiddleware.push(socketJwtMiddleware({ issuer: options.issuer || options.host }));
     }
 
     if (options.useSocketRedisAdapter !== false) {

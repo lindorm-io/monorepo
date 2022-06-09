@@ -1,4 +1,4 @@
-import { TokenIssuer } from "@lindorm-io/jwt";
+import { JWT } from "@lindorm-io/jwt";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -8,7 +8,7 @@ import {
 } from "@lindorm-io/koa";
 
 interface Context extends DefaultLindormContext {
-  jwt: TokenIssuer;
+  jwt: JWT;
 }
 
 export type DefaultLindormBearerAuthKoaMiddleware = DefaultLindormMiddleware<

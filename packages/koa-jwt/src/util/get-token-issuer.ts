@@ -1,8 +1,8 @@
 import { DefaultLindormJwtContext } from "../types";
-import { TokenIssuer } from "@lindorm-io/jwt";
+import { JWT } from "@lindorm-io/jwt";
 import { ServerError } from "@lindorm-io/errors";
 
-export const getTokenIssuer = (ctx: DefaultLindormJwtContext, issuer: string): TokenIssuer => {
+export const getJwt = (ctx: DefaultLindormJwtContext, issuer: string): JWT => {
   if (!ctx.keystore) {
     throw new ServerError("Invalid keystore", {
       description: "Keystore not set",
@@ -15,7 +15,7 @@ export const getTokenIssuer = (ctx: DefaultLindormJwtContext, issuer: string): T
     });
   }
 
-  return new TokenIssuer({
+  return new JWT({
     issuer,
     keystore: ctx.keystore,
     logger: ctx.logger,
