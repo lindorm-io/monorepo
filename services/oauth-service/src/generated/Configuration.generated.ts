@@ -20,6 +20,10 @@ interface Defaults {
   id_token_expiry:                 string;
   level_of_assurance:              number;
   logout_session_expiry:           string;
+  maximum_days_loa_1:              number;
+  maximum_days_loa_2:              number;
+  maximum_days_loa_3:              number;
+  maximum_days_loa_4:              number;
   refresh_session_expiry:          string;
   tenant_active_state:             boolean;
 }

@@ -1,16 +1,20 @@
 defaults:
-  client_active_state: false
-  tenant_active_state: false
-  level_of_assurance: 1
   access_token_expiry: 3 minutes
   authorization_session_expiry: 30 minutes
   browser_session_expiry: 20 hours
   browser_session_remember_expiry: 30 days
+  client_active_state: false
   client_credentials_expiry: 60 seconds
   code_session_expiry: 60 seconds
   id_token_expiry: 24 hours
+  level_of_assurance: 1
   logout_session_expiry: 60 seconds
+  maximum_days_loa_1: 90
+  maximum_days_loa_2: 30
+  maximum_days_loa_3: 7
+  maximum_days_loa_4: 1
   refresh_session_expiry: 30 days
+  tenant_active_state: false
 
 frontend:
   host: localhost
