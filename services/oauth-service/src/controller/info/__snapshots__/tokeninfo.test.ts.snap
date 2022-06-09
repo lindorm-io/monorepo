@@ -3,6 +3,7 @@
 exports[`tokeninfoController should resolve token info 1`] = `
 Object {
   "body": Object {
+    "aal": 2,
     "acr": Array [
       "acr1",
     ],

@@ -42,6 +42,7 @@ describe("tokeninfoController", () => {
     decode.mockImplementation(() => ({
       id: "id",
       active: true,
+      adjustedAccessLevel: 2,
       audiences: "audiences",
       authContextClass: ["acr1"],
       authMethodsReference: ["amr1"],

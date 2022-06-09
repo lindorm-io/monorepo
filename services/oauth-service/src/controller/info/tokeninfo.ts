@@ -13,6 +13,7 @@ interface RequestData {
 
 interface ResponseBody {
   active: boolean;
+  aal?: number;
   acr?: Array<string>;
   amr?: Array<string>;
   aud: Array<string>;
@@ -47,6 +48,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
 
   const {
     id,
+    adjustedAccessLevel,
     active,
     audiences,
     authContextClass,
@@ -95,6 +97,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
   return {
     body: {
       active: active && verifiedToken && !invalidToken,
+      ...(adjustedAccessLevel ? { aal: adjustedAccessLevel } : {}),
       ...(authContextClass?.length ? { acr: authContextClass } : {}),
       ...(authMethodsReference?.length ? { amr: authMethodsReference } : {}),
       aud: audiences,
