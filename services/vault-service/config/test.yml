@@ -14,6 +14,7 @@ redis:
 
 server:
   domain: https://test.lindorm.io
+  environment: test
   issuer: https://vault.test.lindorm.io
   host: https://vault.test.lindorm.io
   port: 3700

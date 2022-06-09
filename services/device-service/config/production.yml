@@ -4,6 +4,7 @@ redis:
 
 server:
   domain: https://lindorm.io
+  environment: production
   issuer: https://device.lindorm.io
   host: https://device.lindorm.io
   workers: true

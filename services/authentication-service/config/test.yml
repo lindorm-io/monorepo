@@ -25,6 +25,7 @@ redis:
 
 server:
   domain: https://test.lindorm.io
+  environment: test
   issuer: https://authentication.test.lindorm.io
   host: https://authentication.test.lindorm.io
   keys:

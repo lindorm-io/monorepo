@@ -18,6 +18,7 @@ oauth:
 
 server:
   domain: https://development.lindorm.io
+  environment: development
   issuer: https://identity.development.lindorm.io
   host: http://identity-service
   port: 3000

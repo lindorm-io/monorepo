@@ -17,6 +17,7 @@ redis:
 
 server:
   domain: https://development.lindorm.io
+  environment: development
   issuer: https://oauth.development.lindorm.io
   host: http://localhost
   keys:

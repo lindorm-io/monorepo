@@ -14,6 +14,7 @@ redis:
 
 server:
   domain: https://development.lindorm.io
+  environment: development
   issuer: https://device.development.lindorm.io
   host: http://device-service
   port: 3000

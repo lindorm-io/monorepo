@@ -17,6 +17,7 @@ redis:
 
 server:
   domain: https://test.lindorm.io
+  environment: test
   issuer: https://identity.test.lindorm.io
   host: https://identity.test.lindorm.io
   port: 3400

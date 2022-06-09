@@ -40,6 +40,7 @@ redis:
 
 server:
   domain: https://test.lindorm.io
+  environment: test
   issuer: https://oidc.test.lindorm.io
   host: https://oidc.test.lindorm.io
   port: 3600

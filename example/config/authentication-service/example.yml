@@ -18,6 +18,7 @@ redis:
 
 server:
   domain: https://development.lindorm.io
+  environment: development
   issuer: https://authentication.development.lindorm.io
   host: http://authentication-service
   keys:

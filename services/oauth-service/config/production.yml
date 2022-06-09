@@ -1,5 +1,6 @@
 server:
   domain: https://lindorm.io
+  environment: production
   issuer: https://oauth.lindorm.io
   host: https://oauth.lindorm.io
   workers: true

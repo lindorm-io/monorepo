@@ -1,5 +1,6 @@
 server:
   domain: https://staging.lindorm.io
+  environment: staging
   issuer: https://oauth.staging.lindorm.io
   host: https://oauth.staging.lindorm.io
   workers: true
