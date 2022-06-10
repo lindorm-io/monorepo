@@ -7,9 +7,12 @@ import {
   createAccountPasswordSchema,
   deleteAccountTotpController,
   deleteAccountTotpSchema,
-  generateAccountRecoveryCodeController,
-  generateAccountTotpController,
+  generateRecoveryCodeController,
+  generateTotpController,
+  generateBrowserLinkCodeController,
   getAccountController,
+  linkAccountToBrowserController,
+  linkAccountToBrowserSchema,
   updateAccountPasswordController,
   updateAccountPasswordSchema,
 } from "../controller";
@@ -50,13 +53,34 @@ router.patch(
 );
 
 router.get(
+  "/browser-code",
+  identityAuthMiddleware({
+    permissions: [IdentityPermission.USER],
+    scopes: [Scope.OPENID],
+  }),
+  accountEntityMiddleware("token.bearerToken.subject"),
+  useController(generateBrowserLinkCodeController),
+);
+
+router.post(
+  "/browser-link",
+  useSchema(linkAccountToBrowserSchema),
+  identityAuthMiddleware({
+    permissions: [IdentityPermission.USER],
+    scopes: [Scope.OPENID],
+  }),
+  accountEntityMiddleware("token.bearerToken.subject"),
+  useController(linkAccountToBrowserController),
+);
+
+router.get(
   "/recovery-code",
   identityAuthMiddleware({
     permissions: [IdentityPermission.USER],
     scopes: [Scope.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
-  useController(generateAccountRecoveryCodeController),
+  useController(generateRecoveryCodeController),
 );
 
 router.get(
@@ -66,7 +90,7 @@ router.get(
     scopes: [Scope.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
-  useController(generateAccountTotpController),
+  useController(generateTotpController),
 );
 
 router.delete(

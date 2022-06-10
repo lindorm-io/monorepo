@@ -9,7 +9,7 @@ import {
 } from "@lindorm-io/entity";
 
 export interface BrowserLinkAttributes extends EntityAttributes {
-  identityId: string;
+  accountId: string;
 }
 
 export type BrowserLinkOptions = Optional<BrowserLinkAttributes, EntityKeys>;
@@ -17,19 +17,19 @@ export type BrowserLinkOptions = Optional<BrowserLinkAttributes, EntityKeys>;
 const schema = Joi.object<BrowserLinkAttributes>({
   ...JOI_ENTITY_BASE,
 
-  identityId: JOI_GUID.required(),
+  accountId: JOI_GUID.required(),
 });
 
 export class BrowserLink
   extends LindormEntity<BrowserLinkAttributes>
   implements BrowserLinkAttributes
 {
-  public readonly identityId: string;
+  public readonly accountId: string;
 
   public constructor(options: BrowserLinkOptions) {
     super(options);
 
-    this.identityId = options.identityId;
+    this.accountId = options.accountId;
   }
 
   public create(): void {
@@ -44,7 +44,7 @@ export class BrowserLink
     return {
       ...this.defaultJSON(),
 
-      identityId: this.identityId,
+      accountId: this.accountId,
     };
   }
 }

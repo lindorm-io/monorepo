@@ -3,26 +3,27 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { vaultGetSalt } from "../../handler";
+import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
+import { getExpiryDate } from "@lindorm-io/core";
 
 interface RequestData {
+  code: string;
   password: string;
-  newPassword: string;
 }
 
-export const updateAccountPasswordSchema = Joi.object<RequestData>()
+export const linkAccountToBrowserSchema = Joi.object<RequestData>()
   .keys({
+    code: Joi.string().required(),
     password: Joi.string().required(),
-    newPassword: Joi.string().required(),
   })
   .required();
 
-export const updateAccountPasswordController: ServerKoaController<RequestData> = async (
+export const linkAccountToBrowserController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    data: { password, newPassword },
+    data: { code, password },
     entity: { account },
-    repository: { accountRepository },
   } = ctx;
 
   const salt = await vaultGetSalt(ctx, account);
@@ -31,9 +32,10 @@ export const updateAccountPasswordController: ServerKoaController<RequestData> =
     sha: { secret: salt.sha },
   });
 
+  await crypto.assert(code, account.browserLinkCode);
   await crypto.assert(password, account.password);
 
-  account.password = await crypto.encrypt(newPassword);
-
-  await accountRepository.update(account);
+  ctx.setCookie(BROWSER_LINK_COOKIE_NAME, account.id, {
+    expiry: getExpiryDate("99 years"),
+  });
 };

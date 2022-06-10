@@ -1,0 +1,50 @@
+import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { ServerKoaController } from "../../types";
+import { getExpiryDate, getRandomString } from "@lindorm-io/core";
+import { vaultGetSalt } from "../../handler";
+
+interface ResponseBody {
+  code: string;
+}
+
+export const generateBrowserLinkCodeController: ServerKoaController = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
+  const {
+    entity: { account },
+    repository: { accountRepository },
+  } = ctx;
+
+  if (account.browserLinkCode && ctx.getCookie(BROWSER_LINK_COOKIE_NAME) !== account.id) {
+    throw new ClientError("Unauthorized", {
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
+  const salt = await vaultGetSalt(ctx, account);
+  const crypto = new CryptoLayered({
+    aes: { secret: salt.aes },
+    sha: { secret: salt.sha },
+  });
+
+  const code = [
+    getRandomString(2).toUpperCase(),
+    getRandomString(6).toUpperCase(),
+    getRandomString(4).toUpperCase(),
+    getRandomString(8).toUpperCase(),
+    getRandomString(4).toUpperCase(),
+  ].join("-");
+
+  account.browserLinkCode = await crypto.encrypt(code);
+
+  await accountRepository.update(account);
+
+  ctx.setCookie(BROWSER_LINK_COOKIE_NAME, account.id, {
+    expiry: getExpiryDate("99 years"),
+  });
+
+  return { body: { code } };
+};

@@ -57,7 +57,7 @@ export const confirmPasswordBrowserLinkFlow = async (
   const cookieId = ctx.getCookie(BROWSER_LINK_COOKIE_NAME);
   const browserLink = await browserLinkRepository.find({ id: cookieId });
 
-  if (identityId !== browserLink.identityId) {
+  if (identityId !== browserLink.accountId) {
     throw new ClientError("Invalid Cookie", {
       description: "Invalid Browser Link",
     });

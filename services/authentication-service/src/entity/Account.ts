@@ -8,6 +8,7 @@ import {
 } from "@lindorm-io/entity";
 
 export interface AccountAttributes extends EntityAttributes {
+  browserLinkCode: string | null;
   password: string | null;
   recoveryCode: string | null;
   totp: string | null;
@@ -15,18 +16,20 @@ export interface AccountAttributes extends EntityAttributes {
 
 export type AccountOptions = Optional<
   AccountAttributes,
-  EntityKeys | "password" | "recoveryCode" | "totp"
+  EntityKeys | "browserLinkCode" | "password" | "recoveryCode" | "totp"
 >;
 
 const schema = Joi.object<AccountAttributes>({
   ...JOI_ENTITY_BASE,
 
+  browserLinkCode: Joi.string().base64().allow(null).required(),
   password: Joi.string().base64().allow(null).required(),
   recoveryCode: Joi.string().base64().required(),
   totp: Joi.string().base64().allow(null).required(),
 });
 
 export class Account extends LindormEntity<AccountAttributes> implements AccountAttributes {
+  public browserLinkCode: string | null;
   public password: string | null;
   public recoveryCode: string | null;
   public totp: string | null;
@@ -34,6 +37,7 @@ export class Account extends LindormEntity<AccountAttributes> implements Account
   public constructor(options: AccountOptions) {
     super(options);
 
+    this.browserLinkCode = options.browserLinkCode || null;
     this.password = options.password || null;
     this.recoveryCode = options.recoveryCode || null;
     this.totp = options.totp || null;
@@ -51,6 +55,7 @@ export class Account extends LindormEntity<AccountAttributes> implements Account
     return {
       ...this.defaultJSON(),
 
+      browserLinkCode: this.browserLinkCode,
       password: this.password,
       recoveryCode: this.recoveryCode,
       totp: this.totp,

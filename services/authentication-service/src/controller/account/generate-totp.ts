@@ -8,7 +8,7 @@ interface ResponseBody {
   uri: string;
 }
 
-export const generateAccountTotpController: ServerKoaController = async (
+export const generateTotpController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

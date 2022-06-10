@@ -8,6 +8,7 @@ export const getAccountController: ServerKoaController = async (ctx): Controller
 
   return {
     body: {
+      browserLinkCode: !!account.browserLinkCode,
       password: !!account.password,
       recoveryCode: !!account.recoveryCode,
       totp: !!account.totp,

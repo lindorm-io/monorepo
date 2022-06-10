@@ -5,10 +5,10 @@ import { getRandomString } from "@lindorm-io/core";
 import { vaultGetSalt } from "../../handler";
 
 interface ResponseBody {
-  recoveryCode: string;
+  code: string;
 }
 
-export const generateAccountRecoveryCodeController: ServerKoaController = async (
+export const generateRecoveryCodeController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
@@ -22,16 +22,16 @@ export const generateAccountRecoveryCodeController: ServerKoaController = async 
     sha: { secret: salt.sha },
   });
 
-  const recoveryCode = [
+  const code = [
     getRandomString(6).toUpperCase(),
     getRandomString(6).toUpperCase(),
     getRandomString(6).toUpperCase(),
     getRandomString(6).toUpperCase(),
   ].join("-");
 
-  account.recoveryCode = await crypto.encrypt(recoveryCode);
+  account.recoveryCode = await crypto.encrypt(code);
 
   await accountRepository.update(account);
 
-  return { body: { recoveryCode } };
+  return { body: { code } };
 };
