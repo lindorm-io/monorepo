@@ -1,4 +1,4 @@
-import { createTestAccount } from "../../fixtures/entity";
+import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { rtbfController } from "./rtbf";
 import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -17,6 +17,7 @@ describe("rtbfController", () => {
       },
       repository: {
         accountRepository: createMockRepository(createTestAccount),
+        browserLinkRepository: createMockRepository(createTestBrowserLink),
       },
     };
 
@@ -27,5 +28,6 @@ describe("rtbfController", () => {
     await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.accountRepository.destroy).toHaveBeenCalled();
+    expect(ctx.repository.browserLinkRepository.deleteMany).toHaveBeenCalled();
   });
 });
