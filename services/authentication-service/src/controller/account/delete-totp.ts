@@ -9,13 +9,13 @@ interface RequestData {
   totp: string;
 }
 
-export const deleteAccountTotpSchema = Joi.object<RequestData>()
+export const deleteTotpSchema = Joi.object<RequestData>()
   .keys({
     totp: Joi.string().required(),
   })
   .required();
 
-export const deleteAccountTotpController: ServerKoaController<RequestData> = async (
+export const deleteTotpController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

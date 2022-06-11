@@ -21,7 +21,9 @@ describe("generateTotpController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        account: createTestAccount(),
+        account: createTestAccount({
+          totp: null,
+        }),
       },
       repository: {
         accountRepository: createMockRepository(createTestAccount),

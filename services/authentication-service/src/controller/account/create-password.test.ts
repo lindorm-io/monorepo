@@ -1,5 +1,5 @@
 import { baseHash } from "@lindorm-io/core";
-import { createAccountPasswordController } from "./create-account-password";
+import { createPasswordController } from "./create-password";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
@@ -27,7 +27,7 @@ describe("createAccountPasswordController", () => {
         newPassword: "new-password",
       },
       entity: {
-        account: createTestAccount(),
+        account: createTestAccount({ password: null }),
       },
       repository: {
         accountRepository: createMockRepository(createTestAccount),
@@ -38,7 +38,7 @@ describe("createAccountPasswordController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(createAccountPasswordController(ctx)).resolves.toBeUndefined();
+    await expect(createPasswordController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

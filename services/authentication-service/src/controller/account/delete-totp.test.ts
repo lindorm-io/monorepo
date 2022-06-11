@@ -1,4 +1,4 @@
-import { deleteAccountTotpController } from "./delete-account-totp";
+import { deleteTotpController } from "./delete-totp";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
@@ -13,7 +13,7 @@ jest.mock("../../handler");
 
 const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
-describe("deleteAccountTotpController", () => {
+describe("deleteTotpController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe("deleteAccountTotpController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(deleteAccountTotpController(ctx)).resolves.toBeUndefined();
+    await expect(deleteTotpController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

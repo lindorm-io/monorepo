@@ -1,10 +1,16 @@
 import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { createTestAccount } from "../../fixtures/entity";
+import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { linkAccountToBrowserController } from "./link-account-to-browser";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.mock("crypto", () => ({
+  ...jest.requireActual("crypto"),
+
+  randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
+}));
 
 jest.mock("@lindorm-io/core", () => ({
   ...jest.requireActual("@lindorm-io/core"),
@@ -38,8 +44,18 @@ describe("linkAccountToBrowserController", () => {
           id: "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
         }),
       },
+      metadata: {
+        agent: {
+          browser: "agent-browser",
+          os: "agent-os",
+          platform: "agent-platform",
+        },
+        client: {
+          environment: "client-environment",
+        },
+      },
       repository: {
-        accountRepository: createMockRepository(createTestAccount),
+        browserLinkRepository: createMockRepository(createTestBrowserLink),
       },
 
       setCookie: jest.fn(),
@@ -53,7 +69,7 @@ describe("linkAccountToBrowserController", () => {
 
     expect(ctx.setCookie).toHaveBeenCalledWith(
       "lindorm_io_authentication_browser_link",
-      "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
+      "a26dad28-e854-447d-bce6-5c685cddfea8",
       { expiry: new Date("2120-01-01T08:00:00.000Z") },
     );
   });

@@ -1,3 +1,4 @@
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { TOTPHandler } from "../../class";
@@ -15,6 +16,12 @@ export const generateTotpController: ServerKoaController = async (
     entity: { account },
     repository: { accountRepository },
   } = ctx;
+
+  if (account.totp) {
+    throw new ClientError("Bad Request", {
+      description: "Password already exists",
+    });
+  }
 
   const salt = await vaultGetSalt(ctx, account);
   const totpHandler = new TOTPHandler({

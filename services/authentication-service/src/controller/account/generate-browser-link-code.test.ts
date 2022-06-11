@@ -1,12 +1,18 @@
 import MockDate from "mockdate";
+import { ClientError } from "@lindorm-io/errors";
 import { baseHash } from "@lindorm-io/core";
-import { generateBrowserLinkCodeController } from "./generate-browser-link-code";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
+import { generateBrowserLinkCodeController } from "./generate-browser-link-code";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
-import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.mock("crypto", () => ({
+  ...jest.requireActual("crypto"),
+
+  randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
+}));
 
 jest.mock("@lindorm-io/core", () => ({
   ...jest.requireActual("@lindorm-io/core"),
@@ -42,9 +48,6 @@ describe("generateBrowserLinkCodeController", () => {
       repository: {
         accountRepository: createMockRepository(createTestAccount),
       },
-
-      getCookie: jest.fn().mockImplementation(() => null),
-      setCookie: jest.fn(),
     };
 
     vaultGetSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
@@ -52,36 +55,20 @@ describe("generateBrowserLinkCodeController", () => {
 
   test("should resolve", async () => {
     await expect(generateBrowserLinkCodeController(ctx)).resolves.toStrictEqual({
-      body: { code: "12-123456-1234-12345678-1234" },
+      body: { code: "12-123456-1234-123456-1234-123456" },
     });
 
     expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        browserLinkCode: "MTItMTIzNDU2LTEyMzQtMTIzNDU2NzgtMTIzNA==",
+        browserLinkCode: "MTItMTIzNDU2LTEyMzQtMTIzNDU2LTEyMzQtMTIzNDU2",
       }),
     );
-
-    expect(ctx.setCookie).toHaveBeenCalledWith(
-      "lindorm_io_authentication_browser_link",
-      "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
-      { expiry: new Date("2120-01-01T08:00:00.000Z") },
-    );
-  });
-
-  test("should resolve with existing browser link code", async () => {
-    ctx.entity.account = createTestAccount({
-      id: "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
-    });
-    ctx.getCookie.mockImplementation(() => "ce43d777-8a56-4053-bc5b-8f1f5624b71c");
-
-    await expect(generateBrowserLinkCodeController(ctx)).resolves.toBeTruthy();
   });
 
   test("should reject", async () => {
     ctx.entity.account = createTestAccount({
       id: "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
     });
-    ctx.getCookie.mockImplementation(() => "13a23b49-e42a-4097-a7c0-7b5c23a7a0d0");
 
     await expect(generateBrowserLinkCodeController(ctx)).rejects.toThrow(ClientError);
   });

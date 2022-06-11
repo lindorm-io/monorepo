@@ -24,7 +24,7 @@ const schema = Joi.object<AccountAttributes>({
 
   browserLinkCode: Joi.string().base64().allow(null).required(),
   password: Joi.string().base64().allow(null).required(),
-  recoveryCode: Joi.string().base64().required(),
+  recoveryCode: Joi.string().base64().allow(null).required(),
   totp: Joi.string().base64().allow(null).required(),
 });
 
