@@ -29,7 +29,7 @@ export const createTestLoginSession = (options: Partial<LoginSessionOptions> = {
     pkceMethod: PKCEMethod.S256,
     remember: true,
     requestedAuthenticationMethods: ["email_otp"],
-    requestedLevelOfAssurance: 2,
+    requestedLevelOfAssurance: 4,
     sessions: [randomUUID(), randomUUID()],
     ...options,
   });

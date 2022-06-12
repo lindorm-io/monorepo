@@ -7,14 +7,14 @@ import { SessionStatus } from "../../../common";
 import { argon } from "../../../instance";
 import { createTestLoginSession } from "../../../fixtures/entity";
 import { getRandomNumber } from "@lindorm-io/core";
+import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
 import {
-  getTestFlowSessionToken,
-  setupIntegration,
   TEST_FLOW_SESSION_CACHE,
   TEST_LOGIN_SESSION_CACHE,
+  getTestFlowSessionToken,
+  setupIntegration,
 } from "../../../fixtures/integration";
-import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
