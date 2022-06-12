@@ -4,6 +4,7 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
 import { canFlowGenerateMfaCookie } from "../../util";
 import {
   confirmBankIdSeFlow,
@@ -22,7 +23,6 @@ import {
   generateMfaCookie,
   updateLoginSessionWithFlow,
 } from "../../handler";
-import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;
@@ -54,10 +54,10 @@ export const confirmFlowController: ServerKoaController<RequestData> = async (
   const {
     cache: { flowSessionCache },
     data: { challengeConfirmationToken, code, otp, password, totp },
-    entity: { flowSession },
   } = ctx;
 
   let account: Account;
+  let flowSession = ctx.entity.flowSession;
   let loginSession = ctx.entity.loginSession;
 
   switch (flowSession.type) {
@@ -149,7 +149,7 @@ export const confirmFlowController: ServerKoaController<RequestData> = async (
 
   flowSession.status = SessionStatus.CONFIRMED;
 
-  await flowSessionCache.update(flowSession);
+  flowSession = await flowSessionCache.update(flowSession);
 
   loginSession = await updateLoginSessionWithFlow(ctx, account, loginSession, flowSession);
 
