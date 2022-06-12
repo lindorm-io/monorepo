@@ -53,7 +53,7 @@ export const FLOW_TYPE_CONFIG: Array<FlowTypeConfig> = [
     amrValuesMin: 0,
     mfaCookie: true,
     pollingRequired: false,
-    tokenReturn: false,
+    tokenReturn: true,
     value: 2,
     valueMax: 2,
     weight: 20,

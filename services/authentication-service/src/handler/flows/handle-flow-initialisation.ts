@@ -52,6 +52,7 @@ export const handleFlowInitialisation = async (
   const { token: flowToken } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: flowSession.expires,
+    sessionId: flowSession.id,
     subject: flowSession.id,
     subjectHint: SubjectHint.SESSION,
     type: TokenType.FLOW_SESSION,

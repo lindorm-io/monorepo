@@ -1,4 +1,4 @@
-import { Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../../../types";
 import {
   flowSessionEntityMiddleware,
@@ -29,7 +29,9 @@ router.post(
 
 router.put(
   "/:id/confirm",
+  paramsMiddleware,
   useSchema(confirmFlowSchema),
+  flowTokenMiddleware("data.flowToken"),
   useAssertion({
     fromPath: {
       expect: "data.id",
@@ -44,6 +46,7 @@ router.put(
 
 router.put(
   "/:id/reject",
+  paramsMiddleware,
   useSchema(rejectFlowSchema),
   flowTokenMiddleware("data.flowToken"),
   useAssertion({
@@ -60,6 +63,7 @@ router.put(
 
 router.get(
   "/:id/status",
+  paramsMiddleware,
   useSchema(getFlowStatusSchema),
   flowSessionEntityMiddleware("data.id"),
   useController(getFlowStatusController),

@@ -1,6 +1,6 @@
 import { Account, LoginSession, FlowSession } from "../../../entity";
-import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
+import { argon } from "../../../instance";
 
 interface Options {
   otp: string;
@@ -27,9 +27,7 @@ export const confirmSessionOtpFlow = async (
 
   logger.debug("Verifying OTP");
 
-  if (otp !== flowSession.otp) {
-    throw new ClientError("Invalid OTP");
-  }
+  await argon.assert(otp, flowSession.otp);
 
   logger.debug("Resolving Account");
 

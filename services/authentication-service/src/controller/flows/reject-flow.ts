@@ -1,18 +1,16 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../common";
+import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;
-  rdcSessionId: never;
-  rdcSessionStatus: never;
+  flowToken: string;
 }
 
 export const rejectFlowSchema = Joi.object<RequestData>({
   id: JOI_GUID.required(),
-  rdcSessionId: Joi.string().optional(),
-  rdcSessionStatus: Joi.string().optional(),
+  flowToken: JOI_JWT.required(),
 });
 
 export const rejectFlowController: ServerKoaController<RequestData> = async (
