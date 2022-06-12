@@ -1,6 +1,5 @@
 import { Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../../../types";
-import { includes } from "lodash";
 import {
   flowSessionEntityMiddleware,
   flowTokenMiddleware,
@@ -25,26 +24,18 @@ router.post(
   "/",
   useSchema(initialiseFlowSchema),
   loginSessionCookieMiddleware,
-  useAssertion({
-    assertion: includes,
-    fromPath: {
-      expect: "entity.loginSession.allowedFlows",
-      actual: "data.flowType",
-    },
-    hint: "flowType",
-  }),
   useController(initialiseFlowController),
 );
 
 router.put(
   "/:id/confirm",
   useSchema(confirmFlowSchema),
-  flowTokenMiddleware("data.flowToken"),
   useAssertion({
     fromPath: {
       expect: "data.id",
       actual: "token.flowToken.sessionId",
     },
+    hint: "id",
   }),
   flowSessionEntityMiddleware("data.id"),
   loginSessionEntityMiddleware("entity.flowSession.loginSessionId"),
@@ -60,6 +51,7 @@ router.put(
       expect: "data.id",
       actual: "token.flowToken.sessionId",
     },
+    hint: "id",
   }),
   flowSessionEntityMiddleware("data.id"),
   loginSessionEntityMiddleware("entity.flowSession.loginSessionId"),

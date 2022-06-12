@@ -8,6 +8,8 @@ import {
   InitialiseFlowResponseBody,
   ServerKoaController,
 } from "../../types";
+import { includes } from "lodash";
+import { ClientError } from "@lindorm-io/errors";
 
 interface RequestData extends InitialiseFlowRequestData {
   remember: boolean;
@@ -31,6 +33,10 @@ export const initialiseFlowController: ServerKoaController<RequestData> = async 
   } = ctx;
 
   let loginSession = ctx.entity.loginSession;
+
+  if (!includes(loginSession.allowedFlows, flowType)) {
+    throw new ClientError("Invalid Flow Type");
+  }
 
   loginSession.remember = remember;
 

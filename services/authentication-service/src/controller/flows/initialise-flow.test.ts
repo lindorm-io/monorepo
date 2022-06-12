@@ -1,3 +1,4 @@
+import { ClientError } from "@lindorm-io/errors";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestLoginSession } from "../../fixtures/entity";
 import { handleFlowInitialisation as _handleFlowInitialisation } from "../../handler";
@@ -17,7 +18,7 @@ describe("initialiseFlowController", () => {
       },
       data: {
         email: "email",
-        flowType: "flowType",
+        flowType: "email_link",
         nonce: "nonce",
         phoneNumber: "phoneNumber",
         remember: "remember",
@@ -35,5 +36,11 @@ describe("initialiseFlowController", () => {
     await expect(initialiseFlowController(ctx)).resolves.toStrictEqual({ body: "flow" });
 
     expect(ctx.cache.loginSessionCache.update).toHaveBeenCalled();
+  });
+
+  test("should reject invalid flow type", async () => {
+    ctx.data.flowType = "wrong";
+
+    await expect(initialiseFlowController(ctx)).rejects.toThrow(ClientError);
   });
 });
