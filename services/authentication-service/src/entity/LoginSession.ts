@@ -57,7 +57,7 @@ const schema = Joi.object<LoginSessionAttributes>({
 
   allowedFlows: Joi.array().items(JOI_FLOW_TYPE).required(),
   allowedOidc: Joi.array().items(Joi.string()).required(),
-  amrValues: Joi.array().items(JOI_FLOW_TYPE).required(),
+  amrValues: Joi.array().items(Joi.string()).required(),
   country: Joi.string().length(2).allow(null).required(),
   deviceLinks: Joi.array().items(JOI_GUID).required(),
   expires: Joi.date().required(),
