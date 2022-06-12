@@ -8,10 +8,10 @@ export const deviceLinkGetIdentityDeviceLinks = async (
   account: Account,
 ): Promise<GetIdentityDeviceLinksResponseBody> => {
   const {
-    axios: { deviceLinkClient, oauthClient },
+    axios: { deviceClient, oauthClient },
   } = ctx;
 
-  const { data } = await deviceLinkClient.get<GetIdentityDeviceLinksResponseBody>(
+  const { data } = await deviceClient.get<GetIdentityDeviceLinksResponseBody>(
     "/internal/identities/:id/device-links",
     {
       params: { id: account.id },

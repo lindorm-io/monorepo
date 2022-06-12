@@ -31,7 +31,7 @@ import {
 
 interface ServerAxios extends LindormNodeServerAxios {
   communicationClient: Axios;
-  deviceLinkClient: Axios;
+  deviceClient: Axios;
   identityClient: Axios;
   oauthClient: Axios;
   oidcClient: Axios;
