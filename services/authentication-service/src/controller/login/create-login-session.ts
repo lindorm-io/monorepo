@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { Account, LoginSession } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { FlowType } from "../../enum";
 import { JOI_EMAIL, JOI_GUID, JOI_NONCE, JOI_PHONE_NUMBER } from "../../common";
@@ -7,6 +8,7 @@ import { JOI_FLOW_TYPE, JOI_PKCE_METHOD } from "../../constant";
 import { configuration } from "../../server/configuration";
 import { getExpires, PKCEMethod } from "@lindorm-io/core";
 import { handleFlowInitialisation, resolveAllowedFlows } from "../../handler";
+import { includes } from "lodash";
 import {
   InitialiseFlowRequestData,
   InitialiseFlowResponseBody,
@@ -14,7 +16,7 @@ import {
 } from "../../types";
 
 interface RequestData extends Partial<InitialiseFlowRequestData> {
-  flowType: FlowType;
+  flowType?: FlowType;
   country?: string;
   identityId?: string;
   pkceChallenge?: string;
@@ -27,7 +29,7 @@ interface ResponseBody {
 }
 
 export const createLoginSessionSchema = Joi.object<RequestData>({
-  country: Joi.string().length(2).optional(),
+  country: Joi.string().length(2).lowercase().optional(),
   email: JOI_EMAIL.optional(),
   flowType: JOI_FLOW_TYPE.optional(),
   identityId: JOI_GUID.optional(),
@@ -74,6 +76,10 @@ export const createLoginSessionController: ServerKoaController<RequestData> = as
   }
 
   loginSession = await resolveAllowedFlows(ctx, loginSession, account);
+
+  if (flowType && !includes(loginSession.allowedFlows, flowType)) {
+    throw new ClientError("Invalid Flow Type");
+  }
 
   await loginSessionCache.create(loginSession, expiresIn);
 

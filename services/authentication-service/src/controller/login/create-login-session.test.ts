@@ -1,3 +1,4 @@
+import { ClientError } from "@lindorm-io/errors";
 import { createLoginSessionController } from "./create-login-session";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -23,7 +24,7 @@ describe("createLoginSessionController", () => {
       data: {
         country: "country",
         email: "email",
-        flowType: "flowType",
+        flowType: "email_link",
         identityId: "identityId",
         nonce: "nonce",
         phoneNumber: "phoneNumber",
@@ -36,15 +37,18 @@ describe("createLoginSessionController", () => {
       },
     };
 
-    handleFlowInitialisation.mockResolvedValue("flow");
-    resolveAllowedFlows.mockImplementation(async (_1, _2, arg) => ({ ...arg, id: "id" }));
+    handleFlowInitialisation.mockResolvedValue("mocked-flow");
+    resolveAllowedFlows.mockImplementation(async (ctx, loginSession, account) => {
+      loginSession.allowedFlows = ["email_link"];
+      return loginSession;
+    });
   });
 
   afterEach(jest.resetAllMocks);
 
   test("should resolve", async () => {
     await expect(createLoginSessionController(ctx)).resolves.toStrictEqual({
-      body: { flow: "flow", id: "id" },
+      body: { id: expect.any(String), flow: "mocked-flow" },
     });
 
     expect(handleFlowInitialisation).toHaveBeenCalled();
@@ -54,9 +58,15 @@ describe("createLoginSessionController", () => {
     ctx.data.flowType = undefined;
 
     await expect(createLoginSessionController(ctx)).resolves.toStrictEqual({
-      body: { id: "id" },
+      body: { id: expect.any(String) },
     });
 
     expect(handleFlowInitialisation).not.toHaveBeenCalled();
+  });
+
+  test("should reject invalid flow", async () => {
+    ctx.data.flowType = "wrong";
+
+    await expect(createLoginSessionController(ctx)).rejects.toThrow(ClientError);
   });
 });
