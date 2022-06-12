@@ -36,6 +36,8 @@ server:
 services:
   communication_service:
     host: https://communication.test.lindorm.io
+  device_service:
+    host: https://device.test.lindorm.io
   identity_service:
     host: https://identity.test.lindorm.io
   oauth_service:
