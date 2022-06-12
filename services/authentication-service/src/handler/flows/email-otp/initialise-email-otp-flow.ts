@@ -1,11 +1,11 @@
 import { ClientScope, SendCodeRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomNumberAsync } from "../../../util";
 
-interface Options extends FlowHandlerInitialiseOptions {
+interface Options {
   email: string;
 }
 
@@ -18,17 +18,9 @@ export const initialiseEmailOtpFlow = async (
   const {
     cache: { flowSessionCache },
     axios: { communicationClient, oauthClient },
-    logger,
   } = ctx;
 
-  const { flowToken, email } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
+  const { email } = options;
 
   const otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
   flowSession.otp = await argon.encrypt(otp);

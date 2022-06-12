@@ -1,14 +1,15 @@
 import { ClientScope, SendCodeRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { getRandomString } from "@lindorm-io/core";
 
-interface Options extends FlowHandlerInitialiseOptions {
+interface Options {
   email: string;
+  flowToken: string;
 }
 
 export const initialiseEmailLinkFlow = async (
@@ -20,17 +21,9 @@ export const initialiseEmailLinkFlow = async (
   const {
     cache: { flowSessionCache },
     axios: { communicationClient, oauthClient },
-    logger,
   } = ctx;
 
-  const { flowToken, email } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
+  const { email, flowToken } = options;
 
   const code = getRandomString(64);
   flowSession.code = await argon.encrypt(code);

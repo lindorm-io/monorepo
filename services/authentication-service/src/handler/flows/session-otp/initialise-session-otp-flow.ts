@@ -1,33 +1,20 @@
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomNumberAsync } from "../../../util";
-
-type Options = FlowHandlerInitialiseOptions;
 
 export const initialiseSessionOtpFlow = async (
   ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
-  options: Options,
 ): Promise<void> => {
   const {
     axios: { communicationClient, oauthClient },
     cache: { flowSessionCache },
-    logger,
   } = ctx;
-
-  const { flowToken } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
 
   if (!loginSession.sessions.length) {
     throw new ServerError("Unable to start flow", {

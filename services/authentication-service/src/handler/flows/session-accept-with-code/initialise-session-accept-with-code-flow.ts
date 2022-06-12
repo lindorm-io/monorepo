@@ -1,12 +1,14 @@
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRandomString } from "@lindorm-io/core";
 
-type Options = FlowHandlerInitialiseOptions;
+interface Options {
+  flowToken: string;
+}
 
 interface Result {
   displayCode: string;
@@ -21,17 +23,9 @@ export const initialiseSessionAcceptWithCodeFlow = async (
   const {
     axios: { communicationClient, oauthClient },
     cache: { flowSessionCache },
-    logger,
   } = ctx;
 
   const { flowToken } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
 
   if (!loginSession.sessions.length) {
     throw new ServerError("Unable to start flow", {

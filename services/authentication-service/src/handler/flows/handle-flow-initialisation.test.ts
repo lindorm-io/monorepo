@@ -1,6 +1,9 @@
+import MockDate from "mockdate";
 import { FlowType } from "../../enum";
 import { LoginSession } from "../../entity";
-import { createTestLoginSession } from "../../fixtures/entity";
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockLogger } from "@lindorm-io/winston";
+import { createTestFlowSession, createTestLoginSession } from "../../fixtures/entity";
 import { handleFlowInitialisation } from "./handle-flow-initialisation";
 import {
   isPollingRequired as _isPollingRequired,
@@ -8,8 +11,10 @@ import {
 } from "../../util";
 import {
   initialiseBankIdSeFlow as _initialiseBankIdSeFlow,
-  initialiseTimeBasedOtpFlow as _initialiseTimeBasedOtpFlow,
+  initialiseEmailLinkFlow as _initialiseEmailLinkFlow,
 } from "../../handler";
+
+MockDate.set("2022-01-01T07:00:00.000Z");
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -17,7 +22,7 @@ jest.mock("../../util");
 const isPollingRequired = _isPollingRequired as jest.Mock;
 const isTokenReturned = _isTokenReturned as jest.Mock;
 const initialiseBankIdSeFlow = _initialiseBankIdSeFlow as jest.Mock;
-const initialiseTimeBasedOtpFlow = _initialiseTimeBasedOtpFlow as jest.Mock;
+const initialiseEmailLinkFlow = _initialiseEmailLinkFlow as jest.Mock;
 
 describe("handleFlowInitialisation", () => {
   let ctx: any;
@@ -27,13 +32,12 @@ describe("handleFlowInitialisation", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        flowSessionCache: {
-          create: jest.fn().mockImplementation(async (arg) => ({ ...arg, id: "id" })),
-        },
+        flowSessionCache: createMockCache(createTestFlowSession),
       },
       jwt: {
         sign: jest.fn().mockImplementation(() => ({ token: "jwt.jwt.jwt" })),
       },
+      logger: createMockLogger(),
     };
 
     loginSession = createTestLoginSession();
@@ -48,34 +52,33 @@ describe("handleFlowInitialisation", () => {
 
     isPollingRequired.mockImplementation(() => true);
     isTokenReturned.mockImplementation(() => true);
-    initialiseBankIdSeFlow.mockResolvedValue({ extra: "value" });
-    initialiseTimeBasedOtpFlow.mockResolvedValue(undefined);
+    initialiseBankIdSeFlow.mockResolvedValue(undefined);
+    initialiseEmailLinkFlow.mockResolvedValue(undefined);
   });
 
   afterEach(jest.resetAllMocks);
 
   test("should resolve Bank ID", async () => {
     await expect(handleFlowInitialisation(ctx, loginSession, options)).resolves.toStrictEqual({
-      extra: "value",
       flowToken: "jwt.jwt.jwt",
-      id: "id",
+      id: expect.any(String),
       pollingRequired: true,
     });
 
     expect(initialiseBankIdSeFlow).toHaveBeenCalled();
-    expect(initialiseTimeBasedOtpFlow).not.toHaveBeenCalled();
+    expect(initialiseEmailLinkFlow).not.toHaveBeenCalled();
   });
 
-  test("should resolve TOTP", async () => {
-    options.flowType = FlowType.TIME_BASED_OTP;
+  test("should resolve Email Link", async () => {
+    options.flowType = FlowType.EMAIL_LINK;
 
     await expect(handleFlowInitialisation(ctx, loginSession, options)).resolves.toStrictEqual({
       flowToken: "jwt.jwt.jwt",
-      id: "id",
+      id: expect.any(String),
       pollingRequired: true,
     });
 
-    expect(initialiseTimeBasedOtpFlow).toHaveBeenCalled();
+    expect(initialiseEmailLinkFlow).toHaveBeenCalled();
     expect(initialiseBankIdSeFlow).not.toHaveBeenCalled();
   });
 });

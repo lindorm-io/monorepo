@@ -37,7 +37,7 @@ export const confirmPasswordFlow = async (
 
   if (!account.password) {
     throw new ClientError("Invalid Flow", {
-      description: "Account does not have a Recovery Code",
+      description: "Account does not have a Password",
     });
   }
 

@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { LoginSession, FlowSession } from "../../../entity";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
@@ -11,7 +11,9 @@ import {
   RequestMethod,
 } from "../../../common";
 
-type Options = FlowHandlerInitialiseOptions;
+interface Options {
+  flowToken: string;
+}
 
 interface Result {
   qrCode: string;
@@ -24,19 +26,11 @@ export const initialiseRdcQrCodeFlow = async (
   options: Options,
 ): Promise<Result> => {
   const {
-    axios: { deviceLinkClient, oauthClient },
+    axios: { deviceClient, oauthClient },
     cache: { flowSessionCache },
-    logger,
   } = ctx;
 
   const { flowToken } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
 
   if (!loginSession.identityId) {
     throw new ClientError("Invalid identifier", {
@@ -70,7 +64,7 @@ export const initialiseRdcQrCodeFlow = async (
     templateName: "authentication",
   };
 
-  await deviceLinkClient.post("/internal/rdc", {
+  await deviceClient.post("/internal/rdc", {
     data,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_RDC_WRITE])],
   });

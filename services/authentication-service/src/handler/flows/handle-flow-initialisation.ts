@@ -12,17 +12,12 @@ import {
 } from "../../types";
 import {
   initialiseBankIdSeFlow,
-  initialiseDeviceChallengeFlow,
   initialiseEmailLinkFlow,
   initialiseEmailOtpFlow,
-  initialiseMfaCookieFlow,
-  initialisePasswordBrowserLinkFlow,
-  initialisePasswordFlow,
   initialisePhoneOtpFlow,
   initialiseRdcQrCodeFlow,
   initialiseSessionAcceptWithCodeFlow,
   initialiseSessionOtpFlow,
-  initialiseTimeBasedOtpFlow,
   initialiseWebauthnFlow,
 } from "../../handler";
 
@@ -34,6 +29,7 @@ export const handleFlowInitialisation = async (
   const {
     cache: { flowSessionCache },
     jwt,
+    logger,
   } = ctx;
 
   const { email, flowType, nonce, phoneNumber, username } = options;
@@ -64,16 +60,15 @@ export const handleFlowInitialisation = async (
   let extra: Record<string, any>;
 
   switch (flowType) {
-    case FlowType.BANK_ID_SE:
-      extra = await initialiseBankIdSeFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
+    case FlowType.DEVICE_CHALLENGE:
+    case FlowType.MFA_COOKIE:
+    case FlowType.PASSWORD:
+    case FlowType.PASSWORD_BROWSER_LINK:
+    case FlowType.TIME_BASED_OTP:
       break;
 
-    case FlowType.DEVICE_CHALLENGE:
-      await initialiseDeviceChallengeFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
+    case FlowType.BANK_ID_SE:
+      await initialiseBankIdSeFlow(ctx, loginSession, flowSession);
       break;
 
     case FlowType.EMAIL_LINK:
@@ -84,35 +79,11 @@ export const handleFlowInitialisation = async (
       break;
 
     case FlowType.EMAIL_OTP:
-      await initialiseEmailOtpFlow(ctx, loginSession, flowSession, {
-        flowToken,
-        email,
-      });
-      break;
-
-    case FlowType.MFA_COOKIE:
-      await initialiseMfaCookieFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
-      break;
-
-    case FlowType.PASSWORD:
-      await initialisePasswordFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
-      break;
-
-    case FlowType.PASSWORD_BROWSER_LINK:
-      await initialisePasswordBrowserLinkFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
+      await initialiseEmailOtpFlow(ctx, loginSession, flowSession, { email });
       break;
 
     case FlowType.PHONE_OTP:
-      await initialisePhoneOtpFlow(ctx, loginSession, flowSession, {
-        flowToken,
-        phoneNumber,
-      });
+      await initialisePhoneOtpFlow(ctx, loginSession, flowSession, { phoneNumber });
       break;
 
     case FlowType.RDC_QR_CODE:
@@ -128,26 +99,23 @@ export const handleFlowInitialisation = async (
       break;
 
     case FlowType.SESSION_OTP:
-      await initialiseSessionOtpFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
-      break;
-
-    case FlowType.TIME_BASED_OTP:
-      await initialiseTimeBasedOtpFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
+      await initialiseSessionOtpFlow(ctx, loginSession, flowSession);
       break;
 
     case FlowType.WEBAUTHN:
-      extra = await initialiseWebauthnFlow(ctx, loginSession, flowSession, {
-        flowToken,
-      });
+      await initialiseWebauthnFlow(ctx, loginSession, flowSession);
       break;
 
     default:
       throw new ServerError("Unknown Flow");
   }
+
+  logger.info("Flow initialised", {
+    id: flowSession.id,
+    loginSessionId: loginSession.id,
+    type: flowSession.type,
+    flowToken,
+  });
 
   return {
     id: flowSession.id,

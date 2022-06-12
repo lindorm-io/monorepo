@@ -1,27 +1,13 @@
 import { LoginSession, FlowSession } from "../../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext, FlowHandlerInitialiseOptions } from "../../../types";
-
-type Options = FlowHandlerInitialiseOptions;
-
-type Result = Record<string, unknown>;
+import { ServerKoaContext } from "../../../types";
 
 export const initialiseWebauthnFlow = async (
   ctx: ServerKoaContext,
   loginSession: LoginSession,
   flowSession: FlowSession,
-  options: Options,
-): Promise<Result> => {
-  const { logger } = ctx;
-
-  const { flowToken } = options;
-
-  logger.info("Flow initialised", {
-    id: flowSession.id,
-    loginSessionId: loginSession.id,
-    type: flowSession.type,
-    flowToken,
-  });
+): Promise<void> => {
+  console.log(ctx, loginSession, flowSession);
 
   throw new ServerError("Flow not implemented");
 };
