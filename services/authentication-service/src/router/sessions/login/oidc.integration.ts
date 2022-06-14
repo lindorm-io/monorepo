@@ -1,11 +1,11 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestLoginSession } from "../../../fixtures/entity";
+import { createURL } from "@lindorm-io/core";
 import { server } from "../../../server/server";
 import { setupIntegration, TEST_LOGIN_SESSION_CACHE } from "../../../fixtures/integration";
-import { createURL } from "@lindorm-io/core";
-import { EntityNotFoundError } from "@lindorm-io/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

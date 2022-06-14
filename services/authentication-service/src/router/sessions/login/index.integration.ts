@@ -1,7 +1,9 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestAuthenticationSession, createTestLoginSession } from "../../../fixtures/entity";
+import { createURL } from "@lindorm-io/core";
 import { server } from "../../../server/server";
 import {
   getTestAuthenticationConfirmationToken,
@@ -9,8 +11,6 @@ import {
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_LOGIN_SESSION_CACHE,
 } from "../../../fixtures/integration";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { createURL } from "@lindorm-io/core";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
