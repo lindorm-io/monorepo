@@ -39,6 +39,7 @@ export const JOI_SCOPE_DESCRIPTION = Joi.object({
 
 export const JOI_SESSION_STATUS = Joi.string().valid(
   SessionStatus.ACKNOWLEDGED,
+  SessionStatus.CODE,
   SessionStatus.CONFIRMED,
   SessionStatus.EXPIRED,
   SessionStatus.PENDING,

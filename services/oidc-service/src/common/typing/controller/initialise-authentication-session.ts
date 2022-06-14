@@ -1,4 +1,3 @@
-import { AuthenticationMethod } from "../../../enum";
 import { LevelOfAssurance } from "../common";
 import { PKCEMethod } from "@lindorm-io/core";
 
@@ -9,7 +8,8 @@ export interface InitialiseAuthenticationRequestData {
   country?: string;
   identityId?: string;
   levelOfAssurance?: LevelOfAssurance;
-  methods?: Array<AuthenticationMethod>;
+  loginHint?: Array<string>;
+  methods?: Array<string>;
   nonce?: string;
   redirectUri?: string;
 }
