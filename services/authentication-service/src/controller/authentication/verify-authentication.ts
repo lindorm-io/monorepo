@@ -42,8 +42,6 @@ export const verifyAuthenticationController: ServerKoaController<
 
   await argon.assert(code, authenticationSession.code);
 
-  authenticationSession.status = SessionStatus.VERIFIED;
-
   const { expiresIn, token: authenticationConfirmationToken } = jwt.sign<
     never,
     AuthenticationConfirmationTokenClaims
@@ -69,7 +67,7 @@ export const verifyAuthenticationController: ServerKoaController<
     await generateMfaCookie(ctx, authenticationSession);
   }
 
-  await authenticationSessionCache.update(authenticationSession);
+  await authenticationSessionCache.destroy(authenticationSession);
 
   if (authenticationSession.redirectUri) {
     return {

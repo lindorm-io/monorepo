@@ -62,7 +62,7 @@ describe("verifyAuthenticationController", () => {
     generateMfaCookie.mockResolvedValue(undefined);
   });
 
-  test("should resolve", async () => {
+  test("should resolve with body", async () => {
     await expect(verifyAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         authenticationConfirmationToken: "jwt.jwt.jwt",
@@ -71,11 +71,7 @@ describe("verifyAuthenticationController", () => {
     });
 
     expect(assertPKCE).toHaveBeenCalled();
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "verified",
-      }),
-    );
+    expect(ctx.cache.authenticationSessionCache.destroy).toHaveBeenCalled();
   });
 
   test("should resolve with generated mfa cookie", async () => {
