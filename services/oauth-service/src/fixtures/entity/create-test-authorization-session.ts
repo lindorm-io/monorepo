@@ -1,4 +1,5 @@
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
+import { baseHash, PKCEMethod } from "@lindorm-io/core";
 import {
   DisplayMode,
   PromptMode,
@@ -7,14 +8,13 @@ import {
   Scope,
   SessionStatus,
 } from "../../common";
-import { baseHash, PKCEMethod } from "@lindorm-io/core";
 
 export const createTestAuthorizationSession = (
   options: Partial<AuthorizationSessionOptions> = {},
 ): AuthorizationSession =>
   new AuthorizationSession({
     audiences: ["1f7e85f9-d707-4319-8b7e-c3c6a2bf8312"],
-    authenticationId: "99fc4b14-507b-49b4-92b1-adcea1a69a91",
+    authToken: "auth.jwt.jwt",
     authenticationMethods: ["email_otp", "phone_otp"],
     authenticationStatus: SessionStatus.PENDING,
     browserSessionId: "c284c06a-29fe-4a3d-ace3-52aacc4f4588",
@@ -27,14 +27,13 @@ export const createTestAuthorizationSession = (
     country: "se",
     displayMode: DisplayMode.POPUP,
     expires: new Date("2021-01-02T08:00:00.000Z"),
-    idTokenHint: "jwt.jwt.jwt",
+    idTokenHint: "id.jwt.jwt",
     identityId: "3f6ee784-bf36-4570-b15e-883dad02ec56",
     levelOfAssurance: 2,
     loginHint: ["test@lindorm.io"],
     maxAge: 999,
     nonce: "xkBpdx5HF1T0fiJL",
     originalUri: "https://localhost/oauth2/authorize?query=query",
-    pkceVerifier: "89fec5f64da748a4b6baae15b73f1345",
     promptModes: [PromptMode.LOGIN, PromptMode.CONSENT],
     redirectData: baseHash(
       baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),

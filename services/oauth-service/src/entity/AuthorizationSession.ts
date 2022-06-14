@@ -35,7 +35,7 @@ import {
 
 export interface AuthorizationSessionAttributes extends EntityAttributes {
   audiences: Array<string>;
-  authenticationId: string | null;
+  authToken: string | null;
   authenticationMethods: Array<string>;
   authenticationStatus: SessionStatus;
   browserSessionId: string | null;
@@ -55,7 +55,6 @@ export interface AuthorizationSessionAttributes extends EntityAttributes {
   maxAge: number | null;
   nonce: string | null;
   originalUri: string;
-  pkceVerifier: string | null;
   promptModes: Array<PromptMode>;
   redirectData: string;
   redirectUri: string;
@@ -71,7 +70,7 @@ export type AuthorizationSessionOptions = Optional<
   AuthorizationSessionAttributes,
   | EntityKeys
   | "audiences"
-  | "authenticationId"
+  | "authToken"
   | "authenticationMethods"
   | "authenticationStatus"
   | "browserSessionId"
@@ -88,7 +87,6 @@ export type AuthorizationSessionOptions = Optional<
   | "loginHint"
   | "maxAge"
   | "nonce"
-  | "pkceVerifier"
   | "promptModes"
   | "redirectData"
   | "refreshSessionId"
@@ -101,7 +99,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>({
   ...JOI_ENTITY_BASE,
 
   audiences: Joi.array().items(JOI_GUID).required(),
-  authenticationId: JOI_GUID.allow(null).required(),
+  authToken: JOI_JWT.allow(null).required(),
   authenticationMethods: Joi.array().items(Joi.string().lowercase()).required(),
   authenticationStatus: JOI_SESSION_STATUS.required(),
   browserSessionId: JOI_GUID.allow(null).required(),
@@ -121,7 +119,6 @@ const schema = Joi.object<AuthorizationSessionAttributes>({
   maxAge: Joi.number().allow(null).required(),
   nonce: JOI_NONCE.allow(null).required(),
   originalUri: Joi.string().uri().required(),
-  pkceVerifier: Joi.string().allow(null).required(),
   promptModes: Joi.array().items(JOI_PROMPT_MODE).required(),
   redirectData: Joi.string().base64().allow(null).required(),
   redirectUri: Joi.string().uri().required(),
@@ -135,7 +132,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>({
 
 export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttributes> {
   public readonly audiences: Array<string>;
-  public readonly authenticationId: string | null;
+  public readonly authToken: string | null;
   public readonly authenticationMethods: Array<string>;
   public readonly clientId: string;
   public readonly codeChallenge: string | null;
@@ -149,7 +146,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly maxAge: number | null;
   public readonly nonce: string | null;
   public readonly originalUri: string;
-  public readonly pkceVerifier: string | null;
   public readonly promptModes: Array<PromptMode>;
   public readonly redirectData: string | null;
   public readonly redirectUri: string;
@@ -171,7 +167,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     super(options);
 
     this.audiences = options.audiences || [];
-    this.authenticationId = options.authenticationId || null;
+    this.authToken = options.authToken || null;
     this.authenticationMethods = options.authenticationMethods || [];
     this.authenticationStatus = options.authenticationStatus || SessionStatus.PENDING;
     this.browserSessionId = options.browserSessionId || null;
@@ -191,7 +187,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.maxAge = options.maxAge || null;
     this.nonce = options.nonce || null;
     this.originalUri = options.originalUri;
-    this.pkceVerifier = options.pkceVerifier || null;
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;
     this.redirectUri = options.redirectUri;
@@ -212,7 +207,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       ...this.defaultJSON(),
 
       audiences: this.audiences,
-      authenticationId: this.authenticationId,
+      authToken: this.authToken,
       authenticationMethods: this.authenticationMethods,
       authenticationStatus: this.authenticationStatus,
       browserSessionId: this.browserSessionId,
@@ -232,7 +227,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       maxAge: this.maxAge,
       nonce: this.nonce,
       originalUri: this.originalUri,
-      pkceVerifier: this.pkceVerifier,
       promptModes: this.promptModes,
       redirectData: this.redirectData,
       redirectUri: this.redirectUri,

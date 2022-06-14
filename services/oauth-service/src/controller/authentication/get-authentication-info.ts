@@ -53,11 +53,10 @@ export const getAuthenticationInfoController: ServerKoaController<RequestData> =
         type: client.type,
       },
       requested: {
-        authenticationId: authorizationSession.authenticationId,
+        authToken: authorizationSession.authToken,
         authenticationMethods: authorizationSession.authenticationMethods,
         country: authorizationSession.country,
         levelOfAssurance: authorizationSession.levelOfAssurance,
-        pkceVerifier: authorizationSession.pkceVerifier,
       },
     },
   };

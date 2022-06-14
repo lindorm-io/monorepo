@@ -16,3 +16,4 @@ export * from "./ResponseType";
 export * from "./Scope";
 export * from "./SessionStatus";
 export * from "./SubjectHint";
+export * from "./TokenType";

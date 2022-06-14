@@ -14,6 +14,7 @@ import {
   DisplayMode,
   JOI_COUNTRY_CODE,
   JOI_GUID,
+  JOI_JWT,
   JOI_NONCE,
   PromptMode,
   ResponseMode,
@@ -38,7 +39,7 @@ import {
 
 interface RequestData {
   acrValues?: string;
-  authenticationId?: string; // lindorm.io
+  authToken?: string; // lindorm.io
   clientId: string;
   codeChallenge?: string;
   codeChallengeMethod?: PKCEMethod;
@@ -61,7 +62,7 @@ interface RequestData {
 
 export const oauthAuthorizeSchema = Joi.object<RequestData>({
   acrValues: Joi.string().optional(),
-  authenticationId: JOI_GUID.optional(),
+  authToken: JOI_JWT.optional(),
   clientId: JOI_GUID.required(),
   codeChallenge: Joi.string().optional(),
   codeChallengeMethod: JOI_PKCE_METHOD.optional(),
@@ -91,7 +92,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     cache: { authorizationSessionCache },
     data: {
       acrValues,
-      authenticationId,
+      authToken,
       codeChallenge,
       codeChallengeMethod,
       country,
@@ -99,7 +100,6 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       loginHint,
       maxAge,
       nonce,
-      pkceVerifier,
       prompt,
       redirectData,
       redirectUri,
@@ -130,7 +130,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     audiences: idToken ? idToken.audiences : [client.id],
-    authenticationId,
+    authToken,
     authenticationMethods,
     browserSessionId: browserSession.id,
     clientId: client.id,
@@ -152,7 +152,6 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     maxAge: maxAge ? parseInt(maxAge, 10) : null,
     nonce: nonce || idToken?.nonce || browserSession.nonce,
     originalUri: new URL(ctx.request.originalUrl, configuration.server.host).toString(),
-    pkceVerifier,
     promptModes: prompts,
     redirectData,
     redirectUri,

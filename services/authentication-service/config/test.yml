@@ -8,16 +8,8 @@ mongo:
   password: example
 
 oauth:
-  client_id: id
+  client_id: 6ea68f3d-e31e-4882-85a5-0a617f431fdd
   client_secret: secret
-
-oidc_providers:
-  - key: apple
-    loa_value: 3
-  - key: google
-    loa_value: 2
-  - key: microsoft
-    loa_value: 2
 
 redis:
   host: localhost
@@ -39,7 +31,7 @@ services:
   device_service:
     host: https://device.test.lindorm.io
   identity_service:
-    host: https://identity.test.lindorm.io
+    host: <https://identity.test.lindorm.io
   oauth_service:
     host: https://oauth.test.lindorm.io
   oidc_service:

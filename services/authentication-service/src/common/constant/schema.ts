@@ -44,6 +44,7 @@ export const JOI_SESSION_STATUS = Joi.string().valid(
   SessionStatus.PENDING,
   SessionStatus.REJECTED,
   SessionStatus.SKIP,
+  SessionStatus.VERIFIED,
 );
 
 export const JOI_STATE = Joi.string().min(16).max(256).base64();

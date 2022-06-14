@@ -1,5 +1,5 @@
 oauth:
-  client_id: id
+  client_id: 6ea68f3d-e31e-4882-85a5-0a617f431fdd
   client_secret: secret
 
 oidc_providers:
@@ -8,6 +8,7 @@ oidc_providers:
     base_url: https://apple.com/
     client_id: apple_client_id
     client_secret: apple_client_secret
+    loa_value: 2
     response_type: code
     scope: openid email
     token_endpoint: /token
@@ -18,6 +19,7 @@ oidc_providers:
     base_url: https://google.com/
     client_id: google_client_id
     client_secret: google_client_secret
+    loa_value: 2
     response_type: id_token
     scope: openid address email phone profile
     token_endpoint: /token
@@ -28,6 +30,7 @@ oidc_providers:
     base_url: https://microsoft.com/
     client_id: microsoft_client_id
     client_secret: microsoft_client_secret
+    loa_value: 2
     response_type: token
     scope: openid profile
     token_endpoint: /token

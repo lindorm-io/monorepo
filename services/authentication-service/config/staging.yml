@@ -12,6 +12,8 @@ server:
 services:
   communication_service:
     host: https://communication.staging.lindorm.io
+  device_service:
+    host: https://device.staging.lindorm.io
   identity_service:
     host: https://identity.staging.lindorm.io
   oauth_service:

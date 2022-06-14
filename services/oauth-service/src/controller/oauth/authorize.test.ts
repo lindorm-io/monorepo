@@ -42,13 +42,13 @@ describe("oauthAuthorizeController", () => {
       },
       data: {
         acrValues: "3 phone_otp session_otp email_otp",
-        authenticationId: "authenticationId",
+        authToken: "auth.jwt.jwt",
         clientId: "clientId",
         codeChallenge: "codeChallenge",
         codeChallengeMethod: "codeChallengeMethod",
         country: "se",
         display: DisplayMode.POPUP,
-        idTokenHint: "jwt.jwt.jwt",
+        idTokenHint: "id.jwt.jwt",
         loginHint: "test@lindorm.io",
         maxAge: "500",
         nonce: "J2qVbRKmMg1UPCty",
@@ -125,7 +125,7 @@ describe("oauthAuthorizeController", () => {
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         audiences: ["3bfc20bd-0f18-4717-b535-ffb4a071deba", "090fd104-7be0-41d1-b877-1c0851318492"],
-        authenticationId: "authenticationId",
+        authToken: "auth.jwt.jwt",
         authenticationMethods: ["phone_otp", "session_otp", "email_otp"],
         authenticationStatus: "pending",
         browserSessionId: "eaad7806-26c8-4c53-9db4-298ebea677c7",
@@ -138,7 +138,7 @@ describe("oauthAuthorizeController", () => {
         country: "se",
         displayMode: "popup",
         expires: new Date("2021-01-01T08:30:00.000Z"),
-        idTokenHint: "jwt.jwt.jwt",
+        idTokenHint: "id.jwt.jwt",
         identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
         levelOfAssurance: 3,
         loginHint: ["test@lindorm.io", "+46705498721", "identity_username"],
@@ -183,7 +183,7 @@ describe("oauthAuthorizeController", () => {
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         audiences: ["3bfc20bd-0f18-4717-b535-ffb4a071deba"],
-        authenticationId: null,
+        authToken: null,
         authenticationMethods: [],
         authenticationStatus: "pending",
         browserSessionId: "eaad7806-26c8-4c53-9db4-298ebea677c7",

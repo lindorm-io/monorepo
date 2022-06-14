@@ -1,13 +1,12 @@
 defaults:
+  authentication_session_expiry: 30 minutes
   browser_link_cookie_expiry: 100 years
-  consent_session_expiry: 30 minutes
-  flow_session_expiry: 15 minutes
-  login_session_expiry: 30 minutes
   mfa_cookie_expiry: 75 minutes
 
 frontend:
   host: http://localhost
   routes:
+    auth: /auth
     code_callback: /code/callback
     consent: /consent
     error: /error
@@ -24,8 +23,6 @@ mongo:
 oauth:
   client_id: id
   client_secret: secret
-
-oidc_providers: []
 
 redis:
   host: localhost

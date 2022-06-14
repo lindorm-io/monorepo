@@ -12,6 +12,8 @@ server:
 services:
   communication_service:
     host: https://communication.lindorm.io
+  device_service:
+    host: https://device.lindorm.io
   identity_service:
     host: https://identity.lindorm.io
   oauth_service:

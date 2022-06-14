@@ -17,6 +17,7 @@ interface OidcProvider {
   client_id:          string;
   client_secret:      string;
   key:                string;
+  loa_value:          number;
   response_type:      string;
   scope:              string;
   token_endpoint:     string;

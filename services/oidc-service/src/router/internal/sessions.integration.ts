@@ -65,6 +65,7 @@ describe("/internal/sessions", () => {
 
     expect(response.body).toStrictEqual({
       identity_id: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
+      level_of_assurance: 2,
       provider: "google",
     });
   });

@@ -29,10 +29,9 @@ export interface GetAuthenticationInfoResponseBody {
     type: ClientType;
   };
   requested: {
-    authenticationId: string | null;
+    authToken: string | null;
     authenticationMethods: Array<string>;
     country: string | null;
     levelOfAssurance: LevelOfAssurance;
-    pkceVerifier: string | null;
   };
 }

@@ -19,6 +19,7 @@ describe("getOidcSessionController", () => {
     await expect(getOidcSessionController(ctx)).resolves.toStrictEqual({
       body: {
         identityId: "identity",
+        levelOfAssurance: 2,
         provider: "apple",
       },
     });

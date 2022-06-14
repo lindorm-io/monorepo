@@ -7,6 +7,7 @@ import {
   InitialiseOidcSessionResponseBody,
   JOI_GUID,
 } from "../../common";
+import { findOidcConfiguration } from "../../util";
 
 export const initialiseOidcSessionSchema = Joi.object<InitialiseOidcSessionRequestData>()
   .keys({
@@ -24,6 +25,8 @@ export const initialiseOidcSessionController: ServerKoaController<
   const {
     data: { callbackUri, expiresAt, identityId, loginHint, provider },
   } = ctx;
+
+  findOidcConfiguration(provider);
 
   const url = await createOidcSession(ctx, {
     callbackUri,
