@@ -35,7 +35,9 @@ describe("initialiseStrategyController", () => {
         username: "username",
       },
       entity: {
-        authenticationSession: createTestAuthenticationSession(),
+        authenticationSession: createTestAuthenticationSession({
+          allowedMethods: Object.values(AuthenticationMethod),
+        }),
       },
       jwt: {
         sign: jest.fn().mockImplementation(() => ({ token: "jwt.jwt.jwt" })),

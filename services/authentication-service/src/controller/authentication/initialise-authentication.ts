@@ -1,10 +1,17 @@
 import Joi from "joi";
+import { AuthenticationMethod } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_AUTHENTICATION_METHOD, JOI_PKCE_METHOD } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
+import { filter, find, includes } from "lodash";
 import { getExpires } from "@lindorm-io/core";
 import { handleAuthenticationInitialisation } from "../../handler";
+import {
+  JOI_AUTHENTICATION_METHOD,
+  JOI_PKCE_METHOD,
+  REGEX_EMAIL,
+  REGEX_PHONE,
+} from "../../constant";
 import {
   InitialiseAuthenticationRequestData,
   InitialiseAuthenticationResponseBody,
@@ -20,6 +27,7 @@ export const initialiseAuthenticationSchema = Joi.object<InitialiseAuthenticatio
     country: Joi.string().lowercase().length(2).optional(),
     identityId: JOI_GUID.optional(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
+    loginHint: Joi.array().items(Joi.string()).optional(),
     methods: Joi.array().items(JOI_AUTHENTICATION_METHOD).optional(),
     nonce: Joi.string().optional(),
     redirectUri: Joi.string().uri().optional(),
@@ -37,6 +45,7 @@ export const initialiseAuthenticationController: ServerKoaController<
       country,
       identityId,
       levelOfAssurance,
+      loginHint,
       methods,
       nonce,
       redirectUri,
@@ -45,17 +54,24 @@ export const initialiseAuthenticationController: ServerKoaController<
 
   const { expires } = getExpires(configuration.defaults.authentication_session_expiry);
 
+  const emailHint = find(loginHint, (item) => REGEX_EMAIL.test(item));
+  const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));
+
   const authenticationSession = await handleAuthenticationInitialisation(ctx, {
     clientId,
     codeChallenge,
     codeMethod,
     country,
+    emailHint,
     expires,
     identityId,
     nonce,
+    phoneHint,
     redirectUri,
     requestedLevelOfAssurance: levelOfAssurance,
-    requestedMethods: methods,
+    requestedMethods: filter(methods, (key) =>
+      includes(Object.values(AuthenticationMethod), key),
+    ) as Array<AuthenticationMethod>,
   });
 
   return {

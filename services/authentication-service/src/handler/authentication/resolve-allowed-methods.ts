@@ -69,12 +69,13 @@ export const resolveAllowedMethods = async (
 
   // Password
 
-  if (filteredMethods.includes(AuthenticationMethod.PASSWORD)) {
+  if (filteredMethods.includes(AuthenticationMethod.PASSWORD) && !!account?.password) {
     allowedMethods.push(AuthenticationMethod.PASSWORD);
   }
 
   if (
     filteredMethods.includes(AuthenticationMethod.PASSWORD_BROWSER_LINK) &&
+    !!account?.password &&
     ctx.getCookie(BROWSER_LINK_COOKIE_NAME)
   ) {
     allowedMethods.push(AuthenticationMethod.PASSWORD_BROWSER_LINK);
@@ -112,7 +113,7 @@ export const resolveAllowedMethods = async (
 
   // Time Based OTP
 
-  if (filteredMethods.includes(AuthenticationMethod.TIME_BASED_OTP) && account?.totp) {
+  if (filteredMethods.includes(AuthenticationMethod.TIME_BASED_OTP) && !!account?.totp) {
     allowedMethods.push(AuthenticationMethod.TIME_BASED_OTP);
   }
 

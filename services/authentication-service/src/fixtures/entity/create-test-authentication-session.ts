@@ -10,8 +10,9 @@ export const createTestAuthenticationSession = (
   new AuthenticationSession({
     allowedMethods: [
       AuthenticationMethod.BANK_ID_SE,
-      AuthenticationMethod.EMAIL_OTP,
+      AuthenticationMethod.DEVICE_CHALLENGE,
       AuthenticationMethod.EMAIL_LINK,
+      AuthenticationMethod.EMAIL_OTP,
       AuthenticationMethod.PHONE_OTP,
     ],
     clientId: randomUUID(),

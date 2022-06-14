@@ -2,8 +2,15 @@ import Joi from "joi";
 import { AuthenticationMethod } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_AUTHENTICATION_METHOD } from "../../constant";
-import { JOI_EMAIL, JOI_NIN, JOI_PHONE_NUMBER, SubjectHint, TokenType } from "../../common";
-import { ServerError } from "@lindorm-io/errors";
+import {
+  JOI_EMAIL,
+  JOI_GUID,
+  JOI_NIN,
+  JOI_PHONE_NUMBER,
+  SubjectHint,
+  TokenType,
+} from "../../common";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ServerKoaController } from "../../types";
 import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
@@ -21,6 +28,7 @@ import {
 } from "../../handler";
 
 interface RequestData {
+  id: string;
   email?: string;
   nin?: string;
   nonce?: string;
@@ -41,6 +49,7 @@ interface ResponseBody {
 
 export const initialiseStrategySchema = Joi.object<RequestData>()
   .keys({
+    id: JOI_GUID.required(),
     email: JOI_EMAIL.optional(),
     nin: JOI_NIN.optional(),
     nonce: Joi.string().optional(),
@@ -61,6 +70,10 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
   } = ctx;
 
   const config = findMethodConfiguration(method);
+
+  if (!authenticationSession.allowedMethods.includes(method)) {
+    throw new ClientError("Invalid method");
+  }
 
   const { expiresIn } = getExpires(authenticationSession.expires);
 

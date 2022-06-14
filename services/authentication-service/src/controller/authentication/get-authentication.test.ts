@@ -28,7 +28,7 @@ describe("getAuthenticationController", () => {
   test("should resolve", async () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
-        allowedMethods: ["bank_id_se", "email_otp", "email_link", "phone_otp"],
+        allowedMethods: ["bank_id_se", "device_challenge", "email_link", "email_otp", "phone_otp"],
         emailHint: "test@lindorm.io",
         expires: new Date("2022-01-01T08:00:00.000Z"),
         phoneHint: "0701234567",
