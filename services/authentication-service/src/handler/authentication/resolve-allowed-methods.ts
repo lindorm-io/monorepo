@@ -69,13 +69,12 @@ export const resolveAllowedMethods = async (
 
   // Password
 
-  if (filteredMethods.includes(AuthenticationMethod.PASSWORD) && !!account?.password) {
+  if (filteredMethods.includes(AuthenticationMethod.PASSWORD)) {
     allowedMethods.push(AuthenticationMethod.PASSWORD);
   }
 
   if (
     filteredMethods.includes(AuthenticationMethod.PASSWORD_BROWSER_LINK) &&
-    !!account?.password &&
     ctx.getCookie(BROWSER_LINK_COOKIE_NAME)
   ) {
     allowedMethods.push(AuthenticationMethod.PASSWORD_BROWSER_LINK);
