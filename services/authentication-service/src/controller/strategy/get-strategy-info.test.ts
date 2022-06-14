@@ -1,9 +1,10 @@
-import { getStrategyStatusController } from "./get-strategy-status";
+import { getStrategyInfoController } from "./get-strategy-info";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestStrategySession } from "../../fixtures/entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
+import { AuthenticationMethod } from "../../enum";
 
-describe("getStrategyStatusController", () => {
+describe("getStrategyInfoController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -18,8 +19,10 @@ describe("getStrategyStatusController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(getStrategyStatusController(ctx)).resolves.toStrictEqual({
+    await expect(getStrategyInfoController(ctx)).resolves.toStrictEqual({
       body: {
+        expires: new Date("2022-01-01T08:00:00.000Z"),
+        method: AuthenticationMethod.EMAIL_OTP,
         status: "pending",
       },
     });
@@ -28,7 +31,7 @@ describe("getStrategyStatusController", () => {
   test("should resolve expired", async () => {
     ctx.cache.strategySessionCache.find.mockRejectedValue(new EntityNotFoundError("message"));
 
-    await expect(getStrategyStatusController(ctx)).resolves.toStrictEqual({
+    await expect(getStrategyInfoController(ctx)).resolves.toStrictEqual({
       body: {
         status: "expired",
       },

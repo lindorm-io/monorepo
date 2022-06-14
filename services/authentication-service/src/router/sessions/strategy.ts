@@ -8,8 +8,8 @@ import {
 import {
   confirmStrategyController,
   confirmStrategySchema,
-  getStrategyStatusController,
-  getStrategyStatusSchema,
+  getStrategyInfoController,
+  getStrategyInfoSchema,
   rejectStrategyController,
   rejectStrategySchema,
 } from "../../controller";
@@ -18,11 +18,19 @@ const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
 router.get(
-  "/:id/status",
+  "/:id",
   paramsMiddleware,
-  useSchema(getStrategyStatusSchema),
+  useSchema(getStrategyInfoSchema),
   strategySessionEntityMiddleware("data.id"),
-  useController(getStrategyStatusController),
+  useController(getStrategyInfoController),
+);
+
+router.delete(
+  "/:id",
+  paramsMiddleware,
+  useSchema(rejectStrategySchema),
+  strategySessionEntityMiddleware("data.id"),
+  useController(rejectStrategyController),
 );
 
 router.put(
@@ -40,12 +48,4 @@ router.put(
   strategySessionEntityMiddleware("data.id"),
   authenticationSessionEntityMiddleware("entity.strategySession.authenticationSessionId"),
   useController(confirmStrategyController),
-);
-
-router.put(
-  "/:id/reject",
-  paramsMiddleware,
-  useSchema(rejectStrategySchema),
-  strategySessionEntityMiddleware("data.id"),
-  useController(rejectStrategyController),
 );

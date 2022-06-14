@@ -3,24 +3,21 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
+import { StrategySessionAttributes } from "../../entity";
 
 interface RequestData {
   id: string;
 }
 
-interface ResponseBody {
-  status: SessionStatus;
-}
-
-export const getStrategyStatusSchema = Joi.object<RequestData>()
+export const getStrategyInfoSchema = Joi.object<RequestData>()
   .keys({
     id: JOI_GUID.required(),
   })
   .required();
 
-export const getStrategyStatusController: ServerKoaController<RequestData> = async (
+export const getStrategyInfoController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseBody> => {
+): ControllerResponse<Partial<StrategySessionAttributes>> => {
   const {
     cache: { strategySessionCache },
     data: { id },
@@ -29,7 +26,13 @@ export const getStrategyStatusController: ServerKoaController<RequestData> = asy
   try {
     const session = await strategySessionCache.find({ id });
 
-    return { body: { status: session.status } };
+    return {
+      body: {
+        expires: session.expires,
+        method: session.method,
+        status: session.status,
+      },
+    };
   } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;

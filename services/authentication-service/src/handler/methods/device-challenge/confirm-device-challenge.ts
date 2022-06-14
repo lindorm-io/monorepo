@@ -23,7 +23,7 @@ export const confirmDeviceChallenge = async (
 
   logger.debug("Verifying Challenge Confirmation Token");
 
-  jwt.verify(challengeConfirmationToken, {
+  const verifiedToken = jwt.verify(challengeConfirmationToken, {
     issuer:
       configuration.services.device_service.issuer || configuration.services.device_service.host,
     nonce: strategySession.nonce,
@@ -34,5 +34,5 @@ export const confirmDeviceChallenge = async (
 
   logger.debug("Resolving Account");
 
-  return await accountRepository.find({ id: authenticationSession.identityId });
+  return await accountRepository.find({ id: verifiedToken.subject });
 };

@@ -53,7 +53,7 @@ export const getTestChallengeConfirmationToken = (
   const { token } = createTestJwt({
     issuer: configuration.services.device_service.issuer,
   }).sign({
-    audiences: [randomUUID()],
+    audiences: [configuration.oauth.client_id],
     claims: {
       deviceLinkId: randomUUID(),
       factors: ["possession", "inherence"],
@@ -93,6 +93,22 @@ export const getTestAuthenticationConfirmationToken = (
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
     type: TokenType.AUTHENTICATION_CONFIRMATION,
+    ...options,
+  });
+  return token;
+};
+
+export const getTestStrategySessionToken = (
+  options: Partial<JwtSignOptions<any, any>> = {},
+): string => {
+  const { token } = createTestJwt({
+    issuer: configuration.server.issuer,
+  }).sign({
+    audiences: [configuration.oauth.client_id],
+    expiry: "10 seconds",
+    subject: randomUUID(),
+    subjectHint: SubjectHint.SESSION,
+    type: TokenType.STRATEGY_SESSION,
     ...options,
   });
   return token;
