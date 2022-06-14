@@ -1,7 +1,7 @@
 import { generateTotpController } from "./generate-totp";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
 jest.mock("../../class", () => ({
   TOTPHandler: class TOTPHandler {
@@ -13,7 +13,7 @@ jest.mock("../../class", () => ({
 
 jest.mock("../../handler");
 
-const vaultGetSalt = _vaultGetSalt as jest.Mock;
+const fetchAccountSalt = _fetchAccountSalt as jest.Mock;
 
 describe("generateTotpController", () => {
   let ctx: any;
@@ -30,7 +30,7 @@ describe("generateTotpController", () => {
       },
     };
 
-    vaultGetSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
+    fetchAccountSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
   });
 
   test("should resolve", async () => {

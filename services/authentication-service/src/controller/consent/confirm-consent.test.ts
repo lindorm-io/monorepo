@@ -1,11 +1,11 @@
 import { confirmConsentController } from "./confirm-consent";
+import { confirmOauthConsentSession as _confirmOauthConsentSession } from "../../handler";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestConsentSession } from "../../fixtures/entity";
-import { oauthConfirmConsent as _oauthConfirmConsent } from "../../handler";
 
 jest.mock("../../handler");
 
-const oauthConfirmConsent = _oauthConfirmConsent as jest.Mock;
+const confirmOauthConsentSession = _confirmOauthConsentSession as jest.Mock;
 
 describe("confirmConsentController", () => {
   let ctx: any;
@@ -25,15 +25,15 @@ describe("confirmConsentController", () => {
       deleteCookie: jest.fn(),
     };
 
-    oauthConfirmConsent.mockResolvedValue({ redirectTo: "oauthConfirmConsent" });
+    confirmOauthConsentSession.mockResolvedValue({ redirectTo: "https://confirm" });
   });
 
   test("should resolve", async () => {
     await expect(confirmConsentController(ctx)).resolves.toStrictEqual({
-      redirect: "oauthConfirmConsent",
+      redirect: "https://confirm",
     });
 
-    expect(oauthConfirmConsent).toHaveBeenCalled();
+    expect(confirmOauthConsentSession).toHaveBeenCalled();
     expect(ctx.cache.consentSessionCache.destroy).toHaveBeenCalled();
     expect(ctx.deleteCookie).toHaveBeenCalled();
   });

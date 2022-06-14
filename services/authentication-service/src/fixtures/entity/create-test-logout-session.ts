@@ -1,5 +1,6 @@
 import { LogoutSession, LogoutSessionOptions } from "../../entity";
 import { ClientType } from "../../common";
+import { randomUUID } from "crypto";
 
 export const createTestLogoutSession = (
   options: Partial<LogoutSessionOptions> = {},
@@ -9,7 +10,7 @@ export const createTestLogoutSession = (
     expires: new Date("2022-01-01T08:00:00.000Z"),
     logoUri: "https://client.logo.uri/",
     name: "name",
-    oauthSessionId: "b150db59-ae42-4c9f-b282-c1710a952aed",
+    oauthSessionId: randomUUID(),
     type: ClientType.PUBLIC,
     ...options,
   });

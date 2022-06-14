@@ -1,6 +1,10 @@
 import { Axios } from "@lindorm-io/axios";
-import { JwtVerifyData } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
+import { JwtVerifyData } from "@lindorm-io/jwt";
+import {
+  VerifiedAuthenticationConfirmationToken,
+  VerifiedChallengeConfirmationToken,
+} from "../common";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,
@@ -12,21 +16,23 @@ import {
 } from "@lindorm-io/node-server";
 import {
   Account,
+  AuthenticationSession,
   BrowserLink,
-  FlowSession,
-  MfaCookieSession,
-  LoginSession,
   ConsentSession,
+  LoginSession,
   LogoutSession,
+  MfaCookieSession,
+  StrategySession,
 } from "../entity";
 import {
   AccountRepository,
+  AuthenticationSessionCache,
   BrowserLinkRepository,
-  FlowSessionCache,
-  MfaCookieSessionCache,
-  LoginSessionCache,
   ConsentSessionCache,
+  LoginSessionCache,
   LogoutSessionCache,
+  MfaCookieSessionCache,
+  StrategySessionCache,
 } from "../infrastructure";
 
 interface ServerAxios extends LindormNodeServerAxios {
@@ -39,21 +45,23 @@ interface ServerAxios extends LindormNodeServerAxios {
 }
 
 interface ServerCache extends LindormNodeServerCache {
+  authenticationSessionCache: AuthenticationSessionCache;
   consentSessionCache: ConsentSessionCache;
-  flowSessionCache: FlowSessionCache;
   loginSessionCache: LoginSessionCache;
   logoutSessionCache: LogoutSessionCache;
   mfaCookieSessionCache: MfaCookieSessionCache;
+  strategySessionCache: StrategySessionCache;
 }
 
 interface ServerEntity {
   account: Account;
+  authenticationSession: AuthenticationSession;
   browserLink: BrowserLink;
   consentSession: ConsentSession;
-  flowSession: FlowSession;
   loginSession: LoginSession;
   logoutSession: LogoutSession;
   mfaCookieSession: MfaCookieSession;
+  strategySession: StrategySession;
 }
 
 interface ServerRepository extends LindormNodeServerRepository {
@@ -62,8 +70,9 @@ interface ServerRepository extends LindormNodeServerRepository {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  challengeConfirmationToken: JwtVerifyData;
-  flowToken: JwtVerifyData;
+  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
+  challengeConfirmationToken: VerifiedChallengeConfirmationToken;
+  strategySessionToken: JwtVerifyData;
 }
 
 interface Context extends LindormNodeServerContext {

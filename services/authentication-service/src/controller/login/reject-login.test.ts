@@ -1,11 +1,14 @@
-import { createMockCache } from "@lindorm-io/redis";
-import { createTestLoginSession } from "../../fixtures/entity";
-import { oauthRejectAuthentication as _oauthRejectAuthentication } from "../../handler";
+import MockDate from "mockdate";
 import { rejectLoginController } from "./reject-login";
+import { rejectOauthAuthenticationSession as _rejectOauthAuthenticationSession } from "../../handler";
+import { createMockCache } from "@lindorm-io/redis";
+import { createTestAuthenticationSession, createTestLoginSession } from "../../fixtures/entity";
+
+MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../../handler");
 
-const oauthRejectAuthentication = _oauthRejectAuthentication as jest.Mock;
+const rejectOauthAuthenticationSession = _rejectOauthAuthenticationSession as jest.Mock;
 
 describe("rejectLoginController", () => {
   let ctx: any;
@@ -13,25 +16,23 @@ describe("rejectLoginController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
+        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
         loginSessionCache: createMockCache(createTestLoginSession),
       },
       entity: {
+        authenticationSession: createTestAuthenticationSession(),
         loginSession: createTestLoginSession(),
       },
       deleteCookie: jest.fn(),
     };
 
-    oauthRejectAuthentication.mockResolvedValue({
-      redirectTo: "oauthRejectAuthentication",
-    });
+    rejectOauthAuthenticationSession.mockResolvedValue({ redirectTo: "https://reject" });
   });
 
   test("should resolve", async () => {
-    await expect(rejectLoginController(ctx)).resolves.toStrictEqual({
-      redirect: "oauthRejectAuthentication",
-    });
+    await expect(rejectLoginController(ctx)).resolves.toStrictEqual({ redirect: "https://reject" });
 
-    expect(oauthRejectAuthentication).toHaveBeenCalled();
+    expect(ctx.cache.authenticationSessionCache.destroy).toHaveBeenCalled();
     expect(ctx.cache.loginSessionCache.destroy).toHaveBeenCalled();
     expect(ctx.deleteCookie).toHaveBeenCalled();
   });

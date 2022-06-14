@@ -1,4 +1,5 @@
+export * from "./authentication-method-config";
 export * from "./cookie";
 export * from "./error";
-export * from "./flow-type-config";
+export * from "./regex";
 export * from "./schema";

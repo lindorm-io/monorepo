@@ -1,30 +1,19 @@
+import { AuthenticationMethod } from "../enum";
+import { AuthenticationSession } from "../entity";
 import { LevelOfAssurance } from "../common";
-import { LoginSession } from "../entity";
-import { configuration } from "../server/configuration";
-import { find } from "lodash";
-import { getFlowTypeConfig } from "./get-flow-type-config";
+import { findMethodConfiguration } from "./find-method-configuration";
 
-export const calculateLevelOfAssurance = (loginSession: LoginSession): LevelOfAssurance => {
+export const calculateLevelOfAssurance = (
+  authenticationSession: AuthenticationSession,
+): LevelOfAssurance => {
   let value = 0;
   let maxValue = 0;
 
-  for (const name of loginSession.amrValues) {
-    const config = getFlowTypeConfig(name);
+  for (const name of authenticationSession.confirmedMethods) {
+    const config = findMethodConfiguration(name as AuthenticationMethod);
 
-    if (config) {
-      value = value + config.value;
-      maxValue = config.valueMax > maxValue ? config.valueMax : maxValue;
-    } else {
-      const oidc = find(
-        configuration.oidc_providers,
-        (provider) => provider.key === name.replace("oidc_", ""),
-      );
-
-      if (!oidc) continue;
-
-      value = value + oidc.loa_value;
-      maxValue = oidc.loa_value > maxValue ? oidc.loa_value : maxValue;
-    }
+    value = value + config.value;
+    maxValue = config.valueMax > maxValue ? config.valueMax : maxValue;
   }
 
   return (value > maxValue ? maxValue : value) as LevelOfAssurance;

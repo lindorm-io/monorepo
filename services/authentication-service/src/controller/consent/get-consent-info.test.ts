@@ -1,5 +1,5 @@
-import { getConsentInfoController } from "./get-consent-info";
 import { createTestConsentSession } from "../../fixtures/entity";
+import { getConsentInfoController } from "./get-consent-info";
 
 describe("getConsentInfoController", () => {
   let ctx: any;

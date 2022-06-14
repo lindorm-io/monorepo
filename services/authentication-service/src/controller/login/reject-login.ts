@@ -1,16 +1,17 @@
 import { ControllerResponse } from "@lindorm-io/koa";
 import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { oauthRejectAuthentication } from "../../handler";
+import { rejectOauthAuthenticationSession } from "../../handler";
 
 export const rejectLoginController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
-    cache: { loginSessionCache },
-    entity: { loginSession },
+    cache: { authenticationSessionCache, loginSessionCache },
+    entity: { authenticationSession, loginSession },
   } = ctx;
 
-  const { redirectTo } = await oauthRejectAuthentication(ctx, loginSession.oauthSessionId);
+  const { redirectTo } = await rejectOauthAuthenticationSession(ctx, loginSession.oauthSessionId);
 
+  await authenticationSessionCache.destroy(authenticationSession);
   await loginSessionCache.destroy(loginSession);
 
   ctx.deleteCookie(LOGIN_SESSION_COOKIE_NAME);

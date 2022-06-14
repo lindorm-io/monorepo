@@ -1,14 +1,14 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { FlowType } from "../../enum";
+import { AuthenticationMethod } from "../../enum";
 import { SessionStatus } from "../../common";
-import { TEST_LOGIN_SESSION_CACHE, setupIntegration } from "../../fixtures/integration";
-import { createTestLoginSession } from "../../fixtures/entity";
 import { createURL, getExpires } from "@lindorm-io/core";
-import { getTestData } from "../../fixtures/data";
-import { randomUUID } from "crypto";
 import { server } from "../../server/server";
+import {
+  getTestAuthenticationConfirmationToken,
+  setupIntegration,
+} from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,14 +30,14 @@ describe("/oauth/login", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put("/internal/sessions/authentication/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8/confirm")
+    .put((uri) => uri.startsWith("/internal/sessions/authentication/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put("/internal/sessions/authentication/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8/skip")
+    .put((uri) => uri.startsWith("/internal/sessions/authentication/") && uri.endsWith("/skip"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-skip.url/",
@@ -62,7 +62,7 @@ describe("/oauth/login", () => {
           authenticationMethods: [],
           country: "se",
           levelOfAssurance: 3,
-          pkceVerifier: null,
+          codeVerifier: null,
         },
       });
 
@@ -110,7 +110,7 @@ describe("/oauth/login", () => {
           authenticationMethods: [],
           country: "se",
           levelOfAssurance: 3,
-          pkceVerifier: null,
+          codeVerifier: null,
         },
       });
 
@@ -130,23 +130,10 @@ describe("/oauth/login", () => {
   });
 
   test("GET / - CONFIRM", async () => {
-    const { expires, expiresIn } = getExpires(new Date("2021-01-01T08:30:00.000Z"));
-    const { pkceChallenge, pkceMethod, pkceVerifier } = getTestData();
-
-    const loginSession = await TEST_LOGIN_SESSION_CACHE.create(
-      createTestLoginSession({
-        amrValues: [FlowType.DEVICE_CHALLENGE],
-        expires,
-        identityId: randomUUID(),
-        levelOfAssurance: 3,
-        oauthSessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
-        pkceChallenge,
-        pkceMethod,
-      }),
-    );
+    const authToken = getTestAuthenticationConfirmationToken();
 
     nock("https://oauth.test.lindorm.io")
-      .get("/internal/sessions/authentication/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .get(`/internal/sessions/authentication/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
       .reply(200, {
         authenticationRequired: true,
         authenticationStatus: SessionStatus.PENDING,
@@ -159,11 +146,10 @@ describe("/oauth/login", () => {
           uiLocales: ["en-GB"],
         },
         requested: {
-          authenticationId: loginSession.id,
-          authenticationMethods: [FlowType.DEVICE_CHALLENGE],
+          authToken: authToken,
+          authenticationMethods: [AuthenticationMethod.DEVICE_CHALLENGE],
           country: "se",
           levelOfAssurance: 3,
-          pkceVerifier: pkceVerifier,
         },
       });
 

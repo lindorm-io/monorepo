@@ -2,23 +2,23 @@ import { createHash } from "crypto";
 import { getRandomString, PKCEMethod } from "@lindorm-io/core";
 
 interface Result {
-  pkceChallenge: string;
-  pkceMethod: PKCEMethod;
-  pkceVerifier: string;
+  codeChallenge: string;
+  codeMethod: PKCEMethod;
+  codeVerifier: string;
   nonce: string;
 }
 
 export const getTestData = (): Result => {
-  const pkceVerifier = getRandomString(32);
-  const pkceMethod = PKCEMethod.S256;
-  const pkceChallenge = createHash("sha256").update(pkceVerifier, "utf8").digest("base64");
+  const codeVerifier = getRandomString(32);
+  const codeMethod = PKCEMethod.S256;
+  const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64");
 
   const nonce = getRandomString(16);
 
   return {
-    pkceChallenge,
-    pkceMethod,
-    pkceVerifier,
+    codeChallenge,
+    codeMethod,
+    codeVerifier,
     nonce,
   };
 };

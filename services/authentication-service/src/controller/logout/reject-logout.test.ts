@@ -1,11 +1,11 @@
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestLogoutSession } from "../../fixtures/entity";
-import { oauthRejectLogout as _oauthRejectLogout } from "../../handler";
 import { rejectLogoutController } from "./reject-logout";
+import { rejectOauthLogoutSession as _rejectOauthLogoutSession } from "../../handler";
 
 jest.mock("../../handler");
 
-const oauthRejectLogout = _oauthRejectLogout as jest.Mock;
+const rejectOauthLogoutSession = _rejectOauthLogoutSession as jest.Mock;
 
 describe("rejectLogoutController", () => {
   let ctx: any;
@@ -21,15 +21,15 @@ describe("rejectLogoutController", () => {
       deleteCookie: jest.fn(),
     };
 
-    oauthRejectLogout.mockResolvedValue({ redirectTo: "oauthRejectLogout" });
+    rejectOauthLogoutSession.mockResolvedValue({ redirectTo: "https://reject" });
   });
 
   test("should resolve", async () => {
     await expect(rejectLogoutController(ctx)).resolves.toStrictEqual({
-      redirect: "oauthRejectLogout",
+      redirect: "https://reject",
     });
 
-    expect(oauthRejectLogout).toHaveBeenCalled();
+    expect(rejectOauthLogoutSession).toHaveBeenCalled();
     expect(ctx.cache.logoutSessionCache.destroy).toHaveBeenCalled();
     expect(ctx.deleteCookie).toHaveBeenCalled();
   });

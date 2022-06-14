@@ -3,7 +3,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { TOTPHandler } from "../../class";
 import { configuration } from "../../server/configuration";
-import { vaultGetSalt } from "../../handler";
+import { fetchAccountSalt } from "../../handler";
 
 interface RequestData {
   totp: string;
@@ -24,7 +24,7 @@ export const deleteTotpController: ServerKoaController<RequestData> = async (
     repository: { accountRepository },
   } = ctx;
 
-  const salt = await vaultGetSalt(ctx, account);
+  const salt = await fetchAccountSalt(ctx, account);
   const totpHandler = new TOTPHandler({
     aes: { secret: salt.aes },
     issuer: configuration.server.issuer,

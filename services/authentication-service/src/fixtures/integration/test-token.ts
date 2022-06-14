@@ -1,15 +1,15 @@
-import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { getRandomString } from "@lindorm-io/core";
+import { randomUUID } from "crypto";
 import {
   ClientPermission,
   ClientScope,
   IdentityPermission,
   Scope,
   SubjectHint,
+  TokenType,
 } from "../../common";
-import { randomUUID } from "crypto";
-import { getRandomString } from "@lindorm-io/core";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
@@ -23,7 +23,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
     scopes: Object.values(Scope),
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: "access_token",
+    type: TokenType.ACCESS,
     ...options,
   });
   return `Bearer ${token}`;
@@ -41,7 +41,7 @@ export const getTestClientCredentials = (
     scopes: Object.values(ClientScope),
     subject: "08e99132-09d5-4f87-a489-a62d2896a7bf",
     subjectHint: SubjectHint.CLIENT,
-    type: "access_token",
+    type: TokenType.ACCESS,
     ...options,
   });
   return `Bearer ${token}`;
@@ -59,31 +59,40 @@ export const getTestChallengeConfirmationToken = (
       factors: ["possession", "inherence"],
       strategy: "biometry",
     },
-    expiry: new Date("2022-01-01T08:00:00.000Z"),
+    expiry: "10 seconds",
     nonce: getRandomString(16),
     payload: {},
     scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
+    type: TokenType.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
 };
 
-export const getTestFlowSessionToken = (
+export const getTestAuthenticationConfirmationToken = (
   options: Partial<JwtSignOptions<any, any>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
     audiences: [configuration.oauth.client_id],
-    expiry: new Date("2022-01-01T08:00:00.000Z"),
+    authContextClass: ["loa_3"],
+    authMethodsReference: ["device_challenge"],
+    claims: {
+      country: "se",
+      remember: true,
+    },
+    expiry: "60 seconds",
+    levelOfAssurance: 3,
+    nonce: getRandomString(16),
+    scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),
-    subjectHint: SubjectHint.SESSION,
-    type: TokenType.FLOW_SESSION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: TokenType.AUTHENTICATION_CONFIRMATION,
     ...options,
   });
   return token;

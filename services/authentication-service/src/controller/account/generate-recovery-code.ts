@@ -1,8 +1,8 @@
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
+import { fetchAccountSalt } from "../../handler";
 import { getRandomString } from "@lindorm-io/core";
-import { vaultGetSalt } from "../../handler";
 
 interface ResponseBody {
   code: string;
@@ -16,7 +16,7 @@ export const generateRecoveryCodeController: ServerKoaController = async (
     repository: { accountRepository },
   } = ctx;
 
-  const salt = await vaultGetSalt(ctx, account);
+  const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },

@@ -1,20 +1,17 @@
 export interface Configuration {
-  defaults:        Defaults;
-  frontend:        Frontend;
-  mongo:           Mongo;
-  oauth:           Oauth;
-  oidc_providers:  OidcProvider[];
-  redis:           Mongo;
-  server:          Server;
-  services:        Services;
+  defaults:  Defaults;
+  frontend:  Frontend;
+  mongo:     Mongo;
+  oauth:     Oauth;
+  redis:     Mongo;
+  server:    Server;
+  services:  Services;
 }
 
 interface Defaults {
-  browser_link_cookie_expiry: string;
-  consent_session_expiry:     string;
-  flow_session_expiry:        string;
-  login_session_expiry:       string;
-  mfa_cookie_expiry:          string;
+  authentication_session_expiry: string;
+  browser_link_cookie_expiry:    string;
+  mfa_cookie_expiry:             string;
 }
 
 interface Frontend {
@@ -24,6 +21,7 @@ interface Frontend {
 }
 
 interface Routes {
+  auth:          string;
   code_callback: string;
   consent:       string;
   error:         string;
@@ -42,11 +40,6 @@ interface Mongo {
 interface Oauth {
   client_id:     string;
   client_secret: string;
-}
-
-interface OidcProvider {
-  key:       string;
-  loa_value: number;
 }
 
 interface Server {

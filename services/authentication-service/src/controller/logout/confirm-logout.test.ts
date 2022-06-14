@@ -1,11 +1,11 @@
 import { confirmLogoutController } from "./confirm-logout";
+import { confirmOauthLogoutSession as _confirmOauthLogoutSession } from "../../handler";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestLogoutSession } from "../../fixtures/entity";
-import { oauthConfirmLogout as _oauthConfirmLogout } from "../../handler";
 
 jest.mock("../../handler");
 
-const oauthConfirmLogout = _oauthConfirmLogout as jest.Mock;
+const confirmOauthLogoutSession = _confirmOauthLogoutSession as jest.Mock;
 
 describe("confirmLogoutController", () => {
   let ctx: any;
@@ -21,15 +21,15 @@ describe("confirmLogoutController", () => {
       deleteCookie: jest.fn(),
     };
 
-    oauthConfirmLogout.mockResolvedValue({ redirectTo: "oauthConfirmLogout" });
+    confirmOauthLogoutSession.mockResolvedValue({ redirectTo: "https://confirm" });
   });
 
   test("should resolve", async () => {
     await expect(confirmLogoutController(ctx)).resolves.toStrictEqual({
-      redirect: "oauthConfirmLogout",
+      redirect: "https://confirm",
     });
 
-    expect(oauthConfirmLogout).toHaveBeenCalled();
+    expect(confirmOauthLogoutSession).toHaveBeenCalled();
     expect(ctx.cache.logoutSessionCache.destroy).toHaveBeenCalled();
     expect(ctx.deleteCookie).toHaveBeenCalled();
   });

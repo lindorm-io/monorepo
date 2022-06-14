@@ -9,21 +9,23 @@ import { winston } from "./logger";
 import { workers } from "./workers";
 import {
   AccountRepository,
+  AuthenticationSessionCache,
   BrowserLinkRepository,
   ConsentSessionCache,
-  FlowSessionCache,
   LoginSessionCache,
   LogoutSessionCache,
   MfaCookieSessionCache,
+  StrategySessionCache,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
   caches: [
+    AuthenticationSessionCache,
     ConsentSessionCache,
-    FlowSessionCache,
     LoginSessionCache,
     LogoutSessionCache,
     MfaCookieSessionCache,
+    StrategySessionCache,
   ],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,

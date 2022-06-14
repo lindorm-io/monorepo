@@ -1,2 +1,1 @@
-export * from "./FlowType";
-export * from "./TokenType";
+export * from "./AuthenticationMethod";

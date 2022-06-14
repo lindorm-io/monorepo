@@ -1,7 +1,7 @@
 import { ControllerResponse } from "@lindorm-io/koa";
 import { LOGOUT_SESSION_COOKIE_NAME } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { oauthConfirmLogout } from "../../handler";
+import { confirmOauthLogoutSession } from "../../handler";
 
 export const confirmLogoutController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
@@ -9,7 +9,7 @@ export const confirmLogoutController: ServerKoaController = async (ctx): Control
     entity: { logoutSession },
   } = ctx;
 
-  const { redirectTo } = await oauthConfirmLogout(ctx, logoutSession.oauthSessionId);
+  const { redirectTo } = await confirmOauthLogoutSession(ctx, logoutSession.oauthSessionId);
 
   await logoutSessionCache.destroy(logoutSession);
 

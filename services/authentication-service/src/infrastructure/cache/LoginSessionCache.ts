@@ -6,7 +6,7 @@ export class LoginSessionCache extends LindormCache<LoginSessionAttributes, Logi
     super({
       ...options,
       entityName: "LoginSession",
-      indexedAttributes: [],
+      indexedAttributes: ["authenticationSessionId"],
     });
   }
 

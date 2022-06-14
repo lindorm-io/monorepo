@@ -3,7 +3,7 @@ import { baseHash } from "@lindorm-io/core";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { generateRecoveryCodeController } from "./generate-recovery-code";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -25,7 +25,7 @@ jest.mock("@lindorm-io/crypto", () => ({
 
 jest.mock("../../handler");
 
-const vaultGetSalt = _vaultGetSalt as jest.Mock;
+const fetchAccountSalt = _fetchAccountSalt as jest.Mock;
 
 describe("generateRecoveryCodeController", () => {
   let ctx: any;
@@ -42,7 +42,7 @@ describe("generateRecoveryCodeController", () => {
       },
     };
 
-    vaultGetSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
+    fetchAccountSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
   });
 
   test("should resolve", async () => {

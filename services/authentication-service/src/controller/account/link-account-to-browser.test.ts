@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { linkAccountToBrowserController } from "./link-account-to-browser";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,7 +28,7 @@ jest.mock("@lindorm-io/crypto", () => ({
 
 jest.mock("../../handler");
 
-const vaultGetSalt = _vaultGetSalt as jest.Mock;
+const fetchAccountSalt = _fetchAccountSalt as jest.Mock;
 
 describe("linkAccountToBrowserController", () => {
   let ctx: any;
@@ -61,7 +61,7 @@ describe("linkAccountToBrowserController", () => {
       setCookie: jest.fn(),
     };
 
-    vaultGetSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
+    fetchAccountSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
   });
 
   test("should resolve", async () => {

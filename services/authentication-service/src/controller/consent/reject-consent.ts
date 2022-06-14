@@ -1,7 +1,7 @@
 import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { oauthRejectConsent } from "../../handler";
+import { rejectOauthConsentSession } from "../../handler";
 
 export const rejectConsentController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
@@ -9,7 +9,7 @@ export const rejectConsentController: ServerKoaController = async (ctx): Control
     entity: { consentSession },
   } = ctx;
 
-  const { redirectTo } = await oauthRejectConsent(ctx, consentSession.oauthSessionId);
+  const { redirectTo } = await rejectOauthConsentSession(ctx, consentSession.oauthSessionId);
 
   await consentSessionCache.destroy(consentSession);
 

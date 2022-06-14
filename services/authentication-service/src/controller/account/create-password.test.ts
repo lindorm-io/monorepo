@@ -2,7 +2,7 @@ import { baseHash } from "@lindorm-io/core";
 import { createPasswordController } from "./create-password";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
 jest.mock("@lindorm-io/crypto", () => ({
   ...jest.requireActual("@lindorm-io/crypto"),
@@ -16,7 +16,7 @@ jest.mock("@lindorm-io/crypto", () => ({
 
 jest.mock("../../handler");
 
-const vaultGetSalt = _vaultGetSalt as jest.Mock;
+const fetchAccountSalt = _fetchAccountSalt as jest.Mock;
 
 describe("createAccountPasswordController", () => {
   let ctx: any;
@@ -34,7 +34,7 @@ describe("createAccountPasswordController", () => {
       },
     };
 
-    vaultGetSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
+    fetchAccountSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
   });
 
   test("should resolve", async () => {

@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
-import { vaultGetSalt } from "../../handler";
+import { fetchAccountSalt } from "../../handler";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
 import { getExpiryDate } from "@lindorm-io/core";
 import { BrowserLink } from "../../entity";
@@ -29,7 +29,7 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     repository: { browserLinkRepository },
   } = ctx;
 
-  const salt = await vaultGetSalt(ctx, account);
+  const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },

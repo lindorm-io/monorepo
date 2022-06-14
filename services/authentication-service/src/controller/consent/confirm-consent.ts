@@ -2,7 +2,7 @@ import Joi from "joi";
 import { CONSENT_SESSION_COOKIE_NAME } from "../../constant";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { oauthConfirmConsent } from "../../handler";
+import { confirmOauthConsentSession } from "../../handler";
 
 interface RequestData {
   audiences: Array<string>;
@@ -23,8 +23,7 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
     entity: { consentSession },
   } = ctx;
 
-  const { redirectTo } = await oauthConfirmConsent(ctx, {
-    sessionId: consentSession.oauthSessionId,
+  const { redirectTo } = await confirmOauthConsentSession(ctx, consentSession.oauthSessionId, {
     audiences,
     scopes,
   });

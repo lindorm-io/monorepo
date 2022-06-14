@@ -1,9 +1,13 @@
 import { MfaCookieSession, MfaCookieSessionOptions } from "../../entity";
+import { randomUUID } from "crypto";
+import { AuthenticationMethod } from "../../enum";
 
 export const createTestMfaCookieSession = (
   options: Partial<MfaCookieSessionOptions> = {},
 ): MfaCookieSession =>
   new MfaCookieSession({
-    identityId: "72cfccb7-de1c-4f41-9bd0-d53c235578f9",
+    identityId: randomUUID(),
+    levelOfAssurance: 3,
+    methods: [AuthenticationMethod.EMAIL_LINK, AuthenticationMethod.PHONE_OTP],
     ...options,
   });
