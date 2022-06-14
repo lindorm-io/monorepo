@@ -26,14 +26,14 @@ describe("/oauth/logout", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put("/internal/sessions/logout/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8/confirm")
+    .put((uri) => uri.startsWith("/internal/sessions/logout/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put("/internal/sessions/logout/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8/skip")
+    .put((uri) => uri.startsWith("/internal/sessions/skip/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-skip.url/",
