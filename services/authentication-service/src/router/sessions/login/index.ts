@@ -1,6 +1,10 @@
 import { ServerKoaContext } from "../../../types";
 import { Router, useController, useSchema } from "@lindorm-io/koa";
-import { loginSessionCookieMiddleware } from "../../../middleware";
+import {
+  authenticationConfirmationTokenMiddleware,
+  authenticationSessionEntityMiddleware,
+  loginSessionCookieMiddleware,
+} from "../../../middleware";
 import {
   confirmLoginWithAuthenticationTokenController,
   confirmLoginWithAuthenticationTokenSchema,
@@ -13,11 +17,17 @@ export default router;
 
 router.get("/", loginSessionCookieMiddleware, useController(getLoginInfoController));
 
+router.delete(
+  "/",
+  loginSessionCookieMiddleware,
+  authenticationSessionEntityMiddleware("entity.loginSession.authenticationSessionId"),
+  useController(rejectLoginController),
+);
+
 router.get(
   "/confirm",
   useSchema(confirmLoginWithAuthenticationTokenSchema),
   loginSessionCookieMiddleware,
+  authenticationConfirmationTokenMiddleware("data.authenticationConfirmationToken"),
   useController(confirmLoginWithAuthenticationTokenController),
 );
-
-router.get("/reject", loginSessionCookieMiddleware, useController(rejectLoginController));
