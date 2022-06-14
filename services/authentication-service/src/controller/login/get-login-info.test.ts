@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
-import { acknowledgeLoginController } from "./acknowledge-login";
 import { createTestLoginSession } from "../../fixtures/entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { getLoginInfoController } from "./get-login-info";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -10,9 +9,6 @@ describe("acknowledgeLoginController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        loginSessionCache: createMockCache(createTestLoginSession),
-      },
       entity: {
         loginSession: createTestLoginSession({
           authenticationSessionId: "333c59d9-22f8-4165-9b72-7065495c609a",
@@ -24,12 +20,6 @@ describe("acknowledgeLoginController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(acknowledgeLoginController(ctx)).resolves.toMatchSnapshot();
-
-    expect(ctx.cache.loginSessionCache.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "acknowledged",
-      }),
-    );
+    await expect(getLoginInfoController(ctx)).resolves.toMatchSnapshot();
   });
 });
