@@ -40,21 +40,23 @@ export type RefreshSessionOptions = Optional<
   | "uiLocales"
 >;
 
-const schema = Joi.object<RefreshSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<RefreshSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  clientId: JOI_GUID.required(),
-  expires: Joi.date().required(),
-  identityId: JOI_GUID.required(),
-  latestAuthentication: Joi.date().required(),
-  levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-  nonce: JOI_NONCE.required(),
-  previousRefreshSessionId: JOI_GUID.allow(null).required(),
-  tokenId: JOI_GUID.required(),
-  uiLocales: Joi.array().items(JOI_LOCALE).required(),
-});
+    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    clientId: JOI_GUID.required(),
+    expires: Joi.date().required(),
+    identityId: JOI_GUID.required(),
+    latestAuthentication: Joi.date().required(),
+    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    nonce: JOI_NONCE.required(),
+    previousRefreshSessionId: JOI_GUID.allow(null).required(),
+    tokenId: JOI_GUID.required(),
+    uiLocales: Joi.array().items(JOI_LOCALE).required(),
+  })
+  .required();
 
 export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
   public readonly acrValues: Array<string>;

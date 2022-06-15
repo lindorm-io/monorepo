@@ -58,6 +58,7 @@ Object {
       ],
     },
     "defaults": Object {
+      "audiences": Array [],
       "displayMode": "popup",
       "levelOfAssurance": 3,
       "responseMode": "query",

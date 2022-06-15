@@ -41,14 +41,13 @@ Object {
       "type": "confidential",
     },
     "requested": Object {
-      "authenticationId": "99fc4b14-507b-49b4-92b1-adcea1a69a91",
+      "authToken": "auth.jwt.jwt",
       "authenticationMethods": Array [
         "email_otp",
         "phone_otp",
       ],
       "country": "se",
       "levelOfAssurance": 2,
-      "pkceVerifier": "89fec5f64da748a4b6baae15b73f1345",
     },
   },
 }

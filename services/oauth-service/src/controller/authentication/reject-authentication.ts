@@ -10,9 +10,11 @@ interface RequestData {
   id: string;
 }
 
-export const rejectAuthenticationSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const rejectAuthenticationSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const rejectAuthenticationController: ServerKoaController<RequestData> = async (
   ctx,

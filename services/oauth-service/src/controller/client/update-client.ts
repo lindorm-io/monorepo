@@ -25,28 +25,34 @@ interface RequestData {
   scopeDescriptions: Array<ScopeDescription>;
 }
 
-export const updateClientSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  defaults: Joi.object({
-    displayMode: JOI_DISPLAY_MODE.optional(),
-    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
-    responseMode: JOI_RESPONSE_MODE.optional(),
-  }).optional(),
-  description: Joi.string().allow(null).optional(),
-  expiry: Joi.object({
-    accessToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-    idToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-    refreshToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-  }).optional(),
-  host: Joi.string().uri().optional(),
-  logoUri: Joi.string().uri().allow(null).optional(),
-  logoutUri: Joi.string().uri().optional(),
-  name: Joi.string().optional(),
-  redirectUris: Joi.array().items(Joi.string().uri()).optional(),
-  requiredScopes: Joi.array().items(Joi.string()).optional(),
-  rtbfUri: Joi.string().uri().allow(null).optional(),
-  scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).optional(),
-});
+export const updateClientSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    defaults: Joi.object()
+      .keys({
+        displayMode: JOI_DISPLAY_MODE.optional(),
+        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
+        responseMode: JOI_RESPONSE_MODE.optional(),
+      })
+      .optional(),
+    description: Joi.string().allow(null).optional(),
+    expiry: Joi.object()
+      .keys({
+        accessToken: JOI_EXPIRY_REGEX.allow(null).optional(),
+        idToken: JOI_EXPIRY_REGEX.allow(null).optional(),
+        refreshToken: JOI_EXPIRY_REGEX.allow(null).optional(),
+      })
+      .optional(),
+    host: Joi.string().uri().optional(),
+    logoUri: Joi.string().uri().allow(null).optional(),
+    logoutUri: Joi.string().uri().optional(),
+    name: Joi.string().optional(),
+    redirectUris: Joi.array().items(Joi.string().uri()).optional(),
+    requiredScopes: Joi.array().items(Joi.string()).optional(),
+    rtbfUri: Joi.string().uri().allow(null).optional(),
+    scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).optional(),
+  })
+  .required();
 
 export const updateClientController: ServerKoaController<RequestData> = async (
   ctx,

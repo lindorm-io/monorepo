@@ -12,13 +12,15 @@ interface RequestData {
   subdomain: string;
 }
 
-export const updateTenantSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  administrators: Joi.array().items(Joi.string()).optional(),
-  name: Joi.string().optional(),
-  owner: Joi.string().optional(),
-  subdomain: Joi.string().optional(),
-});
+export const updateTenantSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    administrators: Joi.array().items(Joi.string()).optional(),
+    name: Joi.string().optional(),
+    owner: Joi.string().optional(),
+    subdomain: Joi.string().optional(),
+  })
+  .required();
 
 export const updateTenantController: ServerKoaController<RequestData> = async (
   ctx,

@@ -31,10 +31,12 @@ interface ResponseBody {
   username?: string;
 }
 
-export const tokeninfoSchema = Joi.object<RequestData>({
-  token: JOI_JWT.required(),
-  tokenTypeHint: Joi.string(),
-});
+export const tokeninfoSchema = Joi.object<RequestData>()
+  .keys({
+    token: JOI_JWT.required(),
+    tokenTypeHint: Joi.string(),
+  })
+  .required();
 
 export const tokeninfoController: ServerKoaController<RequestData> = async (
   ctx,

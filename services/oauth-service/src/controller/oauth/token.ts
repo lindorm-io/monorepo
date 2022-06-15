@@ -11,16 +11,18 @@ import {
   handleRefreshTokenGrant,
 } from "../../handler";
 
-export const oauthTokenSchema = Joi.object({
-  clientId: JOI_GUID.optional(),
-  clientSecret: Joi.string().optional(),
-  code: JOI_CODE.optional(),
-  codeVerifier: Joi.string().base64().optional(),
-  grantType: JOI_GRANT_TYPE.required(),
-  redirectUri: Joi.string().uri().optional(),
-  refreshToken: JOI_JWT.optional(),
-  scope: Joi.string().optional(),
-});
+export const oauthTokenSchema = Joi.object()
+  .keys({
+    clientId: JOI_GUID.optional(),
+    clientSecret: Joi.string().optional(),
+    code: JOI_CODE.optional(),
+    codeVerifier: Joi.string().base64().optional(),
+    grantType: JOI_GRANT_TYPE.required(),
+    redirectUri: Joi.string().uri().optional(),
+    refreshToken: JOI_JWT.optional(),
+    scope: Joi.string().optional(),
+  })
+  .required();
 
 export const oauthTokenController: ServerKoaController<OAuthTokenRequestData> = async (
   ctx,

@@ -21,13 +21,15 @@ interface ResponseQuery {
   uiLocales: Array<string>;
 }
 
-export const oauthLogoutSchema = Joi.object({
-  clientId: JOI_GUID.required(),
-  idTokenHint: Joi.string().optional(),
-  redirectUri: Joi.string().uri().optional(),
-  sessionId: JOI_GUID.required(),
-  state: Joi.string().optional(),
-});
+export const oauthLogoutSchema = Joi.object()
+  .keys({
+    clientId: JOI_GUID.required(),
+    idTokenHint: Joi.string().optional(),
+    redirectUri: Joi.string().uri().optional(),
+    sessionId: JOI_GUID.required(),
+    state: Joi.string().optional(),
+  })
+  .required();
 
 export const oauthLogoutController: ServerKoaController<RequestData> = async (
   ctx,
@@ -42,7 +44,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
 
   const { session, type } = await findSessionToLogout(ctx, sessionId);
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.logout_session_expiry);
+  const { expires, expiresIn } = getExpires(configuration.defaults.expiry.logout_session);
 
   const logoutSession = await logoutSessionCache.create(
     new LogoutSession({

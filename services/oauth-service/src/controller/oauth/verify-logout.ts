@@ -14,10 +14,12 @@ interface RequestData {
   sessionId: string;
 }
 
-export const oauthVerifyLogoutSchema = Joi.object<RequestData>({
-  redirectUri: Joi.string().uri().required(),
-  sessionId: JOI_GUID,
-});
+export const oauthVerifyLogoutSchema = Joi.object<RequestData>()
+  .keys({
+    redirectUri: Joi.string().uri().required(),
+    sessionId: JOI_GUID,
+  })
+  .required();
 
 export const oauthVerifyLogoutController: ServerKoaController<RequestData> = async (
   ctx,

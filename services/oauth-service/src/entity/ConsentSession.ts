@@ -21,15 +21,17 @@ export type ConsentSessionOptions = Optional<
   EntityKeys | "audiences" | "scopes" | "sessions"
 >;
 
-const schema = Joi.object<ConsentSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<ConsentSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  audiences: Joi.array().items(JOI_GUID).required(),
-  clientId: JOI_GUID.required(),
-  identityId: JOI_GUID.required(),
-  scopes: Joi.array().items(Joi.string().lowercase()).required(),
-  sessions: Joi.array().items(JOI_GUID).required(),
-});
+    audiences: Joi.array().items(JOI_GUID).required(),
+    clientId: JOI_GUID.required(),
+    identityId: JOI_GUID.required(),
+    scopes: Joi.array().items(Joi.string().lowercase()).required(),
+    sessions: Joi.array().items(JOI_GUID).required(),
+  })
+  .required();
 
 export class ConsentSession extends LindormEntity<ConsentSessionAttributes> {
   public readonly clientId: string;

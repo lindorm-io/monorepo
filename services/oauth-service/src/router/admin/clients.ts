@@ -1,7 +1,7 @@
 import { ServerKoaContext } from "../../types";
 import { IdentityPermission } from "../../common";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
-import { updateClientController, updateClientSchema } from "../../controller";
+import { adminClientController, adminClientSchema } from "../../controller";
 import {
   assertTenantPermissionMiddleware,
   clientEntityMiddleware,
@@ -18,9 +18,9 @@ router.patch(
   identityAuthMiddleware({
     permissions: [IdentityPermission.CLIENT_ADMIN],
   }),
-  useSchema(updateClientSchema),
+  useSchema(adminClientSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),
   assertTenantPermissionMiddleware,
-  useController(updateClientController),
+  useController(adminClientController),
 );

@@ -11,11 +11,13 @@ interface RequestData {
   token: string;
 }
 
-export const oauthRevokeSchema = Joi.object({
-  clientId: JOI_GUID.required(),
-  clientSecret: Joi.string().required(),
-  token: JOI_JWT.required(),
-});
+export const oauthRevokeSchema = Joi.object()
+  .keys({
+    clientId: JOI_GUID.required(),
+    clientSecret: Joi.string().required(),
+    token: JOI_JWT.required(),
+  })
+  .required();
 
 export const oauthRevokeController: ServerKoaController<RequestData> = async (
   ctx,

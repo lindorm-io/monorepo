@@ -10,22 +10,38 @@ export interface Configuration {
 }
 
 interface Defaults {
-  access_token_expiry:             string;
-  authorization_session_expiry:    string;
-  browser_session_expiry:          string;
-  browser_session_remember_expiry: string;
-  client_active_state:             boolean;
-  client_credentials_expiry:       string;
-  code_session_expiry:             string;
-  id_token_expiry:                 string;
-  level_of_assurance:              number;
-  logout_session_expiry:           string;
-  maximum_days_loa_1:              number;
-  maximum_days_loa_2:              number;
-  maximum_days_loa_3:              number;
-  maximum_days_loa_4:              number;
-  refresh_session_expiry:          string;
-  tenant_active_state:             boolean;
+  clients:  Clients;
+  expiry:   Expiry;
+  sessions: Sessions;
+  tenants:  Tenants;
+}
+
+interface Clients {
+  active_state:       boolean;
+  level_of_assurance: number;
+}
+
+interface Expiry {
+  access_token:             string;
+  authorization_session:    string;
+  browser_session:          string;
+  browser_session_remember: string;
+  client_credentials:       string;
+  code_session:             string;
+  id_token:                 string;
+  logout_session:           string;
+  refresh_session:          string;
+}
+
+interface Sessions {
+  maximum_days_loa_1: number;
+  maximum_days_loa_2: number;
+  maximum_days_loa_3: number;
+  maximum_days_loa_4: number;
+}
+
+interface Tenants {
+  active_state: boolean;
 }
 
 interface Frontend {

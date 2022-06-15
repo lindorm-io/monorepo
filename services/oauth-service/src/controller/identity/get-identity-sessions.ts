@@ -9,9 +9,11 @@ interface IdentitySessionsRequestData {
   id: string;
 }
 
-export const getIdentitySessionsSchema = Joi.object<IdentitySessionsRequestData>({
-  id: JOI_GUID.required(),
-});
+export const getIdentitySessionsSchema = Joi.object<IdentitySessionsRequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getIdentitySessionsController: ServerKoaController<
   IdentitySessionsRequestData

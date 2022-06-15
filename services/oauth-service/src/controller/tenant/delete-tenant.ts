@@ -7,9 +7,11 @@ interface RequestData {
   id: string;
 }
 
-export const deleteTenantSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const deleteTenantSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const deleteTenantController: ServerKoaController<RequestData> = async (
   ctx,

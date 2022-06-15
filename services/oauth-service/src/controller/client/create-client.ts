@@ -21,14 +21,16 @@ interface ResponseBody {
   secret: string;
 }
 
-export const createClientSchema = Joi.object<RequestData>({
-  description: Joi.string().required(),
-  host: Joi.string().uri().required(),
-  logoutUri: Joi.string().uri().required(),
-  name: Joi.string().required(),
-  redirectUris: Joi.array().items(Joi.string().uri()).required(),
-  tenantId: JOI_GUID.required(),
-});
+export const createClientSchema = Joi.object<RequestData>()
+  .keys({
+    description: Joi.string().required(),
+    host: Joi.string().uri().required(),
+    logoutUri: Joi.string().uri().required(),
+    name: Joi.string().required(),
+    redirectUris: Joi.array().items(Joi.string().uri()).required(),
+    tenantId: JOI_GUID.required(),
+  })
+  .required();
 
 export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
@@ -44,10 +46,11 @@ export const createClientController: ServerKoaController<RequestData> = async (
 
   const client = await clientRepository.create(
     new Client({
-      active: configuration.defaults.client_active_state,
+      active: configuration.defaults.clients.active_state,
       defaults: {
+        audiences: [],
         displayMode: DisplayMode.PAGE,
-        levelOfAssurance: configuration.defaults.level_of_assurance as LevelOfAssurance,
+        levelOfAssurance: configuration.defaults.clients.level_of_assurance as LevelOfAssurance,
         responseMode: ResponseMode.QUERY,
       },
       description,

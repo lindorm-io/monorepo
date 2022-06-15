@@ -13,10 +13,12 @@ interface ResponseBody {
   id: string;
 }
 
-export const createTenantSchema = Joi.object<RequestData>({
-  name: Joi.string().required(),
-  subdomain: Joi.string().required(),
-});
+export const createTenantSchema = Joi.object<RequestData>()
+  .keys({
+    name: Joi.string().required(),
+    subdomain: Joi.string().required(),
+  })
+  .required();
 
 export const createTenantController: ServerKoaController<RequestData> = async (
   ctx,
@@ -31,7 +33,7 @@ export const createTenantController: ServerKoaController<RequestData> = async (
 
   const tenant = await tenantRepository.create(
     new Tenant({
-      active: configuration.defaults.tenant_active_state,
+      active: configuration.defaults.tenants.active_state,
       administrators: [identityId],
       name,
       owner: identityId,

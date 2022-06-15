@@ -17,15 +17,17 @@ export interface TenantAttributes extends EntityAttributes {
 
 export type TenantOptions = Optional<TenantAttributes, EntityKeys>;
 
-const schema = Joi.object<TenantAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<TenantAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  active: Joi.boolean().required(),
-  administrators: Joi.array().items(Joi.string()).required(),
-  name: Joi.string().required(),
-  owner: Joi.string().required(),
-  subdomain: Joi.string().required(),
-});
+    active: Joi.boolean().required(),
+    administrators: Joi.array().items(Joi.string()).required(),
+    name: Joi.string().required(),
+    owner: Joi.string().required(),
+    subdomain: Joi.string().required(),
+  })
+  .required();
 
 export class Tenant extends LindormEntity<TenantAttributes> {
   public active: boolean;

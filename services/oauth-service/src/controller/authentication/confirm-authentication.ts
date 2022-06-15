@@ -19,14 +19,16 @@ interface RequestData extends ConfirmAuthenticationRequestBody {
   id: string;
 }
 
-export const confirmAuthenticationSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  identityId: JOI_GUID.required(),
-  levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-  remember: Joi.boolean().required(),
-});
+export const confirmAuthenticationSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    identityId: JOI_GUID.required(),
+    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    remember: Joi.boolean().required(),
+  })
+  .required();
 
 export const confirmAuthenticationController: ServerKoaController<RequestData> = async (
   ctx,
@@ -76,7 +78,7 @@ export const confirmAuthenticationController: ServerKoaController<RequestData> =
   browserSession.amrValues = amrValues;
   browserSession.country = authorizationSession.country;
   browserSession.expires = remember
-    ? getExpiryDate(configuration.defaults.browser_session_remember_expiry)
+    ? getExpiryDate(configuration.defaults.expiry.browser_session_remember)
     : browserSession.expires;
   browserSession.identityId = identityId;
   browserSession.latestAuthentication = new Date();

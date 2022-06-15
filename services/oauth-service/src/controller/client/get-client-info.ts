@@ -10,9 +10,11 @@ interface RequestData {
 
 type ResponseBody = Partial<ClientAttributes>;
 
-export const getClientInfoSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getClientInfoSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getClientInfoController: ServerKoaController<RequestData> = async (
   ctx,

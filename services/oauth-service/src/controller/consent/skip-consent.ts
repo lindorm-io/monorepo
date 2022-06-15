@@ -10,9 +10,11 @@ interface RequestData {
   id: string;
 }
 
-export const skipConsentSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const skipConsentSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const skipConsentController: ServerKoaController<RequestData> = async (
   ctx,

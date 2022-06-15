@@ -1,4 +1,4 @@
-import { Client, ClientOptions } from "../../entity";
+import { Client, ClientAttributes } from "../../entity";
 import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
 import {
   ClientPermission,
@@ -11,7 +11,7 @@ import {
   Scope,
 } from "../../common";
 
-export const createTestClient = (options: Partial<ClientOptions> = {}): Client =>
+export const createTestClient = (options: Partial<ClientAttributes> = {}): Client =>
   new Client({
     active: true,
     allowed: {
@@ -22,17 +22,21 @@ export const createTestClient = (options: Partial<ClientOptions> = {}): Client =
       ],
       responseTypes: [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN],
       scopes: [...Object.values(Scope), ...Object.values(ClientScope)],
+      ...(options.allowed || {}),
     },
     defaults: {
+      audiences: [],
       displayMode: DisplayMode.POPUP,
       levelOfAssurance: 3,
       responseMode: ResponseMode.QUERY,
+      ...(options.defaults || {}),
     },
     description: "Client description",
     expiry: {
       accessToken: "99 seconds",
       idToken: "99 seconds",
       refreshToken: "99 seconds",
+      ...(options.expiry || {}),
     },
     host: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",

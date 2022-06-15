@@ -9,9 +9,11 @@ interface RequestData {
   id: string;
 }
 
-export const getConsentInfoSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getConsentInfoSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getConsentInfoController: ServerKoaController<RequestData> = async (
   ctx,

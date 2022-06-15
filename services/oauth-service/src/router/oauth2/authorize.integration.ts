@@ -50,7 +50,7 @@ describe("/oauth2/authorize", () => {
       host: "https://test.test",
       query: {
         acrValues: ["loa_3", "session_otp", "email_otp", "phone_otp"],
-        authenticationId: "f4215681-c782-4251-b1bb-c145202c52da",
+        authToken: "auth.jwt.jwt",
         clientId: client.id,
         codeChallenge,
         codeChallengeMethod,
@@ -59,7 +59,6 @@ describe("/oauth2/authorize", () => {
         loginHint: "test@lindorm.io",
         maxAge: 3600,
         nonce,
-        pkceVerifier: "a1991d47a77b4dff89d2f7fd51361c66",
         prompt: [PromptMode.LOGIN, PromptMode.CONSENT],
         redirectData,
         redirectUri: "https://test.client.lindorm.io/redirect",
@@ -94,7 +93,7 @@ describe("/oauth2/authorize", () => {
     expect(session).toStrictEqual(
       expect.objectContaining({
         audiences: [client.id],
-        authenticationId: "f4215681-c782-4251-b1bb-c145202c52da",
+        authToken: "auth.jwt.jwt",
         authenticationMethods: ["session_otp", "email_otp", "phone_otp"],
         authenticationStatus: SessionStatus.PENDING,
         browserSessionId: expect.any(String),

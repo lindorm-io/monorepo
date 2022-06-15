@@ -45,21 +45,23 @@ export type BrowserSessionOptions = Optional<
   | "uiLocales"
 >;
 
-const schema = Joi.object<BrowserSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<BrowserSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-  clients: Joi.array().items(JOI_GUID).required(),
-  country: JOI_COUNTRY_CODE.allow(null).required(),
-  expires: Joi.date().required(),
-  identityId: JOI_GUID.allow(null).required(),
-  latestAuthentication: Joi.date().allow(null).required(),
-  levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-  nonce: JOI_NONCE.required(),
-  remember: Joi.boolean().required(),
-  uiLocales: Joi.array().items(JOI_LOCALE).required(),
-});
+    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    clients: Joi.array().items(JOI_GUID).required(),
+    country: JOI_COUNTRY_CODE.allow(null).required(),
+    expires: Joi.date().required(),
+    identityId: JOI_GUID.allow(null).required(),
+    latestAuthentication: Joi.date().allow(null).required(),
+    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    nonce: JOI_NONCE.required(),
+    remember: Joi.boolean().required(),
+    uiLocales: Joi.array().items(JOI_LOCALE).required(),
+  })
+  .required();
 
 export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
   public acrValues: Array<string>;

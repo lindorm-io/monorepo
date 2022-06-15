@@ -10,9 +10,11 @@ interface RequestData {
 
 type ResponseBody = Partial<TenantAttributes>;
 
-export const getTenantInfoSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const getTenantInfoSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const getTenantInfoController: ServerKoaController<RequestData> = async (
   ctx,

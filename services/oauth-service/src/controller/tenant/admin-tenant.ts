@@ -10,11 +10,13 @@ interface RequestData {
   owner: string;
 }
 
-export const adminTenantSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  active: Joi.boolean().optional(),
-  owner: Joi.string().optional(),
-});
+export const adminTenantSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    active: Joi.boolean().optional(),
+    owner: Joi.string().optional(),
+  })
+  .required();
 
 export const adminTenantController: ServerKoaController<RequestData> = async (
   ctx,

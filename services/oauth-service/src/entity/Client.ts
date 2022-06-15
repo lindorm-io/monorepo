@@ -61,39 +61,48 @@ export type ClientOptions = Optional<
   | "scopeDescriptions"
 >;
 
-const schema = Joi.object<ClientAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<ClientAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  active: Joi.boolean().required(),
-  allowed: Joi.object({
-    grantTypes: Joi.array().items(JOI_GRANT_TYPE).required(),
-    responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).required(),
-    scopes: Joi.array().items(Joi.string()).required(),
-  }).required(),
-  defaults: Joi.object({
-    displayMode: JOI_DISPLAY_MODE.required(),
-    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-    responseMode: JOI_RESPONSE_MODE.required(),
-  }).required(),
-  description: Joi.string().allow(null).required(),
-  expiry: Joi.object({
-    accessToken: JOI_EXPIRY_REGEX.allow(null).required(),
-    idToken: JOI_EXPIRY_REGEX.allow(null).required(),
-    refreshToken: JOI_EXPIRY_REGEX.allow(null).required(),
-  }).required(),
-  host: Joi.string().uri().required(),
-  logoUri: Joi.string().uri().allow(null).required(),
-  logoutUri: Joi.string().uri().required(),
-  name: Joi.string().required(),
-  permissions: Joi.array().items(Joi.string()).required(),
-  redirectUris: Joi.array().items(Joi.string().uri()).required(),
-  requiredScopes: Joi.array().items(Joi.string()).required(),
-  rtbfUri: Joi.string().uri().allow(null).required(),
-  scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).required(),
-  secret: JOI_ARGON_STRING.required(),
-  tenant: JOI_GUID.required(),
-  type: JOI_CLIENT_TYPE.required(),
-});
+    active: Joi.boolean().required(),
+    allowed: Joi.object()
+      .keys({
+        grantTypes: Joi.array().items(JOI_GRANT_TYPE).required(),
+        responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).required(),
+        scopes: Joi.array().items(Joi.string()).required(),
+      })
+      .required(),
+    defaults: Joi.object()
+      .keys({
+        audiences: Joi.array().items(JOI_GUID).required(),
+        displayMode: JOI_DISPLAY_MODE.required(),
+        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        responseMode: JOI_RESPONSE_MODE.required(),
+      })
+      .required(),
+    description: Joi.string().allow(null).required(),
+    expiry: Joi.object()
+      .keys({
+        accessToken: JOI_EXPIRY_REGEX.allow(null).required(),
+        idToken: JOI_EXPIRY_REGEX.allow(null).required(),
+        refreshToken: JOI_EXPIRY_REGEX.allow(null).required(),
+      })
+      .required(),
+    host: Joi.string().uri().required(),
+    logoUri: Joi.string().uri().allow(null).required(),
+    logoutUri: Joi.string().uri().required(),
+    name: Joi.string().required(),
+    permissions: Joi.array().items(Joi.string()).required(),
+    redirectUris: Joi.array().items(Joi.string().uri()).required(),
+    requiredScopes: Joi.array().items(Joi.string()).required(),
+    rtbfUri: Joi.string().uri().allow(null).required(),
+    scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).required(),
+    secret: JOI_ARGON_STRING.required(),
+    tenant: JOI_GUID.required(),
+    type: JOI_CLIENT_TYPE.required(),
+  })
+  .required();
 
 export class Client extends LindormEntity<ClientAttributes> {
   public active: boolean;
@@ -124,6 +133,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       scopes: options.allowed?.scopes || [],
     };
     this.defaults = {
+      audiences: options.defaults?.audiences || [],
       displayMode: options.defaults?.displayMode || DisplayMode.PAGE,
       levelOfAssurance: options.defaults?.levelOfAssurance || 1,
       responseMode: options.defaults?.responseMode || ResponseMode.QUERY,

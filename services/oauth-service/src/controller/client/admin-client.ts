@@ -13,17 +13,19 @@ interface RequestData {
   type: ClientType;
 }
 
-export const adminClientSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  active: Joi.boolean().optional(),
-  allowed: Joi.object({
-    grantTypes: Joi.array().items(JOI_GRANT_TYPE).optional(),
-    responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).optional(),
-    scopes: Joi.array().items(Joi.string()).optional(),
-  }).optional(),
-  permissions: Joi.array().items(Joi.string()).optional(),
-  type: JOI_CLIENT_TYPE.optional(),
-});
+export const adminClientSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    active: Joi.boolean().optional(),
+    allowed: Joi.object({
+      grantTypes: Joi.array().items(JOI_GRANT_TYPE).optional(),
+      responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).optional(),
+      scopes: Joi.array().items(Joi.string()).optional(),
+    }).optional(),
+    permissions: Joi.array().items(Joi.string()).optional(),
+    type: JOI_CLIENT_TYPE.optional(),
+  })
+  .required();
 
 export const adminClientController: ServerKoaController<RequestData> = async (
   ctx,

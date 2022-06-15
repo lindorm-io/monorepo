@@ -26,19 +26,21 @@ export type LogoutSessionOptions = Optional<
   EntityKeys | "idTokenHint" | "redirectUri" | "state" | "status"
 >;
 
-const schema = Joi.object<LogoutSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<LogoutSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  clientId: JOI_GUID.required(),
-  expires: Joi.date().required(),
-  idTokenHint: JOI_JWT.allow(null).required(),
-  originalUri: Joi.string().required(),
-  redirectUri: Joi.string().uri().allow(null).required(),
-  sessionId: JOI_GUID.required(),
-  sessionType: Joi.string().required(),
-  state: Joi.string().allow(null).required(),
-  status: JOI_SESSION_STATUS.required(),
-});
+    clientId: JOI_GUID.required(),
+    expires: Joi.date().required(),
+    idTokenHint: JOI_JWT.allow(null).required(),
+    originalUri: Joi.string().required(),
+    redirectUri: Joi.string().uri().allow(null).required(),
+    sessionId: JOI_GUID.required(),
+    sessionType: Joi.string().required(),
+    state: Joi.string().allow(null).required(),
+    status: JOI_SESSION_STATUS.required(),
+  })
+  .required();
 
 export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
   public readonly clientId: string;

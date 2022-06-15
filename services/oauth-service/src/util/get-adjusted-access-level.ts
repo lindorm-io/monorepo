@@ -9,7 +9,7 @@ const getHighestPossibleAdjustment = (
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.maximum_days_loa_1),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_1),
     )
   ) {
     return 0;
@@ -18,7 +18,7 @@ const getHighestPossibleAdjustment = (
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.maximum_days_loa_2),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_2),
     )
   ) {
     return 1;
@@ -27,7 +27,7 @@ const getHighestPossibleAdjustment = (
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.maximum_days_loa_3),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_3),
     )
   ) {
     return 2;
@@ -36,7 +36,7 @@ const getHighestPossibleAdjustment = (
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.maximum_days_loa_4),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_4),
     )
   ) {
     return 3;

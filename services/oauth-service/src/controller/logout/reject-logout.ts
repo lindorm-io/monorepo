@@ -10,9 +10,11 @@ interface RequestData {
   id: string;
 }
 
-export const rejectLogoutSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const rejectLogoutSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const rejectLogoutController: ServerKoaController<RequestData> = async (
   ctx,

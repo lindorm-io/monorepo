@@ -11,9 +11,11 @@ export type InvalidTokenAttributes = EntityAttributes;
 
 export type InvalidTokenOptions = Optional<InvalidTokenAttributes, EntityKeys>;
 
-const schema = Joi.object<InvalidTokenAttributes>({
-  ...JOI_ENTITY_BASE,
-});
+const schema = Joi.object<InvalidTokenAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
+  })
+  .required();
 
 export class InvalidToken extends LindormEntity<InvalidTokenAttributes> {
   public constructor(options: InvalidTokenOptions) {

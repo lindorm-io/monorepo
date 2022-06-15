@@ -21,8 +21,8 @@ export const browserSessionCookieMiddleware: ServerKoaMiddleware = async (
       const browserSession = await browserSessionRepository.find({ id: cookieId });
 
       browserSession.expires = browserSession.remember
-        ? getExpiryDate(configuration.defaults.browser_session_remember_expiry)
-        : getExpiryDate(configuration.defaults.browser_session_expiry);
+        ? getExpiryDate(configuration.defaults.expiry.browser_session_remember)
+        : getExpiryDate(configuration.defaults.expiry.browser_session);
 
       ctx.entity.browserSession = await browserSessionRepository.update(browserSession);
     } catch (err) {
@@ -36,7 +36,7 @@ export const browserSessionCookieMiddleware: ServerKoaMiddleware = async (
     ctx.entity.browserSession = await browserSessionRepository.create(
       new BrowserSession({
         id: cookieId,
-        expires: getExpiryDate(configuration.defaults.browser_session_expiry),
+        expires: getExpiryDate(configuration.defaults.expiry.browser_session),
       }),
     );
   }

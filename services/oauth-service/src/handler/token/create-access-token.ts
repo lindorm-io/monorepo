@@ -24,7 +24,7 @@ export const createAccessToken = (
     adjustedAccessLevel: getAdjustedAccessLevel(session),
     audiences: [client.id],
     authTime: getUnixTime(session.latestAuthentication),
-    expiry: client.expiry.accessToken || configuration.defaults.access_token_expiry,
+    expiry: client.expiry.accessToken || configuration.defaults.expiry.access_token,
     levelOfAssurance: session.levelOfAssurance,
     permissions: options.permissions,
     scopes: options.scopes,

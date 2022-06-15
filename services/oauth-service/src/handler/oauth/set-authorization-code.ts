@@ -11,7 +11,7 @@ export const setAuthorizationCode = async (
     cache: { authorizationSessionCache },
   } = ctx;
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.code_session_expiry);
+  const { expires, expiresIn } = getExpires(configuration.defaults.expiry.code_session);
 
   authorizationSession.code = getRandomString(128);
   authorizationSession.expires = expires;

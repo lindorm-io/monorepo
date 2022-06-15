@@ -12,9 +12,11 @@ interface RequestData {
   id: string;
 }
 
-export const confirmLogoutSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const confirmLogoutSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const confirmLogoutController: ServerKoaController<RequestData> = async (
   ctx,

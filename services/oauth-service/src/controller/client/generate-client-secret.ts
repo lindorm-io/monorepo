@@ -12,9 +12,11 @@ interface ResponseBody {
   secret: string;
 }
 
-export const generateClientSecretSchema = Joi.object<RequestData>({
-  id: Joi.string().required(),
-});
+export const generateClientSecretSchema = Joi.object<RequestData>()
+  .keys({
+    id: Joi.string().required(),
+  })
+  .required();
 
 export const generateClientSecretController: ServerKoaController<RequestData> = async (
   ctx,

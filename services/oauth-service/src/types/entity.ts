@@ -7,6 +7,7 @@ export interface ClientAllowed {
 }
 
 export interface ClientDefaults {
+  audiences: Array<string>;
   displayMode: DisplayMode;
   levelOfAssurance: LevelOfAssurance;
   responseMode: ResponseMode;

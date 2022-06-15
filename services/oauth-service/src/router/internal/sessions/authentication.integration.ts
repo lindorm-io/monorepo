@@ -44,11 +44,10 @@ describe("/internal/sessions/authentication", () => {
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        authenticationId: "6eecdda6-5f59-44c9-86da-2f9aed8989a2",
+        authToken: "auth.jwt.jwt",
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId,
-        pkceVerifier: "e1a84d0bd266465eaa8ba70d134919bf",
       }),
     );
 
@@ -86,10 +85,9 @@ describe("/internal/sessions/authentication", () => {
       },
       requested: {
         country: "se",
-        authentication_id: "6eecdda6-5f59-44c9-86da-2f9aed8989a2",
+        auth_token: "auth.jwt.jwt",
         authentication_methods: ["email_otp", "phone_otp"],
         level_of_assurance: 2,
-        pkce_verifier: "e1a84d0bd266465eaa8ba70d134919bf",
       },
     });
   });

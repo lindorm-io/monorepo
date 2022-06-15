@@ -10,9 +10,11 @@ interface RequestData {
   id: string;
 }
 
-export const skipAuthenticationSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-});
+export const skipAuthenticationSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+  })
+  .required();
 
 export const skipAuthenticationController: ServerKoaController<RequestData> = async (
   ctx,

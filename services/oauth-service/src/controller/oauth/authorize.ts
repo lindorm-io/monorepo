@@ -60,30 +60,30 @@ interface RequestData {
   uiLocales?: string;
 }
 
-export const oauthAuthorizeSchema = Joi.object<RequestData>({
-  acrValues: Joi.string().optional(),
-  authToken: JOI_JWT.optional(),
-  clientId: JOI_GUID.required(),
-  codeChallenge: Joi.string().optional(),
-  codeChallengeMethod: JOI_PKCE_METHOD.optional(),
-  country: JOI_COUNTRY_CODE.optional(),
-  display: JOI_DISPLAY_MODE.optional(),
-  idTokenHint: Joi.string().optional(),
-  loginHint: Joi.string().optional(),
-  maxAge: Joi.string()
-    .pattern(/^[0-9]+$/)
-    .optional(),
-  nonce: JOI_NONCE.optional(),
-  pkceVerifier: Joi.string().optional(),
-  prompt: JOI_PROMPT_REGEX.optional(),
-  redirectData: Joi.string().base64().optional(),
-  redirectUri: Joi.string().uri().required(),
-  responseMode: JOI_RESPONSE_MODE.optional(),
-  responseType: JOI_RESPONSE_TYPE_REGEX.required(),
-  scope: Joi.string().required(),
-  state: Joi.string().required(),
-  uiLocales: Joi.string().optional(),
-});
+export const oauthAuthorizeSchema = Joi.object<RequestData>()
+  .keys({
+    acrValues: Joi.string().optional(),
+    authToken: JOI_JWT.optional(),
+    clientId: JOI_GUID.required(),
+    codeChallenge: Joi.string().optional(),
+    codeChallengeMethod: JOI_PKCE_METHOD.optional(),
+    country: JOI_COUNTRY_CODE.optional(),
+    display: JOI_DISPLAY_MODE.optional(),
+    idTokenHint: Joi.string().optional(),
+    loginHint: Joi.string().optional(),
+    maxAge: Joi.string().pattern(/^\d+$/).optional(),
+    nonce: JOI_NONCE.optional(),
+    pkceVerifier: Joi.string().optional(),
+    prompt: JOI_PROMPT_REGEX.optional(),
+    redirectData: Joi.string().base64().optional(),
+    redirectUri: Joi.string().uri().required(),
+    responseMode: JOI_RESPONSE_MODE.optional(),
+    responseType: JOI_RESPONSE_TYPE_REGEX.required(),
+    scope: Joi.string().required(),
+    state: Joi.string().required(),
+    uiLocales: Joi.string().optional(),
+  })
+  .required();
 
 export const oauthAuthorizeController: ServerKoaController<RequestData> = async (
   ctx,
@@ -117,7 +117,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const responseTypes = responseType.toLowerCase().split(" ") as Array<ResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.authorization_session_expiry);
+  const { expires, expiresIn } = getExpires(configuration.defaults.expiry.authorization_session);
 
   const { authenticationMethods, levelOfAssurance } = filterAcrValues(
     acrValues,

@@ -15,11 +15,13 @@ interface RequestData extends ConfirmConsentRequestBody {
   id: string;
 }
 
-export const confirmConsentSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
-  audiences: Joi.array().items(JOI_GUID).required(),
-  scopes: Joi.array().items(Joi.string()).required(),
-});
+export const confirmConsentSchema = Joi.object<RequestData>()
+  .keys({
+    id: JOI_GUID.required(),
+    audiences: Joi.array().items(JOI_GUID).required(),
+    scopes: Joi.array().items(Joi.string()).required(),
+  })
+  .required();
 
 export const confirmConsentController: ServerKoaController<RequestData> = async (
   ctx,
