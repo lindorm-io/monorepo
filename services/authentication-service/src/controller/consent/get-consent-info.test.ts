@@ -7,7 +7,9 @@ describe("getConsentInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        consentSession: createTestConsentSession(),
+        consentSession: createTestConsentSession({
+          requestedAudiences: ["1ea69be9-7857-420f-b4ef-1eb59e106189"],
+        }),
       },
     };
   });

@@ -11,7 +11,10 @@ interface ResponseBody {
     scopeDescriptions: Array<ScopeDescription>;
     type: ClientType;
   };
-  scopes: Array<string>;
+  requested: {
+    audiences: Array<string>;
+    scopes: Array<string>;
+  };
 }
 
 export const getConsentInfoController: ServerKoaController = async (
@@ -21,20 +24,20 @@ export const getConsentInfoController: ServerKoaController = async (
     entity: { consentSession },
   } = ctx;
 
-  const { description, logoUri, name, requestedScopes, requiredScopes, scopeDescriptions, type } =
-    consentSession;
-
   return {
     body: {
       client: {
-        description,
-        logoUri,
-        name,
-        requiredScopes,
-        scopeDescriptions,
-        type,
+        description: consentSession.description,
+        logoUri: consentSession.logoUri,
+        name: consentSession.name,
+        requiredScopes: consentSession.requiredScopes,
+        scopeDescriptions: consentSession.scopeDescriptions,
+        type: consentSession.type,
       },
-      scopes: requestedScopes,
+      requested: {
+        audiences: consentSession.requestedAudiences,
+        scopes: consentSession.requestedScopes,
+      },
     },
   };
 };

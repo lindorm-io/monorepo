@@ -9,20 +9,39 @@ Object {
       "name": "name",
       "requiredScopes": Array [
         "openid",
-        "email",
+        "profile",
       ],
       "scopeDescriptions": Array [
         Object {
           "description": "email-description",
           "name": "email",
         },
+        Object {
+          "description": "openid-description",
+          "name": "openid",
+        },
+        Object {
+          "description": "phone-description",
+          "name": "phone",
+        },
+        Object {
+          "description": "profile-description",
+          "name": "profile",
+        },
       ],
       "type": "public",
     },
-    "scopes": Array [
-      "openid",
-      "email",
-    ],
+    "requested": Object {
+      "audiences": Array [
+        "1ea69be9-7857-420f-b4ef-1eb59e106189",
+      ],
+      "scopes": Array [
+        "email",
+        "openid",
+        "phone",
+        "profile",
+      ],
+    },
   },
 }
 `;
