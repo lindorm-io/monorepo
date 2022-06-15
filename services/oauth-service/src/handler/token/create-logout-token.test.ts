@@ -1,11 +1,12 @@
-import { BrowserSession, Client } from "../../entity";
 import { createLogoutToken } from "./create-logout-token";
-import { createTestBrowserSession, createTestClient } from "../../fixtures/entity";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 describe("createLogoutToken", () => {
   let ctx: any;
-  let browserSession: BrowserSession;
-  let client: Client;
 
   beforeEach(() => {
     ctx = {
@@ -13,18 +14,25 @@ describe("createLogoutToken", () => {
         sign: jest.fn().mockImplementation(() => "signed"),
       },
     };
-
-    browserSession = createTestBrowserSession({
-      id: "58c9e5aa-c576-43a5-97a1-9bde154eda75",
-    });
-    client = createTestClient({
-      id: "a95372ca-c721-4c53-8ac3-c16d61943b21",
-    });
   });
 
   test("should create logout token", () => {
-    expect(createLogoutToken(ctx, client, browserSession)).toBe("signed");
+    expect(createLogoutToken(ctx, createTestClient(), createTestBrowserSession())).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "browser",
+      }),
+    );
+  });
+
+  test("should create logout token", () => {
+    expect(createLogoutToken(ctx, createTestClient(), createTestRefreshSession())).toBe("signed");
+
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "refresh",
+      }),
+    );
   });
 });

@@ -64,7 +64,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
     subject,
     type,
     username,
-  } = JWT.decode(token);
+  } = JWT.decodeFormatted(token);
 
   let verifiedToken = false;
   let invalidToken = false;

@@ -1,4 +1,3 @@
-import { Client } from "../../entity";
 import { createAccessToken } from "./create-access-token";
 import {
   createTestBrowserSession,
@@ -8,8 +7,6 @@ import {
 
 describe("createAccessToken", () => {
   let ctx: any;
-  let client: Client;
-  let scopes: Array<string>;
 
   beforeEach(() => {
     ctx = {
@@ -17,30 +14,35 @@ describe("createAccessToken", () => {
         sign: jest.fn().mockImplementation(() => "signed"),
       },
     };
-
-    client = createTestClient();
-    scopes = ["scope1", "scope2"];
   });
 
   test("should create access token for browser session", () => {
     expect(
-      createAccessToken(ctx, client, createTestBrowserSession(), {
+      createAccessToken(ctx, createTestClient(), createTestBrowserSession(), {
         permissions: [],
-        scopes,
+        scopes: ["scope1", "scope2"],
       }),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "browser",
+      }),
+    );
   });
 
   test("should create access token for refresh session", () => {
     expect(
-      createAccessToken(ctx, client, createTestRefreshSession(), {
+      createAccessToken(ctx, createTestClient(), createTestRefreshSession(), {
         permissions: [],
-        scopes,
+        scopes: ["scope1", "scope2"],
       }),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "refresh",
+      }),
+    );
   });
 });

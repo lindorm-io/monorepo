@@ -1,4 +1,3 @@
-import { Client } from "../../entity";
 import { createIdToken } from "./create-id-token";
 import {
   createTestClient,
@@ -8,8 +7,6 @@ import {
 
 describe("createIdToken", () => {
   let ctx: any;
-  let client: Client;
-  let scopes: Array<string>;
 
   beforeEach(() => {
     ctx = {
@@ -17,32 +14,37 @@ describe("createIdToken", () => {
         sign: jest.fn().mockImplementation(() => "signed"),
       },
     };
-
-    client = createTestClient();
-    scopes = ["scope1", "scope2"];
   });
 
   test("should create id token for browser session", async () => {
     await expect(
-      createIdToken(ctx, client, createTestBrowserSession(), {
+      createIdToken(ctx, createTestClient(), createTestBrowserSession(), {
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
-        scopes,
+        scopes: ["scope1", "scope2"],
       }),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "browser",
+      }),
+    );
   });
 
   test("should create id token for refresh session", async () => {
     await expect(
-      createIdToken(ctx, client, createTestRefreshSession(), {
+      createIdToken(ctx, createTestClient(), createTestRefreshSession(), {
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
-        scopes,
+        scopes: ["scope1", "scope2"],
       }),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalled();
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionHint: "refresh",
+      }),
+    );
   });
 });

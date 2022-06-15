@@ -1,6 +1,6 @@
 import { Client } from "../../entity";
-import { ServerKoaContext } from "../../types";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { ServerKoaContext } from "../../types";
 import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 

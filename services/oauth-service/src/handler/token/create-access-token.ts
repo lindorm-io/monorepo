@@ -1,6 +1,7 @@
-import { Client, BrowserSession, RefreshSession } from "../../entity";
+import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { ServerKoaContext } from "../../types";
+import { SessionHint } from "../../enum";
 import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
@@ -28,6 +29,7 @@ export const createAccessToken = (
     permissions: options.permissions,
     scopes: options.scopes,
     sessionId: session.id,
+    sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
     subject: session.identityId,
     subjectHint: SubjectHint.IDENTITY,
     type: TokenType.ACCESS,

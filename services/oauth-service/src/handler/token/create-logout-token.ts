@@ -1,6 +1,7 @@
 import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { SessionHint } from "../../enum";
 import { SubjectHint, TokenType } from "../../common";
 
 export const createLogoutToken = (
@@ -19,6 +20,7 @@ export const createLogoutToken = (
     },
     expiry: "60 seconds",
     sessionId: session.id,
+    sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
     subject: session.identityId,
     subjectHint: SubjectHint.IDENTITY,
     type: TokenType.LOGOUT,
