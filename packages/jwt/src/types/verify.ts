@@ -38,6 +38,7 @@ export interface JwtVerifyData<Payload = never, Claims = never> {
   permissions: Array<string>;
   scopes: Array<string>;
   sessionId: string | null;
+  sessionHint: string | null;
   subject: string;
   subjectHint: string | null;
   token: string;

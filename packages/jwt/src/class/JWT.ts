@@ -1,6 +1,9 @@
 import { ILogger } from "@lindorm-io/winston";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
+import { decode, Jwt, sign, verify } from "jsonwebtoken";
+import { getUnixTime } from "date-fns";
+import { randomUUID } from "crypto";
 import {
   camelKeys,
   getExpires,
@@ -8,9 +11,6 @@ import {
   snakeKeys,
   sortObjectKeys,
 } from "@lindorm-io/core";
-import { decode, sign, verify } from "jsonwebtoken";
-import { getUnixTime } from "date-fns";
-import { randomUUID } from "crypto";
 import {
   assertClaimDifference,
   assertClaimEquals,
@@ -77,6 +77,7 @@ export class JWT {
       loa: options.levelOfAssurance,
       iam: options.permissions,
       scp: options.scopes,
+      sih: options.sessionHint,
       suh: options.subjectHint,
       usr: options.username,
 
@@ -113,7 +114,7 @@ export class JWT {
   ): JwtVerifyData<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
-    const { keyId, ...claims } = JWT.decode<Payload, Claims>(token);
+    const { keyId, ...claims } = JWT.decodeFormatted<Payload, Claims>(token);
     const { algorithms, publicKey } = this.keystore.getKey(keyId);
     const {
       adjustedAccessLevel,
@@ -192,7 +193,11 @@ export class JWT {
     };
   }
 
-  public static decode<Payload = Record<string, any>, Claims = Record<string, any>>(
+  public static decode(token: string): Jwt | null {
+    return decode(token, { complete: true });
+  }
+
+  public static decodeFormatted<Payload = Record<string, any>, Claims = Record<string, any>>(
     token: string,
   ): JwtDecodeData<Payload, Claims> {
     const {
@@ -222,6 +227,7 @@ export class JWT {
       nonce,
       scp,
       sid,
+      sih,
       sub,
       suh,
       token_type,
@@ -252,6 +258,7 @@ export class JWT {
       permissions: iam || [],
       scopes: scp || [],
       sessionId: sid || null,
+      sessionHint: sih || null,
       subject: sub,
       subjectHint: suh || null,
       type: token_type,

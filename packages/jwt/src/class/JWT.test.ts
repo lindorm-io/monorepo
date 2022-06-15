@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
+import { JWT } from "./JWT";
 import { JwtSignOptions } from "../types";
 import { TokenError } from "../error";
-import { JWT } from "./JWT";
 import { baseParse } from "@lindorm-io/core";
 import { createTestJwt } from "../mocks";
 import { getUnixTime } from "date-fns";
@@ -44,8 +44,9 @@ describe("JWT", () => {
       permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+      sessionHint: "sessionHint",
       subject: "subject",
-      subjectHint: "hint",
+      subjectHint: "subjectHint",
       type: "type",
       username: "username",
     };
@@ -112,10 +113,73 @@ describe("JWT", () => {
     });
   });
 
-  test("should decode", () => {
+  test("should decode full values", () => {
     const { id, token } = jwt.sign(optionsFull);
 
     expect(JWT.decode(token)).toStrictEqual({
+      header: {
+        alg: "ES512",
+        kid: "7531da89-12e9-403e-925a-5da49100635c",
+        typ: "JWT",
+      },
+      payload: {
+        aal: 3,
+        acr: ["acr"],
+        amr: ["amr"],
+        aud: ["audience"],
+        auth_time: 1609488000,
+        azp: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        claims_key: "claimValue",
+        exp: 1609488010,
+        ext: {
+          payload_key: "payloadValue",
+        },
+        iam: ["permission1", "permission2", "permission3"],
+        iat: 1609488000,
+        iss: "issuer",
+        jti: id,
+        loa: 4,
+        nbf: 1609488000,
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+        scp: ["scope"],
+        sid: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+        sih: "sessionHint",
+        sub: "subject",
+        suh: "subjectHint",
+        token_type: "type",
+        usr: "username",
+      },
+      signature: expect.any(String),
+    });
+  });
+
+  test("should decode minimum signed values", () => {
+    const { id, token } = jwt.sign(optionsMin);
+
+    expect(JWT.decode(token)).toStrictEqual({
+      header: {
+        alg: "ES512",
+        kid: "7531da89-12e9-403e-925a-5da49100635c",
+        typ: "JWT",
+      },
+      payload: {
+        aud: ["audience"],
+        exp: 1609488010,
+        iat: 1609488000,
+        iss: "issuer",
+        jti: id,
+        nbf: 1609488000,
+        sub: "subject",
+        token_type: "type",
+      },
+      signature: expect.any(String),
+    });
+  });
+
+  test("should decode and format", () => {
+    const { id, token } = jwt.sign(optionsFull);
+
+    expect(JWT.decodeFormatted(token)).toStrictEqual({
       id,
       active: true,
       adjustedAccessLevel: 3,
@@ -138,8 +202,9 @@ describe("JWT", () => {
       permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+      sessionHint: "sessionHint",
       subject: "subject",
-      subjectHint: "hint",
+      subjectHint: "subjectHint",
       type: "type",
       username: "username",
     });
@@ -260,7 +325,7 @@ describe("JWT", () => {
 
     expect(
       jwt.verify(token, {
-        subjectHint: "hint",
+        subjectHint: "subjectHint",
       }),
     ).toBeTruthy();
   });
@@ -300,8 +365,9 @@ describe("JWT", () => {
       permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+      sessionHint: "sessionHint",
       subject: "subject",
-      subjectHint: "hint",
+      subjectHint: "subjectHint",
       token: expect.any(String),
       type: "type",
       username: "username",
@@ -333,6 +399,7 @@ describe("JWT", () => {
       permissions: [],
       scopes: [],
       sessionId: null,
+      sessionHint: null,
       subject: "subject",
       subjectHint: null,
       token: token,

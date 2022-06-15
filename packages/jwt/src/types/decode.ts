@@ -13,6 +13,7 @@ export interface JwtDecodedClaims<Payload, Claims> {
   permissions: Array<string>;
   scopes: Array<string>;
   sessionId: string | null;
+  sessionHint: string | null;
   subject: string;
   subjectHint: string | null;
   type: string;

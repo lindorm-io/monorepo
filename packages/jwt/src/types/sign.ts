@@ -19,6 +19,7 @@ export interface JwtSignOptions<Payload = never, Claims = never> {
   permissions?: Array<string>;
   scopes?: Array<string>;
   sessionId?: string;
+  sessionHint?: string;
   subject: string;
   subjectHint?: string;
   type: string;

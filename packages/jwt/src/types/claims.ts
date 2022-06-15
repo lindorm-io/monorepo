@@ -25,5 +25,6 @@ export interface LindormClaims extends StandardClaims {
   iam?: Array<string>; // permissions
   loa?: number; // level of assurance
   scp?: Array<string>; // scope
+  sih?: string; // session hint
   suh?: string; // subject hint
 }
