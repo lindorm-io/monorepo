@@ -18,12 +18,3 @@ for (const provider of configuration.oidc_providers) {
     }),
   );
 }
-
-export const keyPairOAuthJwksWorker = keyPairJwksCacheWorker({
-  host: configuration.services.oauth_service.host,
-  port: configuration.services.oauth_service.port,
-  clientName: "oauthClient",
-  redisConnection,
-  retry: 30,
-  winston,
-});

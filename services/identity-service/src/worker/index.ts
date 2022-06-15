@@ -1,1 +1,1 @@
-export * from "./key-pair-cache-worker";
+export * from "./key-pair-jwks-cache-worker";

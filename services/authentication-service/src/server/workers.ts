@@ -1,20 +1,19 @@
 import { IntervalWorker } from "@lindorm-io/koa";
 import { configuration } from "./configuration";
 import {
-  keyPairCacheWorker,
   keyPairCleanupWorker,
   keyPairDeviceJwksWorker,
-  keyPairOAuthJwksWorker,
+  keyPairMongoCacheWorker,
+  keyPairOauthJwksWorker,
   keyPairRotationWorker,
 } from "../worker";
 
 export const workers: Array<IntervalWorker> = [];
 
 if (configuration.server.workers) {
-  workers.push(keyPairRotationWorker);
-  workers.push(keyPairCacheWorker);
   workers.push(keyPairCleanupWorker);
-
-  workers.push(keyPairOAuthJwksWorker);
   workers.push(keyPairDeviceJwksWorker);
+  workers.push(keyPairMongoCacheWorker);
+  workers.push(keyPairOauthJwksWorker);
+  workers.push(keyPairRotationWorker);
 }

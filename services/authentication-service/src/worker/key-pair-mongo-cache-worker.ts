@@ -1,8 +1,8 @@
-import { keyPairMongoCacheWorker } from "@lindorm-io/koa-keystore";
+import { keyPairMongoCacheWorker as _keyPairMongoCacheWorker } from "@lindorm-io/koa-keystore";
 import { mongoConnection, redisConnection } from "../instance";
 import { winston } from "../server/logger";
 
-export const keyPairCacheWorker = keyPairMongoCacheWorker({
+export const keyPairMongoCacheWorker = _keyPairMongoCacheWorker({
   mongoConnection,
   redisConnection,
   winston,

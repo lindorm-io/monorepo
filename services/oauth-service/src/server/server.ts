@@ -1,11 +1,12 @@
 import { Environment } from "@lindorm-io/koa";
+import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { winston } from "./logger";
 import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
+import { winston } from "./logger";
 import { workers } from "./workers";
 import {
   AuthorizationSessionCache,
@@ -18,7 +19,6 @@ import {
   RefreshSessionRepository,
   TenantRepository,
 } from "../infrastructure";
-import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 
 export const server = createNodeServer<ServerKoaContext>({
   caches: [
