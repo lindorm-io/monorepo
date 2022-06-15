@@ -37,6 +37,7 @@ describe("oauthLogoutController", () => {
       token: {
         idToken: {
           subject: "idTokenSubject",
+          sessionHint: "sessionHint",
         },
       },
     };

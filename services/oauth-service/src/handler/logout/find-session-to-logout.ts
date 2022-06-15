@@ -1,8 +1,8 @@
-import { ServerKoaContext } from "../../types";
 import { BrowserSession, RefreshSession } from "../../entity";
-import { EntityNotFoundError } from "@lindorm-io/entity";
 import { ClientError } from "@lindorm-io/errors";
-import { LogoutSessionType } from "../../enum";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { LogoutSessionType, SessionHint } from "../../enum";
+import { ServerKoaContext } from "../../types";
 
 interface Result {
   session: BrowserSession | RefreshSession;
@@ -12,28 +12,33 @@ interface Result {
 export const findSessionToLogout = async (
   ctx: ServerKoaContext,
   sessionId: string,
+  sessionHint?: string,
 ): Promise<Result> => {
   const {
     repository: { browserSessionRepository, refreshSessionRepository },
   } = ctx;
 
-  try {
-    const session = await browserSessionRepository.find({ id: sessionId });
+  if (!sessionHint || sessionHint === SessionHint.BROWSER) {
+    try {
+      const session = await browserSessionRepository.find({ id: sessionId });
 
-    return { session, type: LogoutSessionType.BROWSER };
-  } catch (err: any) {
-    if (!(err instanceof EntityNotFoundError)) {
-      throw err;
+      return { session, type: LogoutSessionType.BROWSER };
+    } catch (err: any) {
+      if (!(err instanceof EntityNotFoundError)) {
+        throw err;
+      }
     }
   }
 
-  try {
-    const session = await refreshSessionRepository.find({ id: sessionId });
+  if (!sessionHint || sessionHint === SessionHint.REFRESH) {
+    try {
+      const session = await refreshSessionRepository.find({ id: sessionId });
 
-    return { session, type: LogoutSessionType.REFRESH };
-  } catch (err: any) {
-    if (!(err instanceof EntityNotFoundError)) {
-      throw err;
+      return { session, type: LogoutSessionType.REFRESH };
+    } catch (err: any) {
+      if (!(err instanceof EntityNotFoundError)) {
+        throw err;
+      }
     }
   }
 

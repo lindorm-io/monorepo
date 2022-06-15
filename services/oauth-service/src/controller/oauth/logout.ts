@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
+import { JOI_GUID, JOI_JWT } from "../../common";
 import { LogoutSession } from "../../entity";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL, getExpires } from "@lindorm-io/core";
 import { findSessionToLogout, setLogoutSessionCookie } from "../../handler";
@@ -24,7 +24,7 @@ interface ResponseQuery {
 export const oauthLogoutSchema = Joi.object()
   .keys({
     clientId: JOI_GUID.required(),
-    idTokenHint: Joi.string().optional(),
+    idTokenHint: JOI_JWT.optional(),
     redirectUri: Joi.string().uri().optional(),
     sessionId: JOI_GUID.required(),
     state: Joi.string().optional(),
@@ -42,7 +42,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     token: { idToken },
   } = ctx;
 
-  const { session, type } = await findSessionToLogout(ctx, sessionId);
+  const { session, type } = await findSessionToLogout(ctx, sessionId, idToken?.sessionHint);
 
   const { expires, expiresIn } = getExpires(configuration.defaults.expiry.logout_session);
 
