@@ -1,17 +1,17 @@
 import { ChallengeStrategy, DeviceFactor } from "../enum";
 import { JwtVerifyData } from "@lindorm-io/jwt";
+import { IdentityServiceClaims } from "./claims";
 
 export interface AuthenticationConfirmationTokenClaims {
   country: string;
   remember: boolean;
+  verifiedIdentifiers: Array<string>;
 }
 
 export type VerifiedAuthenticationConfirmationToken = JwtVerifyData<
   never,
   AuthenticationConfirmationTokenClaims
 >;
-
-export type ChallengeConfirmationTokenPayload = Record<string, unknown>;
 
 export interface ChallengeConfirmationTokenClaims {
   deviceLinkId: string;
@@ -20,6 +20,8 @@ export interface ChallengeConfirmationTokenClaims {
 }
 
 export type VerifiedChallengeConfirmationToken = JwtVerifyData<
-  ChallengeConfirmationTokenPayload,
+  Record<string, any>,
   ChallengeConfirmationTokenClaims
 >;
+
+export type VerifiedIdentityToken = JwtVerifyData<never, IdentityServiceClaims>;
