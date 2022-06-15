@@ -2,8 +2,6 @@ import { ServerKoaContext } from "../../types";
 import { authenticationSessionEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  deleteAuthenticationController,
-  deleteAuthenticationSchema,
   getAuthenticationController,
   getAuthenticationSchema,
   initialiseAuthenticationController,
@@ -29,14 +27,6 @@ router.get(
   useSchema(getAuthenticationSchema),
   authenticationSessionEntityMiddleware("data.id"),
   useController(getAuthenticationController),
-);
-
-router.delete(
-  "/:id",
-  paramsMiddleware,
-  useSchema(deleteAuthenticationSchema),
-  authenticationSessionEntityMiddleware("data.id"),
-  useController(deleteAuthenticationController),
 );
 
 router.post(
