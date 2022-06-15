@@ -25,14 +25,6 @@ router.get(
   useController(getStrategyInfoController),
 );
 
-router.delete(
-  "/:id",
-  paramsMiddleware,
-  useSchema(rejectStrategySchema),
-  strategySessionEntityMiddleware("data.id"),
-  useController(rejectStrategyController),
-);
-
 router.put(
   "/:id/confirm",
   paramsMiddleware,
@@ -48,4 +40,12 @@ router.put(
   strategySessionEntityMiddleware("data.id"),
   authenticationSessionEntityMiddleware("entity.strategySession.authenticationSessionId"),
   useController(confirmStrategyController),
+);
+
+router.put(
+  "/:id/reject",
+  paramsMiddleware,
+  useSchema(rejectStrategySchema),
+  strategySessionEntityMiddleware("data.id"),
+  useController(rejectStrategyController),
 );
