@@ -1,8 +1,7 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { ServerKoaContext } from "../../types";
-import { SubjectHint } from "../../common";
-import { TokenType } from "../../enum";
+import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";

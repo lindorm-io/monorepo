@@ -1,8 +1,7 @@
 import { Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { JwtSignData } from "@lindorm-io/jwt";
-import { SubjectHint } from "../../common";
-import { TokenType } from "../../enum";
+import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 
 export const createClientCredentialsToken = (

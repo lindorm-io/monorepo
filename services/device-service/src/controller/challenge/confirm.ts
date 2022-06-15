@@ -4,7 +4,6 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { vaultGetSalt } from "../../handler";
@@ -15,6 +14,7 @@ import {
   JOI_GUID,
   JOI_JWT,
   SubjectHint,
+  TokenType,
 } from "../../common";
 
 interface RequestData {
@@ -119,7 +119,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     sessionId: challengeSession.id,
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
+    type: TokenType.CHALLENGE_CONFIRMATION,
   });
 
   await challengeSessionCache.destroy(challengeSession);

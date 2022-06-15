@@ -2,8 +2,7 @@ import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { InvalidToken } from "../../entity";
-import { JOI_GUID, JOI_JWT } from "../../common";
-import { TokenType } from "../../enum";
+import { JOI_GUID, JOI_JWT, TokenType } from "../../common";
 
 interface RequestData {
   clientId: string;

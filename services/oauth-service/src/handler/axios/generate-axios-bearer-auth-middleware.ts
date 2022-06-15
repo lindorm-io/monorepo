@@ -1,6 +1,5 @@
 import { ServerKoaContext } from "../../types";
-import { SubjectHint } from "../../common";
-import { TokenType } from "../../enum";
+import { SubjectHint, TokenType } from "../../common";
 import { axiosBearerAuthMiddleware, AxiosMiddleware } from "@lindorm-io/axios";
 import { configuration } from "../../server/configuration";
 

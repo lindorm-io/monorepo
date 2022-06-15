@@ -1,4 +1,3 @@
-import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getRandomString } from "@lindorm-io/core";
@@ -10,6 +9,7 @@ import {
   DeviceFactor,
   IdentityPermission,
   SubjectHint,
+  TokenType,
 } from "../../common";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
@@ -24,7 +24,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
     scopes: ["test"],
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ACCESS_TOKEN,
+    type: TokenType.ACCESS,
     ...options,
   });
   return token;
@@ -46,7 +46,7 @@ export const getTestClientCredentials = (
     ],
     subject: "08e99132-09d5-4f87-a489-a62d2896a7bf",
     subjectHint: SubjectHint.CLIENT,
-    type: TokenType.ACCESS_TOKEN,
+    type: TokenType.ACCESS,
     ...options,
   });
   return token;
@@ -71,7 +71,7 @@ export const getTestChallengeConfirmationToken = (
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
+    type: TokenType.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
@@ -88,7 +88,7 @@ export const getTestChallengeSessionToken = (
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_SESSION_TOKEN,
+    type: TokenType.CHALLENGE_SESSION,
     ...options,
   });
   return token;
@@ -105,7 +105,7 @@ export const getTestEnrolmentSessionToken = (
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ENROLMENT_SESSION_TOKEN,
+    type: TokenType.ENROLMENT_SESSION,
     ...options,
   });
   return token;
@@ -120,7 +120,7 @@ export const getTestRdcToken = (options: Partial<JwtSignOptions<any, any>> = {})
     sessionId: "id",
     subject: "subject",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION_TOKEN,
+    type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
     ...options,
   });
   return token;

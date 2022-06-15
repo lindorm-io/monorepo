@@ -1,14 +1,20 @@
 import Joi from "joi";
-import { CertificateMethod, TokenType } from "../../enum";
-import { ServerKoaController } from "../../types";
+import { CertificateMethod } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EnrolmentSession } from "../../entity";
 import { JOI_CERTIFICATE_METHOD } from "../../constant";
-import { RdcSessionMode, RdcSessionType, SessionStatus, SubjectHint } from "../../common";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession, isRdcRequired } from "../../handler";
 import { getExpires } from "@lindorm-io/core";
 import { getRandomString } from "@lindorm-io/core";
+import {
+  RdcSessionMode,
+  RdcSessionType,
+  SessionStatus,
+  SubjectHint,
+  TokenType,
+} from "../../common";
 
 interface RequestData {
   brand: string | null;
@@ -105,7 +111,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     sessionId: session.id,
     subject: identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ENROLMENT_SESSION_TOKEN,
+    type: TokenType.ENROLMENT_SESSION,
   });
 
   if (externalChallengeRequired) {

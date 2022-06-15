@@ -1,9 +1,8 @@
 import Joi from "joi";
 import { ChallengeSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint } from "../../common";
+import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint, TokenType } from "../../common";
 import { ServerKoaController } from "../../types";
-import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { getRandomString, stringToSeconds } from "@lindorm-io/core";
 import { sortedUniq } from "lodash";
@@ -78,7 +77,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     sessionId: session.id,
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_SESSION_TOKEN,
+    type: TokenType.CHALLENGE_SESSION,
   });
 
   return {

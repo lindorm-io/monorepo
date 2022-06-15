@@ -1,4 +1,4 @@
-import { TokenType } from "../enum";
+import { TokenType } from "../common";
 import { configuration } from "../server/configuration";
 import { tokenValidationMiddleware } from "@lindorm-io/koa-jwt";
 

@@ -4,7 +4,6 @@ import { CryptoLayered } from "@lindorm-io/crypto";
 import { DeviceLink } from "../../entity";
 import { DeviceLinkSalt, ServerKoaController } from "../../types";
 import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
-import { TokenType } from "../../enum";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
@@ -18,6 +17,7 @@ import {
   JOI_JWT,
   SessionStatus,
   SubjectHint,
+  TokenType,
 } from "../../common";
 
 interface RequestData {
@@ -107,7 +107,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     sessionId: enrolmentSession.id,
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
+    type: TokenType.CHALLENGE_CONFIRMATION,
   });
 
   await enrolmentSessionCache.destroy(enrolmentSession);

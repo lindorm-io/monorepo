@@ -1,4 +1,3 @@
-import { TokenType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import {
@@ -8,6 +7,7 @@ import {
   IdentityPermission,
   Scope,
   SubjectHint,
+  TokenType,
 } from "../../common";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {

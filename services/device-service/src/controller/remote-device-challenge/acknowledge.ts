@@ -1,7 +1,6 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { TokenType } from "../../enum";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { difference } from "lodash";
 import {
@@ -11,6 +10,7 @@ import {
   RdcSessionMode,
   SessionStatus,
   SubjectHint,
+  TokenType,
 } from "../../common";
 
 interface RequestData {
@@ -81,7 +81,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     sessionId: id,
     subject: identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION_TOKEN,
+    type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
   });
 
   await rdcSessionCache.update(rdcSession);

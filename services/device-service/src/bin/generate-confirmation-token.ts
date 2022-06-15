@@ -1,4 +1,3 @@
-import { TokenType } from "../enum";
 import { configuration } from "../server/configuration";
 import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
@@ -7,6 +6,7 @@ import {
   ChallengeStrategy,
   DeviceFactor,
   SubjectHint,
+  TokenType,
 } from "../common";
 
 const main = async (): Promise<void> => {
@@ -26,7 +26,7 @@ const main = async (): Promise<void> => {
     sessionId: "b0bcc6d6-55c1-4965-bd67-f0bb1c981538",
     subject: "acbfce9e-072b-450f-b451-5915cdd17a33",
     subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION_TOKEN,
+    type: TokenType.CHALLENGE_CONFIRMATION,
   });
 
   logger.info("Generated token", { token });

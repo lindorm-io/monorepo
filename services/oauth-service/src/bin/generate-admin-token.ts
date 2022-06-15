@@ -1,5 +1,4 @@
-import { IdentityPermission, Scope, SubjectHint } from "../common";
-import { TokenType } from "../enum";
+import { IdentityPermission, Scope, SubjectHint, TokenType } from "../common";
 import { getClients } from "./util/get-clients";
 import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";

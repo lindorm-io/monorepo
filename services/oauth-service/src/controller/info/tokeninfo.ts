@@ -2,8 +2,7 @@ import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { JOI_JWT } from "../../common";
-import { TokenType } from "../../enum";
+import { JOI_JWT, TokenType } from "../../common";
 import { TokenError, JWT } from "@lindorm-io/jwt";
 
 interface RequestData {

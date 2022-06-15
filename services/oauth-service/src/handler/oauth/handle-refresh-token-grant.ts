@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
-import { TokenType } from "../../enum";
+import { TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { generateTokenResponse } from "./generate-token-response";
 import { getExpiryDate } from "@lindorm-io/core";
