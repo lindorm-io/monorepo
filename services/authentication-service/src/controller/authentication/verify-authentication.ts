@@ -6,6 +6,7 @@ import { argon } from "../../instance";
 import { assertPKCE, createURL } from "@lindorm-io/core";
 import { canGenerateMfaCookie } from "../../util";
 import { generateMfaCookie } from "../../handler";
+import { getUnixTime } from "date-fns";
 import {
   AuthenticationConfirmationTokenClaims,
   JOI_GUID,
@@ -49,6 +50,7 @@ export const verifyAuthenticationController: ServerKoaController<
     audiences: [authenticationSession.clientId],
     authContextClass: [`loa_${authenticationSession.confirmedLevelOfAssurance}`],
     authMethodsReference: authenticationSession.confirmedMethods,
+    authTime: getUnixTime(new Date()),
     claims: {
       country: authenticationSession.country,
       remember: authenticationSession.remember,
