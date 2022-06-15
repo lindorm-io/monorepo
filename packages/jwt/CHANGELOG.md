@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.7.1...@lindorm-io/jwt@0.8.0) (2022-06-15)
+
+
+### Bug Fixes
+
+* improve jwt claims code readability ([7bcc2b2](https://github.com/lindorm-io/monorepo/commit/7bcc2b2063f6ef50be4665e6ddd74a5a78911a4c))
+
+
+### Features
+
+* add session hint and formatted decoder to jwt ([758bb84](https://github.com/lindorm-io/monorepo/commit/758bb8483a761b0baaf27dd38ecd7d7c2bf9b9cb))
+
+
+
+
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.7.0...@lindorm-io/jwt@0.7.1) (2022-06-09)
 
 

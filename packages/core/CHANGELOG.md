@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.5.0...@lindorm-io/core@0.6.0) (2022-06-15)
+
+
+### Features
+
+* add utility to remove undefined values from objects and arrays ([2c12f1f](https://github.com/lindorm-io/monorepo/commit/2c12f1fa1c873809ac37d949b07bb61df7296d18))
+
+
+
+
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.4.0...@lindorm-io/core@0.5.0) (2022-06-04)
 
 

@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/mongo",
   "description": "Mongo and Repository tools for lindorm.io",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -30,7 +30,7 @@
     "mongodb": "^4.3.0"
   },
   "devDependencies": {
-    "@lindorm-io/winston": "^0.4.2",
+    "@lindorm-io/winston": "^0.4.3",
     "@types/lodash": "^4.14.182",
     "compd": "^4.1.1",
     "mongo-mock": "^4.1.0"

@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,14 +18,14 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.5.0",
+    "@lindorm-io/core": "^0.6.0",
     "@lindorm-io/errors": "^0.1.13",
     "axios": "0.27.2",
     "date-fns": "^2.25.0",
     "lodash": "4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/winston": "^0.4.2",
+    "@lindorm-io/winston": "^0.4.3",
     "@types/lodash": "^4.14.182"
   }
 }
