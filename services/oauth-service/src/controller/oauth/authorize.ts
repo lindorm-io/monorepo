@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL, getExpires, PKCEMethod } from "@lindorm-io/core";
-import { uniq } from "lodash";
+import { flatten, uniq } from "lodash";
 import {
   setAuthorizationSessionCookie,
   tryFindConsentSession,
@@ -128,8 +128,12 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const consentSession = await tryFindConsentSession(ctx, browserSession, client);
   const refreshSession = await tryFindRefreshSession(ctx, idToken);
 
+  const audiences = idToken
+    ? uniq(flatten([idToken.audiences, client.id, client.defaults.audiences]))
+    : uniq(flatten([client.id, client.defaults.audiences]));
+
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
-    audiences: idToken ? idToken.audiences : [client.id],
+    audiences,
     authToken,
     authenticationMethods,
     browserSessionId: browserSession.id,
