@@ -1,5 +1,8 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { getRandomString } from "@lindorm-io/core";
+import { getUnixTime } from "date-fns";
+import { randomUUID } from "crypto";
 import {
   IdentityServiceClaims,
   ClientPermission,
@@ -9,20 +12,22 @@ import {
   SubjectHint,
   TokenType,
 } from "../../common";
+import { SessionHint } from "../../enum";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
-    audiences: ["3c12edf7-2e1d-4df2-a199-3226e36f84a4"],
+    audiences: [randomUUID()],
     authContextClass: ["loa_2", "email_otp", "phone_otp"],
     authMethodsReference: ["email_otp", "phone_otp"],
     expiry: "10 seconds",
     levelOfAssurance: 2,
     permissions: Object.values(IdentityPermission),
     scopes: Object.values(Scope),
-    sessionId: "4e8cbd69-f474-43df-a195-ecfe35d78522",
-    subject: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
+    sessionId: randomUUID(),
+    sessionHint: SessionHint.BROWSER,
+    subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
     type: TokenType.ACCESS,
     ...options,
@@ -88,5 +93,33 @@ export const getTestRefreshToken = (options: Partial<JwtSignOptions<any, any>> =
     ...options,
   });
 
+  return token;
+};
+
+export const getTestAuthenticationConfirmationToken = (
+  options: Partial<JwtSignOptions<any, any>> = {},
+): string => {
+  const { token } = createTestJwt({
+    issuer: configuration.services.authentication_service.issuer,
+  }).sign({
+    audiences: [configuration.oauth.client_id],
+    authContextClass: ["loa_3"],
+    authMethodsReference: ["email_otp", "device_challenge"],
+    authTime: getUnixTime(new Date()),
+    claims: {
+      country: "se",
+      remember: true,
+      verifiedIdentifiers: ["test@lindorm.io"],
+    },
+    expiry: "60 seconds",
+    levelOfAssurance: 3,
+    nonce: getRandomString(16),
+    scopes: ["authentication"],
+    sessionId: randomUUID(),
+    subject: randomUUID(),
+    subjectHint: SubjectHint.IDENTITY,
+    type: TokenType.AUTHENTICATION_CONFIRMATION,
+    ...options,
+  });
   return token;
 };

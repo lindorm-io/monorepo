@@ -10,6 +10,7 @@ import {
   SubjectHint,
   TokenType,
 } from "../../common";
+import { getUnixTime } from "date-fns";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
   const { token } = createTestJwt({
@@ -81,9 +82,11 @@ export const getTestAuthenticationConfirmationToken = (
     audiences: [configuration.oauth.client_id],
     authContextClass: ["loa_3"],
     authMethodsReference: ["device_challenge"],
+    authTime: getUnixTime(new Date()),
     claims: {
       country: "se",
       remember: true,
+      verifiedIdentifiers: ["test@lindorm.io"],
     },
     expiry: "60 seconds",
     levelOfAssurance: 3,

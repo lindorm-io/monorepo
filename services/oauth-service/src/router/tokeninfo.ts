@@ -6,11 +6,10 @@ import { tokeninfoController, tokeninfoSchema } from "../controller";
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.use(clientAuthMiddleware());
-
 router.post(
   "/",
   useSchema(tokeninfoSchema),
+  clientAuthMiddleware(),
   clientEntityMiddleware("token.bearerToken.subject"),
   useAssertion({
     expect: true,

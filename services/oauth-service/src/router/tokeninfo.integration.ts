@@ -44,6 +44,7 @@ describe("/tokeninfo", () => {
       id: tokenId,
       audiences: [client.id],
       sessionId: browserSession.id,
+      subject: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
     });
 
     const response = await request(server.callback())

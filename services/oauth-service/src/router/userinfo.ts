@@ -7,11 +7,11 @@ import { userinfoController } from "../controller";
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.use(
+router.get(
+  "/",
   identityAuthMiddleware({
     permissions: [IdentityPermission.USER],
     scopes: [Scope.OPENID],
   }),
+  useController(userinfoController),
 );
-
-router.get("/", useController(userinfoController));

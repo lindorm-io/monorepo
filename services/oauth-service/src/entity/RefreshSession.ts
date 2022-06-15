@@ -59,17 +59,17 @@ const schema = Joi.object<RefreshSessionAttributes>()
   .required();
 
 export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
-  public readonly acrValues: Array<string>;
-  public readonly amrValues: Array<string>;
   public readonly clientId: string;
   public readonly identityId: string;
-  public readonly levelOfAssurance: LevelOfAssurance;
   public readonly nonce: string;
   public readonly previousRefreshSessionId: string;
   public readonly uiLocales: Array<string>;
 
+  public acrValues: Array<string>;
+  public amrValues: Array<string>;
   public expires: Date;
   public latestAuthentication: Date;
+  public levelOfAssurance: LevelOfAssurance;
   public tokenId: string;
 
   public constructor(options: RefreshSessionOptions) {

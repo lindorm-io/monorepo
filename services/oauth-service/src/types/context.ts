@@ -1,7 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
 import { Controller } from "@lindorm-io/koa";
 import { JwtVerifyData } from "@lindorm-io/jwt";
-import { VerifiedIdentityToken } from "../common";
+import { VerifiedAuthenticationConfirmationToken, VerifiedIdentityToken } from "../common";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,
@@ -65,6 +65,7 @@ interface ServerRepository extends LindormNodeServerRepository {
 }
 
 interface ServerToken extends LindormNodeServerToken {
+  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
   idToken: VerifiedIdentityToken;
   refreshToken: JwtVerifyData;
 }
