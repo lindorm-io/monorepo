@@ -18,8 +18,6 @@ export const createTestAuthenticationSession = (
     clientId: randomUUID(),
     codeChallenge: getRandomString(32),
     codeMethod: PKCEMethod.S256,
-    confirmedLevelOfAssurance: 0,
-    confirmedMethods: [],
     country: "se",
     emailHint: "test@lindorm.io",
     expires: new Date("2022-01-01T08:00:00.000Z"),

@@ -52,6 +52,7 @@ export const verifyAuthenticationController: ServerKoaController<
     claims: {
       country: authenticationSession.country,
       remember: authenticationSession.remember,
+      verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
     },
     expiry: "60 seconds",
     levelOfAssurance: authenticationSession.confirmedLevelOfAssurance,

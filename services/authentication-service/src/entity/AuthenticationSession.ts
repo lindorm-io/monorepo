@@ -23,6 +23,7 @@ export interface AuthenticationSessionAttributes extends EntityAttributes {
   code: string | null;
   codeChallenge: string;
   codeMethod: PKCEMethod;
+  confirmedIdentifiers: Array<string>;
   confirmedLevelOfAssurance: LevelOfAssurance;
   confirmedMethods: Array<AuthenticationMethod>;
   country: string | null;
@@ -44,6 +45,7 @@ export type AuthenticationSessionOptions = Optional<
   | EntityKeys
   | "allowedMethods"
   | "code"
+  | "confirmedIdentifiers"
   | "confirmedLevelOfAssurance"
   | "confirmedMethods"
   | "country"
@@ -68,6 +70,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     code: Joi.string().allow(null).required(),
     codeChallenge: Joi.string().required(),
     codeMethod: JOI_PKCE_METHOD.required(),
+    confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
     confirmedLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     confirmedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
     country: Joi.string().lowercase().length(2).allow(null).required(),
@@ -104,6 +107,7 @@ export class AuthenticationSession
 
   public allowedMethods: Array<AuthenticationMethod>;
   public code: string | null;
+  public confirmedIdentifiers: Array<string>;
   public confirmedLevelOfAssurance: LevelOfAssurance;
   public confirmedMethods: Array<AuthenticationMethod>;
   public identityId: string | null;
@@ -118,6 +122,7 @@ export class AuthenticationSession
     this.code = options.code || null;
     this.codeChallenge = options.codeChallenge;
     this.codeMethod = options.codeMethod;
+    this.confirmedIdentifiers = options.confirmedIdentifiers || [];
     this.confirmedLevelOfAssurance = options.confirmedLevelOfAssurance || 0;
     this.confirmedMethods = options.confirmedMethods || [];
     this.country = options.country || null;
@@ -151,6 +156,7 @@ export class AuthenticationSession
       code: this.code,
       codeChallenge: this.codeChallenge,
       codeMethod: this.codeMethod,
+      confirmedIdentifiers: this.confirmedIdentifiers,
       confirmedLevelOfAssurance: this.confirmedLevelOfAssurance,
       confirmedMethods: this.confirmedMethods,
       country: this.country,

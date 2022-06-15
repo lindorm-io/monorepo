@@ -22,6 +22,7 @@ import {
   confirmWebauthn,
   resolveAllowedMethods,
 } from "../../handler";
+import { flatten, uniq } from "lodash";
 
 interface RequestData {
   id: string;
@@ -159,6 +160,19 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
 
   authenticationSession.identityId = account.id;
   authenticationSession.confirmedMethods.push(strategySession.method);
+
+  authenticationSession.confirmedIdentifiers = uniq(
+    flatten([
+      authenticationSession.confirmedIdentifiers,
+      [
+        ...(strategySession.email ? [strategySession.email] : []),
+        ...(strategySession.nin ? [strategySession.nin] : []),
+        ...(strategySession.phoneNumber ? [strategySession.phoneNumber] : []),
+        ...(strategySession.username ? [strategySession.username] : []),
+      ],
+    ]),
+  );
+
   authenticationSession.confirmedLevelOfAssurance =
     calculateLevelOfAssurance(authenticationSession);
 

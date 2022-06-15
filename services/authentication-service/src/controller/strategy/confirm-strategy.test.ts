@@ -45,9 +45,14 @@ describe("confirmStrategyController", () => {
       entity: {
         authenticationSession: createTestAuthenticationSession({
           identityId: null,
+          confirmedIdentifiers: ["test@lindorm.io"],
           status: SessionStatus.PENDING,
         }),
         strategySession: createTestStrategySession({
+          email: null,
+          nin: null,
+          phoneNumber: null,
+          username: "username",
           status: SessionStatus.PENDING,
           method: AuthenticationMethod.PASSWORD,
         }),
@@ -70,6 +75,7 @@ describe("confirmStrategyController", () => {
     expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         allowedMethods: ["device_challenge"],
+        confirmedIdentifiers: ["test@lindorm.io", "username"],
         confirmedLevelOfAssurance: 3,
         confirmedMethods: ["password"],
         identityId: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
