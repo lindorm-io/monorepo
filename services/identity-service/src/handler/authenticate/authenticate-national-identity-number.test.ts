@@ -1,9 +1,9 @@
-import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity } from "../../entity";
 import { authenticateNationalIdentityNumber } from "./authenticate-national-identity-number";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
+import { ClientError } from "@lindorm-io/errors";
 
 describe("authenticateNationalIdentityNumber", () => {
   let ctx: any;
@@ -27,13 +27,13 @@ describe("authenticateNationalIdentityNumber", () => {
   test("should resolve found and verified identity", async () => {
     ctx.repository.identityRepository.find.mockResolvedValue(
       createTestIdentity({
-        id: "identityId",
+        id: "347221b1-9a7e-4040-af7f-135b02c0e07b",
       }),
     );
 
     await expect(
       authenticateNationalIdentityNumber(ctx, {
-        identityId: "identityId",
+        identityId: "347221b1-9a7e-4040-af7f-135b02c0e07b",
         nationalIdentityNumber: "202202050101",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
@@ -68,15 +68,36 @@ describe("authenticateNationalIdentityNumber", () => {
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
 
-    expect(ctx.repository.identityRepository.create).toHaveBeenCalled();
+    expect(ctx.repository.identityRepository.findOrCreate).toHaveBeenCalled();
   });
 
-  test("should throw on unauthorized", async () => {
+  test("should resolve created identity with specific id", async () => {
     ctx.repository.identityRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(
       authenticateNationalIdentityNumber(ctx, {
-        identityId: "identityId",
+        identityId: "347221b1-9a7e-4040-af7f-135b02c0e07b",
+        nationalIdentityNumber: "202202050101",
+      }),
+    ).resolves.toStrictEqual(expect.any(Identity));
+
+    expect(ctx.repository.identityRepository.findOrCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "347221b1-9a7e-4040-af7f-135b02c0e07b",
+      }),
+    );
+  });
+
+  test("should throw on invalid identity", async () => {
+    ctx.repository.identityRepository.find.mockResolvedValue(
+      createTestIdentity({
+        id: "21aafd9d-c139-4696-a0e6-36bea99cc6a4",
+      }),
+    );
+
+    await expect(
+      authenticateNationalIdentityNumber(ctx, {
+        identityId: "347221b1-9a7e-4040-af7f-135b02c0e07b",
         nationalIdentityNumber: "202202050101",
       }),
     ).rejects.toThrow(ClientError);

@@ -1,7 +1,8 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identity } from "../../entity";
+import { ServerKoaContext } from "../../types";
+import { randomUUID } from "crypto";
 
 interface Options {
   identityId?: string;
@@ -33,6 +34,7 @@ export const authenticateNationalIdentityNumber = async (
 
     if (!identity.nationalIdentityNumberVerified) {
       identity.nationalIdentityNumberVerified = true;
+
       return identityRepository.update(identity);
     }
 
@@ -43,17 +45,11 @@ export const authenticateNationalIdentityNumber = async (
     }
   }
 
-  if (identityId) {
-    throw new ClientError("Unauthorized", {
-      description: "Identity not matched to any identifiers",
-      statusCode: ClientError.StatusCode.UNAUTHORIZED,
-    });
-  }
+  const id = identityId || randomUUID();
+  const identity = await identityRepository.findOrCreate({ id });
 
-  return await identityRepository.create(
-    new Identity({
-      nationalIdentityNumber,
-      nationalIdentityNumberVerified: true,
-    }),
-  );
+  identity.nationalIdentityNumber = nationalIdentityNumber;
+  identity.nationalIdentityNumberVerified = true;
+
+  return identityRepository.update(identity);
 };

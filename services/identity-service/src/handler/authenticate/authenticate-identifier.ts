@@ -5,6 +5,7 @@ import { IdentifierType } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
+import { randomUUID } from "crypto";
 
 interface Options {
   identifier: string;
@@ -46,6 +47,7 @@ export const authenticateIdentifier = async (
 
     if (!identifierEntity.verified) {
       identifierEntity.verified = true;
+
       await identifierRepository.update(identifierEntity);
     }
 
@@ -56,14 +58,8 @@ export const authenticateIdentifier = async (
     }
   }
 
-  if (identityId) {
-    throw new ClientError("Unauthorized", {
-      description: "Identity not matched to any identifiers",
-      statusCode: ClientError.StatusCode.UNAUTHORIZED,
-    });
-  }
-
-  const identity = await identityRepository.create(new Identity({}));
+  const id = identityId || randomUUID();
+  const identity = await identityRepository.findOrCreate({ id });
 
   await identifierRepository.create(
     new Identifier({

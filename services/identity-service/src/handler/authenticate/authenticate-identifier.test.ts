@@ -1,7 +1,7 @@
-import { ClientError, ServerError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { IdentifierType } from "../../common";
 import { Identity } from "../../entity";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { authenticateIdentifier } from "./authenticate-identifier";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
@@ -42,17 +42,35 @@ describe("authenticateIdentifier", () => {
   test("should resolve found and verified identity", async () => {
     ctx.repository.identifierRepository.find.mockResolvedValue(
       createTestEmailIdentifier({
-        identityId: "identityId",
+        identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
       }),
     );
 
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        identityId: "identityId",
+        identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
         type: IdentifierType.EMAIL,
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
+  });
+
+  test("should resolve created identity with specific id", async () => {
+    ctx.repository.identifierRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
+
+    await expect(
+      authenticateIdentifier(ctx, {
+        identifier: "test@lindorm.io",
+        identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
+        type: IdentifierType.EMAIL,
+      }),
+    ).resolves.toStrictEqual(expect.any(Identity));
+
+    expect(ctx.repository.identityRepository.findOrCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
+      }),
+    );
   });
 
   test("should resolve and set identifier as verified", async () => {
@@ -117,13 +135,17 @@ describe("authenticateIdentifier", () => {
     ).rejects.toThrow(ServerError);
   });
 
-  test("should throw on unauthorized", async () => {
-    ctx.repository.identifierRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
+  test("should throw on invalid identity", async () => {
+    ctx.repository.identifierRepository.find.mockResolvedValue(
+      createTestEmailIdentifier({
+        identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
+      }),
+    );
 
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        identityId: "identityId",
+        identityId: "2dbf0b95-4798-4f6a-b8c8-8be39b2a779d",
         type: IdentifierType.EMAIL,
       }),
     ).rejects.toThrow(ClientError);
