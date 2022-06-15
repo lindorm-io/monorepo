@@ -1,7 +1,13 @@
 import { ILogger } from "@lindorm-io/winston";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
-import { camelKeys, getExpires, snakeKeys, sortObjectKeys } from "@lindorm-io/core";
+import {
+  camelKeys,
+  getExpires,
+  removeUndefinedFromObject,
+  snakeKeys,
+  sortObjectKeys,
+} from "@lindorm-io/core";
 import { decode, sign, verify } from "jsonwebtoken";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
@@ -18,7 +24,7 @@ import {
   JwtSignOptions,
   JwtVerifyData,
   JwtVerifyOptions,
-  StandardClaims,
+  LindormClaims,
 } from "../types";
 
 export class JWT {
@@ -47,7 +53,7 @@ export class JWT {
       options,
     });
 
-    const object: StandardClaims = {
+    const object: LindormClaims = {
       // required claims
       aud: options.audiences,
       exp: expiresUnix,
@@ -58,24 +64,26 @@ export class JWT {
       sub: options.subject,
       token_type: options.type,
 
-      // optional claims
-      ...(options.adjustedAccessLevel ? { aal: options.adjustedAccessLevel } : {}),
-      ...(options.authContextClass ? { acr: options.authContextClass } : {}),
-      ...(options.authMethodsReference ? { amr: options.authMethodsReference } : {}),
-      ...(options.authTime ? { auth_time: options.authTime } : {}),
-      ...(options.authorizedParty ? { azp: options.authorizedParty } : {}),
-      ...(options.levelOfAssurance ? { loa: options.levelOfAssurance } : {}),
+      // optional standard claims
+      acr: options.authContextClass,
+      amr: options.authMethodsReference,
+      auth_time: options.authTime,
+      azp: options.authorizedParty,
+      nonce: options.nonce,
+      sid: options.sessionId,
+
+      // optional lindorm claims
+      aal: options.adjustedAccessLevel,
+      loa: options.levelOfAssurance,
+      iam: options.permissions,
+      scp: options.scopes,
+      suh: options.subjectHint,
+      usr: options.username,
+
+      // payload & claims
       ...(options.payload
         ? { ext: snakeKeys<Payload, Record<string, unknown>>(options.payload) }
         : {}),
-      ...(options.permissions ? { iam: options.permissions } : {}),
-      ...(options.nonce ? { nonce: options.nonce } : {}),
-      ...(options.scopes ? { scp: options.scopes } : {}),
-      ...(options.sessionId ? { sid: options.sessionId } : {}),
-      ...(options.subjectHint ? { suh: options.subjectHint } : {}),
-      ...(options.username ? { usr: options.username } : {}),
-
-      // spread remaining claims
       ...(options.claims ? snakeKeys(options.claims) : {}),
     };
 
@@ -86,7 +94,7 @@ export class JWT {
       key.type === KeyType.RSA ? { passphrase: key.passphrase || "", key: privateKey } : privateKey;
     const keyInfo = { algorithm: key.preferredAlgorithm, keyid: key.id };
 
-    const token = sign(sortObjectKeys(object), signingKey, keyInfo);
+    const token = sign(sortObjectKeys(removeUndefinedFromObject(object)), signingKey, keyInfo);
 
     this.logger.debug("sign token success", { token, ...object, ...keyInfo });
 
@@ -192,7 +200,7 @@ export class JWT {
       payload: object,
     } = decode(token, { complete: true }) as unknown as {
       header: any;
-      payload: StandardClaims & { [key: string]: any };
+      payload: LindormClaims & { [key: string]: any };
     };
 
     const now = getUnixTime(new Date());

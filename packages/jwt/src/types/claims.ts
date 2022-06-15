@@ -9,18 +9,21 @@ export interface DefaultClaims {
 }
 
 export interface StandardClaims extends DefaultClaims {
-  aal?: number; // adjusted access level
   acr?: Array<string>; // authentication context class reference
   amr?: Array<string>; // authentication methods reference
   auth_time?: number; // time when authentication was performed
   azp?: string; // authorized party
+  nonce?: string;
+  sid?: string; // session id
+  token_type: string;
+  usr?: string; // username
+}
+
+export interface LindormClaims extends StandardClaims {
+  aal?: number; // adjusted access level
   ext?: Record<string, any>; // payload
   iam?: Array<string>; // permissions
   loa?: number; // level of assurance
-  nonce?: string;
   scp?: Array<string>; // scope
-  sid?: string; // session id
   suh?: string; // subject hint
-  token_type: string;
-  usr?: string; // username
 }
