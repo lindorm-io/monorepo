@@ -1,5 +1,5 @@
 import { ConsentSession, ConsentSessionOptions } from "../../entity";
-import { ClientType } from "../../common";
+import { ClientType, Scope } from "../../common";
 import { randomUUID } from "crypto";
 
 export const createTestConsentSession = (
@@ -12,9 +12,14 @@ export const createTestConsentSession = (
     name: "name",
     oauthSessionId: randomUUID(),
     requestedAudiences: [randomUUID()],
-    requestedScopes: ["openid", "email"],
-    requiredScopes: ["openid", "email"],
-    scopeDescriptions: [{ name: "email", description: "email-description" }],
+    requestedScopes: [Scope.EMAIL, Scope.OPENID, Scope.PHONE, Scope.PROFILE],
+    requiredScopes: [Scope.OPENID, Scope.PROFILE],
+    scopeDescriptions: [
+      { name: "email", description: "email-description" },
+      { name: "openid", description: "openid-description" },
+      { name: "phone", description: "phone-description" },
+      { name: "profile", description: "profile-description" },
+    ],
     type: ClientType.PUBLIC,
     ...options,
   });

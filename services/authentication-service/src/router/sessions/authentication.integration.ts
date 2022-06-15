@@ -103,20 +103,6 @@ describe("/sessions/authentication", () => {
     await expect(argon.assert(response.body.code, found.code)).resolves.not.toThrow();
   });
 
-  test("DELETE /:id", async () => {
-    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
-      createTestAuthenticationSession(),
-    );
-
-    await request(server.callback())
-      .delete(`/sessions/authentication/${authenticationSession.id}`)
-      .expect(204);
-
-    await expect(
-      TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
-    ).rejects.toThrow(EntityNotFoundError);
-  });
-
   test("POST /:id/strategy", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession(),

@@ -10,12 +10,12 @@ import {
   createTestStrategySession,
 } from "../../fixtures/entity";
 import {
-  getTestChallengeConfirmationToken,
-  getTestStrategySessionToken,
-  setupIntegration,
   TEST_ACCOUNT_REPOSITORY,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
+  getTestChallengeConfirmationToken,
+  getTestStrategySessionToken,
+  setupIntegration,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -23,7 +23,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
-describe("/sessions/authentication", () => {
+describe("/sessions/strategy", () => {
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
@@ -69,20 +69,6 @@ describe("/sessions/authentication", () => {
       method: "email_otp",
       status: "pending",
     });
-  });
-
-  test("DELETE /:id", async () => {
-    const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(createTestStrategySession());
-
-    await request(server.callback()).delete(`/sessions/strategy/${strategySession.id}`).expect(204);
-
-    await expect(
-      TEST_STRATEGY_SESSION_CACHE.find({ id: strategySession.id }),
-    ).resolves.toStrictEqual(
-      expect.objectContaining({
-        status: "rejected",
-      }),
-    );
   });
 
   test("PUT /:id/confirm", async () => {
@@ -141,6 +127,22 @@ describe("/sessions/authentication", () => {
     ).resolves.toStrictEqual(
       expect.objectContaining({
         status: "confirmed",
+      }),
+    );
+  });
+
+  test("PUT /:id/reject", async () => {
+    const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(createTestStrategySession());
+
+    await request(server.callback())
+      .put(`/sessions/strategy/${strategySession.id}/reject`)
+      .expect(204);
+
+    await expect(
+      TEST_STRATEGY_SESSION_CACHE.find({ id: strategySession.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        status: "rejected",
       }),
     );
   });
