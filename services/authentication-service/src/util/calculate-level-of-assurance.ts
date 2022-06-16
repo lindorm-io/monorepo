@@ -3,18 +3,24 @@ import { AuthenticationSession } from "../entity";
 import { LevelOfAssurance } from "../common";
 import { findMethodConfiguration } from "./find-method-configuration";
 
-export const calculateLevelOfAssurance = (
-  authenticationSession: AuthenticationSession,
-): LevelOfAssurance => {
-  let value = 0;
-  let maxValue = 0;
+interface Result {
+  levelOfAssurance: LevelOfAssurance;
+  maximumLevelOfAssurance: LevelOfAssurance;
+}
+
+export const calculateLevelOfAssurance = (authenticationSession: AuthenticationSession): Result => {
+  let value: LevelOfAssurance = 0;
+  let maxValue: LevelOfAssurance = 0;
 
   for (const name of authenticationSession.confirmedMethods) {
     const config = findMethodConfiguration(name as AuthenticationMethod);
 
-    value = value + config.value;
+    value = (value + config.value) as LevelOfAssurance;
     maxValue = config.valueMax > maxValue ? config.valueMax : maxValue;
   }
 
-  return (value > maxValue ? maxValue : value) as LevelOfAssurance;
+  return {
+    levelOfAssurance: value > maxValue ? maxValue : value,
+    maximumLevelOfAssurance: maxValue,
+  };
 };

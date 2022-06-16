@@ -14,7 +14,7 @@ describe("calculateLevelOfAssurance", () => {
           ],
         }),
       ),
-    ).toBe(3);
+    ).toStrictEqual({ levelOfAssurance: 3, maximumLevelOfAssurance: 3 });
   });
 
   test("should resolve with value for EMAIL_OTP", () => {
@@ -24,7 +24,7 @@ describe("calculateLevelOfAssurance", () => {
           confirmedMethods: [AuthenticationMethod.EMAIL_OTP],
         }),
       ),
-    ).toBe(2);
+    ).toStrictEqual({ levelOfAssurance: 2, maximumLevelOfAssurance: 2 });
   });
 
   test("should resolve with value for BANK_ID_SE", () => {
@@ -34,6 +34,6 @@ describe("calculateLevelOfAssurance", () => {
           confirmedMethods: [AuthenticationMethod.BANK_ID_SE],
         }),
       ),
-    ).toBe(4);
+    ).toStrictEqual({ levelOfAssurance: 4, maximumLevelOfAssurance: 4 });
   });
 });
