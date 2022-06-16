@@ -4,7 +4,9 @@ import { JOI_PKCE_METHOD } from "../../constant";
 import { PKCEMethod } from "@lindorm-io/core";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
+import { fromUnixTime } from "date-fns";
 import { generateAxiosBearerAuthMiddleware } from "../../handler";
+import { getAdjustedAccessLevel } from "../../util";
 import { uniq } from "lodash";
 import {
   ClientPermission,
@@ -43,13 +45,18 @@ export const initialiseSessionAuthenticationController: ServerKoaController<Requ
     token: { bearerToken, idToken },
   } = ctx;
 
+  const adjustedAccessLevel = getAdjustedAccessLevel({
+    latestAuthentication: fromUnixTime(bearerToken.authTime),
+    levelOfAssurance: bearerToken.levelOfAssurance as LevelOfAssurance,
+  });
+
   const body: InitialiseAuthenticationRequestData = {
     clientId: configuration.oauth.client_id,
     codeChallenge,
-    codeMethod: codeChallengeMethod,
+    codeChallengeMethod,
     country,
     identityId: bearerToken.subject,
-    levelOfAssurance: bearerToken.levelOfAssurance as LevelOfAssurance,
+    levelOfAssurance: (bearerToken.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
     loginHint: uniq([
       ...(idToken?.claims?.email ? [idToken.claims.email] : []),
       ...(idToken?.claims?.phoneNumber ? [idToken.claims.phoneNumber] : []),
