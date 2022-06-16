@@ -1,11 +1,16 @@
 import MockDate from "mockdate";
+import { BrowserSession } from "../../entity";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestBrowserSession } from "../../fixtures/entity";
-import { getUnixTime } from "date-fns";
 import { updateBrowserSessionAuthentication } from "./update-browser-session-authentication";
+import { updateSessionWithAuthToken as _updateSessionWithAuthToken } from "../../util";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.mock("../../util");
+
+const updateSessionWithAuthToken = _updateSessionWithAuthToken as jest.Mock;
 
 describe("updateBrowserSessionAuthentication", () => {
   let ctx: any;
@@ -19,12 +24,9 @@ describe("updateBrowserSessionAuthentication", () => {
       },
     };
 
-    token = {
-      authContextClass: ["loa_3"],
-      authMethodsReference: ["device_challenge"],
-      authTime: getUnixTime(new Date("2021-01-01T08:00:00.000Z")),
-      levelOfAssurance: 3,
-    };
+    token = "auth-token";
+
+    updateSessionWithAuthToken.mockImplementation((session) => session);
   });
 
   test("should resolve", async () => {
@@ -32,13 +34,13 @@ describe("updateBrowserSessionAuthentication", () => {
       updateBrowserSessionAuthentication(ctx, "sessionId", token),
     ).resolves.toBeUndefined();
 
+    expect(updateSessionWithAuthToken).toHaveBeenCalledWith(
+      expect.any(BrowserSession),
+      "auth-token",
+    );
+
     expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        acrValues: ["loa_3"],
-        amrValues: ["email_otp", "phone_otp", "device_challenge"],
-        latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
-        levelOfAssurance: 3,
-      }),
+      expect.any(BrowserSession),
     );
   });
 });

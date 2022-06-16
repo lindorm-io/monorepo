@@ -109,6 +109,7 @@ export const getTestAuthenticationConfirmationToken = (
     claims: {
       country: "se",
       remember: true,
+      maximumLoa: 3,
       verifiedIdentifiers: ["test@lindorm.io"],
     },
     expiry: "60 seconds",

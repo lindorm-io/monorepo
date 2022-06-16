@@ -42,7 +42,7 @@ describe("/sessions", () => {
     ).resolves.toStrictEqual(
       expect.objectContaining({
         acrValues: ["loa_3"],
-        amrValues: ["email_otp", "phone_otp", "device_challenge"],
+        amrValues: ["device_challenge", "email_otp", "phone_otp"],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
       }),

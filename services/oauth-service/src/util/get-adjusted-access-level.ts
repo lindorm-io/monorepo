@@ -1,11 +1,13 @@
-import { BrowserSession, RefreshSession } from "../entity";
+import { LevelOfAssurance } from "../common";
 import { addDays, isAfter } from "date-fns";
 import { configuration } from "../server/configuration";
-import { LevelOfAssurance } from "../common";
 
-const getHighestPossibleAdjustment = (
-  session: BrowserSession | RefreshSession,
-): LevelOfAssurance => {
+interface ISession {
+  latestAuthentication: Date;
+  levelOfAssurance: LevelOfAssurance;
+}
+
+const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
@@ -45,10 +47,7 @@ const getHighestPossibleAdjustment = (
   return 4;
 };
 
-export const getAdjustedAccessLevel = (
-  session: BrowserSession | RefreshSession,
-): LevelOfAssurance => {
+export const getAdjustedAccessLevel = (session: ISession): LevelOfAssurance => {
   const highest = getHighestPossibleAdjustment(session);
-
   return highest >= session.levelOfAssurance ? session.levelOfAssurance : highest;
 };

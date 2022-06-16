@@ -1,7 +1,6 @@
-import { LevelOfAssurance, VerifiedAuthenticationConfirmationToken } from "../../common";
 import { ServerKoaContext } from "../../types";
-import { flatten, uniq } from "lodash";
-import { fromUnixTime } from "date-fns";
+import { VerifiedAuthenticationConfirmationToken } from "../../common";
+import { updateSessionWithAuthToken } from "../../util";
 
 export const updateBrowserSessionAuthentication = async (
   ctx: ServerKoaContext,
@@ -13,16 +12,9 @@ export const updateBrowserSessionAuthentication = async (
     repository: { browserSessionRepository },
   } = ctx;
 
-  const { authContextClass, authMethodsReference, authTime, levelOfAssurance } = token;
-
   logger.debug("Updating BrowserSession");
 
   const browserSession = await browserSessionRepository.find({ id: sessionId });
 
-  browserSession.acrValues = authContextClass;
-  browserSession.amrValues = uniq(flatten([browserSession.amrValues, authMethodsReference]));
-  browserSession.latestAuthentication = fromUnixTime(authTime);
-  browserSession.levelOfAssurance = levelOfAssurance as LevelOfAssurance;
-
-  await browserSessionRepository.update(browserSession);
+  await browserSessionRepository.update(updateSessionWithAuthToken(browserSession, token));
 };
