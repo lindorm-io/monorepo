@@ -27,7 +27,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
     type: TokenType.ACCESS,
     ...options,
   });
-  return `Bearer ${token}`;
+  return token;
 };
 
 export const getTestClientCredentials = (
@@ -40,12 +40,12 @@ export const getTestClientCredentials = (
     expiry: "10 seconds",
     permissions: Object.values(ClientPermission),
     scopes: Object.values(ClientScope),
-    subject: "08e99132-09d5-4f87-a489-a62d2896a7bf",
+    subject: randomUUID(),
     subjectHint: SubjectHint.CLIENT,
     type: TokenType.ACCESS,
     ...options,
   });
-  return `Bearer ${token}`;
+  return token;
 };
 
 export const getTestChallengeConfirmationToken = (

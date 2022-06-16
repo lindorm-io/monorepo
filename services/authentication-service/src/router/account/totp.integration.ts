@@ -64,7 +64,7 @@ describe("/account/password", () => {
 
     const response = await request(server.callback())
       .get("/account/totp")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     const found = await TEST_ACCOUNT_REPOSITORY.find({ id: account.id });
@@ -93,7 +93,7 @@ describe("/account/password", () => {
 
     await request(server.callback())
       .delete("/account/totp")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({
         totp: code,
       })

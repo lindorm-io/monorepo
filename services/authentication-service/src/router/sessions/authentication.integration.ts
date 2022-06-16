@@ -37,30 +37,6 @@ describe("/sessions/authentication", () => {
     .times(999)
     .reply(200, {});
 
-  test("POST /", async () => {
-    const { codeMethod, codeChallenge, nonce } = getTestData();
-
-    const response = await request(server.callback())
-      .post("/sessions/authentication")
-      .send({
-        client_id: "64d26e49-c9b2-42a7-86c3-1c0fb045e658",
-        code_challenge: codeChallenge,
-        code_method: codeMethod,
-        country: "en",
-        identity_id: "4c875493-575a-4660-94d6-432787597ea2",
-        level_of_assurance: 3,
-        login_hint: ["test@lindorm.io", "+46701234567"],
-        methods: ["email_otp", "phone_otp", "device_challenge"],
-        nonce: nonce,
-        redirect_uri: "https://request.redirect.uri/path",
-      })
-      .expect(200);
-
-    expect(response.body).toStrictEqual({
-      id: expect.any(String),
-    });
-  });
-
   test("GET /:id", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession(),

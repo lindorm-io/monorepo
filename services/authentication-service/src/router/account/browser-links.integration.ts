@@ -62,7 +62,7 @@ describe("/account/browser-link", () => {
 
     const response = await request(server.callback())
       .post("/account/browser-links")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .set(
         "User-Agent",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
@@ -101,7 +101,7 @@ describe("/account/browser-link", () => {
 
     const response = await request(server.callback())
       .get("/account/browser-links")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
@@ -138,7 +138,7 @@ describe("/account/browser-link", () => {
 
     await request(server.callback())
       .delete(`/account/browser-links/${browserLink.id}`)
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(204);
 
     await expect(TEST_BROWSER_LINK_REPOSITORY.find({ id: browserLink.id })).rejects.toThrow(

@@ -54,7 +54,7 @@ describe("/account", () => {
 
     const response = await request(server.callback())
       .get("/account")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
@@ -78,7 +78,7 @@ describe("/account", () => {
 
     const response = await request(server.callback())
       .get("/account/browser-link-code")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
@@ -99,7 +99,7 @@ describe("/account", () => {
 
     const response = await request(server.callback())
       .get("/account/recovery-code")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({

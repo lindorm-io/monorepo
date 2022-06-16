@@ -4,8 +4,6 @@ import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/
 import {
   getAuthenticationController,
   getAuthenticationSchema,
-  initialiseAuthenticationController,
-  initialiseAuthenticationSchema,
   initialiseStrategyController,
   initialiseStrategySchema,
   verifyAuthenticationController,
@@ -14,12 +12,6 @@ import {
 
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
-
-router.post(
-  "/",
-  useSchema(initialiseAuthenticationSchema),
-  useController(initialiseAuthenticationController),
-);
 
 router.get(
   "/:id",

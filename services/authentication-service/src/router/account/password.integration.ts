@@ -58,7 +58,7 @@ describe("/account/password", () => {
 
     await request(server.callback())
       .post("/account/password")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({
         new_password: "new-password",
       })
@@ -82,7 +82,7 @@ describe("/account/password", () => {
 
     await request(server.callback())
       .patch("/account/password")
-      .set("Authorization", accessToken)
+      .set("Authorization", `Bearer ${accessToken}`)
       .send({
         password: "password",
         new_password: "new-password",
