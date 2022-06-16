@@ -2,11 +2,14 @@ import { AuthenticationMethod } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { assertPKCE as _assertPKCE } from "@lindorm-io/core";
-import { canGenerateMfaCookie as _canGenerateMfaCookie } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateMfaCookie as _generateMfaCookie } from "../../handler";
 import { verifyAuthenticationController } from "./verify-authentication";
+import {
+  calculateLevelOfAssurance as _calculateLevelOfAssurance,
+  canGenerateMfaCookie as _canGenerateMfaCookie,
+} from "../../util";
 
 jest.mock("@lindorm-io/core", () => ({
   ...jest.requireActual("@lindorm-io/core"),
@@ -24,6 +27,7 @@ jest.mock("../../handler");
 jest.mock("../../util");
 
 const assertPKCE = _assertPKCE as jest.Mock;
+const calculateLevelOfAssurance = _calculateLevelOfAssurance as jest.Mock;
 const canGenerateMfaCookie = _canGenerateMfaCookie as jest.Mock;
 const generateMfaCookie = _generateMfaCookie as jest.Mock;
 
@@ -58,6 +62,10 @@ describe("verifyAuthenticationController", () => {
       },
     };
 
+    calculateLevelOfAssurance.mockImplementation(() => ({
+      levelOfAssurance: 3,
+      maximumLevelOfAssurance: 3,
+    }));
     canGenerateMfaCookie.mockImplementation(() => false);
     generateMfaCookie.mockResolvedValue(undefined);
   });

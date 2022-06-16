@@ -173,8 +173,8 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
     ]),
   );
 
-  authenticationSession.confirmedLevelOfAssurance =
-    calculateLevelOfAssurance(authenticationSession);
+  const { levelOfAssurance } = calculateLevelOfAssurance(authenticationSession);
+  authenticationSession.confirmedLevelOfAssurance = levelOfAssurance;
 
   authenticationSession.allowedMethods = await resolveAllowedMethods(
     ctx,

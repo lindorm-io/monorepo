@@ -81,11 +81,12 @@ export const getTestAuthenticationConfirmationToken = (
   }).sign({
     audiences: [configuration.oauth.client_id],
     authContextClass: ["loa_3"],
-    authMethodsReference: ["device_challenge"],
+    authMethodsReference: ["email_otp", "device_challenge"],
     authTime: getUnixTime(new Date()),
     claims: {
       country: "se",
       remember: true,
+      maximumLoa: 3,
       verifiedIdentifiers: ["test@lindorm.io"],
     },
     expiry: "60 seconds",

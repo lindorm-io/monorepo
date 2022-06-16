@@ -60,7 +60,10 @@ describe("confirmStrategyController", () => {
     };
 
     calculateAuthenticationStatus.mockImplementation(() => SessionStatus.CONFIRMED);
-    calculateLevelOfAssurance.mockImplementation(() => 3);
+    calculateLevelOfAssurance.mockImplementation(() => ({
+      levelOfAssurance: 3,
+      maximumLevelOfAssurance: 3,
+    }));
     confirmPassword.mockImplementation(async () =>
       createTestAccount({
         id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",

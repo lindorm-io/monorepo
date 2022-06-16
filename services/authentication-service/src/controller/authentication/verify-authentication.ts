@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { assertPKCE, createURL } from "@lindorm-io/core";
-import { canGenerateMfaCookie } from "../../util";
+import { calculateLevelOfAssurance, canGenerateMfaCookie } from "../../util";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
 import {
@@ -43,6 +43,8 @@ export const verifyAuthenticationController: ServerKoaController<
 
   await argon.assert(code, authenticationSession.code);
 
+  const { maximumLevelOfAssurance } = calculateLevelOfAssurance(authenticationSession);
+
   const { expiresIn, token: authenticationConfirmationToken } = jwt.sign<
     never,
     AuthenticationConfirmationTokenClaims
@@ -54,6 +56,7 @@ export const verifyAuthenticationController: ServerKoaController<
     claims: {
       country: authenticationSession.country,
       remember: authenticationSession.remember,
+      maximumLoa: maximumLevelOfAssurance,
       verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
     },
     expiry: "60 seconds",
