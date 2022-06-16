@@ -34,7 +34,7 @@ describe("handleAuthenticationInitialisation", () => {
       identityId: "71781faf-5195-4cd9-8200-5a54b9ddcdc6",
       nonce: "nonce",
       codeChallenge: "codeChallenge",
-      codeMethod: "codeMethod",
+      codeChallengeMethod: "codeChallengeMethod",
       requestedLevelOfAssurance: 4,
       requestedMethods: [AuthenticationMethod.EMAIL_LINK],
     };

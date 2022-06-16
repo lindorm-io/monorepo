@@ -77,7 +77,7 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
   const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));
 
   const codeVerifier = getRandomString(32);
-  const codeMethod = PKCEMethod.S256;
+  const codeChallengeMethod = PKCEMethod.S256;
   const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64");
 
   const authenticationSessionId = randomUUID();
@@ -87,7 +87,7 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
     id: authenticationSessionId,
     clientId: configuration.oauth.client_id,
     codeChallenge,
-    codeMethod,
+    codeChallengeMethod,
     country,
     emailHint,
     expires: new Date(expiresAt),

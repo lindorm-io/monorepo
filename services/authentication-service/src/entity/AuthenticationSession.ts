@@ -22,7 +22,7 @@ export interface AuthenticationSessionAttributes extends EntityAttributes {
   clientId: string;
   code: string | null;
   codeChallenge: string;
-  codeMethod: PKCEMethod;
+  codeChallengeMethod: PKCEMethod;
   confirmedIdentifiers: Array<string>;
   confirmedLevelOfAssurance: LevelOfAssurance;
   confirmedMethods: Array<AuthenticationMethod>;
@@ -69,7 +69,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     clientId: JOI_GUID.required(),
     code: Joi.string().allow(null).required(),
     codeChallenge: Joi.string().required(),
-    codeMethod: JOI_PKCE_METHOD.required(),
+    codeChallengeMethod: JOI_PKCE_METHOD.required(),
     confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
     confirmedLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     confirmedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
@@ -94,7 +94,7 @@ export class AuthenticationSession
 {
   public readonly clientId: string;
   public readonly codeChallenge: string;
-  public readonly codeMethod: PKCEMethod;
+  public readonly codeChallengeMethod: PKCEMethod;
   public readonly country: string | null;
   public readonly emailHint: string | null;
   public readonly expires: Date;
@@ -121,7 +121,7 @@ export class AuthenticationSession
     this.clientId = options.clientId;
     this.code = options.code || null;
     this.codeChallenge = options.codeChallenge;
-    this.codeMethod = options.codeMethod;
+    this.codeChallengeMethod = options.codeChallengeMethod;
     this.confirmedIdentifiers = options.confirmedIdentifiers || [];
     this.confirmedLevelOfAssurance = options.confirmedLevelOfAssurance || 0;
     this.confirmedMethods = options.confirmedMethods || [];
@@ -155,7 +155,7 @@ export class AuthenticationSession
       clientId: this.clientId,
       code: this.code,
       codeChallenge: this.codeChallenge,
-      codeMethod: this.codeMethod,
+      codeChallengeMethod: this.codeChallengeMethod,
       confirmedIdentifiers: this.confirmedIdentifiers,
       confirmedLevelOfAssurance: this.confirmedLevelOfAssurance,
       confirmedMethods: this.confirmedMethods,

@@ -20,7 +20,7 @@ describe("initialiseAuthenticationController", () => {
         methods: [AuthenticationMethod.EMAIL_LINK],
         nonce: "nonce",
         codeChallenge: "codeChallenge",
-        codeMethod: "codeMethod",
+        codeChallengeMethod: "codeChallengeMethod",
       },
     };
 

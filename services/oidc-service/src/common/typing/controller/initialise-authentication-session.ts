@@ -4,7 +4,7 @@ import { PKCEMethod } from "@lindorm-io/core";
 export interface InitialiseAuthenticationRequestData {
   clientId: string;
   codeChallenge: string;
-  codeMethod: PKCEMethod;
+  codeChallengeMethod: PKCEMethod;
   country?: string;
   identityId?: string;
   levelOfAssurance?: LevelOfAssurance;

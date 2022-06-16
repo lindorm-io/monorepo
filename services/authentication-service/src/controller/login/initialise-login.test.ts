@@ -92,7 +92,7 @@ describe("initialiseLoginController", () => {
       id: expect.any(String),
       clientId: "6ea68f3d-e31e-4882-85a5-0a617f431fdd",
       codeChallenge: expect.any(String),
-      codeMethod: "S256",
+      codeChallengeMethod: "S256",
       country: "se",
       emailHint: "test@lindorm.io",
       expires: new Date("2022-01-01T08:15:00.000Z"),

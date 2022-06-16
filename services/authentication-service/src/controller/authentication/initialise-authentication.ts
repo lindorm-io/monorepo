@@ -23,7 +23,7 @@ export const initialiseAuthenticationSchema = Joi.object<InitialiseAuthenticatio
   .keys({
     clientId: JOI_GUID.required(),
     codeChallenge: Joi.string().required(),
-    codeMethod: JOI_PKCE_METHOD.required(),
+    codeChallengeMethod: JOI_PKCE_METHOD.required(),
     country: Joi.string().lowercase().length(2).optional(),
     identityId: JOI_GUID.optional(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
@@ -41,7 +41,7 @@ export const initialiseAuthenticationController: ServerKoaController<
     data: {
       clientId,
       codeChallenge,
-      codeMethod,
+      codeChallengeMethod,
       country,
       identityId,
       levelOfAssurance,
@@ -60,7 +60,7 @@ export const initialiseAuthenticationController: ServerKoaController<
   const authenticationSession = await handleAuthenticationInitialisation(ctx, {
     clientId,
     codeChallenge,
-    codeMethod,
+    codeChallengeMethod,
     country,
     emailHint,
     expires,

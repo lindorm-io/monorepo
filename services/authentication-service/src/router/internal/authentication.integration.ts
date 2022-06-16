@@ -23,7 +23,7 @@ describe("/internal/authentication", () => {
     });
 
   test("POST /", async () => {
-    const { codeMethod, codeChallenge, nonce } = getTestData();
+    const { codeChallengeMethod, codeChallenge, nonce } = getTestData();
 
     const clientCredentials = getTestClientCredentials();
 
@@ -33,7 +33,7 @@ describe("/internal/authentication", () => {
       .send({
         client_id: "64d26e49-c9b2-42a7-86c3-1c0fb045e658",
         code_challenge: codeChallenge,
-        code_method: codeMethod,
+        code_method: codeChallengeMethod,
         country: "en",
         identity_id: "4c875493-575a-4660-94d6-432787597ea2",
         level_of_assurance: 3,

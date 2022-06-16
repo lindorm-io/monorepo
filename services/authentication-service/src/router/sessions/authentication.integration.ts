@@ -104,13 +104,13 @@ describe("/sessions/authentication", () => {
 
   test("POST /:id/verify - with mfa and body", async () => {
     const code = getRandomString(64);
-    const { codeChallenge, codeMethod, codeVerifier } = getTestData();
+    const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
         code: await argon.encrypt(code),
         codeChallenge,
-        codeMethod,
+        codeChallengeMethod,
         confirmedLevelOfAssurance: 3,
         confirmedMethods: [AuthenticationMethod.EMAIL_OTP, AuthenticationMethod.PHONE_OTP],
         redirectUri: null,
@@ -142,13 +142,13 @@ describe("/sessions/authentication", () => {
 
   test("POST /:id/verify - with redirect", async () => {
     const code = getRandomString(64);
-    const { codeChallenge, codeMethod, codeVerifier } = getTestData();
+    const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
         code: await argon.encrypt(code),
         codeChallenge,
-        codeMethod,
+        codeChallengeMethod,
         confirmedLevelOfAssurance: 3,
         confirmedMethods: [AuthenticationMethod.EMAIL_OTP, AuthenticationMethod.PHONE_OTP],
         redirectUri: "https://redirect.uri/path",

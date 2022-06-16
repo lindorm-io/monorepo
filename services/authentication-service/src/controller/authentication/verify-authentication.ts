@@ -39,7 +39,11 @@ export const verifyAuthenticationController: ServerKoaController<
     throw new ClientError("Invalid session status");
   }
 
-  assertPKCE(authenticationSession.codeChallenge, authenticationSession.codeMethod, codeVerifier);
+  assertPKCE(
+    authenticationSession.codeChallenge,
+    authenticationSession.codeChallengeMethod,
+    codeVerifier,
+  );
 
   await argon.assert(code, authenticationSession.code);
 
