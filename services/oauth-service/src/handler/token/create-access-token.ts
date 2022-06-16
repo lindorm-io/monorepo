@@ -5,6 +5,7 @@ import { SessionHint } from "../../enum";
 import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
+import { getRandomString } from "@lindorm-io/core";
 import { getUnixTime } from "date-fns";
 
 interface Options {
@@ -26,6 +27,7 @@ export const createAccessToken = (
     authTime: getUnixTime(session.latestAuthentication),
     expiry: client.expiry.accessToken || configuration.defaults.expiry.access_token,
     levelOfAssurance: session.levelOfAssurance,
+    nonce: session.nonce || getRandomString(16),
     permissions: options.permissions,
     scopes: options.scopes,
     sessionId: session.id,

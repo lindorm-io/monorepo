@@ -6,7 +6,7 @@ import { configuration } from "../../server/configuration";
 export const generateAxiosBearerAuthMiddleware = (
   ctx: ServerKoaContext,
   permissions: Array<string>,
-  scopes: Array<string>,
+  scopes?: Array<string>,
 ): AxiosMiddleware => {
   const { jwt } = ctx;
 
@@ -14,7 +14,7 @@ export const generateAxiosBearerAuthMiddleware = (
     audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.expiry.client_credentials,
     permissions,
-    scopes,
+    scopes: scopes || [],
     subject: configuration.oauth.client_id,
     subjectHint: SubjectHint.CLIENT,
     type: TokenType.ACCESS,
