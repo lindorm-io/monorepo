@@ -4,6 +4,7 @@ import { IdentityServiceClaims } from "./claims";
 
 export interface AuthenticationConfirmationTokenClaims {
   country: string;
+  maximumLoa: number;
   remember: boolean;
   verifiedIdentifiers: Array<string>;
 }
