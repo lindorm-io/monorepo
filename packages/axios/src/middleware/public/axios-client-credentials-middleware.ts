@@ -3,6 +3,7 @@ import { AxiosMiddleware, AxiosRequest, OAuthTokenResponseData } from "../../typ
 import { difference, flatten, uniq } from "lodash";
 import { getUnixTime } from "date-fns";
 import { MetadataHeader } from "../../enum";
+import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 
 export interface AxiosClientCredentialsMiddlewareConfig {
   clientEnvironment: string;
@@ -12,6 +13,7 @@ export interface AxiosClientCredentialsMiddlewareConfig {
   grantType?: string;
   path?: string;
   timeoutAdjustment?: number;
+  useBasicAuth?: boolean;
 }
 
 export const axiosClientCredentialsMiddleware = (
@@ -25,6 +27,7 @@ export const axiosClientCredentialsMiddleware = (
     grantType = "client_credentials",
     path = "/oauth2/token",
     timeoutAdjustment = 5,
+    useBasicAuth = true,
   } = config;
 
   let bearerScopes: Array<string> = [];
@@ -45,8 +48,7 @@ export const axiosClientCredentialsMiddleware = (
           data: { accessToken, expiresIn, scope },
         } = await oauthClient.post<OAuthTokenResponseData>(path, {
           body: {
-            clientId,
-            clientSecret,
+            ...(!useBasicAuth ? { clientId, clientSecret } : {}),
             grantType,
             scope: uniq(flatten([bearerScopes, scopes])).join(" "),
           },
@@ -55,6 +57,11 @@ export const axiosClientCredentialsMiddleware = (
             [MetadataHeader.CLIENT_ENVIRONMENT]: clientEnvironment,
             [MetadataHeader.CLIENT_VERSION]: clientVersion,
           },
+          middleware: [
+            ...(useBasicAuth
+              ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
+              : []),
+          ],
         });
 
         bearerScopes = uniq(flatten([bearerScopes, scope]));

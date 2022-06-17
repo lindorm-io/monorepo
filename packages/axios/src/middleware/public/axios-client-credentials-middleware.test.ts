@@ -40,6 +40,7 @@ describe("axiosClientCredentialsMiddleware", () => {
       clientSecret: "clientSecret",
       clientVersion: "clientVersion",
       timeoutAdjustment: 1,
+      useBasicAuth: false,
     });
   });
 
@@ -68,22 +69,26 @@ describe("axiosClientCredentialsMiddleware", () => {
       },
     });
 
-    expect(request).toHaveBeenCalledWith({
-      data: {
-        client_id: "clientId",
-        client_secret: "clientSecret",
-        grant_type: "client_credentials",
-        scope: "scope1 scope2",
-      },
-      headers: {
-        "x-client-environment": "clientEnvironment",
-        "x-client-id": "clientId",
-        "x-client-version": "clientVersion",
-      },
-      method: "post",
-      timeout: 3000,
-      url: "https://oauth.lindorm.io:4000/oauth2/token",
+    expect(request.mock.calls).toMatchSnapshot();
+  });
+
+  test("should use basic auth", async () => {
+    middleware = axiosClientCredentialsMiddleware({
+      clientEnvironment: "clientEnvironment",
+      clientId: "clientId",
+      clientSecret: "clientSecret",
+      clientVersion: "clientVersion",
+      timeoutAdjustment: 1,
+      useBasicAuth: true,
     });
+
+    await middleware(axios, ["scope1", "scope2"]).request({
+      data: { data: true },
+      headers: { headers: true },
+      params: { params: true },
+    });
+
+    expect(request.mock.calls).toMatchSnapshot();
   });
 
   test("should use existing bearer token by default", async () => {
