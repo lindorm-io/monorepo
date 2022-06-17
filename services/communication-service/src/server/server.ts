@@ -1,5 +1,6 @@
 import { Environment } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../types";
+import { SubjectHint } from "../common";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
@@ -39,8 +40,9 @@ export const server = createNodeServer<ServerKoaContext>({
   socket: true,
   socketMiddleware: [
     socketBearerAuthMiddleware({
-      issuer:
-        configuration.services.oauth_service.issuer || configuration.services.oauth_service.host,
+      audiences: [configuration.oauth.client_id],
+      issuer: configuration.services.oauth_service.issuer,
+      subjectHint: SubjectHint.IDENTITY,
     }),
   ],
   socketListeners,

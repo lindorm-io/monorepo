@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { ClientType } from "../../../common";
-import { server } from "../../../server/server";
+import { configuration } from "../../../server/configuration";
 import { randomUUID } from "crypto";
+import { server } from "../../../server/server";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -36,7 +37,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -46,7 +47,7 @@ describe("/internal/sessions/consent", () => {
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId,
@@ -92,7 +93,7 @@ describe("/internal/sessions/consent", () => {
       },
       consent_status: "pending",
       requested: {
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
       },
     });
@@ -108,7 +109,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -141,7 +142,7 @@ describe("/internal/sessions/consent", () => {
       .put(`/internal/sessions/consent/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         scopes: authorizationSession.scopes,
       })
       .expect(200);
@@ -162,7 +163,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -193,7 +194,7 @@ describe("/internal/sessions/consent", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -205,7 +206,7 @@ describe("/internal/sessions/consent", () => {
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId,
         scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],

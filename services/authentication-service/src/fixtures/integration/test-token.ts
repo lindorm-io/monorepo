@@ -1,52 +1,9 @@
+import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getRandomString } from "@lindorm-io/core";
-import { randomUUID } from "crypto";
-import {
-  ClientPermission,
-  ClientScope,
-  IdentityPermission,
-  Scope,
-  SubjectHint,
-  TokenType,
-} from "../../common";
 import { getUnixTime } from "date-fns";
-
-export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
-  const { token } = createTestJwt({
-    issuer: configuration.services.oauth_service.issuer,
-  }).sign({
-    adjustedAccessLevel: 4,
-    audiences: [randomUUID()],
-    authMethodsReference: ["email"],
-    expiry: "10 seconds",
-    permissions: [IdentityPermission.USER],
-    scopes: Object.values(Scope),
-    subject: randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ACCESS,
-    ...options,
-  });
-  return token;
-};
-
-export const getTestClientCredentials = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
-  const { token } = createTestJwt({
-    issuer: configuration.services.oauth_service.issuer,
-  }).sign({
-    audiences: [randomUUID()],
-    expiry: "10 seconds",
-    permissions: Object.values(ClientPermission),
-    scopes: Object.values(ClientScope),
-    subject: randomUUID(),
-    subjectHint: SubjectHint.CLIENT,
-    type: TokenType.ACCESS,
-    ...options,
-  });
-  return token;
-};
+import { randomUUID } from "crypto";
 
 export const getTestChallengeConfirmationToken = (
   options: Partial<JwtSignOptions<any, any>> = {},

@@ -57,7 +57,7 @@ describe("initialiseSessionAuthenticationController", () => {
     });
 
     expect(ctx.axios.authenticationClient.post).toHaveBeenCalledWith("/internal/authentication", {
-      data: {
+      body: {
         clientId: "6ea68f3d-e31e-4882-85a5-0a617f431fdd",
         codeChallenge: "codeChallenge",
         codeChallengeMethod: "codeChallengeMethod",

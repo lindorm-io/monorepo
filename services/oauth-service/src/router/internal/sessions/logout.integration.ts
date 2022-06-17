@@ -2,8 +2,9 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ClientType } from "../../../common";
-import { server } from "../../../server/server";
+import { configuration } from "../../../server/configuration";
 import { randomUUID } from "crypto";
+import { server } from "../../../server/server";
 import {
   createTestClient,
   createTestConsentSession,
@@ -37,13 +38,13 @@ describe("/internal/sessions/logout", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: randomUUID(),
         scopes: ["openid"],
@@ -93,13 +94,13 @@ describe("/internal/sessions/logout", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: randomUUID(),
         scopes: ["openid"],
@@ -141,13 +142,13 @@ describe("/internal/sessions/logout", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: randomUUID(),
         scopes: ["openid"],

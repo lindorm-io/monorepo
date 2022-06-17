@@ -1,10 +1,11 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { baseHash, createURL } from "@lindorm-io/core";
+import { configuration } from "../../server/configuration";
 import { createTestClient } from "../../fixtures/entity";
 import { getTestData } from "../../fixtures/data";
-import { server } from "../../server/server";
 import { randomUUID } from "crypto";
+import { server } from "../../server/server";
 import {
   DisplayMode,
   PromptMode,
@@ -35,7 +36,7 @@ describe("/oauth2/authorize", () => {
 
     const identityId = randomUUID();
     const idToken = getTestIdToken({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       claims: {
         email: "email@lindorm.io",
         phoneNumber: "+46705498721",
@@ -92,7 +93,7 @@ describe("/oauth2/authorize", () => {
 
     expect(session).toStrictEqual(
       expect.objectContaining({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         authToken: "auth.jwt.jwt",
         authenticationMethods: ["session_otp", "email_otp", "phone_otp"],
         authenticationStatus: SessionStatus.PENDING,

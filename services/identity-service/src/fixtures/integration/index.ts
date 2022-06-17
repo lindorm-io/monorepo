@@ -1,2 +1,2 @@
 export * from "./setup-integration";
-export * from "./test-token";
+export * from "./test-auth";

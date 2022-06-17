@@ -4,53 +4,10 @@ import { getRandomString } from "@lindorm-io/core";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,
-  ClientPermission,
-  ClientScope,
   DeviceFactor,
-  IdentityPermission,
   SubjectHint,
   TokenType,
 } from "../../common";
-
-export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
-  const { token } = createTestJwt({
-    issuer: configuration.services.oauth_service.issuer,
-  }).sign({
-    id: "a7534836-65f2-4e04-9f16-b5afebdcdd71",
-    audiences: ["0438487d-0cf0-4399-b3d3-c2876db14ca6"],
-    authMethodsReference: ["email"],
-    expiry: "10 seconds",
-    permissions: [IdentityPermission.USER],
-    scopes: ["test"],
-    subject: "subject",
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ACCESS,
-    ...options,
-  });
-  return token;
-};
-
-export const getTestClientCredentials = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
-  const { token } = createTestJwt({
-    issuer: configuration.services.oauth_service.issuer,
-  }).sign({
-    audiences: ["08e99132-09d5-4f87-a489-a62d2896a7bf"],
-    expiry: "10 seconds",
-    permissions: [ClientPermission.DEVICE_CONFIDENTIAL, ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [
-      ClientScope.DEVICE_IDENTITY_READ,
-      ClientScope.DEVICE_RDC_READ,
-      ClientScope.DEVICE_RDC_WRITE,
-    ],
-    subject: "08e99132-09d5-4f87-a489-a62d2896a7bf",
-    subjectHint: SubjectHint.CLIENT,
-    type: TokenType.ACCESS,
-    ...options,
-  });
-  return token;
-};
 
 export const getTestChallengeConfirmationToken = (
   options: Partial<JwtSignOptions<Record<string, unknown>, ChallengeConfirmationTokenClaims>> = {},

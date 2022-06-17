@@ -2,10 +2,11 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { LogoutSessionType } from "../../../enum";
 import { SessionStatus } from "../../../common";
+import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { getTestData } from "../../../fixtures/data";
-import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
+import { server } from "../../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -40,7 +41,7 @@ describe("/oauth2/sessions/logout", () => {
     );
 
     const idToken = getTestIdToken({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: browserSession.id,
       subject: identityId,
     });
@@ -93,7 +94,7 @@ describe("/oauth2/sessions/logout", () => {
     );
 
     const idToken = getTestIdToken({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: refreshSession.id,
       subject: identityId,
     });

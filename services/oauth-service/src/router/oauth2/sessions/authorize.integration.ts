@@ -3,6 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { ResponseMode, Scope, SessionStatus } from "../../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
+import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { server } from "../../../server/server";
 import {
@@ -48,7 +49,7 @@ describe("/oauth2/sessions/verify", () => {
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
@@ -111,7 +112,7 @@ describe("/oauth2/sessions/verify", () => {
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],

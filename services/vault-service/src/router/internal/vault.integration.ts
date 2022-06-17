@@ -23,7 +23,8 @@ describe("/internal/vault", () => {
   beforeAll(setupIntegration);
 
   test("POST /internal/vault", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
     await request(server.callback())
       .post("/internal/vault")
@@ -37,9 +38,10 @@ describe("/internal/vault", () => {
   });
 
   test("GET /internal/vault/:id", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
-    const secret = getKey("client", "08e99132-09d5-4f87-a489-a62d2896a7bf");
+    const secret = getKey("client", subject);
     const crypto = new CryptoAES({ secret });
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({
@@ -60,9 +62,10 @@ describe("/internal/vault", () => {
   });
 
   test("DELETE /internal/vault/:id", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
-    const secret = getKey("client", "08e99132-09d5-4f87-a489-a62d2896a7bf");
+    const secret = getKey("client", subject);
     const crypto = new CryptoAES({ secret });
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({

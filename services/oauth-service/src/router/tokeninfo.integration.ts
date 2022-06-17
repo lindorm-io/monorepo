@@ -1,7 +1,9 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { server } from "../server/server";
+import { Scope } from "../common";
+import { configuration } from "../server/configuration";
 import { randomUUID } from "crypto";
+import { server } from "../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -16,7 +18,6 @@ import {
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
 } from "../fixtures/integration";
-import { Scope } from "../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,8 +29,9 @@ describe("/tokeninfo", () => {
 
   test("POST / - ACCESS", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
+
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -42,7 +44,7 @@ describe("/tokeninfo", () => {
     const tokenId = randomUUID();
     const token = getTestAccessToken({
       id: tokenId,
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: browserSession.id,
       subject: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
     });
@@ -57,16 +59,15 @@ describe("/tokeninfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      acr: ["loa_2", "email_otp", "phone_otp"],
+      aal: 4,
       active: true,
-      amr: ["email_otp", "phone_otp"],
-      aud: [client.id],
+      aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
       iss: "https://oauth.test.lindorm.io",
       jti: tokenId,
-      loa: 2,
+      loa: 4,
       nbf: 1609488000,
       scope: Object.values(Scope),
       sid: browserSession.id,
@@ -78,7 +79,7 @@ describe("/tokeninfo", () => {
   test("POST / - REFRESH", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
@@ -93,7 +94,7 @@ describe("/tokeninfo", () => {
 
     const token = getTestRefreshToken({
       id: tokenId,
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: refreshSession.id,
     });
 
@@ -108,7 +109,7 @@ describe("/tokeninfo", () => {
 
     expect(response.body).toStrictEqual({
       active: true,
-      aud: [client.id],
+      aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,

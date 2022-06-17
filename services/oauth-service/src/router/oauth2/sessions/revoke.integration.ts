@@ -1,9 +1,10 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { InvalidToken } from "../../../entity";
+import { configuration } from "../../../server/configuration";
 import { createTestClient, createTestRefreshSession } from "../../../fixtures/entity";
-import { server } from "../../../server/server";
 import { randomUUID } from "crypto";
+import { server } from "../../../server/server";
 import {
   TEST_CLIENT_CACHE,
   TEST_ARGON,
@@ -32,7 +33,7 @@ describe("/oauth2/sessions/revoke", () => {
     const tokenId = randomUUID();
     const token = getTestAccessToken({
       id: tokenId,
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
     });
 
     await request(server.callback())
@@ -68,7 +69,7 @@ describe("/oauth2/sessions/revoke", () => {
 
     const token = getTestRefreshToken({
       id: tokenId,
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: refreshSession.id,
     });
 

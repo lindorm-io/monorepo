@@ -20,7 +20,8 @@ describe("/vault", () => {
   beforeAll(setupIntegration);
 
   test("POST /vault", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
     const response = await request(server.callback())
       .post("/vault")
@@ -38,7 +39,8 @@ describe("/vault", () => {
   });
 
   test("POST /vault/:id/unlock", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
     const key = "secret";
     const crypto = new CryptoAES({ secret: key });
@@ -46,7 +48,7 @@ describe("/vault", () => {
       new ProtectedRecord({
         protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
         expires: new Date("2024-02-03T09:10:15.000Z"),
-        owner: "08e99132-09d5-4f87-a489-a62d2896a7bf",
+        owner: subject,
         ownerType: "client",
       }),
     );
@@ -64,13 +66,14 @@ describe("/vault", () => {
   });
 
   test("DELETE /vault/:id", async () => {
-    const clientCredentials = getTestClientCredentials();
+    const subject = randomUUID();
+    const clientCredentials = getTestClientCredentials({ subject });
 
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
         protectedData: "encrypted-data",
         expires: null,
-        owner: "08e99132-09d5-4f87-a489-a62d2896a7bf",
+        owner: subject,
         ownerType: "client",
       }),
     );

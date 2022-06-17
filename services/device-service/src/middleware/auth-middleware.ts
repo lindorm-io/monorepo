@@ -1,12 +1,15 @@
+import { SubjectHint } from "../common";
 import { bearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { configuration } from "../server/configuration";
 
 export const clientAuthMiddleware = bearerAuthMiddleware({
-  issuer: configuration.services.oauth_service.issuer || configuration.services.oauth_service.host,
-  subjectHint: "client",
+  audiences: [configuration.oauth.client_id],
+  issuer: configuration.services.oauth_service.issuer,
+  subjectHint: SubjectHint.CLIENT,
 });
 
 export const identityAuthMiddleware = bearerAuthMiddleware({
-  issuer: configuration.services.oauth_service.issuer || configuration.services.oauth_service.host,
-  subjectHint: "identity",
+  audiences: [configuration.oauth.client_id],
+  issuer: configuration.services.oauth_service.issuer,
+  subjectHint: SubjectHint.IDENTITY,
 });

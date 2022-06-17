@@ -3,8 +3,9 @@ import nock from "nock";
 import request from "supertest";
 import { GrantType } from "../../common";
 import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../fixtures/data";
-import { server } from "../../server/server";
+import { configuration } from "../../server/configuration";
 import { randomUUID } from "crypto";
+import { server } from "../../server/server";
 import {
   createTestAuthorizationSession,
   createTestClient,
@@ -54,7 +55,7 @@ describe("/oauth2/token", () => {
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: client.allowed.scopes,
@@ -64,7 +65,7 @@ describe("/oauth2/token", () => {
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         code,
         codeChallenge,
@@ -143,7 +144,7 @@ describe("/oauth2/token", () => {
 
     await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
-        audiences: [client.id],
+        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
         identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
         scopes: client.allowed.scopes,
@@ -153,7 +154,7 @@ describe("/oauth2/token", () => {
 
     const refreshToken = getTestRefreshToken({
       id: refreshSession.tokenId,
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       sessionId: refreshSession.id,
       subject: "d821cde6-250f-4918-ad55-877a7abf0271",
     });

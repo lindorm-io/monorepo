@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { ClientType } from "../../common";
-import { server } from "../../server/server";
+import { configuration } from "../../server/configuration";
 import { randomUUID } from "crypto";
+import { server } from "../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -34,7 +35,7 @@ describe("/internal/identities", () => {
     );
 
     const clientCredentials = getTestClientCredentials({
-      audiences: [client.id],
+      audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 

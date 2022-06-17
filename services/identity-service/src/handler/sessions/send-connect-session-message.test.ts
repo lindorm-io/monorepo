@@ -37,7 +37,7 @@ describe("sendConnectSessionMessage", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.axios.communicationClient.post).toHaveBeenCalledWith("/internal/send/code", {
-      data: {
+      body: {
         content: {
           expires: new Date("2029-01-01T08:00:00.000Z"),
           url: "https://frontend.url/connect/callback?code=code&session_id=4ccac677-8a15-40a2-a19e-f094e1710eb0",
