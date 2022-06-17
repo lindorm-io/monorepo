@@ -94,6 +94,7 @@ describe("authenticateIdentifier", () => {
 
   test("should resolve created identity with primary identifier", async () => {
     ctx.repository.identifierRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
+    ctx.repository.identifierRepository.count.mockResolvedValue(0);
 
     await expect(
       authenticateIdentifier(ctx, {

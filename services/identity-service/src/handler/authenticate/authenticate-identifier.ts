@@ -61,11 +61,17 @@ export const authenticateIdentifier = async (
   const id = identityId || randomUUID();
   const identity = await identityRepository.findOrCreate({ id });
 
+  let primary = false;
+  if (isPrimaryUsedByIdentifier) {
+    const amount = await identifierRepository.count({ identityId: identity.id, provider, type });
+    primary = amount < 1;
+  }
+
   await identifierRepository.create(
     new Identifier({
       identifier,
       identityId: identity.id,
-      primary: isPrimaryUsedByIdentifier(type),
+      primary,
       provider,
       type,
       verified: true,
