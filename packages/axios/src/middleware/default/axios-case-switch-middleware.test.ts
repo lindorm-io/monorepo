@@ -7,10 +7,10 @@ describe("axiosCaseSwitchMiddleware", () => {
     middleware = axiosCaseSwitchMiddleware;
   });
 
-  test("should convert all data keys to snake_case", async () => {
+  test("should convert all request keys to snake_case", async () => {
     await expect(
       middleware.request({
-        data: {
+        body: {
           camelCase1: 1,
           camelCase2: 2,
           camelCase3: { camelCase4: 4 },
@@ -19,7 +19,7 @@ describe("axiosCaseSwitchMiddleware", () => {
         params: { params: true },
       }),
     ).resolves.toStrictEqual({
-      data: {
+      body: {
         camel_case_1: 1,
         camel_case_2: 2,
         camel_case_3: {
@@ -35,7 +35,7 @@ describe("axiosCaseSwitchMiddleware", () => {
     });
   });
 
-  test("should convert all data keys to camelCase", async () => {
+  test("should convert all response keys to camelCase", async () => {
     await expect(
       middleware.response({
         data: {

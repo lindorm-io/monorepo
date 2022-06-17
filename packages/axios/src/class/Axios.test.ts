@@ -152,7 +152,7 @@ describe("Axios", () => {
   test("should use data as specified", async () => {
     await expect(
       handler.post("/post/path", {
-        data: {
+        body: {
           data1: "value",
         },
       }),
@@ -239,7 +239,7 @@ describe("Axios", () => {
   test("should throw when data is added to a GET request", async () => {
     await expect(
       handler.get("/path", {
-        data: { any: true },
+        body: { any: true },
       }),
     ).rejects.toThrow(Error);
   });

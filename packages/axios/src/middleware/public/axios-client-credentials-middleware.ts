@@ -44,7 +44,7 @@ export const axiosClientCredentialsMiddleware = (
         const {
           data: { accessToken, expiresIn, scope },
         } = await oauthClient.post<OAuthTokenResponseData>(path, {
-          data: {
+          body: {
             clientId,
             clientSecret,
             grantType,

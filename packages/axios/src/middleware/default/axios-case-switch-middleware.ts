@@ -4,7 +4,7 @@ import { camelKeys, snakeKeys, isObjectStrict } from "@lindorm-io/core";
 export const axiosCaseSwitchMiddleware: AxiosMiddleware = {
   request: async (request): Promise<AxiosRequest> => ({
     ...request,
-    data: isObjectStrict(request.data) ? snakeKeys<any, any>(request.data) : undefined,
+    body: isObjectStrict(request.body) ? snakeKeys<any, any>(request.body) : undefined,
   }),
   response: async (response): Promise<AxiosResponse<any>> => ({
     ...response,

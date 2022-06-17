@@ -21,7 +21,7 @@ export interface AxiosConfig {
 }
 
 export interface AxiosRequest {
-  data?: Record<string, any>;
+  body?: Record<string, any>;
   headers?: Record<string, any>;
   params?: Record<string, any>;
   query?: Record<string, any>;

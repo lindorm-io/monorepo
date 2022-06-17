@@ -23,7 +23,7 @@ export const convertError = (error: AxiosError<any>): AxiosRequestError => {
       notes: lindormKoaError.details || error?.response?.statusText,
     },
     request: {
-      data: error?.config?.data,
+      body: error?.config?.data,
       headers: error?.config?.headers,
       params: error?.config?.params,
     },

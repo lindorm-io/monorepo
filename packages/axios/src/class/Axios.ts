@@ -34,7 +34,7 @@ export class Axios {
     path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
-    if (options.data) {
+    if (options.body) {
       throw new Error("Unable to used data for a GET request");
     }
 
@@ -187,9 +187,9 @@ export class Axios {
 
     const { auth, method, path } = await this.configMiddleware(config, options);
 
-    const { data, headers, params, query } = await this.requestMiddleware(
+    const { body, headers, params, query } = await this.requestMiddleware(
       {
-        data: options.data,
+        body: options.body,
         headers: options.headers || {},
         params: options.params,
         query: options.query,
@@ -209,7 +209,7 @@ export class Axios {
         timeout,
         url,
         ...(auth ? { auth } : {}),
-        ...(data ? { data } : {}),
+        ...(body ? { data: body } : {}),
       });
 
       logAxiosResponse({
