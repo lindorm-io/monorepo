@@ -1,11 +1,13 @@
+import { LevelOfAssurance } from "./loa";
+
 export interface JwtVerifyOptions {
-  adjustedAccessLevel: number;
+  adjustedAccessLevel: LevelOfAssurance;
   audience: string;
   audiences: Array<string>;
   authorizedParty: string;
   clockTolerance: number;
   issuer: string;
-  levelOfAssurance: number;
+  levelOfAssurance: LevelOfAssurance;
   maxAge: string;
   nonce: string;
   permissions: Array<string>;
@@ -19,7 +21,7 @@ export interface JwtVerifyOptions {
 export interface JwtVerifyData<Payload = never, Claims = never> {
   id: string;
   active: boolean;
-  adjustedAccessLevel: number | null;
+  adjustedAccessLevel: LevelOfAssurance;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;
@@ -30,7 +32,7 @@ export interface JwtVerifyData<Payload = never, Claims = never> {
   expiresIn: number;
   issuedAt: number;
   issuer: string;
-  levelOfAssurance: number | null;
+  levelOfAssurance: LevelOfAssurance;
   nonce: string | null;
   notBefore: number;
   now: number;

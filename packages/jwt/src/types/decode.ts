@@ -1,13 +1,15 @@
+import { LevelOfAssurance } from "./loa";
+
 export interface JwtDecodedClaims<Payload, Claims> {
   id: string;
-  adjustedAccessLevel: number | null;
+  adjustedAccessLevel: LevelOfAssurance;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;
   authTime: number | null;
   authorizedParty: string | null;
   claims: Claims;
-  levelOfAssurance: number | null;
+  levelOfAssurance: LevelOfAssurance;
   nonce: string | null;
   payload: Payload;
   permissions: Array<string>;

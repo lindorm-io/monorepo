@@ -24,6 +24,7 @@ import {
   JwtSignOptions,
   JwtVerifyData,
   JwtVerifyOptions,
+  LevelOfAssurance,
   LindormClaims,
 } from "../types";
 
@@ -238,7 +239,7 @@ export class JWT {
     return {
       id: jti,
       active: iat <= now && nbf <= now && exp >= now,
-      adjustedAccessLevel: aal || null,
+      adjustedAccessLevel: (aal as LevelOfAssurance) || 0,
       audiences: aud,
       authContextClass: acr || [],
       authMethodsReference: amr || [],
@@ -250,7 +251,7 @@ export class JWT {
       issuedAt: iat,
       issuer: iss,
       keyId,
-      levelOfAssurance: loa || null,
+      levelOfAssurance: (loa as LevelOfAssurance) || 0,
       nonce: nonce || null,
       notBefore: nbf,
       now,

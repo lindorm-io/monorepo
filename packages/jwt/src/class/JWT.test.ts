@@ -380,7 +380,7 @@ describe("JWT", () => {
     expect(jwt.verify(token)).toStrictEqual({
       id: id,
       active: true,
-      adjustedAccessLevel: null,
+      adjustedAccessLevel: 0,
       audiences: ["audience"],
       authContextClass: [],
       authMethodsReference: [],
@@ -391,7 +391,7 @@ describe("JWT", () => {
       expiresIn: 10,
       issuedAt: 1609488000,
       issuer: "issuer",
-      levelOfAssurance: null,
+      levelOfAssurance: 0,
       nonce: null,
       notBefore: 1609488000,
       now: 1609488000,

@@ -1,9 +1,10 @@
 import { KeyType } from "@lindorm-io/key-pair";
 import { Expiry } from "@lindorm-io/core";
+import { LevelOfAssurance } from "./loa";
 
 export interface JwtSignOptions<Payload = never, Claims = never> {
   id?: string;
-  adjustedAccessLevel?: number;
+  adjustedAccessLevel?: LevelOfAssurance;
   audiences: Array<string>;
   authContextClass?: Array<string>;
   authMethodsReference?: Array<string>;
@@ -12,7 +13,7 @@ export interface JwtSignOptions<Payload = never, Claims = never> {
   claims?: Claims;
   expiry: Expiry;
   keyType?: KeyType;
-  levelOfAssurance?: number;
+  levelOfAssurance?: LevelOfAssurance;
   nonce?: string;
   notBefore?: Date;
   payload?: Payload;
