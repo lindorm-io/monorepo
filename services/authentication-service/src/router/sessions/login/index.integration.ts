@@ -66,39 +66,6 @@ describe("/sessions/login", () => {
     });
   });
 
-  test("DELETE /", async () => {
-    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
-      createTestAuthenticationSession(),
-    );
-
-    const loginSession = await TEST_LOGIN_SESSION_CACHE.create(
-      createTestLoginSession({
-        authenticationSessionId: authenticationSession.id,
-      }),
-    );
-
-    const response = await request(server.callback())
-      .delete("/sessions/login")
-      .set("Cookie", [
-        `lindorm_io_authentication_login_session=${loginSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
-      .expect(302);
-
-    expect(response.headers.location).toBe("https://oauth-redirect-reject.url/");
-
-    expect(response.headers["set-cookie"]).toEqual([
-      "lindorm_io_authentication_login_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
-    ]);
-
-    await expect(
-      TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
-    ).rejects.toThrow(EntityNotFoundError);
-
-    await expect(TEST_LOGIN_SESSION_CACHE.find({ id: loginSession.id })).rejects.toThrow(
-      EntityNotFoundError,
-    );
-  });
-
   test("GET /confirm", async () => {
     const loginSession = await TEST_LOGIN_SESSION_CACHE.create(createTestLoginSession());
 
@@ -121,6 +88,39 @@ describe("/sessions/login", () => {
     expect(response.headers["set-cookie"]).toEqual([
       "lindorm_io_authentication_login_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
     ]);
+
+    await expect(TEST_LOGIN_SESSION_CACHE.find({ id: loginSession.id })).rejects.toThrow(
+      EntityNotFoundError,
+    );
+  });
+
+  test("GET /reject", async () => {
+    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
+      createTestAuthenticationSession(),
+    );
+
+    const loginSession = await TEST_LOGIN_SESSION_CACHE.create(
+      createTestLoginSession({
+        authenticationSessionId: authenticationSession.id,
+      }),
+    );
+
+    const response = await request(server.callback())
+      .get("/sessions/login/reject")
+      .set("Cookie", [
+        `lindorm_io_authentication_login_session=${loginSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
+      ])
+      .expect(302);
+
+    expect(response.headers.location).toBe("https://oauth-redirect-reject.url/");
+
+    expect(response.headers["set-cookie"]).toEqual([
+      "lindorm_io_authentication_login_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
+    ]);
+
+    await expect(
+      TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
+    ).rejects.toThrow(EntityNotFoundError);
 
     await expect(TEST_LOGIN_SESSION_CACHE.find({ id: loginSession.id })).rejects.toThrow(
       EntityNotFoundError,

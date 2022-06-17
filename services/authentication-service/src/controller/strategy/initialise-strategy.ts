@@ -39,9 +39,9 @@ interface RequestData {
 
 interface ResponseBody {
   id: string;
-  strategySessionToken: string | null;
   expiresIn: number;
   pollingRequired: boolean;
+  strategySessionToken: string | null;
 
   displayCode?: string;
   qrCode?: string;

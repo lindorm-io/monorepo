@@ -26,15 +26,15 @@ import { flatten, uniq } from "lodash";
 
 interface RequestData {
   id: string;
-  challengeConfirmationToken: string;
-  code: string;
-  otp: string;
-  password: string;
+  challengeConfirmationToken?: string;
+  code?: string;
+  otp?: string;
+  password?: string;
   rdcSessionId: never;
   rdcSessionStatus: never;
-  remember: boolean;
+  remember?: boolean;
   strategySessionToken: string;
-  totp: string;
+  totp?: string;
 }
 
 export const confirmStrategySchema = Joi.object<RequestData>()

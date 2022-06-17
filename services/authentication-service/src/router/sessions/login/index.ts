@@ -17,17 +17,17 @@ export default router;
 
 router.get("/", loginSessionCookieMiddleware, useController(getLoginInfoController));
 
-router.delete(
-  "/",
-  loginSessionCookieMiddleware,
-  authenticationSessionEntityMiddleware("entity.loginSession.authenticationSessionId"),
-  useController(rejectLoginController),
-);
-
 router.get(
   "/confirm",
   useSchema(confirmLoginWithAuthenticationTokenSchema),
   loginSessionCookieMiddleware,
   authenticationConfirmationTokenMiddleware("data.authenticationConfirmationToken"),
   useController(confirmLoginWithAuthenticationTokenController),
+);
+
+router.get(
+  "/reject",
+  loginSessionCookieMiddleware,
+  authenticationSessionEntityMiddleware("entity.loginSession.authenticationSessionId"),
+  useController(rejectLoginController),
 );
