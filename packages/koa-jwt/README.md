@@ -34,35 +34,30 @@ koaApp.addMiddleware(
 
 ```typescript
 const middleware = tokenValidationMiddleware({
-  clockTolerance: 3, // OPTIONAL | number | giving some tolerance for time validation
+  audiences: [configuration.server_oauth_client_id], // OPTIONAL | array | used when all tokens of this type require specific audience
+  clockTolerance: 300, // OPTIONAL | number | giving some tolerance for time validation
   contextKey: "tokenKey", // REQUIRED | string | used to set validated token on context (ctx.token.tokenKey)
   issuer: "https://authorization.service", // REQURIED | uri | used for token validation
-  maxAge: "10 minutes", // OPTIONAL | string | used in JWT validation
   subjectHint: "identity", // OPTIONAL [ string ]
   types: ["refresh_token"], // REQUIRED | string | token type
 });
 
 router.use(
   middleware(
-    "request.body.tokenName", // REQUIRED | path | used to find token
+    "request.body.tokenName", // REQUIRED | string | path used to find token
     {
-      audience, // OPTIONAL [ string ]
-      audiences, // OPTIONAL [ Array<string> ]
-      nonce, // OPTIONAL [ string ]
-      permissions, // OPTIONAL [ Array<string> ]
-      scopes, // OPTIONAL [ Array<string> ]
-      subject, // OPTIONAL [ string ]
-      subjects, // OPTIONAL [ Array<string> ]
+      adjustedAccessLevel: 2, // OPTIONAL | number
+      audiences: [configuration.server_oauth_client_id], // OPTIONAL | array | used when token on specific route requires specific audiences
+      levelOfAssurance: 3, // OPTIONAL | number
+      maxAge: 400, // OPTIONAL | number
+      permissions: ["admin"], // OPTIONAL | array
+      scopes: ["openid"], // OPTIONAL | array
 
       fromPath: {
-        audience, // OPTIONAL [ string ] - path to string on ctx
-        audiences, // OPTIONAL [ string ] - path to Array<string> on ctx
-        nonce, // OPTIONAL [ string ] - path to string on ctx
-        permissions, // OPTIONAL [ string ] - path to Array<string> on ctx
-        scopes, // OPTIONAL [ string ] - path to Array<string> on ctx
-        subject, // OPTIONAL [ string ] - path to string on ctx
-        subjects, // OPTIONAL [ string ] - path to Array<string> on ctx
-      },
+        audience: "query.clientId", // OPTIONAL | string | path to string
+        nonce: "entity.entityName.nonce", // OPTIONAL | string | path to string
+        subject: "token.bearerToken.subject", // OPTIONAL | string | path to string
+      }, // OPTIONAL | object
 
       optional: false, // OPTIONAL [ boolean ] - determines if middleware should throw when token is missing
     },

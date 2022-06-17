@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
-import { get, isFunction } from "lodash";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { flatten, get, isFunction, uniq } from "lodash";
 import {
   BearerTokenCustomValidation,
   DefaultLindormBearerAuthKoaMiddleware,
@@ -7,24 +8,17 @@ import {
 } from "../types";
 
 export interface BearerAuthOptions {
-  adjustedAccessLevel?: number;
-  audience?: string;
+  adjustedAccessLevel?: LevelOfAssurance;
   audiences?: Array<string>;
-  levelOfAssurance?: number;
-  nonce?: string;
+  levelOfAssurance?: LevelOfAssurance;
+  maxAge?: string;
   permissions?: Array<string>;
   scopes?: Array<string>;
-  subject?: string;
-  subjects?: Array<string>;
 
   fromPath?: {
     audience?: string;
-    audiences?: string;
     nonce?: string;
-    permissions?: string;
-    scopes?: string;
     subject?: string;
-    subjects?: string;
   };
 }
 
@@ -38,17 +32,17 @@ export const bearerAuthMiddleware =
     const metric = ctx.getMetric("auth");
 
     const {
-      adjustedAccessLevel,
       clockTolerance,
       contextKey = "bearerToken",
       issuer,
-      levelOfAssurance,
-      maxAge,
       subjectHint,
-      types,
+      types = ["access_token"],
     } = config;
-    const { audience, audiences, nonce, permissions, scopes, subject, subjects, fromPath } =
+
+    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, permissions, scopes } =
       options;
+
+    const audiences = uniq(flatten([config.audiences || [], options.audiences || []]));
 
     try {
       const { type: tokenType, value: token } = ctx.getAuthorizationHeader() || {};
@@ -61,19 +55,18 @@ export const bearerAuthMiddleware =
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
         adjustedAccessLevel,
-        audience: fromPath?.audience ? get(ctx, fromPath.audience) : audience,
-        audiences: fromPath?.audiences ? get(ctx, fromPath.audiences) : audiences,
+        audience: fromPath?.audience ? get(ctx, fromPath.audience) : undefined,
+        audiences: audiences.length ? audiences : undefined,
         clockTolerance,
         issuer,
         levelOfAssurance,
         maxAge,
-        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : nonce,
-        permissions: fromPath?.permissions ? get(ctx, fromPath.permissions) : permissions,
-        scopes: fromPath?.scopes ? get(ctx, fromPath.scopes) : scopes,
-        subject: fromPath?.subject ? get(ctx, fromPath.subject) : subject,
+        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
+        permissions,
+        scopes,
+        subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
         subjectHint,
-        subjects: fromPath?.subjects ? get(ctx, fromPath.subjects) : subjects,
-        types: types || ["access_token"],
+        types,
       });
 
       if (isFunction(customValidation)) {

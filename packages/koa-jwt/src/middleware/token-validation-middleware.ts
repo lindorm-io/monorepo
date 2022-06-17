@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
-import { get, isFunction, isString } from "lodash";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { flatten, get, isFunction, isString, uniq } from "lodash";
 import {
   TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
@@ -7,26 +8,17 @@ import {
 } from "../types";
 
 export interface TokenValidationOptions {
-  adjustedAccessLevel?: number;
-  audience?: string;
+  adjustedAccessLevel?: LevelOfAssurance;
   audiences?: Array<string>;
-  authorizedParty?: string;
-  levelOfAssurance?: number;
-  nonce?: string;
+  levelOfAssurance?: LevelOfAssurance;
+  maxAge?: string;
   permissions?: Array<string>;
   scopes?: Array<string>;
-  subject?: string;
-  subjects?: Array<string>;
 
   fromPath?: {
     audience?: string;
-    audiences?: string;
-    authorizedParty?: string;
     nonce?: string;
-    permissions?: string;
-    scopes?: string;
     subject?: string;
-    subjects?: string;
   };
 
   optional?: boolean;
@@ -42,22 +34,14 @@ export const tokenValidationMiddleware =
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("token");
 
-    const { clockTolerance, contextKey, issuer, maxAge, subjectHint, types } = config;
-    const {
-      adjustedAccessLevel,
-      audience,
-      audiences,
-      authorizedParty,
-      levelOfAssurance,
-      nonce,
-      permissions,
-      scopes,
-      subject,
-      subjects,
-      fromPath,
-    } = options;
+    const { clockTolerance, contextKey, issuer, subjectHint, types } = config;
+
+    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, permissions, scopes } =
+      options;
 
     const token = get(ctx, path);
+
+    const audiences = uniq(flatten([config.audiences || [], options.audiences || []]));
 
     try {
       if (!isString(token)) {
@@ -68,21 +52,17 @@ export const tokenValidationMiddleware =
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
         adjustedAccessLevel,
-        audience: fromPath?.audience ? get(ctx, fromPath.audience) : audience,
-        audiences: fromPath?.audiences ? get(ctx, fromPath.audiences) : audiences,
-        authorizedParty: fromPath?.authorizedParty
-          ? get(ctx, fromPath.authorizedParty)
-          : authorizedParty,
+        audience: fromPath?.audience ? get(ctx, fromPath.audience) : undefined,
+        audiences: audiences.length ? audiences : undefined,
         clockTolerance,
         issuer,
         levelOfAssurance,
         maxAge,
-        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : nonce,
-        permissions: fromPath?.permissions ? get(ctx, fromPath.permissions) : permissions,
-        scopes: fromPath?.scopes ? get(ctx, fromPath.scopes) : scopes,
-        subject: fromPath?.subject ? get(ctx, fromPath.subject) : subject,
+        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
+        permissions,
+        scopes,
+        subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
         subjectHint,
-        subjects: fromPath?.subjects ? get(ctx, fromPath.subjects) : subjects,
         types,
       });
 

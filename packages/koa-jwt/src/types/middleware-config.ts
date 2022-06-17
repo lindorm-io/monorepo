@@ -1,8 +1,8 @@
 export interface TokenValidationMiddlewareConfig {
+  audiences?: Array<string>;
   clockTolerance?: number;
   contextKey: string;
   issuer: string;
-  maxAge?: string;
   subjectHint?: string;
   types: Array<string>;
 }
