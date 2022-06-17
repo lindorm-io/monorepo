@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.0...@lindorm-io/jwt@0.8.1) (2022-06-17)
+
+
+### Bug Fixes
+
+* use level of assurance type in jwt package ([7a0f59c](https://github.com/lindorm-io/monorepo/commit/7a0f59cfe0fd41e6af7023acecbca6c61333fa18))
+
+
+
+
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.7.1...@lindorm-io/jwt@0.8.0) (2022-06-15)
 
 

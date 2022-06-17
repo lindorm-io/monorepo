@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.15...@lindorm-io/koa-bearer-auth@0.3.16) (2022-06-17)
+
+
+### Bug Fixes
+
+* update token middleware ([4a78315](https://github.com/lindorm-io/monorepo/commit/4a783151b729d0021876c70988cb0ce15c2f8cd8))
+
+
+
+
+
 ## [0.3.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.14...@lindorm-io/koa-bearer-auth@0.3.15) (2022-06-15)
 
 **Note:** Version bump only for package @lindorm-io/koa-bearer-auth

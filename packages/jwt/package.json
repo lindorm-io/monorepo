@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/jwt",
   "description": "JWT tools for lindorm.io",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.8...@lindorm-io/axios@0.4.0) (2022-06-17)
+
+
+### Features
+
+* add basic auth to axios client credentials middleware ([5c09c75](https://github.com/lindorm-io/monorepo/commit/5c09c758819f36cea1583fdf56fec73e478a0b73))
+* use body instead of data on axios request ([f768147](https://github.com/lindorm-io/monorepo/commit/f768147e326ef739702e1301beb54f7628bb5d0f))
+
+
+
+
+
 ## [0.3.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.3.7...@lindorm-io/axios@0.3.8) (2022-06-15)
 
 **Note:** Version bump only for package @lindorm-io/axios
