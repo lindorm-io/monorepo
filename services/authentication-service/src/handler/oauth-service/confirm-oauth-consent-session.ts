@@ -1,6 +1,6 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { ClientScope, ConfirmConsentRequestBody, ResponseWithRedirectBody } from "../../common";
+import { ConfirmConsentRequestBody, ResponseWithRedirectBody } from "../../common";
 
 export const confirmOauthConsentSession = async (
   ctx: ServerKoaContext,
@@ -16,7 +16,7 @@ export const confirmOauthConsentSession = async (
     {
       body,
       params: { id: sessionId },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_CONSENT_WRITE])],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

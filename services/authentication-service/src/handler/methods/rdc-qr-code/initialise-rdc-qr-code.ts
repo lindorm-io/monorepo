@@ -1,15 +1,10 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
+import { InitialiseRdcSessionRequestData, RdcSessionMode, RequestMethod } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL, getRandomString } from "@lindorm-io/core";
-import {
-  ClientScope,
-  InitialiseRdcSessionRequestData,
-  RdcSessionMode,
-  RequestMethod,
-} from "../../../common";
 
 interface Options {
   strategySessionToken: string;
@@ -66,7 +61,7 @@ export const initialiseRdcQrCode = async (
 
   await deviceClient.post("/internal/rdc", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_RDC_WRITE])],
+    middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 
   return { qrCode: "QR_CODE" };

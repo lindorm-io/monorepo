@@ -1,4 +1,4 @@
-import { ClientPermission, ClientScope } from "../../common";
+import { ClientPermission } from "../../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, oidcSessionEntityMiddleware } from "../../middleware";
@@ -13,12 +13,14 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.post(
-  "/",
+router.use(
   clientAuthMiddleware({
     permissions: [ClientPermission.OIDC_CONFIDENTIAL],
-    scopes: [ClientScope.OIDC_SESSION_WRITE],
   }),
+);
+
+router.post(
+  "/",
   useSchema(initialiseOidcSessionSchema),
   useController(initialiseOidcSessionController),
 );
@@ -26,10 +28,6 @@ router.post(
 router.get(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OIDC_CONFIDENTIAL],
-    scopes: [ClientScope.OIDC_SESSION_READ],
-  }),
   useSchema(getOidcSessionSchema),
   oidcSessionEntityMiddleware("data.id"),
   useController(getOidcSessionController),

@@ -1,10 +1,6 @@
+import { InitialiseOidcSessionRequestData, InitialiseOidcSessionResponseBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import {
-  ClientScope,
-  InitialiseOidcSessionRequestData,
-  InitialiseOidcSessionResponseBody,
-} from "../../common";
 
 export const initialiseOidcSession = async (
   ctx: ServerKoaContext,
@@ -16,7 +12,7 @@ export const initialiseOidcSession = async (
 
   const { data } = await oidcClient.post<InitialiseOidcSessionResponseBody>("/internal/sessions", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OIDC_SESSION_WRITE])],
+    middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 
   return data;

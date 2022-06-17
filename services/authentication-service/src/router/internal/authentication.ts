@@ -10,11 +10,14 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.post(
-  "/",
-  useSchema(initialiseAuthenticationSchema),
+router.use(
   clientAuthMiddleware({
     permissions: [ClientPermission.AUTHENTICATION_CONFIDENTIAL],
   }),
+);
+
+router.post(
+  "/",
+  useSchema(initialiseAuthenticationSchema),
   useController(initialiseAuthenticationController),
 );

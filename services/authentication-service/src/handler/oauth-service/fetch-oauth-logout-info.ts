@@ -1,4 +1,4 @@
-import { ClientScope, GetLogoutSessionInfoResponseBody } from "../../common";
+import { GetLogoutSessionInfoResponseBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 
@@ -14,7 +14,7 @@ export const fetchOauthLogoutInfo = async (
     "/internal/sessions/logout/:id",
     {
       params: { id: sessionId },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_LOGOUT_READ])],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

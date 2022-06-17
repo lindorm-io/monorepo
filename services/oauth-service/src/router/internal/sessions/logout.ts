@@ -1,5 +1,5 @@
 import { ServerKoaContext } from "../../../types";
-import { ClientPermission, ClientScope } from "../../../common";
+import { ClientPermission } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   clientAuthMiddleware,
@@ -18,14 +18,15 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
+router.use(
+  clientAuthMiddleware({
+    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
+  }),
+);
+
 router.get(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_LOGOUT_READ],
-  }),
-
   useSchema(getLogoutInfoSchema),
   logoutSessionEntityMiddleware("data.id"),
   clientEntityMiddleware("entity.logoutSession.clientId"),
@@ -35,11 +36,6 @@ router.get(
 router.put(
   "/:id/confirm",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_LOGOUT_WRITE],
-  }),
-
   useSchema(confirmLogoutSchema),
   logoutSessionEntityMiddleware("data.id"),
   useController(confirmLogoutController),
@@ -48,11 +44,6 @@ router.put(
 router.put(
   "/:id/reject",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_LOGOUT_WRITE],
-  }),
-
   useSchema(rejectLogoutSchema),
   logoutSessionEntityMiddleware("data.id"),
   useController(rejectLogoutController),

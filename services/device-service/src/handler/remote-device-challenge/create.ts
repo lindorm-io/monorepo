@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ClientScope, EmitSocketEventRequestData, RdcSessionMode } from "../../common";
+import { EmitSocketEventRequestData, RdcSessionMode } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { RdcSession, RdcSessionAttributes } from "../../entity";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -101,9 +101,7 @@ export const createRdcSession = async (
 
     await communicationClient.post("/internal/socket/emit", {
       body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     });
   }
 

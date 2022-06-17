@@ -1,5 +1,5 @@
 import { ServerKoaContext } from "../../../types";
-import { ClientPermission, ClientScope } from "../../../common";
+import { ClientPermission } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   authorizationSessionEntityMiddleware,
@@ -22,14 +22,15 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
+router.use(
+  clientAuthMiddleware({
+    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
+  }),
+);
+
 router.get(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_CONSENT_READ],
-  }),
-
   useSchema(getConsentInfoSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
@@ -40,11 +41,6 @@ router.get(
 router.put(
   "/:id/confirm",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
-  }),
-
   useSchema(confirmConsentSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
@@ -55,11 +51,6 @@ router.put(
 router.put(
   "/:id/reject",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
-  }),
-
   useSchema(rejectConsentSchema),
   authorizationSessionEntityMiddleware("data.id"),
   useController(rejectConsentController),
@@ -68,11 +59,6 @@ router.put(
 router.put(
   "/:id/skip",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_CONSENT_WRITE],
-  }),
-
   useSchema(skipConsentSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),

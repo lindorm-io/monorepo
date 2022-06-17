@@ -4,7 +4,6 @@ import { OidcSession } from "../entity";
 import {
   AuthenticateIdentifierRequestData,
   AuthenticateIdentifierResponseBody,
-  ClientScope,
   IdentifierType,
 } from "../common";
 
@@ -36,9 +35,7 @@ export const axiosAuthenticateOidcIdentity = async (
     "/internal/identifiers/authenticate",
     {
       body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTIFIER_WRITE]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

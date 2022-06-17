@@ -1,4 +1,4 @@
-import { ClientPermission, ClientScope } from "../../common";
+import { ClientPermission } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, encryptedRecordEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
@@ -14,12 +14,14 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.post(
-  "/",
+router.use(
   clientAuthMiddleware({
     permissions: [ClientPermission.VAULT_CONFIDENTIAL],
-    scopes: [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE],
   }),
+);
+
+router.post(
+  "/",
   useSchema(createEncryptedRecordSchema),
   useController(createEncryptedRecordController),
 );
@@ -27,10 +29,6 @@ router.post(
 router.get(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.VAULT_CONFIDENTIAL],
-    scopes: [ClientScope.VAULT_ENCRYPTED_RECORD_READ],
-  }),
   useSchema(getEncryptedRecordSchema),
   encryptedRecordEntityMiddleware("data.id"),
   useController(getEncryptedRecordController),
@@ -39,10 +37,6 @@ router.get(
 router.delete(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.VAULT_CONFIDENTIAL],
-    scopes: [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE],
-  }),
   useSchema(deleteEncryptedRecordSchema),
   encryptedRecordEntityMiddleware("data.id"),
   useController(deleteEncryptedRecordController),

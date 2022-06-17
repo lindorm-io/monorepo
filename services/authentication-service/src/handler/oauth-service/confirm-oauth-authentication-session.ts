@@ -1,10 +1,6 @@
+import { ConfirmAuthenticationRequestBody, ResponseWithRedirectBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import {
-  ClientScope,
-  ConfirmAuthenticationRequestBody,
-  ResponseWithRedirectBody,
-} from "../../common";
 
 export const confirmOauthAuthenticationSession = async (
   ctx: ServerKoaContext,
@@ -20,9 +16,7 @@ export const confirmOauthAuthenticationSession = async (
     {
       body,
       params: { id: sessionId },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

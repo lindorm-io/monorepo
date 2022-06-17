@@ -1,6 +1,6 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { ClientScope, GetAuthenticationInfoResponseBody } from "../../common";
+import { GetAuthenticationInfoResponseBody } from "../../common";
 
 export const fetchOauthAuthenticationInfo = async (
   ctx: ServerKoaContext,
@@ -14,9 +14,7 @@ export const fetchOauthAuthenticationInfo = async (
     "/internal/sessions/authentication/:id",
     {
       params: { id: sessionId },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_READ]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

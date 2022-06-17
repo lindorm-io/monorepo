@@ -1,12 +1,8 @@
 import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
+import { CreateEncryptedRecordRequestBody, GetEncryptedRecordResponseBody } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { getRandomString } from "@lindorm-io/core";
-import {
-  ClientScope,
-  CreateEncryptedRecordRequestBody,
-  GetEncryptedRecordResponseBody,
-} from "../../common";
 
 export const createAccountCallback =
   (ctx: ServerKoaContext) =>
@@ -25,9 +21,7 @@ export const createAccountCallback =
 
     await vaultClient.post("/internal/vault", {
       body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     });
   };
 
@@ -42,8 +36,6 @@ export const destroyAccountCallback =
       params: {
         id: account.id,
       },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     });
   };

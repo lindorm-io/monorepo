@@ -1,5 +1,5 @@
 import { ServerKoaContext } from "../types";
-import { ClientScope, AddUserinfoRequestBody } from "../common";
+import { AddUserinfoRequestBody } from "../common";
 import { clientCredentialsMiddleware } from "../middleware";
 
 export const axiosUpdateIdentityUserinfo = async (
@@ -14,6 +14,6 @@ export const axiosUpdateIdentityUserinfo = async (
   await identityClient.put("/internal/userinfo/:id", {
     body: options,
     params: { id: identityId },
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTITY_WRITE])],
+    middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 };

@@ -1,4 +1,4 @@
-import { ClientScope, ResponseWithRedirectBody } from "../../common";
+import { ResponseWithRedirectBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 
@@ -14,9 +14,7 @@ export const skipOauthAuthenticationSession = async (
     "/internal/sessions/authentication/:id/skip",
     {
       params: { id: sessionId },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
-      ],
+      middleware: [clientCredentialsMiddleware(oauthClient)],
     },
   );
 

@@ -1,5 +1,5 @@
 import { ServerKoaContext } from "../../../types";
-import { ClientPermission, ClientScope } from "../../../common";
+import { ClientPermission } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   authorizationSessionEntityMiddleware,
@@ -21,14 +21,15 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
+router.use(
+  clientAuthMiddleware({
+    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
+  }),
+);
+
 router.get(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_READ],
-  }),
-
   useSchema(getAuthenticationInfoSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
@@ -39,11 +40,6 @@ router.get(
 router.put(
   "/:id/confirm",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
-  }),
-
   useSchema(confirmAuthenticationSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
@@ -53,11 +49,6 @@ router.put(
 router.put(
   "/:id/reject",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
-  }),
-
   useSchema(rejectAuthenticationSchema),
   authorizationSessionEntityMiddleware("data.id"),
   useController(rejectAuthenticationController),
@@ -66,11 +57,6 @@ router.put(
 router.put(
   "/:id/skip",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-    scopes: [ClientScope.OAUTH_AUTHENTICATION_WRITE],
-  }),
-
   useSchema(skipAuthenticationSchema),
   authorizationSessionEntityMiddleware("data.id"),
   browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),

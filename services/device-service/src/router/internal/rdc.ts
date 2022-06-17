@@ -1,4 +1,4 @@
-import { ClientPermission, ClientScope } from "../../common";
+import { ClientPermission } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { clientAuthMiddleware } from "../../middleware";
@@ -10,7 +10,6 @@ export default router;
 router.use(
   clientAuthMiddleware({
     permissions: [ClientPermission.DEVICE_CONFIDENTIAL],
-    scopes: [ClientScope.DEVICE_RDC_WRITE],
   }),
 );
 
