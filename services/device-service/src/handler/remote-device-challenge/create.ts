@@ -93,14 +93,14 @@ export const createRdcSession = async (
   const { id } = rdcSession;
 
   if (mode === RdcSessionMode.PUSH_NOTIFICATION) {
-    const data: EmitSocketEventRequestData = {
+    const body: EmitSocketEventRequestData = {
       channels: { deviceLinks, identities: [identityId] },
       content: { id },
       event: "rdcSession:created",
     };
 
     await communicationClient.post("/internal/socket/emit", {
-      data,
+      body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
       ],

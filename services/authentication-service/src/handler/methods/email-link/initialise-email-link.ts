@@ -35,7 +35,7 @@ export const initialiseEmailLink = async (
     query: { strategySessionToken, code },
   });
 
-  const data: SendCodeRequestData = {
+  const body: SendCodeRequestData = {
     content: {
       expires: strategySession.expires,
       url: url.toString(),
@@ -46,7 +46,7 @@ export const initialiseEmailLink = async (
   };
 
   await communicationClient.post("/internal/send/code", {
-    data,
+    body,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
     ],

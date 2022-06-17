@@ -43,7 +43,7 @@ export const verifyOidcWithCode = async (
   } = await axiosClient.post<OAuthTokenResponseData>(
     createURL(tokenEndpoint, { host }).toString(),
     {
-      data: {
+      body: {
         code,
         codeVerifier: oidcSession.codeVerifier,
         grantType: GrantType.AUTHORIZATION_CODE,

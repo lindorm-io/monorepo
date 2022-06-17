@@ -34,7 +34,7 @@ export const sendConnectSessionMessage = async (
     },
   });
 
-  const data: SendCodeRequestData = {
+  const body: SendCodeRequestData = {
     content: { expires, url: url.toString() },
     template: "identifier-connect-session",
     to: identifier.identifier,
@@ -42,7 +42,7 @@ export const sendConnectSessionMessage = async (
   };
 
   await communicationClient.post("/internal/send/code", {
-    data,
+    body,
     middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 };

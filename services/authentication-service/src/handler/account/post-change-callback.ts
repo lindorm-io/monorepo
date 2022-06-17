@@ -24,7 +24,7 @@ export const createAccountCallback =
     };
 
     await vaultClient.post("/internal/vault", {
-      data: body,
+      body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
       ],

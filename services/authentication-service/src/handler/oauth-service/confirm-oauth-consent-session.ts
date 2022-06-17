@@ -14,8 +14,8 @@ export const confirmOauthConsentSession = async (
   const { data } = await oauthClient.put<ResponseWithRedirectBody>(
     "/internal/sessions/consent/:id/confirm",
     {
+      body,
       params: { id: sessionId },
-      data: body,
       middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_CONSENT_WRITE])],
     },
   );

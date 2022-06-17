@@ -18,8 +18,8 @@ export const confirmOauthAuthenticationSession = async (
   const { data } = await oauthClient.put<ResponseWithRedirectBody>(
     "/internal/sessions/authentication/:id/confirm",
     {
+      body,
       params: { id: sessionId },
-      data: body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
       ],

@@ -42,7 +42,7 @@ export const initialiseRdcQrCode = async (
 
   await strategySessionCache.update(strategySession);
 
-  const data: InitialiseRdcSessionRequestData = {
+  const body: InitialiseRdcSessionRequestData = {
     clientId: configuration.oauth.client_id,
     confirmMethod: RequestMethod.PUT,
     confirmPayload: { strategySessionToken },
@@ -65,7 +65,7 @@ export const initialiseRdcQrCode = async (
   };
 
   await deviceClient.post("/internal/rdc", {
-    data,
+    body,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_RDC_WRITE])],
   });
 

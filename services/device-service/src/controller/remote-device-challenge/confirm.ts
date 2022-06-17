@@ -37,7 +37,7 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
   switch (rdcSession.type) {
     case RdcSessionType.CALLBACK:
       await axiosClient.request(rdcSession.confirmMethod, rdcSession.confirmUri, {
-        data: {
+        body: {
           rdcSessionId: rdcSession.id,
           rdcSessionStatus: rdcSession.status,
           challengeConfirmationToken: challengeConfirmationToken.token,

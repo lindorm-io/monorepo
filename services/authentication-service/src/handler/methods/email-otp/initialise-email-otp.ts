@@ -26,7 +26,7 @@ export const initialiseEmailOtp = async (
 
   await strategySessionCache.update(strategySession);
 
-  const data: SendCodeRequestData = {
+  const body: SendCodeRequestData = {
     content: {
       expires: strategySession.expires,
       otp,
@@ -37,7 +37,7 @@ export const initialiseEmailOtp = async (
   };
 
   await communicationClient.post("/internal/send/otp", {
-    data,
+    body,
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
     ],

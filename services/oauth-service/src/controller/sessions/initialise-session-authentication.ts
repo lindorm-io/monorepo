@@ -69,7 +69,7 @@ export const initialiseSessionAuthenticationController: ServerKoaController<Requ
   const { data } = await authenticationClient.post<InitialiseAuthenticationResponseBody>(
     "/internal/authentication",
     {
-      data: body,
+      body,
       middleware: [
         generateAxiosBearerAuthMiddleware(ctx, [ClientPermission.AUTHENTICATION_CONFIDENTIAL]),
       ],

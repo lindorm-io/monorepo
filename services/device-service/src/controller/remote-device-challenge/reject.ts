@@ -31,7 +31,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
   switch (rdcSession.type) {
     case RdcSessionType.CALLBACK:
       await axiosClient.request(rdcSession.rejectMethod, rdcSession.rejectUri, {
-        data: {
+        body: {
           rdcSessionId: rdcSession.id,
           rdcSessionStatus: rdcSession.status,
           ...rdcSession.rejectPayload,

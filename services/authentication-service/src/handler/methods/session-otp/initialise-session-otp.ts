@@ -36,14 +36,14 @@ export const initialiseSessionOtp = async (
     });
   }
 
-  const data: EmitSocketEventRequestData = {
+  const body: EmitSocketEventRequestData = {
     channels: { sessions },
     content: { otp },
     event: "authentication-service:session-otp-flow",
   };
 
   await communicationClient.post("/internal/socket/emit", {
-    data,
+    body,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 };

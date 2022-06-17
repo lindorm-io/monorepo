@@ -12,7 +12,7 @@ export const axiosUpdateIdentityUserinfo = async (
   } = ctx;
 
   await identityClient.put("/internal/userinfo/:id", {
-    data: options,
+    body: options,
     params: { id: identityId },
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTITY_WRITE])],
   });

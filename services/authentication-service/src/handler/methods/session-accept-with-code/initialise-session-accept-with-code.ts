@@ -47,14 +47,14 @@ export const initialiseSessionAcceptWithCode = async (
     });
   }
 
-  const data: EmitSocketEventRequestData = {
+  const body: EmitSocketEventRequestData = {
     channels: { sessions },
     content: { id: authenticationSession.id, strategySessionToken },
     event: "authentication-service:session-accept-with-code",
   };
 
   await communicationClient.post("/internal/socket/emit", {
-    data,
+    body,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 

@@ -22,7 +22,7 @@ export const handleRefreshSessionLogout = async (
   const { token: logoutToken } = await createLogoutToken(ctx, client, refreshSession);
 
   await axiosClient.post(client.logoutUri, {
-    data: { logoutToken },
+    body: { logoutToken },
   });
 
   await handleConsentSessionOnLogout(ctx, client, refreshSession);

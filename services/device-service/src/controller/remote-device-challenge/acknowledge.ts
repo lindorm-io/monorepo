@@ -89,14 +89,14 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
   const deviceLinks = difference(rdcSession.deviceLinks, [linkId]);
 
   if (mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
-    const data: EmitSocketEventRequestData = {
+    const body: EmitSocketEventRequestData = {
       channels: { deviceLinks, identities: [identityId] },
       content: { id },
       event: "rdcSession:acknowledged",
     };
 
     await communicationClient.post("/internal/socket/emit", {
-      data,
+      body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
       ],

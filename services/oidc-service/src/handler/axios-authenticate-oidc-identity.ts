@@ -35,7 +35,7 @@ export const axiosAuthenticateOidcIdentity = async (
   const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
     "/internal/identifiers/authenticate",
     {
-      data: body,
+      body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTIFIER_WRITE]),
       ],

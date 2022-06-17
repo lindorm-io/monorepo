@@ -15,7 +15,7 @@ export const initialiseOidcSession = async (
   } = ctx;
 
   const { data } = await oidcClient.post<InitialiseOidcSessionResponseBody>("/internal/sessions", {
-    data: body,
+    body,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OIDC_SESSION_WRITE])],
   });
 

@@ -23,7 +23,7 @@ export const handleBrowserSessionLogout = async (
     const { token: logoutToken } = await createLogoutToken(ctx, client, browserSession);
 
     await axiosClient.post(client.logoutUri, {
-      data: { logoutToken },
+      body: { logoutToken },
     });
 
     await handleConsentSessionOnLogout(ctx, client, browserSession);
