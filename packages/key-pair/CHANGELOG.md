@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.8...@lindorm-io/key-pair@0.5.0) (2022-06-18)
+
+
+### Features
+
+* ttl attribute designation in redis ([65b6e74](https://github.com/lindorm-io/monorepo/commit/65b6e7452d3e4a1826507beedafb1fa697d07b35))
+
+
+
+
+
 ## [0.4.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.7...@lindorm-io/key-pair@0.4.8) (2022-06-18)
 
 **Note:** Version bump only for package @lindorm-io/key-pair

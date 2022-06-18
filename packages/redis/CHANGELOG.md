@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.8.3...@lindorm-io/redis@0.9.0) (2022-06-18)
+
+
+### Bug Fixes
+
+* align lindorm cache with ioredis upgrade ([9fcf833](https://github.com/lindorm-io/monorepo/commit/9fcf833742292218dde6b638fdc3c458799bb49d))
+
+
+### Features
+
+* ttl attribute designation in redis ([65b6e74](https://github.com/lindorm-io/monorepo/commit/65b6e7452d3e4a1826507beedafb1fa697d07b35))
+
+
+
+
+
 ## [0.8.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.8.2...@lindorm-io/redis@0.8.3) (2022-06-18)
 
 

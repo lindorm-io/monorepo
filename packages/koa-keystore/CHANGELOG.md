@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.8.4...@lindorm-io/koa-keystore@0.9.0) (2022-06-18)
+
+
+### Features
+
+* ttl attribute designation in redis ([65b6e74](https://github.com/lindorm-io/monorepo/commit/65b6e7452d3e4a1826507beedafb1fa697d07b35))
+
+
+
+
+
 ## [0.8.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.8.3...@lindorm-io/koa-keystore@0.8.4) (2022-06-18)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore
