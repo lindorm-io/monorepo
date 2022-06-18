@@ -1,11 +1,10 @@
 import { ClientCache, ClientRepository } from "../infrastructure";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { mongoConnection, redisConnection } from "../instance";
-import { stringToMilliseconds, stringToSeconds } from "@lindorm-io/core";
+import { stringToMilliseconds } from "@lindorm-io/core";
 import { winston } from "../server/logger";
 
 const logger = winston.createChildLogger(["clientCacheWorker"]);
-const expiresInSeconds = stringToSeconds("62 minutes");
 const time = stringToMilliseconds("60 minutes");
 
 export const clientCacheWorker = new IntervalWorker({
@@ -15,11 +14,7 @@ export const clientCacheWorker = new IntervalWorker({
       logger,
     });
 
-    const cache = new ClientCache({
-      connection: redisConnection,
-      expiresInSeconds,
-      logger,
-    });
+    const cache = new ClientCache({ connection: redisConnection, logger });
 
     const clients = await repository.findMany({});
 
