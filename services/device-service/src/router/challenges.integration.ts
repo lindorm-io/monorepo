@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { ChallengeStrategy } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
@@ -71,7 +71,7 @@ describe("/challenges", () => {
         client_id: "7bb4396b-5bad-4e6e-8edb-4f0f3c20e902",
         device_link_id: deviceLink.id,
         identity_id: deviceLink.identityId,
-        nonce: getRandomString(16),
+        nonce: randomString(16),
         payload: { integration: true },
         scopes: ["integration", "test"],
       })
@@ -129,7 +129,7 @@ describe("/challenges", () => {
   });
 
   test("POST /:id/confirm [ BIOMETRY ]", async () => {
-    const biometry = getRandomString(128);
+    const biometry = randomString(128);
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({
@@ -178,7 +178,7 @@ describe("/challenges", () => {
   });
 
   test("POST /:id/confirm [ PINCODE ]", async () => {
-    const pincode = getRandomNumber(6).toString().padStart(6, "0");
+    const pincode = randomNumber(6).toString().padStart(6, "0");
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({

@@ -64,7 +64,7 @@ describe("initialiseSessionAuthenticationController", () => {
         country: "country",
         identityId: "b09b7efa-833e-44fd-a884-f76e7a2b882f",
         levelOfAssurance: 2,
-        loginHint: ["test@lindorm.io", "+46701234567", "username"],
+        loginHint: ["+46701234567", "test@lindorm.io", "username"],
         methods: ["email_otp", "phone_otp"],
         nonce: "gjwZbMwXKp8pv2W6",
       },

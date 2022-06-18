@@ -2,10 +2,9 @@ import Joi from "joi";
 import { ClientAllowed, ClientDefaults, ClientExpiry } from "../types";
 import {
   EntityAttributes,
-  EntityKeys,
+  EntityOptions,
   JOI_ENTITY_BASE,
   LindormEntity,
-  Optional,
 } from "@lindorm-io/entity";
 import {
   JOI_DISPLAY_MODE,
@@ -46,20 +45,25 @@ export interface ClientAttributes extends EntityAttributes {
   type: ClientType;
 }
 
-export type ClientOptions = Optional<
-  ClientAttributes,
-  | EntityKeys
-  | "active"
-  | "allowed"
-  | "defaults"
-  | "description"
-  | "expiry"
-  | "logoUri"
-  | "permissions"
-  | "requiredScopes"
-  | "rtbfUri"
-  | "scopeDescriptions"
->;
+export interface ClientOptions extends EntityOptions {
+  active?: boolean;
+  allowed?: Partial<ClientAllowed>;
+  defaults?: Partial<ClientDefaults>;
+  description?: string | null;
+  expiry?: Partial<ClientExpiry>;
+  host: string;
+  logoUri?: string | null;
+  logoutUri: string;
+  name: string;
+  permissions?: Array<string>;
+  redirectUris?: Array<string>;
+  requiredScopes?: Array<string>;
+  rtbfUri?: string | null;
+  scopeDescriptions?: Array<ScopeDescription>;
+  secret: string;
+  tenant: string;
+  type: ClientType;
+}
 
 const schema = Joi.object<ClientAttributes>()
   .keys({
@@ -149,7 +153,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.logoutUri = options.logoutUri;
     this.name = options.name;
     this.permissions = options.permissions || [];
-    this.redirectUris = options.redirectUris;
+    this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
     this.rtbfUri = options.rtbfUri || null;
     this.scopeDescriptions = options.scopeDescriptions || [];

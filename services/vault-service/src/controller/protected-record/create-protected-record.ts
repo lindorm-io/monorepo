@@ -8,7 +8,7 @@ import {
 import { CryptoAES } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { ProtectedRecord } from "../../entity";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 
 export const createProtectedRecordSchema = Joi.object<CreateProtectedRecordRequestBody>()
@@ -30,7 +30,7 @@ export const createProtectedRecordController: ServerKoaController<
     },
   } = ctx;
 
-  const key = getRandomString(128);
+  const key = randomString(128);
   const crypto = new CryptoAES({ secret: key });
 
   await protectedRecordRepository.create(

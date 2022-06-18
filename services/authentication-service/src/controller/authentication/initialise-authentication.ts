@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { filter, find, includes } from "lodash";
-import { getExpires } from "@lindorm-io/core";
+import { getExpiryDate } from "@lindorm-io/core";
 import { handleAuthenticationInitialisation } from "../../handler";
 import {
   JOI_AUTHENTICATION_METHOD,
@@ -52,7 +52,7 @@ export const initialiseAuthenticationController: ServerKoaController<
     },
   } = ctx;
 
-  const { expires } = getExpires(configuration.defaults.authentication_session_expiry);
+  const expires = getExpiryDate(configuration.defaults.authentication_session_expiry);
 
   const emailHint = find(loginHint, (item) => REGEX_EMAIL.test(item));
   const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));

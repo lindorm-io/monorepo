@@ -2,7 +2,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { fetchAccountSalt } from "../../handler";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 interface ResponseBody {
   code: string;
@@ -23,10 +23,10 @@ export const generateRecoveryCodeController: ServerKoaController = async (
   });
 
   const code = [
-    getRandomString(6).toUpperCase(),
-    getRandomString(6).toUpperCase(),
-    getRandomString(6).toUpperCase(),
-    getRandomString(6).toUpperCase(),
+    randomString(6).toUpperCase(),
+    randomString(6).toUpperCase(),
+    randomString(6).toUpperCase(),
+    randomString(6).toUpperCase(),
   ].join("-");
 
   account.recoveryCode = await crypto.encrypt(code);

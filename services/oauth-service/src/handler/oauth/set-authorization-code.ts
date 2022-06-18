@@ -1,7 +1,7 @@
 import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getExpires, getRandomString } from "@lindorm-io/core";
+import { getExpiryDate, randomString } from "@lindorm-io/core";
 
 export const setAuthorizationCode = async (
   ctx: ServerKoaContext,
@@ -11,10 +11,10 @@ export const setAuthorizationCode = async (
     cache: { authorizationSessionCache },
   } = ctx;
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.expiry.code_session);
+  const expires = getExpiryDate(configuration.defaults.expiry.code_session);
 
-  authorizationSession.code = getRandomString(128);
+  authorizationSession.code = randomString(128);
   authorizationSession.expires = expires;
 
-  return await authorizationSessionCache.update(authorizationSession, expiresIn);
+  return await authorizationSessionCache.update(authorizationSession);
 };

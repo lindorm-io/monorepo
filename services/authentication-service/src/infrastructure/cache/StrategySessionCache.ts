@@ -7,6 +7,7 @@ export class StrategySessionCache extends LindormCache<StrategySessionAttributes
       ...options,
       entityName: "StrategySession",
       indexedAttributes: ["authenticationSessionId"],
+      ttlAttribute: "expires",
     });
   }
 

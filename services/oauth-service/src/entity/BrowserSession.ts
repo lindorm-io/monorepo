@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import {
   JOI_COUNTRY_CODE,
   JOI_GUID,
@@ -87,7 +87,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
     this.identityId = options.identityId || null;
     this.latestAuthentication = options.latestAuthentication || null;
     this.levelOfAssurance = options.levelOfAssurance || 0;
-    this.nonce = options.nonce || getRandomString(16);
+    this.nonce = options.nonce || randomString(16);
     this.remember = options.remember === true;
     this.uiLocales = options.uiLocales || [];
   }

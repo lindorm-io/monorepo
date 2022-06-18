@@ -6,7 +6,7 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { SessionStatus } from "../../common";
 import { argon } from "../../instance";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { getTestData } from "../../fixtures/data";
 import { server } from "../../server/server";
 import {
@@ -103,7 +103,7 @@ describe("/sessions/authentication", () => {
   });
 
   test("POST /:id/verify - with mfa and body", async () => {
-    const code = getRandomString(64);
+    const code = randomString(64);
     const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
@@ -141,7 +141,7 @@ describe("/sessions/authentication", () => {
   });
 
   test("POST /:id/verify - with redirect", async () => {
-    const code = getRandomString(64);
+    const code = randomString(64);
     const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(

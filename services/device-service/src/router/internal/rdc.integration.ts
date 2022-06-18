@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "../../common";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
@@ -58,7 +58,7 @@ describe("/internal/rdc", () => {
         confirm_uri: "https://callback.uri/confirm",
         identity_id: deviceLink.identityId,
         mode: RdcSessionMode.PUSH_NOTIFICATION,
-        nonce: getRandomString(16),
+        nonce: randomString(16),
         reject_payload: { reject: true },
         reject_uri: "https://callback.uri/reject",
         scopes: ["scope"],

@@ -1,6 +1,7 @@
 import { AuthenticationSession, StrategySession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { removeEmptyFromObject } from "@lindorm-io/core";
 import {
   AuthenticateIdentifierRequestData,
   AuthenticateIdentifierResponseBody,
@@ -19,16 +20,16 @@ export const authenticateIdentifier = async (
   const { identityId } = authenticationSession;
   const { email, nin, phoneNumber, username } = strategySession;
 
-  const body: AuthenticateIdentifierRequestData = {
+  const body: AuthenticateIdentifierRequestData = removeEmptyFromObject({
     identifier: email || nin || phoneNumber || username,
-    ...(identityId ? { identityId } : {}),
+    identityId,
     type: IdentifierType.EMAIL,
 
     ...(email ? { type: IdentifierType.EMAIL } : {}),
     ...(nin ? { type: IdentifierType.NIN } : {}),
     ...(phoneNumber ? { type: IdentifierType.PHONE } : {}),
     ...(username ? { type: IdentifierType.USERNAME } : {}),
-  };
+  });
 
   const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
     "/internal/identifiers/authenticate",

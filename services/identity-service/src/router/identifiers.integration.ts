@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { server } from "../server/server";
 import {
   getTestAccessToken,
@@ -27,8 +27,8 @@ describe("/identity", () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
-          name: getRandomString(10),
-          number: getRandomNumber(4),
+          name: randomString(10),
+          number: randomNumber(4),
         },
       }),
     );
@@ -73,8 +73,8 @@ describe("/identity", () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
-          name: getRandomString(10),
-          number: getRandomNumber(4),
+          name: randomString(10),
+          number: randomNumber(4),
         },
       }),
     );

@@ -7,6 +7,7 @@ export class LogoutSessionCache extends LindormCache<LogoutSessionAttributes, Lo
       ...options,
       entityName: "LogoutSession",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

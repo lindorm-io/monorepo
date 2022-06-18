@@ -1,7 +1,7 @@
 import { IdentityServiceClaims, Scope, SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 
@@ -64,7 +64,7 @@ export const getTestAuthenticationConfirmationToken = (
     },
     expiry: "60 seconds",
     levelOfAssurance: 3,
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),

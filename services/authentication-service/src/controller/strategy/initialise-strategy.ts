@@ -88,7 +88,6 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
       method,
       username,
     }),
-    expiresIn,
   );
 
   const { token: strategySessionToken } = jwt.sign({

@@ -3,7 +3,7 @@ import request from "supertest";
 import { ChallengeStrategy, DeviceFactor } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { createTestDeviceLink } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
@@ -169,7 +169,7 @@ describe("/device-links", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
         challengeConfirmationToken,
-        biometry: getRandomString(128),
+        biometry: randomString(128),
       })
       .expect(204);
 
@@ -205,7 +205,7 @@ describe("/device-links", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
         challengeConfirmationToken,
-        pincode: getRandomNumber(6).toString().padStart(6, "0"),
+        pincode: randomNumber(6).toString().padStart(6, "0"),
       })
       .expect(204);
 

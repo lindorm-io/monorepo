@@ -65,30 +65,32 @@ export type RdcSessionOptions = Optional<
   | "tokenPayload"
 >;
 
-const schema = Joi.object<RdcSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<RdcSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  clientId: JOI_GUID.required(),
-  confirmMethod: JOI_RDC_CONFIRM_METHOD.required(),
-  confirmPayload: Joi.object().required(),
-  confirmUri: Joi.string().uri().allow(null).required(),
-  deviceLinks: Joi.array().items(Joi.string()).required(),
-  enrolmentSessionId: JOI_GUID.allow(null).required(),
-  expires: Joi.date().required(),
-  factors: JOI_FACTORS.required(),
-  identityId: JOI_GUID.allow(null).required(),
-  mode: JOI_RDC_MODE.required(),
-  nonce: JOI_NONCE.required(),
-  rejectMethod: JOI_RDC_REJECT_METHOD.required(),
-  rejectPayload: Joi.object().required(),
-  rejectUri: Joi.string().uri().allow(null).required(),
-  scopes: Joi.array().items(Joi.string()).required(),
-  status: JOI_SESSION_STATUS.required(),
-  templateName: Joi.string().required(),
-  templateParameters: Joi.object().required(),
-  tokenPayload: Joi.object().required(),
-  type: JOI_RDC_TYPE.required(),
-});
+    clientId: JOI_GUID.required(),
+    confirmMethod: JOI_RDC_CONFIRM_METHOD.required(),
+    confirmPayload: Joi.object().required(),
+    confirmUri: Joi.string().uri().allow(null).required(),
+    deviceLinks: Joi.array().items(Joi.string()).required(),
+    enrolmentSessionId: JOI_GUID.allow(null).required(),
+    expires: Joi.date().required(),
+    factors: JOI_FACTORS.required(),
+    identityId: JOI_GUID.allow(null).required(),
+    mode: JOI_RDC_MODE.required(),
+    nonce: JOI_NONCE.required(),
+    rejectMethod: JOI_RDC_REJECT_METHOD.required(),
+    rejectPayload: Joi.object().required(),
+    rejectUri: Joi.string().uri().allow(null).required(),
+    scopes: Joi.array().items(Joi.string()).required(),
+    status: JOI_SESSION_STATUS.required(),
+    templateName: Joi.string().required(),
+    templateParameters: Joi.object().required(),
+    tokenPayload: Joi.object().required(),
+    type: JOI_RDC_TYPE.required(),
+  })
+  .required();
 
 export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly clientId: string;
@@ -136,10 +138,6 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     this.templateParameters = options.templateParameters || {};
     this.tokenPayload = options.tokenPayload || {};
     this.type = options.type;
-  }
-
-  public create(): void {
-    /* intentionally left empty */
   }
 
   public async schemaValidation(): Promise<void> {

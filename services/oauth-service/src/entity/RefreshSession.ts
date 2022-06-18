@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
   JOI_GUID,
@@ -82,7 +82,7 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
-    this.nonce = options.nonce || getRandomString(16);
+    this.nonce = options.nonce || randomString(16);
     this.previousRefreshSessionId = options.previousRefreshSessionId || null;
     this.tokenId = options.tokenId || randomUUID();
     this.uiLocales = options.uiLocales || [];

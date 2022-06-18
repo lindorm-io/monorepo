@@ -23,19 +23,18 @@ export const sendConnectSessionMessage = async (
     });
   }
 
-  const { expires } = connectSession;
-
-  const url = createURL(configuration.frontend.routes.connect_callback, {
-    host: configuration.frontend.host,
-    port: configuration.frontend.port,
-    query: {
-      code,
-      sessionId: connectSession.id,
-    },
-  });
-
   const body: SendCodeRequestData = {
-    content: { expires, url: url.toString() },
+    content: {
+      expires: connectSession.expires,
+      url: createURL(configuration.frontend.routes.connect_callback, {
+        host: configuration.frontend.host,
+        port: configuration.frontend.port,
+        query: {
+          code,
+          sessionId: connectSession.id,
+        },
+      }).toString(),
+    },
     template: "identifier-connect-session",
     to: identifier.identifier,
     type: identifier.type,

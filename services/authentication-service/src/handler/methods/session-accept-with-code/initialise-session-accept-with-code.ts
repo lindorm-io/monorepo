@@ -4,7 +4,7 @@ import { EmitSocketEventRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { getValidIdentitySessions } from "../../authentication";
 
 interface Options {
@@ -34,7 +34,7 @@ export const initialiseSessionAcceptWithCode = async (
     });
   }
 
-  const code = `${getRandomString(4)}-${getRandomString(4)}`.toUpperCase();
+  const code = `${randomString(4)}-${randomString(4)}`.toUpperCase();
   strategySession.code = await argon.encrypt(code);
 
   await strategySessionCache.update(strategySession);

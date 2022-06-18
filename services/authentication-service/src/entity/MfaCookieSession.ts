@@ -11,6 +11,7 @@ import { JOI_AUTHENTICATION_METHOD } from "../constant";
 import { AuthenticationMethod } from "../enum";
 
 export interface MfaCookieSessionAttributes extends EntityAttributes {
+  expires: Date;
   identityId: string;
   levelOfAssurance: LevelOfAssurance;
   methods: Array<AuthenticationMethod>;
@@ -22,6 +23,7 @@ const schema = Joi.object<MfaCookieSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    expires: Joi.date().required(),
     identityId: JOI_GUID.required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     methods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
@@ -32,6 +34,7 @@ export class MfaCookieSession
   extends LindormEntity<MfaCookieSessionAttributes>
   implements MfaCookieSessionAttributes
 {
+  public readonly expires: Date;
   public readonly identityId: string;
   public readonly levelOfAssurance: LevelOfAssurance;
   public readonly methods: Array<AuthenticationMethod>;
@@ -39,13 +42,10 @@ export class MfaCookieSession
   public constructor(options: MfaCookieSessionOptions) {
     super(options);
 
+    this.expires = options.expires;
     this.identityId = options.identityId;
     this.levelOfAssurance = options.levelOfAssurance;
     this.methods = options.methods;
-  }
-
-  public create(): void {
-    /* intentionally left empty */
   }
 
   public async schemaValidation(): Promise<void> {
@@ -56,6 +56,7 @@ export class MfaCookieSession
     return {
       ...this.defaultJSON(),
 
+      expires: this.expires,
       identityId: this.identityId,
       levelOfAssurance: this.levelOfAssurance,
       methods: this.methods,

@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint, TokenType } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getRandomString, stringToSeconds } from "@lindorm-io/core";
+import { getExpires, randomString } from "@lindorm-io/core";
 import { sortedUniq } from "lodash";
 
 interface RequestData {
@@ -55,20 +55,20 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     strategies.push(ChallengeStrategy.PINCODE);
   }
 
-  const certificateChallenge = getRandomString(128);
-  const expiresIn = stringToSeconds(configuration.defaults.challenge_session_expiry);
+  const certificateChallenge = randomString(128);
+  const { expires, expiresIn } = getExpires(configuration.defaults.challenge_session_expiry);
 
   const session = await challengeSessionCache.create(
     new ChallengeSession({
       certificateChallenge,
       clientId,
       deviceLinkId: deviceLink.id,
+      expires,
       nonce,
       payload,
       scopes,
       strategies,
     }),
-    expiresIn,
   );
 
   const { token } = jwt.sign({

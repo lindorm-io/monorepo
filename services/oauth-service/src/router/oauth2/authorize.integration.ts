@@ -108,7 +108,7 @@ describe("/oauth2/authorize", () => {
         idTokenHint: expect.any(String),
         identityId: identityId,
         levelOfAssurance: 3,
-        loginHint: ["test@lindorm.io", "email@lindorm.io", "+46705498721", "identity_username"],
+        loginHint: ["+46705498721", "email@lindorm.io", "identity_username", "test@lindorm.io"],
         maxAge: 3600,
         nonce: nonce,
         originalUri: expect.any(String),

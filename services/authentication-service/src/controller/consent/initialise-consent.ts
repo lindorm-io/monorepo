@@ -30,7 +30,7 @@ export const initialiseConsentController: ServerKoaController<RequestData> = asy
   } = ctx;
 
   const {
-    authorizationSession: { displayMode, expiresAt, expiresIn, uiLocales },
+    authorizationSession: { displayMode, expiresAt, uiLocales },
     client: { scopeDescriptions, description, name, requiredScopes, type, logoUri },
     consentRequired,
     consentStatus,
@@ -69,7 +69,6 @@ export const initialiseConsentController: ServerKoaController<RequestData> = asy
       scopeDescriptions,
       type,
     }),
-    expiresIn,
   );
 
   ctx.setCookie(CONSENT_SESSION_COOKIE_NAME, consentSession.id, { expiry: consentSession.expires });

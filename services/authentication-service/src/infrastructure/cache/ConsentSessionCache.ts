@@ -7,6 +7,7 @@ export class ConsentSessionCache extends LindormCache<ConsentSessionAttributes, 
       ...options,
       entityName: "ConsentSession",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

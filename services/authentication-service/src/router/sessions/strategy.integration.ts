@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { AuthenticationMethod } from "../../enum";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
   createTestAccount,
@@ -88,7 +88,7 @@ describe("/sessions/strategy", () => {
       createTestStrategySession({
         authenticationSessionId: authenticationSession.id,
         method: AuthenticationMethod.DEVICE_CHALLENGE,
-        nonce: getRandomString(16),
+        nonce: randomString(16),
       }),
     );
 

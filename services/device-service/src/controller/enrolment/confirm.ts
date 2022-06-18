@@ -7,7 +7,7 @@ import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { includes } from "lodash";
 import {
   ChallengeConfirmationTokenClaims,
@@ -68,8 +68,8 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
 
   const trusted = includes([SessionStatus.CONFIRMED, SessionStatus.SKIP], enrolmentSession.status);
   const salt: DeviceLinkSalt = {
-    aes: getRandomString(128),
-    sha: getRandomString(128),
+    aes: randomString(128),
+    sha: randomString(128),
   };
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },

@@ -5,7 +5,7 @@ import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 interface RequestData {
   description: string;
@@ -42,7 +42,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
     repository: { clientRepository },
   } = ctx;
 
-  const secret = getRandomString(128);
+  const secret = randomString(128);
 
   const client = await clientRepository.create(
     new Client({

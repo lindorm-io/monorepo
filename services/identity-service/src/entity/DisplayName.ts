@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { LindormError } from "@lindorm-io/errors";
-import { getRandomNumber } from "@lindorm-io/core";
+import { randomNumber } from "@lindorm-io/core";
 import { includes, remove } from "lodash";
 import {
   EntityAttributes,
@@ -59,7 +59,7 @@ export class DisplayName extends LindormEntity<DisplayNameAttributes> {
     let currentTry = 0;
 
     while (currentTry < maximumTries) {
-      const number = getRandomNumber(4);
+      const number = randomNumber(4);
 
       if (!this.exists(number)) {
         return number;

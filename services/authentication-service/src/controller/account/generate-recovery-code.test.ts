@@ -10,7 +10,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.mock("@lindorm-io/core", () => ({
   ...jest.requireActual("@lindorm-io/core"),
 
-  getRandomString: (num: number) => "1234567890".slice(0, num),
+  randomString: (num: number) => "1234567890".slice(0, num),
 }));
 
 jest.mock("@lindorm-io/crypto", () => ({

@@ -5,7 +5,7 @@ import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/core";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 interface Options {
   strategySessionToken: string;
@@ -24,7 +24,7 @@ export const initialiseEmailLink = async (
 
   const { strategySessionToken, email } = options;
 
-  const code = getRandomString(64);
+  const code = randomString(64);
   strategySession.code = await argon.encrypt(code);
 
   await strategySessionCache.update(strategySession);

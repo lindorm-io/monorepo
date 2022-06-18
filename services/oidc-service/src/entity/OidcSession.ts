@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -6,7 +7,6 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import { JOI_GUID } from "../common";
 
 export interface OidcSessionAttributes extends EntityAttributes {
   callbackUri: string;

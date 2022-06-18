@@ -7,6 +7,7 @@ export class ConnectSessionCache extends LindormCache<ConnectSessionAttributes, 
       ...options,
       entityName: "ConnectSession",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

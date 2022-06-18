@@ -2,7 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { fetchAccountSalt } from "../../handler";
 
 interface ResponseBody {
@@ -30,12 +30,12 @@ export const generateBrowserLinkCodeController: ServerKoaController = async (
   });
 
   const code = [
-    getRandomString(2).toUpperCase(),
-    getRandomString(6).toUpperCase(),
-    getRandomString(4).toUpperCase(),
-    getRandomString(6).toUpperCase(),
-    getRandomString(4).toUpperCase(),
-    getRandomString(6).toUpperCase(),
+    randomString(2).toUpperCase(),
+    randomString(6).toUpperCase(),
+    randomString(4).toUpperCase(),
+    randomString(6).toUpperCase(),
+    randomString(4).toUpperCase(),
+    randomString(6).toUpperCase(),
   ].join("-");
 
   account.browserLinkCode = await crypto.encrypt(code);

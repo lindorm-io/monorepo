@@ -7,7 +7,7 @@ import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession, isRdcRequired } from "../../handler";
 import { getExpires } from "@lindorm-io/core";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import {
   RdcSessionMode,
   RdcSessionType,
@@ -74,12 +74,12 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     },
   } = ctx;
 
-  const certificateChallenge = getRandomString(128);
+  const certificateChallenge = randomString(128);
 
   const { expires, expiresIn } = getExpires(configuration.defaults.enrolment_session_expiry);
 
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
-  const nonce = getRandomString(16);
+  const nonce = randomString(16);
 
   const session = await enrolmentSessionCache.create(
     new EnrolmentSession({
@@ -93,6 +93,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
         model,
         systemName,
       },
+      expires,
       fingerprint,
       identityId,
       installationId,
@@ -102,7 +103,6 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       status: externalChallengeRequired ? SessionStatus.PENDING : SessionStatus.SKIP,
       uniqueId,
     }),
-    expiresIn,
   );
 
   const { token } = jwt.sign({

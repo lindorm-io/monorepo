@@ -1,12 +1,12 @@
 import { Identifier, IdentifierOptions } from "../../entity";
 import { IdentifierType } from "../../common";
 import { configuration } from "../../server/configuration";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 
 export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = {}): Identifier =>
   new Identifier({
-    identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
+    identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
     identityId: randomUUID(),
     label: "home",
     primary: true,
@@ -20,7 +20,7 @@ export const createTestExternalIdentifier = (
   options: Partial<IdentifierOptions> = {},
 ): Identifier =>
   new Identifier({
-    identifier: getRandomString(32),
+    identifier: randomString(32),
     identityId: randomUUID(),
     label: "home",
     primary: false,
@@ -32,7 +32,7 @@ export const createTestExternalIdentifier = (
 
 export const createTestPhoneIdentifier = (options: Partial<IdentifierOptions> = {}): Identifier =>
   new Identifier({
-    identifier: `+4670${getRandomNumber(7)}`,
+    identifier: `+4670${randomNumber(7)}`,
     identityId: randomUUID(),
     label: "home",
     primary: true,

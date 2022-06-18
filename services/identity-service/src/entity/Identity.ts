@@ -76,34 +76,36 @@ export type IdentityOptions = Optional<
   | "zoneInfo"
 >;
 
-const schema = Joi.object<IdentityAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<IdentityAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  active: Joi.boolean().required(),
-  birthDate: JOI_BIRTHDATE.allow(null).required(),
-  displayName: JOI_IDENTITY_DISPLAY_NAME.required(),
-  familyName: Joi.string().allow(null).required(),
-  gender: Joi.string().allow(null).required(),
-  givenName: Joi.string().allow(null).required(),
-  gravatarUri: Joi.string().uri().allow(null).required(),
-  locale: JOI_LOCALE.allow(null).required(),
-  middleName: Joi.string().allow(null).required(),
-  namingSystem: JOI_NAMING_SYSTEM.required(),
-  nationalIdentityNumber: Joi.string().allow(null).required(),
-  nationalIdentityNumberVerified: Joi.boolean().required(),
-  nickname: Joi.string().allow(null).required(),
-  permissions: Joi.array().items(Joi.string()).required(),
-  picture: Joi.string().uri().allow(null).required(),
-  preferredAccessibility: Joi.array().items(Joi.string()).required(),
-  preferredUsername: Joi.string().allow(null).required(),
-  profile: Joi.string().uri().allow(null).required(),
-  pronouns: Joi.string().allow(null).required(),
-  socialSecurityNumber: Joi.string().allow(null).required(),
-  socialSecurityNumberVerified: Joi.boolean().required(),
-  username: Joi.string().lowercase().allow(null).required(),
-  website: Joi.string().uri().allow(null).required(),
-  zoneInfo: JOI_ZONE_INFO.allow(null).required(),
-});
+    active: Joi.boolean().required(),
+    birthDate: JOI_BIRTHDATE.allow(null).required(),
+    displayName: JOI_IDENTITY_DISPLAY_NAME.required(),
+    familyName: Joi.string().allow(null).required(),
+    gender: Joi.string().allow(null).required(),
+    givenName: Joi.string().allow(null).required(),
+    gravatarUri: Joi.string().uri().allow(null).required(),
+    locale: JOI_LOCALE.allow(null).required(),
+    middleName: Joi.string().allow(null).required(),
+    namingSystem: JOI_NAMING_SYSTEM.required(),
+    nationalIdentityNumber: Joi.string().allow(null).required(),
+    nationalIdentityNumberVerified: Joi.boolean().required(),
+    nickname: Joi.string().allow(null).required(),
+    permissions: Joi.array().items(Joi.string()).required(),
+    picture: Joi.string().uri().allow(null).required(),
+    preferredAccessibility: Joi.array().items(Joi.string()).required(),
+    preferredUsername: Joi.string().allow(null).required(),
+    profile: Joi.string().uri().allow(null).required(),
+    pronouns: Joi.string().allow(null).required(),
+    socialSecurityNumber: Joi.string().allow(null).required(),
+    socialSecurityNumberVerified: Joi.boolean().required(),
+    username: Joi.string().lowercase().allow(null).required(),
+    website: Joi.string().uri().allow(null).required(),
+    zoneInfo: JOI_ZONE_INFO.allow(null).required(),
+  })
+  .required();
 
 export class Identity extends LindormEntity<IdentityAttributes> {
   public active: boolean;

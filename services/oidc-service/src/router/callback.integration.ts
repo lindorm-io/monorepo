@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createURL, getRandomString } from "@lindorm-io/core";
+import { createURL, randomString } from "@lindorm-io/core";
 import { createTestOidcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import {
@@ -55,8 +55,8 @@ describe("/callback", () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
         provider: "apple",
-        nonce: getRandomString(16),
-        state: getRandomString(48),
+        nonce: randomString(16),
+        state: randomString(48),
       }),
     );
 
@@ -89,8 +89,8 @@ describe("/callback", () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
         provider: "google",
-        nonce: getRandomString(16),
-        state: getRandomString(48),
+        nonce: randomString(16),
+        state: randomString(48),
       }),
     );
 
@@ -123,8 +123,8 @@ describe("/callback", () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
         provider: "microsoft",
-        nonce: getRandomString(16),
-        state: getRandomString(48),
+        nonce: randomString(16),
+        state: randomString(48),
       }),
     );
 

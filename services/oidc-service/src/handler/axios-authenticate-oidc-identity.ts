@@ -1,6 +1,7 @@
+import { OidcSession } from "../entity";
 import { ServerKoaContext } from "../types";
 import { clientCredentialsMiddleware } from "../middleware";
-import { OidcSession } from "../entity";
+import { removeEmptyFromObject } from "@lindorm-io/core";
 import {
   AuthenticateIdentifierRequestData,
   AuthenticateIdentifierResponseBody,
@@ -24,12 +25,12 @@ export const axiosAuthenticateOidcIdentity = async (
   const { identityId } = oidcSession;
   const { provider, subject } = options;
 
-  const body: AuthenticateIdentifierRequestData = {
+  const body: AuthenticateIdentifierRequestData = removeEmptyFromObject({
     identifier: subject,
-    ...(identityId ? { identityId } : {}),
-    provider: provider,
+    identityId,
+    provider,
     type: IdentifierType.EXTERNAL,
-  };
+  });
 
   const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
     "/internal/identifiers/authenticate",

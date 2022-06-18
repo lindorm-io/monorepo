@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { IdentifierType } from "../../common";
 import { argon } from "../../instance";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
   TEST_CONNECT_SESSION_CACHE,
@@ -44,8 +44,8 @@ describe("/sessions/connect-identifier", () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
-          name: getRandomString(10),
-          number: getRandomNumber(4),
+          name: randomString(10),
+          number: randomNumber(4),
         },
       }),
     );
@@ -58,7 +58,7 @@ describe("/sessions/connect-identifier", () => {
       .post("/sessions/connect-identifier")
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
-        identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
+        identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
         label: "label",
         type: IdentifierType.EMAIL,
       })
@@ -69,8 +69,8 @@ describe("/sessions/connect-identifier", () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
-          name: getRandomString(10),
-          number: getRandomNumber(4),
+          name: randomString(10),
+          number: randomNumber(4),
         },
       }),
     );
@@ -82,7 +82,7 @@ describe("/sessions/connect-identifier", () => {
       }),
     );
 
-    const code = getRandomString(64);
+    const code = randomString(64);
     const connectSession = await TEST_CONNECT_SESSION_CACHE.create(
       createTestConnectSession({
         code: await argon.encrypt(code),

@@ -6,7 +6,7 @@ import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { calculatePrioritizedMethod } from "../../util";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 interface RequestData {
   id: string;
@@ -51,7 +51,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
   }
 
   if (authenticationSession.status === SessionStatus.CONFIRMED) {
-    const code = getRandomString(64);
+    const code = randomString(64);
 
     authenticationSession.code = await argon.encrypt(code);
     authenticationSession.status = SessionStatus.CODE;

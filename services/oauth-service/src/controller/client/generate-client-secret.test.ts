@@ -5,7 +5,8 @@ import { createTestClient } from "../../fixtures/entity";
 
 jest.mock("@lindorm-io/core", () => ({
   ...(jest.requireActual("@lindorm-io/core") as object),
-  getRandomString: jest.fn().mockImplementation(() => "random-string"),
+
+  randomString: jest.fn().mockImplementation(() => "random-string"),
 }));
 
 jest.mock("../../instance", () => ({

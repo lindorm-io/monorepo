@@ -8,7 +8,7 @@ import { LoginSession } from "../../entity";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createHash, randomUUID } from "crypto";
-import { createURL, getRandomString, PKCEMethod } from "@lindorm-io/core";
+import { createURL, randomString, PKCEMethod } from "@lindorm-io/core";
 import { filter, find, includes } from "lodash";
 import {
   confirmOauthAuthenticationSession,
@@ -76,7 +76,7 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
   const emailHint = find(loginHint, (item) => REGEX_EMAIL.test(item));
   const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));
 
-  const codeVerifier = getRandomString(32);
+  const codeVerifier = randomString(32);
   const codeChallengeMethod = PKCEMethod.S256;
   const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64");
 
@@ -93,7 +93,7 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
     expires: new Date(expiresAt),
     identityId,
     loginSessionId,
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     phoneHint,
     redirectUri: createURL("/sessions/login/confirm", {
       host: configuration.server.host,

@@ -1,6 +1,6 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 import {
@@ -21,7 +21,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
     authTime: getUnixTime(new Date()),
     expiry: "10 seconds",
     levelOfAssurance: 4,
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     permissions: Object.values(IdentityPermission),
     scopes: Object.values(Scope),
     sessionId: randomUUID(),

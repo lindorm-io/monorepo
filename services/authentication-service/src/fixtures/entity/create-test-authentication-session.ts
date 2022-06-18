@@ -1,6 +1,6 @@
 import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
 import { SessionStatus } from "../../common";
-import { getRandomString, PKCEMethod } from "@lindorm-io/core";
+import { randomString, PKCEMethod } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import { AuthenticationMethod } from "../../enum";
 
@@ -16,14 +16,14 @@ export const createTestAuthenticationSession = (
       AuthenticationMethod.PHONE_OTP,
     ],
     clientId: randomUUID(),
-    codeChallenge: getRandomString(32),
+    codeChallenge: randomString(32),
     codeChallengeMethod: PKCEMethod.S256,
     country: "se",
     emailHint: "test@lindorm.io",
     expires: new Date("2022-01-01T08:00:00.000Z"),
     identityId: randomUUID(),
     loginSessionId: randomUUID(),
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     phoneHint: "0701234567",
     redirectUri: "https://redirect.uri",
     requestedLevelOfAssurance: 4,

@@ -1,7 +1,7 @@
 import { CertificateMethod } from "../../enum";
 import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
 import { SessionStatus } from "../../common";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 
 export const createTestEnrolmentSession = (
@@ -19,11 +19,12 @@ export const createTestEnrolmentSession = (
       model: "iPhone7,2",
       systemName: "iOS",
     },
-    fingerprint: getRandomString(32),
+    expires: new Date("2023-01-01T08:00:00.000Z"),
+    fingerprint: randomString(32),
     identityId: randomUUID(),
     installationId: randomUUID(),
     name: "Test DeviceLink Name",
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     publicKey:
       "-----BEGIN RSA PUBLIC KEY-----\n" +
       "MIGJAoGBAKdVz2lIbQi1YU3Z0qRizpV9gAMW9Kmwms4aP+r7CKcu4w9/fMcV4v6P\n" +

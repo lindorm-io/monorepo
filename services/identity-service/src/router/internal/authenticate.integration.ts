@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { IdentifierType } from "../../common";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
   TEST_IDENTIFIER_REPOSITORY,
@@ -26,7 +26,7 @@ describe("/internal/authenticate", () => {
       .post("/internal/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
+        identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
         type: IdentifierType.EMAIL,
       })
       .expect(200);
@@ -69,7 +69,7 @@ describe("/internal/authenticate", () => {
       .post("/internal/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        identifier: `${getRandomString(16).toLowerCase()}@lindorm.io`,
+        identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
         type: IdentifierType.EMAIL,
       })
       .expect(200);
@@ -86,7 +86,7 @@ describe("/internal/authenticate", () => {
       .post("/internal/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        identifier: getRandomString(32),
+        identifier: randomString(32),
         provider: "https://login.apple.com/",
         type: IdentifierType.EXTERNAL,
       })
@@ -104,7 +104,7 @@ describe("/internal/authenticate", () => {
       .post("/internal/authenticate")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        identifier: `+4670${getRandomNumber(7)}`,
+        identifier: `+4670${randomNumber(7)}`,
         type: IdentifierType.PHONE,
       })
       .expect(200);
@@ -140,7 +140,7 @@ describe("/internal/authenticate", () => {
   test("POST / - should verify username", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
-        username: getRandomString(12),
+        username: randomString(12),
       }),
     );
 

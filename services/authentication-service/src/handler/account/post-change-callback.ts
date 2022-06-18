@@ -2,7 +2,7 @@ import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
 import { CreateEncryptedRecordRequestBody, GetEncryptedRecordResponseBody } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 export const createAccountCallback =
   (ctx: ServerKoaContext) =>
@@ -14,8 +14,8 @@ export const createAccountCallback =
     const body: CreateEncryptedRecordRequestBody<AccountSalt> = {
       id: account.id,
       data: {
-        aes: getRandomString(128),
-        sha: getRandomString(128),
+        aes: randomString(128),
+        sha: randomString(128),
       },
     };
 

@@ -140,7 +140,7 @@ describe("oauthAuthorizeController", () => {
         idTokenHint: "id.jwt.jwt",
         identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
         levelOfAssurance: 3,
-        loginHint: ["test@lindorm.io", "+46705498721", "identity_username"],
+        loginHint: ["+46705498721", "identity_username", "test@lindorm.io"],
         maxAge: 500,
         nonce: "J2qVbRKmMg1UPCty",
         originalUri: "https://oauth.test.lindorm.io/oauth2/authorize?query=query",
@@ -152,7 +152,6 @@ describe("oauthAuthorizeController", () => {
         state: "l7wj9qEP90kfbAGa",
         uiLocales: ["en-GB", "en-US"],
       }),
-      1800,
     );
 
     expect(setAuthorizationSessionCookie).toHaveBeenCalled();
@@ -210,7 +209,6 @@ describe("oauthAuthorizeController", () => {
         state: "l7wj9qEP90kfbAGa",
         uiLocales: [],
       }),
-      1800,
     );
   });
 });

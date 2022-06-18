@@ -4,7 +4,7 @@ import { IdentifierType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import { initialiseConnectSession, sendConnectSessionMessage } from "../sessions";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
 
@@ -57,7 +57,7 @@ export const addIdentifierFromUserinfo = async (
     }),
   );
 
-  const code = getRandomString(64);
+  const code = randomString(64);
   const connectSession = await initialiseConnectSession(ctx, identifierEntity, code);
 
   await sendConnectSessionMessage(ctx, identifierEntity, connectSession, code);

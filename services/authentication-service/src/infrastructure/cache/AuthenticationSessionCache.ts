@@ -10,6 +10,7 @@ export class AuthenticationSessionCache extends LindormCache<
       ...options,
       entityName: "AuthenticationSession",
       indexedAttributes: ["loginSessionId"],
+      ttlAttribute: "expires",
     });
   }
 

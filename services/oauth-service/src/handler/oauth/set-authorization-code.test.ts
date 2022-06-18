@@ -33,7 +33,6 @@ describe("setAuthorizationCode", () => {
 
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.any(AuthorizationSession),
-      60,
     );
   });
 });

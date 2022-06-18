@@ -7,6 +7,7 @@ export class OidcSessionCache extends LindormCache<OidcSessionAttributes, OidcSe
       ...options,
       entityName: "OidcSession",
       indexedAttributes: ["state"],
+      ttlAttribute: "expires",
     });
   }
 

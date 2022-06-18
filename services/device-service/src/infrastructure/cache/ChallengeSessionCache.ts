@@ -10,6 +10,7 @@ export class ChallengeSessionCache extends LindormCache<
       ...options,
       entityName: "ChallengeSession",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

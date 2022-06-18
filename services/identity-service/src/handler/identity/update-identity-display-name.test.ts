@@ -4,7 +4,8 @@ import { updateIdentityDisplayName } from "./update-identity-display-name";
 
 jest.mock("@lindorm-io/core", () => ({
   ...(jest.requireActual("@lindorm-io/core") as object),
-  getRandomNumber: jest.fn().mockImplementation(async () => 4444),
+
+  randomNumber: jest.fn().mockImplementation(async () => 4444),
 }));
 
 describe("updateIdentityDisplayName", () => {

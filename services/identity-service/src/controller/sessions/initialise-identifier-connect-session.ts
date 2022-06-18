@@ -4,7 +4,7 @@ import { IdentifierType } from "../../common";
 import { JOI_EMAIL, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import {
   findOrCreateIdentifier,
   initialiseConnectSession,
@@ -50,7 +50,7 @@ export const initialiseIdentifierConnectSessionController: ServerKoaController<
     });
   }
 
-  const code = getRandomString(64);
+  const code = randomString(64);
   const connectSession = await initialiseConnectSession(ctx, identifierEntity, code);
 
   await sendConnectSessionMessage(ctx, identifierEntity, connectSession, code);

@@ -16,13 +16,15 @@ export interface ConnectSessionAttributes extends EntityAttributes {
 
 export type ConnectSessionOptions = Optional<ConnectSessionAttributes, EntityKeys>;
 
-const schema = Joi.object<ConnectSessionAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<ConnectSessionAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  code: JOI_ARGON_STRING.required(),
-  expires: Joi.date().required(),
-  identifierId: JOI_GUID.required(),
-});
+    code: JOI_ARGON_STRING.required(),
+    expires: Joi.date().required(),
+    identifierId: JOI_GUID.required(),
+  })
+  .required();
 
 export class ConnectSession extends LindormEntity<ConnectSessionAttributes> {
   public readonly code: string;

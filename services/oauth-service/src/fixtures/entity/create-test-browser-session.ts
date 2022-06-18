@@ -1,6 +1,6 @@
 import { BrowserSession, BrowserSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 export const createTestBrowserSession = (
   options: Partial<BrowserSessionOptions> = {},
@@ -14,7 +14,7 @@ export const createTestBrowserSession = (
     identityId: randomUUID(),
     latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
     levelOfAssurance: 2,
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     remember: true,
     uiLocales: ["sv-SE", "en-GB"],
     ...options,

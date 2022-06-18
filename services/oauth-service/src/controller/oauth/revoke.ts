@@ -3,6 +3,7 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { InvalidToken } from "../../entity";
 import { JOI_GUID, JOI_JWT, TokenType } from "../../common";
+import { fromUnixTime } from "date-fns";
 
 interface RequestData {
   clientId: string;
@@ -28,11 +29,11 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
     repository: { refreshSessionRepository },
   } = ctx;
 
-  const { id, expiresIn, sessionId, type } = jwt.verify(data.token, {
+  const { id, expires, sessionId, type } = jwt.verify(data.token, {
     types: [TokenType.ACCESS, TokenType.REFRESH],
   });
 
-  await invalidTokenCache.create(new InvalidToken({ id }), expiresIn);
+  await invalidTokenCache.create(new InvalidToken({ id, expires: fromUnixTime(expires) }));
 
   if (type === TokenType.REFRESH) {
     await refreshSessionRepository.deleteMany({ id: sessionId });

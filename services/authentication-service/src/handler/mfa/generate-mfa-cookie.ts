@@ -2,7 +2,7 @@ import { AuthenticationSession, MfaCookieSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { configuration } from "../../server/configuration";
-import { getExpires, getExpiryDate } from "@lindorm-io/core";
+import { getExpiryDate } from "@lindorm-io/core";
 
 export const generateMfaCookie = async (
   ctx: ServerKoaContext,
@@ -12,18 +12,18 @@ export const generateMfaCookie = async (
     cache: { mfaCookieSessionCache },
   } = ctx;
 
-  const { expiresIn } = getExpires(configuration.defaults.mfa_cookie_expiry);
+  const expires = getExpiryDate(configuration.defaults.mfa_cookie_expiry);
 
   const mfaCookieSession = await mfaCookieSessionCache.create(
     new MfaCookieSession({
+      expires,
       identityId: authenticationSession.identityId,
       levelOfAssurance: authenticationSession.confirmedLevelOfAssurance,
       methods: authenticationSession.confirmedMethods,
     }),
-    expiresIn,
   );
 
   ctx.setCookie(MFA_COOKIE_NAME, mfaCookieSession.id, {
-    expiry: getExpiryDate(configuration.defaults.mfa_cookie_expiry),
+    expiry: expires,
   });
 };

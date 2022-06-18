@@ -11,7 +11,7 @@ import {
   createTestPhoneIdentifier,
 } from "../../fixtures/entity";
 import { find } from "lodash";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
   TEST_IDENTIFIER_REPOSITORY,
@@ -47,8 +47,8 @@ describe("/internal/userinfo", () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
       createTestIdentity({
         displayName: {
-          name: getRandomString(12),
-          number: getRandomNumber(4),
+          name: randomString(12),
+          number: randomNumber(4),
         },
       }),
     );
@@ -145,10 +145,10 @@ describe("/internal/userinfo", () => {
     const identity = new Identity({});
     identity.username = null;
 
-    const email = `new-${getRandomString(16)}@lindorm.io`;
-    const phone = `+${getRandomNumber(12)}`;
-    const sub = getRandomString(32);
-    const username = getRandomString(16);
+    const email = `new-${randomString(16)}@lindorm.io`;
+    const phone = `+${randomNumber(12)}`;
+    const sub = randomString(32);
+    const username = randomString(16);
 
     await TEST_IDENTITY_REPOSITORY.create(identity);
 

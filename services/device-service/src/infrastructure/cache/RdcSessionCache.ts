@@ -7,6 +7,7 @@ export class RdcSessionCache extends LindormCache<RdcSessionAttributes, RdcSessi
       ...options,
       entityName: "RdcSession",
       indexedAttributes: ["identityId"],
+      ttlAttribute: "expires",
     });
   }
 

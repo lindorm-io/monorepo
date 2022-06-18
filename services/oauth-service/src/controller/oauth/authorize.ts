@@ -3,7 +3,7 @@ import { AuthorizationSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { createURL, getExpires, PKCEMethod } from "@lindorm-io/core";
+import { createURL, getExpiryDate, PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
 import { flatten, uniq } from "lodash";
 import {
   setAuthorizationSessionCookie,
@@ -117,7 +117,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const responseTypes = responseType.toLowerCase().split(" ") as Array<ResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.expiry.authorization_session);
+  const expires = getExpiryDate(configuration.defaults.expiry.authorization_session);
 
   const { authenticationMethods, levelOfAssurance } = filterAcrValues(
     acrValues,
@@ -147,12 +147,14 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     idTokenHint: idToken ? idToken.token : null,
     identityId: idToken ? idToken.subject : null,
     levelOfAssurance: levelOfAssurance || client.defaults.levelOfAssurance,
-    loginHint: uniq([
-      ...(loginHint ? [loginHint] : []),
-      ...(idToken?.claims?.email ? [idToken.claims.email] : []),
-      ...(idToken?.claims?.phoneNumber ? [idToken.claims.phoneNumber] : []),
-      ...(idToken?.claims?.username ? [idToken.claims.username] : []),
-    ]),
+    loginHint: removeEmptyFromArray(
+      uniq([
+        loginHint,
+        idToken?.claims?.email,
+        idToken?.claims?.phoneNumber,
+        idToken?.claims?.username,
+      ]),
+    ).sort(),
     maxAge: maxAge ? parseInt(maxAge, 10) : null,
     nonce: nonce || idToken?.nonce || browserSession.nonce,
     originalUri: new URL(ctx.request.originalUrl, configuration.server.host).toString(),
@@ -182,7 +184,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   assertAuthorizeScope(authorizationSession, client);
 
-  authorizationSession = await authorizationSessionCache.create(authorizationSession, expiresIn);
+  authorizationSession = await authorizationSessionCache.create(authorizationSession);
 
   setAuthorizationSessionCookie(ctx, authorizationSession);
 

@@ -63,8 +63,6 @@ export const createRdcSession = async (
     deviceLinks = deviceLinkList.map((deviceLink) => deviceLink.id);
   }
 
-  const { expiresIn } = getExpires(expires);
-
   const rdcSession = await rdcSessionCache.create(
     new RdcSession({
       clientId,
@@ -87,7 +85,6 @@ export const createRdcSession = async (
       tokenPayload,
       type,
     }),
-    expiresIn,
   );
 
   const { id } = rdcSession;
@@ -104,6 +101,8 @@ export const createRdcSession = async (
       middleware: [clientCredentialsMiddleware(oauthClient)],
     });
   }
+
+  const { expiresIn } = getExpires(expires);
 
   return { id, expiresIn };
 };

@@ -31,22 +31,24 @@ export type DeviceLinkOptions = Optional<
   EntityKeys | "active" | "biometry" | "pincode" | "trusted"
 >;
 
-const schema = Joi.object<DeviceLinkAttributes>({
-  ...JOI_ENTITY_BASE,
+const schema = Joi.object<DeviceLinkAttributes>()
+  .keys({
+    ...JOI_ENTITY_BASE,
 
-  active: Joi.boolean().required(),
-  biometry: Joi.string().base64().allow(null).required(),
-  certificateMethod: JOI_CERTIFICATE_METHOD.required(),
-  deviceMetadata: JOI_DEVICE_METADATA.required(),
-  fingerprint: Joi.string().required(),
-  identityId: JOI_GUID.required(),
-  installationId: JOI_GUID.required(),
-  name: Joi.string().allow(null).required(),
-  pincode: Joi.string().base64().allow(null).required(),
-  publicKey: Joi.string().required(),
-  trusted: Joi.boolean().required(),
-  uniqueId: JOI_GUID.required(),
-});
+    active: Joi.boolean().required(),
+    biometry: Joi.string().base64().allow(null).required(),
+    certificateMethod: JOI_CERTIFICATE_METHOD.required(),
+    deviceMetadata: JOI_DEVICE_METADATA.required(),
+    fingerprint: Joi.string().required(),
+    identityId: JOI_GUID.required(),
+    installationId: JOI_GUID.required(),
+    name: Joi.string().allow(null).required(),
+    pincode: Joi.string().base64().allow(null).required(),
+    publicKey: Joi.string().required(),
+    trusted: Joi.boolean().required(),
+    uniqueId: JOI_GUID.required(),
+  })
+  .required();
 
 export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
   public readonly certificateMethod: CertificateMethod;
@@ -57,72 +59,27 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
   public readonly publicKey: string;
   public readonly uniqueId: string;
 
-  private _active: boolean;
-  private _biometry: string | null;
-  private _name: string | null;
-  private _pincode: string | null;
-  private _trusted: boolean;
+  public active: boolean;
+  public biometry: string | null;
+  public name: string | null;
+  public pincode: string | null;
+  public trusted: boolean;
 
   public constructor(options: DeviceLinkOptions) {
     super(options);
 
+    this.active = options.active === true;
+    this.biometry = options.biometry || null;
     this.certificateMethod = options.certificateMethod;
     this.deviceMetadata = options.deviceMetadata;
     this.fingerprint = options.fingerprint;
     this.identityId = options.identityId;
     this.installationId = options.installationId;
+    this.name = options.name || null;
+    this.pincode = options.pincode || null;
     this.publicKey = options.publicKey;
+    this.trusted = options.trusted === true;
     this.uniqueId = options.uniqueId;
-
-    this._active = options.active === true;
-    this._biometry = options.biometry || null;
-    this._name = options.name || null;
-    this._pincode = options.pincode || null;
-    this._trusted = options.trusted === true;
-  }
-
-  public get active(): boolean {
-    return this._active;
-  }
-  public set active(active: boolean) {
-    this._active = active;
-    this.updated = new Date();
-  }
-
-  public get biometry(): string | null {
-    return this._biometry;
-  }
-  public set biometry(biometry: string | null) {
-    this._biometry = biometry;
-    this.updated = new Date();
-  }
-
-  public get name(): string | null {
-    return this._name;
-  }
-  public set name(name: string | null) {
-    this._name = name;
-    this.updated = new Date();
-  }
-
-  public get pincode(): string | null {
-    return this._pincode;
-  }
-  public set pincode(pincode: string | null) {
-    this._pincode = pincode;
-    this.updated = new Date();
-  }
-
-  public get trusted(): boolean {
-    return this._trusted;
-  }
-  public set trusted(trusted: boolean) {
-    this._trusted = trusted;
-    this.updated = new Date();
-  }
-
-  public create(): void {
-    /* intentionally left empty */
   }
 
   public async schemaValidation(): Promise<void> {

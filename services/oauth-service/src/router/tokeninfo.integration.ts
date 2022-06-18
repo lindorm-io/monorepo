@@ -59,8 +59,10 @@ describe("/tokeninfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      aal: 4,
       active: true,
+      aal: 4,
+      acr: [],
+      amr: [],
       aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
       client_id: client.id,
       exp: 1609488010,
@@ -73,6 +75,7 @@ describe("/tokeninfo", () => {
       sid: browserSession.id,
       sub: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
       token_type: "access_token",
+      username: null,
     });
   });
 
@@ -109,17 +112,22 @@ describe("/tokeninfo", () => {
 
     expect(response.body).toStrictEqual({
       active: true,
+      aal: 0,
+      acr: [],
+      amr: [],
       aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
       iss: "https://oauth.test.lindorm.io",
       jti: tokenId,
+      loa: 0,
       nbf: 1609488000,
       scope: [],
       sid: refreshSession.id,
       sub: "4634b8bf-a17e-4788-84d7-3054d2e522cb",
       token_type: "refresh_token",
+      username: null,
     });
   });
 });

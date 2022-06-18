@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_PKCE_METHOD } from "../../constant";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { fromUnixTime } from "date-fns";
@@ -57,11 +57,9 @@ export const initialiseSessionAuthenticationController: ServerKoaController<Requ
     country,
     identityId: bearerToken.subject,
     levelOfAssurance: (bearerToken.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
-    loginHint: uniq([
-      ...(idToken?.claims?.email ? [idToken.claims.email] : []),
-      ...(idToken?.claims?.phoneNumber ? [idToken.claims.phoneNumber] : []),
-      ...(idToken?.claims?.username ? [idToken.claims.username] : []),
-    ]),
+    loginHint: removeEmptyFromArray(
+      uniq([idToken?.claims?.email, idToken?.claims?.phoneNumber, idToken?.claims?.username]),
+    ).sort(),
     methods: idToken?.authMethodsReference,
     nonce: bearerToken.nonce,
   };

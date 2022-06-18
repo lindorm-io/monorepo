@@ -4,7 +4,7 @@ import { InitialiseRdcSessionRequestData, RdcSessionMode, RequestMethod } from "
 import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
-import { createURL, getRandomString } from "@lindorm-io/core";
+import { createURL, randomString } from "@lindorm-io/core";
 
 interface Options {
   strategySessionToken: string;
@@ -33,7 +33,7 @@ export const initialiseRdcQrCode = async (
     });
   }
 
-  strategySession.nonce = getRandomString(16);
+  strategySession.nonce = randomString(16);
 
   await strategySessionCache.update(strategySession);
 

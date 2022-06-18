@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm-io/errors";
 import { OidcSession } from "../entity";
+import { PKCEMethod, createURL, randomString, removeEmptyFromObject } from "@lindorm-io/core";
 import { ResponseMode, ResponseType } from "../common";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
 import { createHash } from "crypto";
-import { createURL, getExpires, getRandomString, PKCEMethod } from "@lindorm-io/core";
 import { find } from "lodash";
 
 interface Options {
@@ -36,24 +36,21 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
     scope,
   } = config;
 
-  const { expiresIn } = getExpires(expires);
-
   const oidcSession = await oidcSessionCache.create(
     new OidcSession({
       callbackUri,
-      codeVerifier: getRandomString(32),
+      codeVerifier: randomString(32),
       expires,
       identityId,
-      nonce: getRandomString(16),
+      nonce: randomString(16),
       provider,
-      state: getRandomString(48),
+      state: randomString(48),
     }),
-    expiresIn,
   );
 
   return createURL(endpoint, {
     host,
-    query: {
+    query: removeEmptyFromObject({
       clientId,
       ...(responseType === ResponseType.CODE
         ? {
@@ -63,13 +60,13 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
             codeChallengeMethod: PKCEMethod.S256,
           }
         : {}),
-      ...(loginHint ? { loginHint } : {}),
+      loginHint,
       nonce: oidcSession.nonce,
       redirectUri: createURL("/callback", { host: configuration.server.host }).toString(),
       responseMode: ResponseMode.QUERY,
       responseType,
       scope,
       state: oidcSession.state,
-    },
+    }),
   });
 };

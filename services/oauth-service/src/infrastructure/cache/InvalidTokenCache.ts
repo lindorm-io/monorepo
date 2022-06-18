@@ -7,6 +7,7 @@ export class InvalidTokenCache extends LindormCache<InvalidTokenAttributes, Inva
       ...options,
       entityName: "InvalidToken",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

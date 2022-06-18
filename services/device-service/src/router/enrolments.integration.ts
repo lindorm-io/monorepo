@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { CertificateMethod } from "../enum";
 import { SessionStatus } from "../common";
-import { getRandomNumber, getRandomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { createTestEnrolmentSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
@@ -104,8 +104,8 @@ describe("/enrolments", () => {
       .send({
         certificate_verifier: certificateVerifier,
         enrolment_session_token: enrolmentSessionToken,
-        biometry: getRandomString(128),
-        pincode: getRandomNumber(6).toString().padStart(6, "0"),
+        biometry: randomString(128),
+        pincode: randomNumber(6).toString().padStart(6, "0"),
       })
       .expect(200);
 

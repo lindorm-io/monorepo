@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_JWT, TokenType } from "../../common";
+import { ServerKoaController } from "../../types";
 import { TokenError, JWT } from "@lindorm-io/jwt";
 
 interface RequestData {
@@ -98,22 +98,22 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
   return {
     body: {
       active: active && verifiedToken && !invalidToken,
-      ...(adjustedAccessLevel ? { aal: adjustedAccessLevel } : {}),
-      ...(authContextClass?.length ? { acr: authContextClass } : {}),
-      ...(authMethodsReference?.length ? { amr: authMethodsReference } : {}),
-      aud: audiences,
       clientId: client.id,
+      aal: adjustedAccessLevel,
+      acr: authContextClass,
+      amr: authMethodsReference,
+      aud: audiences,
       exp: expires,
       iat: issuedAt,
       iss: issuer,
       jti: id,
-      ...(levelOfAssurance ? { loa: levelOfAssurance } : {}),
+      loa: levelOfAssurance,
       nbf: notBefore,
       scope: scopes,
       sid: sessionId,
       sub: subject,
       tokenType: type,
-      ...(username ? { username: username } : {}),
+      username,
     },
   };
 };

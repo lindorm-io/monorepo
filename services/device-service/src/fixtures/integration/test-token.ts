@@ -1,6 +1,6 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,
@@ -22,7 +22,7 @@ export const getTestChallengeConfirmationToken = (
       strategy: ChallengeStrategy.PINCODE,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
-    nonce: getRandomString(16),
+    nonce: randomString(16),
     payload: { generated: true },
     scopes: ["test"],
     sessionId: "id",

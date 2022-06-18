@@ -10,6 +10,7 @@ export class MfaCookieSessionCache extends LindormCache<
       ...options,
       entityName: "MfaCookieSession",
       indexedAttributes: ["identityId"],
+      ttlAttribute: "expires",
     });
   }
 

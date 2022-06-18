@@ -7,19 +7,27 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export type InvalidTokenAttributes = EntityAttributes;
+export interface InvalidTokenAttributes extends EntityAttributes {
+  expires: Date;
+}
 
 export type InvalidTokenOptions = Optional<InvalidTokenAttributes, EntityKeys>;
 
 const schema = Joi.object<InvalidTokenAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
+
+    expires: Joi.date().required(),
   })
   .required();
 
 export class InvalidToken extends LindormEntity<InvalidTokenAttributes> {
+  public readonly expires: Date;
+
   public constructor(options: InvalidTokenOptions) {
     super(options);
+
+    this.expires = options.expires;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -29,6 +37,8 @@ export class InvalidToken extends LindormEntity<InvalidTokenAttributes> {
   public toJSON(): InvalidTokenAttributes {
     return {
       ...this.defaultJSON(),
+
+      expires: this.expires,
     };
   }
 }

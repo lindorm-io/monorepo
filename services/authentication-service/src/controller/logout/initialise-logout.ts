@@ -26,7 +26,7 @@ export const initialiseLogoutController: ServerKoaController<RequestData> = asyn
 
   const {
     client: { name, logoUri, description, type },
-    logoutSession: { expiresAt, expiresIn },
+    logoutSession: { expiresAt },
   } = await fetchOauthLogoutInfo(ctx, sessionId);
 
   if (type === ClientType.CONFIDENTIAL) {
@@ -44,7 +44,6 @@ export const initialiseLogoutController: ServerKoaController<RequestData> = asyn
       oauthSessionId: sessionId,
       type,
     }),
-    expiresIn,
   );
 
   ctx.setCookie(LOGOUT_SESSION_COOKIE_NAME, logoutSession.id, { expiry: logoutSession.expires });

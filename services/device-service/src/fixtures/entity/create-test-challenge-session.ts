@@ -1,6 +1,6 @@
 import { ChallengeSession, ChallengeSessionOptions } from "../../entity";
 import { ChallengeStrategy } from "../../common";
-import { getRandomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/core";
 
 export const createTestChallengeSession = (
   options: Partial<ChallengeSessionOptions> = {},
@@ -10,7 +10,8 @@ export const createTestChallengeSession = (
       "fU8ob4kqvPCfVCd5FdaM0hpXvpRoBx3VlPEWGarUP8DvTMj4AcFgieq2HMeH3uXK7MggvmLnG5iGGhUVMqDRhd7fRzW1XVveJe3CI7Pf3HlQpzqIOmrHGxes3yjZY3Es",
     clientId: "7bb4396b-5bad-4e6e-8edb-4f0f3c20e902",
     deviceLinkId: "4bfbd305-8296-427e-b212-7f4999181e58",
-    nonce: getRandomString(16),
+    expires: new Date("2023-01-01T08:00:00.000Z"),
+    nonce: randomString(16),
     payload: { test: true },
     scopes: ["test"],
     strategies: [ChallengeStrategy.BIOMETRY, ChallengeStrategy.IMPLICIT, ChallengeStrategy.PINCODE],

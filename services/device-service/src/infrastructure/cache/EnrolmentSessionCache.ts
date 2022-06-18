@@ -10,6 +10,7 @@ export class EnrolmentSessionCache extends LindormCache<
       ...options,
       entityName: "EnrolmentSession",
       indexedAttributes: [],
+      ttlAttribute: "expires",
     });
   }
 

@@ -6,6 +6,8 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_JWT, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { calculateAuthenticationStatus, calculateLevelOfAssurance } from "../../util";
+import { flatten, uniq } from "lodash";
+import { removeEmptyFromArray } from "@lindorm-io/core";
 import {
   confirmBankIdSe,
   confirmDeviceChallenge,
@@ -22,7 +24,6 @@ import {
   confirmWebauthn,
   resolveAllowedMethods,
 } from "../../handler";
-import { flatten, uniq } from "lodash";
 
 interface RequestData {
   id: string;
@@ -161,16 +162,16 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
   authenticationSession.identityId = account.id;
   authenticationSession.confirmedMethods.push(strategySession.method);
 
-  authenticationSession.confirmedIdentifiers = uniq(
-    flatten([
-      authenticationSession.confirmedIdentifiers,
-      [
-        ...(strategySession.email ? [strategySession.email] : []),
-        ...(strategySession.nin ? [strategySession.nin] : []),
-        ...(strategySession.phoneNumber ? [strategySession.phoneNumber] : []),
-        ...(strategySession.username ? [strategySession.username] : []),
-      ],
-    ]),
+  authenticationSession.confirmedIdentifiers = removeEmptyFromArray(
+    uniq(
+      flatten([
+        authenticationSession.confirmedIdentifiers,
+        strategySession.email,
+        strategySession.nin,
+        strategySession.phoneNumber,
+        strategySession.username,
+      ]),
+    ),
   );
 
   const { levelOfAssurance } = calculateLevelOfAssurance(authenticationSession);
