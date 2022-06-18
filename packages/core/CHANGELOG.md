@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.0...@lindorm-io/core@0.6.1) (2022-06-18)
+
+
+### Bug Fixes
+
+* add utility to clear empty values from array and object ([9690f8d](https://github.com/lindorm-io/monorepo/commit/9690f8df4ec45874247e6f3d5747e3763515b182))
+
+
+
+
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.5.0...@lindorm-io/core@0.6.0) (2022-06-15)
 
 

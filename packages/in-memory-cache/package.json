@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/in-memory-cache",
   "description": "In Memory Cache for lindorm.io",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -23,7 +23,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/winston": "^0.4.3",
+    "@lindorm-io/winston": "^0.4.4",
     "@types/lodash": "^4.14.182"
   }
 }

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.8.2...@lindorm-io/redis@0.8.3) (2022-06-18)
+
+
+### Bug Fixes
+
+* amend error in index key ([b32ae8a](https://github.com/lindorm-io/monorepo/commit/b32ae8ac22da65559d64b9681e7d16b6a0201eef))
+
+
+
+
+
 ## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.8.1...@lindorm-io/redis@0.8.2) (2022-06-15)
 
 **Note:** Version bump only for package @lindorm-io/redis
