@@ -24,7 +24,7 @@ describe("LindormCache", () => {
       customClient: new RedisMock({
         host: "localhost",
         port: 6379,
-      }) as Redis,
+      }) as unknown as Redis,
     });
 
     await connection.waitForConnection();

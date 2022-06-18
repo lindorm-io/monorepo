@@ -195,7 +195,7 @@ export abstract class LindormCache<
     entity.updated = new Date();
 
     try {
-      await this.setEntity(entity, expiresInSeconds, "KEEPTTL");
+      await this.setEntity(entity, expiresInSeconds, true);
     } catch (err: any) {
       throw new EntityNotUpdatedError(err.message, {
         error: err,
@@ -294,7 +294,7 @@ export abstract class LindormCache<
     let entityKeys: Array<string> = [];
 
     do {
-      const [cursorString, keys] = await this.client.scan(cursor, "match", this.getKey("*"));
+      const [cursorString, keys] = await this.client.scan(cursor, "MATCH", this.getKey("*"));
 
       cursor = parseInt(cursorString, 10);
       entityKeys = flatten([entityKeys, keys]);
@@ -354,7 +354,7 @@ export abstract class LindormCache<
   private async setEntity(
     entity: Entity,
     expiresInSeconds?: number,
-    expiryMode?: string,
+    keepTTL?: true,
   ): Promise<void> {
     const start = Date.now();
 
@@ -371,8 +371,8 @@ export abstract class LindormCache<
 
     if (expiresInSeconds) {
       result = await this.client.setex(key, expiresInSeconds, blob);
-    } else if (expiryMode) {
-      result = await this.client.set(key, blob, expiryMode);
+    } else if (keepTTL) {
+      result = await this.client.set(key, blob, "KEEPTTL");
     } else {
       result = await this.client.set(key, blob);
     }
@@ -381,10 +381,11 @@ export abstract class LindormCache<
 
     this.logger.debug("set entity", {
       input: {
-        method,
         expiresInSeconds,
         json,
+        keepTTL,
         key,
+        method,
       },
       result: {
         result,
