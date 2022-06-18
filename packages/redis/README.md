@@ -38,6 +38,7 @@ export class TestCache extends LindormCache<TestEntityAttributes, TestEntity> {
       ...options,
       entityName: "TestEntity",
       indexedAttributes: ["name"],
+      ttlAttribute: "expires",
     });
   }
 
@@ -48,13 +49,24 @@ export class TestCache extends LindormCache<TestEntityAttributes, TestEntity> {
 
 const cache = new TestCache({
   client: connection.client(),
-  expiresInSeconds: 100,
   logger: winston,
 });
 
 await cache.create(entity);
-await cache.update(entity);
-const entity = await cache.find({ id: "id" });
-const array = await cache.findMany({ name: "name" });
+await cache.createMany([entity, anotherEntity]);
+
+await cache.deleteMany({ name: "destroy" });
 await cache.destroy(entity);
+await cache.destroyMany([entity, anotherEntity]);
+
+await cache.find({ id: "id" });
+await cache.findMany({ name: "name" });
+
+await cache.findOrCreate({ name: "name" });
+await cache.tryFind({ name: "name" });
+
+await cache.ttl(entity);
+
+await cache.update(entity);
+await cache.updateMany([entity, anotherEntity]);
 ```
