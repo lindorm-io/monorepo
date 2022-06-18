@@ -5,3 +5,5 @@ const maximum = (length: number): number => {
 export const getRandomNumber = (length: number): number => {
   return Math.floor(Math.random() * maximum(length));
 };
+
+export const randomNumber = getRandomNumber;

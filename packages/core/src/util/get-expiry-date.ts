@@ -60,3 +60,5 @@ export const getExpiryDate = (expiry: Expiry): Date => {
 
   return date;
 };
+
+export const expiryDate = getExpiryDate;

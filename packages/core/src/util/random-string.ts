@@ -12,3 +12,5 @@ export const getRandomString = (length: number): string => {
     .replace(/=/g, hex())
     .slice(0, length);
 };
+
+export const randomString = getRandomString;
