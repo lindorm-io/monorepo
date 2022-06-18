@@ -1,6 +1,6 @@
+import { ILogger } from "@lindorm-io/winston";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
-import { ILogger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { add } from "date-fns";
 import { generateKeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";

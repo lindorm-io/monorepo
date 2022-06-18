@@ -1,7 +1,9 @@
+import MockDate from "mockdate";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairCache } from "./KeyPairCache";
 import { RedisConnection } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import { randomUUID } from "crypto";
 import {
   Algorithm,
   KeyPair,
@@ -9,7 +11,8 @@ import {
   createTestKeyPair,
   createTestKeyPairRSA,
 } from "@lindorm-io/key-pair";
-import { randomUUID } from "crypto";
+
+MockDate.set("2022-01-01T08:00:00.000Z");
 
 describe("KeyPairCache", () => {
   let cache: KeyPairCache;
@@ -31,7 +34,9 @@ describe("KeyPairCache", () => {
   });
 
   beforeEach(async () => {
-    entity = await cache.create(createTestKeyPair({ id: randomUUID() }));
+    entity = await cache.create(
+      createTestKeyPair({ id: randomUUID(), expires: new Date("2022-01-01T08:15:00.000Z") }),
+    );
   });
 
   afterAll(async () => {
@@ -52,10 +57,11 @@ describe("KeyPairCache", () => {
     ).resolves.toStrictEqual(expect.any(KeyPair));
   });
 
-  test("should update", async () => {
-    entity.expires = new Date("2099-01-01T08:00:00.000Z");
+  test("should update with expiry", async () => {
+    entity.expires = new Date("2022-01-01T08:30:00.000Z");
 
     await expect(cache.update(entity)).resolves.toStrictEqual(expect.any(KeyPair));
+    await expect(cache.ttl(entity)).resolves.toBe(1800);
   });
 
   test("should find", async () => {

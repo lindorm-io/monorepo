@@ -3,6 +3,7 @@ import { CacheIndex } from "./CacheIndex";
 import { ICache, LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
 import { RedisError } from "../error";
 import { find, filter as _filter, flatten, uniqBy, snakeCase } from "lodash";
+import { getUnixTime, isDate } from "date-fns";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import {
   EntityAttributes,
@@ -20,16 +21,18 @@ export abstract class LindormCache<
   extends CacheBase
   implements ICache<Interface, Entity>
 {
-  protected prefix: string;
   protected indices: Array<CacheIndex<Interface>>;
+  protected prefix: string;
+  protected ttlAttribute: keyof Interface | undefined;
 
   // protected
 
   protected constructor(options: LindormCacheOptions<Interface>) {
     super(options);
 
-    this.prefix = snakeCase(options.entityName);
     this.indices = [];
+    this.prefix = snakeCase(options.entityName);
+    this.ttlAttribute = options.ttlAttribute;
 
     for (const attributeKey of options.indexedAttributes) {
       this.indices.push(
@@ -47,15 +50,11 @@ export abstract class LindormCache<
 
   // public
 
-  public async create(
-    entity: Entity,
-    expiresInSeconds?: number,
-    callback?: PostChangeCallback<Entity>,
-  ): Promise<Entity> {
+  public async create(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
     await entity.schemaValidation();
 
     try {
-      await this.setEntity(entity, expiresInSeconds || this.expiresInSeconds);
+      await this.setEntity(entity);
     } catch (err: any) {
       throw new EntityNotCreatedError(err.message, {
         error: err,
@@ -71,13 +70,12 @@ export abstract class LindormCache<
 
   public async createMany(
     entities: Array<Entity>,
-    expiresInSeconds?: number,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.create(entity, expiresInSeconds, callback));
+      promises.push(this.create(entity, callback));
     }
 
     return Promise.allSettled(promises);
@@ -153,7 +151,6 @@ export abstract class LindormCache<
 
   public async findOrCreate(
     filter: Partial<Interface>,
-    expiresInSeconds?: number,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Entity> {
     try {
@@ -163,7 +160,7 @@ export abstract class LindormCache<
         throw err;
       }
 
-      return await this.create(this.createEntity(filter as Interface), expiresInSeconds, callback);
+      return await this.create(this.createEntity(filter as Interface), callback);
     }
   }
 
@@ -185,17 +182,13 @@ export abstract class LindormCache<
     return await this.client.ttl(this.getKey(entity.id));
   }
 
-  public async update(
-    entity: Entity,
-    expiresInSeconds?: number,
-    callback?: PostChangeCallback<Entity>,
-  ): Promise<Entity> {
+  public async update(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
     await entity.schemaValidation();
 
     entity.updated = new Date();
 
     try {
-      await this.setEntity(entity, expiresInSeconds, true);
+      await this.setEntity(entity);
     } catch (err: any) {
       throw new EntityNotUpdatedError(err.message, {
         error: err,
@@ -211,13 +204,12 @@ export abstract class LindormCache<
 
   public async updateMany(
     entities: Array<Entity>,
-    expiresInSeconds?: number,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
-      promises.push(this.update(entity, expiresInSeconds, callback));
+      promises.push(this.update(entity, callback));
     }
 
     return Promise.allSettled(promises);
@@ -351,11 +343,7 @@ export abstract class LindormCache<
     return null;
   }
 
-  private async setEntity(
-    entity: Entity,
-    expiresInSeconds?: number,
-    keepTTL?: true,
-  ): Promise<void> {
+  private async setEntity(entity: Entity): Promise<void> {
     const start = Date.now();
 
     await this.connection.waitForConnection();
@@ -365,14 +353,13 @@ export abstract class LindormCache<
     const json = entity.toJSON();
     const key = this.getKey(json.id);
     const blob = stringifyBlob(json);
+    const expiresInSeconds = this.getExpiry(json);
     const method = expiresInSeconds ? "setex" : "set";
 
     let result: string | null;
 
     if (expiresInSeconds) {
       result = await this.client.setex(key, expiresInSeconds, blob);
-    } else if (keepTTL) {
-      result = await this.client.set(key, blob, "KEEPTTL");
     } else {
       result = await this.client.set(key, blob);
     }
@@ -383,7 +370,6 @@ export abstract class LindormCache<
       input: {
         expiresInSeconds,
         json,
-        keepTTL,
         key,
         method,
       },
@@ -447,5 +433,23 @@ export abstract class LindormCache<
 
   private getKey(key: string): string {
     return `entity::${this.prefix}::${key}`;
+  }
+
+  private getExpiry(entity: Interface): number | undefined {
+    if (!this.ttlAttribute) return;
+
+    const attribute = entity[this.ttlAttribute];
+
+    if (!isDate(attribute)) {
+      this.logger.warn("TTL Attribute is not a date", {
+        key: this.ttlAttribute,
+        value: attribute,
+        expect: "Date",
+        actual: typeof attribute,
+      });
+      return;
+    }
+
+    return getUnixTime(attribute as unknown as Date) - getUnixTime(new Date());
   }
 }

@@ -4,7 +4,7 @@ import { JoseData, JWK, KeyJWK } from "../types";
 import { KeyPairError } from "../error";
 import { camelKeys, snakeKeys } from "@lindorm-io/core";
 import { decodeKeys, encodeKeys } from "../util";
-import { getUnixTime } from "date-fns";
+import { fromUnixTime, getUnixTime } from "date-fns";
 import { includes, isString, orderBy } from "lodash";
 import {
   JOI_KEY_ALGORITHM,
@@ -173,9 +173,9 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     return new KeyPair({
       id: jwk.kid,
       algorithms: [jwk.alg as Algorithm],
-      allowed: jwk.allowedFrom ? new Date(jwk.allowedFrom * 1000) : undefined,
-      created: jwk.createdAt ? new Date(jwk.createdAt * 1000) : undefined,
-      expires: jwk.expiresAt ? new Date(jwk.expiresAt * 1000) : undefined,
+      allowed: jwk.allowedFrom ? fromUnixTime(jwk.allowedFrom) : undefined,
+      created: jwk.createdAt ? fromUnixTime(jwk.createdAt) : undefined,
+      expires: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
       external: true,
       namedCurve: jwk.crv ? (jwk.crv as NamedCurve) : undefined,
       preferredAlgorithm: jwk.alg as Algorithm,

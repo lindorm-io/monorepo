@@ -1,10 +1,10 @@
+import { ILogger } from "@lindorm-io/winston";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
-import { Keystore } from "@lindorm-io/key-pair";
-import { ILogger } from "@lindorm-io/winston";
 import { RedisConnection } from "@lindorm-io/redis";
 import { WebKeyHandler } from "../class";
-import { stringToSeconds } from "@lindorm-io/core";
+import { addSeconds } from "date-fns";
+import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
 import {
   Axios,
   axiosClientCredentialsMiddleware,
@@ -46,7 +46,6 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
-  const expiresInSeconds = workerIntervalInSeconds + 120;
   const time = workerIntervalInSeconds * 1000;
   const logger = winston.createChildLogger(["keyPairVaultCacheWorker"]);
 
@@ -76,13 +75,15 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
-      const cache = new KeyPairCache({ connection: redisConnection, expiresInSeconds, logger });
+      const cache = new KeyPairCache({ connection: redisConnection, logger });
 
       const array = await handler.getKeys();
 
       for (const entity of array) {
-        const expires = Keystore.getTTL(entity);
-        await cache.create(entity, expires?.seconds);
+        if (!entity.expires) {
+          entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+        }
+        await cache.create(entity);
       }
     },
     logger,

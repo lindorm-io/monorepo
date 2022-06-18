@@ -1,12 +1,12 @@
+import { ILogger } from "@lindorm-io/winston";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { KeyPairRepository } from "../infrastructure";
-import { Keystore } from "@lindorm-io/key-pair";
-import { ILogger } from "@lindorm-io/winston";
+import { LindormError } from "@lindorm-io/errors";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
-import { stringToSeconds } from "@lindorm-io/core";
-import { LindormError } from "@lindorm-io/errors";
+import { addSeconds } from "date-fns";
+import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
 
 interface Options {
   mongoConnection: MongoConnection;
@@ -26,7 +26,6 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
-  const expiresInSeconds = workerIntervalInSeconds + 120;
   const time = workerIntervalInSeconds * 1000;
   const logger = winston.createChildLogger(["keyPairMongoCacheWorker"]);
 
@@ -46,12 +45,13 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
       const cache = new KeyPairCache({
         connection: redisConnection,
         logger,
-        expiresInSeconds,
       });
 
       for (const entity of array) {
-        const expires = Keystore.getTTL(entity);
-        await cache.create(entity, expires?.seconds);
+        if (!entity.expires) {
+          entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+        }
+        await cache.create(entity);
       }
     },
     logger,

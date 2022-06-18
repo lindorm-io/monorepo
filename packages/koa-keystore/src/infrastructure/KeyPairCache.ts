@@ -7,6 +7,7 @@ export class KeyPairCache extends LindormCache<KeyPairAttributes, KeyPair> {
       ...options,
       entityName: "KeyPair",
       indexedAttributes: ["type"],
+      ttlAttribute: "expires",
     });
   }
 

@@ -1,11 +1,15 @@
+import MockDate from "mockdate";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
-import { TestCache } from "../mocks";
+import { TestCache, TestCacheExpires, TestEntityExpires } from "../mocks";
 import { TestEntity } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 
+MockDate.set("2022-01-01T08:00:00.000Z");
+
 const entityKey = (entity: any): string => `entity::test_entity::${entity.id}`;
+const entityExpiresKey = (entity: any): string => `entity::test_entity_expires::${entity.id}`;
 
 describe("LindormCache", () => {
   let cache: TestCache;
@@ -43,12 +47,29 @@ describe("LindormCache", () => {
   });
 
   test("should create with expiry", async () => {
-    entity = await cache.create(new TestEntity({ name: "expiry" }), 900);
+    const cacheExpires = new TestCacheExpires({ connection, logger });
 
-    await expect(redis.get(entityKey(entity))).resolves.toStrictEqual(
-      expect.stringMatching(/"name":"expiry"/),
+    const entityExpires = await cacheExpires.create(
+      new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),
     );
-    await expect(redis.ttl(entityKey(entity))).resolves.toBe(900);
+
+    await expect(redis.get(entityExpiresKey(entityExpires))).resolves.toStrictEqual(
+      expect.stringMatching(/"name":"expires"/),
+    );
+    await expect(redis.ttl(entityExpiresKey(entityExpires))).resolves.toBe(900);
+  });
+
+  test("should create without expiry", async () => {
+    const cacheExpires = new TestCacheExpires({ connection, logger });
+
+    const entityExpires = await cacheExpires.create(
+      new TestEntityExpires({ name: "expires", expires: null }),
+    );
+
+    await expect(redis.get(entityExpiresKey(entityExpires))).resolves.toStrictEqual(
+      expect.stringMatching(/"name":"expires"/),
+    );
+    await expect(redis.ttl(entityExpiresKey(entityExpires))).resolves.toBe(-1);
   });
 
   test("should delete many", async () => {
@@ -106,9 +127,13 @@ describe("LindormCache", () => {
   });
 
   test("should return entity ttl", async () => {
-    entity = await cache.create(new TestEntity(), 700);
+    const cacheExpires = new TestCacheExpires({ connection, logger });
 
-    await expect(cache.ttl(entity)).resolves.toBe(700);
+    const entityExpires = await cacheExpires.create(
+      new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:30:00.000Z") }),
+    );
+
+    await expect(cacheExpires.ttl(entityExpires)).resolves.toBe(1800);
   });
 
   test("should update", async () => {
@@ -122,28 +147,37 @@ describe("LindormCache", () => {
   });
 
   test("should update and set new expiry", async () => {
-    entity = await cache.create(new TestEntity(), 800);
+    const cacheExpires = new TestCacheExpires({ connection, logger });
 
-    entity.name = "new-entity-name";
-
-    await cache.update(entity, 700);
-
-    await expect(redis.get(entityKey(entity))).resolves.toStrictEqual(
-      expect.stringMatching(/"name":"new-entity-name"/),
+    const entityExpires = await cacheExpires.create(
+      new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),
     );
-    await expect(redis.ttl(entityKey(entity))).resolves.toBe(700);
+
+    entityExpires.name = "new-entity-expires-name";
+    entityExpires.expires = new Date("2022-01-01T08:20:00.000Z");
+
+    await cacheExpires.update(entityExpires);
+
+    await expect(redis.get(entityExpiresKey(entityExpires))).resolves.toStrictEqual(
+      expect.stringMatching(/"name":"new-entity-expires-name"/),
+    );
+    await expect(redis.ttl(entityExpiresKey(entityExpires))).resolves.toBe(1200);
   });
 
   test("should update and keep expiry", async () => {
-    entity = await cache.create(new TestEntity(), 800);
+    const cacheExpires = new TestCacheExpires({ connection, logger });
 
-    entity.name = "new-entity-name";
-
-    await cache.update(entity);
-
-    await expect(redis.get(entityKey(entity))).resolves.toStrictEqual(
-      expect.stringMatching(/"name":"new-entity-name"/),
+    const entityExpires = await cacheExpires.create(
+      new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),
     );
-    await expect(redis.ttl(entityKey(entity))).resolves.toBe(800);
+
+    entityExpires.name = "new-entity-expires-name";
+
+    await cacheExpires.update(entityExpires);
+
+    await expect(redis.get(entityExpiresKey(entityExpires))).resolves.toStrictEqual(
+      expect.stringMatching(/"name":"new-entity-expires-name"/),
+    );
+    await expect(redis.ttl(entityExpiresKey(entityExpires))).resolves.toBe(900);
   });
 });
