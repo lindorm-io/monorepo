@@ -34,8 +34,8 @@
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-router": "^7.4.4",
     "@types/lodash": "^4.14.182",
-    "ioredis": "^4.28.2",
-    "ioredis-mock": "^5.8.1",
+    "ioredis": "^5.0.6",
+    "ioredis-mock": "^8.2.2",
     "koa": "2.13.4",
     "koa-bodyparser": "^4.3.0",
     "redis-commands": "^1.7.0"
