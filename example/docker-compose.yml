@@ -35,11 +35,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/authentication-service:/app/config-volume
+      - ./config/authentication-service:/app/volumes/config
 
   communication_service:
     image: lindorm-io/communication-service
@@ -52,11 +52,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/communication-service:/app/config-volume
+      - ./config/communication-service:/app/volumes/config
 
   device_service:
     image: lindorm-io/device-service
@@ -70,11 +70,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/device-service:/app/config-volume
+      - ./config/device-service:/app/volumes/config
 
   identity_service:
     image: lindorm-io/identity-service
@@ -87,11 +87,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/identity-service:/app/config-volume
+      - ./config/identity-service:/app/volumes/config
 
   oauth_service:
     image: lindorm-io/oauth-service
@@ -104,11 +104,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/oauth-service:/app/config-volume
+      - ./config/oauth-service:/app/volumes/config
 
   oidc_service:
     image: lindorm-io/oidc-service
@@ -121,11 +121,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/oidc-service:/app/config-volume
+      - ./config/oidc-service:/app/volumes/config
 
   vault_service:
     image: lindorm-io/vault-service
@@ -137,8 +137,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_CONFIG_DIR=/config:/config-volume
+      - NODE_CONFIG_DIR=/config:/volumes/config
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/vault-service:/app/config-volume
+      - ./config/vault-service:/app/volumes/config
