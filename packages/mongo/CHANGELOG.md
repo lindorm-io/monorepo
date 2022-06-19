@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.3...@lindorm-io/mongo@0.9.4) (2022-06-19)
+
+**Note:** Version bump only for package @lindorm-io/mongo
+
+
+
+
+
 ## [0.9.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.2...@lindorm-io/mongo@0.9.3) (2022-06-18)
 
 **Note:** Version bump only for package @lindorm-io/mongo
