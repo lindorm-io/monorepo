@@ -1,3 +1,8 @@
+frontend:
+  host: localhost
+  routes:
+    error: /error
+
 oauth:
   client_id: id
   client_secret: secret

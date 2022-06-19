@@ -1,9 +1,20 @@
 export interface Configuration {
+  frontend:        Frontend;
   oauth:           Oauth;
   oidc_providers:  OidcProvider[];
   redis:           Redis;
   server:          Server;
   services:        Services;
+}
+
+interface Frontend {
+  host:    string;
+  port:    number;
+  routes:  Routes;
+}
+
+interface Routes {
+  error: string;
 }
 
 interface Oauth {

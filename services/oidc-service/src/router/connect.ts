@@ -1,8 +1,9 @@
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { IdentityPermission, Scope } from "../common";
+import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { ServerKoaContext } from "../types";
+import { configuration } from "../server/configuration";
 import { identityAuthMiddleware } from "../middleware";
-import { useController, useSchema } from "@lindorm-io/koa";
+import { redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
   connectOidcToIdentityController,
   connectOidcToIdentitySchema,
@@ -13,6 +14,10 @@ export default router;
 
 router.post(
   "/",
+  redirectErrorMiddleware({
+    redirectUri: configuration.frontend.routes.error,
+    path: "data.callbackUri",
+  }),
   useSchema(connectOidcToIdentitySchema),
   identityAuthMiddleware({
     permissions: [IdentityPermission.USER],

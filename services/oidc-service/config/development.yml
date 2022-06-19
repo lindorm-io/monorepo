@@ -1,3 +1,7 @@
+frontend:
+  host: http://localhost
+  port: 4600
+
 oauth:
   client_id: 3e0ab7aa-f445-4031-ad27-d87ff23d2ce2
   client_secret: 5NTac6bAnSNAWnMh0pCjABmlv1ca6LUml88gaQrQrBU3aNS6W6LpJp9r3ViclTe8
