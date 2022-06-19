@@ -34,10 +34,10 @@ interface Expiry {
 }
 
 interface Sessions {
-  maximum_days_loa_1: number;
-  maximum_days_loa_2: number;
-  maximum_days_loa_3: number;
-  maximum_days_loa_4: number;
+  loa_1_max_days:    number;
+  loa_2_max_days:    number;
+  loa_3_max_days:    number;
+  loa_4_max_minutes: number;
 }
 
 interface Tenants {

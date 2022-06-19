@@ -13,10 +13,10 @@ defaults:
     logout_session: 60 seconds
     refresh_session: 30 days
   sessions:
-    maximum_days_loa_1: 90
-    maximum_days_loa_2: 30
-    maximum_days_loa_3: 7
-    maximum_days_loa_4: 1
+    loa_1_max_days: 90
+    loa_2_max_days: 30
+    loa_3_max_days: 3
+    loa_4_max_minutes: 15
   tenants:
     active_state: false
 

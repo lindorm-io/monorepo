@@ -1,5 +1,5 @@
 import { LevelOfAssurance } from "../common";
-import { addDays, isAfter } from "date-fns";
+import { addDays, addMinutes, isAfter } from "date-fns";
 import { configuration } from "../server/configuration";
 
 interface ISession {
@@ -11,7 +11,7 @@ const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_1),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_1_max_days),
     )
   ) {
     return 0;
@@ -20,7 +20,7 @@ const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_2),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_2_max_days),
     )
   ) {
     return 1;
@@ -29,7 +29,7 @@ const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_3),
+      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_3_max_days),
     )
   ) {
     return 2;
@@ -38,7 +38,7 @@ const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.maximum_days_loa_4),
+      addMinutes(session.latestAuthentication, configuration.defaults.sessions.loa_4_max_minutes),
     )
   ) {
     return 3;
