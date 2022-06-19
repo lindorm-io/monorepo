@@ -792,30 +792,30 @@
     "@lindorm-io/key-pair" "^0.5.0"
     "@lindorm-io/koa" "^0.13.2"
 
-"@lindorm-io/koa-keystore@^0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.9.0.tgz#59502a68b2e5d1e51a691c1a3f5703e6f8aefb1d"
-  integrity sha512-iNf+cjngwpgCKJ7cIkNjoxpiAlSrvcIdai1LmjBWDZAC34Sso0zyKREy8PwB5g26brkvoxi6ulnkcJ3pqPjAbA==
+"@lindorm-io/koa-keystore@^0.9.1":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.9.1.tgz#c5af0c6370f0accabf7b799f67e4211ea436c13d"
+  integrity sha512-1qN9c0sw76ecrwlxeq9qypidWuzL70lvnHuDnG5MG/ChlpLOEHrK7/pFJh2hjKonn89NYGnWZHGKh2fhG8HLGA==
   dependencies:
     "@lindorm-io/axios" "^0.4.1"
     "@lindorm-io/core" "^0.6.1"
     "@lindorm-io/errors" "^0.1.13"
     "@lindorm-io/key-pair" "^0.5.0"
     "@lindorm-io/koa" "^0.13.2"
-    "@lindorm-io/mongo" "^0.9.3"
+    "@lindorm-io/mongo" "^0.9.4"
     "@lindorm-io/redis" "^0.9.0"
     joi "^17.5.0"
     lodash "^4.17.21"
 
-"@lindorm-io/koa-mongo@^0.8.6":
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-mongo/-/koa-mongo-0.8.6.tgz#749c5b2ed9dbddd4a5ff217b95dd376cef51f7a7"
-  integrity sha512-zz/husjFdS21jjIfRSeDie50Rc1z3Y4pfsVl0KDb6JMwKDFNtxJB3wgffivDvTB9x4r06AeF0JQH2AkZ3uYCTw==
+"@lindorm-io/koa-mongo@^0.8.7":
+  version "0.8.7"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-mongo/-/koa-mongo-0.8.7.tgz#cb4956db1b3cffa1e8c24c85baf7f88316545c21"
+  integrity sha512-xiKwsgkit8XxroT3UdLGiYMcmNJNkkG6G/zIX4y1TRJOHSr4kpRW/kYHJ1Kyly1iwkqx1I5HPxHht3c6/M3bwA==
   dependencies:
     "@lindorm-io/entity" "^0.3.4"
     "@lindorm-io/errors" "^0.1.13"
     "@lindorm-io/koa" "^0.13.2"
-    "@lindorm-io/mongo" "^0.9.3"
+    "@lindorm-io/mongo" "^0.9.4"
     lodash "^4.17.21"
 
 "@lindorm-io/koa-redis@^0.6.7":
@@ -845,20 +845,20 @@
     lodash "4.17.21"
     socket.io "^4.5.1"
 
-"@lindorm-io/mongo@^0.9.3":
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/mongo/-/mongo-0.9.3.tgz#ec7000738da2e4edba675b346f1325c83c9a5d1b"
-  integrity sha512-Rta6Nx4pZCUd7t4zELPxBXm4k9ESENMmXF7seyo/rHhrRZwQTyQHaP1BZJ9rQOzhoGlQamdOmZCCdWVS2QCymQ==
+"@lindorm-io/mongo@^0.9.4":
+  version "0.9.4"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/mongo/-/mongo-0.9.4.tgz#bcd45932be5ffdaa08250b85058e0f117017039c"
+  integrity sha512-zmIbDsypdyhWrgICEinokgc8WRYyDxX6HeZh0vrQ+pOD7fddXDtFYCsZk8OgCBVO+P6adhtS9il8WOfXP/jkDw==
   dependencies:
     "@lindorm-io/entity" "^0.3.4"
     "@lindorm-io/errors" "^0.1.13"
     lodash "^4.17.21"
-    mongodb "^4.3.0"
+    mongodb "^4.7.0"
 
-"@lindorm-io/node-server@^0.4.7":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.7.tgz#16f70ec3af756a45e3f633efa83c98014e194c74"
-  integrity sha512-c33WC7dUdPa/VHpgqJmM95+E+4MooJUsKnNc1l5eY1bw5ozjkQDgOoTC1zDSOlEkyy3XI/efKUXIDNwiuyAl1w==
+"@lindorm-io/node-server@^0.4.8":
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.8.tgz#859ac41f937e1e8dbf6bd978295b75eadb0646c6"
+  integrity sha512-+rbEjJEAZiaYJ1hEK6OYEsWDUBAn/pXj2kVGsveq52BkcS1SeEX3bxBhZbjGoftfSV6vu88lvkcQUo/LsrFEkQ==
   dependencies:
     "@lindorm-io/axios" "^0.4.1"
     "@lindorm-io/jwt" "^0.8.3"
@@ -866,10 +866,10 @@
     "@lindorm-io/koa" "^0.13.2"
     "@lindorm-io/koa-axios" "^0.1.15"
     "@lindorm-io/koa-jwt" "^0.5.18"
-    "@lindorm-io/koa-keystore" "^0.9.0"
-    "@lindorm-io/koa-mongo" "^0.8.6"
+    "@lindorm-io/koa-keystore" "^0.9.1"
+    "@lindorm-io/koa-mongo" "^0.8.7"
     "@lindorm-io/koa-redis" "^0.6.7"
-    "@lindorm-io/mongo" "^0.9.3"
+    "@lindorm-io/mongo" "^0.9.4"
     "@lindorm-io/redis" "^0.9.0"
     "@lindorm-io/winston" "^0.4.4"
     "@socket.io/redis-adapter" "^7.2.0"
@@ -1655,10 +1655,10 @@ bser@2.1.1:
   dependencies:
     node-int64 "^0.4.0"
 
-bson@^4.6.1:
-  version "4.6.1"
-  resolved "https://registry.yarnpkg.com/bson/-/bson-4.6.1.tgz#2b5da517539bb0f7f3ffb54ac70a384ca899641c"
-  integrity sha512-I1LQ7Hz5zgwR4QquilLNZwbhPw0Apx7i7X9kGMBTsqPdml/03Q9NBtD9nt/19ahjlphktQImrnderxqpzeVDjw==
+bson@^4.6.3:
+  version "4.6.4"
+  resolved "https://registry.yarnpkg.com/bson/-/bson-4.6.4.tgz#e66d4a334f1ab230dfcfb9ec4ea9091476dd372e"
+  integrity sha512-TdQ3FzguAu5HKPPlr0kYQCyrYUYh8tFM+CMTpxjNzVzxeiJY00Rtuj3LXLHSgiGvmaWlZ8PE+4KyM2thqE38pQ==
   dependencies:
     buffer "^5.6.0"
 
@@ -3822,12 +3822,12 @@ mongodb-connection-string-url@^2.5.2:
     "@types/whatwg-url" "^8.2.1"
     whatwg-url "^11.0.0"
 
-mongodb@^4.2.2, mongodb@^4.3.0:
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-4.4.1.tgz#e604cfbe2d5e125ae156ad04b52d261bed480b99"
-  integrity sha512-IAD3nFtCR4s22vi5qjqkCBnuyDDrOW8WVSSmgHquOvGaP1iTD+XpC5tr8wAUbZ2EeZkaswwBKQFHDvl4qYcKqQ==
+mongodb@^4.7.0:
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-4.7.0.tgz#99f7323271d93659067695b60e7b4efee2de9bf0"
+  integrity sha512-HhVar6hsUeMAVlIbwQwWtV36iyjKd9qdhY+s4wcU8K6TOj4Q331iiMy+FoPuxEntDIijTYWivwFJkLv8q/ZgvA==
   dependencies:
-    bson "^4.6.1"
+    bson "^4.6.3"
     denque "^2.0.1"
     mongodb-connection-string-url "^2.5.2"
     socks "^2.6.2"
