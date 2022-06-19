@@ -47,8 +47,8 @@ RUN adduser -S nodejs -u 1001
 
 USER nodejs
 
-VOLUME config-volume
-COPY config config
+VOLUME volumes/config
+COPY config/default.yml config/default.yml
 COPY package.json package.json
 COPY --from=dependencies /app/node_modules node_modules
 COPY --from=builder /app/dist dist
