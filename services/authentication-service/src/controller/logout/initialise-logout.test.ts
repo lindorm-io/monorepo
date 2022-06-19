@@ -57,7 +57,6 @@ describe("initialiseLogoutController", () => {
       expect.objectContaining({
         expires: new Date("2022-01-01T08:00:00.000Z"),
       }),
-      expect.any(Number),
     );
     expect(ctx.setCookie).toHaveBeenCalled();
   });
