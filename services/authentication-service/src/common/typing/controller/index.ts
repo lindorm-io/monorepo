@@ -12,6 +12,7 @@ export * from "./get-identity-device-links";
 export * from "./get-identity-sessions";
 export * from "./get-logout-info";
 export * from "./get-oidc-session";
+export * from "./get-providers-list";
 export * from "./get-userinfo";
 export * from "./initialise-authentication-session";
 export * from "./initialise-oidc-session";
