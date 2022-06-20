@@ -1,9 +1,9 @@
 version: "3.7"
 
 services:
-  identity_service_redis:
+  odic_service_redis:
     image: redis
-    container_name: identity_service_redis
+    container_name: odic_service_redis
     labels:
       - redis
     ports:
