@@ -1,7 +1,8 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetOidcSessionResponseBody, JOI_GUID, LevelOfAssurance } from "../../common";
+import { GetOidcSessionResponseBody, JOI_GUID } from "../../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { ServerKoaController } from "../../types";
 import { findOidcConfiguration } from "../../util";
 

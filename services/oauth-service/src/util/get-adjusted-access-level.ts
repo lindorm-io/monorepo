@@ -1,4 +1,4 @@
-import { LevelOfAssurance } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { addDays, addMinutes, isAfter } from "date-fns";
 import { configuration } from "../server/configuration";
 

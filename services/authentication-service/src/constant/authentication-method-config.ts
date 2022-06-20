@@ -1,5 +1,5 @@
 import { AuthenticationMethod } from "../enum";
-import { LevelOfAssurance } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 
 export interface AuthenticationMethodConfig {
   name: AuthenticationMethod;

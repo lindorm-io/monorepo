@@ -1,5 +1,5 @@
 import { ALLOWED_ACR_VALUES } from "../constant";
-import { LevelOfAssurance } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { flatten, isNaN, isString, last, uniq } from "lodash";
 
 interface Result {

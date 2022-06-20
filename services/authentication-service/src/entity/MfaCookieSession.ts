@@ -1,5 +1,8 @@
 import Joi from "joi";
-import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, LevelOfAssurance } from "../common";
+import { AuthenticationMethod } from "../enum";
+import { JOI_AUTHENTICATION_METHOD } from "../constant";
+import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,8 +10,6 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import { JOI_AUTHENTICATION_METHOD } from "../constant";
-import { AuthenticationMethod } from "../enum";
 
 export interface MfaCookieSessionAttributes extends EntityAttributes {
   expires: Date;

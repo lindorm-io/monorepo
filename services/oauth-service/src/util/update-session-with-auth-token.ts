@@ -1,4 +1,5 @@
-import { LevelOfAssurance, VerifiedAuthenticationConfirmationToken } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { VerifiedAuthenticationConfirmationToken } from "../common";
 import { calculateUpdatedLoa } from "./calculate-updated-loa";
 import { flatten, uniq } from "lodash";
 import { fromUnixTime } from "date-fns";

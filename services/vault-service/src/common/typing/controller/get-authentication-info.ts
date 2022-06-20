@@ -1,5 +1,5 @@
 import { ClientType, DisplayMode, SessionStatus } from "../../enum";
-import { LevelOfAssurance } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 
 export interface GetAuthenticationInfoResponseBody {
   authenticationRequired: boolean;

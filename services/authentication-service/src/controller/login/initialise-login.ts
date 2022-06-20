@@ -2,7 +2,7 @@ import Joi from "joi";
 import { AuthenticationMethod } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, LevelOfAssurance, SessionStatus, TokenType } from "../../common";
+import { JOI_GUID, SessionStatus, TokenType } from "../../common";
 import { LOGIN_SESSION_COOKIE_NAME, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
 import { LoginSession } from "../../entity";
 import { ServerKoaController } from "../../types";
@@ -62,7 +62,7 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
         acrValues: authenticationConfirmationToken.authContextClass,
         amrValues: authenticationConfirmationToken.authMethodsReference,
         identityId: authenticationConfirmationToken.subject,
-        levelOfAssurance: authenticationConfirmationToken.levelOfAssurance as LevelOfAssurance,
+        levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
         remember: authenticationConfirmationToken.claims.remember,
       });
 

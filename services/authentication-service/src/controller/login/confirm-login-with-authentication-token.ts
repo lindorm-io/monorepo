@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_JWT, LevelOfAssurance } from "../../common";
+import { JOI_JWT } from "../../common";
 import { LOGIN_SESSION_COOKIE_NAME } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { confirmOauthAuthenticationSession } from "../../handler";
@@ -28,7 +28,7 @@ export const confirmLoginWithAuthenticationTokenController: ServerKoaController<
     acrValues: authenticationConfirmationToken.authContextClass,
     amrValues: authenticationConfirmationToken.authMethodsReference,
     identityId: authenticationConfirmationToken.subject,
-    levelOfAssurance: authenticationConfirmationToken.levelOfAssurance as LevelOfAssurance,
+    levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
     remember: authenticationConfirmationToken.claims.remember,
   });
 

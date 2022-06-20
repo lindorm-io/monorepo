@@ -1,4 +1,5 @@
-import { DisplayMode, GrantType, LevelOfAssurance, ResponseMode, ResponseType } from "../common";
+import { DisplayMode, GrantType, ResponseMode, ResponseType } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 
 export interface ClientAllowed {
   grantTypes: Array<GrantType>;

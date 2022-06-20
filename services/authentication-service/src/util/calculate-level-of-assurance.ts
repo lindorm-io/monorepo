@@ -1,6 +1,6 @@
 import { AuthenticationMethod } from "../enum";
 import { AuthenticationSession } from "../entity";
-import { LevelOfAssurance } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { findMethodConfiguration } from "./find-method-configuration";
 
 interface Result {

@@ -1,4 +1,5 @@
-import { LevelOfAssurance, VerifiedAuthenticationConfirmationToken } from "../common";
+import { VerifiedAuthenticationConfirmationToken } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { getAdjustedAccessLevel } from "./get-adjusted-access-level";
 
 interface ISession {

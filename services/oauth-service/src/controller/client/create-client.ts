@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { Client } from "../../entity";
-import { ClientType, DisplayMode, JOI_GUID, LevelOfAssurance, ResponseMode } from "../../common";
+import { ClientType, DisplayMode, JOI_GUID, ResponseMode } from "../../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
