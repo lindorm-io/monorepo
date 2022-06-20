@@ -1,7 +1,13 @@
 import Joi from "joi";
 import { AuthenticationMethod } from "../../enum";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_AUTHENTICATION_METHOD } from "../../constant";
+import { ServerKoaController } from "../../types";
+import { StrategySession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { findMethodConfiguration } from "../../util";
+import { getExpires } from "@lindorm-io/core";
 import {
   JOI_EMAIL,
   JOI_GUID,
@@ -10,12 +16,6 @@ import {
   SubjectHint,
   TokenType,
 } from "../../common";
-import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ServerKoaController } from "../../types";
-import { StrategySession } from "../../entity";
-import { configuration } from "../../server/configuration";
-import { findMethodConfiguration } from "../../util";
-import { getExpires } from "@lindorm-io/core";
 import {
   initialiseBankIdSe,
   initialiseEmailLink,

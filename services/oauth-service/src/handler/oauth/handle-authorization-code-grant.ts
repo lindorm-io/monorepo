@@ -5,7 +5,7 @@ import { RefreshSession } from "../../entity";
 import { Scope } from "../../common";
 import { assertCodeChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
-import { flatten, includes, uniq } from "lodash";
+import { flatten, uniq } from "lodash";
 import { generateTokenResponse } from "./generate-token-response";
 import { getExpiryDate } from "@lindorm-io/core";
 
@@ -72,7 +72,7 @@ export const handleAuthorizationCodeGrant = async (
   if (
     !consentSession.audiences.length ||
     !consentSession.scopes.length ||
-    !includes(consentSession.sessions, browserSession.id)
+    !consentSession.sessions.includes(browserSession.id)
   ) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
@@ -86,7 +86,7 @@ export const handleAuthorizationCodeGrant = async (
 
   await authorizationSessionCache.destroy(authorizationSession);
 
-  if (includes(authorizationSession.scopes, Scope.OFFLINE_ACCESS)) {
+  if (authorizationSession.scopes.includes(Scope.OFFLINE_ACCESS)) {
     const refreshSession = await refreshSessionRepository.create(
       new RefreshSession({
         acrValues: browserSession.acrValues,

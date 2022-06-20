@@ -3,7 +3,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_LOCALE, Scope } from "../../common";
 import { NamingSystem } from "../../enum";
 import { ServerKoaController, IdentityAddress } from "../../types";
-import { includes, isUndefined } from "lodash";
+import { isUndefined } from "lodash";
 import { updateIdentityDisplayName } from "../../handler";
 import {
   JOI_BIRTHDATE,
@@ -93,15 +93,15 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     },
   } = ctx;
 
-  if (includes(scopes, Scope.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
+  if (scopes.includes(Scope.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
     identity.preferredAccessibility = preferredAccessibility;
   }
 
-  if (includes(scopes, Scope.NATIONAL_IDENTITY_NUMBER) && !isUndefined(nationalIdentityNumber)) {
+  if (scopes.includes(Scope.NATIONAL_IDENTITY_NUMBER) && !isUndefined(nationalIdentityNumber)) {
     identity.nationalIdentityNumber = nationalIdentityNumber;
   }
 
-  if (includes(scopes, Scope.PROFILE)) {
+  if (scopes.includes(Scope.PROFILE)) {
     if (!isUndefined(displayName) && displayName !== identity.displayName.name) {
       await updateIdentityDisplayName(ctx, identity, displayName);
     }
@@ -121,15 +121,12 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     if (!isUndefined(zoneInfo)) identity.zoneInfo = zoneInfo;
   }
 
-  if (includes(scopes, Scope.SOCIAL_SECURITY_NUMBER) && !isUndefined(socialSecurityNumber)) {
+  if (scopes.includes(Scope.SOCIAL_SECURITY_NUMBER) && !isUndefined(socialSecurityNumber)) {
     identity.socialSecurityNumber = socialSecurityNumber;
   }
 
-  if (includes(scopes, Scope.USERNAME) && !isUndefined(username)) {
+  if (scopes.includes(Scope.USERNAME) && !isUndefined(username)) {
     identity.preferredUsername = username;
-  }
-
-  if (includes(scopes, Scope.USERNAME) && !isUndefined(username)) {
     identity.username = username;
   }
 

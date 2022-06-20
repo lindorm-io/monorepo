@@ -3,7 +3,6 @@ import { AuthenticationMethod } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { filter, find, includes } from "lodash";
 import { getExpiryDate } from "@lindorm-io/core";
 import { handleAuthenticationInitialisation } from "../../handler";
 import {
@@ -54,8 +53,8 @@ export const initialiseAuthenticationController: ServerKoaController<
 
   const expires = getExpiryDate(configuration.defaults.authentication_session_expiry);
 
-  const emailHint = find(loginHint, (item) => REGEX_EMAIL.test(item));
-  const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));
+  const emailHint = loginHint?.find((item) => REGEX_EMAIL.test(item));
+  const phoneHint = loginHint?.find((item) => REGEX_PHONE.test(item));
 
   const authenticationSession = await handleAuthenticationInitialisation(ctx, {
     clientId,
@@ -69,8 +68,8 @@ export const initialiseAuthenticationController: ServerKoaController<
     phoneHint,
     redirectUri,
     requestedLevelOfAssurance: levelOfAssurance,
-    requestedMethods: filter(methods, (key) =>
-      includes(Object.values(AuthenticationMethod), key),
+    requestedMethods: methods.filter((key: AuthenticationMethod) =>
+      Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });
 

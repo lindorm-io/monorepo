@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaMiddleware } from "../../types";
-import { includes } from "lodash";
 
 export const assertTenantPermissionMiddleware: ServerKoaMiddleware = async (
   ctx,
@@ -17,7 +16,7 @@ export const assertTenantPermissionMiddleware: ServerKoaMiddleware = async (
     throw new ClientError("Tenant is not active");
   }
 
-  if (!includes(tenant.administrators, identityId)) {
+  if (!tenant.administrators.includes(identityId)) {
     throw new ClientError("Unauthorized to make changes to tenant");
   }
 

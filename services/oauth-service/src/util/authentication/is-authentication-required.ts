@@ -1,7 +1,7 @@
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { PromptMode, SessionStatus } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
-import { difference, includes } from "lodash";
+import { difference } from "lodash";
 import { getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isAuthenticationRequiredByMaxAge } from "./is-authentication-required-by-max-age";
 
@@ -57,7 +57,7 @@ export const isAuthenticationRequired = (
     return true;
   }
 
-  if (includes(authorizationSession.promptModes, PromptMode.LOGIN)) {
+  if (authorizationSession.promptModes.includes(PromptMode.LOGIN)) {
     return true;
   }
 

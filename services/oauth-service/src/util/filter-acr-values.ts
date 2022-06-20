@@ -1,6 +1,6 @@
 import { ALLOWED_ACR_VALUES } from "../constant";
 import { LevelOfAssurance } from "../common";
-import { filter, flatten, includes, isNaN, isString, last, uniq } from "lodash";
+import { flatten, isNaN, isString, last, uniq } from "lodash";
 
 interface Result {
   authenticationMethods: Array<string>;
@@ -23,8 +23,8 @@ export const filterAcrValues = (
 
   const flatArray: Array<string> = uniq(flatten([splitArray, acrValuesArray, amrValuesArray]));
 
-  const filteredLoa = filter(flatArray, (item) => includes(ALLOWED_ACR_VALUES, item));
-  const filteredMethods = filter(flatArray, (item) => !includes(ALLOWED_ACR_VALUES, item));
+  const filteredLoa = flatArray.filter((item) => ALLOWED_ACR_VALUES.includes(item));
+  const filteredMethods = flatArray.filter((item) => !ALLOWED_ACR_VALUES.includes(item));
 
   const loa: Array<number> = [];
 

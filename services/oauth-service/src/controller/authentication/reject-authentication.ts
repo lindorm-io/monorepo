@@ -4,7 +4,6 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { createURL } from "@lindorm-io/core";
-import { includes } from "lodash";
 
 interface RequestData {
   id: string;
@@ -26,8 +25,7 @@ export const rejectAuthenticationController: ServerKoaController<RequestData> = 
   } = ctx;
 
   if (
-    includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       authorizationSession.authenticationStatus,
     )
   ) {

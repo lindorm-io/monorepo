@@ -1,13 +1,12 @@
 import Joi from "joi";
 import { BROWSER_SESSION_COOKIE_NAME, LOGOUT_SESSION_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { LogoutSessionType } from "../../enum";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
-import { includes } from "lodash";
 
 interface RequestData {
   redirectUri: string;
@@ -38,8 +37,7 @@ export const oauthVerifyLogoutController: ServerKoaController<RequestData> = asy
   }
 
   if (
-    !includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    ![SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       logoutSession.status,
     )
   ) {

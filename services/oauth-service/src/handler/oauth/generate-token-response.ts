@@ -1,10 +1,9 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
 import { Scope } from "../../common";
+import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken, createRefreshToken } from "../token";
 import { getIdentityUserinfo } from "../identity";
-import { includes } from "lodash";
 
 interface ResponseBody {
   accessToken: string;
@@ -44,7 +43,7 @@ export const generateTokenResponse = async (
   body.expiresIn = expiresIn;
   body.tokenType = "Bearer";
 
-  if (includes(scopes, Scope.OPENID)) {
+  if (scopes.includes(Scope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, session, {
       claims,
       scopes,
@@ -54,7 +53,7 @@ export const generateTokenResponse = async (
     body.idToken = idToken;
   }
 
-  if (includes(scopes, Scope.OFFLINE_ACCESS)) {
+  if (scopes.includes(Scope.OFFLINE_ACCESS)) {
     if (!(session instanceof RefreshSession)) {
       throw new ServerError("Unexpected session type");
     }

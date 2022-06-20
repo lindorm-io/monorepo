@@ -1,13 +1,12 @@
 import Joi from "joi";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { ServerKoaController } from "../../types";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/core";
 import { generateCallbackResponse, setBrowserSessionCookie } from "../../handler";
-import { includes } from "lodash";
-import { ClientError } from "@lindorm-io/errors";
 
 interface RequestData {
   redirectUri: string;
@@ -44,8 +43,7 @@ export const oauthVerifyAuthorizationController: ServerKoaController<RequestData
   setBrowserSessionCookie(ctx, browserSession);
 
   if (
-    !includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    ![SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       authorizationSession.authenticationStatus,
     )
   ) {
@@ -59,8 +57,7 @@ export const oauthVerifyAuthorizationController: ServerKoaController<RequestData
   }
 
   if (
-    !includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    ![SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       authorizationSession.consentStatus,
     )
   ) {

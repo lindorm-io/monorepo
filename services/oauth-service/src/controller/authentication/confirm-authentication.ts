@@ -5,7 +5,7 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { configuration } from "../../server/configuration";
 import { createAuthorizationVerifyRedirectUri } from "../../util";
-import { difference, includes } from "lodash";
+import { difference } from "lodash";
 import { getExpiryDate } from "@lindorm-io/core";
 import {
   ConfirmAuthenticationRequestBody,
@@ -42,8 +42,7 @@ export const confirmAuthenticationController: ServerKoaController<RequestData> =
   } = ctx;
 
   if (
-    includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       authorizationSession.authenticationStatus,
     )
   ) {

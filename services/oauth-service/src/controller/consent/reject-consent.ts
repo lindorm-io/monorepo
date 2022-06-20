@@ -1,10 +1,9 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
 import { createURL } from "@lindorm-io/core";
-import { includes } from "lodash";
 
 interface RequestData {
   id: string;
@@ -26,8 +25,7 @@ export const rejectConsentController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   if (
-    includes(
-      [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP],
+    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
       authorizationSession.consentStatus,
     )
   ) {

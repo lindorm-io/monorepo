@@ -1,12 +1,11 @@
 import { AuthorizationSession, BrowserSession, Client } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ResponseMode, ResponseType, Scope } from "../../common";
+import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
 import { createURL } from "@lindorm-io/core";
 import { getIdentityUserinfo } from "../identity";
-import { includes } from "lodash";
 import { setAuthorizationCode } from "./set-authorization-code";
 
 interface Data {
@@ -46,11 +45,11 @@ export const generateCallbackResponse = async (
     authorizationSession = await setAuthorizationCode(ctx, authorizationSession);
   }
 
-  if (includes(responseTypes, ResponseType.CODE)) {
+  if (responseTypes.includes(ResponseType.CODE)) {
     data.code = authorizationSession.code;
   }
 
-  if (includes(responseTypes, ResponseType.TOKEN)) {
+  if (responseTypes.includes(ResponseType.TOKEN)) {
     const { token: accessToken, expiresIn } = createAccessToken(ctx, client, browserSession, {
       permissions,
       scopes,
@@ -61,7 +60,7 @@ export const generateCallbackResponse = async (
     data.tokenType = "Bearer";
   }
 
-  if (includes(responseTypes, ResponseType.ID_TOKEN) && includes(scopes, Scope.OPENID)) {
+  if (responseTypes.includes(ResponseType.ID_TOKEN) && scopes.includes(Scope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, browserSession, {
       claims,
       scopes,

@@ -1,7 +1,7 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ResponseType } from "../../common";
-import { difference, includes } from "lodash";
+import { difference } from "lodash";
 
 export const assertAuthorizeResponseType = (
   authorizationSession: AuthorizationSession,
@@ -22,7 +22,7 @@ export const assertAuthorizeResponseType = (
   }
 
   if (
-    includes(authorizationSession.responseTypes, ResponseType.CODE) &&
+    authorizationSession.responseTypes.includes(ResponseType.CODE) &&
     (!authorizationSession.codeChallenge || !authorizationSession.codeChallengeMethod)
   ) {
     throw new ClientError("Invalid request combination", {

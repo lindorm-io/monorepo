@@ -1,7 +1,7 @@
 import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
-import { difference, includes } from "lodash";
+import { difference } from "lodash";
 
 export const isConsentRequired = (
   authorizationSession: AuthorizationSession,
@@ -32,7 +32,7 @@ export const isConsentRequired = (
     return true;
   }
 
-  if (!includes(consentSession.audiences, authorizationSession.clientId)) {
+  if (!consentSession.audiences.includes(authorizationSession.clientId)) {
     return true;
   }
 

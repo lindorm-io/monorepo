@@ -4,7 +4,6 @@ import { ServerKoaContext } from "../../types";
 import { getAddress, getDisplayName, getName } from "../../util";
 import { getIdentifierUserinfo } from "../identifier";
 import { getUnixTime } from "date-fns";
-import { includes } from "lodash";
 
 export const getUserinfoResponseBody = async (
   ctx: ServerKoaContext,
@@ -20,7 +19,7 @@ export const getUserinfoResponseBody = async (
     updatedAt: getUnixTime(identity.updated),
   };
 
-  if (!includes(scopes, Scope.OPENID)) {
+  if (!scopes.includes(Scope.OPENID)) {
     return { active: identity.active, claims, permissions: identity.permissions };
   }
 

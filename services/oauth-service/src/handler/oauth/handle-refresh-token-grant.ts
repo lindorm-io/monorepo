@@ -4,7 +4,6 @@ import { TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { generateTokenResponse } from "./generate-token-response";
 import { getExpiryDate } from "@lindorm-io/core";
-import { includes } from "lodash";
 import { isAfter } from "date-fns";
 import { randomUUID } from "crypto";
 
@@ -59,7 +58,7 @@ export const handleRefreshTokenGrant = async (
     identityId: refreshSession.identityId,
   });
 
-  if (!includes(consentSession.sessions, refreshSession.id)) {
+  if (!consentSession.sessions.includes(refreshSession.id)) {
     throw new ClientError("Invalid Session", {
       code: "invalid_request",
       description: "Session does not have consent",

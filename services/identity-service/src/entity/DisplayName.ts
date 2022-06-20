@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { LindormError } from "@lindorm-io/errors";
 import { randomNumber } from "@lindorm-io/core";
-import { includes, remove } from "lodash";
+import { remove } from "lodash";
 import {
   EntityAttributes,
   EntityKeys,
@@ -36,7 +36,7 @@ export class DisplayName extends LindormEntity<DisplayNameAttributes> {
   }
 
   public add(number: number): void {
-    if (includes(this.numbers, number)) {
+    if (this.numbers.includes(number)) {
       throw new LindormError("Number already exists for this DisplayName");
     }
 
@@ -51,7 +51,7 @@ export class DisplayName extends LindormEntity<DisplayNameAttributes> {
   }
 
   public exists(number: number): boolean {
-    return includes(this.numbers, number);
+    return this.numbers.includes(number);
   }
 
   public async generateNumber(): Promise<number> {

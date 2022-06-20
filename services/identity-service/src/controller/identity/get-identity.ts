@@ -2,7 +2,6 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType, Scope } from "../../common";
 import { ServerKoaController } from "../../types";
-import { includes } from "lodash";
 import {
   getAddressList,
   getDisplayName,
@@ -25,7 +24,7 @@ export const getIdentityController: ServerKoaController = async (ctx): Controlle
     permissions: identity.permissions,
   };
 
-  if (!includes(scopes, Scope.OPENID)) {
+  if (!scopes.includes(Scope.OPENID)) {
     throw new ClientError("Unauthorized", {
       debug: { scopes },
       description: "Invalid scope",

@@ -9,7 +9,6 @@ import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createHash, randomUUID } from "crypto";
 import { createURL, randomString, PKCEMethod } from "@lindorm-io/core";
-import { filter, find, includes } from "lodash";
 import {
   confirmOauthAuthenticationSession,
   fetchOauthAuthenticationInfo,
@@ -73,8 +72,8 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
     }
   }
 
-  const emailHint = find(loginHint, (item) => REGEX_EMAIL.test(item));
-  const phoneHint = find(loginHint, (item) => REGEX_PHONE.test(item));
+  const emailHint = loginHint?.find((item) => REGEX_EMAIL.test(item));
+  const phoneHint = loginHint?.find((item) => REGEX_PHONE.test(item));
 
   const codeVerifier = randomString(32);
   const codeChallengeMethod = PKCEMethod.S256;
@@ -100,8 +99,8 @@ export const initialiseLoginController: ServerKoaController<RequestData> = async
       port: configuration.server.port,
     }).toString(),
     requestedLevelOfAssurance: levelOfAssurance,
-    requestedMethods: filter(authenticationMethods, (key) =>
-      includes(Object.values(AuthenticationMethod), key),
+    requestedMethods: authenticationMethods.filter((key: AuthenticationMethod) =>
+      Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });
 

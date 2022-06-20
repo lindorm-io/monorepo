@@ -8,7 +8,6 @@ import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
 import { randomString } from "@lindorm-io/core";
-import { includes } from "lodash";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,
@@ -66,7 +65,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     publicKey: enrolmentSession.publicKey,
   });
 
-  const trusted = includes([SessionStatus.CONFIRMED, SessionStatus.SKIP], enrolmentSession.status);
+  const trusted = [SessionStatus.CONFIRMED, SessionStatus.SKIP].includes(enrolmentSession.status);
   const salt: DeviceLinkSalt = {
     aes: randomString(128),
     sha: randomString(128),
