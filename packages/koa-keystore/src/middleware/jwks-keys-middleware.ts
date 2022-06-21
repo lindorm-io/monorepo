@@ -6,7 +6,14 @@ export const jwksKeysMiddleware =
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("keystore");
 
-    ctx.keys = await getKeysFromJwks(ctx, config);
+    ctx.keys = await getKeysFromJwks({
+      currentKeys: ctx.keys,
+      host: config.host,
+      logger: ctx.logger,
+      name: config.name,
+      path: config.path,
+      port: config.port,
+    });
 
     metric.end();
 

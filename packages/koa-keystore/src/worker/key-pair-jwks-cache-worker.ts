@@ -2,13 +2,13 @@ import { ILogger } from "@lindorm-io/winston";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { RedisConnection } from "@lindorm-io/redis";
-import { WebKeyHandler } from "../class";
 import { addSeconds } from "date-fns";
 import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { getKeysFromJwks } from "../util";
 
 interface Options {
-  clientName: string;
   host: string;
+  path?: string;
   port?: number;
   redisConnection: RedisConnection;
   retry?: number;
@@ -18,8 +18,8 @@ interface Options {
 
 export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const {
-    clientName,
     host,
+    path,
     port,
     redisConnection,
     retry = 10,
@@ -32,26 +32,24 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const logger = winston.createChildLogger(["keyPairJwksCacheWorker"]);
 
   logger.debug("creating jwks cache worker", {
-    clientName,
     host,
+    path,
     port,
     workerInterval,
-  });
-
-  const handler = new WebKeyHandler({
-    host,
-    logger,
-    name: clientName,
-    port,
   });
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
       const cache = new KeyPairCache({ connection: redisConnection, logger });
 
-      const array = await handler.getKeys();
+      const keys = await getKeysFromJwks({
+        logger,
+        host,
+        path,
+        port,
+      });
 
-      for (const entity of array) {
+      for (const entity of keys) {
         if (!entity.expires) {
           entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
         }

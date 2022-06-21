@@ -1,24 +1,20 @@
 import { Metric } from "@lindorm-io/koa";
-import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/winston";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
+import { getKeysFromJwks as _getKeysFromJwks } from "../util";
 import { jwksKeysMiddleware } from "./jwks-keys-middleware";
 
-const keyRSA = createTestKeyPairRSA();
-
-jest.mock("../class", () => ({
-  WebKeyHandler: class WebKeyHandler {
-    public async getKeys() {
-      return [keyRSA];
-    }
-  },
-}));
+jest.mock("../util");
 
 const next = () => Promise.resolve();
+
+const getKeysFromJwks = _getKeysFromJwks as jest.Mock;
 
 describe("jwksKeysMiddleware", () => {
   let ctx: any;
 
   const keyEC = createTestKeyPairEC();
+  const keyRSA = createTestKeyPairRSA();
   const logger = createMockLogger();
 
   beforeEach(async () => {
@@ -27,7 +23,10 @@ describe("jwksKeysMiddleware", () => {
       logger,
       metrics: {},
     };
+
     ctx.getMetric = (key: string) => new Metric(ctx, key);
+
+    getKeysFromJwks.mockResolvedValue([keyEC, keyRSA]);
   });
 
   test("should successfully add keys to context", async () => {

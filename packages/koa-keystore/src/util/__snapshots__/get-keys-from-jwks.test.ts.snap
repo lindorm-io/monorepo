@@ -1,0 +1,85 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getKeysFromJwks should resolve 1`] = `
+Array [
+  Object {
+    "algorithms": Array [
+      "RS256",
+      "RS384",
+      "RS512",
+    ],
+    "allowed": 2020-01-01T08:00:00.000Z,
+    "created": 2020-01-01T08:00:00.000Z,
+    "expires": 2029-01-01T08:00:00.000Z,
+    "external": false,
+    "id": "e6301473-e347-4035-8084-8645d034e4a3",
+    "namedCurve": null,
+    "origin": null,
+    "passphrase": null,
+    "preferredAlgorithm": "RS512",
+    "privateKey": "-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQILo+vYp1sVzkCAggA
+MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBAH/kHULWxjfIfts06S+YgeBIIC
+gDTn9aCl0ndo30oMZGxXPjulzWp5+GcdcyhmwS0BHN/xWxoE/hAZcNHMshIqRZkz
+9Bt8Az9x8nn5EHBp9DjrK/iC8sftrHwqCZuyeG07kZnHGkScAndGPGixHDOPmGhR
+PMTA6VdS/BPojLf4avdA++pwqe9jgKfU7EIHZzVQibFJfNt0R8kNlDd9hlc8efiM
+UfRbD+KgX0fRISoFxPWHBS7RCg/RczC2RQ7WtAUviD7sc9OzK0x8oUmr6gf/NDYD
+pTYU4LUzFHc2FrXN5N0/w/1l7nzCTCuSo2w/2tx5eB6vD/oA6r+7KMzhG94aCeIJ
+Rw6g1Be1Bgdqy8ijq1JMp3Tb7rkfRPf64OPHiUcXYi7A2G3EaofYgj8geaXNiDSf
+t6kRPI5as27N8n1oOXb+8++kDuYU+T7lnBu3eprx+J0UMXKKdGWMfppOuCELaZEK
+cO9JOcZQdXNWmFpmiSeGSsREAeNQp+wM8gkN6fJSlxCR4zjEP7z6dwl8sInEdTks
+w6HoCmSgFohkcAmfLjPnNWGXEdkaAx0fnXia1V1OCccnHR+r/FnuKmkFjj8oPNmL
+k86Y+YwTwzOAX56qRoiDevBqWScEy0GedYLAkjv5KwM+pajVjFEliXZ+BmMOGMgx
+YuTg02HZfsAy90YuyWaBdxLLRcXcH4CIqbd83OVx+ostDFHN7wrfczgo5tDFiAp4
+iBpuohVw7dDqxgzJ875v62ErYzTN00UddRFyy7L11duo3kmrbXzmeQ8qQ1J3RZxQ
+B+S+46BStdGJfc8tDX7G4yhH6GUracFD9a6Uk4r4shj0emlU44NZR9V90xejwq2A
+g3oTzDTCesmOzSew3oD8who=
+-----END ENCRYPTED PRIVATE KEY-----
+",
+    "publicKey": "-----BEGIN RSA PUBLIC KEY-----
+MIGJAoGBAMpaNgFfgnUINKdxyxjlZs3L0GBjcW7qqwtzBAAMgdJWcEo7Z8flDNGy
+rvl8GarL3tkwoBcpUyi1/awyHpHeRMSLgKOnwMeMenK99TzeU4UWPX9ZXIQ4KxWE
+tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=
+-----END RSA PUBLIC KEY-----
+",
+    "revision": 0,
+    "type": "RSA",
+    "updated": 2021-01-01T09:00:00.000Z,
+    "version": 0,
+  },
+  Object {
+    "algorithms": Array [
+      "ES512",
+    ],
+    "allowed": 2021-01-01T08:00:00.000Z,
+    "created": 2021-01-01T08:00:00.000Z,
+    "expires": null,
+    "external": true,
+    "id": "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
+    "namedCurve": "P-521",
+    "origin": "https://origin.uri",
+    "passphrase": null,
+    "preferredAlgorithm": "ES512",
+    "privateKey": "-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAmT5i0eE+ihtF0Rlf
+Mr1REhPuYHt28Zh4fpOYryQ/Todr+VVFfx//MP29z0JGKT59vpeRxMzGS0U297Ve
+Srcdsy6hgYkDgYYABAALCbX3YEpmksbJtbMDkgqHZksXhMMUNb3HZC1ckqWQBi3B
+mWDSLyfXFLUBkHPUtwg745EdG5K8auBy2KguCsKHcwCXEjKSVpmfe4L9N4FyCGx+
+e6dNUTegqVXFE11vrODcZ0OlA4blinsgXQexdeK10GUCob5bqBqY77+jjeG3ZNsL
+lg==
+-----END PRIVATE KEY-----
+",
+    "publicKey": "-----BEGIN PUBLIC KEY-----
+MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQACwm192BKZpLGybWzA5IKh2ZLF4TD
+FDW9x2QtXJKlkAYtwZlg0i8n1xS1AZBz1LcIO+ORHRuSvGrgctioLgrCh3MAlxIy
+klaZn3uC/TeBcghsfnunTVE3oKlVxRNdb6zg3GdDpQOG5Yp7IF0HsXXitdBlAqG+
+W6gamO+/o43ht2TbC5Y=
+-----END PUBLIC KEY-----
+",
+    "revision": 0,
+    "type": "EC",
+    "updated": 2021-01-01T08:00:00.000Z,
+    "version": 0,
+  },
+]
+`;

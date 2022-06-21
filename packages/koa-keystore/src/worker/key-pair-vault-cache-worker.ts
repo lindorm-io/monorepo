@@ -2,9 +2,9 @@ import { ILogger } from "@lindorm-io/winston";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { RedisConnection } from "@lindorm-io/redis";
-import { WebKeyHandler } from "../class";
 import { addSeconds } from "date-fns";
 import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { getKeysFromJwks } from "../util";
 import {
   Axios,
   axiosClientCredentialsMiddleware,
@@ -27,7 +27,6 @@ interface Options {
   oauthService: OAuthServiceOptions;
   redisConnection: RedisConnection;
   retry?: number;
-  scopes?: Array<string>;
   vaultService: VaultServiceOptions;
   winston: ILogger;
   workerInterval?: string;
@@ -39,7 +38,6 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
     oauthService,
     redisConnection,
     retry = 3,
-    scopes = ["lindorm.io/vault-service/client/jwks-private:read"],
     vaultService,
     winston,
     workerInterval = "5 minutes",
@@ -64,22 +62,19 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
 
   const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
 
-  const handler = new WebKeyHandler({
-    host: vaultService.host,
-    logger,
-    middleware: [clientCredentialsMiddleware(oauthClient, scopes)],
-    name: "vaultClient",
-    path: vaultService.path || "/internal/jwks",
-    port: vaultService.port,
-  });
-
   return new IntervalWorker({
     callback: async (): Promise<void> => {
       const cache = new KeyPairCache({ connection: redisConnection, logger });
 
-      const array = await handler.getKeys();
+      const keys = await getKeysFromJwks({
+        logger,
+        host: vaultService.host,
+        middleware: [clientCredentialsMiddleware(oauthClient)],
+        path: vaultService.path || "/internal/jwks",
+        port: vaultService.port,
+      });
 
-      for (const entity of array) {
+      for (const entity of keys) {
         if (!entity.expires) {
           entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
         }
