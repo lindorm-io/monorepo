@@ -11,6 +11,7 @@ interface Options {
   keyType?: KeyType;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
+  origin?: string;
   passphrase?: string;
   retry?: number;
   rotationInterval?: string;
@@ -24,6 +25,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
     keyType = KeyType.EC,
     mongoConnection,
     namedCurve = NamedCurve.P521,
+    origin,
     passphrase = "",
     retry = 3,
     rotationInterval = "30 days",
@@ -48,6 +50,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
 
         const keyPair = await generateKeyPair({
           namedCurve,
+          origin,
           passphrase,
           type: keyType,
         });
@@ -55,7 +58,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         keyPair.allowed = now;
         keyPair.expires = add(now, stringToDurationObject(keyExpiry));
 
-        logger.debug("Adding KeyPair to repository", {
+        logger.verbose("Adding KeyPair to repository", {
           id: keyPair.id,
           allowed: keyPair.allowed,
           expires: keyPair.expires,
@@ -68,6 +71,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
       if (keys.length < 2) {
         const keyPair = await generateKeyPair({
           namedCurve,
+          origin,
           passphrase,
           type: keyType,
         });
@@ -75,7 +79,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         keyPair.allowed = add(now, stringToDurationObject(rotationInterval));
         keyPair.expires = add(keyPair.allowed, stringToDurationObject(keyExpiry));
 
-        logger.debug("Adding KeyPair to repository", {
+        logger.verbose("Adding KeyPair to repository", {
           id: keyPair.id,
           allowed: keyPair.allowed,
           expires: keyPair.expires,
