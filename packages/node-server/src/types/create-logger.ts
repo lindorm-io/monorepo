@@ -1,6 +1,8 @@
-import { LoggerOptions } from "@lindorm-io/winston";
-import { Environment } from "@lindorm-io/koa";
+import { LoggerOptions, LogLevel } from "@lindorm-io/winston";
 
 export interface CreateLoggerOptions extends LoggerOptions {
-  environment: Environment;
+  level: LogLevel;
+  colours: boolean;
+  readable: boolean;
+  timestamp: boolean;
 }

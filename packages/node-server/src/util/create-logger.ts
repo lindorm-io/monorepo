@@ -1,23 +1,16 @@
 import { CreateLoggerOptions } from "../types";
-import { Environment } from "@lindorm-io/koa";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 
-export const createLogger = (options: CreateLoggerOptions): Logger => {
+export const createLogger = (options: Partial<CreateLoggerOptions> = {}): Logger => {
+  const { level = LogLevel.VERBOSE, colours = false, readable = false, timestamp = true } = options;
+
+  if (!Object.values(LogLevel).includes(level)) {
+    throw new Error(`Invalid LogLevel [ ${level} ]`);
+  }
+
   const logger = new Logger();
 
-  switch (options.environment) {
-    case Environment.DEVELOPMENT:
-      logger.addConsole(LogLevel.DEBUG, { readable: true, colours: true, timestamp: true });
-      break;
-
-    case Environment.TEST:
-      logger.addConsole(LogLevel.ERROR, { readable: true });
-      break;
-
-    default:
-      logger.addConsole(LogLevel.INFO);
-      break;
-  }
+  logger.addConsole(level, { readable, colours, timestamp });
 
   return logger;
 };
