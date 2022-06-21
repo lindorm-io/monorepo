@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { PKCEMethod } from "@lindorm-io/core";
 import {
   EntityAttributes,
@@ -17,7 +18,6 @@ import {
   JOI_NONCE,
   JOI_SESSION_STATUS,
   JOI_STATE,
-  LevelOfAssurance,
   PromptMode,
   ResponseMode,
   ResponseType,

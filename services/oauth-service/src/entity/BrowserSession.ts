@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/core";
 import {
   JOI_COUNTRY_CODE,
@@ -6,7 +7,6 @@ import {
   JOI_LEVEL_OF_ASSURANCE,
   JOI_LOCALE,
   JOI_NONCE,
-  LevelOfAssurance,
 } from "../common";
 import {
   EntityAttributes,

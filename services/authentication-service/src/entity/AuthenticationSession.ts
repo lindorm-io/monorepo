@@ -1,14 +1,9 @@
 import Joi from "joi";
 import { AuthenticationMethod } from "../enum";
 import { JOI_AUTHENTICATION_METHOD, JOI_PKCE_METHOD } from "../constant";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { PKCEMethod } from "@lindorm-io/core";
-import {
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_SESSION_STATUS,
-  LevelOfAssurance,
-  SessionStatus,
-} from "../common";
+import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS, SessionStatus } from "../common";
 import {
   EntityAttributes,
   EntityKeys,

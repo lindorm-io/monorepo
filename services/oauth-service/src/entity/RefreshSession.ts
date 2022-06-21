@@ -1,13 +1,8 @@
 import Joi from "joi";
+import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, JOI_LOCALE, JOI_NONCE } from "../common";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
-import {
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_LOCALE,
-  JOI_NONCE,
-  LevelOfAssurance,
-} from "../common";
 import {
   EntityAttributes,
   EntityKeys,

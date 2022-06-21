@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_PKCE_METHOD } from "../../constant";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
@@ -13,7 +14,6 @@ import {
   InitialiseAuthenticationRequestData,
   InitialiseAuthenticationResponseBody,
   JOI_JWT,
-  LevelOfAssurance,
 } from "../../common";
 
 interface RequestData {
@@ -47,7 +47,7 @@ export const initialiseSessionAuthenticationController: ServerKoaController<Requ
 
   const adjustedAccessLevel = getAdjustedAccessLevel({
     latestAuthentication: fromUnixTime(bearerToken.authTime),
-    levelOfAssurance: bearerToken.levelOfAssurance as LevelOfAssurance,
+    levelOfAssurance: bearerToken.levelOfAssurance,
   });
 
   const body: InitialiseAuthenticationRequestData = {
