@@ -2,6 +2,12 @@ frontend:
   host: http://localhost
   port: 4100
 
+logger:
+  level: debug
+  colours: true
+  readable: true
+  timestamp: true
+
 mongo:
   host: localhost
   port: 3101

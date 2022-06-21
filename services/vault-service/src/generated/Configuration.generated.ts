@@ -1,17 +1,17 @@
 export interface Configuration {
-  defaults:  Defaults;
-  mongo:     Mongo;
-  oauth:     Oauth;
-  redis:     Mongo;
-  server:    Server;
-  services:  Services;
+  logger:   Logger;
+  mongo:    Mongo;
+  oauth:    Oauth;
+  redis:    Mongo;
+  server:   Server;
+  services: Services;
 }
 
-interface Defaults {
-  challenge_confirmation_token_expiry:   string;
-  challenge_session_expiry:              string;
-  enrolment_session_expiry:              string;
-  remote_vault_challenge_session_expiry: string;
+interface Logger {
+  colours:   boolean;
+  level:     string;
+  readable:  boolean;
+  timestamp: boolean;
 }
 
 interface Mongo {

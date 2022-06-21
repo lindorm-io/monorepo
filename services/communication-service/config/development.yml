@@ -1,3 +1,9 @@
+logger:
+  level: debug
+  colours: true
+  readable: true
+  timestamp: true
+
 oauth:
   client_id: aec0a293-4371-450a-bcfa-0f60f1f51a65
   client_secret: 8uXj4edcXTOvT7BbB9ecspvfXrujPmIViFr7jw2k5sZVlleDI58WUg6V6HbjG2Md

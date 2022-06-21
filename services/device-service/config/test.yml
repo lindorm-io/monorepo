@@ -1,3 +1,9 @@
+logger:
+  level: error
+  colours: true
+  readable: true
+  timestamp: true
+
 mongo:
   host: localhost
   port: 3301

@@ -1,5 +1,6 @@
 export interface Configuration {
   frontend:        Frontend;
+  logger:          Logger;
   oauth:           Oauth;
   oidc_providers:  OidcProvider[];
   redis:           Redis;
@@ -15,6 +16,13 @@ interface Frontend {
 
 interface Routes {
   error: string;
+}
+
+interface Logger {
+  colours:   boolean;
+  level:     string;
+  readable:  boolean;
+  timestamp: boolean;
 }
 
 interface Oauth {

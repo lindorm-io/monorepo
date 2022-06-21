@@ -1,6 +1,7 @@
 export interface Configuration {
   defaults:  Defaults;
   frontend:  Frontend;
+  logger:    Logger;
   mongo:     Mongo;
   oauth:     Oauth;
   redis:     Mongo;
@@ -20,6 +21,13 @@ interface Frontend {
 
 interface Routes {
   connect_callback: string;
+}
+
+interface Logger {
+  colours:   boolean;
+  level:     string;
+  readable:  boolean;
+  timestamp: boolean;
 }
 
 interface Mongo {

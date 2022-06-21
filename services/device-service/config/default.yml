@@ -4,6 +4,12 @@ defaults:
   enrolment_session_expiry: 15 minutes
   remote_device_challenge_session_expiry: 15 minutes
 
+logger:
+  level: info
+  colours: false
+  readable: false
+  timestamp: true
+
 mongo:
   host: localhost
   port: 27017

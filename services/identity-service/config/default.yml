@@ -6,6 +6,12 @@ frontend:
   routes:
     connect_callback: /connect/callback
 
+logger:
+  level: info
+  colours: false
+  readable: false
+  timestamp: true
+
 mongo:
   host: localhost
   port: 27017

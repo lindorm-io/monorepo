@@ -1,8 +1,16 @@
 export interface Configuration {
+  logger:   Logger;
   oauth:    Oauth;
   redis:    Redis;
   server:   Server;
   services: Services;
+}
+
+interface Logger {
+  colours:   boolean;
+  level:     string;
+  readable:  boolean;
+  timestamp: boolean;
 }
 
 interface Oauth {

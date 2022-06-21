@@ -1,3 +1,9 @@
+logger:
+  level: info
+  colours: false
+  readable: false
+  timestamp: true
+
 oauth:
   client_id: id
   client_secret: secret
