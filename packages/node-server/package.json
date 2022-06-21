@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/node-server",
   "description": "Lindorm Node Server",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
