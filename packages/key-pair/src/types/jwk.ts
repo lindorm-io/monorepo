@@ -2,14 +2,18 @@ import { KeyType, NamedCurve } from "../enum";
 
 export interface DefaultJWK {
   alg: string;
-  allowedFrom?: number;
-  createdAt?: number;
   crv?: string;
-  expiresAt?: number;
   keyOps: Array<string>;
   kid: string;
   kty: string;
   use: string;
+}
+
+export interface LindormJWK extends DefaultJWK {
+  allowedFrom?: number;
+  createdAt?: number;
+  expiresAt?: number;
+  origin?: string;
 }
 
 export interface EllipticalJWK {
@@ -31,7 +35,7 @@ export interface RivestJWK {
 }
 
 export type KeyJWK = EllipticalJWK | RivestJWK;
-export type JWK = DefaultJWK & KeyJWK;
+export type JWK = LindormJWK & KeyJWK;
 
 export interface JoseData {
   privateKey?: string;

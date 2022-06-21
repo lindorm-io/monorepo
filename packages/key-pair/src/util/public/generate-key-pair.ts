@@ -3,14 +3,15 @@ import { KeyPair } from "../../entity";
 import { generateEcKeys } from "./generate-ec-keys";
 import { generateRsaKeys } from "./generate-rsa-keys";
 
-interface IOptions {
+interface Options {
   namedCurve?: NamedCurve;
+  origin?: string;
   passphrase?: string;
   type: KeyType;
 }
 
-export const generateKeyPair = async (options: IOptions): Promise<KeyPair> => {
-  const { type } = options;
+export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
+  const { origin, type } = options;
 
   let algorithms: Array<Algorithm>;
   let namedCurve: NamedCurve | null = null;
@@ -34,6 +35,7 @@ export const generateKeyPair = async (options: IOptions): Promise<KeyPair> => {
   return new KeyPair({
     algorithms,
     namedCurve,
+    origin,
     passphrase,
     privateKey,
     publicKey,
