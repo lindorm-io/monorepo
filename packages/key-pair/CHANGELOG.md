@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.5.0...@lindorm-io/key-pair@0.6.0) (2022-06-21)
+
+
+### Features
+
+* add origin to key pair ([6830f51](https://github.com/lindorm-io/monorepo/commit/6830f5141b46a87de45f1ad2cac4f55fb4cd10da))
+
+
+
+
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.4.8...@lindorm-io/key-pair@0.5.0) (2022-06-18)
 
 
