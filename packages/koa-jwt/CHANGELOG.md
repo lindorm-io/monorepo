@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.20](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.19...@lindorm-io/koa-jwt@0.5.20) (2022-06-22)
+
+**Note:** Version bump only for package @lindorm-io/koa-jwt
+
+
+
+
+
 ## [0.5.19](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.18...@lindorm-io/koa-jwt@0.5.19) (2022-06-21)
 
 **Note:** Version bump only for package @lindorm-io/koa-jwt

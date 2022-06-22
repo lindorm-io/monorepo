@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.4...@lindorm-io/jwt@0.8.5) (2022-06-22)
+
+
+### Bug Fixes
+
+* convert objects inside arrays in case switch utility ([ab27f3a](https://github.com/lindorm-io/monorepo/commit/ab27f3afe8e121f852c63f4a874909241565d7d2))
+
+
+
+
+
 ## [0.8.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.3...@lindorm-io/jwt@0.8.4) (2022-06-21)
 
 **Note:** Version bump only for package @lindorm-io/jwt

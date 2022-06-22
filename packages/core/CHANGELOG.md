@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.1...@lindorm-io/core@0.6.2) (2022-06-22)
+
+
+### Bug Fixes
+
+* convert objects inside arrays in case switch utility ([ab27f3a](https://github.com/lindorm-io/monorepo/commit/ab27f3afe8e121f852c63f4a874909241565d7d2))
+
+
+
+
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.0...@lindorm-io/core@0.6.1) (2022-06-18)
 
 
