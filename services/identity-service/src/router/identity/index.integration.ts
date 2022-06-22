@@ -75,13 +75,13 @@ describe("/identity", () => {
       addresses: [
         {
           id: address.id,
-          careOf: "Gustav Torsson",
+          care_of: "Gustav Torsson",
           country: "Sweden",
           label: "work",
           locality: "Stockholm",
-          postalCode: "12345",
+          postal_code: "12345",
           region: "Stockholm",
-          streetAddress: ["Long Street Name 12", "Second Row"],
+          street_address: ["Long Street Name 12", "Second Row"],
         },
       ],
       birth_date: "2000-01-01",

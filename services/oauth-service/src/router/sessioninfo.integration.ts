@@ -82,7 +82,7 @@ describe("/sessioninfo", () => {
         {
           clients: [client1.id],
           expires: "2021-04-01T08:00:00.000Z",
-          levelOfAssurance: 2,
+          level_of_assurance: 2,
           remember: true,
         },
       ],
@@ -100,19 +100,19 @@ describe("/sessioninfo", () => {
       ],
       consent_sessions: [
         {
-          clientId: client1.id,
+          client_id: client1.id,
           scopes: ["openid", "email", "profile"],
         },
         {
-          clientId: client2.id,
+          client_id: client2.id,
           scopes: ["openid", "email", "profile"],
         },
       ],
       refresh_sessions: [
         {
-          clientId: client2.id,
+          client_id: client2.id,
           expires: "2021-02-01T08:00:00.000Z",
-          levelOfAssurance: 2,
+          level_of_assurance: 2,
         },
       ],
     });

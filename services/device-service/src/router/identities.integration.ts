@@ -50,12 +50,12 @@ describe("/identities", () => {
     expect(response.body).toStrictEqual({
       sessions: [
         {
-          expiresIn: 1200,
           id: session2.id,
+          expires_in: 1200,
         },
         {
-          expiresIn: 900,
           id: session1.id,
+          expires_in: 900,
         },
       ],
     });
