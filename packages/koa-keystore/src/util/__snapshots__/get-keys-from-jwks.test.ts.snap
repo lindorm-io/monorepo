@@ -14,6 +14,12 @@ Array [
     "external": false,
     "id": "e6301473-e347-4035-8084-8645d034e4a3",
     "namedCurve": null,
+    "operations": Array [
+      "decrypt",
+      "encrypt",
+      "sign",
+      "verify",
+    ],
     "origin": null,
     "passphrase": null,
     "preferredAlgorithm": "RS512",
@@ -57,6 +63,9 @@ tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=
     "external": true,
     "id": "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
     "namedCurve": "P-521",
+    "operations": Array [
+      "verify",
+    ],
     "origin": "https://origin.uri",
     "passphrase": null,
     "preferredAlgorithm": "ES512",
