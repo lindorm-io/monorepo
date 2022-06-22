@@ -17,7 +17,7 @@ export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>>
   const {
     currentKeys = [],
     host,
-    name = "jwksClient",
+    name = "jwks",
     path = "/.well-known/jwks.json",
     port,
     ...rest

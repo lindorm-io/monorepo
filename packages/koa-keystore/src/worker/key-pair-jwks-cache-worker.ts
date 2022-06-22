@@ -8,6 +8,7 @@ import { getKeysFromJwks } from "../util";
 
 interface Options {
   host: string;
+  name?: string;
   path?: string;
   port?: number;
   redisConnection: RedisConnection;
@@ -19,6 +20,7 @@ interface Options {
 export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
   const {
     host,
+    name,
     path,
     port,
     redisConnection,
@@ -33,6 +35,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
 
   logger.debug("creating jwks cache worker", {
     host,
+    name,
     path,
     port,
     workerInterval,
@@ -45,6 +48,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
       const keys = await getKeysFromJwks({
         logger,
         host,
+        name,
         path,
         port,
       });
