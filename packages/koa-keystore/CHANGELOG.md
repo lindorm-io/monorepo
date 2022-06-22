@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.2...@lindorm-io/koa-keystore@0.9.3) (2022-06-22)
+
+
+### Bug Fixes
+
+* rework unnecessary handler class into utility ([7a9ed0f](https://github.com/lindorm-io/monorepo/commit/7a9ed0f57af3ddd3c5a5b8ee434b5342d10d5c90))
+* update name input ([7de38c1](https://github.com/lindorm-io/monorepo/commit/7de38c1274873f446ecefa4640d0ec7d24d3dec2))
+
+
+
+
+
 ## [0.9.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.1...@lindorm-io/koa-keystore@0.9.2) (2022-06-21)
 
 
