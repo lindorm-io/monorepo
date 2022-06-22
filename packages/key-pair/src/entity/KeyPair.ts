@@ -26,6 +26,7 @@ export interface KeyPairAttributes extends EntityAttributes {
   expires: Date | null;
   external: boolean;
   namedCurve: NamedCurve | null;
+  operations: Array<string>;
   origin: string | null;
   passphrase: string | null;
   preferredAlgorithm: Algorithm;
@@ -41,13 +42,20 @@ export type KeyPairOptions = Optional<
   | "expires"
   | "external"
   | "namedCurve"
+  | "operations"
   | "origin"
   | "passphrase"
   | "preferredAlgorithm"
   | "privateKey"
 >;
 
-const schema = Joi.object()
+interface CalculateOperationsOptions {
+  passphrase?: string | null;
+  privateKey?: string | null;
+  type: KeyType;
+}
+
+const schema = Joi.object<KeyPairAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
@@ -56,6 +64,7 @@ const schema = Joi.object()
     expires: Joi.date().allow(null).required(),
     external: Joi.boolean().required(),
     namedCurve: JOI_KEY_NAMED_CURVE.allow(null).required(),
+    operations: Joi.array().items(Joi.string()).required(),
     origin: Joi.string().uri().allow(null).required(),
     passphrase: Joi.string().allow(null).required(),
     preferredAlgorithm: JOI_KEY_ALGORITHM.required(),
@@ -69,6 +78,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
   public readonly algorithms: Array<Algorithm>;
   public readonly external: boolean;
   public readonly namedCurve: NamedCurve | null;
+  public readonly operations: Array<string>;
   public readonly origin: string | null;
   public readonly passphrase: string | null;
   public readonly privateKey: string | null;
@@ -92,6 +102,9 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     this.expires = options.expires || null;
     this.external = options.external === true;
     this.namedCurve = options.namedCurve || null;
+    this.operations = options.operations?.length
+      ? options.operations
+      : KeyPair.calculateOperations(options);
     this.origin = options.origin || null;
     this.passphrase = options.passphrase || null;
     this.privateKey = options.privateKey || null;
@@ -102,6 +115,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
   public get preferredAlgorithm(): Algorithm {
     return this._preferredAlgorithm;
   }
+
   public set preferredAlgorithm(preferredAlgorithm: Algorithm) {
     if (!includes(this.algorithms, preferredAlgorithm)) {
       throw new KeyPairError("Invalid preferredAlgorithm", {
@@ -128,6 +142,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       expires: this.expires,
       external: this.external,
       namedCurve: this.namedCurve,
+      operations: this.operations,
       origin: this.origin,
       passphrase: this.passphrase,
       preferredAlgorithm: this.preferredAlgorithm,
@@ -146,28 +161,20 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       type: this.type,
     });
 
-    const keyOps = ["verify"];
+    const keyOps = KeyPair.calculateOperations({
+      passphrase: exposePrivateKey ? this.passphrase : undefined,
+      privateKey: exposePrivateKey ? this.privateKey : undefined,
+      type: this.type,
+    });
 
-    if (exposePrivateKey && isString(this.privateKey)) {
-      keyOps.push("sign");
-
-      if (this.type === KeyType.RSA && (this.passphrase?.length || 0) < 1) {
-        keyOps.push("encrypt");
-      }
-    }
-
-    if (this.type === KeyType.RSA) {
-      keyOps.push("decrypt");
-    }
-
-    return snakeKeys(
-      removeUndefinedFromObject({
+    return removeUndefinedFromObject(
+      snakeKeys({
         alg: this.preferredAlgorithm,
         allowedFrom: getUnixTime(this.allowed),
         createdAt: getUnixTime(this.created),
         crv: this.namedCurve ? this.namedCurve : undefined,
         expiresAt: this.expires ? getUnixTime(this.expires) : undefined,
-        keyOps: keyOps.sort(),
+        keyOps,
         kid: this.id,
         kty: this.type,
         origin: this.origin ? this.origin : undefined,
@@ -179,7 +186,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
 
   public static fromJWK(input: JWK): KeyPair {
     const data: JoseData = decodeKeys(input);
-    const jwk = camelKeys(input);
+    const jwk = camelKeys<JWK>(input);
 
     return new KeyPair({
       id: jwk.kid,
@@ -188,11 +195,30 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       created: jwk.createdAt ? fromUnixTime(jwk.createdAt) : undefined,
       expires: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
       external: true,
+      operations: jwk.keyOps,
       namedCurve: jwk.crv ? (jwk.crv as NamedCurve) : undefined,
       origin: jwk.origin,
       preferredAlgorithm: jwk.alg as Algorithm,
       type: jwk.kty as KeyType,
       ...data,
     });
+  }
+
+  private static calculateOperations(options: CalculateOperationsOptions): Array<string> {
+    const result: Array<string> = ["verify"];
+
+    if (options.type === KeyType.RSA) {
+      result.push("decrypt");
+    }
+
+    if (isString(options.privateKey)) {
+      result.push("sign");
+
+      if (options.type === KeyType.RSA) {
+        result.push("encrypt");
+      }
+    }
+
+    return result.sort();
   }
 }

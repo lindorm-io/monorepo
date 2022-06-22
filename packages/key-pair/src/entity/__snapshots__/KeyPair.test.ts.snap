@@ -11,6 +11,10 @@ Object {
   "external": true,
   "id": "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
   "namedCurve": "P-521",
+  "operations": Array [
+    "sign",
+    "verify",
+  ],
   "origin": "https://origin.uri",
   "passphrase": null,
   "preferredAlgorithm": "ES512",
@@ -36,6 +40,10 @@ Object {
   "external": false,
   "id": "259ff47d-e334-4784-a478-04bf6d6b5d84",
   "namedCurve": "P-521",
+  "operations": Array [
+    "sign",
+    "verify",
+  ],
   "origin": null,
   "passphrase": null,
   "preferredAlgorithm": "ES512",
@@ -61,6 +69,10 @@ Object {
   "external": false,
   "id": "259ff47d-e334-4784-a478-04bf6d6b5d84",
   "namedCurve": "P-521",
+  "operations": Array [
+    "sign",
+    "verify",
+  ],
   "origin": null,
   "passphrase": null,
   "preferredAlgorithm": "ES512",
@@ -85,6 +97,10 @@ Object {
   "external": false,
   "id": "02dc19eb-2b8b-4a83-a0c0-9ac2b306bb9a",
   "namedCurve": null,
+  "operations": Array [
+    "decrypt",
+    "verify",
+  ],
   "origin": null,
   "passphrase": null,
   "preferredAlgorithm": "RS384",
@@ -109,6 +125,7 @@ Object {
   "e": "e",
   "key_ops": Array [
     "decrypt",
+    "encrypt",
     "sign",
     "verify",
   ],
