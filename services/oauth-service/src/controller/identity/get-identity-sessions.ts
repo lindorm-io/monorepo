@@ -1,9 +1,11 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
+import { BrowserSession, RefreshSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { isAfter } from "date-fns";
-import { orderBy } from "lodash";
 import { GetIdentitySessionsResponseBody, IdentitySessionsData, JOI_GUID } from "../../common";
+import { ServerKoaController } from "../../types";
+import { flatten, orderBy } from "lodash";
+import { getAdjustedAccessLevel } from "../../util";
+import { isAfter } from "date-fns";
 
 interface IdentitySessionsRequestData {
   id: string;
@@ -28,21 +30,19 @@ export const getIdentitySessionsController: ServerKoaController<
   const now = new Date();
 
   const browserSessions = await browserSessionRepository.findMany({ identityId });
-
-  for (const session of browserSessions) {
-    if (session.levelOfAssurance === 0) continue;
-    if (isAfter(now, session.expires)) continue;
-
-    sessions.push({ id: session.id, levelOfAssurance: session.levelOfAssurance });
-  }
-
   const refreshSessions = await refreshSessionRepository.findMany({ identityId });
 
-  for (const session of refreshSessions) {
+  const array = flatten<BrowserSession | RefreshSession>([browserSessions, refreshSessions]);
+
+  for (const session of array) {
     if (session.levelOfAssurance === 0) continue;
     if (isAfter(now, session.expires)) continue;
 
-    sessions.push({ id: session.id, levelOfAssurance: session.levelOfAssurance });
+    sessions.push({
+      id: session.id,
+      adjustedAccessLevel: getAdjustedAccessLevel(session),
+      levelOfAssurance: session.levelOfAssurance,
+    });
   }
 
   return { body: { sessions: orderBy(sessions, ["levelOfAssurance"], ["asc"]) } };

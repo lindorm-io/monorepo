@@ -1,8 +1,13 @@
 import MockDate from "mockdate";
 import { getIdentitySessionsController } from "./get-identity-sessions";
 import { createTestBrowserSession, createTestRefreshSession } from "../../fixtures/entity";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
+
+jest.mock("../../util");
+
+const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
 
 describe("getIdentitySessions", () => {
   let ctx: any;
@@ -63,6 +68,8 @@ describe("getIdentitySessions", () => {
         },
       },
     };
+
+    getAdjustedAccessLevel.mockImplementation(() => 1);
   });
 
   test("should resolve sessions", async () => {

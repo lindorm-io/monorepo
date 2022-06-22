@@ -80,18 +80,22 @@ describe("/internal/identities", () => {
       sessions: [
         {
           id: session1.id,
+          adjustedAccessLevel: 1,
           levelOfAssurance: 1,
         },
         {
           id: session2.id,
+          adjustedAccessLevel: 2,
           levelOfAssurance: 2,
         },
         {
           id: session3.id,
+          adjustedAccessLevel: 3,
           levelOfAssurance: 3,
         },
         {
           id: session4.id,
+          adjustedAccessLevel: 4,
           levelOfAssurance: 4,
         },
       ],
