@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getValidIdentitySessions should resolve valid sessions 1`] = `
+Array [
+  "2",
+  "3",
+  "4",
+]
+`;

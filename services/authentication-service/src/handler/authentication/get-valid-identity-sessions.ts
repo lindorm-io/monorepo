@@ -23,7 +23,9 @@ export const getValidIdentitySessions = async (
       },
     );
 
-    return data.sessions.filter((item) => item.levelOfAssurance >= 2).map((item) => item.id);
+    return data.sessions
+      .filter((item) => item.adjustedAccessLevel >= 2 && item.levelOfAssurance >= 2)
+      .map((item) => item.id);
   } catch (err) {
     return [];
   }
