@@ -1,51 +1,14 @@
 import { camelCase, snakeCase } from "lodash";
-import { isArrayStrict, isObjectStrict } from "./strict-type";
-
-type Callback = (arg: string) => string;
-
-const convertArrayValuesTo = (input: Array<string>, callback: Callback): Array<string> => {
-  if (!isArrayStrict(input)) {
-    throw new Error(`Invalid input [ ${typeof input} ]`);
-  }
-
-  const result: Array<string> = [];
-
-  for (const value of input) {
-    result.push(callback(value));
-  }
-
-  return result;
-};
-
-const convertObjectKeysTo = <Input extends Record<string, any>, Output extends Record<string, any>>(
-  input: Input,
-  callback: Callback,
-): Output => {
-  if (!isObjectStrict(input)) {
-    throw new Error(`Invalid input [ ${typeof input} ]`);
-  }
-
-  const result: Record<string, any> = {};
-
-  for (const [key, value] of Object.entries(input)) {
-    if (isObjectStrict(value)) {
-      result[callback(key)] = convertObjectKeysTo(value, callback);
-    } else {
-      result[callback(key)] = value;
-    }
-  }
-
-  return result as Output;
-};
+import { convertArrayValues, convertObjectKeys } from "./convert";
 
 export const camelArray = (input: Array<string>): Array<string> => {
-  return convertArrayValuesTo(input, camelCase);
+  return convertArrayValues(input, camelCase);
 };
 
-export const camelKeys = <Input extends Record<string, any>, Output extends Record<string, any>>(
-  input: Input,
+export const camelKeys = <Output extends Record<string, any>>(
+  input: Record<string, any>,
 ): Output => {
-  return convertObjectKeysTo<Input, Output>(input, camelCase);
+  return convertObjectKeys<Output>(input, camelCase);
 };
 
 export const pascalCase = (string: string): string => {
@@ -54,21 +17,21 @@ export const pascalCase = (string: string): string => {
 };
 
 export const pascalArray = (input: Array<string>): Array<string> => {
-  return convertArrayValuesTo(input, pascalCase);
+  return convertArrayValues(input, pascalCase);
 };
 
-export const pascalKeys = <Input extends Record<string, any>, Output extends Record<string, any>>(
-  input: Input,
+export const pascalKeys = <Output extends Record<string, any>>(
+  input: Record<string, any>,
 ): Output => {
-  return convertObjectKeysTo<Input, Output>(input, pascalCase);
+  return convertObjectKeys<Output>(input, pascalCase);
 };
 
 export const snakeArray = (input: Array<string>): Array<string> => {
-  return convertArrayValuesTo(input, snakeCase);
+  return convertArrayValues(input, snakeCase);
 };
 
-export const snakeKeys = <Input extends Record<string, any>, Output extends Record<string, any>>(
-  input: Input,
+export const snakeKeys = <Output extends Record<string, any>>(
+  input: Record<string, any>,
 ): Output => {
-  return convertObjectKeysTo<Input, Output>(input, snakeCase);
+  return convertObjectKeys<Output>(input, snakeCase);
 };

@@ -8,13 +8,64 @@ import {
   snakeKeys,
 } from "./case-switch";
 
+const inputArray = ["snake_case", "camelCase", "PascalCase"];
+
+const inputObject = {
+  at_snake: "at_snake",
+  boCamel: "boCamel",
+  CePascal: "CePascal",
+
+  de_snake_object: {
+    at_one: "at_one",
+    boTwo: "boTwo",
+    CeThree: "CeThree",
+  },
+  ekCamelObject: {
+    at_one: "at_one",
+    boTwo: "boTwo",
+    CeThree: "CeThree",
+  },
+  FaPascalObject: {
+    at_one: "at_one",
+    boTwo: "boTwo",
+    CeThree: "CeThree",
+  },
+
+  gi_snake_array: [
+    "snake_value",
+    "camelValue",
+    "PascalValue",
+    {
+      at_snake_object_value: "at_snake_object_value",
+      boCamelObjectValue: "boCamelObjectValue",
+      CePascalObjectValue: "CePascalObjectValue",
+    },
+  ],
+  haCamelArray: [
+    "snake_value",
+    "camelValue",
+    "PascalValue",
+    {
+      at_snake_object_value: "at_snake_object_value",
+      boCamelObjectValue: "boCamelObjectValue",
+      CePascalObjectValue: "CePascalObjectValue",
+    },
+  ],
+  ItPascalArray: [
+    "snake_value",
+    "camelValue",
+    "PascalValue",
+    {
+      at_snake_object_value: "at_snake_object_value",
+      boCamelObjectValue: "boCamelObjectValue",
+      CePascalObjectValue: "CePascalObjectValue",
+    },
+  ],
+};
+
 describe("camelArray", () => {
   test("should convert array values", () => {
-    expect(camelArray(["camelCase", "snake_case", "PascalCase"])).toStrictEqual([
-      "camelCase",
-      "snakeCase",
-      "pascalCase",
-    ]);
+    expect(camelArray(inputArray)).toMatchSnapshot();
   });
 
   test("should throw on invalid type", () => {
@@ -25,45 +76,7 @@ describe("camelArray", () => {
 
 describe("camelKeys", () => {
   test("should convert object keys to camelCase", () => {
-    expect(
-      camelKeys({
-        snake_one: "one",
-        snake_two: 2,
-        snake_three: true,
-        camelOne: ["mock"],
-      }),
-    ).toStrictEqual({
-      camelOne: ["mock"],
-      snakeOne: "one",
-      snakeThree: true,
-      snakeTwo: 2,
-    });
-  });
-
-  test("should convert nested objects to camelCase", () => {
-    expect(
-      camelKeys({
-        snake_one: "one",
-        snake_two: {
-          object_one: 1,
-          object_two: "two",
-          nested_object: {
-            nested_one: "one",
-            nested_two: ["array"],
-          },
-        },
-      }),
-    ).toStrictEqual({
-      snakeOne: "one",
-      snakeTwo: {
-        nestedObject: {
-          nestedOne: "one",
-          nestedTwo: ["array"],
-        },
-        objectOne: 1,
-        objectTwo: "two",
-      },
-    });
+    expect(camelKeys(inputObject)).toMatchSnapshot();
   });
 
   test("should throw on invalid type", () => {
@@ -83,27 +96,13 @@ describe("camelKeys", () => {
 
 describe("snakeArray", () => {
   test("should convert array values to snake_case", () => {
-    expect(snakeArray(["camelCase", "snake_case", "PascalCase"])).toStrictEqual([
-      "camel_case",
-      "snake_case",
-      "pascal_case",
-    ]);
+    expect(snakeArray(inputArray)).toMatchSnapshot();
   });
 });
 
 describe("snakeKeys", () => {
   test("should convert object keys to snake_case", () => {
-    expect(
-      snakeKeys({
-        camelOne: "one",
-        camelTwo: 2,
-        snake_one: "mock",
-      }),
-    ).toStrictEqual({
-      camel_one: "one",
-      camel_two: 2,
-      snake_one: "mock",
-    });
+    expect(snakeKeys(inputObject)).toMatchSnapshot();
   });
 });
 
@@ -116,24 +115,12 @@ describe("pascalCase", () => {
 
 describe("pascalArray", () => {
   test("should convert array values to PascalCase", () => {
-    expect(pascalArray(["camelCase", "snake_case", "PascalCase"])).toStrictEqual([
-      "CamelCase",
-      "SnakeCase",
-      "PascalCase",
-    ]);
+    expect(pascalArray(inputArray)).toMatchSnapshot();
   });
 });
 
 describe("pascalKeys", () => {
   test("should convert object keys to PascalCase", () => {
-    expect(
-      pascalKeys({
-        camelOne: "one",
-        snake_one: "one",
-      }),
-    ).toStrictEqual({
-      CamelOne: "one",
-      SnakeOne: "one",
-    });
+    expect(pascalKeys(inputObject)).toMatchSnapshot();
   });
 });

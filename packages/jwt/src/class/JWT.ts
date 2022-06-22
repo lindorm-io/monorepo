@@ -83,9 +83,7 @@ export class JWT {
       usr: options.username,
 
       // payload & claims
-      ...(options.payload
-        ? { ext: snakeKeys<Payload, Record<string, unknown>>(options.payload) }
-        : {}),
+      ...(options.payload ? { ext: snakeKeys(options.payload) } : {}),
       ...(options.claims ? snakeKeys(options.claims) : {}),
     };
 
@@ -245,7 +243,7 @@ export class JWT {
       authMethodsReference: amr || [],
       authTime: auth_time || null,
       authorizedParty: azp || null,
-      claims: claims ? camelKeys<Record<string, unknown>, Claims>(claims) : ({} as Claims),
+      claims: claims ? camelKeys<Claims>(claims) : ({} as Claims),
       expires: exp,
       expiresIn: exp - now,
       issuedAt: iat,
@@ -255,7 +253,7 @@ export class JWT {
       nonce: nonce || null,
       notBefore: nbf,
       now,
-      payload: ext ? camelKeys<Record<string, unknown>, Payload>(ext) : ({} as Payload),
+      payload: ext ? camelKeys<Payload>(ext) : ({} as Payload),
       permissions: iam || [],
       scopes: scp || [],
       sessionId: sid || null,
