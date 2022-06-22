@@ -6,7 +6,7 @@ import { winston } from "../server/logger";
 export const keyPairAuthenticationJwksWorker = keyPairJwksCacheWorker({
   host: configuration.services.authentication_service.host,
   port: configuration.services.authentication_service.port,
-  clientName: "authenticationClient",
+  name: "authentication",
   redisConnection,
   retry: 30,
   winston,

@@ -6,7 +6,7 @@ import { winston } from "../server/logger";
 export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
   host: configuration.services.device_service.host,
   port: configuration.services.device_service.port,
-  clientName: "deviceClient",
+  name: "device",
   redisConnection,
   retry: 30,
   winston,
@@ -15,7 +15,7 @@ export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
 export const keyPairOauthJwksWorker = keyPairJwksCacheWorker({
   host: configuration.services.oauth_service.host,
   port: configuration.services.oauth_service.port,
-  clientName: "oauthClient",
+  name: "oauth",
   redisConnection,
   retry: 30,
   winston,

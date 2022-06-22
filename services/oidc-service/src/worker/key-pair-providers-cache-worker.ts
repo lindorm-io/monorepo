@@ -12,7 +12,7 @@ for (const provider of configuration.oidc_providers) {
   oidcProvidersJwksWorkers.push(
     keyPairJwksCacheWorker({
       host: provider.base_url,
-      clientName: provider.key,
+      name: provider.key,
       redisConnection,
       winston,
     }),
