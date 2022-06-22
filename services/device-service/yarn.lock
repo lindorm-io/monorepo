@@ -792,10 +792,10 @@
     "@lindorm-io/key-pair" "^0.6.0"
     "@lindorm-io/koa" "^0.13.2"
 
-"@lindorm-io/koa-keystore@^0.9.2":
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.9.2.tgz#2bcf16ce98937145ec48037d466c05028857a7ff"
-  integrity sha512-Qn+gFVLdk+6cWVe+1nuFbSmuQ1pC7vvHN7TiS5hUHXYguZDFc6oJgsslBIm82Pb8zXQVaeYqWgDLY+o+G1eRyg==
+"@lindorm-io/koa-keystore@^0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.9.3.tgz#9e4937a6c13f9040c012c982a10fb812e6ec8ee9"
+  integrity sha512-xZ8qcY8Uk4RbdVAyUsfhgVEOL6kZBOS2uDP7n1h4HC3a5hmv6kB6NKrab4R5OaumRNubUf2cFEin9mdDCRGf3A==
   dependencies:
     "@lindorm-io/axios" "^0.4.1"
     "@lindorm-io/core" "^0.6.1"
@@ -855,10 +855,10 @@
     lodash "^4.17.21"
     mongodb "^4.7.0"
 
-"@lindorm-io/node-server@^0.4.9":
-  version "0.4.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.9.tgz#2be2de094fbdb09cfe1e83758c12982e6a0568e3"
-  integrity sha512-KIUizhA6LdbniV9rbMyAG21UynMRtoptChySjx/hjfMIRJVpaBWdguKRGoCVckMUKZ7lywLUXH/zB27x1HBeGw==
+"@lindorm-io/node-server@^0.4.11":
+  version "0.4.11"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.11.tgz#3e92d4c3166b6b889f4f4daee809f7f124552988"
+  integrity sha512-5R+2h/VslW80hnjiWpHhaApIiJtjSILLpBF50dBlUX0ZJ14cAJuu/kbQDKZDJ29N4KlPfK11umsdbtFO5QRwPA==
   dependencies:
     "@lindorm-io/axios" "^0.4.1"
     "@lindorm-io/jwt" "^0.8.4"
@@ -866,7 +866,7 @@
     "@lindorm-io/koa" "^0.13.2"
     "@lindorm-io/koa-axios" "^0.1.15"
     "@lindorm-io/koa-jwt" "^0.5.19"
-    "@lindorm-io/koa-keystore" "^0.9.2"
+    "@lindorm-io/koa-keystore" "^0.9.3"
     "@lindorm-io/koa-mongo" "^0.8.7"
     "@lindorm-io/koa-redis" "^0.6.7"
     "@lindorm-io/mongo" "^0.9.4"
