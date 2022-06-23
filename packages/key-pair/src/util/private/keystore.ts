@@ -1,21 +1,23 @@
 import { KeyPair } from "../../entity";
 import { isAfter } from "date-fns";
 import { isString } from "lodash";
+import { KeyOperation, KeyType } from "../../enum";
 
-export const isKeyAllowed = (key: KeyPair): boolean => {
-  return isAfter(new Date(), key.allowed);
-};
+export const isKeyAllowed = (key: KeyPair): boolean =>
+  !!key.allowed && isAfter(new Date(), key.allowed);
 
-export const isKeyExpired = (key: KeyPair): boolean => {
-  if (key.expires === null) return false;
+export const isKeyCorrectType =
+  (type?: KeyType) =>
+  (key: KeyPair): boolean =>
+    !type || type === key.type;
 
-  return isAfter(new Date(), key.expires);
-};
+export const isKeyExpired = (key: KeyPair): boolean =>
+  !!key.expires && isAfter(new Date(), key.expires);
 
-export const isKeyPrivate = (key: KeyPair): boolean => {
-  return isString(key.privateKey);
-};
+export const isKeyNotExpired = (key: KeyPair): boolean => !isKeyExpired(key);
 
-export const isKeyUsable = (key: KeyPair): boolean => {
-  return isKeyAllowed(key) && !isKeyExpired(key);
-};
+export const isKeyPrivate = (key: KeyPair): boolean => isString(key.privateKey);
+
+export const isKeySigning = (key: KeyPair): boolean => key.operations.includes(KeyOperation.SIGN);
+
+export const isKeyUsable = (key: KeyPair): boolean => isKeyAllowed(key) && !isKeyExpired(key);

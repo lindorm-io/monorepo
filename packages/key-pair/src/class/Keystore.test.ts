@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
 import { Keystore } from "./Keystore";
-import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
 import { KeyPair } from "../entity";
+import { KeystoreError } from "../error";
 
 MockDate.set("2021-02-01T08:00:00.000Z");
 
@@ -10,6 +11,17 @@ const privateKey = new KeyPair({
   algorithms: [Algorithm.ES512],
   created: new Date("2020-01-02T01:00:00.000Z"),
   namedCurve: NamedCurve.P521,
+  privateKey: "privateKey-private-key",
+  publicKey: "privateKey-public-key",
+  type: KeyType.EC,
+});
+
+const privateKeyNotSigning = new KeyPair({
+  id: "privateKey",
+  algorithms: [Algorithm.ES512],
+  created: new Date("2020-01-02T01:00:00.000Z"),
+  namedCurve: NamedCurve.P521,
+  operations: [KeyOperation.VERIFY],
   privateKey: "privateKey-private-key",
   publicKey: "privateKey-public-key",
   type: KeyType.EC,
@@ -235,9 +247,7 @@ describe("Keystore.ts", () => {
         privateKey,
       ]);
     });
-  });
 
-  describe("getKeys (with type)", () => {
     test("should return all unique keys of type", () => {
       expect(keystore.getKeys(KeyType.EC)).toStrictEqual([
         publicKeyExpires,
@@ -247,6 +257,18 @@ describe("Keystore.ts", () => {
         privateKeyExternal,
         privateKey,
       ]);
+    });
+
+    test("should throw on expired keys", () => {
+      const store = new Keystore({ keys: [privateKeyExpired, publicKeyExpired] });
+
+      expect(() => store.getKeys()).toThrow(KeystoreError);
+    });
+
+    test("should throw on wrong type", () => {
+      const store = new Keystore({ keys: [privateKeyRSA, publicKeyRSA] });
+
+      expect(() => store.getKeys(KeyType.EC)).toThrow(KeystoreError);
     });
   });
 
@@ -259,23 +281,37 @@ describe("Keystore.ts", () => {
         privateKeyExternal,
       ]);
     });
-  });
 
-  describe("getPrivateKeys (type)", () => {
     test("should return all keys that are private of type", () => {
       expect(keystore.getPrivateKeys(KeyType.RSA)).toStrictEqual([privateKeyRSA]);
+    });
+
+    test("should throw on no private keys", () => {
+      const store = new Keystore({ keys: [publicKey] });
+
+      expect(() => store.getPrivateKeys()).toThrow(KeystoreError);
+    });
+
+    test("should throw on no private keys of specific type", () => {
+      const store = new Keystore({ keys: [privateKeyRSA] });
+
+      expect(() => store.getPrivateKeys(KeyType.EC)).toThrow(KeystoreError);
     });
   });
 
   describe("getSigningKey", () => {
-    test("should return the current key", () => {
+    test("should return the current signing key", () => {
       expect(keystore.getSigningKey()).toStrictEqual(privateKeyExpires);
     });
-  });
 
-  describe("getSigningKey (type)", () => {
-    test("should return the current key of type", () => {
+    test("should return the current signing key of type", () => {
       expect(keystore.getSigningKey(KeyType.RSA)).toStrictEqual(privateKeyRSA);
+    });
+
+    test("should throw on no signing key", () => {
+      const store = new Keystore({ keys: [privateKeyNotSigning] });
+
+      expect(() => store.getSigningKey()).toThrow(KeystoreError);
     });
   });
 

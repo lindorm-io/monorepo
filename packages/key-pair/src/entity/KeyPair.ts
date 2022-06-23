@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
 import { JoseData, JWK, KeyJWK } from "../types";
 import { KeyPairError } from "../error";
 import { camelKeys, removeUndefinedFromObject, snakeKeys } from "@lindorm-io/core";
@@ -26,7 +26,7 @@ export interface KeyPairAttributes extends EntityAttributes {
   expires: Date | null;
   external: boolean;
   namedCurve: NamedCurve | null;
-  operations: Array<string>;
+  operations: Array<KeyOperation>;
   origin: string | null;
   passphrase: string | null;
   preferredAlgorithm: Algorithm;
@@ -78,7 +78,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
   public readonly algorithms: Array<Algorithm>;
   public readonly external: boolean;
   public readonly namedCurve: NamedCurve | null;
-  public readonly operations: Array<string>;
+  public readonly operations: Array<KeyOperation>;
   public readonly origin: string | null;
   public readonly passphrase: string | null;
   public readonly privateKey: string | null;
@@ -195,7 +195,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       created: jwk.createdAt ? fromUnixTime(jwk.createdAt) : undefined,
       expires: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
       external: true,
-      operations: jwk.keyOps,
+      operations: jwk.keyOps as Array<KeyOperation>,
       namedCurve: jwk.crv ? (jwk.crv as NamedCurve) : undefined,
       origin: jwk.origin,
       preferredAlgorithm: jwk.alg as Algorithm,
@@ -204,18 +204,18 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     });
   }
 
-  private static calculateOperations(options: CalculateOperationsOptions): Array<string> {
-    const result: Array<string> = ["verify"];
+  private static calculateOperations(options: CalculateOperationsOptions): Array<KeyOperation> {
+    const result: Array<KeyOperation> = [KeyOperation.VERIFY];
 
     if (options.type === KeyType.RSA) {
-      result.push("decrypt");
+      result.push(KeyOperation.DECRYPT);
     }
 
     if (isString(options.privateKey)) {
-      result.push("sign");
+      result.push(KeyOperation.SIGN);
 
       if (options.type === KeyType.RSA) {
-        result.push("encrypt");
+        result.push(KeyOperation.ENCRYPT);
       }
     }
 
