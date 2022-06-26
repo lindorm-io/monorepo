@@ -2,9 +2,9 @@ import Joi from "joi";
 import { CertificateMethod } from "../enum";
 import { ChallengeStrategy, RdcSessionMode, RdcSessionType, RequestMethod } from "../common";
 
-export const JOI_BIOMETRY = Joi.string().base64().length(128);
+export const JOI_BIOMETRY = Joi.string().length(128);
 
-export const JOI_CERTIFICATE_CHALLENGE = Joi.string().base64().length(128);
+export const JOI_CERTIFICATE_CHALLENGE = Joi.string().length(128);
 
 export const JOI_CERTIFICATE_METHOD = Joi.string().valid(
   CertificateMethod.SHA256,

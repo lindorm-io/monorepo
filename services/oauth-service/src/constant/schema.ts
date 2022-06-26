@@ -2,7 +2,7 @@ import Joi from "joi";
 import { PKCEMethod } from "@lindorm-io/core";
 import { DisplayMode, GrantType, PromptMode, ResponseMode, ResponseType } from "../common";
 
-export const JOI_CODE = Joi.string().base64().length(128);
+export const JOI_CODE = Joi.string().length(128);
 
 export const JOI_CODE_CHALLENGE = Joi.string().min(32).max(256);
 

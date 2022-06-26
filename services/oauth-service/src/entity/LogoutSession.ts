@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { LogoutSessionType } from "../enum";
-import { JOI_GUID, JOI_JWT, JOI_SESSION_STATUS, SessionStatus } from "../common";
+import { JOI_GUID, JOI_JWT, JOI_SESSION_STATUS, JOI_STATE, SessionStatus } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -37,7 +37,7 @@ const schema = Joi.object<LogoutSessionAttributes>()
     redirectUri: Joi.string().uri().allow(null).required(),
     sessionId: JOI_GUID.required(),
     sessionType: Joi.string().required(),
-    state: Joi.string().allow(null).required(),
+    state: JOI_STATE.allow(null).required(),
     status: JOI_SESSION_STATUS.required(),
   })
   .required();

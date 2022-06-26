@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT } from "../../common";
+import { JOI_GUID, JOI_JWT, JOI_STATE } from "../../common";
 import { LogoutSession } from "../../entity";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
@@ -27,7 +27,7 @@ export const oauthLogoutSchema = Joi.object()
     idTokenHint: JOI_JWT.optional(),
     redirectUri: Joi.string().uri().optional(),
     sessionId: JOI_GUID.required(),
-    state: Joi.string().optional(),
+    state: JOI_STATE.optional(),
   })
   .required();
 

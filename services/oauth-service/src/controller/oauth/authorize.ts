@@ -16,6 +16,7 @@ import {
   JOI_GUID,
   JOI_JWT,
   JOI_NONCE,
+  JOI_STATE,
   PromptMode,
   ResponseMode,
   ResponseType,
@@ -80,7 +81,7 @@ export const oauthAuthorizeSchema = Joi.object<RequestData>()
     responseMode: JOI_RESPONSE_MODE.optional(),
     responseType: JOI_RESPONSE_TYPE_REGEX.required(),
     scope: Joi.string().required(),
-    state: Joi.string().required(),
+    state: JOI_STATE.required(),
     uiLocales: Joi.string().optional(),
   })
   .required();
