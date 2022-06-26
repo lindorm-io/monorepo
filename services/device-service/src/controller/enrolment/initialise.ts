@@ -67,7 +67,6 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     metadata: {
       client: { id: clientId },
       device: { installationId, name, uniqueId, systemVersion },
-      identifiers: { fingerprint },
     },
     token: {
       bearerToken: { subject: identityId },
@@ -93,11 +92,10 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
         model,
         systemName,
       },
+      name,
       expires,
-      fingerprint,
       identityId,
       installationId,
-      name,
       nonce,
       publicKey,
       status: externalChallengeRequired ? SessionStatus.PENDING : SessionStatus.SKIP,

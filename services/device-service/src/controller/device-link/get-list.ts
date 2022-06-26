@@ -23,7 +23,7 @@ export const getDeviceLinkListController: ServerKoaController = async (
     deviceLinks.push({
       id: deviceLink.id,
       active: deviceLink.active,
-      deviceMetadata: deviceLink.deviceMetadata,
+      metadata: deviceLink.metadata,
       name: deviceLink.name,
       trusted: deviceLink.trusted,
     });

@@ -25,7 +25,9 @@ describe("getDeviceLinkController", () => {
       body: {
         id: "ded67066-ba3a-4898-b537-de12d4b7f86d",
         active: true,
-        deviceMetadata: {
+        identityId: "b799b044-16db-495a-b7e1-2cf3175d4b54",
+        installationId: "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75",
+        metadata: {
           brand: "Apple",
           buildId: "12A269",
           buildNumber: "89",
@@ -33,8 +35,6 @@ describe("getDeviceLinkController", () => {
           model: "iPhone7,2",
           systemName: "iOS",
         },
-        identityId: "b799b044-16db-495a-b7e1-2cf3175d4b54",
-        installationId: "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75",
         name: "Test DeviceLink Name",
         trusted: true,
         uniqueId: "27a10522a6994bbca0e1fc666804b350",

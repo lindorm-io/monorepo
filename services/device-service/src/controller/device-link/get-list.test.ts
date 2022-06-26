@@ -32,7 +32,7 @@ describe("getDeviceLinkListController", () => {
           {
             id: "ded67066-ba3a-4898-b537-de12d4b7f86d",
             active: true,
-            deviceMetadata: {
+            metadata: {
               brand: "Apple",
               buildId: "12A269",
               buildNumber: "89",
@@ -46,7 +46,7 @@ describe("getDeviceLinkListController", () => {
           {
             id: "616b4b54-608f-4e88-805e-a43dd2b2ecc4",
             active: true,
-            deviceMetadata: {
+            metadata: {
               brand: "Apple",
               buildId: "12A269",
               buildNumber: "89",

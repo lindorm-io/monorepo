@@ -2,8 +2,8 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "../../common";
-import { randomString } from "@lindorm-io/core";
 import { createTestDeviceLink } from "../../fixtures/entity";
+import { randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,
@@ -39,8 +39,8 @@ describe("/internal/rdc", () => {
     await TEST_DEVICE_REPOSITORY.create(
       await createTestDeviceLink({
         identityId: deviceLink.identityId,
-        deviceMetadata: {
-          ...deviceLink.deviceMetadata,
+        metadata: {
+          ...deviceLink.metadata,
           macAddress: "E1:9A:09:75:46:93",
         },
         name: "My Xperia 7",

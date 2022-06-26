@@ -15,8 +15,7 @@ export interface DeviceLinkAttributes extends EntityAttributes {
   active: boolean;
   biometry: string | null;
   certificateMethod: CertificateMethod;
-  deviceMetadata: DeviceMetadata;
-  fingerprint: string;
+  metadata: DeviceMetadata;
   identityId: string;
   installationId: string;
   name: string | null;
@@ -38,24 +37,22 @@ const schema = Joi.object<DeviceLinkAttributes>()
     active: Joi.boolean().required(),
     biometry: Joi.string().base64().allow(null).required(),
     certificateMethod: JOI_CERTIFICATE_METHOD.required(),
-    deviceMetadata: JOI_DEVICE_METADATA.required(),
-    fingerprint: Joi.string().required(),
     identityId: JOI_GUID.required(),
     installationId: JOI_GUID.required(),
+    metadata: JOI_DEVICE_METADATA.required(),
     name: Joi.string().allow(null).required(),
     pincode: Joi.string().base64().allow(null).required(),
     publicKey: Joi.string().required(),
     trusted: Joi.boolean().required(),
-    uniqueId: JOI_GUID.required(),
+    uniqueId: Joi.string().required(),
   })
   .required();
 
 export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
   public readonly certificateMethod: CertificateMethod;
-  public readonly deviceMetadata: DeviceMetadata;
-  public readonly fingerprint: string;
   public readonly identityId: string;
   public readonly installationId: string;
+  public readonly metadata: DeviceMetadata;
   public readonly publicKey: string;
   public readonly uniqueId: string;
 
@@ -71,10 +68,9 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
     this.active = options.active === true;
     this.biometry = options.biometry || null;
     this.certificateMethod = options.certificateMethod;
-    this.deviceMetadata = options.deviceMetadata;
-    this.fingerprint = options.fingerprint;
     this.identityId = options.identityId;
     this.installationId = options.installationId;
+    this.metadata = options.metadata;
     this.name = options.name || null;
     this.pincode = options.pincode || null;
     this.publicKey = options.publicKey;
@@ -93,10 +89,9 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
       active: this.active,
       biometry: this.biometry,
       certificateMethod: this.certificateMethod,
-      deviceMetadata: this.deviceMetadata,
-      fingerprint: this.fingerprint,
       identityId: this.identityId,
       installationId: this.installationId,
+      metadata: this.metadata,
       name: this.name,
       pincode: this.pincode,
       publicKey: this.publicKey,

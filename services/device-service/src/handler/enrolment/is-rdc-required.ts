@@ -8,7 +8,6 @@ export const isRdcRequired = async (
   const {
     metadata: {
       device: { installationId, uniqueId },
-      identifiers: { fingerprint },
     },
     repository: { deviceLinkRepository },
   } = ctx;
@@ -20,7 +19,6 @@ export const isRdcRequired = async (
   });
 
   const filtered = filter(deviceLinks, {
-    fingerprint,
     installationId,
     uniqueId,
   });

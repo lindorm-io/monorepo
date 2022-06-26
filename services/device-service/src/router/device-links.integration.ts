@@ -1,19 +1,19 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { ChallengeStrategy, DeviceFactor } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { randomNumber, randomString } from "@lindorm-io/core";
 import { createTestDeviceLink } from "../fixtures/entity";
-import { server } from "../server/server";
+import { randomNumber, randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
+import { server } from "../server/server";
 import {
   getTestAccessToken,
   getTestChallengeConfirmationToken,
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
-import nock from "nock";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -61,8 +61,8 @@ describe("/device-links", () => {
     const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({
         identityId: deviceLink.identityId,
-        deviceMetadata: {
-          ...deviceLink.deviceMetadata,
+        metadata: {
+          ...deviceLink.metadata,
           macAddress: "E1:9A:09:75:46:93",
         },
         name: "My Xperia 7",
@@ -127,7 +127,9 @@ describe("/device-links", () => {
     expect(response.body).toStrictEqual({
       id: deviceLink.id,
       active: true,
-      device_metadata: {
+      identity_id: deviceLink.identityId,
+      installation_id: deviceLink.installationId,
+      metadata: {
         brand: "Apple",
         build_id: "12A269",
         build_number: "89",
@@ -135,8 +137,6 @@ describe("/device-links", () => {
         model: "iPhone7,2",
         system_name: "iOS",
       },
-      identity_id: deviceLink.identityId,
-      installation_id: deviceLink.installationId,
       name: "Test DeviceLink Name",
       trusted: true,
       unique_id: deviceLink.uniqueId,

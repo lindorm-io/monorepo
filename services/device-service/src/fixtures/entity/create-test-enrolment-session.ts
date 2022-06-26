@@ -20,7 +20,6 @@ export const createTestEnrolmentSession = (
       systemName: "iOS",
     },
     expires: new Date("2023-01-01T08:00:00.000Z"),
-    fingerprint: randomString(32),
     identityId: randomUUID(),
     installationId: randomUUID(),
     name: "Test DeviceLink Name",

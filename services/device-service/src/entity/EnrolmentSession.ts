@@ -21,7 +21,6 @@ export interface EnrolmentSessionAttributes extends EntityAttributes {
   certificateMethod: CertificateMethod;
   deviceMetadata: DeviceMetadata;
   expires: Date;
-  fingerprint: string | null;
   identityId: string;
   installationId: string;
   name: string | null;
@@ -41,7 +40,6 @@ const schema = Joi.object<EnrolmentSessionAttributes>()
     certificateMethod: JOI_CERTIFICATE_METHOD.required(),
     deviceMetadata: JOI_DEVICE_METADATA.required(),
     expires: Joi.date().required(),
-    fingerprint: Joi.string().allow(null).required(),
     identityId: Joi.string().guid().required(),
     uniqueId: Joi.string().required(),
     installationId: Joi.string().guid().required(),
@@ -57,7 +55,6 @@ export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> 
   public readonly certificateMethod: CertificateMethod;
   public readonly deviceMetadata: DeviceMetadata;
   public readonly expires: Date;
-  public readonly fingerprint: string | null;
   public readonly identityId: string;
   public readonly installationId: string;
   public readonly name: string | null;
@@ -74,7 +71,6 @@ export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> 
     this.certificateMethod = options.certificateMethod;
     this.deviceMetadata = options.deviceMetadata;
     this.expires = options.expires;
-    this.fingerprint = options.fingerprint || null;
     this.identityId = options.identityId;
     this.installationId = options.installationId;
     this.name = options.name || null;
@@ -96,7 +92,6 @@ export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> 
       certificateMethod: this.certificateMethod,
       deviceMetadata: this.deviceMetadata,
       expires: this.expires,
-      fingerprint: this.fingerprint,
       identityId: this.identityId,
       installationId: this.installationId,
       name: this.name,

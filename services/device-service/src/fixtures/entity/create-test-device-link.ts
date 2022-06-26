@@ -1,14 +1,16 @@
 import { CertificateMethod } from "../../enum";
 import { DeviceLink, DeviceLinkOptions } from "../../entity";
-import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
+import { randomString } from "@lindorm-io/core";
 
 export const createTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): DeviceLink =>
   new DeviceLink({
     active: true,
     biometry: null,
     certificateMethod: CertificateMethod.SHA512,
-    deviceMetadata: {
+    identityId: randomUUID(),
+    installationId: randomUUID(),
+    metadata: {
       brand: "Apple",
       buildId: "12A269",
       buildNumber: "89",
@@ -16,9 +18,6 @@ export const createTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): 
       model: "iPhone7,2",
       systemName: "iOS",
     },
-    fingerprint: randomString(32),
-    identityId: randomUUID(),
-    installationId: randomUUID(),
     name: "Test DeviceLink Name",
     pincode: null,
     publicKey:
@@ -28,6 +27,6 @@ export const createTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): 
       "dsAFDTzmso9VtnBNgbt8afNea1nK25Fa+Zq+gztxkI5pkw1WFm4FAgMBAAE=\n" +
       "-----END RSA PUBLIC KEY-----\n",
     trusted: true,
-    uniqueId: randomUUID(),
+    uniqueId: randomString(32),
     ...options,
   });

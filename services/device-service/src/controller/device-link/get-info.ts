@@ -21,8 +21,7 @@ export const getDeviceLinkInfoController: ServerKoaController<RequestData> = asy
     entity: { deviceLink },
   } = ctx;
 
-  const { id, active, identityId, installationId, deviceMetadata, name, trusted, uniqueId } =
-    deviceLink;
+  const { id, active, identityId, installationId, metadata, name, trusted, uniqueId } = deviceLink;
 
   return {
     body: {
@@ -30,7 +29,7 @@ export const getDeviceLinkInfoController: ServerKoaController<RequestData> = asy
       active,
       identityId,
       installationId,
-      deviceMetadata,
+      metadata,
       name,
       trusted,
       uniqueId,

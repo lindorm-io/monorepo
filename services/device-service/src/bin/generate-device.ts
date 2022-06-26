@@ -16,7 +16,9 @@ const main = async (): Promise<void> => {
       active: true,
       biometry: null,
       certificateMethod: CertificateMethod.SHA256,
-      deviceMetadata: {
+      identityId: "acbfce9e-072b-450f-b451-5915cdd17a33",
+      installationId: "6cd31fe8-898c-4d5f-9926-32d33fcad270",
+      metadata: {
         brand: "Brand",
         buildId: "39c0b7cc-484b-4450-a7a2-727688640996",
         buildNumber: "789",
@@ -24,9 +26,6 @@ const main = async (): Promise<void> => {
         model: "Model",
         systemName: "System Name",
       },
-      fingerprint: "21cc7f3c-c873-4ef5-924d-c6ea3d618c27",
-      identityId: "acbfce9e-072b-450f-b451-5915cdd17a33",
-      installationId: "6cd31fe8-898c-4d5f-9926-32d33fcad270",
       name: "Name",
       pincode: null,
       publicKey: RSA_KEY.publicKey,
