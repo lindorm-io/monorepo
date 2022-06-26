@@ -30,19 +30,8 @@ describe("resolveAllowedMethods", () => {
   });
 
   test("should resolve", async () => {
-    await expect(resolveAllowedMethods(ctx, authenticationSession, account)).resolves.toStrictEqual(
-      [
-        "bank_id_se",
-        "device_challenge",
-        "email_link",
-        "email_otp",
-        "password",
-        "password_browser_link",
-        "phone_otp",
-        "rdc_qr_code",
-        "session_accept_with_code",
-        "webauthn",
-      ],
-    );
+    await expect(
+      resolveAllowedMethods(ctx, authenticationSession, account),
+    ).resolves.toMatchSnapshot();
   });
 });

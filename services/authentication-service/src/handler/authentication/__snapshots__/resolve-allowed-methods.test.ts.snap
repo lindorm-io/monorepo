@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`resolveAllowedMethods should resolve 1`] = `
+Array [
+  "bank_id_se",
+  "device_challenge",
+  "email_link",
+  "email_otp",
+  "password",
+  "password_browser_link",
+  "phone_otp",
+  "rdc_qr_code",
+  "session_accept_with_code",
+  "webauthn",
+]
+`;

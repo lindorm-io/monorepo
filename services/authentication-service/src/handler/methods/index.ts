@@ -6,6 +6,7 @@ export * from "./mfa-cookie";
 export * from "./password";
 export * from "./password-browser-link";
 export * from "./phone-otp";
+export * from "./rdc-push-notification";
 export * from "./rdc-qr-code";
 export * from "./recovery-code";
 export * from "./session-accept-with-code";

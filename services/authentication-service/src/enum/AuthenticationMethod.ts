@@ -7,6 +7,7 @@ export enum AuthenticationMethod {
   PASSWORD = "password",
   PASSWORD_BROWSER_LINK = "password_browser_link",
   PHONE_OTP = "phone_otp",
+  RDC_PUSH_NOTIFICATION = "rdc_push_notification",
   RDC_QR_CODE = "rdc_qr_code",
   SESSION_ACCEPT_WITH_CODE = "session_accept_with_code",
   SESSION_OTP = "session_otp",

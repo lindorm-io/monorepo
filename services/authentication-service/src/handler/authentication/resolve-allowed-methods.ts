@@ -86,7 +86,11 @@ export const resolveAllowedMethods = async (
     allowedMethods.push(AuthenticationMethod.PHONE_OTP);
   }
 
-  // Remote Device Challenge - QR code
+  // Remote Device Challenge
+
+  if (filteredMethods.includes(AuthenticationMethod.RDC_PUSH_NOTIFICATION) && deviceLinks.length) {
+    allowedMethods.push(AuthenticationMethod.RDC_PUSH_NOTIFICATION);
+  }
 
   if (filteredMethods.includes(AuthenticationMethod.RDC_QR_CODE)) {
     allowedMethods.push(AuthenticationMethod.RDC_QR_CODE);

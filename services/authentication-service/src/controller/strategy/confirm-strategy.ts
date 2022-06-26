@@ -17,6 +17,7 @@ import {
   confirmPassword,
   confirmPasswordBrowserLink,
   confirmPhoneOtp,
+  confirmRdcPushNotification,
   confirmRdcQrCode,
   confirmSessionAcceptWithCode,
   confirmSessionOtp,
@@ -112,6 +113,12 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
     case AuthenticationMethod.PHONE_OTP:
       account = await confirmPhoneOtp(ctx, authenticationSession, strategySession, {
         otp,
+      });
+      break;
+
+    case AuthenticationMethod.RDC_PUSH_NOTIFICATION:
+      account = await confirmRdcPushNotification(ctx, strategySession, {
+        challengeConfirmationToken,
       });
       break;
 

@@ -103,6 +103,17 @@ export const AUTHENTICATION_METHOD_CONFIG: Array<AuthenticationMethodConfig> = [
     weight: 20,
   },
   {
+    name: AuthenticationMethod.RDC_PUSH_NOTIFICATION,
+    amrValuesMax: 9,
+    amrValuesMin: 1,
+    mfaCookie: true,
+    pollingRequired: true,
+    tokenReturn: false,
+    valueMax: 3,
+    value: 3,
+    weight: 90,
+  },
+  {
     name: AuthenticationMethod.RDC_QR_CODE,
     amrValuesMax: 9,
     amrValuesMin: 0,

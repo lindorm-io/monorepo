@@ -7,7 +7,7 @@ interface Options {
   challengeConfirmationToken: string;
 }
 
-export const confirmRdcQrCode = async (
+export const confirmRdcPushNotification = async (
   ctx: ServerKoaContext,
   strategySession: StrategySession,
   options: Options,

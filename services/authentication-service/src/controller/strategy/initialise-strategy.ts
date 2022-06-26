@@ -21,6 +21,7 @@ import {
   initialiseEmailLink,
   initialiseEmailOtp,
   initialisePhoneOtp,
+  initialiseRdcPushNotification,
   initialiseRdcQrCode,
   initialiseSessionAcceptWithCode,
   initialiseSessionOtp,
@@ -131,6 +132,12 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     case AuthenticationMethod.PHONE_OTP:
       await initialisePhoneOtp(ctx, authenticationSession, strategySession, {
         phoneNumber,
+      });
+      break;
+
+    case AuthenticationMethod.RDC_PUSH_NOTIFICATION:
+      await initialiseRdcPushNotification(ctx, authenticationSession, strategySession, {
+        strategySessionToken,
       });
       break;
 
