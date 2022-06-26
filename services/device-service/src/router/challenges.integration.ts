@@ -68,7 +68,7 @@ describe("/challenges", () => {
       .set("x-device-unique-id", deviceLink.uniqueId)
       .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
-        client_id: "7bb4396b-5bad-4e6e-8edb-4f0f3c20e902",
+        audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
         device_link_id: deviceLink.id,
         identity_id: deviceLink.identityId,
         nonce: randomString(16),
@@ -79,6 +79,7 @@ describe("/challenges", () => {
 
     expect(response.body).toStrictEqual({
       certificate_challenge: expect.any(String),
+      challenge_session_id: expect.any(String),
       challenge_session_token: expect.any(String),
       expires_in: 300,
       strategies: ["implicit", "biometry", "pincode"],

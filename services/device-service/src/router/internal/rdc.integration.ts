@@ -53,7 +53,7 @@ describe("/internal/rdc", () => {
       .post("/internal/rdc")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        client_id: "7bb4396b-5bad-4e6e-8edb-4f0f3c20e902",
+        audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
         confirm_payload: { confirm: true },
         confirm_uri: "https://callback.uri/confirm",
         identity_id: deviceLink.identityId,

@@ -34,9 +34,6 @@ describe("acknowledgeRdcController", () => {
         })),
       },
       metadata: {
-        client: {
-          id: "5845e43c-26d4-490b-a0fe-0c6fd83c602c",
-        },
         device: {
           linkId: "e68ec1b8-786a-443d-bd94-18ba78b95ca0",
         },
@@ -49,7 +46,7 @@ describe("acknowledgeRdcController", () => {
       body: {
         id: "859858ee-4be6-47a8-8d22-f0f6393f2651",
         challenge: {
-          clientId: "b639e4ac-81cb-4c4d-8c77-4ff6a4e3e7df",
+          audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902"],
           identityId: "9b6c9a47-7335-4ad5-85ed-af698199cdd9",
           nonce: "45Bd49BnDaKJbJM1",
           payload: { token: true },

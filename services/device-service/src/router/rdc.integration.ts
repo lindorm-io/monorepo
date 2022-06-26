@@ -67,7 +67,7 @@ describe("/rdc", () => {
     expect(response.body).toStrictEqual({
       id: session.id,
       challenge: {
-        client_id: session.clientId,
+        audiences: session.audiences,
         identity_id: deviceLink.identityId,
         nonce: session.nonce,
         payload: { token: true },

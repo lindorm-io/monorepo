@@ -9,6 +9,7 @@ import { createRdcSession, isRdcRequired } from "../../handler";
 import { getExpires } from "@lindorm-io/core";
 import { randomString } from "@lindorm-io/core";
 import {
+  JOI_GUID,
   RdcSessionMode,
   RdcSessionType,
   SessionStatus,
@@ -17,6 +18,7 @@ import {
 } from "../../common";
 
 interface RequestData {
+  audiences?: Array<string>;
   brand: string | null;
   buildId: string | null;
   buildNumber: string | null;
@@ -37,6 +39,7 @@ interface ResponseBody {
 
 export const initialiseEnrolmentSchema = Joi.object<RequestData>()
   .keys({
+    audiences: Joi.array().items(JOI_GUID).optional(),
     brand: Joi.string().required(),
     buildId: Joi.string().required(),
     buildNumber: Joi.string().required(),
@@ -54,6 +57,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   const {
     cache: { enrolmentSessionCache },
     data: {
+      audiences,
       brand,
       buildId,
       buildNumber,
@@ -65,7 +69,6 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     },
     jwt,
     metadata: {
-      client: { id: clientId },
       device: { installationId, name, uniqueId, systemVersion },
     },
     token: {
@@ -82,6 +85,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const session = await enrolmentSessionCache.create(
     new EnrolmentSession({
+      audiences,
       certificateChallenge,
       certificateMethod,
       deviceMetadata: {
@@ -104,7 +108,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   );
 
   const { token } = jwt.sign({
-    audiences: [clientId],
+    audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.enrolment_session_expiry,
     sessionId: session.id,
     subject: identityId,
@@ -114,6 +118,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   if (externalChallengeRequired) {
     await createRdcSession(ctx, {
+      audiences,
       enrolmentSessionId: session.id,
       expires,
       factors: 2,

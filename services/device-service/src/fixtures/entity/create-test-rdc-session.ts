@@ -5,7 +5,7 @@ import { randomUUID } from "crypto";
 
 export const createTestRdcSession = (options: Partial<RdcSessionOptions> = {}): RdcSession =>
   new RdcSession({
-    clientId: "b639e4ac-81cb-4c4d-8c77-4ff6a4e3e7df",
+    audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902"],
     confirmMethod: RequestMethod.PUT,
     confirmPayload: { confirm: true },
     confirmUri: "https://callback.lindorm.io/confirm",

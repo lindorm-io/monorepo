@@ -1,7 +1,7 @@
 import { RdcSessionMode, RequestMethod } from "../../enum";
 
 export interface InitialiseRdcSessionRequestData {
-  clientId: string;
+  audiences: Array<string>;
   confirmMethod?: RequestMethod;
   confirmPayload?: Record<string, any>;
   confirmUri: string;

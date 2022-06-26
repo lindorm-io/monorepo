@@ -8,6 +8,7 @@ export const createTestEnrolmentSession = (
   options: Partial<EnrolmentSessionOptions> = {},
 ): EnrolmentSession =>
   new EnrolmentSession({
+    audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902"],
     certificateChallenge:
       "fU8ob4kqvPCfVCd5FdaM0hpXvpRoBx3VlPEWGarUP8DvTMj4AcFgieq2HMeH3uXK7MggvmLnG5iGGhUVMqDRhd7fRzW1XVveJe3CI7Pf3HlQpzqIOmrHGxes3yjZY3Es",
     certificateMethod: CertificateMethod.SHA512,

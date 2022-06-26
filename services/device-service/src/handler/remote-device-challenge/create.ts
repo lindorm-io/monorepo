@@ -21,7 +21,7 @@ export const createRdcSession = async (
   } = ctx;
 
   const {
-    clientId,
+    audiences,
     confirmMethod,
     confirmPayload,
     confirmUri,
@@ -65,7 +65,7 @@ export const createRdcSession = async (
 
   const rdcSession = await rdcSessionCache.create(
     new RdcSession({
-      clientId,
+      audiences,
       confirmMethod,
       confirmPayload,
       confirmUri,

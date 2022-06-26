@@ -10,8 +10,8 @@ import {
 } from "@lindorm-io/entity";
 
 export interface ChallengeSessionAttributes extends EntityAttributes {
+  audiences: Array<string>;
   certificateChallenge: string;
-  clientId: string;
   deviceLinkId: string;
   expires: Date;
   nonce: string;
@@ -20,14 +20,17 @@ export interface ChallengeSessionAttributes extends EntityAttributes {
   strategies: Array<ChallengeStrategy>;
 }
 
-export type ChallengeSessionOptions = Optional<ChallengeSessionAttributes, EntityKeys>;
+export type ChallengeSessionOptions = Optional<
+  ChallengeSessionAttributes,
+  EntityKeys | "audiences"
+>;
 
 const schema = Joi.object<ChallengeSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    audiences: Joi.array().items(JOI_GUID).required(),
     certificateChallenge: JOI_CERTIFICATE_CHALLENGE.required(),
-    clientId: JOI_GUID.required(),
     deviceLinkId: JOI_GUID.required(),
     expires: Joi.date().required(),
     nonce: JOI_NONCE.required(),
@@ -38,8 +41,8 @@ const schema = Joi.object<ChallengeSessionAttributes>()
   .required();
 
 export class ChallengeSession extends LindormEntity<ChallengeSessionAttributes> {
+  public readonly audiences: Array<string>;
   public readonly certificateChallenge: string;
-  public readonly clientId: string;
   public readonly deviceLinkId: string;
   public readonly expires: Date;
   public readonly nonce: string;
@@ -50,8 +53,8 @@ export class ChallengeSession extends LindormEntity<ChallengeSessionAttributes> 
   public constructor(options: ChallengeSessionOptions) {
     super(options);
 
+    this.audiences = options.audiences || [];
     this.certificateChallenge = options.certificateChallenge;
-    this.clientId = options.clientId;
     this.deviceLinkId = options.deviceLinkId;
     this.expires = options.expires;
     this.nonce = options.nonce;
@@ -68,8 +71,8 @@ export class ChallengeSession extends LindormEntity<ChallengeSessionAttributes> 
     return {
       ...this.defaultJSON(),
 
+      audiences: this.audiences,
       certificateChallenge: this.certificateChallenge,
-      clientId: this.clientId,
       deviceLinkId: this.deviceLinkId,
       expires: this.expires,
       nonce: this.nonce,

@@ -24,7 +24,7 @@ import {
 } from "@lindorm-io/entity";
 
 export interface RdcSessionAttributes extends EntityAttributes {
-  clientId: string;
+  audiences: Array<string>;
   confirmMethod: RequestMethod;
   confirmPayload: Record<string, any>;
   confirmUri: string | null;
@@ -49,6 +49,7 @@ export interface RdcSessionAttributes extends EntityAttributes {
 export type RdcSessionOptions = Optional<
   RdcSessionAttributes,
   | EntityKeys
+  | "audiences"
   | "confirmMethod"
   | "confirmPayload"
   | "confirmUri"
@@ -69,7 +70,7 @@ const schema = Joi.object<RdcSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    clientId: JOI_GUID.required(),
+    audiences: Joi.array().items(JOI_GUID).required(),
     confirmMethod: JOI_RDC_CONFIRM_METHOD.required(),
     confirmPayload: Joi.object().required(),
     confirmUri: Joi.string().uri().allow(null).required(),
@@ -93,7 +94,7 @@ const schema = Joi.object<RdcSessionAttributes>()
   .required();
 
 export class RdcSession extends LindormEntity<RdcSessionAttributes> {
-  public readonly clientId: string;
+  public readonly audiences: Array<string>;
   public readonly confirmMethod: RequestMethod;
   public readonly confirmPayload: Record<string, any>;
   public readonly confirmUri: string | null;
@@ -118,7 +119,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public constructor(options: RdcSessionOptions) {
     super(options);
 
-    this.clientId = options.clientId;
+    this.audiences = options.audiences || [];
     this.confirmMethod = options.confirmMethod || RequestMethod.POST;
     this.confirmPayload = options.confirmPayload || {};
     this.confirmUri = options.confirmUri || null;
@@ -148,7 +149,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     return {
       ...this.defaultJSON(),
 
-      clientId: this.clientId,
+      audiences: this.audiences,
       confirmMethod: this.confirmMethod,
       confirmPayload: this.confirmPayload,
       confirmUri: this.confirmUri,

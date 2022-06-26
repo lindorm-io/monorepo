@@ -8,7 +8,7 @@ import { getExpires, randomString } from "@lindorm-io/core";
 import { sortedUniq } from "lodash";
 
 interface RequestData {
-  clientId: string;
+  audiences?: Array<string>;
   deviceLinkId: string;
   identityId: string;
   nonce: string;
@@ -18,6 +18,7 @@ interface RequestData {
 
 interface ResponseBody {
   certificateChallenge: string;
+  challengeSessionId: string;
   challengeSessionToken: string;
   expiresIn: number;
   strategies: Array<ChallengeStrategy>;
@@ -25,7 +26,7 @@ interface ResponseBody {
 
 export const initialiseChallengeSchema = Joi.object<RequestData>()
   .keys({
-    clientId: JOI_GUID.required(),
+    audiences: Joi.array().items(JOI_GUID).optional(),
     deviceLinkId: JOI_GUID.required(),
     identityId: JOI_GUID.required(),
     nonce: JOI_NONCE.required(),
@@ -39,10 +40,9 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { challengeSessionCache },
-    data: { clientId, nonce, payload, scopes },
+    data: { audiences, nonce, payload, scopes },
     entity: { deviceLink },
     jwt,
-    metadata: { client },
   } = ctx;
 
   const strategies: Array<ChallengeStrategy> = [ChallengeStrategy.IMPLICIT];
@@ -61,7 +61,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   const session = await challengeSessionCache.create(
     new ChallengeSession({
       certificateChallenge,
-      clientId,
+      audiences,
       deviceLinkId: deviceLink.id,
       expires,
       nonce,
@@ -72,7 +72,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   );
 
   const { token } = jwt.sign({
-    audiences: [client.id],
+    audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.challenge_session_expiry,
     sessionId: session.id,
     subject: deviceLink.identityId,
@@ -83,6 +83,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   return {
     body: {
       certificateChallenge,
+      challengeSessionId: session.id,
       challengeSessionToken: token,
       expiresIn,
       strategies: sortedUniq(strategies),

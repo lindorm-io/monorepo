@@ -1,7 +1,8 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { configuration } from "../../server/configuration";
 import { difference } from "lodash";
 import {
   EmitSocketEventRequestData,
@@ -19,7 +20,7 @@ interface RequestData {
 interface ResponseBody {
   id: string;
   challenge: {
-    clientId: string;
+    audiences: Array<string>;
     identityId: string;
     nonce: string;
     payload: Record<string, any>;
@@ -52,7 +53,6 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     entity: { rdcSession },
     jwt,
     metadata: {
-      client,
       device: { linkId },
     },
   } = ctx;
@@ -61,7 +61,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
 
   const {
     id,
-    clientId,
+    audiences,
     expires,
     factors,
     identityId,
@@ -75,7 +75,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
   } = rdcSession;
 
   const { token: rdcSessionToken, expiresIn } = jwt.sign({
-    audiences: [client.id],
+    audiences: [configuration.oauth.client_id],
     expiry: expires,
     sessionId: id,
     subject: identityId,
@@ -104,7 +104,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     body: {
       id,
       challenge: {
-        clientId,
+        audiences,
         identityId,
         nonce,
         payload: tokenPayload,

@@ -6,6 +6,7 @@ import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
+import { flatten } from "lodash";
 import { vaultGetSalt } from "../../handler";
 import {
   ChallengeConfirmationTokenClaims,
@@ -106,7 +107,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
   }
 
   const { expiresIn, token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
-    audiences: [challengeSession.clientId],
+    audiences: flatten([configuration.oauth.client_id, challengeSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
       factors,

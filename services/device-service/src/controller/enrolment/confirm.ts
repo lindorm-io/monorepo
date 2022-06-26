@@ -7,6 +7,7 @@ import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
 import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
+import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/core";
 import {
   ChallengeConfirmationTokenClaims,
@@ -52,9 +53,6 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     data: { biometry, certificateVerifier, pincode },
     entity: { enrolmentSession },
     jwt,
-    metadata: {
-      client: { id: clientId },
-    },
     repository: { deviceLinkRepository },
   } = ctx;
 
@@ -93,7 +91,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
   );
 
   const { expiresIn, token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
-    audiences: [clientId],
+    audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
       factors: [DeviceFactor.POSSESSION],

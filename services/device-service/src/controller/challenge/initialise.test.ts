@@ -20,7 +20,7 @@ describe("initialiseChallengeController", () => {
         challengeSessionCache: createMockCache(createTestChallengeSession),
       },
       data: {
-        clientId: "bcfcc919-b9af-4d4e-a9db-d35059994f22",
+        audiences: ["bcfcc919-b9af-4d4e-a9db-d35059994f22"],
         nonce: "18455aba1b024f4e",
         payload: { test: true },
         scopes: ["test_scope"],
@@ -36,11 +36,6 @@ describe("initialiseChallengeController", () => {
           token: "jwt.jwt.jwt",
         })),
       },
-      metadata: {
-        client: {
-          id: "5e8a2502-915f-4eed-b72f-665d5ac1458c",
-        },
-      },
     };
   });
 
@@ -48,6 +43,7 @@ describe("initialiseChallengeController", () => {
     await expect(initialiseChallengeController(ctx)).resolves.toStrictEqual({
       body: {
         certificateChallenge: "random-value",
+        challengeSessionId: expect.any(String),
         challengeSessionToken: "jwt.jwt.jwt",
         expiresIn: 300,
         strategies: ["implicit", "biometry", "pincode"],

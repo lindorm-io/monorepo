@@ -20,7 +20,7 @@ import {
 
 export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>()
   .keys({
-    clientId: JOI_GUID.required(),
+    audiences: Joi.array().items(JOI_GUID).optional(),
     confirmMethod: JOI_RDC_CONFIRM_METHOD.optional(),
     confirmPayload: Joi.object().optional(),
     confirmUri: Joi.string().uri().required(),
@@ -48,7 +48,7 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
 ): ControllerResponse<InitialiseRdcSessionResponseBody> => {
   const {
     data: {
-      clientId,
+      audiences,
       confirmPayload,
       confirmMethod,
       confirmUri,
@@ -68,7 +68,7 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
   } = ctx;
 
   const { id, expiresIn } = await createRdcSession(ctx, {
-    clientId,
+    audiences,
     confirmMethod,
     confirmPayload,
     confirmUri,

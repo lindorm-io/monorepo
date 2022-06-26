@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { CertificateMethod } from "../enum";
 import { DeviceMetadata } from "../types";
-import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
+import { JOI_GUID, JOI_NONCE, JOI_SESSION_STATUS } from "../common";
 import { SessionStatus } from "../common";
 import {
   JOI_CERTIFICATE_CHALLENGE,
@@ -17,6 +17,7 @@ import {
 } from "@lindorm-io/entity";
 
 export interface EnrolmentSessionAttributes extends EntityAttributes {
+  audiences: Array<string>;
   certificateChallenge: string;
   certificateMethod: CertificateMethod;
   deviceMetadata: DeviceMetadata;
@@ -30,12 +31,16 @@ export interface EnrolmentSessionAttributes extends EntityAttributes {
   uniqueId: string;
 }
 
-export type EnrolmentSessionOptions = Optional<EnrolmentSessionAttributes, EntityKeys>;
+export type EnrolmentSessionOptions = Optional<
+  EnrolmentSessionAttributes,
+  EntityKeys | "audiences"
+>;
 
 const schema = Joi.object<EnrolmentSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    audiences: Joi.array().items(JOI_GUID).required(),
     certificateChallenge: JOI_CERTIFICATE_CHALLENGE.required(),
     certificateMethod: JOI_CERTIFICATE_METHOD.required(),
     deviceMetadata: JOI_DEVICE_METADATA.required(),
@@ -51,6 +56,7 @@ const schema = Joi.object<EnrolmentSessionAttributes>()
   .required();
 
 export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> {
+  public readonly audiences: Array<string>;
   public readonly certificateChallenge: string;
   public readonly certificateMethod: CertificateMethod;
   public readonly deviceMetadata: DeviceMetadata;
@@ -67,6 +73,7 @@ export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> 
   public constructor(options: EnrolmentSessionOptions) {
     super(options);
 
+    this.audiences = options.audiences || [];
     this.certificateChallenge = options.certificateChallenge;
     this.certificateMethod = options.certificateMethod;
     this.deviceMetadata = options.deviceMetadata;
@@ -88,6 +95,7 @@ export class EnrolmentSession extends LindormEntity<EnrolmentSessionAttributes> 
     return {
       ...this.defaultJSON(),
 
+      audiences: this.audiences,
       certificateChallenge: this.certificateChallenge,
       certificateMethod: this.certificateMethod,
       deviceMetadata: this.deviceMetadata,
