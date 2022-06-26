@@ -1,5 +1,6 @@
-import { isArrayStrict, isObjectStrict } from "../strict-type";
+import { isObjectStrict } from "../is-object-strict";
 import { convertArrayObjectKeys } from "./convert-array-object-keys";
+import { isArray } from "lodash";
 
 type Callback = (arg: string) => string;
 
@@ -16,7 +17,7 @@ export const convertObjectKeys = <Output extends Record<string, any> = Record<st
   for (const [key, value] of Object.entries(input)) {
     if (isObjectStrict(value)) {
       result[callback(key)] = convertObjectKeys(value, callback);
-    } else if (isArrayStrict(value)) {
+    } else if (isArray(value)) {
       result[callback(key)] = convertArrayObjectKeys(value, callback);
     } else {
       result[callback(key)] = value;

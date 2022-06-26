@@ -1,10 +1,6 @@
-export const baseHash = (input: string): string => {
-  return Buffer.from(input).toString("base64");
-};
+export const baseHash = (input: string): string => Buffer.from(input).toString("base64");
 
-export const baseParse = (input: string): string => {
-  return Buffer.from(input, "base64").toString("utf8");
-};
+export const baseParse = (input: string): string => Buffer.from(input, "base64").toString("utf8");
 
 const fromBase64 = (base64: string): string =>
   base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");

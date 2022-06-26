@@ -85,6 +85,5 @@ export const stringToMilliseconds = (string: string): number => {
   return time;
 };
 
-export const stringToSeconds = (string: string): number => {
-  return Math.round(stringToMilliseconds(string) / 1000);
-};
+export const stringToSeconds = (string: string): number =>
+  Math.round(stringToMilliseconds(string) / 1000);

@@ -1,8 +1,6 @@
 import { isUndefined } from "lodash";
 
-export const removeUndefinedFromArray = <Input extends Array<any>, Output extends Array<any>>(
-  input: Input,
-): Output => {
+export const removeUndefinedFromArray = <Output extends Array<any>>(input: Array<any>): Output => {
   const result: Array<any> = [];
 
   for (const value of input) {
@@ -13,11 +11,8 @@ export const removeUndefinedFromArray = <Input extends Array<any>, Output extend
   return result as Output;
 };
 
-export const removeUndefinedFromObject = <
-  Input extends Record<string, any>,
-  Output extends Record<string, any>,
->(
-  input: Input,
+export const removeUndefinedFromObject = <Output extends Record<string, any>>(
+  input: Record<string, any>,
 ): Output => {
   const result: Record<string, any> = {};
 

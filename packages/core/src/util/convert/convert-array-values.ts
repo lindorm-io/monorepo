@@ -1,9 +1,9 @@
-import { isArrayStrict } from "../strict-type";
+import { isArray } from "lodash";
 
 type Callback = (arg: string) => string;
 
 export const convertArrayValues = (input: Array<string>, callback: Callback): Array<string> => {
-  if (!isArrayStrict(input)) {
+  if (!isArray(input)) {
     throw new Error(`Invalid input [ ${typeof input} ]`);
   }
 

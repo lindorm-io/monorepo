@@ -1,16 +1,18 @@
 import { randomBytes } from "crypto";
 
-const hex = (): string => {
-  return randomBytes(2).toString("hex").slice(0, 1);
-};
-
 export const getRandomString = (length: number): string => {
-  return randomBytes(Math.ceil((length * 3) / 4))
-    .toString("base64")
-    .replace(/\+/g, hex())
-    .replace(/\//g, hex())
-    .replace(/=/g, hex())
-    .slice(0, length);
+  if (Buffer.isEncoding("base64url")) {
+    return randomBytes(Math.ceil(length * 2))
+      .toString("base64url")
+      .slice(0, length);
+  } else {
+    return randomBytes(Math.ceil(length * 2))
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=/g, "")
+      .slice(0, length);
+  }
 };
 
 export const randomString = getRandomString;

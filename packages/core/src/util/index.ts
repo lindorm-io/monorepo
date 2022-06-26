@@ -9,7 +9,7 @@ export * from "./remove-empty";
 export * from "./remove-undefined";
 export * from "./sleep";
 export * from "./sort-object-keys";
-export * from "./strict-type";
+export * from "./is-object-strict";
 export * from "./string-comparison";
 export * from "./string-time";
 export * from "./url";

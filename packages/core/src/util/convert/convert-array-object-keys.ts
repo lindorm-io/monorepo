@@ -1,10 +1,11 @@
 import { convertObjectKeys } from "./convert-object-keys";
-import { isArrayStrict, isObjectStrict } from "../strict-type";
+import { isArray } from "lodash";
+import { isObjectStrict } from "../is-object-strict";
 
 type Callback = (arg: string) => string;
 
 export const convertArrayObjectKeys = (input: Array<any>, callback: Callback): Array<any> => {
-  if (!isArrayStrict(input)) {
+  if (!isArray(input)) {
     throw new Error(`Invalid input [ ${typeof input} ]`);
   }
 

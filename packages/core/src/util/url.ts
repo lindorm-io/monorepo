@@ -1,5 +1,5 @@
-import { isArrayStrict, isObjectStrict } from "./strict-type";
-import { snakeCase, startsWith } from "lodash";
+import { isArray, snakeCase, startsWith } from "lodash";
+import { isObjectStrict } from "./is-object-strict";
 
 type Default = Record<string, string | number | boolean | Array<string | number | boolean>>;
 
@@ -20,7 +20,7 @@ const replaceParamWithValue = <Params extends Default = Default>(
     throw new Error(`Parameter [ ${string} ] has no replacement variable`);
   }
 
-  if (isArrayStrict(param)) {
+  if (isArray(param)) {
     return param.join(" ");
   }
 
@@ -54,7 +54,7 @@ const addQueryToURL = <Query extends Default = Default>(url: URL, query?: Query)
   }
 
   for (const [key, value] of Object.entries(query)) {
-    if (isArrayStrict(value)) {
+    if (isArray(value)) {
       url.searchParams.append(snakeCase(key), value.join(" "));
     } else {
       url.searchParams.append(snakeCase(key), value.toString());
