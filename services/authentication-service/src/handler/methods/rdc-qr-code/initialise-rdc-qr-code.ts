@@ -38,7 +38,7 @@ export const initialiseRdcQrCode = async (
   await strategySessionCache.update(strategySession);
 
   const body: InitialiseRdcSessionRequestData = {
-    clientId: configuration.oauth.client_id,
+    audiences: [configuration.oauth.client_id],
     confirmMethod: RequestMethod.PUT,
     confirmPayload: { strategySessionToken },
     confirmUri: createURL("/authenticate/flows/:id/confirm", {
