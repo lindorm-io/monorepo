@@ -6,11 +6,12 @@ import { createMockLogger } from "@lindorm-io/winston";
 import { jwtMiddleware } from "./jwt-middleware";
 import {
   Algorithm,
-  createTestKeystore,
   KeyPair,
-  Keystore,
   KeyType,
+  Keystore,
+  KeystoreError,
   NamedCurve,
+  createTestKeystore,
 } from "@lindorm-io/key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -54,16 +55,16 @@ describe("jwtMiddleware", () => {
       keys: [
         new KeyPair({
           id: "59c9f0ac-115a-47b1-b635-a85f88729fc7",
-          expires: new Date("1980-01-01T00:00:00.000Z"),
-          type: KeyType.EC,
           algorithms: [Algorithm.ES512],
+          expires: new Date("1980-01-01T00:00:00.000Z"),
           namedCurve: NamedCurve.P521,
           privateKey: "privateKey",
           publicKey: "publicKey",
+          type: KeyType.EC,
         }),
       ],
     });
 
-    await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
+    await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(KeystoreError);
   });
 });
