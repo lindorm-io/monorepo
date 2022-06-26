@@ -1,6 +1,7 @@
 import { getMetaArray } from "./get-meta-array";
 import { getMetaType } from "./get-meta-type";
-import { isArrayStrict, isObjectStrict } from "@lindorm-io/core";
+import { isArray } from "lodash";
+import { isObjectStrict } from "@lindorm-io/core";
 
 export const getMetaObject = (input: Record<string, any>): Record<string, string> => {
   const result: Record<string, any> = {};
@@ -8,7 +9,7 @@ export const getMetaObject = (input: Record<string, any>): Record<string, string
   for (const [key, value] of Object.entries(input)) {
     if (isObjectStrict(value)) {
       result[key] = getMetaObject(value);
-    } else if (isArrayStrict(value)) {
+    } else if (isArray(value)) {
       result[key] = getMetaArray(value);
     } else {
       result[key] = getMetaType(value);

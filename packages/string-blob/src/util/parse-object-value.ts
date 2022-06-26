@@ -1,6 +1,6 @@
 import { MetaType } from "../enum";
-import { isArrayStrict, isObjectStrict } from "@lindorm-io/core";
-import { isString } from "lodash";
+import { isArray, isString } from "lodash";
+import { isObjectStrict } from "@lindorm-io/core";
 import { parseArrayValue } from "./parse-array-value";
 import { parseErrorValue } from "./parse-error-value";
 
@@ -13,7 +13,7 @@ export const parseObjectValue = (
   for (const [key, value] of Object.entries(json)) {
     if (isObjectStrict(meta[key])) {
       result[key] = parseObjectValue(json[key], meta[key]);
-    } else if (isArrayStrict(meta[key])) {
+    } else if (isArray(meta[key])) {
       result[key] = parseArrayValue(json[key], meta[key]);
     } else if (meta[key] === MetaType.BOOLEAN) {
       result[key] = JSON.parse(value);

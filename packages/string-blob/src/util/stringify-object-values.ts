@@ -1,5 +1,5 @@
-import { isArrayStrict, isObjectStrict } from "@lindorm-io/core";
-import { isDate, isError, isNull, isString, isUndefined } from "lodash";
+import { isObjectStrict } from "@lindorm-io/core";
+import { isArray, isDate, isError, isNull, isString, isUndefined } from "lodash";
 import { stringifyArrayValues } from "./stringify-array-values";
 
 export const stringifyObjectValues = (input: Record<string, any>): Record<string, any> => {
@@ -8,7 +8,7 @@ export const stringifyObjectValues = (input: Record<string, any>): Record<string
   for (const [key, value] of Object.entries(input)) {
     if (isObjectStrict(value)) {
       result[key] = stringifyObjectValues(value);
-    } else if (isArrayStrict(value)) {
+    } else if (isArray(value)) {
       result[key] = stringifyArrayValues(value);
     } else if (isDate(value)) {
       result[key] = value.toJSON();
