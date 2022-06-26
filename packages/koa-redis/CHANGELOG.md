@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.8...@lindorm-io/koa-redis@0.6.9) (2022-06-26)
+
+**Note:** Version bump only for package @lindorm-io/koa-redis
+
+
+
+
+
 ## [0.6.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.7...@lindorm-io/koa-redis@0.6.8) (2022-06-22)
 
 **Note:** Version bump only for package @lindorm-io/koa-redis

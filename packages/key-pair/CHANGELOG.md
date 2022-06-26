@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.1...@lindorm-io/key-pair@0.6.2) (2022-06-26)
+
+
+### Bug Fixes
+
+* export constants and errors from key-pair ([675dbf6](https://github.com/lindorm-io/monorepo/commit/675dbf6499b4af4809236542707e399cdb2ae716))
+* upgrade keystore methods ([85b9dad](https://github.com/lindorm-io/monorepo/commit/85b9dadbeadbe25f9a74514c337e19fdb2e18951))
+
+
+
+
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.0...@lindorm-io/key-pair@0.6.1) (2022-06-22)
 
 

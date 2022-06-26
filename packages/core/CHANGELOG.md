@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.2...@lindorm-io/core@0.6.3) (2022-06-26)
+
+
+### Bug Fixes
+
+* refine core utilities ([48e3385](https://github.com/lindorm-io/monorepo/commit/48e3385d23d572f8c9fa147eb6e61e4d6831c347))
+
+
+
+
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.1...@lindorm-io/core@0.6.2) (2022-06-22)
 
 
