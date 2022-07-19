@@ -35,11 +35,11 @@
     "@lindorm-io/winston": "^0.4.6",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^4.28.7",
-    "@types/koa": "^2.13.4",
+    "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-router": "^7.4.4",
     "@types/lodash": "^4.14.182",
-    "ioredis": "^5.0.6",
+    "ioredis": "^5.2.1",
     "koa": "2.13.4",
     "koa-bodyparser": "^4.3.0",
     "redis-commands": "^1.7.0"
