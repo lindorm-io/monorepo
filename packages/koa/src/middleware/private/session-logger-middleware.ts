@@ -2,9 +2,9 @@ import { DefaultLindormMiddleware } from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 
 export const sessionLoggerMiddleware =
-  (winston: ILogger): DefaultLindormMiddleware =>
+  (logger: ILogger): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
-    ctx.logger = winston.createSessionLogger({
+    ctx.logger = logger.createSessionLogger({
       correlationId: ctx.metadata.identifiers.correlationId,
       fingerprint: ctx.metadata.identifiers.fingerprint,
     });

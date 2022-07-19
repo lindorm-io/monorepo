@@ -9,8 +9,8 @@ type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
 interface Options {
   callback: Callback;
   logger: ILogger;
-  retry?: number;
   onError?: OnError;
+  retry?: number;
   time: number;
 }
 
