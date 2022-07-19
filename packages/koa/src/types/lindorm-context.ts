@@ -9,6 +9,7 @@ export interface DefaultLindormContext {
   keys: Array<any>;
   keystore: any;
   logger: ILogger;
+  messageBus: any;
   repository: any;
   token: any;
 }

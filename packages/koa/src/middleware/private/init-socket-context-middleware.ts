@@ -26,6 +26,7 @@ export const initSocketContextMiddleware: DefaultLindormSocketMiddleware<CustomS
     keys: [],
     keystore: undefined,
     logger: undefined,
+    messageBus: undefined,
     repository: {},
     token: {},
   };
