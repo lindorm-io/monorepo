@@ -87,8 +87,8 @@ export const createNodeServer = <
     if (options.useSocketRedisAdapter !== false) {
       options.socketOptions = {
         adapter: createAdapter(
-          options.redisConnection.client().duplicate(),
-          options.redisConnection.client().duplicate(),
+          options.redisConnection.client.duplicate(),
+          options.redisConnection.client.duplicate(),
         ),
       };
     }

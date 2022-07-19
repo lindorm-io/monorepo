@@ -3,7 +3,7 @@ import request from "supertest";
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
 import { KoaApp } from "@lindorm-io/koa";
 import { RedisConnection } from "@lindorm-io/redis";
-import { createLogger } from "../util/create-logger";
+import { createMockLogger } from "@lindorm-io/winston";
 import { createNodeServer } from "../util/create-node-server";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
 import { createWellKnownJwksRouter } from "./well-known-jwks";
@@ -14,12 +14,12 @@ describe("/.well-known", () => {
   let server: KoaApp;
 
   beforeAll(async () => {
-    const logger = createLogger();
+    const logger = createMockLogger();
 
     const redisConnection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
+      port: 6376,
+      logger,
     });
 
     server = createNodeServer({

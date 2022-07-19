@@ -4,8 +4,8 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: redis
+    container_name: node_server_redis
     labels:
       - redis
     ports:
-      - "6379:6379"
+      - "6376:6379"
