@@ -24,11 +24,11 @@ describe("KeyPairCache", () => {
   beforeAll(async () => {
     connection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
+      port: 6378,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
 
     cache = new KeyPairCache({ connection, logger });
   });
@@ -40,7 +40,7 @@ describe("KeyPairCache", () => {
   });
 
   afterAll(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   test("should create", async () => {

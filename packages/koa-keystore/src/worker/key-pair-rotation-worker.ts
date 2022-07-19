@@ -15,7 +15,7 @@ interface Options {
   passphrase?: string;
   retry?: number;
   rotationInterval?: string;
-  winston: ILogger;
+  logger: ILogger;
   workerInterval?: string;
 }
 
@@ -29,11 +29,10 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
     passphrase = "",
     retry = 3,
     rotationInterval = "30 days",
-    winston,
     workerInterval = "1 days",
   } = options;
 
-  const logger = winston.createChildLogger(["keyPairRotationWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairRotationWorker"]);
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {

@@ -28,7 +28,7 @@ interface Options {
   redisConnection: RedisConnection;
   retry?: number;
   vaultService: VaultServiceOptions;
-  winston: ILogger;
+  logger: ILogger;
   workerInterval?: string;
 }
 
@@ -39,13 +39,12 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
     redisConnection,
     retry = 3,
     vaultService,
-    winston,
     workerInterval = "5 minutes",
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = winston.createChildLogger(["keyPairVaultCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairVaultCacheWorker"]);
 
   logger.debug("creating vault cache worker", {
     oauthService,

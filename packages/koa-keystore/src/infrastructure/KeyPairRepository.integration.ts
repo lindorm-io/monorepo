@@ -21,13 +21,13 @@ describe("KeyPairRepository", () => {
   beforeAll(async () => {
     connection = new MongoConnection({
       host: "localhost",
-      port: 27017,
+      port: 27016,
+      database: "database",
       auth: { username: "root", password: "example" },
-      database: "databaseName",
-      winston: logger,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
 
     repository = new KeyPairRepository({ connection, logger });
   });
@@ -37,7 +37,7 @@ describe("KeyPairRepository", () => {
   });
 
   afterAll(async () => {
-    await connection.close();
+    await connection.disconnect();
   });
 
   test("should create", async () => {

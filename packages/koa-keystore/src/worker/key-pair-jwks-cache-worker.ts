@@ -13,7 +13,7 @@ interface Options {
   port?: number;
   redisConnection: RedisConnection;
   retry?: number;
-  winston: ILogger;
+  logger: ILogger;
   workerInterval?: string;
 }
 
@@ -25,13 +25,12 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
     port,
     redisConnection,
     retry = 10,
-    winston,
     workerInterval = "5 minutes",
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = winston.createChildLogger(["keyPairJwksCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairJwksCacheWorker"]);
 
   logger.debug("creating jwks cache worker", {
     host,

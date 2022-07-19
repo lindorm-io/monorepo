@@ -4,11 +4,11 @@ services:
   mongo:
     image: mongo
     restart: always
-    container_name: mongo
+    container_name: koa_keystore_mongo
     labels:
       - mongo
     ports:
-      - "27017:27017"
+      - "27016:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
@@ -16,8 +16,8 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: redis
+    container_name: koa_keystore_redis
     labels:
       - redis
     ports:
-      - "6379:6379"
+      - "6378:6379"

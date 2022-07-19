@@ -12,22 +12,16 @@ interface Options {
   mongoConnection: MongoConnection;
   redisConnection: RedisConnection;
   retry?: number;
-  winston: ILogger;
+  logger: ILogger;
   workerInterval?: string;
 }
 
 export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
-  const {
-    mongoConnection,
-    redisConnection,
-    retry = 10,
-    winston,
-    workerInterval = "1 hours",
-  } = options;
+  const { mongoConnection, redisConnection, retry = 10, workerInterval = "1 hours" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = winston.createChildLogger(["keyPairMongoCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairMongoCacheWorker"]);
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {

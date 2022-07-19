@@ -7,16 +7,16 @@ import { stringToSeconds } from "@lindorm-io/core";
 interface Options {
   mongoConnection: MongoConnection;
   retry?: number;
-  winston: ILogger;
+  logger: ILogger;
   workerInterval?: string;
 }
 
 export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
-  const { mongoConnection, retry = 3, winston, workerInterval = "1 days" } = options;
+  const { mongoConnection, retry = 3, workerInterval = "1 days" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = winston.createChildLogger(["keyPairMongoCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairMongoCacheWorker"]);
 
   return new IntervalWorker({
     callback: async (): Promise<void> => {
