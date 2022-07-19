@@ -5,17 +5,11 @@ import { createAdapter } from "@socket.io/redis-adapter";
 import { createWellKnownJwksRouter } from "../router";
 import { socketJwtMiddleware, jwtMiddleware } from "@lindorm-io/koa-jwt";
 import {
-  cacheMiddleware,
-  redisMiddleware,
-  socketCacheMiddleware,
-  socketRedisMiddleware,
-} from "@lindorm-io/koa-redis";
-import {
-  mongoMiddleware,
-  repositoryMiddleware,
-  socketMongoMiddleware,
-  socketRepositoryMiddleware,
-} from "@lindorm-io/koa-mongo";
+  amqpMiddleware,
+  messageBusMiddleware,
+  socketAmqpMiddleware,
+  socketMessageBusMiddleware,
+} from "@lindorm-io/koa-amqp";
 import {
   KeyPairCache,
   KeyPairRepository,
@@ -24,6 +18,18 @@ import {
   socketCacheKeysMiddleware,
   socketKeystoreMiddleware,
 } from "@lindorm-io/koa-keystore";
+import {
+  mongoMiddleware,
+  repositoryMiddleware,
+  socketMongoMiddleware,
+  socketRepositoryMiddleware,
+} from "@lindorm-io/koa-mongo";
+import {
+  cacheMiddleware,
+  redisMiddleware,
+  socketCacheMiddleware,
+  socketRedisMiddleware,
+} from "@lindorm-io/koa-redis";
 
 export const createNodeServer = <
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
@@ -44,6 +50,16 @@ export const createNodeServer = <
     socketMiddleware.push(
       socketAxiosMiddleware({ clientName: service.name, host: service.host, port: service.port }),
     );
+  }
+
+  if (options.amqpConnection) {
+    middleware.push(amqpMiddleware(options.amqpConnection));
+    socketMiddleware.push(socketAmqpMiddleware(options.amqpConnection));
+
+    if (options.messageBus) {
+      middleware.push(messageBusMiddleware(options.messageBus));
+      socketMiddleware.push(socketMessageBusMiddleware(options.messageBus));
+    }
   }
 
   if (options.mongoConnection) {
