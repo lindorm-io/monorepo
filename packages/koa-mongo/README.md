@@ -29,7 +29,7 @@ const mongoConnection = new MongoConnection({ ...options });
 
 koaApp.addMiddleware(mongoMiddleware(mongoConnection));
 
-const client: MongoClient = await ctx.client.mongo.connect();
+const client: MongoClient = await ctx.connection.mongo.connect();
 ```
 
 ### Repository Middleware

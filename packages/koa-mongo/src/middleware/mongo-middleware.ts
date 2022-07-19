@@ -6,7 +6,7 @@ export const mongoMiddleware =
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("mongo");
 
-    await connection.waitForConnection();
+    await connection.connect();
 
     ctx.connection.mongo = connection;
 

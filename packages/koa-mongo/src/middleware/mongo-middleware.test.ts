@@ -4,12 +4,12 @@ import { mongoMiddleware } from "./mongo-middleware";
 
 const next = () => Promise.resolve();
 
-const waitForConnection = jest.fn();
+const connect = jest.fn();
 
 class MongoConnection {
   constructor() {}
-  async waitForConnection() {
-    waitForConnection();
+  async connect() {
+    connect();
   }
 }
 
@@ -34,7 +34,7 @@ describe("mongoMiddleware", () => {
     await expect(mongoMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.mongo).toStrictEqual(expect.any(MongoConnection));
-    expect(waitForConnection).toHaveBeenCalled();
+    expect(connect).toHaveBeenCalled();
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));
   });
 });
