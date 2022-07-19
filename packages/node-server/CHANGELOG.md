@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.13...@lindorm-io/node-server@0.4.14) (2022-07-19)
+
+
+### Bug Fixes
+
+* add amqp to node server ([e7a4c10](https://github.com/lindorm-io/monorepo/commit/e7a4c10d8270c7addfc1c6dcc1642835ace501e5))
+* align node-server with mongo and redis ([659a70e](https://github.com/lindorm-io/monorepo/commit/659a70ee617d7681fa639262e8c59fa0138364cd))
+
+
+
+
+
 ## [0.4.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.12...@lindorm-io/node-server@0.4.13) (2022-06-26)
 
 **Note:** Version bump only for package @lindorm-io/node-server

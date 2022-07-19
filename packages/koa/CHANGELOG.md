@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.13.4...@lindorm-io/koa@0.13.5) (2022-07-19)
+
+
+### Bug Fixes
+
+* add message bus to koa context ([248e6e9](https://github.com/lindorm-io/monorepo/commit/248e6e979baeb5d12b0e91f3e48c792bc2338042))
+* update koa middleware args ([77613df](https://github.com/lindorm-io/monorepo/commit/77613df886cccd470359302358dcea9f22c8227d))
+
+
+
+
+
 ## [0.13.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.13.3...@lindorm-io/koa@0.13.4) (2022-06-26)
 
 **Note:** Version bump only for package @lindorm-io/koa

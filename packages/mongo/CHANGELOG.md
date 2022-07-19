@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.6...@lindorm-io/mongo@0.10.0) (2022-07-19)
+
+
+### Features
+
+* use core connection for mongo ([502df4f](https://github.com/lindorm-io/monorepo/commit/502df4f4f170ce0dbbbf6aab12e75407c11bda59))
+
+
+
+
+
 ## [0.9.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.5...@lindorm-io/mongo@0.9.6) (2022-06-26)
 
 **Note:** Version bump only for package @lindorm-io/mongo

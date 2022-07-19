@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.5...@lindorm-io/koa-keystore@0.9.6) (2022-07-19)
+
+
+### Bug Fixes
+
+* align koa-keystore with mongo and redis ([35facb5](https://github.com/lindorm-io/monorepo/commit/35facb584d89266ceb325f8323c2b53db3d4c6f8))
+
+
+
+
+
 ## [0.9.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.4...@lindorm-io/koa-keystore@0.9.5) (2022-06-26)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore
