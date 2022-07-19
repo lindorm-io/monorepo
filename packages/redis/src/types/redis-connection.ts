@@ -1,12 +1,6 @@
-import { ILogger } from "@lindorm-io/winston";
+import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
 import { Redis, RedisOptions } from "ioredis";
 
-export interface IRedisConnection {
-  client(): Redis;
-  quit(): Promise<void>;
-}
+export type IRedisConnection = IConnectionBase<Redis>;
 
-export interface RedisConnectionOptions extends RedisOptions {
-  winston: ILogger;
-  customClient?: Redis;
-}
+export type RedisConnectionOptions = ConnectionBaseOptions<RedisOptions> & RedisOptions;

@@ -1,13 +1,11 @@
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
 import { ILogger } from "@lindorm-io/winston";
-import { Redis } from "ioredis";
 import { RedisConnection } from "../infrastructure";
 import { RedisError } from "../error";
 import { difference, snakeCase, uniq } from "lodash";
 
 export class CacheIndex<Interface> implements ICacheBase {
   private readonly connection: RedisConnection;
-  private readonly client: Redis;
   private readonly logger: ILogger;
   private readonly prefix: string;
 
@@ -15,7 +13,6 @@ export class CacheIndex<Interface> implements ICacheBase {
 
   public constructor(options: CacheIndexBaseOptions<Interface>) {
     this.connection = options.connection;
-    this.client = this.connection.client();
     this.indexKey = options.indexKey;
     this.prefix = snakeCase(options.prefix);
 
@@ -51,7 +48,7 @@ export class CacheIndex<Interface> implements ICacheBase {
   ): Promise<void> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     let result: string | null;
 
@@ -61,9 +58,9 @@ export class CacheIndex<Interface> implements ICacheBase {
     const method = expiresInSeconds ? "setex" : "set";
 
     if (expiresInSeconds) {
-      result = await this.client.setex(indexKey, expiresInSeconds, data);
+      result = await this.connection.client.setex(indexKey, expiresInSeconds, data);
     } else {
-      result = await this.client.set(indexKey, data);
+      result = await this.connection.client.set(indexKey, data);
     }
 
     const success = result === "OK";
@@ -96,10 +93,10 @@ export class CacheIndex<Interface> implements ICacheBase {
   private async getArray(key: string): Promise<Array<string>> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     const indexKey = this.getKey(key);
-    const result = await this.client.get(indexKey);
+    const result = await this.connection.client.get(indexKey);
 
     this.logger.debug("get index", {
       input: {

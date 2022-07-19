@@ -1,29 +1,34 @@
-import { CustomClientConnection } from "./CustomClientConnection";
-import { IORedisConnection } from "./IORedisConnection";
+import { ConnectionBase, ConnectionStatus } from "@lindorm-io/core-connection";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
-import { Redis } from "ioredis";
-import { RedisConnectionBase } from "./RedisConnectionBase";
+import IORedis, { Redis, RedisOptions } from "ioredis";
 
-export class RedisConnection implements IRedisConnection {
-  private readonly connection: RedisConnectionBase;
-
+export class RedisConnection
+  extends ConnectionBase<Redis, RedisOptions>
+  implements IRedisConnection
+{
   public constructor(options: RedisConnectionOptions) {
-    if (options.customClient) {
-      this.connection = new CustomClientConnection(options);
-    } else {
-      this.connection = new IORedisConnection(options);
-    }
+    const { connectInterval, connectTimeout, logger, ...connectOptions } = options;
+
+    super({ connectInterval, connectTimeout, connectOptions, logger });
+
+    this.clientConnection = new IORedis(this.connectOptions);
   }
 
-  public client(): Redis {
-    return this.connection.client();
+  // abstract implementation
+
+  protected async createClientConnection(): Promise<Redis> {
+    return this.clientConnection;
   }
 
-  public async quit(): Promise<void> {
-    return this.connection.quit();
+  protected async connectCallback(): Promise<void> {
+    this.client.on("connect", () => this.setStatus(ConnectionStatus.CONNECTED));
+    this.client.on("error", (err: Error) => this.onError(err));
+    this.client.on("reconnecting", () => this.setStatus(ConnectionStatus.CONNECTING));
+
+    await this.waitForConnection();
   }
 
-  public async waitForConnection(): Promise<void> {
-    return this.connection.waitForConnection();
+  protected async disconnectCallback(): Promise<void> {
+    await this.client.quit();
   }
 }

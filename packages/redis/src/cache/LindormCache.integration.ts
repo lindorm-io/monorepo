@@ -23,17 +23,17 @@ describe("LindormCache", () => {
     connection = new RedisConnection({
       host: "localhost",
       port: 6379,
-      winston: logger,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
 
-    redis = connection.client();
+    redis = connection.client;
     cache = new TestCache({ connection, logger });
   });
 
   afterAll(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   beforeEach(async () => {

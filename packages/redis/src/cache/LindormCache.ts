@@ -179,7 +179,7 @@ export abstract class LindormCache<
   }
 
   public async ttl(entity: Entity): Promise<number> {
-    return await this.client.ttl(this.getKey(entity.id));
+    return this.connection.client.ttl(this.getKey(entity.id));
   }
 
   public async update(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
@@ -280,13 +280,17 @@ export abstract class LindormCache<
   private async scanEntities(): Promise<Array<Entity>> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     let cursor = 0;
     let entityKeys: Array<string> = [];
 
     do {
-      const [cursorString, keys] = await this.client.scan(cursor, "MATCH", this.getKey("*"));
+      const [cursorString, keys] = await this.connection.client.scan(
+        cursor,
+        "MATCH",
+        this.getKey("*"),
+      );
 
       cursor = parseInt(cursorString, 10);
       entityKeys = flatten([entityKeys, keys]);
@@ -319,10 +323,10 @@ export abstract class LindormCache<
   private async getEntity(id: string): Promise<Entity | null> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     const key = this.getKey(id);
-    const result = await this.client.get(key);
+    const result = await this.connection.client.get(key);
 
     this.logger.debug("get entity", {
       input: {
@@ -346,7 +350,7 @@ export abstract class LindormCache<
   private async setEntity(entity: Entity): Promise<void> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     entity.updated = new Date();
 
@@ -359,9 +363,9 @@ export abstract class LindormCache<
     let result: string | null;
 
     if (expiresInSeconds) {
-      result = await this.client.setex(key, expiresInSeconds, blob);
+      result = await this.connection.client.setex(key, expiresInSeconds, blob);
     } else {
-      result = await this.client.set(key, blob);
+      result = await this.connection.client.set(key, blob);
     }
 
     const success = result === "OK";
@@ -398,12 +402,12 @@ export abstract class LindormCache<
   private async delEntity(entity: Entity): Promise<void> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
+    await this.connection.connect();
 
     const json = entity.toJSON();
     const key = this.getKey(json.id);
 
-    const result = await this.client.del(key);
+    const result = await this.connection.client.del(key);
     const success = result !== 0;
 
     this.logger.debug("del entity", {

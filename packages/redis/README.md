@@ -16,17 +16,17 @@ npm install --save @lindorm-io/redis
 const connection = new RedisConnection({
   host: "localhost",
   port: 6379,
-  winston,
+  logger,
 });
 
-await connection.waitForConnection();
-const client = connection.client();
+await connection.connect();
+const client = connection.client;
 
 await client.set("key", JSON.stringify({ blobify: "data" }));
 const data = await client.get("key");
 await client.del("key");
 
-await connection.quit();
+await connection.disconnect();
 ```
 
 ### Lindorm Cache
@@ -48,8 +48,8 @@ export class TestCache extends LindormCache<TestEntityAttributes, TestEntity> {
 }
 
 const cache = new TestCache({
-  client: connection.client(),
-  logger: winston,
+  connection,
+  logger,
 });
 
 await cache.create(entity);
