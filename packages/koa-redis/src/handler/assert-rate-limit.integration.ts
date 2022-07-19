@@ -1,6 +1,4 @@
-import RedisMock from "ioredis-mock";
 import { ClientError } from "@lindorm-io/errors";
-import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimit } from "./assert-rate-limit";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -8,7 +6,6 @@ import { getRateLimitKey } from "../util";
 
 describe("assertRateLimit", () => {
   let connection: RedisConnection;
-  let redis: Redis;
   let ctx: any;
   let options: any;
 
@@ -17,21 +14,15 @@ describe("assertRateLimit", () => {
   beforeAll(async () => {
     connection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
-      customClient: new RedisMock({
-        host: "localhost",
-        port: 6379,
-      }) as Redis,
+      port: 6377,
+      logger,
     });
 
-    await connection.waitForConnection();
-
-    redis = connection.client();
+    await connection.connect();
   });
 
   afterAll(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   beforeEach(() => {
@@ -52,7 +43,7 @@ describe("assertRateLimit", () => {
   });
 
   test("should reject", async () => {
-    await redis.setex(getRateLimitKey("name", "value"), 90, 100);
+    await connection.client.setex(getRateLimitKey("name", "value"), 90, 100);
 
     await expect(assertRateLimit(ctx, options)).rejects.toThrow(ClientError);
   });

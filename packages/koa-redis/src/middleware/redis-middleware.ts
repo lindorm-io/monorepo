@@ -6,7 +6,7 @@ export const redisMiddleware =
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("redis");
 
-    await connection.waitForConnection();
+    await connection.connect();
 
     ctx.connection.redis = connection;
 

@@ -4,12 +4,12 @@ import { redisMiddleware } from "./redis-middleware";
 
 const next = () => Promise.resolve();
 
-const waitForConnection = jest.fn();
+const connect = jest.fn();
 
 class RedisConnection {
   constructor() {}
-  async waitForConnection() {
-    waitForConnection();
+  async connect() {
+    connect();
   }
 }
 
@@ -34,7 +34,7 @@ describe("redisMiddleware", () => {
     await expect(redisMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.redis).toStrictEqual(expect.any(RedisConnection));
-    expect(waitForConnection).toHaveBeenCalled();
+    expect(connect).toHaveBeenCalled();
     expect(ctx.metrics.redis).toStrictEqual(expect.any(Number));
   });
 });

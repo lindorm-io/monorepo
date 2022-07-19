@@ -14,10 +14,10 @@ export const clearRateLimitBackoff = async (
     connection: { redis },
   } = ctx;
 
+  await redis.connect();
+
   const { keyName, value } = options;
   const key = getRateLimitBackoffAttemptKey(keyName, value);
 
-  await redis.waitForConnection();
-  const client = redis.client();
-  await client.del(key);
+  await redis.client.del(key);
 };

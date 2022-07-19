@@ -1,5 +1,3 @@
-import RedisMock from "ioredis-mock";
-import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { getRateLimitBackoffAttemptKey } from "../util";
@@ -7,7 +5,6 @@ import { setRateLimitBackoff } from "./set-rate-limit-backoff";
 
 describe("setRateLimitBackoff", () => {
   let connection: RedisConnection;
-  let redis: Redis;
   let ctx: any;
   let options: any;
 
@@ -16,17 +13,11 @@ describe("setRateLimitBackoff", () => {
   beforeEach(async () => {
     connection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
-      customClient: new RedisMock({
-        host: "localhost",
-        port: 6379,
-      }) as Redis,
+      port: 6377,
+      logger,
     });
 
-    await connection.waitForConnection();
-
-    redis = connection.client();
+    await connection.connect();
 
     ctx = {
       connection: { redis: connection },
@@ -39,7 +30,7 @@ describe("setRateLimitBackoff", () => {
   });
 
   afterEach(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   test("should resolve retriesLeft", async () => {
@@ -49,7 +40,7 @@ describe("setRateLimitBackoff", () => {
   });
 
   test("should resolve retriesLeft", async () => {
-    await redis.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 2);
+    await connection.client.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 2);
 
     await expect(setRateLimitBackoff(ctx, options)).resolves.toStrictEqual({
       retriesLeft: 2,
@@ -57,7 +48,7 @@ describe("setRateLimitBackoff", () => {
   });
 
   test("should resolve retryIn", async () => {
-    await redis.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 4);
+    await connection.client.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 4);
 
     await expect(setRateLimitBackoff(ctx, options)).resolves.toStrictEqual({
       retryIn: 60,
@@ -65,7 +56,7 @@ describe("setRateLimitBackoff", () => {
   });
 
   test("should resolve retryIn", async () => {
-    await redis.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 5);
+    await connection.client.setex(getRateLimitBackoffAttemptKey("name", "value"), 99, 5);
 
     await expect(setRateLimitBackoff(ctx, options)).resolves.toStrictEqual({
       retryIn: 180,

@@ -15,12 +15,11 @@ export const assertRateLimitBackoff = async (
     connection: { redis },
   } = ctx;
 
+  await redis.connect();
+
   const { keyName, value } = options;
   const key = getRateLimitBackoffExpireKey(keyName, value);
-
-  await redis.waitForConnection();
-  const client = redis.client();
-  const expireTTL = await client.ttl(key);
+  const expireTTL = await redis.client.ttl(key);
 
   if (expireTTL && expireTTL > 0) {
     throw new ClientError("Rate Limit", {

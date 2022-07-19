@@ -1,5 +1,3 @@
-import RedisMock from "ioredis-mock";
-import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { clearRateLimitBackoff } from "./clear-rate-limit-backoff";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -14,15 +12,11 @@ describe("clearRateLimitBackoff", () => {
   beforeEach(async () => {
     connection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
-      customClient: new RedisMock({
-        host: "localhost",
-        port: 6379,
-      }) as Redis,
+      port: 6377,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
 
     ctx = {
       connection: { redis: connection },
@@ -35,7 +29,7 @@ describe("clearRateLimitBackoff", () => {
   });
 
   afterEach(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   test("should resolve", async () => {

@@ -17,18 +17,17 @@ export const assertRateLimit = async (
     connection: { redis },
   } = ctx;
 
+  await redis.connect();
+
   const { expiresInSeconds, keyName, limit, value } = options;
   const key = getRateLimitKey(keyName, value);
-
-  await redis.waitForConnection();
-  const client = redis.client();
-  const currentNum = await client.get(key);
+  const currentNum = await redis.client.get(key);
 
   if (currentNum) {
-    const newNum = await client.incr(key);
+    const newNum = await redis.client.incr(key);
 
     if (newNum >= limit) {
-      const retryIn = await client.ttl(key);
+      const retryIn = await redis.client.ttl(key);
 
       throw new ClientError("Rate Limit", {
         statusCode: ClientError.StatusCode.TOO_MANY_REQUESTS,
@@ -36,6 +35,6 @@ export const assertRateLimit = async (
       });
     }
   } else {
-    await client.setex(key, expiresInSeconds, 1);
+    await redis.client.setex(key, expiresInSeconds, 1);
   }
 };

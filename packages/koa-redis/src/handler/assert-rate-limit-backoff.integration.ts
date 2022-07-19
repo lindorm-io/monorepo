@@ -1,6 +1,4 @@
-import RedisMock from "ioredis-mock";
 import { ClientError } from "@lindorm-io/errors";
-import { Redis } from "ioredis";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimitBackoff } from "./assert-rate-limit-backoff";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -8,7 +6,6 @@ import { getRateLimitBackoffExpireKey } from "../util";
 
 describe("assertRateLimitBackoff", () => {
   let connection: RedisConnection;
-  let redis: Redis;
   let ctx: any;
   let options: any;
 
@@ -17,17 +14,11 @@ describe("assertRateLimitBackoff", () => {
   beforeEach(async () => {
     connection = new RedisConnection({
       host: "localhost",
-      port: 6379,
-      winston: logger,
-      customClient: new RedisMock({
-        host: "localhost",
-        port: 6379,
-      }) as Redis,
+      port: 6377,
+      logger,
     });
 
-    await connection.waitForConnection();
-
-    redis = connection.client();
+    await connection.connect();
 
     ctx = {
       connection: { redis: connection },
@@ -40,7 +31,7 @@ describe("assertRateLimitBackoff", () => {
   });
 
   afterEach(async () => {
-    await connection.quit();
+    await connection.disconnect();
   });
 
   test("should resolve", async () => {
@@ -48,7 +39,7 @@ describe("assertRateLimitBackoff", () => {
   });
 
   test("should throw", async () => {
-    await redis.setex(getRateLimitBackoffExpireKey("name", "value"), 99, 1);
+    await connection.client.setex(getRateLimitBackoffExpireKey("name", "value"), 99, 1);
 
     await expect(assertRateLimitBackoff(ctx, options)).rejects.toThrow(ClientError);
   });
