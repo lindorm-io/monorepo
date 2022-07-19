@@ -1,7 +1,7 @@
 import { configuration } from "../server/configuration";
 import { keyPairJwksCacheWorker } from "@lindorm-io/koa-keystore";
 import { redisConnection } from "../instance";
-import { winston } from "../server/logger";
+import { logger } from "../server/logger";
 
 export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
   host: configuration.services.device_service.host,
@@ -9,7 +9,7 @@ export const keyPairDeviceJwksWorker = keyPairJwksCacheWorker({
   name: "device",
   redisConnection,
   retry: 30,
-  winston,
+  logger,
 });
 
 export const keyPairOauthJwksWorker = keyPairJwksCacheWorker({
@@ -18,5 +18,5 @@ export const keyPairOauthJwksWorker = keyPairJwksCacheWorker({
   name: "oauth",
   redisConnection,
   retry: 30,
-  winston,
+  logger,
 });

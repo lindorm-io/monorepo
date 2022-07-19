@@ -8,7 +8,7 @@ export class EncryptedRecordRepository extends LindormRepository<
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "encrypted_record",
+      collection: "encrypted_record",
       indices: [],
     });
   }

@@ -5,7 +5,7 @@ export class ClientRepository extends LindormRepository<ClientAttributes, Client
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "client",
+      collection: "client",
       indices: [],
     });
   }

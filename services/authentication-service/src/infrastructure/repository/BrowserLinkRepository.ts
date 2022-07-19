@@ -5,7 +5,7 @@ export class BrowserLinkRepository extends LindormRepository<BrowserLinkAttribut
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "browser_link",
+      collection: "browser_link",
       indices: [],
     });
   }

@@ -2,7 +2,7 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { BrowserSessionRepository } from "../infrastructure";
 import { mongoConnection } from "../instance";
 import { stringToMilliseconds } from "@lindorm-io/core";
-import { winston } from "../server/logger";
+import { logger as winston } from "../server/logger";
 
 const logger = winston.createChildLogger(["sessionCleanupWorker"]);
 const time = stringToMilliseconds("60 minutes");

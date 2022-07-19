@@ -1,6 +1,6 @@
 import { MongoConnection } from "@lindorm-io/mongo";
 import { configuration } from "../server/configuration";
-import { winston } from "../server/logger";
+import { logger } from "../server/logger";
 
 export const mongoConnection = new MongoConnection({
   host: configuration.mongo.host,
@@ -10,5 +10,5 @@ export const mongoConnection = new MongoConnection({
     password: configuration.mongo.password,
   },
   database: configuration.mongo.db_name,
-  winston,
+  logger,
 });

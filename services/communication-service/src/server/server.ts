@@ -4,11 +4,11 @@ import { SubjectHint } from "../common";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
+import { logger } from "./logger";
 import { middleware } from "./middleware";
 import { redisConnection } from "../instance";
 import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { socketListeners } from "./socket";
-import { winston } from "./logger";
 import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
@@ -21,7 +21,7 @@ export const server = createNodeServer<ServerKoaContext>({
     exposePublic: true,
     keyPairCache: true,
   },
-  logger: winston,
+  logger,
   middleware,
   port: configuration.server.port,
   redisConnection,
@@ -34,7 +34,7 @@ export const server = createNodeServer<ServerKoaContext>({
   workers,
 
   setup: async (): Promise<void> => {
-    await redisConnection.waitForConnection();
+    await redisConnection.connect();
   },
 
   socket: true,

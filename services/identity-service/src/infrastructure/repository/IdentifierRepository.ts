@@ -5,7 +5,7 @@ export class IdentifierRepository extends LindormRepository<IdentifierAttributes
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "identifier",
+      collection: "identifier",
       indices: [
         {
           index: { identityId: 1 },

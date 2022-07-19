@@ -8,7 +8,7 @@ export class ProtectedRecordRepository extends LindormRepository<
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "protected_record",
+      collection: "protected_record",
       indices: [],
     });
   }

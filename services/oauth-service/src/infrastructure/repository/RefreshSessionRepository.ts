@@ -8,7 +8,7 @@ export class RefreshSessionRepository extends LindormRepository<
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "refresh_session",
+      collection: "refresh_session",
       indices: [
         {
           index: {

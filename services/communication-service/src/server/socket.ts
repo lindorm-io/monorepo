@@ -1,7 +1,7 @@
 import { IOServer } from "@lindorm-io/koa";
 import { ServerSocket } from "../types";
 import { joinDeviceChannel } from "../handler/socket";
-import { winston } from "./logger";
+import { logger as winston } from "./logger";
 
 export const socketListeners = (io: IOServer): void => {
   io.on("connection", (listener) => {

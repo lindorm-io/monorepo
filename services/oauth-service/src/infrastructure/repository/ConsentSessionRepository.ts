@@ -8,7 +8,7 @@ export class ConsentSessionRepository extends LindormRepository<
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "consent_session",
+      collection: "consent_session",
       indices: [
         {
           index: {

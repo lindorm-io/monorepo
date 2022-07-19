@@ -5,7 +5,7 @@ export class TenantRepository extends LindormRepository<TenantAttributes, Tenant
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "tenant",
+      collection: "tenant",
       indices: [],
     });
   }

@@ -8,7 +8,7 @@ export class BrowserSessionRepository extends LindormRepository<
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "browser_session",
+      collection: "browser_session",
       indices: [
         {
           index: {

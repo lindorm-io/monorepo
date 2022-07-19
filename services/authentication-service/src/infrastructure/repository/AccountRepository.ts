@@ -5,7 +5,7 @@ export class AccountRepository extends LindormRepository<AccountAttributes, Acco
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "account",
+      collection: "account",
       indices: [],
     });
   }

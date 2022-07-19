@@ -2,7 +2,7 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { configuration } from "../server/configuration";
 import { keyPairJwksCacheWorker } from "@lindorm-io/koa-keystore";
 import { redisConnection } from "../instance";
-import { winston } from "../server/logger";
+import { logger } from "../server/logger";
 
 export const oidcProvidersJwksWorkers: Array<IntervalWorker> = [];
 
@@ -14,7 +14,7 @@ for (const provider of configuration.oidc_providers) {
       host: provider.base_url,
       name: provider.key,
       redisConnection,
-      winston,
+      logger,
     }),
   );
 }

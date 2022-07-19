@@ -5,7 +5,7 @@ export class DisplayNameRepository extends LindormRepository<DisplayNameAttribut
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "display_name",
+      collection: "display_name",
       indices: [
         {
           index: { name: 1 },

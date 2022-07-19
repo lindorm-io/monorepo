@@ -15,7 +15,7 @@ export const oauthTokenSchema = Joi.object()
     clientId: JOI_GUID.optional(),
     clientSecret: Joi.string().optional(),
     code: JOI_CODE.optional(),
-    codeVerifier: Joi.string().base64().optional(),
+    codeVerifier: Joi.string().optional(),
     grantType: JOI_GRANT_TYPE.required(),
     redirectUri: Joi.string().uri().optional(),
     refreshToken: JOI_JWT.optional(),

@@ -5,7 +5,7 @@ export class AddressRepository extends LindormRepository<AddressAttributes, Addr
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "address",
+      collection: "address",
       indices: [
         {
           index: { identityId: 1 },

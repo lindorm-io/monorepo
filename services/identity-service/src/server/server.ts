@@ -5,7 +5,7 @@ import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
-import { winston } from "./logger";
+import { logger } from "./logger";
 import { workers } from "./workers";
 import {
   AddressRepository,
@@ -25,7 +25,7 @@ export const server = createNodeServer<ServerKoaContext>({
     exposePublic: true,
     keyPairCache: true,
   },
-  logger: winston,
+  logger,
   middleware,
   mongoConnection,
   port: configuration.server.port,
@@ -45,7 +45,6 @@ export const server = createNodeServer<ServerKoaContext>({
   workers,
 
   setup: async (): Promise<void> => {
-    await mongoConnection.waitForConnection();
-    await redisConnection.waitForConnection();
+    await Promise.all([mongoConnection.connect(), redisConnection.connect()]);
   },
 });

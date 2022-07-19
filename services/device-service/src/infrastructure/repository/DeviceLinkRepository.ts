@@ -5,7 +5,7 @@ export class DeviceLinkRepository extends LindormRepository<DeviceLinkAttributes
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "deviceLink",
+      collection: "device_link",
       indices: [
         {
           index: {

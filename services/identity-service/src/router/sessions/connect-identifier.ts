@@ -1,5 +1,5 @@
 import { IdentityPermission, Scope } from "../../common";
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
+import { Router } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../../types";
 import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
