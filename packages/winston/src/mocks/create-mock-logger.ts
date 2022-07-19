@@ -18,4 +18,11 @@ export const createMockLogger = (): ILogger => ({
   setFilter: jest.fn(),
   deleteFilter: jest.fn(),
   clearFilters: jest.fn(),
+
+  className: "MockLogger",
+
+  isInfo: jest.fn().mockImplementation(() => true),
+  isError: jest.fn().mockImplementation(() => true),
+  isWarn: jest.fn().mockImplementation(() => true),
+  isDebug: jest.fn().mockImplementation(() => true),
 });

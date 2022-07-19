@@ -23,6 +23,8 @@ import {
 export class Logger implements ILogger {
   private readonly winston: winston.Logger;
 
+  public readonly className: string;
+
   private context: Array<string>;
   private filters: FilterRecord;
   private session: Record<string, any> | undefined;
@@ -34,6 +36,8 @@ export class Logger implements ILogger {
     this.filters = parent ? { ...parent.filters, ...filters } : filters;
     this.session = parent ? merge(cloneDeep(parent.session), session) : session;
     this.winston = parent ? parent.winston : winston.createLogger();
+
+    this.className = this.constructor.name;
   }
 
   // public
@@ -187,6 +191,22 @@ export class Logger implements ILogger {
       throw new Error("Invalid session");
     }
     this.session = merge(cloneDeep(this.session), session);
+  }
+
+  public isError(): boolean {
+    return true;
+  }
+
+  public isWarn(): boolean {
+    return true;
+  }
+
+  public isInfo(): boolean {
+    return true;
+  }
+
+  public isDebug(): boolean {
+    return true;
   }
 
   // private

@@ -19,4 +19,11 @@ export interface ILogger {
   setFilter(path: string, callback?: FilterCallback): void;
   deleteFilter(path: string): void;
   clearFilters(): void;
+
+  className: string;
+
+  isInfo(): boolean;
+  isError(): boolean;
+  isWarn(): boolean;
+  isDebug(): boolean;
 }
