@@ -1,41 +1,41 @@
-import { Collection, Db, MongoClient } from "mongodb";
+import { ConnectionBase } from "@lindorm-io/core-connection";
 import { IMongoConnection, MongoConnectionOptions } from "../types";
-import { MongoConnectionBase } from "./MongoConnectionBase";
-import { CustomClientConnection } from "./CustomClientConnection";
-import { MongoDbConnection } from "./MongoDbConnection";
+import { MongoClient, MongoClientOptions } from "mongodb";
 
-export class MongoConnection implements IMongoConnection {
-  private connection: MongoConnectionBase;
+export class MongoConnection
+  extends ConnectionBase<MongoClient, MongoClientOptions>
+  implements IMongoConnection
+{
+  private readonly url: string;
+
+  public readonly database: string;
 
   public constructor(options: MongoConnectionOptions) {
-    if (options.customClient) {
-      this.connection = new CustomClientConnection(options);
-    } else {
-      this.connection = new MongoDbConnection(options);
-    }
+    const { connectInterval, connectTimeout, logger, database, host, port, ...connectOptions } =
+      options;
+
+    super({
+      connectInterval,
+      connectTimeout,
+      connectOptions: { maxPoolSize: 5, minPoolSize: 1, ...connectOptions },
+      logger,
+    });
+
+    this.database = database;
+    this.url = `mongodb://${host}:${port}/`;
   }
 
-  public client(): MongoClient {
-    return this.connection.client();
+  // abstract implementation
+
+  protected async createClientConnection(): Promise<MongoClient> {
+    return await MongoClient.connect(this.url, this.connectOptions);
   }
 
-  public async close(): Promise<void> {
-    return this.connection.close();
+  protected async connectCallback(): Promise<void> {
+    this.client.on("error", (err) => this.onError(err));
   }
 
-  public async collection(collection: string): Promise<Collection> {
-    return await this.connection.collection(collection);
-  }
-
-  public async connect(): Promise<void> {
-    return this.connection.connect();
-  }
-
-  public database(): Db {
-    return this.connection.database();
-  }
-
-  public async waitForConnection(): Promise<void> {
-    return this.connection.waitForConnection();
+  protected async disconnectCallback(): Promise<void> {
+    await this.client.close();
   }
 }

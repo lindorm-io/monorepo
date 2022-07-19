@@ -43,11 +43,13 @@ export type PostChangeCallback<Entity> = (entity: Entity) => Promise<void>;
 
 export interface RepositoryOptions {
   connection: MongoConnection;
+  database?: string;
   logger: ILogger;
 }
 
 export interface LindormRepositoryOptions<Interface> extends RepositoryOptions {
-  collectionName: string;
+  collection: string;
+  database?: string;
   indices: Array<IndexOptions<Interface>>;
 }
 

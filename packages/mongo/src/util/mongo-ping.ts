@@ -3,7 +3,7 @@ import { ILogger } from "@lindorm-io/winston";
 
 export const mongoPing = async (connection: MongoConnection, logger: ILogger): Promise<boolean> => {
   try {
-    await connection.client().connect();
+    await connection.client.connect();
 
     logger.debug("mongo ping success");
 

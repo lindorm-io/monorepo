@@ -6,7 +6,8 @@ export class TestRepository extends LindormRepository<TestEntityAttributes, Test
   public constructor(options: RepositoryOptions) {
     super({
       ...options,
-      collectionName: "TestRepository",
+      collection: "TestRepository",
+      database: "TestDatabase",
       indices: [{ index: { name: 1 }, options: { unique: false } }],
     });
   }

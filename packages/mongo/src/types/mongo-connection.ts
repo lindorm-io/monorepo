@@ -1,22 +1,13 @@
-import { Collection, Db, MongoClient, MongoClientOptions } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
+import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
+import { MongoClient, MongoClientOptions } from "mongodb";
 
-export interface IMongoConnection {
-  client(): MongoClient;
-  close(): Promise<void>;
-  collection(collection: string): Promise<Collection>;
-  connect(): Promise<void>;
-  database(): Db;
-  waitForConnection(): Promise<void>;
-}
+export type IMongoConnection = IConnectionBase<MongoClient>;
 
-export interface MongoOptions extends MongoClientOptions {
+export interface ExtendedMongoClientOptions extends MongoClientOptions {
   host: string;
   port: number;
+  database?: string;
 }
 
-export interface MongoConnectionOptions extends MongoOptions {
-  customClient?: typeof MongoClient;
-  database: string;
-  winston: ILogger;
-}
+export type MongoConnectionOptions = ConnectionBaseOptions<MongoClientOptions> &
+  ExtendedMongoClientOptions;

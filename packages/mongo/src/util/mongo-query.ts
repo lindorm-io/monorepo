@@ -8,7 +8,7 @@ export const mongoQuery = async (
   callback: QueryCallback,
 ): Promise<void> => {
   try {
-    await connection.waitForConnection();
+    await connection.connect();
 
     await callback({ connection, logger });
 

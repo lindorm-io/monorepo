@@ -14,21 +14,19 @@ npm install --save @lindorm-io/mongo
 
 ```typescript
 const connection = new MongoConnection({
-  auth: { user: "user", password: "password" },
-  databaseName: "database",
   hostname: "db.location.com",
   port: 27000,
-  type: MongoConnectionType.MEMORY,
+  auth: { user: "user", password: "password" },
+  database: "database",
 });
 
 await connection.connect();
-const client = connection.client();
-const db = connection.database();
 
-const collection1 = await connection.collection("collectionName1");
-const collection2 = await db.collection("collectionName2");
+const db = connection.client.db("database");
+const collection1 = db.collection("collectionName1");
+const collection2 = db.collection("collectionName2");
 
-await connection.close();
+await connection.disconnect();
 ```
 
 ### Repository
@@ -54,14 +52,14 @@ class EntityRepository extends LindormRepository<EntityAttributes, Entity> {
 }
 
 const repository = new EntityRepository({
-  db,
+  connection,
   logger: winstonLogger,
 });
 
 await repository.create(entity);
 await repository.update(entity);
 const entity = await repository.find({ filter });
-await[(e1, e2)] = await repository.findMany({ filter });
+const [e1, e2] = await repository.findMany({ filter });
 await repository.remove(entity);
 await repository.removeMany({ filter });
 ```

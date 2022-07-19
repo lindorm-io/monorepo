@@ -19,18 +19,17 @@ describe("LindormRepository.ts", () => {
       host: "localhost",
       port: 27017,
       auth: { username: "root", password: "example" },
-      database: "databaseName",
-      winston: logger,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
 
-    collection = await connection.collection("TestRepository");
+    collection = await connection.client.db("TestDatabase").collection("TestRepository");
     repository = new TestRepository({ connection, logger });
   });
 
   afterAll(async () => {
-    await connection.close();
+    await connection.disconnect();
   });
 
   beforeEach(async () => {

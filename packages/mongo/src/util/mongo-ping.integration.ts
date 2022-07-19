@@ -1,8 +1,8 @@
-import { mongoPing } from "./mongo-ping";
 import { MongoConnection } from "../infrastructure";
 import { createMockLogger } from "@lindorm-io/winston";
+import { mongoPing } from "./mongo-ping";
 
-describe("mongo-query.ts", () => {
+describe("mongoPing", () => {
   let connection: MongoConnection;
 
   const logger = createMockLogger();
@@ -12,15 +12,14 @@ describe("mongo-query.ts", () => {
       host: "localhost",
       port: 27017,
       auth: { username: "root", password: "example" },
-      database: "databaseName",
-      winston: logger,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
   });
 
   afterAll(async () => {
-    await connection.close();
+    await connection.disconnect();
   });
 
   test("should ping mongo by trying connect", async () => {

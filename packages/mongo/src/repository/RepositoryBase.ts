@@ -1,21 +1,24 @@
-import { Collection, Db, IndexSpecification } from "mongodb";
+import { Collection, IndexSpecification } from "mongodb";
 import { EntityAttributes } from "@lindorm-io/entity";
-import { IndexOptions, LindormRepositoryOptions } from "../types";
 import { ILogger } from "@lindorm-io/winston";
+import { IndexOptions, LindormRepositoryOptions } from "../types";
 import { MongoConnection } from "../infrastructure";
+import { LindormError } from "@lindorm-io/errors";
 
 export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected readonly collectionName: string;
   protected readonly connection: MongoConnection;
+  protected readonly databaseName: string;
   protected readonly indices: Array<IndexOptions<Interface>>;
   protected readonly logger: ILogger;
+
   protected collection: Collection | undefined;
-  protected db: Db;
   protected promise: () => Promise<void>;
 
   protected constructor(options: LindormRepositoryOptions<Interface>) {
+    this.collectionName = options.collection;
     this.connection = options.connection;
-    this.collectionName = options.collectionName;
+    this.databaseName = options.database || options.connection.database;
     this.indices = [
       {
         index: { id: 1 },
@@ -24,6 +27,10 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
       ...options.indices,
     ];
 
+    if (!this.databaseName) {
+      throw new LindormError("Invalid database");
+    }
+
     this.logger = options.logger.createChildLogger(["RepositoryBase", this.constructor.name]);
     this.promise = this.initialise;
   }
@@ -31,9 +38,9 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
   public async initialise(): Promise<void> {
     const start = Date.now();
 
-    await this.connection.waitForConnection();
-    this.db = this.connection.database();
-    this.collection = await this.db.collection(this.collectionName);
+    await this.connection.connect();
+
+    this.collection = this.connection.client.db(this.databaseName).collection(this.collectionName);
 
     for (const { index, options } of this.indices) {
       for (const [key, value] of Object.entries(index)) {
@@ -45,9 +52,10 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
       await this.collection.createIndex(index as IndexSpecification, options);
     }
 
-    this.logger.debug("setup", {
+    this.logger.debug("Initialisation successful", {
+      collection: this.collectionName,
+      database: this.databaseName,
       indices: this.indices,
-      result: { success: true },
       time: Date.now() - start,
     });
 

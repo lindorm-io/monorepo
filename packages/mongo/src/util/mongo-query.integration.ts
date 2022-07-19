@@ -2,9 +2,6 @@ import { MongoConnection } from "../infrastructure";
 import { createMockLogger } from "@lindorm-io/winston";
 import { mongoQuery } from "./mongo-query";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const mock = require("mongo-mock");
-
 describe("mongoQuery", () => {
   let connection: MongoConnection;
   let callback: any;
@@ -16,12 +13,10 @@ describe("mongoQuery", () => {
       host: "localhost",
       port: 27017,
       auth: { username: "root", password: "example" },
-      database: "databaseName",
-      winston: logger,
-      customClient: mock.MongoClient,
+      logger,
     });
 
-    await connection.waitForConnection();
+    await connection.connect();
   });
 
   beforeEach(() => {
@@ -29,7 +24,7 @@ describe("mongoQuery", () => {
   });
 
   afterAll(async () => {
-    await connection.close();
+    await connection.disconnect();
   });
 
   test("should connect to mongo and use callback", async () => {
