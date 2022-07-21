@@ -133,22 +133,26 @@ export abstract class MessageBusBase<
     const content = Buffer.from(stringifyBlob(message));
     const routingKey = sanitizeRouteKey(message.routingKey);
 
-    this.connection.channel.publish(
-      this.connection.exchange,
-      routingKey,
-      content,
-      {
-        persistent: true,
-        mandatory: message.mandatory === true,
-      },
-      (err) => {
-        if (err) {
-          this.logger.error("Channel Publish failed", err);
-        } else {
-          this.logger.debug("Message published", { message, routingKey });
-        }
-      },
-    );
+    return new Promise((resolve, reject) => {
+      this.connection.channel.publish(
+        this.connection.exchange,
+        routingKey,
+        content,
+        {
+          persistent: true,
+          mandatory: message.mandatory === true,
+        },
+        (err) => {
+          if (err) {
+            this.logger.error("Channel Publish failed", err);
+            reject(err);
+          } else {
+            this.logger.debug("Message published", { message, routingKey });
+            resolve();
+          }
+        },
+      );
+    });
   }
 
   private async publishMessageWithDelay(message: Message): Promise<void> {
@@ -162,23 +166,27 @@ export abstract class MessageBusBase<
       deadLetterRoutingKey: routingKey,
     });
 
-    this.connection.channel.publish(
-      "",
-      delayQueue,
-      content,
-      {
-        persistent: true,
-        mandatory: message.mandatory === true,
-        expiration: message.delay,
-      },
-      (err) => {
-        if (err) {
-          this.logger.error("Channel Publish failed", err);
-        } else {
-          this.logger.debug("Message published with delay", { message, delayQueue, routingKey });
-        }
-      },
-    );
+    return new Promise((resolve, reject) => {
+      this.connection.channel.publish(
+        "",
+        delayQueue,
+        content,
+        {
+          persistent: true,
+          mandatory: message.mandatory === true,
+          expiration: message.delay,
+        },
+        (err) => {
+          if (err) {
+            this.logger.error("Channel Publish failed", err);
+            reject(err);
+          } else {
+            this.logger.debug("Message published with delay", { message, delayQueue, routingKey });
+            resolve();
+          }
+        },
+      );
+    });
   }
 
   // private event handlers
