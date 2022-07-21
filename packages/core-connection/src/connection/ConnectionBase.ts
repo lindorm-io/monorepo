@@ -70,7 +70,9 @@ export abstract class ConnectionBase<Client, ClientOptions>
       this.clientConnection = await this.connectWithRetry();
       await this.connectCallback();
 
-      this.setStatus(ConnectionStatus.CONNECTED);
+      if (!this.isConnected()) {
+        this.setStatus(ConnectionStatus.CONNECTED);
+      }
 
       this.logger.info("Connection successful");
     } catch (err) {
