@@ -1,9 +1,13 @@
 import { MongoConnection } from "../connection";
 import { createMockLogger } from "@lindorm-io/winston";
-import { mongoPing } from "./mongo-ping";
+import { mongoQuery } from "./mongo-query";
 
-describe("mongoPing", () => {
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mock = require("mongo-mock");
+
+describe("mongoQuery", () => {
   let connection: MongoConnection;
+  let callback: any;
 
   const logger = createMockLogger();
 
@@ -13,16 +17,23 @@ describe("mongoPing", () => {
       port: 27017,
       auth: { username: "root", password: "example" },
       logger,
+      custom: mock.MongoClient,
     });
 
     await connection.connect();
+  });
+
+  beforeEach(() => {
+    callback = jest.fn();
   });
 
   afterAll(async () => {
     await connection.disconnect();
   });
 
-  test("should ping mongo by trying connect", async () => {
-    await expect(mongoPing(connection, logger)).resolves.toBe(true);
+  test("should connect to mongo and use callback", async () => {
+    await expect(mongoQuery(connection, logger, callback)).resolves.toBeUndefined();
+
+    expect(callback).toHaveBeenCalled();
   });
 });

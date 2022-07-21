@@ -1,1 +1,2 @@
-export * from "./MongoConnection";
+export * from "./RepositoryBase";
+export * from "./LindormRepository";

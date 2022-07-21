@@ -2,8 +2,8 @@ import { Collection, IndexSpecification } from "mongodb";
 import { EntityAttributes } from "@lindorm-io/entity";
 import { ILogger } from "@lindorm-io/winston";
 import { IndexOptions, LindormRepositoryOptions } from "../types";
-import { MongoConnection } from "../infrastructure";
 import { LindormError } from "@lindorm-io/errors";
+import { MongoConnection } from "../connection";
 
 export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected readonly collectionName: string;

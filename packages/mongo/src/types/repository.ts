@@ -1,3 +1,5 @@
+import { ILogger } from "@lindorm-io/winston";
+import { MongoConnection } from "../connection";
 import {
   CountDocumentsOptions,
   CreateIndexesOptions,
@@ -6,8 +8,6 @@ import {
   FindOptions,
   IndexDirection,
 } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
-import { MongoConnection } from "../infrastructure";
 
 export interface IRepository<Interface, Entity> {
   count(filter: Partial<Filter<Interface>>, options: CountDocumentsOptions): Promise<number>;

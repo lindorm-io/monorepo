@@ -7,12 +7,20 @@ export class MongoConnection
   implements IMongoConnection
 {
   private readonly url: string;
-
+  private readonly custom: typeof MongoClient;
   public readonly database: string;
 
   public constructor(options: MongoConnectionOptions) {
-    const { connectInterval, connectTimeout, logger, database, host, port, ...connectOptions } =
-      options;
+    const {
+      connectInterval,
+      connectTimeout,
+      logger,
+      database,
+      host,
+      port,
+      custom,
+      ...connectOptions
+    } = options;
 
     super({
       connectInterval,
@@ -21,6 +29,7 @@ export class MongoConnection
       logger,
     });
 
+    this.custom = custom;
     this.database = database;
     this.url = `mongodb://${host}:${port}/`;
   }
@@ -28,6 +37,9 @@ export class MongoConnection
   // abstract implementation
 
   protected async createClientConnection(): Promise<MongoClient> {
+    if (this.custom) {
+      return await this.custom.connect(this.url, this.connectOptions);
+    }
     return await MongoClient.connect(this.url, this.connectOptions);
   }
 

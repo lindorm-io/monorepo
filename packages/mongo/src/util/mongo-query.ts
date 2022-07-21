@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm-io/winston";
-import { MongoConnection } from "../infrastructure";
+import { MongoConnection } from "../connection";
 import { QueryCallback } from "../types";
 
 export const mongoQuery = async (

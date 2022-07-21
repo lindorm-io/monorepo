@@ -1,4 +1,4 @@
-import { LindormRepository } from "../repository";
+import { LindormRepository } from "../infrastructure";
 import { RepositoryOptions } from "../types";
 import { TestEntity, TestEntityAttributes } from "@lindorm-io/entity";
 

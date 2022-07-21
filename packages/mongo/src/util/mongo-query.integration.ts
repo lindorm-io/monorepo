@@ -1,4 +1,4 @@
-import { MongoConnection } from "../infrastructure";
+import { MongoConnection } from "../connection";
 import { createMockLogger } from "@lindorm-io/winston";
 import { mongoQuery } from "./mongo-query";
 

@@ -1,4 +1,4 @@
-import { MongoConnection } from "../infrastructure";
+import { MongoConnection } from "../connection";
 import { ILogger } from "@lindorm-io/winston";
 
 export const mongoPing = async (connection: MongoConnection, logger: ILogger): Promise<boolean> => {

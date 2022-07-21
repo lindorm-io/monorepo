@@ -1,10 +1,13 @@
 import { Collection } from "mongodb";
-import { MongoConnection } from "../infrastructure";
+import { MongoConnection } from "../connection";
 import { TestEntity } from "@lindorm-io/entity";
 import { TestRepository } from "../mocks";
 import { createMockLogger } from "@lindorm-io/winston";
 import { filter } from "lodash";
 import { randomUUID } from "crypto";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mock = require("mongo-mock");
 
 describe("LindormRepository.ts", () => {
   let connection: MongoConnection;
@@ -20,6 +23,7 @@ describe("LindormRepository.ts", () => {
       port: 27017,
       auth: { username: "root", password: "example" },
       logger,
+      custom: mock.MongoClient,
     });
 
     await connection.connect();
