@@ -1,1 +1,1 @@
-export * from "./AmqpConnection";
+export * from "./MessageBusBase";

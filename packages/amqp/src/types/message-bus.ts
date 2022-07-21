@@ -1,4 +1,4 @@
-import { AmqpConnection } from "../infrastructure";
+import { AmqpConnection } from "../connection";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessage } from "./message";
 import { ISubscription } from "./subscription";

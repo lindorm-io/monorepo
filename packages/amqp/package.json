@@ -11,12 +11,15 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist",
-    "test": "yarn test:integration",
-    "test:integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --",
-    "test:integration:update": "compd --file docker-compose.yml jest --config jest.config.integration.js -u --",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js --",
+    "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u --",
     "test:integration:watch": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
-    "test:update": "yarn test:integration:update",
-    "test:watch": "yarn test:integration:watch",
+    "test:unit": "jest --forceExit --config jest.config.js --",
+    "test:unit:update": "jest --forceExit --config jest.config.js -u --",
+    "test:unit:watch": "jest --config jest.config.js --watch --",
+    "test:update": "yarn test:unit:update && yarn test:integration:update",
+    "test:watch": "yarn test:unit:watch --",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch"
   },
@@ -30,6 +33,7 @@
   "devDependencies": {
     "@lindorm-io/winston": "^0.4.7",
     "@types/amqplib": "^0.8.2",
-    "compd": "^4.1.1"
+    "compd": "^4.1.1",
+    "mock-amqplib": "^1.8.0"
   }
 }

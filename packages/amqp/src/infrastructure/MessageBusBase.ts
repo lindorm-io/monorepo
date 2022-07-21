@@ -1,12 +1,15 @@
-import { AmqpConnection } from "../infrastructure";
+import { AmqpConnection } from "../connection";
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessage, IMessageBus, ISubscription, LindormMessageBusOptions } from "../types";
+import { isArray } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { sanitizeRouteKey } from "../util";
 
-export abstract class MessageBusBase<Message extends IMessage, Subscription extends ISubscription>
-  implements IMessageBus<Message, Subscription>
+export abstract class MessageBusBase<
+  Message extends IMessage = IMessage,
+  Subscription extends ISubscription = ISubscription,
+> implements IMessageBus<Message, Subscription>
 {
   private readonly connection: AmqpConnection;
   private readonly nackTimeout: number;
@@ -25,8 +28,8 @@ export abstract class MessageBusBase<Message extends IMessage, Subscription exte
     this.nackTimeout = nackTimeout;
     this.subscriptions = [];
 
-    this.connection.on(ConnectionStatus.CONNECTED, () => this.onConnected());
-    this.connection.on(ConnectionStatus.DISCONNECTED, () => this.onDisconnected());
+    this.connection.on(ConnectionStatus.CONNECTED, this.onConnected.bind(this));
+    this.connection.on(ConnectionStatus.DISCONNECTED, this.onDisconnected.bind(this));
 
     this.onConnected().then();
   }
@@ -35,56 +38,50 @@ export abstract class MessageBusBase<Message extends IMessage, Subscription exte
 
   protected abstract createMessage(message: Message): any;
 
+  protected abstract validateMessage(message: Message): Promise<void>;
+
+  protected abstract validateSubscription(subscription: Subscription): Promise<void>;
+
   // public
 
-  public async publish(messages: Array<Message>): Promise<void> {
+  public async publish(messages: Message | Array<Message>): Promise<void> {
     await this.connection.connect();
 
-    for (const message of messages) {
-      await this.handleMessage(message);
+    if (isArray(messages)) {
+      for (const message of messages) {
+        await this.validateMessage(message);
+        await this.handleMessage(message);
+      }
+    } else {
+      await this.validateMessage(messages);
+      await this.handleMessage(messages);
     }
   }
 
-  public async subscribe(subscriptions: Array<Subscription>): Promise<void> {
+  public async subscribe(subscriptions: Subscription | Array<Subscription>): Promise<void> {
     await this.connection.connect();
 
-    for (const subscription of subscriptions) {
-      await this.handleSubscription(subscription);
-
-      this.subscriptions.push(subscription);
+    if (isArray(subscriptions)) {
+      for (const subscription of subscriptions) {
+        await this.validateSubscription(subscription);
+        await this.handleSubscription(subscription);
+        this.subscriptions.push(subscription);
+      }
+    } else {
+      await this.validateSubscription(subscriptions);
+      await this.handleSubscription(subscriptions);
+      this.subscriptions.push(subscriptions);
     }
   }
 
   // private
 
   private async handleMessage(message: Message): Promise<void> {
-    const content = Buffer.from(stringifyBlob(message));
-    const routingKey = sanitizeRouteKey(message.routingKey);
-
     if (message.delay > 0) {
-      const delayQueue = sanitizeRouteKey(`${message.routingKey}.delayed`);
-
-      await this.connection.channel.assertQueue(delayQueue, {
-        durable: true,
-        deadLetterExchange: this.connection.exchange,
-        deadLetterRoutingKey: routingKey,
-      });
-
-      this.connection.channel.publish("", delayQueue, content, {
-        persistent: true,
-        mandatory: message.mandatory === true,
-        expiration: message.delay,
-      });
-
-      this.logger.debug("Message published with delay", { message, delayQueue });
-    } else {
-      this.connection.channel.publish(this.connection.exchange, routingKey, content, {
-        persistent: true,
-        mandatory: message.mandatory === true,
-      });
-
-      this.logger.debug("Message published", { message });
+      return this.publishMessageWithDelay(message);
     }
+
+    return this.publishMessage(message);
   }
 
   private async handleSubscription(subscription: Subscription): Promise<void> {
@@ -130,6 +127,58 @@ export abstract class MessageBusBase<Message extends IMessage, Subscription exte
     });
 
     this.logger.debug("Subscription created", { subscription });
+  }
+
+  private async publishMessage(message: Message): Promise<void> {
+    const content = Buffer.from(stringifyBlob(message));
+    const routingKey = sanitizeRouteKey(message.routingKey);
+
+    this.connection.channel.publish(
+      this.connection.exchange,
+      routingKey,
+      content,
+      {
+        persistent: true,
+        mandatory: message.mandatory === true,
+      },
+      (err) => {
+        if (err) {
+          this.logger.error("Channel Publish failed", err);
+        } else {
+          this.logger.debug("Message published", { message, routingKey });
+        }
+      },
+    );
+  }
+
+  private async publishMessageWithDelay(message: Message): Promise<void> {
+    const content = Buffer.from(stringifyBlob(message));
+    const routingKey = sanitizeRouteKey(message.routingKey);
+    const delayQueue = sanitizeRouteKey(`${message.routingKey}.delayed`);
+
+    await this.connection.channel.assertQueue(delayQueue, {
+      durable: true,
+      deadLetterExchange: this.connection.exchange,
+      deadLetterRoutingKey: routingKey,
+    });
+
+    this.connection.channel.publish(
+      "",
+      delayQueue,
+      content,
+      {
+        persistent: true,
+        mandatory: message.mandatory === true,
+        expiration: message.delay,
+      },
+      (err) => {
+        if (err) {
+          this.logger.error("Channel Publish failed", err);
+        } else {
+          this.logger.debug("Message published with delay", { message, delayQueue, routingKey });
+        }
+      },
+    );
   }
 
   // private event handlers

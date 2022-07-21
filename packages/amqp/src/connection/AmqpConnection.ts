@@ -1,4 +1,4 @@
-import amqp, { ConfirmChannel, Connection, Options } from "amqplib";
+import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
 import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { ConsumeMessage } from "amqplib/properties";
@@ -10,17 +10,26 @@ export class AmqpConnection
   extends ConnectionBase<Connection, Options.Connect>
   implements IAmqpConnection
 {
+  private readonly custom: typeof amqplib;
+  private confirmChannel: ConfirmChannel;
+
   public readonly deadLetters: string;
   public readonly exchange: string;
 
-  private confirmChannel: ConfirmChannel;
-
   public constructor(options: AmqpConnectionOptions) {
-    const { connectInterval, connectTimeout, logger, deadLetters, exchange, ...connectOptions } =
-      options;
+    const {
+      connectInterval,
+      connectTimeout,
+      logger,
+      deadLetters,
+      exchange,
+      custom,
+      ...connectOptions
+    } = options;
 
     super({ connectInterval, connectTimeout, connectOptions, logger });
 
+    this.custom = custom;
     this.deadLetters = deadLetters || "deadletters";
     this.exchange = exchange || "exchange";
   }
@@ -28,7 +37,10 @@ export class AmqpConnection
   // abstract implementation
 
   protected async createClientConnection(): Promise<Connection> {
-    return await amqp.connect(this.connectOptions);
+    if (this.custom) {
+      return await this.custom.connect(this.connectOptions);
+    }
+    return await amqplib.connect(this.connectOptions);
   }
 
   protected async connectCallback(): Promise<void> {

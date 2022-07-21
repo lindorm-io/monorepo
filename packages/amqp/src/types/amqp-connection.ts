@@ -1,4 +1,4 @@
-import { ConfirmChannel, Connection, Options } from "amqplib";
+import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
 import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
 
 export interface IAmqpConnection extends IConnectionBase<Connection> {
@@ -10,6 +10,7 @@ export interface IAmqpConnection extends IConnectionBase<Connection> {
 }
 
 export interface ExtendedConnectOptions extends Options.Connect {
+  custom?: typeof amqplib;
   deadLetters?: string;
   exchange?: string;
 }
