@@ -1,15 +1,27 @@
 import { ILogger } from "../types";
 
-export const createMockLogger = (): ILogger => ({
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  verbose: jest.fn(),
-  debug: jest.fn(),
-  silly: jest.fn(),
+export const createMockLogger = (logFn?: (...args: any) => void): ILogger => ({
+  error: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
+  warn: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
+  info: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
+  verbose: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
+  debug: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
+  silly: jest.fn().mockImplementation((...args) => {
+    if (logFn) logFn(...args);
+  }),
 
-  createChildLogger: jest.fn().mockImplementation((): ILogger => createMockLogger()),
-  createSessionLogger: jest.fn().mockImplementation((): ILogger => createMockLogger()),
+  createChildLogger: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
+  createSessionLogger: jest.fn().mockImplementation((): ILogger => createMockLogger(logFn)),
 
   addConsole: jest.fn(),
   addContext: jest.fn(),
