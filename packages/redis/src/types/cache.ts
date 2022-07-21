@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm-io/winston";
-import { RedisConnection } from "../infrastructure";
+import { RedisConnection } from "../connection";
 
 export interface ICache<Interface, Entity> {
   create(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity>;

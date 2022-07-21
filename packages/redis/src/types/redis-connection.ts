@@ -3,4 +3,8 @@ import { Redis, RedisOptions } from "ioredis";
 
 export type IRedisConnection = IConnectionBase<Redis>;
 
-export type RedisConnectionOptions = ConnectionBaseOptions<RedisOptions> & RedisOptions;
+export interface ExtendedRedisOptions extends RedisOptions {
+  custom?: Redis;
+}
+
+export type RedisConnectionOptions = ConnectionBaseOptions<RedisOptions> & ExtendedRedisOptions;

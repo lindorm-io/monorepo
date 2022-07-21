@@ -1,4 +1,4 @@
-export * from "./cache";
+export * from "./connection";
 export * from "./error";
 export * from "./infrastructure";
 export * from "./mocks";

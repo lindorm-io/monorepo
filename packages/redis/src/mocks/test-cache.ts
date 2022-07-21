@@ -1,5 +1,5 @@
 import { CacheOptions } from "../types";
-import { LindormCache } from "../cache";
+import { LindormCache } from "../infrastructure";
 import { TestEntity, TestEntityAttributes } from "@lindorm-io/entity";
 
 export class TestCache extends LindormCache<TestEntityAttributes, TestEntity> {

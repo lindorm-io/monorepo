@@ -7,11 +7,15 @@ export class RedisConnection
   implements IRedisConnection
 {
   public constructor(options: RedisConnectionOptions) {
-    const { connectInterval, connectTimeout, logger, ...connectOptions } = options;
+    const { connectInterval, connectTimeout, logger, custom, ...connectOptions } = options;
 
     super({ connectInterval, connectTimeout, connectOptions, logger });
 
-    this.clientConnection = new IORedis(this.connectOptions);
+    if (custom) {
+      this.clientConnection = custom;
+    } else {
+      this.clientConnection = new IORedis(this.connectOptions);
+    }
   }
 
   // abstract implementation

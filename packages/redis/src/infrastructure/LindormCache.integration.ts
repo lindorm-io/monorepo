@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { Redis } from "ioredis";
-import { RedisConnection } from "../infrastructure";
+import { RedisConnection } from "../connection";
 import { TestCache, TestCacheExpires, TestEntityExpires } from "../mocks";
 import { TestEntity } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/winston";

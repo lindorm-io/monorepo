@@ -1,6 +1,6 @@
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
 import { ILogger } from "@lindorm-io/winston";
-import { RedisConnection } from "../infrastructure";
+import { RedisConnection } from "../connection";
 import { RedisError } from "../error";
 import { difference, snakeCase, uniq } from "lodash";
 

@@ -1,5 +1,5 @@
 import { ILogger } from "@lindorm-io/winston";
-import { RedisConnection } from "../infrastructure";
+import { RedisConnection } from "../connection";
 
 export interface ICacheBase {
   get(key: string): Promise<Array<string>>;
