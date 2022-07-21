@@ -11,10 +11,6 @@ describe("MessageBusBase", () => {
   let connection: AmqpConnection;
   let messageBus: TestMessageBus;
 
-  let subscription1: ISubscription;
-  let subscription2: ISubscription;
-  let subscription3: ISubscription;
-
   beforeAll(async () => {
     connection = new AmqpConnection({
       hostname: "localhost",
@@ -27,24 +23,6 @@ describe("MessageBusBase", () => {
     await connection.connect();
 
     messageBus = new TestMessageBus({ connection, logger });
-
-    subscription1 = {
-      callback: jest.fn().mockImplementation(async () => {}),
-      queue: "subscription-queue-1",
-      routingKey: "message-route-1",
-    };
-
-    subscription2 = {
-      callback: jest.fn().mockImplementation(async () => {}),
-      queue: "subscription-queue-2",
-      routingKey: "message-route-2",
-    };
-
-    subscription3 = {
-      callback: jest.fn().mockImplementation(async () => {}),
-      queue: "subscription-queue-3",
-      routingKey: "message-route-3",
-    };
   }, 60000);
 
   afterAll(async () => {
@@ -52,6 +30,12 @@ describe("MessageBusBase", () => {
   });
 
   test("should subscribe and publish", async () => {
+    const subscription1: ISubscription = {
+      callback: jest.fn().mockImplementation(async () => {}),
+      queue: "subscription-queue-1",
+      routingKey: "message-route-1",
+    };
+
     const message1: IMessage = {
       id: randomUUID(),
       name: "message-name-1",
@@ -73,6 +57,18 @@ describe("MessageBusBase", () => {
   }, 15000);
 
   test("should subscribe and publish multiple", async () => {
+    const subscription2: ISubscription = {
+      callback: jest.fn().mockImplementation(async () => {}),
+      queue: "subscription-queue-2",
+      routingKey: "message-route-2",
+    };
+
+    const subscription3: ISubscription = {
+      callback: jest.fn().mockImplementation(async () => {}),
+      queue: "subscription-queue-3",
+      routingKey: "message-route-3",
+    };
+
     const message2: IMessage = {
       id: randomUUID(),
       name: "message-name-2",
@@ -103,5 +99,32 @@ describe("MessageBusBase", () => {
 
     expect(subscription2.callback).toHaveBeenCalledWith(message2);
     expect(subscription3.callback).toHaveBeenCalledWith(message3);
+  }, 15000);
+
+  test("should subscribe and publish with delay", async () => {
+    const subscription4: ISubscription = {
+      callback: jest.fn().mockImplementation(async () => {}),
+      queue: "subscription-queue-4",
+      routingKey: "message-route-4",
+    };
+
+    const message4: IMessage = {
+      id: randomUUID(),
+      name: "message-name-4",
+      data: {},
+      delay: 1000,
+      mandatory: true,
+      routingKey: "message-route-4",
+      timestamp: new Date(),
+      type: "type",
+    };
+
+    await expect(messageBus.subscribe(subscription4)).resolves.toBeUndefined();
+    await sleep(1000);
+
+    await expect(messageBus.publish(message4)).resolves.toBeUndefined();
+    await sleep(3000);
+
+    expect(subscription4.callback).toHaveBeenCalledWith(message4);
   }, 15000);
 });
