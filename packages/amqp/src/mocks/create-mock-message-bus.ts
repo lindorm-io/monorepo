@@ -1,12 +1,15 @@
+import { MessageBusBase } from "../infrastructure";
 import { IMessageBus, IMessage, ISubscription } from "../types";
-import { flatten } from "lodash";
+import { flatten, isArray } from "lodash";
 
-export const createMockMessageBus = (): IMessageBus<any, any> => {
+export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
   let array: Array<ISubscription> = [];
 
-  return {
+  const messageBus: IMessageBus = {
     publish: jest.fn().mockImplementation(async (messages: Array<IMessage>) => {
-      for (const message of messages) {
+      const list = isArray(messages) ? messages : [messages];
+
+      for (const message of list) {
         for (const sub of array) {
           if (message.routingKey !== sub.routingKey) continue;
           await sub.callback(message);
@@ -17,4 +20,6 @@ export const createMockMessageBus = (): IMessageBus<any, any> => {
       array = flatten([array, subscriptions]);
     }),
   };
+
+  return messageBus as Bus;
 };

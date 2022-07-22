@@ -89,7 +89,7 @@ export abstract class ConnectionBase<Client, ClientOptions>
 
     this.setStatus(ConnectionStatus.DISCONNECTED);
 
-    this.logger.info("Disconnection successful");
+    this.logger.info("Disconnect successful");
   }
 
   // protected

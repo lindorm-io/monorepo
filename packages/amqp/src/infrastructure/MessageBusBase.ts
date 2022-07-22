@@ -47,30 +47,23 @@ export abstract class MessageBusBase<
   public async publish(messages: Message | Array<Message>): Promise<void> {
     await this.connection.connect();
 
-    if (isArray(messages)) {
-      for (const message of messages) {
-        await this.validateMessage(message);
-        await this.handleMessage(message);
-      }
-    } else {
-      await this.validateMessage(messages);
-      await this.handleMessage(messages);
+    const array = isArray(messages) ? messages : [messages];
+
+    for (const message of array) {
+      await this.validateMessage(message);
+      await this.handleMessage(message);
     }
   }
 
   public async subscribe(subscriptions: Subscription | Array<Subscription>): Promise<void> {
     await this.connection.connect();
 
-    if (isArray(subscriptions)) {
-      for (const subscription of subscriptions) {
-        await this.validateSubscription(subscription);
-        await this.handleSubscription(subscription);
-        this.subscriptions.push(subscription);
-      }
-    } else {
-      await this.validateSubscription(subscriptions);
-      await this.handleSubscription(subscriptions);
-      this.subscriptions.push(subscriptions);
+    const array = isArray(subscriptions) ? subscriptions : [subscriptions];
+
+    for (const subscription of array) {
+      await this.validateSubscription(subscription);
+      await this.handleSubscription(subscription);
+      this.subscriptions.push(subscription);
     }
   }
 
@@ -108,11 +101,11 @@ export abstract class MessageBusBase<
             this.connection.channel.ack(msg);
             this.logger.debug("Message acknowledged", { message });
           },
-          (): Promise<void> =>
+          (reason): Promise<void> =>
             new Promise((resolve, reject) => {
               setTimeout(() => {
                 try {
-                  this.logger.debug("Message not acknowledged", { message });
+                  this.logger.debug("Message not acknowledged", { message, reason });
                   this.connection.channel.nack(msg, false, true);
                   resolve();
                 } catch (err) {

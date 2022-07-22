@@ -1,0 +1,43 @@
+{
+  "name": "@lindorm-io/event-domain",
+  "description": "Event Domain for lindorm.io",
+  "version": "0.0.1",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "example": "compd --file docker-compose.yml ts-node example/app",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js --",
+    "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u --",
+    "test:integration:watch": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js --watch --",
+    "test:unit": "jest --forceExit --config jest.config.js --",
+    "test:unit:update": "jest --forceExit --config jest.config.js -u --",
+    "test:unit:watch": "jest --config jest.config.js --watch --",
+    "test:update": "yarn test:unit:update && yarn test:integration:update",
+    "test:watch": "yarn test:unit:watch --",
+    "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch"
+  },
+  "dependencies": {
+    "@lindorm-io/amqp": "^0.1.0",
+    "@lindorm-io/core": "^0.6.3",
+    "@lindorm-io/mongo": "^0.10.0",
+    "joi": "^17.6.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@lindorm-io/winston": "^0.4.7",
+    "@types/amqplib": "^0.8.2",
+    "amqplib": "^0.10.0",
+    "compd": "^4.1.1",
+    "date-fns": "^2.28.0",
+    "mock-amqplib": "^1.8.0",
+    "mongo-mock": "^4.1.0"
+  }
+}
