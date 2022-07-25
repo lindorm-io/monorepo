@@ -18,7 +18,7 @@ const connection = new AmqpConnection({
   port: 5672,
 });
 
-await connection.waitForConnection()
+await connection.connect();
 ```
 
 ### Message Bus
@@ -43,6 +43,6 @@ await messageBus.publish([
     mandatory: true,
     routingKey: "default.1",
     type: "type",
-  }
-])
+  },
+]);
 ```
