@@ -4,12 +4,10 @@ import { mongoMiddleware } from "./mongo-middleware";
 
 const next = () => Promise.resolve();
 
-const connect = jest.fn();
-
 class MongoConnection {
   constructor() {}
-  async connect() {
-    connect();
+  public get isConnected(): boolean {
+    return true;
   }
 }
 
@@ -30,11 +28,10 @@ describe("mongoMiddleware", () => {
     ctx.getMetric = (key: string) => new Metric(ctx, key);
   });
 
-  test("should wait for connection and set on context", async () => {
+  test("should set connection on context", async () => {
     await expect(mongoMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.mongo).toStrictEqual(expect.any(MongoConnection));
-    expect(connect).toHaveBeenCalled();
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));
   });
 });

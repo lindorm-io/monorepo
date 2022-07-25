@@ -1,16 +1,19 @@
 import { DefaultLindormMongoKoaMiddleware } from "../types";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { ServerError } from "@lindorm-io/errors";
 
 export const mongoMiddleware =
   (connection: MongoConnection): DefaultLindormMongoKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("mongo");
 
-    await connection.connect();
+    if (!connection.isConnected) {
+      throw new ServerError("Server is not connected to mongo");
+    }
 
     ctx.connection.mongo = connection;
 
-    ctx.logger.debug("mongo connection added to context");
+    ctx.logger.debug("Mongo connection added to context");
 
     metric.end();
 
