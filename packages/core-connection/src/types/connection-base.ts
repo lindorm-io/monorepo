@@ -1,10 +1,10 @@
-import EventEmitter from "events";
 import { ConnectionStatus } from "../enum";
 import { ILogger } from "@lindorm-io/winston";
 
-export interface IConnectionBase<Client> extends EventEmitter {
+export interface IConnectionBase<Client> {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+  on(eventName: string, listener: (...args: any[]) => void): void;
 
   client: Client;
   status: ConnectionStatus;

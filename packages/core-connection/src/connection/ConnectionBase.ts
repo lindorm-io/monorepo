@@ -5,23 +5,19 @@ import { ILogger } from "@lindorm-io/winston";
 import { LindormError } from "@lindorm-io/errors";
 import { sleep } from "@lindorm-io/core";
 
-export abstract class ConnectionBase<Client, ClientOptions>
-  extends EventEmitter
-  implements IConnectionBase<Client>
-{
+export abstract class ConnectionBase<Client, ClientOptions> implements IConnectionBase<Client> {
   private readonly connectInterval: number;
   private readonly connectTimeout: number;
-
   private connectionStatus: ConnectionStatus;
 
+  protected readonly eventEmitter: EventEmitter;
   protected clientConnection: Client;
   protected connectOptions: ClientOptions;
   protected logger: ILogger;
 
   protected constructor(options: ConnectionBaseOptions<ClientOptions>) {
-    super();
-
     this.logger = options.logger.createChildLogger(["ConnectionBase", this.constructor.name]);
+    this.eventEmitter = new EventEmitter();
 
     this.connectOptions = options.connectOptions;
     this.connectInterval = options.connectInterval || 250;
@@ -89,14 +85,18 @@ export abstract class ConnectionBase<Client, ClientOptions>
 
     this.setStatus(ConnectionStatus.DISCONNECTED);
 
-    this.logger.info("Disconnection successful");
+    this.logger.info("Disconnect successful");
+  }
+
+  public on(eventName: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(eventName, listener);
   }
 
   // protected
 
   protected setStatus(status: ConnectionStatus): void {
     this.connectionStatus = status;
-    this.emit(this.connectionStatus);
+    this.eventEmitter.emit(this.connectionStatus);
     this.logger.debug("Status change", { status });
   }
 
