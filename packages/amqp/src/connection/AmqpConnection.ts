@@ -44,10 +44,10 @@ export class AmqpConnection
   }
 
   protected async connectCallback(): Promise<void> {
-    this.client.on("error", (err) => this.onError(err));
+    this.client.on("error", this.onError.bind(this));
 
     this.confirmChannel = await this.client.createConfirmChannel();
-    this.confirmChannel.on("return", (msg) => this.onReturn(msg));
+    this.confirmChannel.on("return", this.onReturn.bind(this));
 
     await this.confirmChannel.assertExchange(this.exchange, "topic", { durable: true });
     await this.bindQueue(this.deadLetters, this.deadLetters);

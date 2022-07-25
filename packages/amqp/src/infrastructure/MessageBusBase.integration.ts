@@ -17,7 +17,7 @@ describe("MessageBusBase", () => {
       logger,
       port: 5672,
       connectInterval: 500,
-      connectTimeout: 50000,
+      connectTimeout: 30000,
     });
 
     await connection.connect();

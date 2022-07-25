@@ -1,6 +1,6 @@
-import { IAmqpConnection } from "../types";
 import { Channel, ConfirmChannel, Connection } from "amqplib";
 import { ConnectionStatus } from "@lindorm-io/core-connection";
+import { IAmqpConnection } from "../types";
 
 export const createMockAmqpConnection = (): IAmqpConnection => {
   const channel = {
@@ -56,7 +56,7 @@ export const createMockAmqpConnection = (): IAmqpConnection => {
     createConfirmChannel: jest.fn().mockImplementation(async () => confirmChannel),
   } as unknown as Connection;
 
-  return {
+  const connection: IAmqpConnection = {
     connect: jest.fn().mockResolvedValue(undefined),
     disconnect: jest.fn().mockResolvedValue(undefined),
     client,
@@ -68,5 +68,7 @@ export const createMockAmqpConnection = (): IAmqpConnection => {
     exchange: "exchange",
 
     on: jest.fn(),
-  } as unknown as IAmqpConnection;
+  };
+
+  return connection as IAmqpConnection;
 };

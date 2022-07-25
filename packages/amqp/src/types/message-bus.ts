@@ -3,7 +3,10 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMessage } from "./message";
 import { ISubscription } from "./subscription";
 
-export interface IMessageBus<Message extends IMessage, Subscription extends ISubscription> {
+export interface IMessageBus<
+  Message extends IMessage = IMessage,
+  Subscription extends ISubscription = ISubscription,
+> {
   publish(messages: Array<Message>): Promise<void>;
   subscribe(subscriptions: Array<Subscription>): Promise<void>;
 }
