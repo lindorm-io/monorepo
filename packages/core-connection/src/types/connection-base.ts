@@ -8,6 +8,9 @@ export interface IConnectionBase<Client> {
 
   client: Client;
   status: ConnectionStatus;
+  isConnected: boolean;
+  isConnecting: boolean;
+  isDisconnected: boolean;
 }
 
 export interface ConnectionBaseOptions<ClientOptions> {

@@ -49,14 +49,35 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
     throw new LindormError("Invalid operation");
   }
 
+  public get isConnected(): boolean {
+    return this.connectionStatus === ConnectionStatus.CONNECTED;
+  }
+  public set isConnected(_: boolean) {
+    /* ignored */
+  }
+
+  public get isConnecting(): boolean {
+    return this.connectionStatus === ConnectionStatus.CONNECTING;
+  }
+  public set isConnecting(_: boolean) {
+    /* ignored */
+  }
+
+  public get isDisconnected(): boolean {
+    return this.connectionStatus === ConnectionStatus.DISCONNECTED;
+  }
+  public set isDisconnected(_: boolean) {
+    /* ignored */
+  }
+
   // public
 
   public async connect(): Promise<void> {
-    if (this.isConnected()) {
+    if (this.isConnected) {
       return;
     }
 
-    if (this.isConnecting()) {
+    if (this.isConnecting) {
       return this.waitForConnection();
     }
 
@@ -66,7 +87,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
       this.clientConnection = await this.connectWithRetry();
       await this.connectCallback();
 
-      if (!this.isConnected()) {
+      if (!this.isConnected) {
         this.setStatus(ConnectionStatus.CONNECTED);
       }
 
@@ -78,7 +99,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
 
   public async disconnect(): Promise<void> {
     if (!this.clientConnection) return;
-    if (this.isDisconnected()) return;
+    if (this.isDisconnected) return;
 
     await this.disconnectCallback();
     this.clientConnection = undefined;
@@ -101,7 +122,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   }
 
   protected async waitForConnection(): Promise<void> {
-    if (this.isConnected()) return;
+    if (this.isConnected) return;
 
     return new Promise((resolve, reject) => {
       let current = 0;
@@ -109,7 +130,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
       const interval = setInterval(() => {
         current += this.connectInterval;
 
-        if (this.isConnected()) {
+        if (this.isConnected) {
           clearInterval(interval);
           resolve();
         }
@@ -148,17 +169,5 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
 
       return this.connectWithRetry(startDate);
     }
-  }
-
-  private isConnected(): boolean {
-    return this.connectionStatus === ConnectionStatus.CONNECTED;
-  }
-
-  private isConnecting(): boolean {
-    return this.connectionStatus === ConnectionStatus.CONNECTING;
-  }
-
-  private isDisconnected(): boolean {
-    return this.connectionStatus === ConnectionStatus.DISCONNECTED;
   }
 }
