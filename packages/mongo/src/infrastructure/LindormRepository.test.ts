@@ -6,7 +6,6 @@ import { createMockLogger } from "@lindorm-io/winston";
 import { filter } from "lodash";
 import { randomUUID } from "crypto";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const mock = require("mongo-mock");
 
 describe("LindormRepository.ts", () => {

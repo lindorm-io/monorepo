@@ -44,7 +44,7 @@ export class MongoConnection
   }
 
   protected async connectCallback(): Promise<void> {
-    this.client.on("error", (err) => this.onError(err));
+    this.client.on("error", this.onError.bind(this));
   }
 
   protected async disconnectCallback(): Promise<void> {
