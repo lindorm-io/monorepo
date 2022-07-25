@@ -2,9 +2,9 @@
 /.vscode
 /coverage
 /data
+/example
 /node_modules
 /src
-/test
 /tmp
 
 .env
