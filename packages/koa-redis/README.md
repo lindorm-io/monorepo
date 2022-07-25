@@ -29,7 +29,7 @@ const redisConnection = new RedisConnection({ ...options });
 
 koaApp.addMiddleware(redisMiddleware(redisConnection));
 
-const client: Redis = await ctx.connection.redis.client();
+await ctx.connection.redis.connect();
 ```
 
 ### Cache Middleware
