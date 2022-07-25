@@ -35,9 +35,7 @@ const amqp: amqp = await ctx.connection.amqp.connect();
 ### Repository Middleware
 
 ```typescript
-koaApp.addMiddleware(
-  messageBusMiddleware(YourMessageBus),
-);
+koaApp.addMiddleware(messageBusMiddleware(YourMessageBus));
 
 await ctx.messageBus.publish([yourMessage]);
 ```
