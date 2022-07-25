@@ -66,6 +66,7 @@ export class EventDomainApp implements IEventDomainApp {
   private readonly viewDomain: ViewDomain;
 
   private promise: () => Promise<void>;
+  private initialised: boolean;
 
   public constructor(options: EventDomainAppOptions) {
     const { amqp, mongo, redis, logger, ...appOptions } = options;
@@ -169,71 +170,16 @@ export class EventDomainApp implements IEventDomainApp {
     this.promise = this.initialise;
   }
 
+  // public properties
+
+  public get isInitialised(): boolean {
+    return this.initialised;
+  }
+  public set isInitialised(_: boolean) {
+    /* ignored */
+  }
+
   // public
-
-  public async init(): Promise<void> {
-    await this.promise();
-  }
-
-  public async publish(options: PublishCommandOptions): Promise<void> {
-    const command = new Command({
-      aggregate: {
-        id: options.aggregate.id,
-        name: options.aggregate.name,
-        context: options.aggregate.context || this.options.domain.context,
-      },
-      name: options.name,
-      data: options.data,
-      delay: options.delay,
-      mandatory: options.mandatory,
-    });
-
-    await JOI_MESSAGE.validateAsync(command);
-
-    if (!(command instanceof Command)) {
-      throw new LindormError("Invalid operation", {
-        data: {
-          expect: "Command",
-          actual: typeof command,
-        },
-      });
-    }
-
-    await this.promise();
-
-    return this.messageBus.publish(command);
-  }
-
-  public on<S = State>(eventName: string, listener: EventEmitterListener<S>): void {
-    if (eventName.startsWith("view")) {
-      this.viewDomain.on(eventName, listener);
-    }
-    if (eventName.startsWith("cache")) {
-      this.cacheDomain.on(eventName, listener);
-    }
-  }
-
-  public async inspect<S extends State = State>(
-    aggregate: InspectAggregateOptions,
-  ): Promise<Aggregate<S>> {
-    await this.promise();
-
-    return this.aggregateDomain.inspect<S>({
-      id: aggregate.id,
-      name: aggregate.name,
-      context: aggregate.context || this.options.domain.context,
-    });
-  }
-
-  public async query<S extends State = State>(
-    documentOptions: ViewStoreDocumentOptions,
-    filter: Filter<ViewStoreAttributes>,
-    findOptions?: FindOptions,
-  ): Promise<Array<ViewStoreAttributes<S>>> {
-    await this.promise();
-
-    return this.viewDomain.query<S>(documentOptions, filter, findOptions);
-  }
 
   public createCacheRepository<S>(
     name: string,
@@ -265,6 +211,72 @@ export class EventDomainApp implements IEventDomainApp {
       },
     });
   }
+
+  public async init(): Promise<void> {
+    await this.promise();
+  }
+
+  public async inspect<S extends State = State>(
+    aggregate: InspectAggregateOptions,
+  ): Promise<Aggregate<S>> {
+    await this.promise();
+
+    return this.aggregateDomain.inspect<S>({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context || this.options.domain.context,
+    });
+  }
+
+  public on<S = State>(eventName: string, listener: EventEmitterListener<S>): void {
+    if (eventName.startsWith("view")) {
+      this.viewDomain.on(eventName, listener);
+    }
+    if (eventName.startsWith("cache")) {
+      this.cacheDomain.on(eventName, listener);
+    }
+  }
+
+  public async publish(options: PublishCommandOptions): Promise<void> {
+    const command = new Command({
+      aggregate: {
+        id: options.aggregate.id,
+        name: options.aggregate.name,
+        context: options.aggregate.context || this.options.domain.context,
+      },
+      name: options.name,
+      data: options.data,
+      delay: options.delay,
+      mandatory: options.mandatory,
+    });
+
+    await JOI_MESSAGE.validateAsync(command);
+
+    if (!(command instanceof Command)) {
+      throw new LindormError("Invalid operation", {
+        data: {
+          expect: "Command",
+          actual: typeof command,
+        },
+      });
+    }
+
+    await this.promise();
+
+    return this.messageBus.publish(command);
+  }
+
+  public async query<S extends State = State>(
+    documentOptions: ViewStoreDocumentOptions,
+    filter: Filter<ViewStoreAttributes>,
+    findOptions?: FindOptions,
+  ): Promise<Array<ViewStoreAttributes<S>>> {
+    await this.promise();
+
+    return this.viewDomain.query<S>(documentOptions, filter, findOptions);
+  }
+
+  // public test methods
 
   public async dangerouslyRegisterAggregateCommandHandlers(
     handlers: Array<AggregateCommandHandler>,
@@ -329,7 +341,10 @@ export class EventDomainApp implements IEventDomainApp {
   // private
 
   private async initialise(): Promise<void> {
-    if (this.options.dangerouslyRegisterHandlersManually) return;
+    if (this.options.dangerouslyRegisterHandlersManually) {
+      this.initialised = true;
+      return;
+    }
 
     if (StructureScanner.hasFiles(this.options.aggregates.directory)) {
       await this.scanAggregates();
@@ -347,6 +362,7 @@ export class EventDomainApp implements IEventDomainApp {
       await this.scanViews();
     }
 
+    this.initialised = true;
     this.promise = (): Promise<void> => Promise.resolve();
   }
 

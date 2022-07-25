@@ -71,15 +71,6 @@ export interface CreateViewRepositoryOptions {
 }
 
 export interface IEventDomainApp {
-  init(): Promise<void>;
-  publish(options: PublishCommandOptions): Promise<void>;
-  on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
-  inspect<S = State>(aggregate: AggregateIdentifier): Promise<Aggregate<S>>;
-  query(
-    documentOptions: ViewStoreDocumentOptions,
-    filter: Filter<ViewStoreAttributes>,
-    findOptions?: FindOptions,
-  ): Promise<Array<ViewStoreAttributes>>;
   createCacheRepository<S = State>(
     name: string,
     options?: CreateCacheRepositoryOptions,
@@ -88,4 +79,15 @@ export interface IEventDomainApp {
     name: string,
     options?: CreateViewRepositoryOptions,
   ): ViewRepository<S>;
+  init(): Promise<void>;
+  inspect<S = State>(aggregate: AggregateIdentifier): Promise<Aggregate<S>>;
+  on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
+  publish(options: PublishCommandOptions): Promise<void>;
+  query(
+    documentOptions: ViewStoreDocumentOptions,
+    filter: Filter<ViewStoreAttributes>,
+    findOptions?: FindOptions,
+  ): Promise<Array<ViewStoreAttributes>>;
+
+  isInitialised: boolean;
 }
