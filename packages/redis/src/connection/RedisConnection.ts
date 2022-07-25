@@ -1,6 +1,6 @@
+import IORedis, { Redis, RedisOptions } from "ioredis";
 import { ConnectionBase, ConnectionStatus } from "@lindorm-io/core-connection";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
-import IORedis, { Redis, RedisOptions } from "ioredis";
 
 export class RedisConnection
   extends ConnectionBase<Redis, RedisOptions>
@@ -16,6 +16,10 @@ export class RedisConnection
     } else {
       this.clientConnection = new IORedis(this.connectOptions);
     }
+
+    this.clientConnection.on("connect", this.onConnect.bind(this));
+    this.clientConnection.on("error", this.onError.bind(this));
+    this.clientConnection.on("reconnecting", this.onReconnecting.bind(this));
   }
 
   // abstract implementation
@@ -25,14 +29,20 @@ export class RedisConnection
   }
 
   protected async connectCallback(): Promise<void> {
-    this.client.on("connect", () => this.setStatus(ConnectionStatus.CONNECTED));
-    this.client.on("error", (err: Error) => this.onError(err));
-    this.client.on("reconnecting", () => this.setStatus(ConnectionStatus.CONNECTING));
-
     await this.waitForConnection();
   }
 
   protected async disconnectCallback(): Promise<void> {
     await this.client.quit();
+  }
+
+  // private event handlers
+
+  private onConnect(): void {
+    this.setStatus(ConnectionStatus.CONNECTED);
+  }
+
+  private onReconnecting(): void {
+    this.setStatus(ConnectionStatus.CONNECTING);
   }
 }
