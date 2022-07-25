@@ -1,1 +1,3 @@
+src/**/*.fixture.ts
+src/**/*.integration.ts
 src/**/*.test.ts

@@ -26,9 +26,10 @@ module.exports = {
   ignorePatterns: [
     "*.config.js",
     "*.d.ts",
+    "*.fixture.*",
     "*.integration.*",
-    "*.test.ts",
     "*.js",
+    "*.test.ts",
     "build",
     "node_modules",
   ],
