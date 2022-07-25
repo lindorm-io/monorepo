@@ -21,18 +21,16 @@ export enum IntervalWorkerEvent {
   ERROR = "interval_worker_error",
 }
 
-export class IntervalWorker extends EventEmitter {
+export class IntervalWorker {
   private readonly callback: Callback;
-  private readonly onError: OnError | undefined;
+  private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
+  private readonly onError: OnError | undefined;
   private readonly retry: number | undefined;
   private readonly time: number;
-
   private interval: Timeout | undefined;
 
   public constructor(options: Options) {
-    super();
-
     this.callback = options.callback;
     this.onError = options.onError;
 
@@ -40,7 +38,12 @@ export class IntervalWorker extends EventEmitter {
     this.retry = options.retry;
     this.time = options.time;
 
+    this.eventEmitter = new EventEmitter();
     this.logger = options.logger.createChildLogger(["IntervalWorker"]);
+  }
+
+  public on(eventName: string, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(eventName, listener);
   }
 
   public trigger(attempt = 0): void {
@@ -49,11 +52,11 @@ export class IntervalWorker extends EventEmitter {
     this.callback()
       .then((result: any) => {
         this.logger.debug("worker success", result ? { result } : undefined);
-        super.emit(IntervalWorkerEvent.SUCCESS, { result });
+        this.eventEmitter.emit(IntervalWorkerEvent.SUCCESS, { result });
       })
       .catch((err: Error) => {
         this.logger.error("worker error", err);
-        super.emit(IntervalWorkerEvent.ERROR, err);
+        this.eventEmitter.emit(IntervalWorkerEvent.ERROR, err);
 
         if (this.onError) {
           this.onError(err, this).then();
@@ -76,7 +79,7 @@ export class IntervalWorker extends EventEmitter {
     this.logger.debug("worker start", { intervalMs: this.time });
     this.interval = setInterval(() => this.trigger(), this.time);
 
-    super.emit(IntervalWorkerEvent.START);
+    this.eventEmitter.emit(IntervalWorkerEvent.START);
   }
 
   public stop(): void {
@@ -88,7 +91,7 @@ export class IntervalWorker extends EventEmitter {
       this.interval = undefined;
     }
 
-    super.emit(IntervalWorkerEvent.STOP);
+    this.eventEmitter.emit(IntervalWorkerEvent.STOP);
   }
 
   public static get Event(): Record<string, IntervalWorkerEvent> {
