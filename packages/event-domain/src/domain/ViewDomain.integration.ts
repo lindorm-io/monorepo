@@ -98,8 +98,8 @@ describe("ViewDomain", () => {
     await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [eventCreate.id, eventAddField.id, eventSetState.id, eventDestroy.id],
         destroyed: true,
         meta: {

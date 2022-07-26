@@ -6,7 +6,8 @@ import { Logger } from "@lindorm-io/winston";
 import { MessageBus, ViewStore } from "../infrastructure";
 import { View } from "../entity";
 import { ViewEventHandler } from "../handler";
-import { find, findLast, isArray, isUndefined, some } from "lodash";
+import { assertSnakeCase } from "../util";
+import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -57,7 +58,11 @@ export class ViewDomain implements IViewDomain {
   }
 
   public async registerEventHandler(eventHandler: ViewEventHandler): Promise<void> {
-    this.logger.debug("Register ViewEventHandler initialised", { name: eventHandler.eventName });
+    this.logger.debug("Registering event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      view: eventHandler.view,
+    });
 
     if (!(eventHandler instanceof ViewEventHandler)) {
       throw new LindormError("Invalid handler type", {
@@ -73,19 +78,27 @@ export class ViewDomain implements IViewDomain {
       : [eventHandler.aggregate.context];
 
     for (const context of contexts) {
-      const existingHandler = some(
-        this.eventHandlers,
-        (handler) =>
-          handler.eventName === eventHandler.eventName &&
-          handler.aggregate.name === eventHandler.aggregate.name &&
-          handler.aggregate.context === context &&
-          handler.view.name === eventHandler.view.name &&
-          handler.view.context === eventHandler.view.context,
-      );
+      const existingHandler = some(this.eventHandlers, {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: eventHandler.aggregate.context,
+        },
+        view: {
+          name: eventHandler.view.name,
+          context: eventHandler.view.context,
+        },
+      });
 
       if (existingHandler) {
         throw new LindormError("Event handler has already been registered");
       }
+
+      assertSnakeCase(context);
+      assertSnakeCase(eventHandler.aggregate.name);
+      assertSnakeCase(eventHandler.view.context);
+      assertSnakeCase(eventHandler.view.name);
+      assertSnakeCase(eventHandler.eventName);
 
       this.eventHandlers.push(
         new ViewEventHandler({
@@ -108,23 +121,80 @@ export class ViewDomain implements IViewDomain {
         routingKey: ViewDomain.getRoutingKey(context, eventHandler),
       });
 
-      this.logger.verbose("Register ViewEventHandler successful", {
+      this.logger.verbose("Event handler registered", {
         eventName: eventHandler.eventName,
         aggregate: {
           name: eventHandler.aggregate.name,
           context: context,
         },
-        conditions: eventHandler.conditions,
-        documentOptions: eventHandler.documentOptions,
         view: eventHandler.view,
       });
     }
   }
 
+  public async removeEventHandler(eventHandler: ViewEventHandler): Promise<void> {
+    this.logger.debug("Removing event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      view: eventHandler.view,
+    });
+
+    if (!(eventHandler instanceof ViewEventHandler)) {
+      throw new LindormError("Invalid handler type", {
+        data: {
+          expect: "ViewEventHandler",
+          actual: typeof eventHandler,
+        },
+      });
+    }
+
+    const contexts = isArray(eventHandler.aggregate.context)
+      ? eventHandler.aggregate.context
+      : [eventHandler.aggregate.context];
+
+    for (const context of contexts) {
+      remove(this.eventHandlers, {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: eventHandler.aggregate.context,
+        },
+        view: {
+          name: eventHandler.view.name,
+          context: eventHandler.view.context,
+        },
+      });
+
+      await this.messageBus.unsubscribe({
+        queue: ViewDomain.getQueue(context, eventHandler),
+        routingKey: ViewDomain.getRoutingKey(context, eventHandler),
+      });
+
+      this.logger.verbose("Event handler removed", {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: context,
+        },
+        view: eventHandler.view,
+      });
+    }
+  }
+
+  public async removeAllEventHandlers(): Promise<void> {
+    for (const handler of this.eventHandlers) {
+      await this.removeEventHandler(handler);
+    }
+  }
+
+  public async collections(): Promise<Array<string>> {
+    return this.store.collections();
+  }
+
   // private
 
   private async handleEvent(event: DomainEvent, viewIdentifier: HandlerIdentifier): Promise<void> {
-    this.logger.debug("Handling DomainEvent", { event });
+    this.logger.debug("Handling event", { event, viewIdentifier });
 
     const conditionValidators = [];
 
@@ -208,14 +278,14 @@ export class ViewDomain implements IViewDomain {
 
       this.emit(saved);
 
-      this.logger.verbose("DomainEvent handled successfully");
+      this.logger.verbose("Handled event", { event, viewIdentifier });
     } catch (err) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
       } else if (err instanceof DomainError) {
         this.logger.warn("Domain error while handling event", err);
       } else {
-        this.logger.error("Failed to handle DomainEvent", err);
+        this.logger.error("Failed to handle event", err);
       }
 
       if (err instanceof DomainError && err.permanent) {
@@ -228,7 +298,7 @@ export class ViewDomain implements IViewDomain {
 
   private async rejectEvent(event: DomainEvent, view: View, error: DomainError): Promise<void> {
     try {
-      this.logger.debug("Reject DomainEvent initialised", { event });
+      this.logger.debug("Rejecting event", { event, view, error });
 
       await this.messageBus.publish([
         new DomainEvent(
@@ -242,9 +312,9 @@ export class ViewDomain implements IViewDomain {
         ),
       ]);
 
-      this.logger.verbose("Reject DomainEvent successful");
+      this.logger.verbose("Rejected event", { event, view, error });
     } catch (err) {
-      this.logger.warn("Reject DomainEvent failed", err);
+      this.logger.warn("Failed to reject event", err);
 
       throw err;
     }

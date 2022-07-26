@@ -101,8 +101,8 @@ describe("SagaDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.saga.aggregateContext.aggregateName.domainEventDefault.sagaContext.sagaName",
-      routingKey: "aggregateContext.aggregateName.domainEventDefault",
+      queue: "queue.saga.default.aggregate_name.domain_event_default.default.saga_name",
+      routingKey: "default.aggregate_name.domain_event_default",
     });
   });
 
@@ -126,14 +126,14 @@ describe("SagaDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
-      queue: "queue.saga.one.aggregateName.domainEventDefault.sagaContext.sagaName",
-      routingKey: "one.aggregateName.domainEventDefault",
+      queue: "queue.saga.one.aggregate_name.domain_event_default.default.saga_name",
+      routingKey: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
-      queue: "queue.saga.two.aggregateName.domainEventDefault.sagaContext.sagaName",
-      routingKey: "two.aggregateName.domainEventDefault",
+      queue: "queue.saga.two.aggregate_name.domain_event_default.default.saga_name",
+      routingKey: "two.aggregate_name.domain_event_default",
     });
   });
 
@@ -165,15 +165,15 @@ describe("SagaDomain", () => {
 
     expect(store.load).toHaveBeenCalledWith({
       id: event.aggregate.id,
-      name: "sagaName",
-      context: "sagaContext",
+      name: "saga_name",
+      context: "default",
     });
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         messagesToDispatch: [],
@@ -206,8 +206,8 @@ describe("SagaDomain", () => {
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [causationId],
         destroyed: false,
         messagesToDispatch: [expect.any(Command)],
@@ -221,14 +221,14 @@ describe("SagaDomain", () => {
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
         id: expect.any(String),
-        name: "commandDefault",
+        name: "command_default",
         aggregate: event.aggregate,
         causationId: expect.any(String),
         correlationId: event.correlationId,
         data: { commandData: true },
         delay: 0,
         mandatory: true,
-        routingKey: "aggregateContext.aggregateName.commandDefault",
+        routingKey: "default.aggregate_name.command_default",
         timestamp: expect.any(Date),
         type: "command",
       }),

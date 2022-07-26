@@ -96,8 +96,8 @@ describe("ViewDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.view.aggregateContext.aggregateName.domainEventDefault.viewContext.viewName",
-      routingKey: "aggregateContext.aggregateName.domainEventDefault",
+      queue: "queue.view.default.aggregate_name.domain_event_default.default.view_name",
+      routingKey: "default.aggregate_name.domain_event_default",
     });
   });
 
@@ -121,14 +121,14 @@ describe("ViewDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
-      queue: "queue.view.one.aggregateName.domainEventDefault.viewContext.viewName",
-      routingKey: "one.aggregateName.domainEventDefault",
+      queue: "queue.view.one.aggregate_name.domain_event_default.default.view_name",
+      routingKey: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
-      queue: "queue.view.two.aggregateName.domainEventDefault.viewContext.viewName",
-      routingKey: "two.aggregateName.domainEventDefault",
+      queue: "queue.view.two.aggregate_name.domain_event_default.default.view_name",
+      routingKey: "two.aggregate_name.domain_event_default",
     });
   });
 
@@ -163,17 +163,17 @@ describe("ViewDomain", () => {
     expect(store.load).toHaveBeenCalledWith(
       {
         id: event.aggregate.id,
-        context: "viewContext",
-        name: "viewName",
+        context: "default",
+        name: "view_name",
       },
-      { collection: "custom_view", database: "db" },
+      {},
     );
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: { created: { removed: false, timestamp: expect.any(Date), value: true } },
@@ -181,7 +181,7 @@ describe("ViewDomain", () => {
         state: { created: true },
       }),
       event,
-      { collection: "custom_view", database: "db" },
+      {},
     );
   });
 

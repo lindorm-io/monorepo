@@ -95,8 +95,8 @@ describe("CacheDomain", () => {
     await expect(store.load(cache)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [eventCreate.id, eventAddField.id, eventSetState.id, eventDestroy.id],
         destroyed: true,
         meta: {

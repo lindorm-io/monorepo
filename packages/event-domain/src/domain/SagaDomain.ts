@@ -6,7 +6,8 @@ import { Logger } from "@lindorm-io/winston";
 import { MessageBus, SagaStore } from "../infrastructure";
 import { Saga } from "../entity";
 import { SagaEventHandler } from "../handler";
-import { find, findLast, isArray, isUndefined, some } from "lodash";
+import { assertSnakeCase } from "../util";
+import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -32,7 +33,11 @@ export class SagaDomain implements ISagaDomain {
   }
 
   public async registerEventHandler(eventHandler: SagaEventHandler): Promise<void> {
-    this.logger.debug("Register SagaEventHandler initialised", { name: eventHandler.eventName });
+    this.logger.debug("Registering event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      saga: eventHandler.saga,
+    });
 
     if (!(eventHandler instanceof SagaEventHandler)) {
       throw new LindormError("Invalid handler type", {
@@ -64,6 +69,12 @@ export class SagaDomain implements ISagaDomain {
         throw new LindormError("Event handler has already been registered");
       }
 
+      assertSnakeCase(context);
+      assertSnakeCase(eventHandler.aggregate.name);
+      assertSnakeCase(eventHandler.saga.context);
+      assertSnakeCase(eventHandler.saga.name);
+      assertSnakeCase(eventHandler.eventName);
+
       this.eventHandlers.push(
         new SagaEventHandler({
           eventName: eventHandler.eventName,
@@ -79,21 +90,75 @@ export class SagaDomain implements ISagaDomain {
         }),
       );
 
-      this.logger.verbose("Register SagaEventHandler successful", {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: context,
-        },
-        conditions: eventHandler.conditions,
-        saga: eventHandler.saga,
-      });
-
       await this.messageBus.subscribe({
         callback: (event: DomainEvent | TimeoutEvent) => this.handleEvent(event, eventHandler.saga),
         queue: SagaDomain.getQueue(context, eventHandler),
         routingKey: SagaDomain.getRoutingKey(context, eventHandler),
       });
+
+      this.logger.verbose("Event handler registered", {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: context,
+        },
+        saga: eventHandler.saga,
+      });
+    }
+  }
+
+  public async removeEventHandler(eventHandler: SagaEventHandler): Promise<void> {
+    this.logger.debug("Removing event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      saga: eventHandler.saga,
+    });
+
+    if (!(eventHandler instanceof SagaEventHandler)) {
+      throw new LindormError("Invalid handler type", {
+        data: {
+          expect: "SagaEventHandler",
+          actual: typeof eventHandler,
+        },
+      });
+    }
+
+    const contexts = isArray(eventHandler.aggregate.context)
+      ? eventHandler.aggregate.context
+      : [eventHandler.aggregate.context];
+
+    for (const context of contexts) {
+      remove(this.eventHandlers, {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: eventHandler.aggregate.context,
+        },
+        saga: {
+          name: eventHandler.saga.name,
+          context: eventHandler.saga.context,
+        },
+      });
+
+      await this.messageBus.unsubscribe({
+        queue: SagaDomain.getQueue(context, eventHandler),
+        routingKey: SagaDomain.getRoutingKey(context, eventHandler),
+      });
+
+      this.logger.verbose("Event handler removed", {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: context,
+        },
+        saga: eventHandler.saga,
+      });
+    }
+  }
+
+  public async removeAllEventHandlers(): Promise<void> {
+    for (const handler of this.eventHandlers) {
+      await this.removeEventHandler(handler);
     }
   }
 
@@ -103,7 +168,7 @@ export class SagaDomain implements ISagaDomain {
     event: DomainEvent | TimeoutEvent,
     sagaIdentifier: HandlerIdentifier,
   ): Promise<void> {
-    this.logger.debug("Handle Event initialised", { event, sagaIdentifier });
+    this.logger.debug("Handling event", { event, sagaIdentifier });
 
     const conditionValidators = [];
 
@@ -175,7 +240,7 @@ export class SagaDomain implements ISagaDomain {
 
         await this.publishCommands(savedSaga);
 
-        this.logger.debug("Saved and handled event", {
+        this.logger.debug("Published commands for saved saga at new revision", {
           id: savedSaga.id,
           name: savedSaga.name,
           context: savedSaga.context,
@@ -198,14 +263,14 @@ export class SagaDomain implements ISagaDomain {
         });
       }
 
-      this.logger.verbose("Handle Event successful");
+      this.logger.verbose("Handled event", { event, sagaIdentifier });
     } catch (err) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
       } else if (err instanceof DomainError) {
         this.logger.warn("Domain error while handling event", err);
       } else {
-        this.logger.error("Handle Event failed", err);
+        this.logger.error("Failed to handle event", err);
       }
 
       throw err;

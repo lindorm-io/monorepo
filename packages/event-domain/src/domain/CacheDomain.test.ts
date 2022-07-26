@@ -87,8 +87,8 @@ describe("CacheDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.cache.aggregateContext.aggregateName.domainEventDefault.cacheContext.cacheName",
-      routingKey: "aggregateContext.aggregateName.domainEventDefault",
+      queue: "queue.cache.default.aggregate_name.domain_event_default.default.cache_name",
+      routingKey: "default.aggregate_name.domain_event_default",
     });
   });
 
@@ -112,14 +112,14 @@ describe("CacheDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
-      queue: "queue.cache.one.aggregateName.domainEventDefault.cacheContext.cacheName",
-      routingKey: "one.aggregateName.domainEventDefault",
+      queue: "queue.cache.one.aggregate_name.domain_event_default.default.cache_name",
+      routingKey: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
-      queue: "queue.cache.two.aggregateName.domainEventDefault.cacheContext.cacheName",
-      routingKey: "two.aggregateName.domainEventDefault",
+      queue: "queue.cache.two.aggregate_name.domain_event_default.default.cache_name",
+      routingKey: "two.aggregate_name.domain_event_default",
     });
   });
 
@@ -153,15 +153,15 @@ describe("CacheDomain", () => {
 
     expect(store.load).toHaveBeenCalledWith({
       id: event.aggregate.id,
-      context: "cacheContext",
-      name: "cacheName",
+      context: "default",
+      name: "cache_name",
     });
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: { created: { removed: false, timestamp: expect.any(Date), value: true } },

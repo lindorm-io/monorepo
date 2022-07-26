@@ -115,29 +115,29 @@ describe("AggregateDomain", () => {
     await expect(store.load(aggregate, eventHandlers)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregateName",
-        context: "aggregateContext",
+        name: "aggregate_name",
+        context: "default",
         destroyed: true,
         events: [
           expect.objectContaining({
             causationId: commandCreate.id,
             correlationId: commandCreate.correlationId,
-            name: "domainEventCreate",
+            name: "domain_event_create",
           }),
           expect.objectContaining({
             causationId: commandMergeState.id,
             correlationId: commandMergeState.correlationId,
-            name: "domainEventMergeState",
+            name: "domain_event_merge_state",
           }),
           expect.objectContaining({
             causationId: commandDestroyNext.id,
             correlationId: commandDestroyNext.correlationId,
-            name: "domainEventDestroyNext",
+            name: "domain_event_destroy_next",
           }),
           expect.objectContaining({
             causationId: commandDestroy.id,
             correlationId: commandDestroy.correlationId,
-            name: "domainEventDestroy",
+            name: "domain_event_destroy",
           }),
         ],
         numberOfLoadedEvents: 4,

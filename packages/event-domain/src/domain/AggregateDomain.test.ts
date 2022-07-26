@@ -98,8 +98,8 @@ describe("AggregateDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.aggregate.aggregateContext.aggregateName.commandDefault",
-      routingKey: "aggregateContext.aggregateName.commandDefault",
+      queue: "queue.aggregate.default.aggregate_name.command_default",
+      routingKey: "default.aggregate_name.command_default",
     });
   });
 
@@ -172,14 +172,14 @@ describe("AggregateDomain", () => {
         events: [
           expect.objectContaining({
             id: expect.any(String),
-            name: "domainEventCreate",
+            name: "domain_event_create",
             aggregate,
             causationId: command.id,
             correlationId: command.correlationId,
             data: { commandData: true },
             delay: 0,
             mandatory: false,
-            routingKey: "aggregateContext.aggregateName.domainEventCreate",
+            routingKey: "default.aggregate_name.domain_event_create",
             timestamp: expect.any(Date),
             type: "domain_event",
           }),
@@ -191,14 +191,14 @@ describe("AggregateDomain", () => {
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
         id: expect.any(String),
-        name: "domainEventCreate",
+        name: "domain_event_create",
         aggregate,
         causationId: command.id,
         correlationId: command.correlationId,
         data: { commandData: true },
         delay: 0,
         mandatory: false,
-        routingKey: "aggregateContext.aggregateName.domainEventCreate",
+        routingKey: "default.aggregate_name.domain_event_create",
         timestamp: expect.any(Date),
         type: "domain_event",
       }),

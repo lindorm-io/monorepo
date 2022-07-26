@@ -5,7 +5,8 @@ import { DomainEvent, Message } from "../message";
 import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/winston";
 import { MessageBus, CacheStore } from "../infrastructure";
-import { find, findLast, isArray, isUndefined, some } from "lodash";
+import { assertSnakeCase } from "../util";
+import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -46,7 +47,10 @@ export class CacheDomain implements ICacheDomain {
   }
 
   public async registerEventHandler(eventHandler: CacheEventHandler): Promise<void> {
-    this.logger.debug("Register CacheEventHandler initialised", { name: eventHandler.eventName });
+    this.logger.debug("Registering event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+    });
 
     if (!(eventHandler instanceof CacheEventHandler)) {
       throw new LindormError("Invalid handler type", {
@@ -62,19 +66,27 @@ export class CacheDomain implements ICacheDomain {
       : [eventHandler.aggregate.context];
 
     for (const context of contexts) {
-      const existingHandler = some(
-        this.eventHandlers,
-        (handler) =>
-          handler.eventName === eventHandler.eventName &&
-          handler.aggregate.name === eventHandler.aggregate.name &&
-          handler.aggregate.context === context &&
-          handler.cache.name === eventHandler.cache.name &&
-          handler.cache.context === eventHandler.cache.context,
-      );
+      const existingHandler = some(this.eventHandlers, {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context,
+        },
+        cache: {
+          name: eventHandler.cache.name,
+          context: eventHandler.cache.context,
+        },
+      });
 
       if (existingHandler) {
         throw new LindormError("Event handler has already been registered");
       }
+
+      assertSnakeCase(context);
+      assertSnakeCase(eventHandler.aggregate.name);
+      assertSnakeCase(eventHandler.cache.context);
+      assertSnakeCase(eventHandler.cache.name);
+      assertSnakeCase(eventHandler.eventName);
 
       this.eventHandlers.push(
         new CacheEventHandler({
@@ -96,7 +108,7 @@ export class CacheDomain implements ICacheDomain {
         routingKey: CacheDomain.getRoutingKey(context, eventHandler),
       });
 
-      this.logger.verbose("Register CacheEventHandler successful", {
+      this.logger.verbose("Event handler registered", {
         eventName: eventHandler.eventName,
         aggregate: {
           name: eventHandler.aggregate.name,
@@ -108,10 +120,65 @@ export class CacheDomain implements ICacheDomain {
     }
   }
 
+  public async removeEventHandler(eventHandler: CacheEventHandler): Promise<void> {
+    this.logger.debug("Removing event handler", {
+      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      cache: eventHandler.cache,
+    });
+
+    if (!(eventHandler instanceof CacheEventHandler)) {
+      throw new LindormError("Invalid handler type", {
+        data: {
+          expect: "CacheEventHandler",
+          actual: typeof eventHandler,
+        },
+      });
+    }
+
+    const contexts = isArray(eventHandler.aggregate.context)
+      ? eventHandler.aggregate.context
+      : [eventHandler.aggregate.context];
+
+    for (const context of contexts) {
+      remove(this.eventHandlers, {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: eventHandler.aggregate.context,
+        },
+        cache: {
+          name: eventHandler.cache.name,
+          context: eventHandler.cache.context,
+        },
+      });
+
+      await this.messageBus.unsubscribe({
+        queue: CacheDomain.getQueue(context, eventHandler),
+        routingKey: CacheDomain.getRoutingKey(context, eventHandler),
+      });
+
+      this.logger.verbose("Event handler removed", {
+        eventName: eventHandler.eventName,
+        aggregate: {
+          name: eventHandler.aggregate.name,
+          context: context,
+        },
+        cache: eventHandler.cache,
+      });
+    }
+  }
+
+  public async removeAllEventHandlers(): Promise<void> {
+    for (const handler of this.eventHandlers) {
+      await this.removeEventHandler(handler);
+    }
+  }
+
   // private
 
   private async handleEvent(event: DomainEvent, cacheIdentifier: HandlerIdentifier): Promise<void> {
-    this.logger.debug("Handling DomainEvent", { event });
+    this.logger.debug("Handling event", { event, cacheIdentifier });
 
     const conditionValidators = [];
 
@@ -192,14 +259,14 @@ export class CacheDomain implements ICacheDomain {
 
       this.emit(saved);
 
-      this.logger.verbose("DomainEvent handled successfully");
+      this.logger.verbose("Handled event", { event, cacheIdentifier });
     } catch (err) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
       } else if (err instanceof DomainError) {
         this.logger.warn("Domain error while handling event", err);
       } else {
-        this.logger.error("Failed to handle DomainEvent", err);
+        this.logger.error("Failed to handle event", err);
       }
 
       if (err instanceof DomainError && err.permanent) {
@@ -212,7 +279,7 @@ export class CacheDomain implements ICacheDomain {
 
   private async rejectEvent(event: DomainEvent, cache: Cache, error: DomainError): Promise<void> {
     try {
-      this.logger.debug("Reject DomainEvent initialised", { event });
+      this.logger.debug("Rejecting event", { event, cache, error });
 
       await this.messageBus.publish([
         new DomainEvent(
@@ -226,9 +293,9 @@ export class CacheDomain implements ICacheDomain {
         ),
       ]);
 
-      this.logger.verbose("Reject DomainEvent successful");
+      this.logger.verbose("Rejected event", { event, cache, error });
     } catch (err) {
-      this.logger.warn("Reject DomainEvent failed", err);
+      this.logger.warn("Failed to reject event", err);
 
       throw err;
     }
