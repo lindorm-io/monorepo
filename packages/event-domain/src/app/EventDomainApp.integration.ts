@@ -63,8 +63,8 @@ describe("EventDomainApp", () => {
       dangerouslyRegisterHandlersManually: true,
     });
 
-    cacheRepo = app.createCacheRepository("greetings");
-    viewRepo = app.createViewRepository("greetings");
+    cacheRepo = app.createCacheRepository("saved_greetings");
+    viewRepo = app.createViewRepository("saved_greetings");
 
     onEventSpyAll = jest.fn();
     onEventSpyContext = jest.fn();
@@ -74,7 +74,7 @@ describe("EventDomainApp", () => {
 
     await Promise.all([amqp.connect(), mongo.connect()]);
 
-    await app.dangerouslyRegisterAggregateCommandHandlers([
+    await app.registerAggregateCommandHandlers([
       new AggregateCommandHandler({
         commandName: "create",
         aggregate: { name: "greeting", context: "default" },
@@ -116,7 +116,7 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.dangerouslyRegisterAggregateEventHandlers([
+    await app.registerAggregateEventHandlers([
       new AggregateEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -143,11 +143,11 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.dangerouslyRegisterCacheEventHandlers([
+    await app.registerCacheEventHandlers([
       new CacheEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
-        cache: { name: "greetings", context: "default" },
+        cache: { name: "saved_greetings", context: "default" },
         conditions: { created: false },
         getCacheId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -157,7 +157,7 @@ describe("EventDomainApp", () => {
       new CacheEventHandler({
         eventName: "updated",
         aggregate: { name: "greeting", context: "default" },
-        cache: { name: "greetings", context: "default" },
+        cache: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
         getCacheId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -167,7 +167,7 @@ describe("EventDomainApp", () => {
       new CacheEventHandler({
         eventName: "responded",
         aggregate: { name: "response", context: "default" },
-        cache: { name: "greetings", context: "default" },
+        cache: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
         getCacheId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -176,11 +176,11 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.dangerouslyRegisterSagaEventHandlers([
+    await app.registerSagaEventHandlers([
       new SagaEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
-        saga: { name: "logGreeting", context: "default" },
+        saga: { name: "log_greeting", context: "default" },
         conditions: { created: false },
         getSagaId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -191,7 +191,7 @@ describe("EventDomainApp", () => {
       new SagaEventHandler({
         eventName: "updated",
         aggregate: { name: "greeting", context: "default" },
-        saga: { name: "logGreeting", context: "default" },
+        saga: { name: "log_greeting", context: "default" },
         conditions: { created: true },
         getSagaId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -206,7 +206,7 @@ describe("EventDomainApp", () => {
       new SagaEventHandler({
         eventName: "responded",
         aggregate: { name: "response", context: "default" },
-        saga: { name: "logGreeting", context: "default" },
+        saga: { name: "log_greeting", context: "default" },
         conditions: { created: true },
         getSagaId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -215,11 +215,11 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.dangerouslyRegisterViewEventHandlers([
+    await app.registerViewEventHandlers([
       new ViewEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
-        view: { name: "greetings", context: "default" },
+        view: { name: "saved_greetings", context: "default" },
         conditions: { created: false },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -229,7 +229,7 @@ describe("EventDomainApp", () => {
       new ViewEventHandler({
         eventName: "updated",
         aggregate: { name: "greeting", context: "default" },
-        view: { name: "greetings", context: "default" },
+        view: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -239,7 +239,7 @@ describe("EventDomainApp", () => {
       new ViewEventHandler({
         eventName: "responded",
         aggregate: { name: "response", context: "default" },
-        view: { name: "greetings", context: "default" },
+        view: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
@@ -258,8 +258,8 @@ describe("EventDomainApp", () => {
 
     app.on("view", onEventSpyAll);
     app.on("view.default", onEventSpyContext);
-    app.on("view.default.greetings", onEventSpyName);
-    app.on("view.default.greetings." + id, onEventSpyId);
+    app.on("view.default.saved_greetings", onEventSpyName);
+    app.on("view.default.saved_greetings." + id, onEventSpyId);
     app.on("cache", onEventSpyCache);
 
     await app.publish({
@@ -289,10 +289,10 @@ describe("EventDomainApp", () => {
 
     await expect(
       app.query(
-        { collection: "greetings", database: "default" },
+        { collection: "views_default_saved_greetings" },
         {
           id,
-          name: "greetings",
+          name: "saved_greetings",
           context: "default",
         },
       ),
@@ -300,7 +300,7 @@ describe("EventDomainApp", () => {
       {
         _id: expect.any(Object),
         id,
-        name: "greetings",
+        name: "saved_greetings",
         context: "default",
         causationList: [expect.any(String), expect.any(String), expect.any(String)],
         destroyed: false,
@@ -335,7 +335,7 @@ describe("EventDomainApp", () => {
 
     expect(onEventSpyAll).toHaveBeenNthCalledWith(1, {
       id,
-      name: "greetings",
+      name: "saved_greetings",
       context: "default",
       revision: 1,
       state: {
@@ -345,7 +345,7 @@ describe("EventDomainApp", () => {
 
     expect(onEventSpyAll).toHaveBeenNthCalledWith(2, {
       id,
-      name: "greetings",
+      name: "saved_greetings",
       context: "default",
       revision: 2,
       state: {
@@ -355,7 +355,7 @@ describe("EventDomainApp", () => {
 
     expect(onEventSpyAll).toHaveBeenNthCalledWith(3, {
       id,
-      name: "greetings",
+      name: "saved_greetings",
       context: "default",
       revision: 3,
       state: {

@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { Aggregate } from "../entity";
-import { AggregateDomain, CacheDomain, SagaDomain, ViewDomain } from "../domain";
+import { AggregateDomain, CacheDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { Command } from "../message";
 import { Filter, FindOptions } from "mongodb";
@@ -9,9 +9,10 @@ import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
+import { ReplayEventName } from "../enum";
 import { StructureScanner } from "../util";
 import { join } from "path";
-import { merge } from "lodash";
+import { merge, snakeCase } from "lodash";
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
@@ -41,7 +42,9 @@ import {
   HandlerConditions,
   IEventDomainApp,
   InspectAggregateOptions,
-  PublishCommandOptions,
+  PublishOptions,
+  PublishResult,
+  ReplayOptions,
   SagaEventHandlerFile,
   SagaStoreSaveOptions,
   State,
@@ -49,6 +52,7 @@ import {
   ViewEventHandlerFile,
   ViewStoreAttributes,
   ViewStoreDocumentOptions,
+  ViewStoreQueryOptions,
 } from "../types";
 
 export class EventDomainApp implements IEventDomainApp {
@@ -63,15 +67,27 @@ export class EventDomainApp implements IEventDomainApp {
   private readonly aggregateDomain: AggregateDomain;
   private readonly cacheDomain: CacheDomain;
   private readonly sagaDomain: SagaDomain;
+  private readonly replayDomain: ReplayDomain;
   private readonly viewDomain: ViewDomain;
 
+  private readonly aggregateCommandHandlers: Array<AggregateCommandHandler>;
+  private readonly aggregateEventHandlers: Array<AggregateEventHandler>;
+  private readonly cacheEventHandlers: Array<CacheEventHandler>;
+  private readonly sagaEventHandlers: Array<SagaEventHandler>;
+  private readonly viewEventHandlers: Array<ViewEventHandler>;
+
   private promise: () => Promise<void>;
+  private initialising: boolean;
   private initialised: boolean;
+  private replaying: boolean;
 
   public constructor(options: EventDomainAppOptions) {
     const { amqp, mongo, redis, logger, ...appOptions } = options;
 
     this.logger = logger.createChildLogger(["EventDomainApp"]);
+
+    this.initialising = false;
+    this.initialised = false;
 
     this.options = merge(
       {
@@ -121,6 +137,24 @@ export class EventDomainApp implements IEventDomainApp {
     this.mongo = mongo;
     this.redis = redis;
 
+    const eventStore = new EventStore({
+      connection: this.mongo,
+      database: this.options.domain.database,
+      logger: this.logger,
+    });
+
+    const sagaStore = new SagaStore({
+      connection: this.mongo,
+      database: this.options.domain.database,
+      logger: this.logger,
+    });
+
+    const viewStore = new ViewStore({
+      connection: this.mongo,
+      database: this.options.domain.database,
+      logger: this.logger,
+    });
+
     this.messageBus = new MessageBus({
       connection: this.amqp,
       logger: this.logger,
@@ -129,31 +163,27 @@ export class EventDomainApp implements IEventDomainApp {
     this.aggregateDomain = new AggregateDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      store: new EventStore({
-        connection: this.mongo,
-        database: this.options.domain.database,
-        logger: this.logger,
-      }),
+      store: eventStore,
     });
 
     this.sagaDomain = new SagaDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      store: new SagaStore({
-        connection: this.mongo,
-        database: this.options.domain.database,
-        logger: this.logger,
-      }),
+      store: sagaStore,
+    });
+
+    this.replayDomain = new ReplayDomain({
+      messageBus: this.messageBus,
+      logger: this.logger,
+      eventStore,
+      viewStore,
+      context: this.options.domain.context,
     });
 
     this.viewDomain = new ViewDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      store: new ViewStore({
-        connection: this.mongo,
-        database: this.options.domain.database,
-        logger: this.logger,
-      }),
+      store: viewStore,
     });
 
     if (this.redis) {
@@ -167,6 +197,12 @@ export class EventDomainApp implements IEventDomainApp {
       });
     }
 
+    this.aggregateCommandHandlers = [];
+    this.aggregateEventHandlers = [];
+    this.cacheEventHandlers = [];
+    this.sagaEventHandlers = [];
+    this.viewEventHandlers = [];
+
     this.promise = this.initialise;
   }
 
@@ -176,6 +212,13 @@ export class EventDomainApp implements IEventDomainApp {
     return this.initialised;
   }
   public set isInitialised(_: boolean) {
+    /* ignored */
+  }
+
+  public get isReplaying(): boolean {
+    return this.replaying;
+  }
+  public set isReplaying(_: boolean) {
     /* ignored */
   }
 
@@ -199,16 +242,18 @@ export class EventDomainApp implements IEventDomainApp {
     name: string,
     options: CreateViewRepositoryOptions = {},
   ): ViewRepository<S> {
+    const view = {
+      name,
+      context: options.context || this.options.domain.context,
+    };
+
     return new ViewRepository<S>({
-      collection: options.collection,
+      collection: options.collection || ViewStore.getCollectionName(view),
       connection: this.mongo,
       database: options.database || this.options.domain.database,
       indices: options.indices,
       logger: this.logger,
-      view: {
-        name,
-        context: options.context || this.options.domain.context,
-      },
+      view,
     });
   }
 
@@ -229,15 +274,22 @@ export class EventDomainApp implements IEventDomainApp {
   }
 
   public on<S = State>(eventName: string, listener: EventEmitterListener<S>): void {
-    if (eventName.startsWith("view")) {
-      this.viewDomain.on(eventName, listener);
-    }
     if (eventName.startsWith("cache")) {
       this.cacheDomain.on(eventName, listener);
     }
+
+    if (eventName.startsWith("replay")) {
+      this.viewDomain.on(eventName, listener);
+    }
+
+    if (eventName.startsWith("view")) {
+      this.viewDomain.on(eventName, listener);
+    }
   }
 
-  public async publish(options: PublishCommandOptions): Promise<void> {
+  public async publish(options: PublishOptions): Promise<PublishResult> {
+    await this.promise();
+
     const command = new Command({
       aggregate: {
         id: options.aggregate.id,
@@ -261,77 +313,72 @@ export class EventDomainApp implements IEventDomainApp {
       });
     }
 
-    await this.promise();
+    await this.messageBus.publish(command);
 
-    return this.messageBus.publish(command);
+    if (this.replaying) return "QUEUED";
+
+    return "OK";
   }
 
   public async query<S extends State = State>(
-    documentOptions: ViewStoreDocumentOptions,
+    queryOptions: ViewStoreQueryOptions,
     filter: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes<S>>> {
     await this.promise();
-
-    return this.viewDomain.query<S>(documentOptions, filter, findOptions);
+    return this.viewDomain.query<S>(queryOptions, filter, findOptions);
   }
 
-  // public test methods
+  public async replay(options: ReplayOptions): Promise<void> {
+    await this.promise();
+    return this.replayDomain.replay(options);
+  }
 
-  public async dangerouslyRegisterAggregateCommandHandlers(
+  public async views(): Promise<Array<string>> {
+    await this.promise();
+    return this.viewDomain.collections();
+  }
+
+  // public handler methods
+
+  public async registerAggregateCommandHandlers(
     handlers: Array<AggregateCommandHandler>,
   ): Promise<void> {
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
-    }
+    this.assertRegister();
 
     for (const handler of handlers) {
       await this.aggregateDomain.registerCommandHandler(handler);
     }
   }
 
-  public async dangerouslyRegisterAggregateEventHandlers(
+  public async registerAggregateEventHandlers(
     handlers: Array<AggregateEventHandler>,
   ): Promise<void> {
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
-    }
+    this.assertRegister();
 
     for (const handler of handlers) {
       await this.aggregateDomain.registerEventHandler(handler);
     }
   }
 
-  public async dangerouslyRegisterCacheEventHandlers(
-    handlers: Array<CacheEventHandler>,
-  ): Promise<void> {
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
-    }
+  public async registerCacheEventHandlers(handlers: Array<CacheEventHandler>): Promise<void> {
+    this.assertRegister();
 
     for (const handler of handlers) {
       await this.cacheDomain.registerEventHandler(handler);
     }
   }
 
-  public async dangerouslyRegisterSagaEventHandlers(
-    handlers: Array<SagaEventHandler>,
-  ): Promise<void> {
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
-    }
+  public async registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void> {
+    this.assertRegister();
 
     for (const handler of handlers) {
       await this.sagaDomain.registerEventHandler(handler);
     }
   }
 
-  public async dangerouslyRegisterViewEventHandlers(
-    handlers: Array<ViewEventHandler>,
-  ): Promise<void> {
-    if (!this.options.dangerouslyRegisterHandlersManually) {
-      throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
-    }
+  public async registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void> {
+    this.assertRegister();
 
     for (const handler of handlers) {
       await this.viewDomain.registerEventHandler(handler);
@@ -346,25 +393,38 @@ export class EventDomainApp implements IEventDomainApp {
       return;
     }
 
+    this.initialising = true;
+
     if (StructureScanner.hasFiles(this.options.aggregates.directory)) {
       await this.scanAggregates();
+      await this.registerAggregateCommandHandlers(this.aggregateCommandHandlers);
+      await this.registerAggregateEventHandlers(this.aggregateEventHandlers);
     }
 
     if (StructureScanner.hasFiles(this.options.caches.directory)) {
       await this.scanCaches();
+      await this.registerCacheEventHandlers(this.cacheEventHandlers);
     }
 
     if (StructureScanner.hasFiles(this.options.sagas.directory)) {
       await this.scanSagas();
+      await this.registerSagaEventHandlers(this.sagaEventHandlers);
     }
 
     if (StructureScanner.hasFiles(this.options.views.directory)) {
       await this.scanViews();
+      await this.registerViewEventHandlers(this.viewEventHandlers);
     }
 
+    await this.setupReplayDomain();
+
     this.initialised = true;
+    this.initialising = false;
+
     this.promise = (): Promise<void> => Promise.resolve();
   }
+
+  // private scan methods
 
   private async scanAggregates(): Promise<void> {
     const scanner = new StructureScanner(
@@ -404,12 +464,12 @@ export class EventDomainApp implements IEventDomainApp {
             .required()
             .validateAsync(handler);
 
-          await this.aggregateDomain.registerCommandHandler(
+          this.aggregateCommandHandlers.push(
             new AggregateCommandHandler({
-              commandName: file.name,
+              commandName: snakeCase(file.name),
               aggregate: {
-                name: aggregateName,
-                context: this.options.domain.context,
+                name: snakeCase(aggregateName),
+                context: snakeCase(this.options.domain.context),
               },
               conditions: handler.conditions,
               schema: handler.schema,
@@ -426,12 +486,12 @@ export class EventDomainApp implements IEventDomainApp {
             .required()
             .validateAsync(handler);
 
-          await this.aggregateDomain.registerEventHandler(
+          this.aggregateEventHandlers.push(
             new AggregateEventHandler({
-              eventName: file.name,
+              eventName: snakeCase(file.name),
               aggregate: {
-                name: aggregateName,
-                context: this.options.domain.context,
+                name: snakeCase(aggregateName),
+                context: snakeCase(this.options.domain.context),
               },
               handler: handler.handler,
             }),
@@ -487,16 +547,16 @@ export class EventDomainApp implements IEventDomainApp {
         .required()
         .validateAsync(handler);
 
-      await this.cacheDomain.registerEventHandler(
+      this.cacheEventHandlers.push(
         new CacheEventHandler({
-          eventName: file.name,
+          eventName: snakeCase(file.name),
           aggregate: {
-            name: aggregateName,
-            context: handler.context || this.options.domain.context,
+            name: snakeCase(aggregateName),
+            context: snakeCase(handler.context || this.options.domain.context),
           },
           cache: {
-            name: cacheName,
-            context: this.options.domain.context,
+            name: snakeCase(cacheName),
+            context: snakeCase(this.options.domain.context),
           },
           conditions: handler.conditions,
           getCacheId: handler.getCacheId,
@@ -548,16 +608,16 @@ export class EventDomainApp implements IEventDomainApp {
         .required()
         .validateAsync(handler);
 
-      await this.sagaDomain.registerEventHandler(
+      this.sagaEventHandlers.push(
         new SagaEventHandler({
-          eventName: file.name,
+          eventName: snakeCase(file.name),
           aggregate: {
-            name: aggregateName,
-            context: handler.context || this.options.domain.context,
+            name: snakeCase(aggregateName),
+            context: snakeCase(handler.context || this.options.domain.context),
           },
           saga: {
-            name: sagaName,
-            context: this.options.domain.context,
+            name: snakeCase(sagaName),
+            context: snakeCase(this.options.domain.context),
           },
           conditions: handler.conditions,
           saveOptions: handler.saveOptions,
@@ -601,8 +661,6 @@ export class EventDomainApp implements IEventDomainApp {
           context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
           documentOptions: Joi.object<ViewStoreDocumentOptions>()
             .keys({
-              collection: Joi.string().required(),
-              database: Joi.string().optional(),
               indices: Joi.array().items(
                 Joi.object<StoreBaseIndex>().keys({
                   indexSpecification: Joi.object().required(),
@@ -617,16 +675,16 @@ export class EventDomainApp implements IEventDomainApp {
         .required()
         .validateAsync(handler);
 
-      await this.viewDomain.registerEventHandler(
+      this.viewEventHandlers.push(
         new ViewEventHandler({
-          eventName: file.name,
+          eventName: snakeCase(file.name),
           aggregate: {
-            name: aggregateName,
-            context: handler.context || this.options.domain.context,
+            name: snakeCase(aggregateName),
+            context: snakeCase(handler.context || this.options.domain.context),
           },
           view: {
-            name: viewName,
-            context: this.options.domain.context,
+            name: snakeCase(viewName),
+            context: snakeCase(this.options.domain.context),
           },
           conditions: handler.conditions,
           documentOptions: handler.documentOptions,
@@ -635,6 +693,23 @@ export class EventDomainApp implements IEventDomainApp {
         }),
       );
     }
+  }
+
+  // private helpers
+
+  private async setupReplayDomain(): Promise<void> {
+    this.replayDomain.on(ReplayEventName.START, this.onReplayStart.bind(this));
+    this.replayDomain.on(ReplayEventName.STOP, this.onReplayStop.bind(this));
+
+    await this.replayDomain.subscribe();
+  }
+
+  private assertRegister(): boolean {
+    if (this.initialising) return;
+    if (this.replaying) return;
+    if (this.options.dangerouslyRegisterHandlersManually) return;
+
+    throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
   }
 
   private isValid(type: string, name: string, structure: AppStructure): boolean {
@@ -653,5 +728,38 @@ export class EventDomainApp implements IEventDomainApp {
     }
 
     return true;
+  }
+
+  // private event listeners
+
+  private onReplayStart(): void {
+    this.replaying = true;
+
+    Promise.all([
+      this.aggregateDomain.removeAllCommandHandlers(),
+      this.aggregateDomain.removeAllEventHandlers(),
+      this.sagaDomain.removeAllEventHandlers(),
+    ])
+      .then(() => {
+        this.logger.verbose("Removed handlers");
+      })
+      .catch((err) => {
+        this.logger.error("Failed to remove handlers", err);
+      });
+  }
+
+  private onReplayStop(): void {
+    Promise.all([
+      this.registerAggregateCommandHandlers(this.aggregateCommandHandlers),
+      this.registerAggregateEventHandlers(this.aggregateEventHandlers),
+      this.registerSagaEventHandlers(this.sagaEventHandlers),
+    ])
+      .then(() => {
+        this.logger.verbose("Registered handlers");
+        this.replaying = false;
+      })
+      .catch((err) => {
+        this.logger.error("Failed to register handlers", err);
+      });
   }
 }
