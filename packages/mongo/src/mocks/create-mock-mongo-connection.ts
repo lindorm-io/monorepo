@@ -63,7 +63,12 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
     connect: jest.fn(),
     disconnect: jest.fn(),
     client,
+
     status: ConnectionStatus.CONNECTED,
+    isConnected: true,
+    isConnecting: false,
+    isDisconnected: false,
+
     on: jest.fn(),
   };
 

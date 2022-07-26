@@ -29,7 +29,12 @@ export const createMockRedisConnection = (o: Options = {}): RedisConnection => {
     connect: jest.fn(),
     disconnect: jest.fn(),
     client,
+
     status: ConnectionStatus.CONNECTED,
+    isConnected: true,
+    isConnecting: false,
+    isDisconnected: false,
+
     on: jest.fn(),
   };
 
