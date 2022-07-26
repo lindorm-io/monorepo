@@ -53,8 +53,8 @@ describe("SagaStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a", event.id],
         destroyed: false,
         messagesToDispatch: [],
@@ -71,8 +71,8 @@ describe("SagaStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         messagesToDispatch: [],
@@ -104,8 +104,8 @@ describe("SagaStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [
           "012db886-5a2b-4f41-8c45-6cf7eb64307d",
           "6bd7ffa6-56c1-40b1-986e-cc919671e164",
@@ -136,8 +136,8 @@ describe("SagaStore", () => {
     await expect(store.load(saga)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a"],
         destroyed: false,
         messagesToDispatch: [],
@@ -151,8 +151,8 @@ describe("SagaStore", () => {
     await expect(store.load(saga)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         messagesToDispatch: [],
@@ -174,8 +174,8 @@ describe("SagaStore", () => {
     await expect(store.clearMessagesToDispatch(entity)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         messagesToDispatch: [],

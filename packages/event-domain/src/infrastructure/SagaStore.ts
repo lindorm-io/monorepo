@@ -1,8 +1,8 @@
 import { Filter, FindOptions, UpdateFilter } from "mongodb";
 import { Message } from "../message";
+import { MongoBase } from "./MongoBase";
 import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../error";
 import { Saga } from "../entity";
-import { MongoBase } from "./MongoBase";
 import {
   ISagaStore,
   SagaData,

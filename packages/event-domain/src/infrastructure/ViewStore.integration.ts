@@ -37,7 +37,7 @@ describe("ViewStore", () => {
 
   beforeEach(() => {
     aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    documentOptions = { collection: "collection" };
+    documentOptions = {};
     view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
   });
 
@@ -52,8 +52,8 @@ describe("ViewStore", () => {
     await expect(store.save(entity, event, documentOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},
@@ -91,8 +91,8 @@ describe("ViewStore", () => {
     await expect(store.save(changed, event2, documentOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [event1.id, event2.id],
         destroyed: false,
         meta: {},
@@ -109,8 +109,8 @@ describe("ViewStore", () => {
     await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: {},
@@ -129,8 +129,8 @@ describe("ViewStore", () => {
     await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},

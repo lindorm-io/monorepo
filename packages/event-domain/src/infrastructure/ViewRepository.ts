@@ -1,15 +1,16 @@
 import { Filter, FindOptions } from "mongodb";
 import { MongoBase } from "./MongoBase";
 import { ViewRepositoryData, ViewRepositoryOptions, ViewStoreAttributes } from "../types";
+import { ViewStore } from "./ViewStore";
 
 export class ViewRepository<S> extends MongoBase<ViewStoreAttributes> {
-  private readonly filter: Record<string, any>;
-  private readonly options: Record<string, any>;
+  private readonly filter: Filter<ViewStoreAttributes>;
+  private readonly options: FindOptions;
 
   public constructor(options: ViewRepositoryOptions) {
     super({
       ...options,
-      collection: options.collection || options.view.name,
+      collection: options.collection || ViewStore.getCollectionName(options.view),
     });
 
     this.filter = { ...options.view, destroyed: false };

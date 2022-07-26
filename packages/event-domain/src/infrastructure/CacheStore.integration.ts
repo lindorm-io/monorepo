@@ -48,8 +48,8 @@ describe("CacheStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},
@@ -87,8 +87,8 @@ describe("CacheStore", () => {
     await expect(store.save(changed, event2)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [event1.id, event2.id],
         destroyed: false,
         meta: {},
@@ -105,8 +105,8 @@ describe("CacheStore", () => {
     await expect(store.load(cache)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: {},
@@ -125,8 +125,8 @@ describe("CacheStore", () => {
     await expect(store.load(cache)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},

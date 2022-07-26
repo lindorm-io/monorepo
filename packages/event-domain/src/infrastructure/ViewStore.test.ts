@@ -1,4 +1,4 @@
-import { AggregateIdentifier, ViewIdentifier, ViewStoreDocumentOptions } from "../types";
+import { AggregateIdentifier, ViewIdentifier } from "../types";
 import { DomainEvent } from "../message";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_DOMAIN_EVENT_SET_STATE } from "../fixtures/domain-event.fixture";
@@ -14,7 +14,6 @@ describe("ViewStore", () => {
 
   let aggregate: AggregateIdentifier;
   let connection: any;
-  let documentOptions: ViewStoreDocumentOptions;
   let store: ViewStore;
   let view: ViewIdentifier;
 
@@ -29,7 +28,6 @@ describe("ViewStore", () => {
 
     connection = createMockMongoConnection({ findOne, findOneAndUpdate, insertOne });
 
-    documentOptions = { collection: "collection" };
     aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
 
@@ -49,11 +47,11 @@ describe("ViewStore", () => {
       state: { loadedState: true },
     });
 
-    await expect(store.save(entity, event, documentOptions)).resolves.toStrictEqual(
+    await expect(store.save(entity, event, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a", event.id],
         destroyed: false,
         meta: {},
@@ -67,11 +65,11 @@ describe("ViewStore", () => {
     const entity = new View(view, logger);
     const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
 
-    await expect(store.save(entity, event, documentOptions)).resolves.toStrictEqual(
+    await expect(store.save(entity, event, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},
@@ -100,11 +98,11 @@ describe("ViewStore", () => {
     );
     const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
 
-    await expect(store.save(entity, event, documentOptions)).resolves.toStrictEqual(
+    await expect(store.save(entity, event, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [
           "012db886-5a2b-4f41-8c45-6cf7eb64307d",
           "6bd7ffa6-56c1-40b1-986e-cc919671e164",
@@ -132,11 +130,11 @@ describe("ViewStore", () => {
       state: { loadedState: true },
     });
 
-    await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
+    await expect(store.load(view, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a"],
         destroyed: false,
         meta: {},
@@ -147,11 +145,11 @@ describe("ViewStore", () => {
   });
 
   test("should load new view", async () => {
-    await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
+    await expect(store.load(view, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: view.id,
-        name: "viewName",
-        context: "viewContext",
+        name: "view_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: {},

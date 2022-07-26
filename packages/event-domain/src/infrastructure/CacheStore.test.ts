@@ -52,8 +52,8 @@ describe("CacheStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a", event.id],
         destroyed: false,
         meta: {},
@@ -73,8 +73,8 @@ describe("CacheStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         meta: {},
@@ -86,17 +86,17 @@ describe("CacheStore", () => {
     expect(getSpy).toHaveBeenCalledTimes(2);
     expect(setSpy).toHaveBeenCalledTimes(2);
 
-    expect(getSpy).toHaveBeenNthCalledWith(1, `cache_context::cache_name::item::${cache.id}`);
-    expect(getSpy).toHaveBeenNthCalledWith(2, "cache_context::cache_name::index");
+    expect(getSpy).toHaveBeenNthCalledWith(1, `default::cache_name::item::${cache.id}`);
+    expect(getSpy).toHaveBeenNthCalledWith(2, "default::cache_name::index");
 
     expect(setSpy).toHaveBeenNthCalledWith(
       1,
-      `cache_context::cache_name::item::${cache.id}`,
+      `default::cache_name::item::${cache.id}`,
       expect.any(String),
     );
     expect(setSpy).toHaveBeenNthCalledWith(
       2,
-      "cache_context::cache_name::index",
+      "default::cache_name::index",
       JSON.stringify([cache.id]),
     );
   });
@@ -131,8 +131,8 @@ describe("CacheStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [
           "012db886-5a2b-4f41-8c45-6cf7eb64307d",
           "6bd7ffa6-56c1-40b1-986e-cc919671e164",
@@ -164,8 +164,8 @@ describe("CacheStore", () => {
     await expect(store.load(cache)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: ["d2679fa3-5fa4-4911-9e63-4ee094fcaa5a"],
         destroyed: false,
         meta: {},
@@ -179,8 +179,8 @@ describe("CacheStore", () => {
     await expect(store.load(cache)).resolves.toStrictEqual(
       expect.objectContaining({
         id: cache.id,
-        name: "cacheName",
-        context: "cacheContext",
+        name: "cache_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         meta: {},

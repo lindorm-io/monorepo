@@ -60,19 +60,19 @@ describe("EventStore", () => {
     const entity = new Aggregate({ ...aggregate, eventHandlers }, logger);
     const command = new Command({ ...TEST_COMMAND_CREATE, aggregate });
 
-    await entity.apply(command, "domainEventCreate", { created: true });
+    await entity.apply(command, "domain_event_create", { created: true });
 
     await expect(store.save(entity, command)).resolves.toStrictEqual([
       expect.objectContaining({
         id: expect.any(String),
-        name: "domainEventCreate",
+        name: "domain_event_create",
         aggregate,
         causationId: command.id,
         correlationId: command.correlationId,
         data: { created: true },
         delay: 0,
         mandatory: false,
-        routingKey: "aggregateContext.aggregateName.domainEventCreate",
+        routingKey: "default.aggregate_name.domain_event_create",
         timestamp: expect.any(Date),
         type: "domain_event",
       }),
@@ -81,8 +81,8 @@ describe("EventStore", () => {
     expect(find).toHaveBeenCalledWith(
       {
         id: aggregate.id,
-        name: "aggregateName",
-        context: "aggregateContext",
+        name: "aggregate_name",
+        context: "default",
         causationId: command.causationId,
       },
       {
@@ -98,13 +98,13 @@ describe("EventStore", () => {
 
     expect(insertOne).toHaveBeenCalledWith({
       id: expect.any(String),
-      name: "aggregateName",
-      context: "aggregateContext",
+      name: "aggregate_name",
+      context: "default",
       causationId: command.causationId,
       events: [
         {
           id: expect.any(String),
-          name: "domainEventCreate",
+          name: "domain_event_create",
           causationId: command.causationId,
           correlationId: command.correlationId,
           data: { created: true },
@@ -122,7 +122,7 @@ describe("EventStore", () => {
     const command = new Command({ ...TEST_COMMAND_CREATE, aggregate });
     const eventCreate = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate }, command);
 
-    await entity.apply(command, "domainEventCreate", { created: true });
+    await entity.apply(command, "domain_event_create", { created: true });
 
     toArray.mockResolvedValue([{ events: [eventCreate] }]);
 
@@ -133,7 +133,7 @@ describe("EventStore", () => {
     const entity = new Aggregate({ ...aggregate, eventHandlers }, logger);
     const command = new Command({ ...TEST_COMMAND_CREATE, aggregate });
 
-    await entity.apply(command, "domainEventCreate", { created: true });
+    await entity.apply(command, "domain_event_create", { created: true });
 
     await expect(store.save(entity, new Command({ ...TEST_COMMAND, aggregate }))).rejects.toThrow(
       CausationMissingEventsError,
@@ -156,21 +156,21 @@ describe("EventStore", () => {
     await expect(store.load(aggregate, eventHandlers)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregateName",
-        context: "aggregateContext",
+        name: "aggregate_name",
+        context: "default",
         destroyed: true,
         events: [
           expect.objectContaining({
-            name: "domainEventCreate",
+            name: "domain_event_create",
           }),
           expect.objectContaining({
-            name: "domainEventMergeState",
+            name: "domain_event_merge_state",
           }),
           expect.objectContaining({
-            name: "domainEventSetState",
+            name: "domain_event_set_state",
           }),
           expect.objectContaining({
-            name: "domainEventDestroy",
+            name: "domain_event_destroy",
           }),
         ],
         numberOfLoadedEvents: 4,
@@ -189,8 +189,8 @@ describe("EventStore", () => {
     await expect(store.load(aggregate, eventHandlers)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "aggregateName",
-        context: "aggregateContext",
+        name: "aggregate_name",
+        context: "default",
         destroyed: false,
         events: [],
         numberOfLoadedEvents: 0,

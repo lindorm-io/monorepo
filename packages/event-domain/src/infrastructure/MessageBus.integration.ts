@@ -29,13 +29,13 @@ describe("MessageBus", () => {
     commandSub = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "command-queue",
-      routingKey: "context.aggregate.commandName",
+      routingKey: "context.aggregate.command_name",
     };
 
     domainEventSub = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "domain-event-queue",
-      routingKey: "context.aggregate.domainEventName",
+      routingKey: "context.aggregate.domain_event_name",
     };
 
     await messageBus.subscribe([commandSub, domainEventSub]);
@@ -48,7 +48,7 @@ describe("MessageBus", () => {
 
   test("should publish command", async () => {
     const command = new Command({
-      name: "commandName",
+      name: "command_name",
       data: { content: "command-data" },
       aggregate: {
         id: randomUUID(),
@@ -66,7 +66,7 @@ describe("MessageBus", () => {
 
   test("should publish domain event", async () => {
     const command = new Command({
-      name: "commandName",
+      name: "command_name",
       data: { content: "command-data" },
       aggregate: {
         id: randomUUID(),
@@ -77,7 +77,7 @@ describe("MessageBus", () => {
 
     const domainEvent = new DomainEvent(
       {
-        name: "domainEventName",
+        name: "domain_event_name",
         data: { content: "domain-event-data" },
         aggregate: {
           id: randomUUID(),

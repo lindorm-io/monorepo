@@ -168,6 +168,30 @@ export class EventStore extends MongoBase<EventStoreAttributes> implements IEven
     return aggregate;
   }
 
+  public async query(
+    filter: Filter<EventStoreAttributes>,
+    options?: FindOptions,
+  ): Promise<Array<EventStoreAttributes>> {
+    const start = Date.now();
+
+    this.logger.debug("Querying EventStore", {
+      filter,
+      options,
+    });
+
+    await this.promise();
+
+    const cursor = await this.collection.find(filter, options);
+    const docs = await cursor.toArray();
+
+    this.logger.verbose("Query successful", {
+      amount: docs.length,
+      time: Date.now() - start,
+    });
+
+    return docs as Array<EventStoreAttributes>;
+  }
+
   // private
 
   private async find(

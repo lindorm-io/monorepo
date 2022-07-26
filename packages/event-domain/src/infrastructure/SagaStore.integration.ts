@@ -51,8 +51,8 @@ describe("SagaStore", () => {
     await expect(store.save(entity, event)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         messagesToDispatch: [],
@@ -90,8 +90,8 @@ describe("SagaStore", () => {
     await expect(store.save(changed, event2)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [event1.id, event2.id],
         destroyed: false,
         messagesToDispatch: [],
@@ -108,8 +108,8 @@ describe("SagaStore", () => {
     await expect(store.load(saga)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [],
         destroyed: false,
         messagesToDispatch: [],
@@ -128,8 +128,8 @@ describe("SagaStore", () => {
     await expect(store.load(saga)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         messagesToDispatch: [],
@@ -155,8 +155,8 @@ describe("SagaStore", () => {
     await expect(store.clearMessagesToDispatch(saved)).resolves.toStrictEqual(
       expect.objectContaining({
         id: saga.id,
-        name: "sagaName",
-        context: "sagaContext",
+        name: "saga_name",
+        context: "default",
         causationList: [event.id],
         destroyed: false,
         messagesToDispatch: [],

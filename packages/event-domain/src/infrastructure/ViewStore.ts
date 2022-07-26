@@ -5,17 +5,19 @@ import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../error";
 import { View } from "../entity";
-import { flatten } from "lodash";
+import { flatten, snakeCase } from "lodash";
 import {
+  HandlerIdentifier,
   IViewStore,
+  State,
+  StoreBaseIndex,
   ViewData,
   ViewIdentifier,
   ViewStoreAttributes,
+  ViewStoreCollectionOptions,
   ViewStoreDocumentOptions,
-  StoreBaseIndex,
   ViewStoreOptions,
   ViewStoreQueryOptions,
-  State,
 } from "../types";
 
 export class ViewStore implements IViewStore {
@@ -94,7 +96,10 @@ export class ViewStore implements IViewStore {
       documentOptions,
     });
 
-    const collection = await this.collection(documentOptions);
+    const collection = await this.collection({
+      ...documentOptions,
+      collection: documentOptions.collection || ViewStore.getCollectionName(json),
+    });
 
     const existing = await this.find(
       collection,
@@ -142,7 +147,10 @@ export class ViewStore implements IViewStore {
 
     this.logger.debug("Loading View", { viewIdentifier, documentOptions });
 
-    const collection = await this.collection(documentOptions);
+    const collection = await this.collection({
+      ...documentOptions,
+      collection: documentOptions.collection || ViewStore.getCollectionName(viewIdentifier),
+    });
 
     const existing = await this.find(collection, viewIdentifier);
 
@@ -167,7 +175,7 @@ export class ViewStore implements IViewStore {
 
   public async query<S extends State = State>(
     queryOptions: ViewStoreQueryOptions,
-    filter: Filter<ViewStoreAttributes>,
+    filter: Filter<ViewStoreAttributes> = {},
     findOptions: FindOptions = {},
   ): Promise<Array<ViewStoreAttributes<S>>> {
     const start = Date.now();
@@ -190,10 +198,25 @@ export class ViewStore implements IViewStore {
     return docs as Array<ViewStoreAttributes<S>>;
   }
 
+  public async collections(): Promise<Array<string>> {
+    const database = this.databaseName || this.connection.database;
+    const collections = await this.connection.client.db(database).collections();
+
+    return collections
+      .map((item) => item.collectionName)
+      .filter((name) => name.startsWith("views_"));
+  }
+
+  public async dropCollection(collection: string): Promise<void> {
+    const database = this.databaseName || this.connection.database;
+
+    await this.connection.client.db(database).dropCollection(collection);
+  }
+
   // private
 
   private async collection(
-    options: ViewStoreDocumentOptions,
+    options: ViewStoreCollectionOptions,
   ): Promise<Collection<ViewStoreAttributes>> {
     const start = Date.now();
 
@@ -404,5 +427,11 @@ export class ViewStore implements IViewStore {
 
       throw err;
     }
+  }
+
+  // public static
+
+  public static getCollectionName(identifier: HandlerIdentifier): string {
+    return `views_${snakeCase(identifier.context)}_${snakeCase(identifier.name)}`;
   }
 }

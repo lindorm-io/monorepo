@@ -38,7 +38,9 @@ describe("ViewRepository", () => {
 
     await connection.connect();
 
-    const collection = connection.client.db("db").collection<ViewStoreAttributes>(view.name);
+    const collection = connection.client
+      .db("db")
+      .collection<ViewStoreAttributes>(`views_${view.context}_${view.name}`);
 
     view1 = randomUUID();
     view2 = randomUUID();
