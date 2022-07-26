@@ -7,9 +7,10 @@ import {
   CacheRepositoryOptions,
   CacheStoreAttributes,
   HandlerIdentifier,
+  State,
 } from "../types";
 
-export class CacheRepository<S> extends RedisBase {
+export class CacheRepository extends RedisBase {
   private readonly index: CacheIndex;
   private readonly identifier: HandlerIdentifier;
 
@@ -23,7 +24,7 @@ export class CacheRepository<S> extends RedisBase {
     });
   }
 
-  public async get(id: string): Promise<CacheRepositoryData<S> | null> {
+  public async get<S = State>(id: string): Promise<CacheRepositoryData<S> | null> {
     const start = Date.now();
 
     await this.promise();
@@ -68,7 +69,7 @@ export class CacheRepository<S> extends RedisBase {
     }
   }
 
-  public async getAll(): Promise<Array<CacheRepositoryData<S>>> {
+  public async getAll<S = State>(): Promise<Array<CacheRepositoryData<S>>> {
     const start = Date.now();
 
     await this.promise();

@@ -1,9 +1,9 @@
 import { Filter, FindOptions } from "mongodb";
 import { MongoBase } from "./MongoBase";
-import { ViewRepositoryData, ViewRepositoryOptions, ViewStoreAttributes } from "../types";
+import { State, ViewRepositoryData, ViewRepositoryOptions, ViewStoreAttributes } from "../types";
 import { ViewStore } from "./ViewStore";
 
-export class ViewRepository<S> extends MongoBase<ViewStoreAttributes> {
+export class ViewRepository extends MongoBase<ViewStoreAttributes> {
   private readonly filter: Filter<ViewStoreAttributes>;
   private readonly options: FindOptions;
 
@@ -56,7 +56,7 @@ export class ViewRepository<S> extends MongoBase<ViewStoreAttributes> {
     }
   }
 
-  public async find(
+  public async find<S = State>(
     findFilter: Filter<ViewStoreAttributes> = {},
     findOptions: FindOptions = {},
   ): Promise<Array<ViewRepositoryData<S>>> {
@@ -94,7 +94,7 @@ export class ViewRepository<S> extends MongoBase<ViewStoreAttributes> {
     }
   }
 
-  public async findOne(
+  public async findOne<S = State>(
     findFilter: Filter<ViewStoreAttributes> = {},
     findOptions: FindOptions = {},
   ): Promise<ViewRepositoryData<S>> {

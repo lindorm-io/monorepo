@@ -10,7 +10,7 @@ import {
   HandlerIdentifier,
   IViewStore,
   State,
-  StoreBaseIndex,
+  MongoIndex,
   ViewData,
   ViewIdentifier,
   ViewStoreAttributes,
@@ -23,7 +23,7 @@ import {
 export class ViewStore implements IViewStore {
   private readonly connection: MongoConnection;
   private readonly databaseName: string;
-  private readonly indices: Array<StoreBaseIndex>;
+  private readonly indices: Array<MongoIndex>;
   private readonly logger: Logger;
 
   public constructor(options: ViewStoreOptions) {
@@ -85,7 +85,7 @@ export class ViewStore implements IViewStore {
   public async save(
     view: View,
     causation: DomainEvent,
-    documentOptions: ViewStoreDocumentOptions,
+    documentOptions: ViewStoreDocumentOptions = {},
   ): Promise<View> {
     const start = Date.now();
     const json = view.toJSON();
@@ -97,8 +97,8 @@ export class ViewStore implements IViewStore {
     });
 
     const collection = await this.collection({
-      ...documentOptions,
-      collection: documentOptions.collection || ViewStore.getCollectionName(json),
+      collection: ViewStore.getCollectionName(json),
+      indices: documentOptions.indices,
     });
 
     const existing = await this.find(
@@ -141,15 +141,15 @@ export class ViewStore implements IViewStore {
 
   public async load(
     viewIdentifier: ViewIdentifier,
-    documentOptions: ViewStoreDocumentOptions,
+    documentOptions: ViewStoreDocumentOptions = {},
   ): Promise<View> {
     const start = Date.now();
 
     this.logger.debug("Loading View", { viewIdentifier, documentOptions });
 
     const collection = await this.collection({
-      ...documentOptions,
-      collection: documentOptions.collection || ViewStore.getCollectionName(viewIdentifier),
+      collection: ViewStore.getCollectionName(viewIdentifier),
+      indices: documentOptions.indices,
     });
 
     const existing = await this.find(collection, viewIdentifier);

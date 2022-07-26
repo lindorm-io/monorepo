@@ -11,7 +11,7 @@ describe("ViewRepository", () => {
   const logger = createMockLogger();
 
   let connection: MongoConnection;
-  let repository: ViewRepository<any>;
+  let repository: ViewRepository;
   let view: ViewIdentifier;
 
   let view1: string;

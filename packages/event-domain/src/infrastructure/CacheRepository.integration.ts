@@ -17,7 +17,7 @@ describe("CacheRepository", () => {
   const logger = createMockLogger();
 
   let connection: RedisConnection;
-  let repository: CacheRepository<any>;
+  let repository: CacheRepository;
   let cache: CacheIdentifier;
 
   let cache1: string;

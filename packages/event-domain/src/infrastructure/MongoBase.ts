@@ -1,19 +1,19 @@
 import { Collection } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
-import { StoreBaseIndex, StoreBaseOptions } from "../types";
+import { MongoIndex, MongoBaseOptions } from "../types";
 
 export abstract class MongoBase<Attributes> {
   protected readonly collectionName: string;
   protected readonly connection: MongoConnection;
   protected readonly databaseName: string;
-  protected readonly indices: Array<StoreBaseIndex>;
+  protected readonly indices: Array<MongoIndex>;
   protected readonly logger: Logger;
 
   protected collection: Collection<Attributes>;
   protected promise: () => Promise<void>;
 
-  protected constructor(options: StoreBaseOptions) {
+  protected constructor(options: MongoBaseOptions) {
     this.collectionName = options.collection;
     this.connection = options.connection;
     this.databaseName = options.database || options.connection.database;
