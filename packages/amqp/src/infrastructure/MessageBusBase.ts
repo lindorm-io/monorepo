@@ -1,10 +1,17 @@
 import { AmqpConnection } from "../connection";
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { ILogger } from "@lindorm-io/winston";
-import { IMessage, IMessageBus, ISubscription, LindormMessageBusOptions } from "../types";
-import { isArray } from "lodash";
+import { find, isArray, remove } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { sanitizeRouteKey } from "../util";
+import {
+  IMessage,
+  IMessageBus,
+  ISubscription,
+  LindormMessageBusOptions,
+  SubscriptionData,
+  UnsubscribeOptions,
+} from "../types";
 
 export abstract class MessageBusBase<
   Message extends IMessage = IMessage,
@@ -13,7 +20,7 @@ export abstract class MessageBusBase<
 {
   private readonly connection: AmqpConnection;
   private readonly nackTimeout: number;
-  private readonly subscriptions: Array<Subscription>;
+  private readonly subscriptions: Array<SubscriptionData<Subscription>>;
 
   protected readonly logger: ILogger;
 
@@ -49,6 +56,10 @@ export abstract class MessageBusBase<
 
     const array = isArray(messages) ? messages : [messages];
 
+    this.logger.verbose("Publishing messages", {
+      messages: array,
+    });
+
     for (const message of array) {
       await this.validateMessage(message);
       await this.handleMessage(message);
@@ -60,10 +71,39 @@ export abstract class MessageBusBase<
 
     const array = isArray(subscriptions) ? subscriptions : [subscriptions];
 
+    this.logger.verbose("Creating subscriptions", {
+      subscriptions: array,
+    });
+
     for (const subscription of array) {
       await this.validateSubscription(subscription);
       await this.handleSubscription(subscription);
-      this.subscriptions.push(subscription);
+    }
+  }
+
+  public async unsubscribe(
+    subscriptions: UnsubscribeOptions | Array<UnsubscribeOptions>,
+  ): Promise<void> {
+    await this.connection.connect();
+
+    const array = isArray(subscriptions) ? subscriptions : [subscriptions];
+
+    this.logger.verbose("Removing subscriptions", {
+      subscriptions: array,
+    });
+
+    for (const subscription of array) {
+      await this.handleUnsubscribe(subscription);
+    }
+  }
+
+  public async unsubscribeAll(): Promise<void> {
+    await this.connection.connect();
+
+    this.logger.verbose("Removing all subscriptions");
+
+    for (const subscription of this.subscriptions) {
+      await this.handleUnsubscribe(subscription);
     }
   }
 
@@ -86,7 +126,7 @@ export abstract class MessageBusBase<
       deadLetterRoutingKey: this.connection.deadLetters,
     });
 
-    await this.connection.channel.consume(queue, (msg) => {
+    const { consumerTag } = await this.connection.channel.consume(queue, (msg) => {
       const message = this.createMessage(parseBlob(msg.content.toString()) as Message);
 
       this.logger.debug("Subscription consuming message", {
@@ -119,7 +159,20 @@ export abstract class MessageBusBase<
         });
     });
 
-    this.logger.debug("Subscription created", { subscription });
+    this.logger.debug("Subscription created", { consumerTag, subscription });
+
+    this.subscriptions.push({ consumerTag, queue, routingKey, subscription });
+  }
+
+  private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {
+    const { queue, routingKey } = subscription;
+    const { consumerTag } = find(this.subscriptions, { queue, routingKey });
+
+    await this.connection.channel.cancel(consumerTag);
+
+    remove(this.subscriptions, { consumerTag });
+
+    this.logger.debug("Unsubscribe successful", { consumerTag, queue, routingKey });
   }
 
   private async publishMessage(message: Message): Promise<void> {
@@ -187,8 +240,8 @@ export abstract class MessageBusBase<
   private async onConnected(): Promise<void> {
     if (this.isConnected) return;
 
-    for (const subscription of this.subscriptions) {
-      await this.handleSubscription(subscription);
+    for (const data of this.subscriptions) {
+      await this.handleSubscription(data.subscription);
     }
 
     this.isConnected = true;

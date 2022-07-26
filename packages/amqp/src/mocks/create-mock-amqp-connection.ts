@@ -60,7 +60,11 @@ export const createMockAmqpConnection = (): IAmqpConnection => {
     connect: jest.fn().mockResolvedValue(undefined),
     disconnect: jest.fn().mockResolvedValue(undefined),
     client,
+
     status: ConnectionStatus.CONNECTED,
+    isConnected: true,
+    isConnecting: false,
+    isDisconnected: false,
 
     bindQueue: jest.fn().mockResolvedValue(undefined),
     channel: confirmChannel,

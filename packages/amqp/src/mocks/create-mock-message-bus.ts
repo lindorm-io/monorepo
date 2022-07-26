@@ -1,6 +1,6 @@
+import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "../types";
 import { MessageBusBase } from "../infrastructure";
-import { IMessageBus, IMessage, ISubscription } from "../types";
-import { flatten, isArray } from "lodash";
+import { filter, flatten, isArray, remove } from "lodash";
 
 export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
   let array: Array<ISubscription> = [];
@@ -10,14 +10,34 @@ export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
       const list = isArray(messages) ? messages : [messages];
 
       for (const message of list) {
-        for (const sub of array) {
-          if (message.routingKey !== sub.routingKey) continue;
-          await sub.callback(message);
+        const subscriptions = filter(array, { routingKey: message.routingKey });
+
+        for (const subscription of subscriptions) {
+          if (message.delay) {
+            setTimeout(() => subscription.callback(message), message.delay);
+          } else {
+            await subscription.callback(message);
+          }
         }
       }
     }),
+
     subscribe: jest.fn().mockImplementation(async (subscriptions: Array<ISubscription>) => {
       array = flatten([array, subscriptions]);
+    }),
+
+    unsubscribe: jest
+      .fn()
+      .mockImplementation(async (subscriptions: UnsubscribeOptions | Array<UnsubscribeOptions>) => {
+        const list = isArray(subscriptions) ? subscriptions : [subscriptions];
+
+        for (const sub of list) {
+          remove(array, sub);
+        }
+      }),
+
+    unsubscribeAll: jest.fn().mockImplementation(async () => {
+      array = [];
     }),
   };
 

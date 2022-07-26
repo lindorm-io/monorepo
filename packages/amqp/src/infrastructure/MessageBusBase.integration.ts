@@ -127,4 +127,39 @@ describe("MessageBusBase", () => {
 
     expect(subscription4.callback).toHaveBeenCalledWith(message4);
   }, 15000);
+
+  test("should unsubscribe", async () => {
+    const subscription5: ISubscription = {
+      callback: jest.fn().mockImplementation(async () => {}),
+      queue: "subscription-queue-5",
+      routingKey: "message-route-5",
+    };
+
+    const message5: IMessage = {
+      id: randomUUID(),
+      name: "message-name-5",
+      data: {},
+      delay: 0,
+      mandatory: true,
+      routingKey: "message-route-5",
+      timestamp: new Date(),
+      type: "type",
+    };
+
+    await expect(messageBus.subscribe(subscription5)).resolves.toBeUndefined();
+    await sleep(500);
+
+    await expect(messageBus.unsubscribe(subscription5)).resolves.toBeUndefined();
+    await sleep(500);
+
+    await expect(messageBus.publish(message5)).resolves.toBeUndefined();
+    await sleep(3000);
+
+    expect(subscription5.callback).not.toHaveBeenCalledWith(message5);
+
+    await expect(messageBus.subscribe(subscription5)).resolves.toBeUndefined();
+    await sleep(500);
+
+    expect(subscription5.callback).toHaveBeenCalledWith(message5);
+  }, 15000);
 });
