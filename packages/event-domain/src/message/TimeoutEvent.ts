@@ -1,9 +1,9 @@
-import { IMessage, MessageOptions } from "../types";
+import { Data, IMessage, MessageOptions } from "../types";
 import { Message } from "./Message";
 import { MessageType } from "../enum";
 
-export class TimeoutEvent extends Message implements IMessage {
-  public constructor(options: MessageOptions, causation?: Message) {
+export class TimeoutEvent<D extends Data = Data> extends Message<D> implements IMessage {
+  public constructor(options: MessageOptions<D>, causation?: Message) {
     super(
       {
         ...options,
