@@ -7,9 +7,12 @@ import { flatten, last, uniqBy } from "lodash";
 import { intervalToDuration } from "date-fns";
 import {
   AggregateIdentifier,
+  Data,
+  EventEmitterListener,
   EventStoreAttributes,
   IReplayDomain,
   ReplayDomainOptions,
+  ReplayEventData,
   ReplayOptions,
 } from "../types";
 
@@ -43,16 +46,41 @@ export class ReplayDomain implements IReplayDomain {
 
   // public
 
-  public on(eventName: string, listener: () => void): void {
+  public on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void {
     this.eventEmitter.on(eventName, listener);
   }
 
   public async replay(options: ReplayOptions = {}): Promise<void> {
+    const data: ReplayEventData = {
+      dropView: {
+        completed: [],
+        remaining: [],
+        delay: options.delay?.dropView || 2000,
+      },
+      moveView: {
+        completed: [],
+        remaining: options.views,
+        delay: options.delay?.moveView || 2000,
+        suffix: options.suffix || "backup",
+      },
+      publishEvents: {
+        amount: 0,
+        contexts: options.aggregateContexts || [this.context],
+        delay: options.delay?.publishEvents || 2000,
+        previous: [],
+      },
+      start: {
+        delay: options.delay?.start || 2000,
+        timestamp: new Date(),
+      },
+    };
+
     await this.messageBus.publish(
-      new ReplayEvent({
+      new ReplayEvent<ReplayEventData>({
         name: ReplayEventName.START,
         aggregate: this.aggregate,
-        data: { ...options, startDate: new Date(), startDelay: options.startDelay || 2000 },
+        data,
+        mandatory: true,
       }),
     );
   }
@@ -65,9 +93,14 @@ export class ReplayDomain implements IReplayDomain {
         routingKey: this.getRoutingKey(ReplayEventName.START),
       },
       {
+        callback: this.handleMoveView.bind(this),
+        queue: this.getQueue(ReplayEventName.MOVE_VIEW),
+        routingKey: this.getRoutingKey(ReplayEventName.MOVE_VIEW),
+      },
+      {
         callback: this.handleDropView.bind(this),
-        queue: this.getQueue(ReplayEventName.DROP_VIEWS),
-        routingKey: this.getRoutingKey(ReplayEventName.DROP_VIEWS),
+        queue: this.getQueue(ReplayEventName.DROP_VIEW),
+        routingKey: this.getRoutingKey(ReplayEventName.DROP_VIEW),
       },
       {
         callback: this.handlePublishEvents.bind(this),
@@ -84,84 +117,102 @@ export class ReplayDomain implements IReplayDomain {
 
   // private
 
-  private async handleStart(replayEvent: ReplayEvent): Promise<void> {
-    this.logger.debug("Handling event", { event: replayEvent });
+  private async handleStart(event: ReplayEvent<ReplayEventData>): Promise<void> {
+    this.logger.debug("Handling event", { event });
 
     this.eventEmitter.emit(ReplayEventName.START);
 
     let name = ReplayEventName.PUBLISH_EVENTS;
 
-    if (replayEvent.data.dropViews.length) {
-      name = ReplayEventName.DROP_VIEWS;
+    if (event.data.moveView.remaining.length) {
+      name = ReplayEventName.MOVE_VIEW;
     }
 
     await this.messageBus.publish(
-      new ReplayEvent(
+      new ReplayEvent<ReplayEventData>(
         {
           name,
-          aggregate: replayEvent.aggregate,
-          data: replayEvent.data,
-          delay: replayEvent.data.startDelay,
+          aggregate: event.aggregate,
+          data: event.data,
+          delay: event.data.start.delay,
         },
-        replayEvent,
+        event,
       ),
     );
   }
 
-  private async handleDropView(replayEvent: ReplayEvent): Promise<void> {
-    this.logger.debug("Handling event", { event: replayEvent });
+  private async handleMoveView(event: ReplayEvent<ReplayEventData>): Promise<void> {
+    this.logger.debug("Handling event", { event });
 
-    if (!replayEvent.data.dropViews.length) {
+    if (!event.data.moveView.remaining.length) {
       return this.messageBus.publish(
-        new ReplayEvent(
+        new ReplayEvent<ReplayEventData>(
           {
             name: ReplayEventName.PUBLISH_EVENTS,
-            aggregate: replayEvent.aggregate,
-            data: replayEvent.data,
+            aggregate: event.aggregate,
+            data: event.data,
+            delay: event.data.moveView.delay,
+            mandatory: true,
           },
-          replayEvent,
+          event,
         ),
       );
     }
 
-    this.eventEmitter.emit(ReplayEventName.DROP_VIEWS);
+    const [view, ...remaining] = event.data.moveView.remaining;
+    const newName = `${view}_${event.data.moveView.suffix}`;
+    const completed = flatten([event.data.moveView.completed, view]);
 
-    const [view, ...dropViews] = replayEvent.data.dropViews;
-    const droppedViews = replayEvent.data.droppedViews
-      ? flatten([replayEvent.data.droppedViews, view])
-      : [view];
+    await this.viewStore.renameCollection(view, newName);
 
-    await this.viewStore.dropCollection(view);
+    this.logger.debug("Moved view", {
+      previousName: view,
+      newName,
+    });
 
-    this.logger.debug("Dropped view", {
-      context: this.context,
-      view,
+    this.eventEmitter.emit(ReplayEventName.MOVE_VIEW, {
+      previousName: view,
+      newName,
     });
 
     await this.messageBus.publish(
-      new ReplayEvent(
+      new ReplayEvent<ReplayEventData>(
         {
-          name: ReplayEventName.DROP_VIEWS,
-          aggregate: replayEvent.aggregate,
-          data: { ...replayEvent.data, droppedViews, dropViews },
+          name: ReplayEventName.DROP_VIEW,
+          aggregate: event.aggregate,
+          data: {
+            ...event.data,
+            dropView: {
+              ...event.data.dropView,
+              remaining: completed,
+            },
+            moveView: {
+              ...event.data.moveView,
+              completed,
+              remaining,
+            },
+          },
+          delay: event.data.moveView.delay,
+          mandatory: true,
         },
-        replayEvent,
+        event,
       ),
     );
   }
 
-  private async handlePublishEvents(replayEvent: ReplayEvent): Promise<void> {
-    this.logger.debug("Handling event", { event: replayEvent });
+  private async handlePublishEvents(event: ReplayEvent<ReplayEventData>): Promise<void> {
+    this.logger.debug("Handling event", { event });
 
-    const documents = await this.queryEvents(replayEvent);
-    const domainEvents = this.filterDomainEvents(documents, replayEvent);
+    const documents = await this.queryEvents(event);
+    const domainEvents = this.filterDomainEvents(documents, event);
 
     if (!domainEvents.length) {
       return this.messageBus.publish(
-        new ReplayEvent({
-          name: ReplayEventName.STOP,
-          aggregate: replayEvent.aggregate,
-          data: replayEvent.data,
+        new ReplayEvent<ReplayEventData>({
+          name: ReplayEventName.DROP_VIEW,
+          aggregate: event.aggregate,
+          data: event.data,
+          delay: event.data.publishEvents.delay,
         }),
       );
     }
@@ -170,59 +221,106 @@ export class ReplayDomain implements IReplayDomain {
 
     await this.messageBus.publish(domainEvents);
 
-    const lastDoc = last(documents);
-    const lastPublishedEvents = domainEvents.map((item) => item.id);
-    const publishedEvents = replayEvent.data.publishedEvents || 0;
+    const published = domainEvents.map((item) => item.id);
 
     this.logger.debug("Published events", {
-      eventStoreTimestamp: lastDoc.timestamp,
-      lastPublishedEvents,
-      publishedEvents,
+      published,
     });
 
     await this.messageBus.publish(
-      new ReplayEvent({
+      new ReplayEvent<ReplayEventData>({
         name: ReplayEventName.PUBLISH_EVENTS,
-        aggregate: replayEvent.aggregate,
+        aggregate: event.aggregate,
         data: {
-          ...replayEvent.data,
-          lastPublishedEvents,
-          publishedEvents: publishedEvents + lastPublishedEvents.length,
-          eventStoreTimestamp: new Date(lastDoc.timestamp),
+          ...event.data,
+          publishEvents: {
+            ...event.data.publishEvents,
+            amount: event.data.publishEvents.amount + domainEvents.length,
+            timestamp: last(documents).timestamp,
+            previous: published,
+          },
         },
-        delay: 2000,
+        delay: event.data.publishEvents.delay,
       }),
     );
   }
 
-  private async handleStop(replayEvent: ReplayEvent): Promise<void> {
+  private async handleDropView(event: ReplayEvent<ReplayEventData>): Promise<void> {
+    this.logger.debug("Handling event", { event });
+
+    if (!event.data.dropView.remaining.length) {
+      return this.messageBus.publish(
+        new ReplayEvent<ReplayEventData>(
+          {
+            name: ReplayEventName.STOP,
+            aggregate: event.aggregate,
+            data: event.data,
+            delay: event.data.dropView.delay,
+          },
+          event,
+        ),
+      );
+    }
+
+    const [view, ...remaining] = event.data.dropView.remaining;
+    const completed = flatten([event.data.dropView.completed, view]);
+
+    await this.viewStore.dropCollection(view);
+
+    this.logger.debug("Dropped view", {
+      view,
+    });
+
+    this.eventEmitter.emit(ReplayEventName.DROP_VIEW, {
+      collectionName: view,
+    });
+
+    return this.messageBus.publish(
+      new ReplayEvent<ReplayEventData>(
+        {
+          name: ReplayEventName.DROP_VIEW,
+          aggregate: event.aggregate,
+          data: {
+            ...event.data,
+            dropView: {
+              ...event.data.dropView,
+              completed,
+              remaining,
+            },
+          },
+          delay: event.data.dropView.delay,
+        },
+        event,
+      ),
+    );
+  }
+
+  private async handleStop(event: ReplayEvent<ReplayEventData>): Promise<void> {
+    this.logger.debug("Handling event", { event });
+
     this.eventEmitter.emit(ReplayEventName.STOP);
 
-    const {
-      data: { droppedViews, publishedEvents, startDate },
-    } = replayEvent;
-
     const duration = intervalToDuration({
-      start: startDate,
-      end: replayEvent.timestamp,
+      start: event.data.start.timestamp,
+      end: event.timestamp,
     });
 
     this.logger.info("Replay complete", {
-      droppedViews,
+      ...event.data,
       duration,
-      publishedEvents,
-      time: replayEvent.timestamp.getTime() - startDate.getTime(),
     });
   }
 
   // private helpers
 
-  private async queryEvents(replayEvent: ReplayEvent): Promise<Array<EventStoreAttributes>> {
+  private async queryEvents(
+    event: ReplayEvent<ReplayEventData>,
+  ): Promise<Array<EventStoreAttributes>> {
     return await this.eventStore.query(
       {
         context: this.context,
-        ...(replayEvent.data.eventStoreTimestamp
-          ? { timestamp: { $gte: replayEvent.data.eventStoreTimestamp } }
+        ...(event.data.publishEvents.timestamp
+          ? { timestamp: { $gte: event.data.publishEvents.timestamp } }
           : {}),
       },
       {
@@ -244,18 +342,18 @@ export class ReplayDomain implements IReplayDomain {
 
   private filterDomainEvents(
     documents: Array<EventStoreAttributes>,
-    replayEvent: ReplayEvent,
+    replayEvent: ReplayEvent<ReplayEventData>,
   ): Array<DomainEvent> {
     this.logger.debug("Filtering documents", { documents });
 
-    const lastPublishedEvents = replayEvent.data.lastPublishedEvents || [];
+    const previous = replayEvent.data.publishEvents.previous;
     const domainEvents: Array<DomainEvent> = [];
 
     for (const aggregate of documents) {
       if (aggregate.context !== this.context) continue;
 
       for (const event of aggregate.events) {
-        if (lastPublishedEvents.includes(event.id)) continue;
+        if (previous.includes(event.id)) continue;
 
         domainEvents.push(
           new DomainEvent({
