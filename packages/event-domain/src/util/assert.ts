@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm-io/errors";
 import { ValidationResult } from "joi";
-import { camelCase } from "lodash";
+import { snakeCase } from "lodash";
 
 export const assertSchema = (result?: ValidationResult): void => {
   if (!result?.error) return;
@@ -21,8 +21,8 @@ export const assertSchemaAsync = async (promise: Promise<any>): Promise<void> =>
   }
 };
 
-export const assertCamelCase = (input: string): void => {
-  if (camelCase(input) === input) return;
+export const assertSnakeCase = (input: string): void => {
+  if (snakeCase(input) === input) return;
 
-  throw new LindormError(`${input} is not in camelCase`);
+  throw new LindormError(`${input} is not in snakeCase`);
 };
