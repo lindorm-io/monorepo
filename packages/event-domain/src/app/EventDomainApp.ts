@@ -11,8 +11,8 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
 import { ReplayEventName } from "../enum";
 import { StructureScanner } from "../util";
+import { camelCase, find, flatten, isArray, merge, remove, snakeCase, uniq } from "lodash";
 import { join } from "path";
-import { merge, snakeCase } from "lodash";
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
@@ -32,37 +32,44 @@ import {
 import {
   AggregateCommandHandlerFile,
   AggregateEventHandlerFile,
-  AppOptions,
+  AppAdmin,
+  PrivateAppOptions,
   AppStructure,
   CacheEventHandlerFile,
-  CreateCacheRepositoryOptions,
-  CreateViewRepositoryOptions,
-  EventDomainAppOptions,
+  CacheEventHandlerFileAggregate,
+  CacheRepositoryInfo,
+  Data,
   EventEmitterListener,
   HandlerConditions,
-  IEventDomainApp,
-  InspectAggregateOptions,
-  PublishOptions,
-  PublishResult,
+  IApp,
+  AppInspectOptions,
+  MongoIndex,
+  AppOptions,
+  AppPublishOptions,
+  AppPublishResult,
   ReplayOptions,
   SagaEventHandlerFile,
+  SagaEventHandlerFileAggregate,
   SagaStoreSaveOptions,
   State,
-  StoreBaseIndex,
   ViewEventHandlerFile,
+  ViewEventHandlerFileAggregate,
+  ViewRepositoryInfo,
   ViewStoreAttributes,
   ViewStoreDocumentOptions,
   ViewStoreQueryOptions,
 } from "../types";
 
-export class EventDomainApp implements IEventDomainApp {
+export class EventDomainApp<Caches extends string, Views extends string>
+  implements IApp<Caches, Views>
+{
   private readonly amqp: AmqpConnection;
   private readonly messageBus: MessageBus;
   private readonly mongo: MongoConnection;
   private readonly redis: RedisConnection;
 
   private readonly logger: Logger;
-  private readonly options: AppOptions;
+  private readonly options: PrivateAppOptions;
 
   private readonly aggregateDomain: AggregateDomain;
   private readonly cacheDomain: CacheDomain;
@@ -76,12 +83,17 @@ export class EventDomainApp implements IEventDomainApp {
   private readonly sagaEventHandlers: Array<SagaEventHandler>;
   private readonly viewEventHandlers: Array<ViewEventHandler>;
 
-  private promise: () => Promise<void>;
-  private initialising: boolean;
+  private readonly cacheRepositories: Array<CacheRepositoryInfo>;
+  private readonly viewRepositories: Array<ViewRepositoryInfo>;
+
+  private aggregateContexts: Array<string>;
   private initialised: boolean;
+  private initialising: boolean;
   private replaying: boolean;
 
-  public constructor(options: EventDomainAppOptions) {
+  private promise: () => Promise<void>;
+
+  public constructor(options: AppOptions) {
     const { amqp, mongo, redis, logger, ...appOptions } = options;
 
     this.logger = logger.createChildLogger(["EventDomainApp"]);
@@ -143,12 +155,6 @@ export class EventDomainApp implements IEventDomainApp {
       logger: this.logger,
     });
 
-    const sagaStore = new SagaStore({
-      connection: this.mongo,
-      database: this.options.domain.database,
-      logger: this.logger,
-    });
-
     const viewStore = new ViewStore({
       connection: this.mongo,
       database: this.options.domain.database,
@@ -169,14 +175,18 @@ export class EventDomainApp implements IEventDomainApp {
     this.sagaDomain = new SagaDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      store: sagaStore,
+      store: new SagaStore({
+        connection: this.mongo,
+        database: this.options.domain.database,
+        logger: this.logger,
+      }),
     });
 
     this.replayDomain = new ReplayDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      eventStore,
-      viewStore,
+      eventStore: eventStore,
+      viewStore: viewStore,
       context: this.options.domain.context,
     });
 
@@ -203,6 +213,10 @@ export class EventDomainApp implements IEventDomainApp {
     this.sagaEventHandlers = [];
     this.viewEventHandlers = [];
 
+    this.aggregateContexts = [];
+    this.cacheRepositories = [];
+    this.viewRepositories = [];
+
     this.promise = this.initialise;
   }
 
@@ -222,72 +236,63 @@ export class EventDomainApp implements IEventDomainApp {
     /* ignored */
   }
 
-  // public
+  public get admin(): AppAdmin {
+    return {
+      inspect: this.inspect.bind(this),
+      query: this.query.bind(this),
+      replay: this.replay.bind(this),
+      listCollections: this.listCollections.bind(this),
 
-  public createCacheRepository<S>(
-    name: string,
-    options: CreateCacheRepositoryOptions = {},
-  ): CacheRepository<S> {
-    return new CacheRepository<S>({
-      connection: this.redis,
-      logger: this.logger,
-      cache: {
-        name,
-        context: options.context || this.options.domain.context,
-      },
-    });
-  }
-
-  public createViewRepository<S>(
-    name: string,
-    options: CreateViewRepositoryOptions = {},
-  ): ViewRepository<S> {
-    const view = {
-      name,
-      context: options.context || this.options.domain.context,
+      registerAggregateCommandHandlers: this.registerAggregateCommandHandlers.bind(this),
+      registerAggregateEventHandlers: this.registerAggregateEventHandlers.bind(this),
+      registerCacheEventHandlers: this.registerCacheEventHandlers.bind(this),
+      registerSagaEventHandlers: this.registerSagaEventHandlers.bind(this),
+      registerViewEventHandlers: this.registerViewEventHandlers.bind(this),
     };
-
-    return new ViewRepository<S>({
-      collection: options.collection || ViewStore.getCollectionName(view),
-      connection: this.mongo,
-      database: options.database || this.options.domain.database,
-      indices: options.indices,
-      logger: this.logger,
-      view,
-    });
+  }
+  public set admin(_: AppAdmin) {
+    /* ignored */
   }
 
-  public async init(): Promise<void> {
-    await this.promise();
-  }
+  public get caches(): Record<Caches, CacheRepository> {
+    const record: Record<string, CacheRepository> = {};
 
-  public async inspect<S extends State = State>(
-    aggregate: InspectAggregateOptions,
-  ): Promise<Aggregate<S>> {
-    await this.promise();
-
-    return this.aggregateDomain.inspect<S>({
-      id: aggregate.id,
-      name: aggregate.name,
-      context: aggregate.context || this.options.domain.context,
-    });
-  }
-
-  public on<S = State>(eventName: string, listener: EventEmitterListener<S>): void {
-    if (eventName.startsWith("cache")) {
-      this.cacheDomain.on(eventName, listener);
+    for (const info of this.cacheRepositories) {
+      record[camelCase(info.name)] = new CacheRepository({
+        cache: { name: info.name, context: info.context },
+        connection: this.redis,
+        logger: this.logger,
+      });
     }
 
-    if (eventName.startsWith("replay")) {
-      this.viewDomain.on(eventName, listener);
-    }
-
-    if (eventName.startsWith("view")) {
-      this.viewDomain.on(eventName, listener);
-    }
+    return record;
+  }
+  public set caches(_: Record<Caches, CacheRepository>) {
+    /* ignored */
   }
 
-  public async publish(options: PublishOptions): Promise<PublishResult> {
+  public get views(): Record<Views, ViewRepository> {
+    const record: Record<string, ViewRepository> = {};
+
+    for (const info of this.viewRepositories) {
+      record[camelCase(info.name)] = new ViewRepository({
+        collection: info.replay || info.collection,
+        connection: this.mongo,
+        database: this.options.domain.database,
+        logger: this.logger,
+        view: { name: info.name, context: info.context },
+      });
+    }
+
+    return record;
+  }
+  public set views(_: Record<Views, ViewRepository>) {
+    /* ignored */
+  }
+
+  // public app
+
+  public async publish(options: AppPublishOptions): Promise<AppPublishResult> {
     await this.promise();
 
     const command = new Command({
@@ -316,32 +321,69 @@ export class EventDomainApp implements IEventDomainApp {
     await this.messageBus.publish(command);
 
     if (this.replaying) return "QUEUED";
-
     return "OK";
   }
 
-  public async query<S extends State = State>(
+  public on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void {
+    if (eventName.startsWith("cache")) {
+      this.cacheDomain.on(eventName, listener);
+    }
+
+    if (eventName.startsWith("replay")) {
+      this.viewDomain.on(eventName, listener);
+    }
+
+    if (eventName.startsWith("view")) {
+      this.viewDomain.on(eventName, listener);
+    }
+  }
+
+  public async init(): Promise<void> {
+    await this.promise();
+  }
+
+  // private admin
+
+  private async inspect<S extends State = State>(
+    aggregate: AppInspectOptions,
+  ): Promise<Aggregate<S>> {
+    await this.promise();
+
+    return this.aggregateDomain.inspect<S>({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context || this.options.domain.context,
+    });
+  }
+
+  private async query<S extends State = State>(
     queryOptions: ViewStoreQueryOptions,
     filter: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes<S>>> {
     await this.promise();
+
     return this.viewDomain.query<S>(queryOptions, filter, findOptions);
   }
 
-  public async replay(options: ReplayOptions): Promise<void> {
+  private async replay(options: ReplayOptions): Promise<void> {
     await this.promise();
-    return this.replayDomain.replay(options);
+
+    return this.replayDomain.replay({
+      ...options,
+      aggregateContexts: options.aggregateContexts || this.aggregateContexts,
+    });
   }
 
-  public async views(): Promise<Array<string>> {
+  private async listCollections(): Promise<Array<string>> {
     await this.promise();
+
     return this.viewDomain.listCollections();
   }
 
-  // public handler methods
+  // private admin register methods
 
-  public async registerAggregateCommandHandlers(
+  private async registerAggregateCommandHandlers(
     handlers: Array<AggregateCommandHandler>,
   ): Promise<void> {
     this.assertRegister();
@@ -351,7 +393,7 @@ export class EventDomainApp implements IEventDomainApp {
     }
   }
 
-  public async registerAggregateEventHandlers(
+  private async registerAggregateEventHandlers(
     handlers: Array<AggregateEventHandler>,
   ): Promise<void> {
     this.assertRegister();
@@ -361,15 +403,16 @@ export class EventDomainApp implements IEventDomainApp {
     }
   }
 
-  public async registerCacheEventHandlers(handlers: Array<CacheEventHandler>): Promise<void> {
+  private async registerCacheEventHandlers(handlers: Array<CacheEventHandler>): Promise<void> {
     this.assertRegister();
 
     for (const handler of handlers) {
       await this.cacheDomain.registerEventHandler(handler);
+      this.registerCacheRepositoryInfo(handler);
     }
   }
 
-  public async registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void> {
+  private async registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void> {
     this.assertRegister();
 
     for (const handler of handlers) {
@@ -377,15 +420,53 @@ export class EventDomainApp implements IEventDomainApp {
     }
   }
 
-  public async registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void> {
+  private async registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void> {
     this.assertRegister();
 
     for (const handler of handlers) {
       await this.viewDomain.registerEventHandler(handler);
+      this.registerViewRepositoryInfo(handler);
+      this.registerViewContexts(handler);
     }
   }
 
-  // private
+  // private register handlers
+
+  private registerCacheRepositoryInfo(handler: CacheEventHandler): void {
+    const existing = find(this.cacheRepositories, {
+      name: handler.cache.name,
+      context: handler.cache.context,
+    });
+
+    if (existing) return;
+
+    this.cacheRepositories.push({
+      name: handler.cache.name,
+      context: handler.cache.context,
+    });
+  }
+
+  private registerViewRepositoryInfo(handler: ViewEventHandler): void {
+    const existing = find(this.viewRepositories, {
+      name: handler.view.name,
+      context: handler.view.context,
+    });
+
+    if (existing) return;
+
+    this.viewRepositories.push({
+      collection: ViewStore.getCollectionName(handler.view),
+      context: handler.view.context,
+      name: handler.view.name,
+      replay: null,
+    });
+  }
+
+  private registerViewContexts(handler: ViewEventHandler): void {
+    this.aggregateContexts = uniq(flatten([this.aggregateContexts, handler.aggregate.context]));
+  }
+
+  // private initialisation handler
 
   private async initialise(): Promise<void> {
     if (this.options.dangerouslyRegisterHandlersManually) {
@@ -424,7 +505,7 @@ export class EventDomainApp implements IEventDomainApp {
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
-  // private scan methods
+  // private scan handlers
 
   private async scanAggregates(): Promise<void> {
     const scanner = new StructureScanner(
@@ -530,17 +611,21 @@ export class EventDomainApp implements IEventDomainApp {
 
       if (!this.isValid("cache", cacheName, this.options.caches)) break;
 
-      const handler = this.options.require(file.path).default;
+      const handler: CacheEventHandlerFile = this.options.require(file.path).default;
 
       await Joi.object<CacheEventHandlerFile>()
         .keys({
+          aggregate: Joi.object<CacheEventHandlerFileAggregate>()
+            .keys({
+              context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+            })
+            .optional(),
           conditions: Joi.object<HandlerConditions>()
             .keys({
               created: Joi.boolean().optional(),
               permanent: Joi.boolean().optional(),
             })
             .optional(),
-          context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
           getCacheId: Joi.function().required(),
           handler: Joi.function().required(),
         })
@@ -552,7 +637,9 @@ export class EventDomainApp implements IEventDomainApp {
           eventName: snakeCase(file.name),
           aggregate: {
             name: snakeCase(aggregateName),
-            context: snakeCase(handler.context || this.options.domain.context),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(handler.aggregate?.context || this.options.domain.context),
           },
           cache: {
             name: snakeCase(cacheName),
@@ -586,11 +673,15 @@ export class EventDomainApp implements IEventDomainApp {
 
       if (!this.isValid("saga", sagaName, this.options.sagas)) break;
 
-      const handler = this.options.require(file.path).default;
+      const handler: SagaEventHandlerFile = this.options.require(file.path).default;
 
       await Joi.object<SagaEventHandlerFile>()
         .keys({
-          context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+          aggregate: Joi.object<SagaEventHandlerFileAggregate>()
+            .keys({
+              context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+            })
+            .optional(),
           conditions: Joi.object<HandlerConditions>()
             .keys({
               created: Joi.boolean().optional(),
@@ -613,7 +704,9 @@ export class EventDomainApp implements IEventDomainApp {
           eventName: snakeCase(file.name),
           aggregate: {
             name: snakeCase(aggregateName),
-            context: snakeCase(handler.context || this.options.domain.context),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(handler.aggregate?.context || this.options.domain.context),
           },
           saga: {
             name: snakeCase(sagaName),
@@ -648,21 +741,25 @@ export class EventDomainApp implements IEventDomainApp {
 
       if (!this.isValid("view", viewName, this.options.views)) break;
 
-      const handler = this.options.require(file.path).default;
+      const handler: ViewEventHandlerFile = this.options.require(file.path).default;
 
       await Joi.object<ViewEventHandlerFile>()
         .keys({
+          aggregate: Joi.object<ViewEventHandlerFileAggregate>()
+            .keys({
+              context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+            })
+            .optional(),
           conditions: Joi.object<HandlerConditions>()
             .keys({
               created: Joi.boolean().optional(),
               permanent: Joi.boolean().optional(),
             })
             .optional(),
-          context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
           documentOptions: Joi.object<ViewStoreDocumentOptions>()
             .keys({
               indices: Joi.array().items(
-                Joi.object<StoreBaseIndex>().keys({
+                Joi.object<MongoIndex>().keys({
                   indexSpecification: Joi.object().required(),
                   createIndexesOptions: Joi.object().required(),
                 }),
@@ -680,7 +777,9 @@ export class EventDomainApp implements IEventDomainApp {
           eventName: snakeCase(file.name),
           aggregate: {
             name: snakeCase(aggregateName),
-            context: snakeCase(handler.context || this.options.domain.context),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(handler.aggregate?.context || this.options.domain.context),
           },
           view: {
             name: snakeCase(viewName),
@@ -695,10 +794,12 @@ export class EventDomainApp implements IEventDomainApp {
     }
   }
 
-  // private helpers
+  // private handlers
 
   private async setupReplayDomain(): Promise<void> {
     this.replayDomain.on(ReplayEventName.START, this.onReplayStart.bind(this));
+    this.replayDomain.on(ReplayEventName.MOVE_VIEW, this.onReplayMoveView.bind(this));
+    this.replayDomain.on(ReplayEventName.DROP_VIEW, this.onReplayDropView.bind(this));
     this.replayDomain.on(ReplayEventName.STOP, this.onReplayStop.bind(this));
 
     await this.replayDomain.subscribe();
@@ -735,11 +836,8 @@ export class EventDomainApp implements IEventDomainApp {
   private onReplayStart(): void {
     this.replaying = true;
 
-    Promise.all([
-      this.aggregateDomain.removeAllCommandHandlers(),
-      this.aggregateDomain.removeAllEventHandlers(),
-      this.sagaDomain.removeAllEventHandlers(),
-    ])
+    this.aggregateDomain
+      .removeAllCommandHandlers()
       .then(() => {
         this.logger.verbose("Removed handlers");
       })
@@ -748,12 +846,34 @@ export class EventDomainApp implements IEventDomainApp {
       });
   }
 
+  private onReplayMoveView({
+    previousName,
+    newName,
+  }: {
+    previousName: string;
+    newName: string;
+  }): void {
+    const existing = find(this.viewRepositories, { collection: previousName });
+    remove(this.viewRepositories, { collection: previousName });
+
+    this.viewRepositories.push({
+      ...existing,
+      replay: newName,
+    });
+  }
+
+  private onReplayDropView({ collectionName }: { collectionName: string }): void {
+    const existing = find(this.viewRepositories, { replay: collectionName });
+    remove(this.viewRepositories, { replay: collectionName });
+
+    this.viewRepositories.push({
+      ...existing,
+      replay: null,
+    });
+  }
+
   private onReplayStop(): void {
-    Promise.all([
-      this.registerAggregateCommandHandlers(this.aggregateCommandHandlers),
-      this.registerAggregateEventHandlers(this.aggregateEventHandlers),
-      this.registerSagaEventHandlers(this.sagaEventHandlers),
-    ])
+    this.registerAggregateCommandHandlers(this.aggregateCommandHandlers)
       .then(() => {
         this.logger.verbose("Registered handlers");
         this.replaying = false;

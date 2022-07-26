@@ -1,9 +1,9 @@
 import Joi from "joi";
 import { AmqpConnection } from "@lindorm-io/amqp";
+import { DomainEvent } from "../message";
 import { EventDomainApp } from "./EventDomainApp";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
-import { CacheRepository, ViewRepository } from "../infrastructure";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
@@ -14,15 +14,12 @@ import {
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
-import { DomainEvent } from "../message";
 
 describe("EventDomainApp", () => {
   const logger = createMockLogger();
 
   let amqp: AmqpConnection;
-  let app: EventDomainApp;
-  let cacheRepo: CacheRepository<any>;
-  let viewRepo: ViewRepository<any>;
+  let app: EventDomainApp<"savedGreetings", "savedGreetings">;
   let mongo: MongoConnection;
   let redis: RedisConnection;
 
@@ -63,9 +60,6 @@ describe("EventDomainApp", () => {
       dangerouslyRegisterHandlersManually: true,
     });
 
-    cacheRepo = app.createCacheRepository("saved_greetings");
-    viewRepo = app.createViewRepository("saved_greetings");
-
     onEventSpyAll = jest.fn();
     onEventSpyContext = jest.fn();
     onEventSpyName = jest.fn();
@@ -74,7 +68,7 @@ describe("EventDomainApp", () => {
 
     await Promise.all([amqp.connect(), mongo.connect()]);
 
-    await app.registerAggregateCommandHandlers([
+    await app.admin.registerAggregateCommandHandlers([
       new AggregateCommandHandler({
         commandName: "create",
         aggregate: { name: "greeting", context: "default" },
@@ -116,7 +110,7 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.registerAggregateEventHandlers([
+    await app.admin.registerAggregateEventHandlers([
       new AggregateEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -143,7 +137,7 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.registerCacheEventHandlers([
+    await app.admin.registerCacheEventHandlers([
       new CacheEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -176,7 +170,7 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.registerSagaEventHandlers([
+    await app.admin.registerSagaEventHandlers([
       new SagaEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -215,7 +209,7 @@ describe("EventDomainApp", () => {
       }),
     ]);
 
-    await app.registerViewEventHandlers([
+    await app.admin.registerViewEventHandlers([
       new ViewEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -270,7 +264,7 @@ describe("EventDomainApp", () => {
 
     await sleep(5000);
 
-    await expect(app.inspect({ id, name: "greeting" })).resolves.toStrictEqual(
+    await expect(app.admin.inspect({ id, name: "greeting" })).resolves.toStrictEqual(
       expect.objectContaining({
         id,
         name: "greeting",
@@ -288,7 +282,7 @@ describe("EventDomainApp", () => {
     );
 
     await expect(
-      app.query(
+      app.admin.query(
         { collection: "views_default_saved_greetings" },
         {
           id,
@@ -318,13 +312,13 @@ describe("EventDomainApp", () => {
       },
     ]);
 
-    await expect(cacheRepo.get(id)).resolves.toStrictEqual({
+    await expect(app.caches.savedGreetings.get(id)).resolves.toStrictEqual({
       id,
       revision: 3,
       state: { messages: ["Hi", "Hello There", "General Kenobi"] },
     });
 
-    await expect(viewRepo.findOne({ id })).resolves.toStrictEqual({
+    await expect(app.views.savedGreetings.findOne({ id })).resolves.toStrictEqual({
       id,
       revision: 3,
       state: { messages: ["Hi", "Hello There", "General Kenobi"] },

@@ -10,6 +10,9 @@ import { sleep } from "@lindorm-io/core";
 const logger = new Logger();
 logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
 
+type Caches = "greetings";
+type Views = "greetings";
+
 const main = async (): Promise<void> => {
   const amqp = new AmqpConnection({
     hostname: "localhost",
@@ -32,7 +35,7 @@ const main = async (): Promise<void> => {
     logger,
   });
 
-  const app = new EventDomainApp({
+  const app = new EventDomainApp<Caches, Views>({
     amqp,
     mongo,
     redis,
@@ -61,7 +64,7 @@ const main = async (): Promise<void> => {
 
   await sleep(2000);
 
-  const result = await app.query(
+  const result = await app.admin.query(
     { collection: "greetings", database: "default" },
     {
       id: aggregateId,
@@ -72,16 +75,13 @@ const main = async (): Promise<void> => {
 
   logger.info("query", { result });
 
-  const cacheRepository = app.createCacheRepository("greetings");
-  const viewRepository = app.createViewRepository("greetings");
-
   const example: any = {};
 
-  example.get = await cacheRepository.get(aggregateId);
-  example.getAll = await cacheRepository.getAll();
-  example.count = await viewRepository.count();
-  example.find = await viewRepository.find();
-  example.findOne = await viewRepository.findOne({ id: aggregateId });
+  example.get = await app.caches.greetings.get(aggregateId);
+  example.getAll = await app.caches.greetings.getAll();
+  example.count = await app.views.greetings.count();
+  example.find = await app.views.greetings.find();
+  example.findOne = await app.views.greetings.findOne({ id: aggregateId });
 
   logger.info("find", { example });
 };
