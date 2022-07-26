@@ -1,4 +1,3 @@
-import { snakeCase } from "lodash";
 import {
   GetViewIdFunction,
   HandlerConditions,
@@ -23,7 +22,7 @@ export class ViewEventHandler<S extends State = State> implements IViewEventHand
   public constructor(options: ViewEventHandlerOptions<S>) {
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.conditions = options.conditions || {};
-    this.documentOptions = options.documentOptions || { collection: snakeCase(options.view.name) };
+    this.documentOptions = options.documentOptions || {};
     this.eventName = options.eventName;
     this.view = { name: options.view.name, context: options.view.context };
     this.getViewId = options.getViewId;
