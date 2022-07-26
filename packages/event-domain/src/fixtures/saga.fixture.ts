@@ -3,8 +3,8 @@ import { randomUUID } from "crypto";
 
 export const TEST_SAGA_IDENTIFIER: SagaIdentifier = {
   id: randomUUID(),
-  name: "sagaName",
-  context: "sagaContext",
+  name: "saga_name",
+  context: "default",
 };
 
 export const TEST_SAGA_OPTIONS: SagaOptions = {

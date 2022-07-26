@@ -3,8 +3,8 @@ import { randomUUID } from "crypto";
 
 export const TEST_CACHE_IDENTIFIER: CacheIdentifier = {
   id: randomUUID(),
-  name: "cacheName",
-  context: "cacheContext",
+  name: "cache_name",
+  context: "default",
 };
 
 export const TEST_CACHE_OPTIONS: CacheOptions = {

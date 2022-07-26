@@ -25,7 +25,6 @@ export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
   eventName: TEST_DOMAIN_EVENT.name,
 
   conditions: { created: true },
-  documentOptions: { database: "db", collection: "custom_view" },
 
   getViewId: (event) => event.aggregate.id,
   handler: jest.fn().mockImplementation(async () => {}),
