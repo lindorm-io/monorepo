@@ -1,16 +1,21 @@
 import { Aggregate } from "../entity";
-import { AggregateIdentifier } from "./aggregate";
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { CacheRepository, ViewRepository } from "../infrastructure";
+import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
 import { ReplayOptions } from "./replay-domain";
-import { State } from "./generic";
-import { StoreBaseIndex } from "./store-base";
 import { ViewStoreAttributes, ViewStoreQueryOptions } from "./view-store";
+import {
+  AggregateCommandHandler,
+  AggregateEventHandler,
+  CacheEventHandler,
+  SagaEventHandler,
+  ViewEventHandler,
+} from "../handler";
 
 export interface AppDomain {
   database?: string;
@@ -25,7 +30,7 @@ export interface AppStructure {
   extensions?: Array<string>;
 }
 
-export interface AppOptions {
+export interface PrivateAppOptions {
   aggregates?: AppStructure;
   caches?: AppStructure;
   dangerouslyRegisterHandlersManually?: boolean;
@@ -35,14 +40,14 @@ export interface AppOptions {
   views?: AppStructure;
 }
 
-export interface EventDomainAppOptions extends AppOptions {
+export interface AppOptions extends PrivateAppOptions {
   amqp: AmqpConnection;
   logger: Logger;
   mongo: MongoConnection;
   redis?: RedisConnection;
 }
 
-export interface PublishOptions {
+export interface AppPublishOptions {
   aggregate: {
     id: string;
     name: string;
@@ -54,46 +59,53 @@ export interface PublishOptions {
   mandatory?: boolean;
 }
 
-export type PublishResult = "OK" | "QUEUED";
+export type AppPublishResult = "OK" | "QUEUED";
 
-export interface InspectAggregateOptions {
+export interface AppInspectOptions {
   id: string;
   name: string;
   context?: string;
 }
 
-export interface CreateCacheRepositoryOptions {
-  context?: string;
+export interface CacheRepositoryInfo {
+  name: string;
+  context: string;
 }
 
-export interface CreateViewRepositoryOptions {
-  collection?: string;
-  database?: string;
-  indices?: Array<StoreBaseIndex>;
-  context?: string;
+export interface ViewRepositoryInfo {
+  collection: string;
+  context: string;
+  name: string;
+  replay: string | null;
 }
 
-export interface IEventDomainApp {
-  createCacheRepository<S = State>(
-    name: string,
-    options?: CreateCacheRepositoryOptions,
-  ): CacheRepository<S>;
-  createViewRepository<S = State>(
-    name: string,
-    options?: CreateViewRepositoryOptions,
-  ): ViewRepository<S>;
-  init(): Promise<void>;
-  inspect<S = State>(aggregate: AggregateIdentifier): Promise<Aggregate<S>>;
-  on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
-  publish(options: PublishOptions): Promise<PublishResult>;
+export interface AppAdmin {
+  inspect<S = State>(aggregate: AppInspectOptions): Promise<Aggregate<S>>;
   query(
     queryOptions: ViewStoreQueryOptions,
     filter: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
   replay(options: ReplayOptions): Promise<void>;
-  views(): Promise<Array<string>>;
+  listCollections(): Promise<Array<string>>;
+
+  registerAggregateCommandHandlers(handlers: Array<AggregateCommandHandler>): Promise<void>;
+  registerAggregateEventHandlers(handlers: Array<AggregateEventHandler>): Promise<void>;
+  registerCacheEventHandlers(handlers: Array<CacheEventHandler>): Promise<void>;
+  registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void>;
+  registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void>;
+}
+
+export interface IApp<Caches extends string, Views extends string> {
+  publish(options: AppPublishOptions): Promise<AppPublishResult>;
+  on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
+  init(): Promise<void>;
+
+  admin: AppAdmin;
 
   isInitialised: boolean;
   isReplaying: boolean;
+
+  caches: Record<Caches, CacheRepository>;
+  views: Record<Views, ViewRepository>;
 }

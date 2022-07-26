@@ -1,9 +1,25 @@
 export interface ReplayEventData {
-  dropViews?: Array<string>;
-  droppedViews?: Array<string>;
-  eventStoreTimestamp?: Date;
-  lastPublishedEvents?: Array<string>;
-  publishedEvents?: number;
-  startDate?: Date;
-  startDelay?: number;
+  dropView: {
+    completed: Array<string>;
+    delay: number;
+    remaining: Array<string>;
+  };
+  error?: Error;
+  moveView: {
+    completed: Array<string>;
+    delay: number;
+    remaining: Array<string>;
+    suffix: string;
+  };
+  publishEvents: {
+    amount: number;
+    contexts: Array<string>;
+    delay: number;
+    previous: Array<string>;
+    timestamp?: Date;
+  };
+  start: {
+    delay: number;
+    timestamp: Date;
+  };
 }

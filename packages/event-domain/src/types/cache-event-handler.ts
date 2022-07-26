@@ -17,9 +17,13 @@ export interface CacheEventHandlerContext<S extends State = State> {
   setState(path: string, value: any): void;
 }
 
-export interface CacheEventHandlerFile<S extends State = State> {
-  conditions?: HandlerConditions;
+export interface CacheEventHandlerFileAggregate {
   context?: Array<string> | string;
+}
+
+export interface CacheEventHandlerFile<S extends State = State> {
+  aggregate?: CacheEventHandlerFileAggregate;
+  conditions?: HandlerConditions;
   getCacheId: GetCacheIdFunction;
   handler(ctx: CacheEventHandlerContext<S>): Promise<void>;
 }

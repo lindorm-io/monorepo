@@ -1,4 +1,4 @@
-import { State } from "./generic";
+import { Data, State } from "./generic";
 import { StandardIdentifier } from "./standard-identifier";
 
 export interface EventEmitterData<S extends State = State> extends StandardIdentifier {
@@ -6,4 +6,4 @@ export interface EventEmitterData<S extends State = State> extends StandardIdent
   state: S;
 }
 
-export type EventEmitterListener<S extends State = State> = (data: EventEmitterData<S>) => void;
+export type EventEmitterListener<D = Data> = (data: D) => void;

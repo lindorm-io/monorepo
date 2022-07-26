@@ -10,8 +10,15 @@ export interface ReplayDomainOptions {
 }
 
 export interface ReplayOptions {
-  dropViews?: Array<string>;
-  startDelay?: number;
+  aggregateContexts?: Array<string>;
+  delay?: {
+    start?: number;
+    dropView?: number;
+    moveView?: number;
+    publishEvents?: number;
+  };
+  suffix?: string;
+  views?: Array<string>;
 }
 
 export interface IReplayDomain {

@@ -12,6 +12,12 @@ export interface CacheData<S extends State = State> extends CacheIdentifier {
   state: S;
 }
 
+export interface CacheEmitData<S extends State = State> extends StandardIdentifier {
+  destroyed: boolean;
+  revision: number;
+  state: S;
+}
+
 export interface CacheOptions<S extends State = State> extends CacheIdentifier {
   causationList?: Array<string>;
   destroyed?: boolean;

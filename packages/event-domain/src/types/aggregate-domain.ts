@@ -13,11 +13,12 @@ export interface AggregateDomainOptions {
 
 export interface IAggregateDomain {
   registerCommandHandler(handler: AggregateCommandHandler): Promise<void>;
-  removeCommandHandler(handler: AggregateCommandHandler): Promise<void>;
-  removeAllCommandHandlers(): Promise<void>;
-
   registerEventHandler(handler: AggregateEventHandler): Promise<void>;
+
+  removeCommandHandler(handler: AggregateCommandHandler): Promise<void>;
   removeEventHandler(handler: AggregateEventHandler): Promise<void>;
+
+  removeAllCommandHandlers(): Promise<void>;
   removeAllEventHandlers(): Promise<void>;
 
   inspect<S extends State = State>(aggregateIdentifier: AggregateIdentifier): Promise<Aggregate<S>>;

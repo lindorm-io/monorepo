@@ -1,5 +1,5 @@
 import { MongoConnection } from "@lindorm-io/mongo";
-import { StoreBaseIndex } from "./store-base";
+import { MongoIndex } from "./mongo-base";
 import { Logger } from "@lindorm-io/winston";
 import { HandlerIdentifier } from "./handler";
 
@@ -7,7 +7,7 @@ export interface ViewRepositoryOptions {
   collection?: string;
   connection: MongoConnection;
   database?: string;
-  indices?: Array<StoreBaseIndex>;
+  indices?: Array<MongoIndex>;
   logger: Logger;
   view: HandlerIdentifier;
 }

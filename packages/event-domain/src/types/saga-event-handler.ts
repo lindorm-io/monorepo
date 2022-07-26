@@ -19,9 +19,13 @@ export interface SagaEventHandlerContext<S extends State = State> {
   timeout(name: string, data: Record<string, any>, delay: number): void;
 }
 
-export interface SagaEventHandlerFile<S extends State = State> {
-  conditions?: HandlerConditions;
+export interface SagaEventHandlerFileAggregate {
   context?: Array<string> | string;
+}
+
+export interface SagaEventHandlerFile<S extends State = State> {
+  aggregate?: SagaEventHandlerFileAggregate;
+  conditions?: HandlerConditions;
   saveOptions?: SagaStoreSaveOptions;
   getSagaId: GetSagaIdFunction;
   handler(ctx: SagaEventHandlerContext<S>): Promise<void>;

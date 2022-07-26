@@ -12,6 +12,12 @@ export interface ViewData<S extends State = State> extends ViewIdentifier {
   state: S;
 }
 
+export interface ViewEmitData<S extends State = State> extends StandardIdentifier {
+  destroyed: boolean;
+  revision: number;
+  state: S;
+}
+
 export interface ViewOptions<S extends State = State> extends ViewIdentifier {
   causationList?: Array<string>;
   destroyed?: boolean;

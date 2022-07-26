@@ -3,7 +3,7 @@ import { Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { State } from "./generic";
-import { StoreBaseIndex } from "./store-base";
+import { MongoIndex } from "./mongo-base";
 import { View } from "../entity";
 import { ViewData, ViewIdentifier } from "./view";
 
@@ -21,13 +21,11 @@ export interface ViewStoreOptions {
 export interface ViewStoreCollectionOptions {
   collection: string;
   database?: string;
-  indices?: Array<StoreBaseIndex>;
+  indices?: Array<MongoIndex>;
 }
 
 export interface ViewStoreDocumentOptions {
-  collection?: string;
-  database?: string;
-  indices?: Array<StoreBaseIndex>;
+  indices?: Array<MongoIndex>;
 }
 
 export type ViewStoreQueryOptions = ViewStoreCollectionOptions;

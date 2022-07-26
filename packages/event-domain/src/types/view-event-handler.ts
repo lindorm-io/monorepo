@@ -18,9 +18,13 @@ export interface ViewEventHandlerContext<S extends State = State> {
   setState(path: string, value: any): void;
 }
 
-export interface ViewEventHandlerFile<S extends State = State> {
-  conditions?: HandlerConditions;
+export interface ViewEventHandlerFileAggregate {
   context?: Array<string> | string;
+}
+
+export interface ViewEventHandlerFile<S extends State = State> {
+  aggregate?: ViewEventHandlerFileAggregate;
+  conditions?: HandlerConditions;
   documentOptions?: ViewStoreDocumentOptions;
   getViewId: GetViewIdFunction;
   handler(ctx: ViewEventHandlerContext<S>): Promise<void>;
