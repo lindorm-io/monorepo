@@ -3,7 +3,7 @@ import { AggregateEventHandler } from "../handler";
 import { Command, DomainEvent } from "../message";
 import { JOI_MESSAGE } from "../constant";
 import { Logger } from "@lindorm-io/winston";
-import { assertCamelCase, assertSchema, assertSchemaAsync } from "../util";
+import { assertSnakeCase, assertSchema, assertSchemaAsync } from "../util";
 import { cloneDeep, find, merge, set } from "lodash";
 import {
   AggregateData,
@@ -38,7 +38,8 @@ export class Aggregate<S extends State = State> implements IAggregate {
   public constructor(options: AggregateOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["Aggregate"]);
 
-    assertCamelCase(options.name);
+    assertSnakeCase(options.context);
+    assertSnakeCase(options.name);
 
     this.id = options.id;
     this.name = options.name;

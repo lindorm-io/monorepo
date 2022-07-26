@@ -3,7 +3,7 @@ import { Command, DomainEvent, TimeoutEvent } from "../message";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../constant";
 import { Logger } from "@lindorm-io/winston";
-import { assertCamelCase, assertSchema } from "../util";
+import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, set } from "lodash";
 import {
   AggregateIdentifier,
@@ -30,7 +30,8 @@ export class Saga<S extends State = State> implements ISaga {
   public constructor(options: SagaOptions<S>, logger: Logger) {
     this.logger = logger.createChildLogger(["Saga"]);
 
-    assertCamelCase(options.name);
+    assertSnakeCase(options.context);
+    assertSnakeCase(options.name);
 
     this.id = options.id;
     this.name = options.name;

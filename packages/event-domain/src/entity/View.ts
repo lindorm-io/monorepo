@@ -5,7 +5,7 @@ import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../constant";
 import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/winston";
-import { assertCamelCase, assertSchema } from "../util";
+import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, find, get, isEqual, isMatch, remove, set, some } from "lodash";
 import { isAfter, parseJSON } from "date-fns";
 
@@ -25,7 +25,8 @@ export class View<S extends State = State> implements IView<S> {
   public constructor(options: ViewOptions<S>, logger: Logger) {
     this.logger = logger.createChildLogger(["View"]);
 
-    assertCamelCase(options.name);
+    assertSnakeCase(options.context);
+    assertSnakeCase(options.name);
 
     this.id = options.id;
     this.name = options.name;

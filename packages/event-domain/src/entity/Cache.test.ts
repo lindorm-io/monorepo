@@ -40,11 +40,11 @@ describe("Cache", () => {
   test("should return json object", async () => {
     expect(cache.toJSON()).toStrictEqual({
       causationList: [],
-      context: "cacheContext",
+      context: "default",
       destroyed: false,
       id: expect.any(String),
       meta: {},
-      name: "cacheName",
+      name: "cache_name",
       revision: 0,
       state: {},
     });

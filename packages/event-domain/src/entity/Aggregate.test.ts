@@ -67,11 +67,11 @@ describe("Aggregate", () => {
 
   test("should return json object", async () => {
     expect(aggregate.toJSON()).toStrictEqual({
-      context: "aggregateContext",
+      context: "default",
       destroyed: false,
       events: [],
       id: expect.any(String),
-      name: "aggregateName",
+      name: "aggregate_name",
       numberOfLoadedEvents: 0,
       state: {},
     });

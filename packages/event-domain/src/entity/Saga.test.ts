@@ -34,11 +34,11 @@ describe("Saga", () => {
   test("should return json object", async () => {
     expect(saga.toJSON()).toStrictEqual({
       causationList: [],
-      context: "sagaContext",
+      context: "default",
       destroyed: false,
       id: expect.any(String),
       messagesToDispatch: [],
-      name: "sagaName",
+      name: "saga_name",
       revision: 0,
       state: {},
     });
@@ -69,7 +69,7 @@ describe("Saga", () => {
         data: { dispatchedData: true },
         delay: 0,
         mandatory: true,
-        routingKey: "aggregateContext.aggregateName.dispatchedCommand",
+        routingKey: "default.aggregate_name.dispatchedCommand",
         timestamp: expect.any(Date),
         type: "command",
       }),

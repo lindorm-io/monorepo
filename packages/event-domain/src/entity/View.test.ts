@@ -40,11 +40,11 @@ describe("View", () => {
   test("should return json object", async () => {
     expect(view.toJSON()).toStrictEqual({
       causationList: [],
-      context: "viewContext",
+      context: "default",
       destroyed: false,
       id: expect.any(String),
       meta: {},
-      name: "viewName",
+      name: "view_name",
       revision: 0,
       state: {},
     });
