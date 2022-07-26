@@ -19,8 +19,10 @@ export interface IViewDomain {
     filter: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
+
   registerEventHandler(eventHandler: ViewEventHandler): Promise<void>;
   removeEventHandler(eventHandler: ViewEventHandler): Promise<void>;
   removeAllEventHandlers(): Promise<void>;
-  collections(): Promise<Array<string>>;
+
+  listCollections(): Promise<Array<string>>;
 }

@@ -187,8 +187,8 @@ export class ViewDomain implements IViewDomain {
     }
   }
 
-  public async collections(): Promise<Array<string>> {
-    return this.store.collections();
+  public async listCollections(): Promise<Array<string>> {
+    return this.store.listCollections();
   }
 
   // private

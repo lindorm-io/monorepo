@@ -336,7 +336,7 @@ export class EventDomainApp implements IEventDomainApp {
 
   public async views(): Promise<Array<string>> {
     await this.promise();
-    return this.viewDomain.collections();
+    return this.viewDomain.listCollections();
   }
 
   // public handler methods

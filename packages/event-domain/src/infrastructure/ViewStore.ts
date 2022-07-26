@@ -198,13 +198,18 @@ export class ViewStore implements IViewStore {
     return docs as Array<ViewStoreAttributes<S>>;
   }
 
-  public async collections(): Promise<Array<string>> {
+  public async listCollections(): Promise<Array<string>> {
     const database = this.databaseName || this.connection.database;
-    const collections = await this.connection.client.db(database).collections();
+    const cursor = await this.connection.client.db(database).listCollections();
+    const collections = await cursor.toArray();
 
-    return collections
-      .map((item) => item.collectionName)
-      .filter((name) => name.startsWith("views_"));
+    return collections.map((item) => item.name).filter((name) => name.startsWith("views_"));
+  }
+
+  public async renameCollection(collection: string, name: string): Promise<void> {
+    const database = this.databaseName || this.connection.database;
+
+    await this.connection.client.db(database).renameCollection(collection, name);
   }
 
   public async dropCollection(collection: string): Promise<void> {

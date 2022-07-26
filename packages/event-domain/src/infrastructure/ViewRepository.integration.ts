@@ -1,5 +1,4 @@
 import { MongoConnection } from "@lindorm-io/mongo";
-import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { ViewIdentifier, ViewStoreAttributes } from "../types";
 import { ViewRepository } from "./ViewRepository";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -25,7 +24,7 @@ describe("ViewRepository", () => {
       database: "db",
     });
 
-    view = { ...TEST_VIEW_IDENTIFIER, id: randomUUID() };
+    view = { context: "view_repository", name: "view_name", id: randomUUID() };
 
     repository = new ViewRepository({
       connection,

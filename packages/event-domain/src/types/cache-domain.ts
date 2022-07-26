@@ -12,6 +12,7 @@ export interface CacheDomainOptions {
 
 export interface ICacheDomain {
   on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
+
   registerEventHandler(eventHandler: CacheEventHandler): Promise<void>;
   removeEventHandler(eventHandler: CacheEventHandler): Promise<void>;
   removeAllEventHandlers(): Promise<void>;

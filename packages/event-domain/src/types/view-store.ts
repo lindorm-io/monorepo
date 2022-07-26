@@ -41,6 +41,7 @@ export interface IViewStore {
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
 
-  collections(context: string): Promise<Array<string>>;
-  dropCollection(context: string, name: string): Promise<void>;
+  listCollections(): Promise<Array<string>>;
+  renameCollection(collection: string, name: string): Promise<void>;
+  dropCollection(collection: string): Promise<void>;
 }
