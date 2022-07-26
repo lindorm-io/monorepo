@@ -14,6 +14,8 @@ export * from "./event-store";
 export * from "./generic";
 export * from "./handler";
 export * from "./message";
+export * from "./replay-domain";
+export * from "./replay-event";
 export * from "./saga";
 export * from "./saga-domain";
 export * from "./saga-event-handler";

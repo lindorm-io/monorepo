@@ -1,15 +1,16 @@
+import { Aggregate } from "../entity";
+import { AggregateIdentifier } from "./aggregate";
 import { AmqpConnection } from "@lindorm-io/amqp";
+import { CacheRepository, ViewRepository } from "../infrastructure";
 import { EventEmitterListener } from "./event-emitter";
 import { Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { RedisConnection } from "@lindorm-io/redis";
+import { ReplayOptions } from "./replay-domain";
 import { State } from "./generic";
 import { StoreBaseIndex } from "./store-base";
-import { CacheRepository, ViewRepository } from "../infrastructure";
-import { ViewStoreAttributes, ViewStoreDocumentOptions } from "./view-store";
-import { RedisConnection } from "@lindorm-io/redis";
-import { AggregateIdentifier } from "./aggregate";
-import { Aggregate } from "../entity";
+import { ViewStoreAttributes, ViewStoreQueryOptions } from "./view-store";
 
 export interface AppDomain {
   database?: string;
@@ -26,12 +27,12 @@ export interface AppStructure {
 
 export interface AppOptions {
   aggregates?: AppStructure;
+  caches?: AppStructure;
   dangerouslyRegisterHandlersManually?: boolean;
   domain?: AppDomain;
   require?: NodeJS.Require;
   sagas?: AppStructure;
   views?: AppStructure;
-  caches?: AppStructure;
 }
 
 export interface EventDomainAppOptions extends AppOptions {
@@ -41,7 +42,7 @@ export interface EventDomainAppOptions extends AppOptions {
   redis?: RedisConnection;
 }
 
-export interface PublishCommandOptions {
+export interface PublishOptions {
   aggregate: {
     id: string;
     name: string;
@@ -52,6 +53,8 @@ export interface PublishCommandOptions {
   delay?: number;
   mandatory?: boolean;
 }
+
+export type PublishResult = "OK" | "QUEUED";
 
 export interface InspectAggregateOptions {
   id: string;
@@ -64,8 +67,8 @@ export interface CreateCacheRepositoryOptions {
 }
 
 export interface CreateViewRepositoryOptions {
-  database?: string;
   collection?: string;
+  database?: string;
   indices?: Array<StoreBaseIndex>;
   context?: string;
 }
@@ -82,12 +85,15 @@ export interface IEventDomainApp {
   init(): Promise<void>;
   inspect<S = State>(aggregate: AggregateIdentifier): Promise<Aggregate<S>>;
   on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
-  publish(options: PublishCommandOptions): Promise<void>;
+  publish(options: PublishOptions): Promise<PublishResult>;
   query(
-    documentOptions: ViewStoreDocumentOptions,
+    queryOptions: ViewStoreQueryOptions,
     filter: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
+  replay(options: ReplayOptions): Promise<void>;
+  views(): Promise<Array<string>>;
 
   isInitialised: boolean;
+  isReplaying: boolean;
 }

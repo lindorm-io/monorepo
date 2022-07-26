@@ -6,6 +6,12 @@ import { State } from "./generic";
 import { ViewEventHandler } from "../handler";
 import { ViewStoreAttributes, ViewStoreQueryOptions } from "./view-store";
 
+export interface ViewDomainOptions {
+  logger: Logger;
+  messageBus: MessageBus;
+  store: ViewStore;
+}
+
 export interface IViewDomain {
   on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
   query(
@@ -14,10 +20,7 @@ export interface IViewDomain {
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
   registerEventHandler(eventHandler: ViewEventHandler): Promise<void>;
-}
-
-export interface ViewDomainOptions {
-  logger: Logger;
-  messageBus: MessageBus;
-  store: ViewStore;
+  removeEventHandler(eventHandler: ViewEventHandler): Promise<void>;
+  removeAllEventHandlers(): Promise<void>;
+  collections(): Promise<Array<string>>;
 }

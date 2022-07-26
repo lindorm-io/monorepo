@@ -2,6 +2,7 @@ import { Aggregate } from "../entity";
 import { AggregateEventHandler } from "../handler";
 import { AggregateIdentifier } from "./aggregate";
 import { Command, DomainEvent } from "../message";
+import { Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 
@@ -38,4 +39,8 @@ export interface IEventStore {
     aggregateIdentifier: AggregateIdentifier,
     eventHandlers: Array<AggregateEventHandler>,
   ): Promise<Aggregate>;
+  query(
+    filter: Filter<EventStoreAttributes>,
+    findOptions?: FindOptions,
+  ): Promise<Array<EventStoreAttributes>>;
 }

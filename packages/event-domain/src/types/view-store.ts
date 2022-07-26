@@ -2,10 +2,10 @@ import { DomainEvent } from "../message";
 import { Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { State } from "./generic";
 import { StoreBaseIndex } from "./store-base";
 import { View } from "../entity";
 import { ViewData, ViewIdentifier } from "./view";
-import { State } from "./generic";
 
 export interface ViewStoreAttributes<S extends State = State> extends ViewData<S> {
   timeModified: Date;
@@ -18,21 +18,29 @@ export interface ViewStoreOptions {
   logger: Logger;
 }
 
-export interface ViewStoreQueryOptions {
+export interface ViewStoreCollectionOptions {
   collection: string;
   database?: string;
-}
-
-export interface ViewStoreDocumentOptions extends ViewStoreQueryOptions {
   indices?: Array<StoreBaseIndex>;
 }
+
+export interface ViewStoreDocumentOptions {
+  collection?: string;
+  database?: string;
+  indices?: Array<StoreBaseIndex>;
+}
+
+export type ViewStoreQueryOptions = ViewStoreCollectionOptions;
 
 export interface IViewStore {
   save(view: View, causation: DomainEvent, options: ViewStoreDocumentOptions): Promise<View>;
   load(viewIdentifier: ViewIdentifier, options: ViewStoreDocumentOptions): Promise<View>;
   query(
     queryOptions: ViewStoreQueryOptions,
-    filter: Filter<ViewStoreAttributes>,
+    filter?: Filter<ViewStoreAttributes>,
     findOptions?: FindOptions,
   ): Promise<Array<ViewStoreAttributes>>;
+
+  collections(context: string): Promise<Array<string>>;
+  dropCollection(context: string, name: string): Promise<void>;
 }
