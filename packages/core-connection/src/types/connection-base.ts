@@ -1,5 +1,5 @@
 import { ConnectionStatus } from "../enum";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/winston";
 
 export interface IConnectionBase<Client> {
   connect(): Promise<void>;
@@ -17,5 +17,5 @@ export interface ConnectionBaseOptions<ClientOptions> {
   connectOptions?: ClientOptions;
   connectInterval?: number;
   connectTimeout?: number;
-  logger: ILogger;
+  logger: Logger;
 }
