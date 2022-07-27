@@ -20,11 +20,11 @@ describe("MongoConnection", () => {
 
     await connection.connect();
 
-    jedi = await connection.client.db("default").collection("Jedi");
-    sith = await connection.client.db("default").collection("Sith");
+    jedi = connection.collection("Jedi");
+    sith = connection.collection("Sith");
   }, 30000);
 
-  test.skip("should resolve transaction", async () => {
+  test("should resolve transaction", async () => {
     await expect(
       connection.withTransaction(
         async (ctx) => {
