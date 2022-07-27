@@ -373,7 +373,7 @@ export class ReplayDomain implements IReplayDomain {
       }
     }
 
-    const unique = uniqBy(domainEvents, (item) => item.id);
+    const unique = uniqBy(domainEvents, "id");
 
     this.logger.debug("Returning events", { events: unique });
 

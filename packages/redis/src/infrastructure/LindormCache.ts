@@ -274,7 +274,7 @@ export abstract class LindormCache<
       }
     }
 
-    return uniqBy(results, (entity) => entity.id);
+    return uniqBy(results, "id");
   }
 
   private async scanEntities(): Promise<Array<Entity>> {
@@ -317,7 +317,7 @@ export abstract class LindormCache<
       }
     }
 
-    return uniqBy(results, (entity) => entity.id);
+    return uniqBy(results, "id");
   }
 
   private async getEntity(id: string): Promise<Entity | null> {
