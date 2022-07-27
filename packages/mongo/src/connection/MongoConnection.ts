@@ -1,5 +1,5 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
-import { IMongoConnection, MongoConnectionOptions } from "../types";
+import { IMongoConnection, MongoConnectionOptions, WithTransactionCallback } from "../types";
 import { MongoClient, MongoClientOptions } from "mongodb";
 
 export class MongoConnection
@@ -32,6 +32,64 @@ export class MongoConnection
     this.custom = custom;
     this.database = database;
     this.url = `mongodb://${host}:${port}/`;
+  }
+
+  // public
+
+  public async withTransaction<Result = any, Options = any>(
+    callback: WithTransactionCallback<Result, Options>,
+    options?: Options,
+  ): Promise<Result> {
+    const session = await this.client.startSession();
+
+    try {
+      session.startTransaction();
+      this.logger.verbose("Transaction started");
+
+      const result = await callback({
+        client: this.client,
+        logger: this.logger,
+        options: options || ({} as Options),
+        session,
+      });
+
+      await session.commitTransaction();
+      this.logger.verbose("Transaction committed", { result });
+
+      return result;
+    } catch (err) {
+      await session.abortTransaction();
+      this.logger.error("Transaction failed", err);
+
+      throw err;
+    } finally {
+      await session.endSession();
+    }
+
+    // try {
+    //   session.startTransaction();
+    //
+    //   await callback({
+    //     client: this.client,
+    //     logger: this.logger,
+    //     options: options || ({} as T),
+    //     session,
+    //   });
+    //
+    //   const result = await session.commitTransaction();
+    //
+    //   this.logger.verbose("Transaction committed", { result });
+    // } catch (err) {
+    //   this.logger.error("Transaction failed", err);
+    //
+    //   await session.abortTransaction();
+    //
+    //   this.logger.debug("Transaction aborted");
+    //
+    //   throw err;
+    // } finally {
+    //   await session.endSession();
+    // }
   }
 
   // abstract implementation
