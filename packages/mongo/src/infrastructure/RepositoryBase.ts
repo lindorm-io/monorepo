@@ -2,13 +2,11 @@ import { Collection, IndexSpecification } from "mongodb";
 import { EntityAttributes } from "@lindorm-io/entity";
 import { ILogger } from "@lindorm-io/winston";
 import { IndexOptions, LindormRepositoryOptions } from "../types";
-import { LindormError } from "@lindorm-io/errors";
 import { MongoConnection } from "../connection";
 
 export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected readonly collectionName: string;
   protected readonly connection: MongoConnection;
-  protected readonly databaseName: string;
   protected readonly indices: Array<IndexOptions<Interface>>;
   protected readonly logger: ILogger;
 
@@ -18,7 +16,6 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected constructor(options: LindormRepositoryOptions<Interface>) {
     this.collectionName = options.collection;
     this.connection = options.connection;
-    this.databaseName = options.database || options.connection.database;
     this.indices = [
       {
         index: { id: 1 },
@@ -26,10 +23,6 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
       },
       ...options.indices,
     ];
-
-    if (!this.databaseName) {
-      throw new LindormError("Invalid database");
-    }
 
     this.logger = options.logger.createChildLogger(["RepositoryBase", this.constructor.name]);
     this.promise = this.initialise;
@@ -40,7 +33,7 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
 
     await this.connection.connect();
 
-    this.collection = this.connection.client.db(this.databaseName).collection(this.collectionName);
+    this.collection = this.connection.collection(this.collectionName);
 
     for (const { index, options } of this.indices) {
       for (const [key, value] of Object.entries(index)) {
@@ -54,7 +47,6 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
 
     this.logger.debug("Initialisation successful", {
       collection: this.collectionName,
-      database: this.databaseName,
       indices: this.indices,
       time: Date.now() - start,
     });

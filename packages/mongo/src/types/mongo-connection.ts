@@ -17,10 +17,10 @@ export interface HostData {
 
 export interface ExtendedMongoClientOptions extends MongoClientOptions {
   custom?: typeof MongoClient;
-  database: string;
+  database?: string;
   databaseOptions?: DbOptions;
-  host: string;
-  port: number;
+  host?: string;
+  port?: number;
   replicas?: Array<HostData>;
 }
 

@@ -10,13 +10,15 @@ describe("MongoConnection", () => {
   let sith: Collection;
 
   beforeEach(async () => {
-    connection = new MongoConnection({
-      host: "localhost",
-      port: 27017,
-      auth: { username: "root", password: "example" },
-      database: "default",
+    connection = new MongoConnection(
+      {
+        auth: { username: "root", password: "example" },
+        database: "MongoConnection",
+        host: "localhost",
+        port: 27017,
+      },
       logger,
-    });
+    );
 
     await connection.connect();
 

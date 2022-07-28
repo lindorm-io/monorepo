@@ -14,14 +14,16 @@ describe("MessageBusBase", () => {
   let messageBus: TestMessageBus;
 
   beforeAll(async () => {
-    connection = new AmqpConnection({
-      hostname: "localhost",
+    connection = new AmqpConnection(
+      {
+        hostname: "localhost",
+        port: 5672,
+        connectInterval: 500,
+        connectTimeout: 50000,
+        custom: mockAmqplib,
+      },
       logger,
-      port: 5672,
-      connectInterval: 500,
-      connectTimeout: 50000,
-      custom: mockAmqplib,
-    });
+    );
 
     await connection.connect();
 

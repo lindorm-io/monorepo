@@ -80,6 +80,7 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
 
     on: jest.fn(),
 
+    collection: jest.fn().mockImplementation(() => collection),
     withTransaction: jest
       .fn()
       .mockImplementation(async (callback) =>

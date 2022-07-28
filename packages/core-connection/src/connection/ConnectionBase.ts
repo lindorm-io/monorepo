@@ -15,8 +15,8 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   protected connectOptions: ClientOptions;
   protected logger: Logger;
 
-  protected constructor(options: ConnectionBaseOptions<ClientOptions>) {
-    this.logger = options.logger.createChildLogger(["ConnectionBase", this.constructor.name]);
+  protected constructor(options: ConnectionBaseOptions<ClientOptions>, logger: Logger) {
+    this.logger = logger.createChildLogger(["ConnectionBase", this.constructor.name]);
     this.eventEmitter = new EventEmitter();
 
     this.connectOptions = options.connectOptions;

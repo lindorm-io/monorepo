@@ -15,16 +15,19 @@ describe("LindormRepository.ts", () => {
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new MongoConnection({
-      host: "localhost",
-      port: 27017,
-      auth: { username: "root", password: "example" },
+    connection = new MongoConnection(
+      {
+        host: "localhost",
+        port: 27017,
+        database: "LindormRepository",
+        auth: { username: "root", password: "example" },
+      },
       logger,
-    });
+    );
 
     await connection.connect();
 
-    collection = await connection.client.db("TestDatabase").collection("TestRepository");
+    collection = await connection.collection("TestRepository");
     repository = new TestRepository({ connection, logger });
   });
 

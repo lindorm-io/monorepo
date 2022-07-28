@@ -14,7 +14,7 @@ interface ClientOptions {}
 
 class Connection extends ConnectionBase<Client, ClientOptions> {
   public constructor(options: ConnectionBaseOptions<ClientOptions>) {
-    super(options);
+    super(options, createMockLogger());
   }
 
   protected async createClientConnection(): Promise<Client> {
@@ -34,9 +34,7 @@ describe("ConnectionBase", () => {
   let connection: Connection;
 
   beforeEach(async () => {
-    connection = new Connection({
-      logger: createMockLogger(),
-    });
+    connection = new Connection({});
 
     await connection.connect();
   });

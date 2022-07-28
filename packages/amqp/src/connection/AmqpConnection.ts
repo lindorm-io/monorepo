@@ -3,6 +3,7 @@ import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { ConsumeMessage } from "amqplib/properties";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/winston";
 import { merge } from "lodash";
 import { parseBlob } from "@lindorm-io/string-blob";
 
@@ -16,18 +17,30 @@ export class AmqpConnection
   public readonly deadLetters: string;
   public readonly exchange: string;
 
-  public constructor(options: AmqpConnectionOptions) {
+  public constructor(options: AmqpConnectionOptions, logger: Logger) {
     const {
       connectInterval,
       connectTimeout,
-      logger,
       deadLetters,
       exchange,
       custom,
+      hostname = "localhost",
+      port = 5672,
       ...connectOptions
     } = options;
 
-    super({ connectInterval, connectTimeout, connectOptions, logger });
+    super(
+      {
+        connectInterval,
+        connectTimeout,
+        connectOptions: {
+          hostname,
+          port,
+          ...connectOptions,
+        },
+      },
+      logger,
+    );
 
     this.custom = custom;
     this.deadLetters = deadLetters || "deadletters";

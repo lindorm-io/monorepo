@@ -9,6 +9,7 @@ import {
   MongoClient,
   MongoClientOptions,
 } from "mongodb";
+import { Logger } from "@lindorm-io/winston";
 
 export class MongoConnection
   extends ConnectionBase<MongoClient, MongoClientOptions>
@@ -20,35 +21,42 @@ export class MongoConnection
   private readonly dbOptions: DbOptions;
   private db: Db;
 
-  public constructor(options: MongoConnectionOptions) {
+  public constructor(options: MongoConnectionOptions, logger: Logger) {
     const {
       connectInterval,
       connectTimeout,
-      logger,
       database,
       databaseOptions,
-      host,
-      port,
+      host = "localhost",
+      port = 27017,
       custom,
       replicas = [],
       ...connectOptions
     } = options;
 
-    super({
-      connectInterval,
-      connectTimeout,
-      connectOptions: {
-        keepAlive: true,
-        maxPoolSize: 5,
-        minPoolSize: 1,
-        ...connectOptions,
+    super(
+      {
+        connectInterval,
+        connectTimeout,
+        connectOptions: {
+          keepAlive: true,
+          maxPoolSize: 5,
+          minPoolSize: 1,
+          ...connectOptions,
+        },
       },
       logger,
-    });
+    );
 
     const hosts = uniqBy([{ host, port }, ...replicas], (item) => item.host && item.port);
-    const url = "mongodb://" + hosts.map((item) => `${item.host}:${item.port},`);
-    this.url = url.slice(0, -1) + "/" + database;
+
+    let url = "mongodb://" + hosts.map((item) => `${item.host}:${item.port},`);
+    url = url.slice(0, -1);
+    if (database) {
+      url = `${url}/${database}`;
+    }
+
+    this.url = url;
 
     this.custom = custom;
     this.dbName = database;

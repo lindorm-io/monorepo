@@ -20,11 +20,13 @@ describe("LindormCache", () => {
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new RedisConnection({
-      host: "localhost",
-      port: 6379,
+    connection = new RedisConnection(
+      {
+        host: "localhost",
+        port: 6379,
+      },
       logger,
-    });
+    );
 
     await connection.connect();
 

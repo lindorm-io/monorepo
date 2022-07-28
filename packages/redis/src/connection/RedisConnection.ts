@@ -1,15 +1,34 @@
 import IORedis, { Redis, RedisOptions } from "ioredis";
 import { ConnectionBase, ConnectionStatus } from "@lindorm-io/core-connection";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
+import { Logger } from "@lindorm-io/winston";
 
 export class RedisConnection
   extends ConnectionBase<Redis, RedisOptions>
   implements IRedisConnection
 {
-  public constructor(options: RedisConnectionOptions) {
-    const { connectInterval, connectTimeout, logger, custom, ...connectOptions } = options;
+  public constructor(options: RedisConnectionOptions, logger: Logger) {
+    const {
+      connectInterval,
+      connectTimeout,
+      custom,
+      host = "localhost",
+      port = 6379,
+      ...connectOptions
+    } = options;
 
-    super({ connectInterval, connectTimeout, connectOptions, logger });
+    super(
+      {
+        connectInterval,
+        connectTimeout,
+        connectOptions: {
+          host,
+          port,
+          ...connectOptions,
+        },
+      },
+      logger,
+    );
 
     if (custom) {
       this.clientConnection = custom;

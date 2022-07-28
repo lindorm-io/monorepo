@@ -9,12 +9,15 @@ describe("mongoQuery", () => {
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new MongoConnection({
-      host: "localhost",
-      port: 27017,
-      auth: { username: "root", password: "example" },
+    connection = new MongoConnection(
+      {
+        host: "localhost",
+        port: 27017,
+        auth: { username: "root", password: "example" },
+        database: "MongoQuery",
+      },
       logger,
-    });
+    );
 
     await connection.connect();
   });
