@@ -1,16 +1,18 @@
-import { Sequelize, Options as SequelizeOptions } from "sequelize";
 import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
+import { DataSource } from "typeorm";
+import { PostgresConnectionOptions as DataSourceOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 
-export interface ExtendedPostgresOptions extends SequelizeOptions {
-  custom?: typeof Sequelize;
+/*
+ * Suppressing type since it's declared in connection
+ */
+// @ts-ignore
+export interface ExtendedDataSourceOptions extends DataSourceOptions {
+  custom?: typeof DataSource;
   database: string;
-  host: string;
-  port: number;
-  username: string;
-  password: string;
+  type?: never;
 }
 
-export type PostgresConnectionOptions = ConnectionBaseOptions<SequelizeOptions> &
-  ExtendedPostgresOptions;
+export type PostgresConnectionOptions = ConnectionBaseOptions<DataSourceOptions> &
+  ExtendedDataSourceOptions;
 
-export type IPostgresConnection = IConnectionBase<Sequelize>;
+export type IPostgresConnection = IConnectionBase<DataSource>;

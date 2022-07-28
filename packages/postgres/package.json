@@ -1,6 +1,6 @@
 {
   "name": "@lindorm-io/postgres",
-  "description": "PostgreSQL and Repository tools for lindorm.io",
+  "description": "Postgres connection for lindorm.io",
   "version": "0.0.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
@@ -24,13 +24,11 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.6.3",
     "@lindorm-io/core-connection": "^0.1.0",
-    "@lindorm-io/entity": "^0.3.4",
     "@lindorm-io/errors": "^0.1.13",
     "lodash": "^4.17.21",
     "pg": "^8.7.3",
-    "sequelize": "^6.21.3"
+    "typeorm": "^0.3.7"
   },
   "devDependencies": {
     "@lindorm-io/winston": "^0.4.7",

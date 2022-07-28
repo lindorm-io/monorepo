@@ -1,51 +1,75 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
-import { Sequelize, Options as SequelizeOptions } from "sequelize";
+import { DataSource } from "typeorm";
+import { EntityManager } from "typeorm/entity-manager/EntityManager";
+import { EntityTarget } from "typeorm/common/EntityTarget";
 import { IPostgresConnection, PostgresConnectionOptions } from "../types";
+import { Logger } from "@lindorm-io/winston";
+import { ObjectLiteral } from "typeorm/common/ObjectLiteral";
+import { PostgresConnectionOptions as DataSourceOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
+import { Repository } from "typeorm/repository/Repository";
 
 export class PostgresConnection
-  extends ConnectionBase<Sequelize, SequelizeOptions>
+  extends ConnectionBase<DataSource, DataSourceOptions>
   implements IPostgresConnection
 {
-  private readonly custom: typeof Sequelize;
+  private readonly custom: typeof DataSource;
 
-  public constructor(options: PostgresConnectionOptions) {
-    const { connectInterval, connectTimeout, logger, custom, ...connectOptions } = options;
-
-    super({
+  public constructor(options: PostgresConnectionOptions, logger: Logger) {
+    const {
       connectInterval,
       connectTimeout,
-      connectOptions: {
-        dialect: "postgres",
-        logging: false,
-        pool: {
-          max: 5,
-          min: 1,
-          ...connectOptions.pool,
+      custom,
+      host = "localhost",
+      port = 5432,
+      ...connectOptions
+    } = options;
+
+    super(
+      {
+        connectInterval,
+        connectTimeout,
+        connectOptions: {
+          extra: {
+            connectionLimit: 5,
+            ...(connectOptions.extra || {}),
+          },
+          host,
+          port,
+          ...connectOptions,
+          type: "postgres",
         },
-        ...connectOptions,
       },
       logger,
-    });
+    );
 
     this.custom = custom;
   }
 
+  // public
+
+  public getRepository<Entity extends ObjectLiteral>(
+    target: EntityTarget<Entity>,
+  ): Repository<Entity> {
+    return this.client.getRepository(target);
+  }
+
+  public transaction<T = void>(
+    runInTransaction: (entityManager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    return this.client.transaction(runInTransaction);
+  }
+
   // abstract implementation
 
-  protected async createClientConnection(): Promise<Sequelize> {
+  protected async createClientConnection(): Promise<DataSource> {
     if (this.custom) {
       return new this.custom(this.connectOptions);
     }
-    return new Sequelize(this.connectOptions);
+    return new DataSource(this.connectOptions);
   }
 
   protected async connectCallback(): Promise<void> {
-    await this.client.authenticate();
-    await this.client.validate();
-
-    const version = await this.client.databaseVersion();
-
-    this.logger.debug("Database Version", { version });
+    await this.client.initialize();
   }
 
   protected async disconnectCallback(): Promise<void> {

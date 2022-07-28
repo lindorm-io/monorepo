@@ -1,6 +1,6 @@
 # @lindorm-io/postgres
 
-PostgreSQL and Repository tools for lindorm.io packages.
+Postgres connection for lindorm.io packages.
 
 ## Installation
 
