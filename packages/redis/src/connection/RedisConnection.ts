@@ -26,6 +26,7 @@ export class RedisConnection
           port,
           ...connectOptions,
         },
+        type: "redis",
       },
       logger,
     );

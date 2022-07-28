@@ -14,7 +14,7 @@ interface ClientOptions {}
 
 class Connection extends ConnectionBase<Client, ClientOptions> {
   public constructor(options: ConnectionBaseOptions<ClientOptions>) {
-    super(options, createMockLogger());
+    super({ ...options, type: "test" }, createMockLogger());
   }
 
   protected async createClientConnection(): Promise<Client> {

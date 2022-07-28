@@ -38,6 +38,7 @@ export class AmqpConnection
           port,
           ...connectOptions,
         },
+        type: "amqp",
       },
       logger,
     );

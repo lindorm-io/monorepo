@@ -44,6 +44,7 @@ export class MongoConnection
           minPoolSize: 1,
           ...connectOptions,
         },
+        type: "mongo",
       },
       logger,
     );

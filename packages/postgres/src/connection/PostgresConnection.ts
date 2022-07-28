@@ -38,6 +38,7 @@ export class PostgresConnection
           ...connectOptions,
           type: "postgres",
         },
+        type: "postgres",
       },
       logger,
     );
