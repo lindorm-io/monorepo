@@ -1,15 +1,14 @@
 import { Command, DomainEvent, Message } from "../message";
+import { ISagaDomain, SagaIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
-import { MessageBus } from "../infrastructure";
 import { Saga } from "../entity";
 import { SagaDomain } from "./SagaDomain";
 import { SagaEventHandler } from "../handler";
-import { SagaIdentifier } from "../types";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createMockMessageBus } from "@lindorm-io/amqp";
+import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomUUID } from "crypto";
 import {
   HandlerNotRegisteredError,
@@ -48,8 +47,8 @@ describe("SagaDomain", () => {
     TEST_SAGA_EVENT_HANDLER_THROWS,
   ];
 
-  let domain: SagaDomain;
-  let messageBus: MessageBus;
+  let domain: ISagaDomain;
+  let messageBus: IMessageBus;
   let store: any;
 
   beforeEach(async () => {
@@ -60,7 +59,7 @@ describe("SagaDomain", () => {
       clearMessagesToDispatch: jest.fn(),
     };
 
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
@@ -95,7 +94,7 @@ describe("SagaDomain", () => {
 
   test("should register event handler", async () => {
     messageBus = createMockMessageBus();
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await expect(domain.registerEventHandler(TEST_SAGA_EVENT_HANDLER)).resolves.toBeUndefined();
 
@@ -108,7 +107,7 @@ describe("SagaDomain", () => {
 
   test("should register multiple event handlers", async () => {
     messageBus = createMockMessageBus();
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await expect(
       domain.registerEventHandler(
@@ -138,7 +137,7 @@ describe("SagaDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(TEST_SAGA_EVENT_HANDLER);
 
@@ -148,7 +147,7 @@ describe("SagaDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     // @ts-ignore
     await expect(domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER)).rejects.toThrow(
@@ -261,7 +260,7 @@ describe("SagaDomain", () => {
   });
 
   test("should throw on missing handler", async () => {
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     const event = new DomainEvent(TEST_DOMAIN_EVENT);
 
@@ -322,7 +321,7 @@ describe("SagaDomain", () => {
   });
 
   test("should dispatch error on not created saga", async () => {
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
       new SagaEventHandler({
@@ -362,7 +361,7 @@ describe("SagaDomain", () => {
   });
 
   test("should throw on already created saga", async () => {
-    domain = new SagaDomain({ logger, messageBus, store: store as any });
+    domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
       new SagaEventHandler({

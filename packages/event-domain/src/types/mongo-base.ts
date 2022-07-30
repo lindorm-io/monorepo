@@ -1,6 +1,5 @@
-import { Logger } from "@lindorm-io/winston";
-import { MongoConnection } from "@lindorm-io/mongo";
 import { CreateIndexesOptions, IndexSpecification } from "mongodb";
+import { IMongoConnection } from "@lindorm-io/mongo";
 
 export interface MongoIndex {
   indexSpecification: IndexSpecification;
@@ -9,8 +8,6 @@ export interface MongoIndex {
 
 export interface MongoBaseOptions {
   collection: string;
-  connection: MongoConnection;
-  database?: string;
+  connection: IMongoConnection;
   indices?: Array<MongoIndex>;
-  logger: Logger;
 }

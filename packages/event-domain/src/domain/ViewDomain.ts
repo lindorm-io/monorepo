@@ -1,9 +1,8 @@
 import EventEmitter from "events";
 import { DomainEvent, Message } from "../message";
-import { Filter, FindOptions } from "mongodb";
+import { ILogger } from "@lindorm-io/winston";
+import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
-import { MessageBus, ViewStore } from "../infrastructure";
 import { View } from "../entity";
 import { ViewEventHandler } from "../handler";
 import { assertSnakeCase } from "../util";
@@ -24,19 +23,18 @@ import {
   State,
   ViewDomainOptions,
   ViewEventHandlerContext,
-  ViewStoreAttributes,
-  ViewStoreQueryOptions,
+  IViewStore,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<ViewEventHandler>;
-  private readonly logger: Logger;
-  private messageBus: MessageBus;
-  private store: ViewStore;
+  private readonly logger: ILogger;
+  private messageBus: IMessageBus;
+  private store: IViewStore;
 
-  public constructor(options: ViewDomainOptions) {
-    this.logger = options.logger.createChildLogger(["ViewDomain"]);
+  public constructor(options: ViewDomainOptions, logger: ILogger) {
+    this.logger = logger.createChildLogger(["ViewDomain"]);
 
     this.messageBus = options.messageBus;
     this.store = options.store;
@@ -47,14 +45,6 @@ export class ViewDomain implements IViewDomain {
 
   public on<S extends State = State>(eventName: string, listener: EventEmitterListener<S>): void {
     this.eventEmitter.on(eventName, listener);
-  }
-
-  public async query<S extends State = State>(
-    queryOptions: ViewStoreQueryOptions,
-    filter: Filter<ViewStoreAttributes>,
-    findOptions?: FindOptions,
-  ): Promise<Array<ViewStoreAttributes<S>>> {
-    return this.store.query<S>(queryOptions, filter, findOptions);
   }
 
   public async registerEventHandler(eventHandler: ViewEventHandler): Promise<void> {
@@ -108,7 +98,7 @@ export class ViewDomain implements IViewDomain {
             context: context,
           },
           conditions: eventHandler.conditions,
-          documentOptions: eventHandler.documentOptions,
+          persistence: eventHandler.persistence,
           getViewId: eventHandler.getViewId,
           handler: eventHandler.handler,
           view: eventHandler.view,
@@ -187,10 +177,6 @@ export class ViewDomain implements IViewDomain {
     }
   }
 
-  public async listCollections(): Promise<Array<string>> {
-    return this.store.listCollections();
-  }
-
   // private
 
   private async handleEvent(event: DomainEvent, viewIdentifier: HandlerIdentifier): Promise<void> {
@@ -245,7 +231,7 @@ export class ViewDomain implements IViewDomain {
         name: viewIdentifier.name,
         context: viewIdentifier.context,
       },
-      eventHandler.documentOptions,
+      eventHandler.persistence,
     );
 
     const lastCausationMatchesEventId = findLast(
@@ -274,7 +260,7 @@ export class ViewDomain implements IViewDomain {
 
       await eventHandler.handler(context);
 
-      const saved = await this.store.save(view, event, eventHandler.documentOptions);
+      const saved = await this.store.save(view, event, eventHandler.persistence);
 
       this.emit(saved);
 

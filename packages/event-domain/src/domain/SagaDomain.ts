@@ -1,13 +1,18 @@
 import { DomainEvent, TimeoutEvent } from "../message";
-import { HandlerIdentifier, SagaEventHandlerContext } from "../types";
-import { ISagaDomain, SagaDomainOptions } from "../types";
+import { ILogger } from "@lindorm-io/winston";
+import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
-import { MessageBus, SagaStore } from "../infrastructure";
 import { Saga } from "../entity";
 import { SagaEventHandler } from "../handler";
+import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State } from "../types";
 import { assertSnakeCase } from "../util";
 import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
+import {
+  HandlerIdentifier,
+  ISagaEventHandler,
+  ISagaStore,
+  SagaEventHandlerContext,
+} from "../types";
 import {
   ConcurrencyError,
   DomainError,
@@ -18,13 +23,13 @@ import {
 } from "../error";
 
 export class SagaDomain implements ISagaDomain {
-  private readonly eventHandlers: Array<SagaEventHandler>;
-  private readonly logger: Logger;
-  private messageBus: MessageBus;
-  private store: SagaStore;
+  private readonly eventHandlers: Array<ISagaEventHandler>;
+  private readonly logger: ILogger;
+  private messageBus: IMessageBus;
+  private store: ISagaStore;
 
-  public constructor(options: SagaDomainOptions) {
-    this.logger = options.logger.createChildLogger(["SagaDomain"]);
+  public constructor(options: SagaDomainOptions, logger: ILogger) {
+    this.logger = logger.createChildLogger(["SagaDomain"]);
 
     this.messageBus = options.messageBus;
     this.store = options.store;
@@ -86,7 +91,7 @@ export class SagaDomain implements ISagaDomain {
           getSagaId: eventHandler.getSagaId,
           handler: eventHandler.handler,
           saga: eventHandler.saga,
-          saveOptions: eventHandler.saveOptions,
+          options: eventHandler.options,
         }),
       );
 
@@ -160,6 +165,10 @@ export class SagaDomain implements ISagaDomain {
     for (const handler of this.eventHandlers) {
       await this.removeEventHandler(handler);
     }
+  }
+
+  public async inspect<S extends State = State>(identifier: SagaIdentifier): Promise<Saga<S>> {
+    return (await this.store.load(identifier)) as Saga<S>;
   }
 
   // private
@@ -312,7 +321,7 @@ export class SagaDomain implements ISagaDomain {
         messagesToDispatch: saga.messagesToDispatch,
       });
 
-      return await this.store.save(saga, event, eventHandler.saveOptions);
+      return await this.store.save(saga, event, eventHandler.options);
     } catch (err) {
       if (err instanceof DomainError && err.permanent) {
         this.logger.error("Failed to handle Saga", err);

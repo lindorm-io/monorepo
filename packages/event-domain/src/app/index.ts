@@ -1,1 +1,1 @@
-export * from "./EventDomainApp";
+export * from "./App";

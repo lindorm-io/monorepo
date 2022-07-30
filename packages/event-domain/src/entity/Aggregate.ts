@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { AggregateEventHandler } from "../handler";
 import { Command, DomainEvent } from "../message";
-import { JOI_MESSAGE } from "../constant";
-import { Logger } from "@lindorm-io/winston";
+import { JOI_MESSAGE } from "../schema";
+import { ILogger } from "@lindorm-io/winston";
 import { assertSnakeCase, assertSchema, assertSchemaAsync } from "../util";
 import { cloneDeep, find, merge, set } from "lodash";
 import {
@@ -10,6 +10,7 @@ import {
   AggregateEventHandlerContext,
   AggregateOptions,
   IAggregate,
+  IAggregateEventHandler,
   State,
 } from "../types";
 import {
@@ -25,7 +26,7 @@ export class Aggregate<S extends State = State> implements IAggregate {
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _eventHandlers: Array<AggregateEventHandler>;
+  private readonly _eventHandlers: Array<IAggregateEventHandler>;
   private readonly _events: Array<DomainEvent>;
   private readonly _state: S;
 
@@ -33,9 +34,9 @@ export class Aggregate<S extends State = State> implements IAggregate {
   private _destroying: boolean;
   private _numberOfLoadedEvents: number;
 
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
 
-  public constructor(options: AggregateOptions, logger: Logger) {
+  public constructor(options: AggregateOptions, logger: ILogger) {
     this.logger = logger.createChildLogger(["Aggregate"]);
 
     assertSnakeCase(options.context);

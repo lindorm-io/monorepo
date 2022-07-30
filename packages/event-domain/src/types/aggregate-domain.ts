@@ -1,22 +1,22 @@
-import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
-import { EventStore, MessageBus } from "../infrastructure";
-import { Logger } from "@lindorm-io/winston";
-import { AggregateIdentifier } from "./aggregate";
-import { State } from "./generic";
 import { Aggregate } from "../entity";
+import { AggregateIdentifier } from "./aggregate";
+import { IAggregateCommandHandler } from "./aggregate-command-handler";
+import { IAggregateEventHandler } from "./aggregate-event-handler";
+import { IDomainEventStore } from "./event-store";
+import { IMessageBus } from "@lindorm-io/amqp";
+import { State } from "./generic";
 
 export interface AggregateDomainOptions {
-  logger: Logger;
-  messageBus: MessageBus;
-  store: EventStore;
+  messageBus: IMessageBus;
+  store: IDomainEventStore;
 }
 
 export interface IAggregateDomain {
-  registerCommandHandler(handler: AggregateCommandHandler): Promise<void>;
-  registerEventHandler(handler: AggregateEventHandler): Promise<void>;
+  registerCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
+  registerEventHandler(handler: IAggregateEventHandler): Promise<void>;
 
-  removeCommandHandler(handler: AggregateCommandHandler): Promise<void>;
-  removeEventHandler(handler: AggregateEventHandler): Promise<void>;
+  removeCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
+  removeEventHandler(handler: IAggregateEventHandler): Promise<void>;
 
   removeAllCommandHandlers(): Promise<void>;
   removeAllEventHandlers(): Promise<void>;

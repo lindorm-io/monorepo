@@ -1,12 +1,12 @@
-import { EventStore, MessageBus, ViewStore } from "../infrastructure";
-import { Logger } from "@lindorm-io/winston";
+import { IDomainEventStore } from "./event-store";
+import { ILogger } from "@lindorm-io/winston";
+import { IMessageBus } from "@lindorm-io/amqp";
 
 export interface ReplayDomainOptions {
-  eventStore: EventStore;
-  messageBus: MessageBus;
-  viewStore: ViewStore;
-  logger: Logger;
   context: string;
+  eventStore: IDomainEventStore;
+  logger: ILogger;
+  messageBus: IMessageBus;
 }
 
 export interface ReplayOptions {

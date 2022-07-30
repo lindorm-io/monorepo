@@ -23,7 +23,7 @@ export abstract class Message<D extends Data = Data> implements IMessage {
     this.data = options.data || ({} as unknown as D);
     this.delay = options.delay || 0;
     this.mandatory = options.mandatory || false;
-    this.timestamp = options.timestamp || new Date();
+    this.timestamp = options.timestamp ? new Date(options.timestamp) : new Date();
     this.type = options.type || MessageType.UNKNOWN;
   }
 

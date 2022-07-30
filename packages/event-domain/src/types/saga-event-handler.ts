@@ -1,15 +1,15 @@
 import { DomainEvent, TimeoutEvent } from "../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { SagaDispatchOptions } from "./saga";
-import { SagaStoreSaveOptions } from "./saga-store";
+import { SagaStoreHandlerOptions } from "./saga-store";
 import { State } from "./generic";
 
 export type GetSagaIdFunction = (event: DomainEvent | TimeoutEvent) => string;
 
 export interface SagaEventHandlerContext<S extends State = State> {
   event: DomainEvent | TimeoutEvent;
-  logger: Logger;
+  logger: ILogger;
 
   destroy(): void;
   dispatch(name: string, data: Record<string, any>, options?: SagaDispatchOptions): void;
@@ -26,7 +26,7 @@ export interface SagaEventHandlerFileAggregate {
 export interface SagaEventHandlerFile<S extends State = State> {
   aggregate?: SagaEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  saveOptions?: SagaStoreSaveOptions;
+  options?: SagaStoreHandlerOptions;
   getSagaId: GetSagaIdFunction;
   handler(ctx: SagaEventHandlerContext<S>): Promise<void>;
 }
@@ -42,7 +42,7 @@ export interface ISagaEventHandler<S extends State = State> {
   conditions: HandlerConditions;
   eventName: string;
   saga: HandlerIdentifier;
-  saveOptions: SagaStoreSaveOptions;
+  options: SagaStoreHandlerOptions;
   getSagaId: GetSagaIdFunction;
   handler(ctx: SagaEventHandlerContext<S>): Promise<void>;
 }

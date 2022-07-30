@@ -1,11 +1,15 @@
 export { Command, DomainEvent } from "./message";
 export { ConcurrencyError, DomainError } from "./error";
-export { EventDomainApp } from "./app";
-export { ViewRepository } from "./infrastructure";
+export { EventEntity, SagaCausationEntity, SagaEntity } from "./infrastructure";
+export { App } from "./app";
+export { createViewEntities } from "./util";
 export {
   AggregateCommandHandlerFile,
   AggregateEventHandlerFile,
-  CacheEventHandlerFile,
+  IApp,
+  IEventStore,
+  ISagaStore,
+  IViewStore,
   SagaEventHandlerFile,
   ViewEventHandlerFile,
 } from "./types";

@@ -1,8 +1,10 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { EventDomainApp } from "../src";
+import { EventEntity, App, SagaEntity, SagaCausationEntity } from "../src";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { PostgresConnection } from "@lindorm-io/postgres";
 import { RedisConnection } from "@lindorm-io/redis";
+import { StoredGreeting, StoredGreetingCausation } from "./entities";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
@@ -10,47 +12,78 @@ import { sleep } from "@lindorm-io/core";
 const logger = new Logger();
 logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
 
-type Caches = "greetings";
-type Views = "greetings";
-
 const main = async (): Promise<void> => {
-  const amqp = new AmqpConnection({
-    hostname: "localhost",
-    logger,
-    port: 5671,
-    connectInterval: 500,
-    connectTimeout: 30000,
-  });
-
-  const mongo = new MongoConnection({
-    host: "localhost",
-    port: 27011,
-    auth: { username: "root", password: "example" },
-    logger,
-  });
-
-  const redis = new RedisConnection({
-    host: "localhost",
-    port: 6371,
-    logger,
-  });
-
-  const app = new EventDomainApp<Caches, Views>({
-    amqp,
-    mongo,
-    redis,
-    logger,
-    domain: {
-      database: "default",
-      directory: join(__dirname),
+  const amqp = new AmqpConnection(
+    {
+      hostname: "localhost",
+      port: 5671,
+      connectInterval: 500,
+      connectTimeout: 30000,
     },
-  });
+    logger,
+  );
+
+  const mongo = new MongoConnection(
+    {
+      host: "localhost",
+      port: 27011,
+      auth: { username: "root", password: "example" },
+      database: "default_db",
+      authSource: "admin",
+    },
+    logger,
+  );
+
+  const postgres = new PostgresConnection(
+    {
+      host: "localhost",
+      port: 5432,
+      username: "root",
+      password: "example",
+      database: "default_db",
+      entities: [
+        EventEntity,
+        SagaEntity,
+        SagaCausationEntity,
+        StoredGreeting,
+        StoredGreetingCausation,
+      ],
+      synchronize: true,
+    },
+    logger,
+  );
+
+  const redis = new RedisConnection(
+    {
+      host: "localhost",
+      port: 6371,
+    },
+    logger,
+  );
+
+  const app = new App(
+    {
+      amqp,
+      mongo,
+      postgres,
+      redis,
+      domain: {
+        directory: join(__dirname),
+      },
+      aggregates: {
+        persistence: "postgres",
+      },
+      sagas: {
+        persistence: "postgres",
+      },
+    },
+    logger,
+  );
+
+  await app.init();
 
   app.on("view", (view) => {
-    logger.info("on:view", { view });
-  });
-  app.on("cache", (cache) => {
-    logger.info("on:cache", { cache });
+    logger.verbose("on:view", { view });
   });
 
   const aggregateId = randomUUID();
@@ -62,28 +95,42 @@ const main = async (): Promise<void> => {
     data: { initial: "Hi" },
   });
 
-  await sleep(2000);
+  await sleep(5000);
 
-  const result = await app.admin.query(
-    { collection: "greetings", database: "default" },
-    {
-      id: aggregateId,
-      name: "greetings",
-      context: "default",
-    },
-  );
+  const inspect: any = {};
 
-  logger.info("query", { result });
+  inspect.greetingAggregate = await app.admin.inspect.aggregate({
+    id: aggregateId,
+    name: "greeting",
+  });
 
-  const example: any = {};
+  inspect.responseAggregate = await app.admin.inspect.aggregate({
+    id: aggregateId,
+    name: "response",
+  });
 
-  example.get = await app.caches.greetings.get(aggregateId);
-  example.getAll = await app.caches.greetings.getAll();
-  example.count = await app.views.greetings.count();
-  example.find = await app.views.greetings.find();
-  example.findOne = await app.views.greetings.findOne({ id: aggregateId });
+  inspect.saga = await app.admin.inspect.aggregate({
+    id: aggregateId,
+    name: "log_greetings",
+  });
 
-  logger.info("find", { example });
+  logger.info("inspect", { inspect });
+
+  const repositories: any = {};
+
+  repositories.savedGreetings = await app.repositories
+    .mongo("saved_greetings")
+    .findById(aggregateId);
+
+  repositories.storedGreetings = await app.repositories
+    .postgres("stored_greetings")
+    .findById(aggregateId);
+
+  repositories.cachedGreetings = await app.repositories
+    .redis("cached_greetings")
+    .findById(aggregateId);
+
+  logger.info("repositories", { repositories });
 };
 
 main()

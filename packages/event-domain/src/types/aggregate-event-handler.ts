@@ -1,11 +1,11 @@
 import { DomainEvent } from "../message";
 import { HandlerIdentifier } from "./handler";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { State } from "./generic";
 
 export interface AggregateEventHandlerContext<S extends State = State> {
   event: DomainEvent;
-  logger: Logger;
+  logger: ILogger;
 
   destroy(): void;
   destroyNext(): void;

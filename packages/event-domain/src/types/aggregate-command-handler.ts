@@ -1,12 +1,12 @@
 import Joi from "joi";
 import { Command } from "../message";
 import { HandlerConditions, HandlerIdentifier } from "./handler";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { State } from "./generic";
 
 export interface AggregateCommandHandlerContext<S extends State = State> {
   command: Command;
-  logger: Logger;
+  logger: ILogger;
 
   apply(name: string, data?: Record<string, any>): Promise<void>;
   getState(): S;

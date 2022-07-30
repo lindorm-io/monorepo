@@ -14,7 +14,6 @@ export const assertSchemaAsync = async (promise: Promise<any>): Promise<void> =>
   try {
     await promise;
   } catch (err) {
-    console.error(err);
     throw new LindormError("Schema Validation Error", {
       error: err,
     });

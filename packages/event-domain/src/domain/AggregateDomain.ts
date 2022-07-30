@@ -1,16 +1,19 @@
 import { Aggregate } from "../entity";
 import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
 import { Command, DomainEvent } from "../message";
-import { EventStore, MessageBus } from "../infrastructure";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { assertSnakeCase } from "../util";
 import { filter, find, findLast, remove, some } from "lodash";
+import { IMessageBus } from "@lindorm-io/amqp";
 import {
   AggregateCommandHandlerContext,
   AggregateDomainOptions,
   AggregateIdentifier,
+  IAggregateCommandHandler,
   IAggregateDomain,
+  IAggregateEventHandler,
+  IDomainEventStore,
   State,
 } from "../types";
 import {
@@ -24,26 +27,20 @@ import {
 } from "../error";
 
 export class AggregateDomain implements IAggregateDomain {
-  private readonly commandHandlers: Array<AggregateCommandHandler>;
-  private readonly eventHandlers: Array<AggregateEventHandler>;
-  private readonly logger: Logger;
-  private readonly messageBus: MessageBus;
-  private readonly store: EventStore;
+  private readonly commandHandlers: Array<IAggregateCommandHandler>;
+  private readonly eventHandlers: Array<IAggregateEventHandler>;
+  private readonly logger: ILogger;
+  private readonly messageBus: IMessageBus;
+  private readonly store: IDomainEventStore;
 
-  public constructor(options: AggregateDomainOptions) {
-    this.logger = options.logger.createChildLogger(["AggregateDomain"]);
+  public constructor(options: AggregateDomainOptions, logger: ILogger) {
+    this.logger = logger.createChildLogger(["AggregateDomain"]);
 
     this.messageBus = options.messageBus;
     this.store = options.store;
 
     this.commandHandlers = [];
     this.eventHandlers = [];
-  }
-
-  public async inspect<S extends State = State>(
-    aggregateIdentifier: AggregateIdentifier,
-  ): Promise<Aggregate<S>> {
-    return await this.store.load<S>(aggregateIdentifier, this.eventHandlers);
   }
 
   public async registerCommandHandler(commandHandler: AggregateCommandHandler): Promise<void> {
@@ -203,6 +200,12 @@ export class AggregateDomain implements IAggregateDomain {
     for (const handler of this.eventHandlers) {
       await this.removeEventHandler(handler);
     }
+  }
+
+  public async inspect<S extends State = State>(
+    identifier: AggregateIdentifier,
+  ): Promise<Aggregate<S>> {
+    return (await this.store.load(identifier, this.eventHandlers)) as Aggregate<S>;
   }
 
   // private

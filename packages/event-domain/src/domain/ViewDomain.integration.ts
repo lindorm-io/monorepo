@@ -25,7 +25,7 @@ import {
 
 describe("ViewDomain", () => {
   const logger = createMockLogger();
-  const documentOptions = TEST_VIEW_EVENT_HANDLER.documentOptions;
+  const handlerOptions = TEST_VIEW_EVENT_HANDLER.persistence;
 
   let amqp: AmqpConnection;
   let domain: ViewDomain;
@@ -35,25 +35,30 @@ describe("ViewDomain", () => {
   let store: ViewStore;
 
   beforeAll(async () => {
-    amqp = new AmqpConnection({
-      hostname: "localhost",
+    amqp = new AmqpConnection(
+      {
+        hostname: "localhost",
+        port: 5671,
+        connectInterval: 500,
+        connectTimeout: 30000,
+      },
       logger,
-      port: 5671,
-      connectInterval: 500,
-      connectTimeout: 30000,
-    });
+    );
 
-    mongo = new MongoConnection({
-      host: "localhost",
-      port: 27011,
-      auth: { username: "root", password: "example" },
+    mongo = new MongoConnection(
+      {
+        host: "localhost",
+        port: 27011,
+        auth: { username: "root", password: "example" },
+        authSource: "admin",
+        database: "ViewDomain",
+      },
       logger,
-      database: "db",
-    });
+    );
 
-    messageBus = new MessageBus({ connection: amqp, logger });
-    store = new ViewStore({ connection: mongo, logger });
-    domain = new ViewDomain({ logger, messageBus, store });
+    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
+    store = new ViewStore({ mongo }, logger);
+    domain = new ViewDomain({ messageBus, store }, logger);
 
     eventHandlers = [
       TEST_VIEW_EVENT_HANDLER,
@@ -95,7 +100,7 @@ describe("ViewDomain", () => {
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(2000);
 
-    await expect(store.load(view, documentOptions)).resolves.toStrictEqual(
+    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
         name: "view_name",

@@ -1,12 +1,11 @@
 import { Aggregate } from "../entity";
 import { AggregateDomain } from "./AggregateDomain";
-import { AggregateIdentifier } from "../types";
+import { AggregateIdentifier, IAggregateDomain } from "../types";
 import { Command, DomainEvent } from "../message";
 import { LindormError } from "@lindorm-io/errors";
-import { MessageBus } from "../infrastructure";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createMockMessageBus } from "@lindorm-io/amqp";
+import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomUUID } from "crypto";
 import {
   AggregateAlreadyCreatedError,
@@ -65,14 +64,14 @@ describe("AggregateDomain", () => {
     TEST_AGGREGATE_EVENT_HANDLER_THROWS,
   ];
 
-  let domain: AggregateDomain;
-  let messageBus: MessageBus;
+  let domain: IAggregateDomain;
+  let messageBus: IMessageBus;
   let store: any;
 
   beforeEach(async () => {
     messageBus = createMockMessageBus();
     store = { save: jest.fn(), load: jest.fn() };
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     for (const handler of commandHandlers) {
       await domain.registerCommandHandler(handler);
@@ -90,7 +89,7 @@ describe("AggregateDomain", () => {
 
   test("should register command handler", async () => {
     messageBus = createMockMessageBus();
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     await expect(
       domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER),
@@ -104,7 +103,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing command handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     await domain.registerCommandHandler(TEST_AGGREGATE_COMMAND_HANDLER);
 
@@ -114,7 +113,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid command handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     // @ts-ignore // private domain.handleCommand
     await expect(domain.registerCommandHandler(TEST_AGGREGATE_EVENT_HANDLER)).rejects.toThrow(
@@ -123,7 +122,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should register event handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     await expect(
       domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER),
@@ -131,7 +130,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     await domain.registerEventHandler(TEST_AGGREGATE_EVENT_HANDLER);
 
@@ -141,7 +140,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     // @ts-ignore // private domain.handleCommand
     await expect(domain.registerEventHandler(TEST_AGGREGATE_COMMAND_HANDLER)).rejects.toThrow(
@@ -227,7 +226,7 @@ describe("AggregateDomain", () => {
   });
 
   test("should throw on missing command handler", async () => {
-    domain = new AggregateDomain({ logger, messageBus, store: store as any });
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     // @ts-ignore // private domain.handleCommand
     await expect(domain.handleCommand(new Command(TEST_COMMAND_CREATE))).rejects.toThrow(

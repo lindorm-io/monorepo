@@ -1,14 +1,14 @@
 import { DomainEvent } from "../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { State } from "./generic";
-import { ViewStoreDocumentOptions } from "./view-store";
+import { ViewStoreHandlerOptions } from "./view-store";
 
 export type GetViewIdFunction = (event: DomainEvent) => string;
 
 export interface ViewEventHandlerContext<S extends State = State> {
   event: DomainEvent;
-  logger: Logger;
+  logger: ILogger;
 
   addField(path: string, value: any): void;
   destroy(): void;
@@ -25,7 +25,7 @@ export interface ViewEventHandlerFileAggregate {
 export interface ViewEventHandlerFile<S extends State = State> {
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  documentOptions?: ViewStoreDocumentOptions;
+  persistence: ViewStoreHandlerOptions;
   getViewId: GetViewIdFunction;
   handler(ctx: ViewEventHandlerContext<S>): Promise<void>;
 }
@@ -39,9 +39,9 @@ export interface ViewEventHandlerOptions<S extends State = State> extends ViewEv
 export interface IViewEventHandler<S extends State = State> {
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;
-  documentOptions: ViewStoreDocumentOptions;
   eventName: string;
-  getViewId: GetViewIdFunction;
+  persistence: ViewStoreHandlerOptions;
   view: HandlerIdentifier;
+  getViewId: GetViewIdFunction;
   handler(ctx: ViewEventHandlerContext<S>): Promise<void>;
 }

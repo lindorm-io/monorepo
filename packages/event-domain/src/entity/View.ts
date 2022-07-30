@@ -2,9 +2,9 @@ import Joi from "joi";
 import { DomainEvent } from "../message";
 import { IView, ViewOptions, ViewData, State } from "../types";
 import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
-import { JOI_MESSAGE } from "../constant";
+import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
+import { ILogger } from "@lindorm-io/winston";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, find, get, isEqual, isMatch, remove, set, some } from "lodash";
 import { isAfter, parseJSON } from "date-fns";
@@ -20,9 +20,9 @@ export class View<S extends State = State> implements IView<S> {
   private readonly _state: S;
   private _destroyed: boolean;
 
-  private readonly logger: Logger;
+  private readonly logger: ILogger;
 
-  public constructor(options: ViewOptions<S>, logger: Logger) {
+  public constructor(options: ViewOptions<S>, logger: ILogger) {
     this.logger = logger.createChildLogger(["View"]);
 
     assertSnakeCase(options.context);

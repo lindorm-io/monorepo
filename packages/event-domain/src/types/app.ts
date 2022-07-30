@@ -1,50 +1,75 @@
-import { Aggregate } from "../entity";
-import { AmqpConnection } from "@lindorm-io/amqp";
-import { CacheRepository, ViewRepository } from "../infrastructure";
+import { Aggregate, Saga } from "../entity";
 import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
-import { Filter, FindOptions } from "mongodb";
-import { Logger } from "@lindorm-io/winston";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
+import { EventStoreType, IEventStore } from "./event-store";
+import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
+import { IMongoConnection } from "@lindorm-io/mongo";
+import { IPostgresConnection } from "@lindorm-io/postgres";
+import { IRedisConnection } from "@lindorm-io/redis";
+import { ISagaStore, SagaStoreType } from "./saga-store";
+import { IViewStore } from "./view-store";
+import { MessageBusType } from "./message-bus";
 import { ReplayOptions } from "./replay-domain";
-import { ViewStoreAttributes, ViewStoreQueryOptions } from "./view-store";
+import {
+  MongoViewRepository,
+  PostgresViewRepository,
+  RedisViewRepository,
+  ViewEntity,
+} from "../infrastructure";
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
-  CacheEventHandler,
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
 
 export interface AppDomain {
-  database?: string;
   directory?: string;
   context?: string;
 }
 
 export interface AppStructure {
-  directory: string;
+  directory?: string;
   include?: Array<RegExp>;
   exclude?: Array<RegExp>;
   extensions?: Array<string>;
 }
 
+export interface AggregateStructure extends AppStructure {
+  persistence?: EventStoreType;
+}
+
+export interface SagaStructure extends AppStructure {
+  persistence?: SagaStoreType;
+}
+
+export type ViewStructure = AppStructure;
+
+export interface MessageBusStructure {
+  persistence?: MessageBusType;
+}
+
 export interface PrivateAppOptions {
-  aggregates?: AppStructure;
-  caches?: AppStructure;
+  aggregates?: AggregateStructure;
+  messageBus?: MessageBusStructure;
   dangerouslyRegisterHandlersManually?: boolean;
   domain?: AppDomain;
   require?: NodeJS.Require;
-  sagas?: AppStructure;
-  views?: AppStructure;
+  sagas?: SagaStructure;
+  views?: ViewStructure;
 }
 
 export interface AppOptions extends PrivateAppOptions {
-  amqp: AmqpConnection;
-  logger: Logger;
-  mongo: MongoConnection;
-  redis?: RedisConnection;
+  amqp?: IAmqpConnection;
+  mongo?: IMongoConnection;
+  postgres?: IPostgresConnection;
+  redis?: IRedisConnection;
+  custom?: {
+    messageBus?: IMessageBus;
+    eventStore?: IEventStore;
+    sagaStore?: ISagaStore;
+    viewStore?: IViewStore;
+  };
 }
 
 export interface AppPublishOptions {
@@ -67,45 +92,35 @@ export interface AppInspectOptions {
   context?: string;
 }
 
-export interface CacheRepositoryInfo {
-  name: string;
-  context: string;
-}
-
-export interface ViewRepositoryInfo {
-  collection: string;
-  context: string;
-  name: string;
-  replay: string | null;
-}
-
 export interface AppAdmin {
-  inspect<S = State>(aggregate: AppInspectOptions): Promise<Aggregate<S>>;
-  query(
-    queryOptions: ViewStoreQueryOptions,
-    filter: Filter<ViewStoreAttributes>,
-    findOptions?: FindOptions,
-  ): Promise<Array<ViewStoreAttributes>>;
+  inspect: {
+    aggregate<S = State>(aggregate: AppInspectOptions): Promise<Aggregate<S>>;
+    saga<S = State>(saga: AppInspectOptions): Promise<Saga<S>>;
+  };
+
   replay(options: ReplayOptions): Promise<void>;
-  listCollections(): Promise<Array<string>>;
 
   registerAggregateCommandHandlers(handlers: Array<AggregateCommandHandler>): Promise<void>;
   registerAggregateEventHandlers(handlers: Array<AggregateEventHandler>): Promise<void>;
-  registerCacheEventHandlers(handlers: Array<CacheEventHandler>): Promise<void>;
   registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void>;
   registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void>;
 }
 
-export interface IApp<Caches extends string, Views extends string> {
+export interface AppRepositories {
+  mongo<S>(name: string, collection?: string): MongoViewRepository<S>;
+  postgres<S>(name: string, entity?: typeof ViewEntity): PostgresViewRepository<S>;
+  redis<S>(name: string): RedisViewRepository<S>;
+}
+
+export interface IApp {
   publish(options: AppPublishOptions): Promise<AppPublishResult>;
   on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
   init(): Promise<void>;
+  initialise(): Promise<void>;
 
   admin: AppAdmin;
+  repositories: AppRepositories;
 
   isInitialised: boolean;
   isReplaying: boolean;
-
-  caches: Record<Caches, CacheRepository>;
-  views: Record<Views, ViewRepository>;
 }

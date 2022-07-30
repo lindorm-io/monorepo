@@ -36,25 +36,30 @@ describe("SagaDomain", () => {
   let store: SagaStore;
 
   beforeAll(async () => {
-    amqp = new AmqpConnection({
-      hostname: "localhost",
+    amqp = new AmqpConnection(
+      {
+        hostname: "localhost",
+        port: 5671,
+        connectInterval: 500,
+        connectTimeout: 30000,
+      },
       logger,
-      port: 5671,
-      connectInterval: 500,
-      connectTimeout: 30000,
-    });
+    );
 
-    mongo = new MongoConnection({
-      host: "localhost",
-      port: 27011,
-      auth: { username: "root", password: "example" },
+    mongo = new MongoConnection(
+      {
+        host: "localhost",
+        port: 27011,
+        auth: { username: "root", password: "example" },
+        authSource: "admin",
+        database: "SagaDomain",
+      },
       logger,
-      database: "db",
-    });
+    );
 
-    messageBus = new MessageBus({ connection: amqp, logger });
-    store = new SagaStore({ connection: mongo, logger });
-    domain = new SagaDomain({ logger, messageBus, store });
+    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
+    store = new SagaStore({ mongo, type: "mongo" }, logger);
+    domain = new SagaDomain({ messageBus, store }, logger);
 
     eventHandlers = [
       TEST_SAGA_EVENT_HANDLER,

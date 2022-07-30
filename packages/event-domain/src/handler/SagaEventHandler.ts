@@ -6,7 +6,7 @@ import {
   ISagaEventHandler,
   SagaEventHandlerContext,
   SagaEventHandlerOptions,
-  SagaStoreSaveOptions,
+  SagaStoreHandlerOptions,
   State,
 } from "../types";
 
@@ -15,7 +15,7 @@ export class SagaEventHandler<S extends State = State> implements ISagaEventHand
   public readonly conditions: HandlerConditions;
   public readonly eventName: string;
   public readonly saga: HandlerIdentifier;
-  public readonly saveOptions: SagaStoreSaveOptions;
+  public readonly options: SagaStoreHandlerOptions;
   public readonly getSagaId: GetSagaIdFunction;
   public readonly handler: (ctx: SagaEventHandlerContext<S>) => Promise<void>;
 
@@ -24,7 +24,7 @@ export class SagaEventHandler<S extends State = State> implements ISagaEventHand
     this.conditions = options.conditions || {};
     this.eventName = options.eventName;
     this.saga = { name: options.saga.name, context: options.saga.context };
-    this.saveOptions = options.saveOptions || {};
+    this.options = options.options || {};
     this.getSagaId = options.getSagaId;
     this.handler = options.handler;
   }

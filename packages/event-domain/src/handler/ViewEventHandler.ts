@@ -7,13 +7,13 @@ import {
   State,
   ViewEventHandlerContext,
   ViewEventHandlerOptions,
-  ViewStoreDocumentOptions,
+  ViewStoreHandlerOptions,
 } from "../types";
 
 export class ViewEventHandler<S extends State = State> implements IViewEventHandler<S> {
   public readonly aggregate: HandlerIdentifierMultipleContexts;
   public readonly conditions: HandlerConditions;
-  public readonly documentOptions: ViewStoreDocumentOptions;
+  public readonly persistence: ViewStoreHandlerOptions;
   public readonly eventName: string;
   public readonly view: HandlerIdentifier;
   public readonly getViewId: GetViewIdFunction;
@@ -22,7 +22,7 @@ export class ViewEventHandler<S extends State = State> implements IViewEventHand
   public constructor(options: ViewEventHandlerOptions<S>) {
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.conditions = options.conditions || {};
-    this.documentOptions = options.documentOptions || {};
+    this.persistence = options.persistence;
     this.eventName = options.eventName;
     this.view = { name: options.view.name, context: options.view.context };
     this.getViewId = options.getViewId;

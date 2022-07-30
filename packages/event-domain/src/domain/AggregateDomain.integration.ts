@@ -41,25 +41,30 @@ describe("AggregateDomain", () => {
   let store: EventStore;
 
   beforeAll(async () => {
-    amqp = new AmqpConnection({
-      hostname: "localhost",
+    amqp = new AmqpConnection(
+      {
+        hostname: "localhost",
+        port: 5671,
+        connectInterval: 500,
+        connectTimeout: 30000,
+      },
       logger,
-      port: 5671,
-      connectInterval: 500,
-      connectTimeout: 30000,
-    });
+    );
 
-    mongo = new MongoConnection({
-      host: "localhost",
-      port: 27011,
-      auth: { username: "root", password: "example" },
+    mongo = new MongoConnection(
+      {
+        host: "localhost",
+        port: 27011,
+        auth: { username: "root", password: "example" },
+        authSource: "admin",
+        database: "AggregateDomain",
+      },
       logger,
-      database: "db",
-    });
+    );
 
-    messageBus = new MessageBus({ connection: amqp, logger });
-    store = new EventStore({ connection: mongo, logger });
-    domain = new AggregateDomain({ logger, messageBus, store });
+    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
+    store = new EventStore({ mongo, type: "mongo" }, logger);
+    domain = new AggregateDomain({ messageBus, store }, logger);
 
     commandHandlers = [
       TEST_AGGREGATE_COMMAND_HANDLER,

@@ -1,39 +1,41 @@
-import { Command, DomainEvent, ReplayEvent, TimeoutEvent } from "../message";
-import { DomainError } from "../error";
-import { IMessage } from "../types";
-import { ISubscription, MessageBusBase, MessageBusOptions } from "@lindorm-io/amqp";
-import { JOI_MESSAGE, JOI_SUBSCRIPTION } from "../constant";
-import { MessageType } from "../enum";
+import { AmqpMessageBus } from "./amqp";
+import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
+import { ILogger } from "@lindorm-io/winston";
+import { MessageBusOptions } from "../types/message-bus";
 
-export class MessageBus extends MessageBusBase<IMessage> {
-  public constructor(options: MessageBusOptions) {
-    super(options);
-  }
+export class MessageBus implements IMessageBus {
+  private readonly bus: IMessageBus;
 
-  protected createMessage(message: IMessage): Command | DomainEvent | ReplayEvent | TimeoutEvent {
-    switch (message.type) {
-      case MessageType.COMMAND:
-        return new Command(message);
+  public constructor(options: MessageBusOptions, logger: ILogger) {
+    switch (options.type) {
+      case "amqp":
+        if (!options.amqp) throw new Error("Connection not provided");
+        this.bus = new AmqpMessageBus(options.amqp, logger);
+        break;
 
-      case MessageType.DOMAIN_EVENT:
-        return new DomainEvent(message);
+      case "custom":
+        if (!options.custom) throw new Error("IMessageBus not provided");
+        this.bus = options.custom;
+        break;
 
-      case MessageType.REPLAY_EVENT:
-        return new ReplayEvent(message);
-
-      case MessageType.TIMEOUT_EVENT:
-        return new TimeoutEvent(message);
-
-      case MessageType.UNKNOWN:
-        throw new DomainError("Unknown Message Type");
+      default:
+        break;
     }
   }
 
-  protected async validateMessage(message: IMessage): Promise<void> {
-    await JOI_MESSAGE.validateAsync(message);
+  public publish(messages: Array<IMessage> | IMessage): Promise<void> {
+    return this.bus.publish(messages);
   }
 
-  protected async validateSubscription(subscription: ISubscription): Promise<void> {
-    await JOI_SUBSCRIPTION.validateAsync(subscription);
+  public subscribe(subscriptions: Array<ISubscription> | ISubscription): Promise<void> {
+    return this.bus.subscribe(subscriptions);
+  }
+
+  public unsubscribe(subscriptions: UnsubscribeOptions | Array<UnsubscribeOptions>): Promise<void> {
+    return this.bus.unsubscribe(subscriptions);
+  }
+
+  public unsubscribeAll(): Promise<void> {
+    return this.bus.unsubscribeAll();
   }
 }

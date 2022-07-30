@@ -7,9 +7,9 @@ import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { View } from "../entity";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandler } from "../handler";
-import { ViewIdentifier } from "../types";
+import { IViewDomain, ViewIdentifier } from "../types";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createMockMessageBus } from "@lindorm-io/amqp";
+import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomUUID } from "crypto";
 import {
   HandlerNotRegisteredError,
@@ -47,8 +47,8 @@ describe("ViewDomain", () => {
     TEST_VIEW_EVENT_HANDLER_THROWS,
   ];
 
-  let domain: ViewDomain;
-  let messageBus: MessageBus;
+  let domain: IViewDomain;
+  let messageBus: IMessageBus;
   let store: any;
 
   beforeEach(async () => {
@@ -56,10 +56,9 @@ describe("ViewDomain", () => {
     store = {
       save: jest.fn(),
       load: jest.fn(),
-      query: jest.fn(),
     };
 
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
@@ -78,19 +77,11 @@ describe("ViewDomain", () => {
     );
 
     store.load.mockImplementation(async (v: ViewIdentifier) => new View(v, logger));
-
-    store.query.mockImplementation(async (filter: any, queryOptions: any, findOptions: any) => [
-      {
-        filter,
-        queryOptions,
-        findOptions,
-      },
-    ]);
   });
 
   test("should register event handler", async () => {
-    messageBus = createMockMessageBus();
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    messageBus = createMockMessageBus() as unknown as MessageBus;
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await expect(domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER)).resolves.toBeUndefined();
 
@@ -102,8 +93,8 @@ describe("ViewDomain", () => {
   });
 
   test("should register multiple event handlers", async () => {
-    messageBus = createMockMessageBus();
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    messageBus = createMockMessageBus() as unknown as MessageBus;
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await expect(
       domain.registerEventHandler(
@@ -133,7 +124,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw on existing event handler", async () => {
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER);
 
@@ -143,7 +134,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw on invalid event handler", async () => {
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(TEST_VIEW_EVENT_HANDLER);
 
@@ -166,7 +157,7 @@ describe("ViewDomain", () => {
         context: "default",
         name: "view_name",
       },
-      {},
+      { type: "mongo" },
     );
 
     expect(store.save).toHaveBeenCalledWith(
@@ -181,7 +172,7 @@ describe("ViewDomain", () => {
         state: { created: true },
       }),
       event,
-      {},
+      { type: "mongo" },
     );
   });
 
@@ -208,7 +199,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw on missing handler", async () => {
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     const event = new DomainEvent(TEST_DOMAIN_EVENT);
 
@@ -269,7 +260,7 @@ describe("ViewDomain", () => {
   });
 
   test("should dispatch error on not created view", async () => {
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
       new ViewEventHandler({
@@ -309,7 +300,7 @@ describe("ViewDomain", () => {
   });
 
   test("should throw on already created view", async () => {
-    domain = new ViewDomain({ logger, messageBus, store: store as any });
+    domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
       new ViewEventHandler({

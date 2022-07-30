@@ -1,28 +1,18 @@
 import { EventEmitterListener } from "./event-emitter";
-import { Filter, FindOptions } from "mongodb";
-import { Logger } from "@lindorm-io/winston";
-import { MessageBus, ViewStore } from "../infrastructure";
+import { IMessageBus } from "@lindorm-io/amqp";
+import { IViewEventHandler } from "./view-event-handler";
+import { IViewStore } from "./view-store";
 import { State } from "./generic";
-import { ViewEventHandler } from "../handler";
-import { ViewStoreAttributes, ViewStoreQueryOptions } from "./view-store";
 
 export interface ViewDomainOptions {
-  logger: Logger;
-  messageBus: MessageBus;
-  store: ViewStore;
+  messageBus: IMessageBus;
+  store: IViewStore;
 }
 
 export interface IViewDomain {
   on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
-  query(
-    queryOptions: ViewStoreQueryOptions,
-    filter: Filter<ViewStoreAttributes>,
-    findOptions?: FindOptions,
-  ): Promise<Array<ViewStoreAttributes>>;
 
-  registerEventHandler(eventHandler: ViewEventHandler): Promise<void>;
-  removeEventHandler(eventHandler: ViewEventHandler): Promise<void>;
+  registerEventHandler(eventHandler: IViewEventHandler): Promise<void>;
+  removeEventHandler(eventHandler: IViewEventHandler): Promise<void>;
   removeAllEventHandlers(): Promise<void>;
-
-  listCollections(): Promise<Array<string>>;
 }
