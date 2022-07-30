@@ -2,8 +2,8 @@ import { ConnectionBase } from "@lindorm-io/core-connection";
 import { DataSource } from "typeorm";
 import { EntityManager } from "typeorm/entity-manager/EntityManager";
 import { EntityTarget } from "typeorm/common/EntityTarget";
+import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection, PostgresConnectionOptions } from "../types";
-import { Logger } from "@lindorm-io/winston";
 import { ObjectLiteral } from "typeorm/common/ObjectLiteral";
 import { PostgresConnectionOptions as DataSourceOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
 import { Repository } from "typeorm/repository/Repository";
@@ -14,7 +14,7 @@ export class PostgresConnection
 {
   private readonly custom: typeof DataSource;
 
-  public constructor(options: PostgresConnectionOptions, logger: Logger) {
+  public constructor(options: PostgresConnectionOptions, logger: ILogger) {
     const {
       connectInterval,
       connectTimeout,

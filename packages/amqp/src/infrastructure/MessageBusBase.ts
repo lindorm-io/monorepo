@@ -1,10 +1,10 @@
-import { AmqpConnection } from "../connection";
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { ILogger } from "@lindorm-io/winston";
 import { find, isArray, remove } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { sanitizeRouteKey } from "../util";
 import {
+  IAmqpConnection,
   IMessage,
   IMessageBus,
   ISubscription,
@@ -18,7 +18,7 @@ export abstract class MessageBusBase<
   Subscription extends ISubscription = ISubscription,
 > implements IMessageBus<Message, Subscription>
 {
-  private readonly connection: AmqpConnection;
+  private readonly connection: IAmqpConnection;
   private readonly nackTimeout: number;
   private readonly subscriptions: Array<SubscriptionData<Subscription>>;
 

@@ -3,7 +3,7 @@ import { MongoConnection } from "./MongoConnection";
 import { createMockLogger } from "@lindorm-io/winston";
 
 describe("MongoConnection", () => {
-  const logger = createMockLogger(console.log);
+  const logger = createMockLogger();
 
   let connection: MongoConnection;
   let jedi: Collection;

@@ -1,4 +1,4 @@
-import { AmqpConnection } from "../connection";
+import { IAmqpConnection } from "./amqp-connection";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessage } from "./message";
 import { ISubscription } from "./subscription";
@@ -8,7 +8,7 @@ export interface BusOptions {
 }
 
 export interface MessageBusOptions {
-  connection: AmqpConnection;
+  connection: IAmqpConnection;
   logger: ILogger;
 }
 

@@ -2,8 +2,8 @@ import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
 import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { ConsumeMessage } from "amqplib/properties";
+import { ILogger } from "@lindorm-io/winston";
 import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/winston";
 import { merge } from "lodash";
 import { parseBlob } from "@lindorm-io/string-blob";
 
@@ -17,7 +17,7 @@ export class AmqpConnection
   public readonly deadLetters: string;
   public readonly exchange: string;
 
-  public constructor(options: AmqpConnectionOptions, logger: Logger) {
+  public constructor(options: AmqpConnectionOptions, logger: ILogger) {
     const {
       connectInterval,
       connectTimeout,

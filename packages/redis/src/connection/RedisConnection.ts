@@ -1,13 +1,13 @@
 import IORedis, { Redis, RedisOptions } from "ioredis";
 import { ConnectionBase, ConnectionStatus } from "@lindorm-io/core-connection";
+import { ILogger } from "@lindorm-io/winston";
 import { IRedisConnection, RedisConnectionOptions } from "../types";
-import { Logger } from "@lindorm-io/winston";
 
 export class RedisConnection
   extends ConnectionBase<Redis, RedisOptions>
   implements IRedisConnection
 {
-  public constructor(options: RedisConnectionOptions, logger: Logger) {
+  public constructor(options: RedisConnectionOptions, logger: ILogger) {
     const {
       connectInterval,
       connectTimeout,

@@ -1,4 +1,5 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
+import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection, MongoConnectionOptions, WithTransactionCallback } from "../types";
 import { uniqBy } from "lodash";
 import {
@@ -9,7 +10,6 @@ import {
   MongoClient,
   MongoClientOptions,
 } from "mongodb";
-import { Logger } from "@lindorm-io/winston";
 
 export class MongoConnection
   extends ConnectionBase<MongoClient, MongoClientOptions>
@@ -21,7 +21,7 @@ export class MongoConnection
   private readonly dbOptions: DbOptions;
   private db: Db;
 
-  public constructor(options: MongoConnectionOptions, logger: Logger) {
+  public constructor(options: MongoConnectionOptions, logger: ILogger) {
     const {
       connectInterval,
       connectTimeout,

@@ -17,7 +17,7 @@ class User {
 }
 
 describe("PostgresConnection", () => {
-  const logger = createMockLogger(console.log);
+  const logger = createMockLogger();
 
   let connection: PostgresConnection;
 

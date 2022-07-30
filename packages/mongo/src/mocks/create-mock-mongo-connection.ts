@@ -1,6 +1,6 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { IMongoConnection } from "../types";
-import { ClientSession, MongoClient } from "mongodb";
+import { ClientSession, Db, MongoClient } from "mongodb";
 import { MongoConnection } from "../connection";
 import { createMockLogger } from "@lindorm-io/winston";
 
@@ -52,7 +52,7 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
 
   const db = {
     collection: jest.fn().mockImplementation(() => collection),
-  };
+  } as unknown as Db;
 
   const client = {
     connect: jest.fn(),
@@ -77,6 +77,7 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
     isConnected: true,
     isConnecting: false,
     isDisconnected: false,
+    database: db,
 
     on: jest.fn(),
 
