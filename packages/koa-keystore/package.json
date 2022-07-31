@@ -46,6 +46,6 @@
     "compd": "^4.1.1",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
-    "mongodb": "^4.8.0"
+    "mongodb": "^4.8.1"
   }
 }

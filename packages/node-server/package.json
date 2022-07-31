@@ -42,7 +42,7 @@
     "config": "^3.3.6"
   },
   "devDependencies": {
-    "@types/config": "^0.0.41",
+    "@types/config": "^3.3.0",
     "@types/crypto-js": "^4.1.0",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^4.28.10",
@@ -52,7 +52,7 @@
     "@types/koa-router": "^7.4.4",
     "@types/lodash": "^4.14.182",
     "compd": "^4.1.1",
-    "mongodb": "^4.8.0",
+    "mongodb": "^4.8.1",
     "redis-commands": "^1.7.0"
   }
 }

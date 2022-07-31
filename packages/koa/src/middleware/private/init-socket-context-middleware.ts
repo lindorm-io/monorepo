@@ -22,7 +22,7 @@ export const initSocketContextMiddleware: DefaultLindormSocketMiddleware<CustomS
     cache: {},
     connection: {},
     entity: {},
-    eventDomain: undefined,
+    eventSource: undefined,
     jwt: undefined,
     keys: [],
     keystore: undefined,

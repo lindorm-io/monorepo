@@ -5,7 +5,7 @@ export interface DefaultLindormContext {
   cache: any;
   connection: any;
   entity: any;
-  eventDomain: any;
+  eventSource: any;
   jwt: any;
   keys: Array<any>;
   keystore: any;
