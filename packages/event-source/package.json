@@ -1,6 +1,6 @@
 {
-  "name": "@lindorm-io/event-domain",
-  "description": "Event Domain for lindorm.io",
+  "name": "@lindorm-io/event-source",
+  "description": "Event Source for lindorm.io",
   "version": "0.0.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
@@ -39,9 +39,9 @@
     "@lindorm-io/winston": "^0.4.7",
     "@types/amqplib": "^0.8.2",
     "@types/ioredis-mock": "^5.6.0",
-    "amqplib": "^0.10.0",
+    "amqplib": "^0.10.1",
     "compd": "^4.1.1",
-    "date-fns": "^2.28.0",
+    "date-fns": "^2.29.1",
     "ioredis-mock": "^8.2.2",
     "mock-amqplib": "^1.8.0",
     "mongo-mock": "^4.1.0"

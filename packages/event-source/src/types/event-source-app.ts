@@ -80,6 +80,7 @@ export interface AppPublishOptions {
   };
   name: string;
   data: Record<string, any>;
+  correlationId?: string;
   delay?: number;
   mandatory?: boolean;
 }
@@ -97,13 +98,7 @@ export interface AppAdmin {
     aggregate<S = State>(aggregate: AppInspectOptions): Promise<Aggregate<S>>;
     saga<S = State>(saga: AppInspectOptions): Promise<Saga<S>>;
   };
-
   replay(options: ReplayOptions): Promise<void>;
-
-  registerAggregateCommandHandlers(handlers: Array<AggregateCommandHandler>): Promise<void>;
-  registerAggregateEventHandlers(handlers: Array<AggregateEventHandler>): Promise<void>;
-  registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void>;
-  registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void>;
 }
 
 export interface AppRepositories {
@@ -112,7 +107,14 @@ export interface AppRepositories {
   redis<S>(name: string): RedisViewRepository<S>;
 }
 
-export interface IApp {
+export interface AppSetup {
+  registerAggregateCommandHandlers(handlers: Array<AggregateCommandHandler>): Promise<void>;
+  registerAggregateEventHandlers(handlers: Array<AggregateEventHandler>): Promise<void>;
+  registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void>;
+  registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void>;
+}
+
+export interface IEventSource {
   publish(options: AppPublishOptions): Promise<AppPublishResult>;
   on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
   init(): Promise<void>;
@@ -120,6 +122,7 @@ export interface IApp {
 
   admin: AppAdmin;
   repositories: AppRepositories;
+  setup: AppSetup;
 
   isInitialised: boolean;
   isReplaying: boolean;

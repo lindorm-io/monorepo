@@ -1,5 +1,5 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { EventEntity, App, SagaEntity, SagaCausationEntity } from "../src";
+import { EventEntity, EventSourceApp, SagaEntity, SagaCausationEntity } from "../src";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
@@ -61,7 +61,7 @@ const main = async (): Promise<void> => {
     logger,
   );
 
-  const app = new App(
+  const app = new EventSourceApp(
     {
       amqp,
       mongo,

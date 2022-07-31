@@ -1,7 +1,8 @@
 import Joi from "joi";
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { App } from "./App";
 import { DomainEvent } from "../message";
+import { EventEntity } from "../infrastructure";
+import { EventSource } from "./EventSource";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { RedisConnection } from "@lindorm-io/redis";
@@ -15,14 +16,13 @@ import {
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
-import { EventEntity } from "../infrastructure";
 
 describe("App", () => {
   const logger = createMockLogger();
   const { ViewEntity, ViewCausationEntity } = createViewEntities("AppView");
 
   let amqp: AmqpConnection;
-  let app: App;
+  let app: EventSource;
   let mongo: MongoConnection;
   let postgres: PostgresConnection;
   let redis: RedisConnection;
@@ -75,7 +75,7 @@ describe("App", () => {
       logger,
     );
 
-    app = new App(
+    app = new EventSource(
       {
         amqp,
         mongo,
@@ -95,7 +95,7 @@ describe("App", () => {
 
     await Promise.all([amqp.connect(), mongo.connect()]);
 
-    await app.admin.registerAggregateCommandHandlers([
+    await app.setup.registerAggregateCommandHandlers([
       new AggregateCommandHandler({
         commandName: "create",
         aggregate: { name: "greeting", context: "default" },
@@ -137,7 +137,7 @@ describe("App", () => {
       }),
     ]);
 
-    await app.admin.registerAggregateEventHandlers([
+    await app.setup.registerAggregateEventHandlers([
       new AggregateEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -164,7 +164,7 @@ describe("App", () => {
       }),
     ]);
 
-    await app.admin.registerSagaEventHandlers([
+    await app.setup.registerSagaEventHandlers([
       new SagaEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -203,7 +203,7 @@ describe("App", () => {
       }),
     ]);
 
-    await app.admin.registerViewEventHandlers([
+    await app.setup.registerViewEventHandlers([
       new ViewEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -239,7 +239,7 @@ describe("App", () => {
       }),
     ]);
 
-    await app.admin.registerViewEventHandlers([
+    await app.setup.registerViewEventHandlers([
       new ViewEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },
@@ -284,7 +284,7 @@ describe("App", () => {
       }),
     ]);
 
-    await app.admin.registerViewEventHandlers([
+    await app.setup.registerViewEventHandlers([
       new ViewEventHandler({
         eventName: "created",
         aggregate: { name: "greeting", context: "default" },

@@ -1,10 +1,10 @@
 import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/winston";
-import { eventDomainMiddleware } from "./event-domain-middleware";
+import { eventSourceMiddleware } from "./event-source-middleware";
 
 const next = () => Promise.resolve();
 
-class EventDomainApp {
+class EventSource {
   constructor() {}
   public get isInitialised(): boolean {
     return true;
@@ -18,7 +18,7 @@ describe("mongoMiddleware", () => {
   const logger = createMockLogger();
 
   beforeEach(async () => {
-    app = new EventDomainApp();
+    app = new EventSource();
 
     ctx = {
       logger,
@@ -28,9 +28,9 @@ describe("mongoMiddleware", () => {
   });
 
   test("should set app on context", async () => {
-    await expect(eventDomainMiddleware(app)(ctx, next)).resolves.toBeUndefined();
+    await expect(eventSourceMiddleware(app)(ctx, next)).resolves.toBeUndefined();
 
-    expect(ctx.eventDomain).toStrictEqual(expect.any(EventDomainApp));
+    expect(ctx.eventSource).toStrictEqual(expect.any(EventSource));
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));
   });
 });

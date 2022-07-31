@@ -1,4 +1,4 @@
-import { EventDomainApp } from "@lindorm-io/event-domain";
+import { EventSource } from "@lindorm-io/event-source";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -8,7 +8,7 @@ import {
 } from "@lindorm-io/koa";
 
 export interface DefaultLindormEventDomainContext extends DefaultLindormContext {
-  eventDomain: EventDomainApp;
+  eventSource: EventSource;
 }
 
 export type DefaultLindormEventDomainKoaMiddleware = DefaultLindormMiddleware<

@@ -1,6 +1,6 @@
 {
-  "name": "@lindorm-io/koa-event-domain",
-  "description": "Event Domain middleware for @lindorm-io/koa applications",
+  "name": "@lindorm-io/koa-event-source",
+  "description": "Event Source middleware for @lindorm-io/koa applications",
   "version": "0.0.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
@@ -18,7 +18,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/event-domain": "^0.0.1",
+    "@lindorm-io/event-source": "^0.0.1",
     "@lindorm-io/errors": "^0.1.13",
     "@lindorm-io/koa": "^0.13.5",
     "lodash": "^4.17.21"

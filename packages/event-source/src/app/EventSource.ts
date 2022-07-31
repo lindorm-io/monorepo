@@ -41,13 +41,14 @@ import {
   AppPublishOptions,
   AppPublishResult,
   AppRepositories,
+  AppSetup,
   AppStructure,
   Data,
   EventEmitterListener,
   IAggregateCommandHandler,
   IAggregateDomain,
   IAggregateEventHandler,
-  IApp,
+  IEventSource,
   IReplayDomain,
   ISagaDomain,
   ISagaEventHandler,
@@ -59,7 +60,7 @@ import {
   ViewEventHandlerFile,
 } from "../types";
 
-export class App implements IApp {
+export class EventSource implements IEventSource {
   private readonly amqp: IAmqpConnection;
   private readonly messageBus: IMessageBus;
   private readonly mongo: IMongoConnection;
@@ -239,13 +240,7 @@ export class App implements IApp {
         aggregate: this.inspectAggregate.bind(this),
         saga: this.inspectSaga.bind(this),
       },
-
       replay: async () => undefined, // this.replay.bind(this),
-
-      registerAggregateCommandHandlers: this.registerAggregateCommandHandlers.bind(this),
-      registerAggregateEventHandlers: this.registerAggregateEventHandlers.bind(this),
-      registerSagaEventHandlers: this.registerSagaEventHandlers.bind(this),
-      registerViewEventHandlers: this.registerViewEventHandlers.bind(this),
     };
   }
   public set admin(_: AppAdmin) {
@@ -285,6 +280,18 @@ export class App implements IApp {
     /* ignored */
   }
 
+  public get setup(): AppSetup {
+    return {
+      registerAggregateCommandHandlers: this.registerAggregateCommandHandlers.bind(this),
+      registerAggregateEventHandlers: this.registerAggregateEventHandlers.bind(this),
+      registerSagaEventHandlers: this.registerSagaEventHandlers.bind(this),
+      registerViewEventHandlers: this.registerViewEventHandlers.bind(this),
+    };
+  }
+  public set setup(_: AppSetup) {
+    /* ignored */
+  }
+
   // public app
 
   public async publish(options: AppPublishOptions): Promise<AppPublishResult> {
@@ -298,6 +305,7 @@ export class App implements IApp {
       },
       name: options.name,
       data: options.data,
+      correlationId: options.correlationId,
       delay: options.delay,
       mandatory: options.mandatory,
     });
