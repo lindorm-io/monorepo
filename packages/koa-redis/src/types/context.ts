@@ -1,4 +1,4 @@
-import { RedisConnection } from "@lindorm-io/redis";
+import { IRedisConnection } from "@lindorm-io/redis";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -9,7 +9,7 @@ import {
 
 export interface DefaultLindormRedisContext extends DefaultLindormContext {
   connection: {
-    redis: RedisConnection;
+    redis: IRedisConnection;
   };
 }
 

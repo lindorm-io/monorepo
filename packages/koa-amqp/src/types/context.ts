@@ -1,4 +1,4 @@
-import { AmqpConnection } from "@lindorm-io/amqp";
+import { IAmqpConnection } from "@lindorm-io/amqp";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -9,7 +9,7 @@ import {
 
 export interface DefaultLindormAmqpContext extends DefaultLindormContext {
   connection: {
-    amqp: AmqpConnection;
+    amqp: IAmqpConnection;
   };
 }
 

@@ -1,4 +1,4 @@
-import { MongoConnection } from "@lindorm-io/mongo";
+import { IMongoConnection } from "@lindorm-io/mongo";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -9,7 +9,7 @@ import {
 
 export interface DefaultLindormMongoContext extends DefaultLindormContext {
   connection: {
-    mongo: MongoConnection;
+    mongo: IMongoConnection;
   };
 }
 

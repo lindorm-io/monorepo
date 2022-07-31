@@ -1,9 +1,9 @@
-import { MongoConnection } from "@lindorm-io/mongo";
+import { IMongoConnection } from "@lindorm-io/mongo";
 import { DefaultLindormMongoSocketMiddleware } from "../types";
 import { getSocketError } from "@lindorm-io/koa";
 
 export const socketMongoMiddleware =
-  (connection: MongoConnection): DefaultLindormMongoSocketMiddleware =>
+  (connection: IMongoConnection): DefaultLindormMongoSocketMiddleware =>
   (socket, next) => {
     try {
       socket.ctx.connection.mongo = connection;
