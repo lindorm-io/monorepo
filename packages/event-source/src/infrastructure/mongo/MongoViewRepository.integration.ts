@@ -52,8 +52,8 @@ describe("MongoViewRepository", () => {
         meta: {},
         revision: 1,
         state: { one: 1, common: "common" },
-        timestamp_modified: new Date(),
-        timestamp_created: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         id: view2,
@@ -64,8 +64,8 @@ describe("MongoViewRepository", () => {
         meta: {},
         revision: 2,
         state: { two: 2, common: "common" },
-        timestamp_modified: new Date(),
-        timestamp_created: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         id: view3,
@@ -76,8 +76,8 @@ describe("MongoViewRepository", () => {
         meta: {},
         revision: 3,
         state: { three: 3, common: "uncommon" },
-        timestamp_modified: new Date(),
-        timestamp_created: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         id: randomUUID(),
@@ -88,8 +88,8 @@ describe("MongoViewRepository", () => {
         meta: {},
         revision: 4,
         state: { four: 4, common: "common" },
-        timestamp_modified: new Date(),
-        timestamp_created: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       },
     ]);
   }, 30000);
@@ -106,7 +106,8 @@ describe("MongoViewRepository", () => {
         context: view.context,
         revision: 1,
         state: { one: 1, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
       {
         id: view2,
@@ -114,7 +115,8 @@ describe("MongoViewRepository", () => {
         context: view.context,
         revision: 2,
         state: { two: 2, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
     ]);
   });
@@ -126,7 +128,8 @@ describe("MongoViewRepository", () => {
       context: view.context,
       revision: 3,
       state: { three: 3, common: "uncommon" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 
@@ -137,7 +140,8 @@ describe("MongoViewRepository", () => {
       context: view.context,
       revision: 1,
       state: { one: 1, common: "common" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 });

@@ -83,6 +83,8 @@ export interface AppPublishOptions {
   correlationId?: string;
   delay?: number;
   mandatory?: boolean;
+  origin?: string;
+  originator?: string | null;
 }
 
 export type AppPublishResult = "OK" | "QUEUED";

@@ -15,6 +15,8 @@ export interface MongoEventStoreAttributes {
   causationId: string;
   events: Array<MongoEventAttributes>;
   expectedEvents: number;
+  origin: string;
+  originator: string | null;
   previousEventId: string | null;
   timestamp: Date;
 }

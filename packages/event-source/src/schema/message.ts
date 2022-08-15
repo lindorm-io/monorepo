@@ -17,7 +17,9 @@ export const JOI_MESSAGE = Joi.object<IMessage>().keys({
   delay: Joi.number().required(),
   mandatory: Joi.boolean().required(),
   name: Joi.string().required(),
-  routingKey: Joi.string().required(),
+  origin: Joi.string().required(),
+  originator: Joi.string().allow(null).required(),
+  topic: Joi.string().required(),
   timestamp: Joi.date().required(),
   type: Joi.string()
     .allow(MessageType.COMMAND, MessageType.DOMAIN_EVENT, MessageType.TIMEOUT_EVENT)

@@ -1,4 +1,5 @@
 import {
+  Data,
   GetSagaIdFunction,
   HandlerConditions,
   HandlerIdentifier,
@@ -10,14 +11,16 @@ import {
   State,
 } from "../types";
 
-export class SagaEventHandler<S extends State = State> implements ISagaEventHandler<S> {
+export class SagaEventHandler<S extends State = State, D extends Data = Data>
+  implements ISagaEventHandler<S, D>
+{
   public readonly aggregate: HandlerIdentifierMultipleContexts;
   public readonly conditions: HandlerConditions;
   public readonly eventName: string;
   public readonly saga: HandlerIdentifier;
   public readonly options: SagaStoreHandlerOptions;
   public readonly getSagaId: GetSagaIdFunction;
-  public readonly handler: (ctx: SagaEventHandlerContext<S>) => Promise<void>;
+  public readonly handler: (ctx: SagaEventHandlerContext<S, D>) => Promise<void>;
 
   public constructor(options: SagaEventHandlerOptions<S>) {
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };

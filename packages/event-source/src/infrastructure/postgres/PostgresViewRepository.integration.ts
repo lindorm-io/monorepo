@@ -93,7 +93,8 @@ describe("PostgresViewRepository", () => {
         context: view.context,
         revision: 1,
         state: { one: 1, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
       {
         id: view2,
@@ -101,7 +102,8 @@ describe("PostgresViewRepository", () => {
         context: view.context,
         revision: 2,
         state: { two: 2, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
       {
         id: view3,
@@ -109,7 +111,8 @@ describe("PostgresViewRepository", () => {
         context: view.context,
         revision: 3,
         state: { three: 3, common: "uncommon" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
     ]);
   });
@@ -121,7 +124,8 @@ describe("PostgresViewRepository", () => {
       context: view.context,
       revision: 3,
       state: { three: 3, common: "uncommon" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 
@@ -132,7 +136,8 @@ describe("PostgresViewRepository", () => {
       context: view.context,
       revision: 1,
       state: { one: 1, common: "common" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 });

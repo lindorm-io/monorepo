@@ -56,7 +56,8 @@ export class RedisViewRepository<S = State> extends RedisBase implements IRedisR
         context: item.context,
         revision: item.revision,
         state: item.state as S,
-        timestamp_modified: item.timestamp_modified,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
       }));
     } catch (err) {
       this.logger.error("Failed to find views", err);
@@ -93,7 +94,8 @@ export class RedisViewRepository<S = State> extends RedisBase implements IRedisR
         context: json.context,
         revision: json.revision,
         state: json.state as S,
-        timestamp_modified: json.timestamp_modified,
+        created_at: json.created_at,
+        updated_at: json.updated_at,
       };
     } catch (err) {
       this.logger.error("Failed to find view", err);

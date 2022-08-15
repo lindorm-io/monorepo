@@ -108,7 +108,7 @@ export class ViewDomain implements IViewDomain {
       await this.messageBus.subscribe({
         callback: (message: Message) => this.handleEvent(message, eventHandler.view),
         queue: ViewDomain.getQueue(context, eventHandler),
-        routingKey: ViewDomain.getRoutingKey(context, eventHandler),
+        topic: ViewDomain.getTopic(context, eventHandler),
       });
 
       this.logger.verbose("Event handler registered", {
@@ -157,7 +157,7 @@ export class ViewDomain implements IViewDomain {
 
       await this.messageBus.unsubscribe({
         queue: ViewDomain.getQueue(context, eventHandler),
-        routingKey: ViewDomain.getRoutingKey(context, eventHandler),
+        topic: ViewDomain.getTopic(context, eventHandler),
       });
 
       this.logger.verbose("Event handler removed", {
@@ -293,6 +293,7 @@ export class ViewDomain implements IViewDomain {
             aggregate: { id: view.id, name: view.name, context: view.context },
             data: { error, message: event },
             mandatory: false,
+            origin: "view_domain",
           },
           event,
         ),
@@ -327,7 +328,7 @@ export class ViewDomain implements IViewDomain {
     return `queue.view.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.view.context}.${eventHandler.view.name}`;
   }
 
-  private static getRoutingKey(context: string, eventHandler: ViewEventHandler): string {
+  private static getTopic(context: string, eventHandler: ViewEventHandler): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

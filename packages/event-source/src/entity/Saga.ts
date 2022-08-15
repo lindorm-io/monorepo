@@ -150,6 +150,8 @@ export class Saga<S extends State = State> implements ISaga {
           {
             aggregate: causation.aggregate,
             correlationId: causation.correlationId,
+            origin: "saga",
+            originator: causation.originator,
           },
           {
             name,
@@ -239,6 +241,8 @@ export class Saga<S extends State = State> implements ISaga {
           name,
           data,
           delay,
+          origin: "saga",
+          originator: causation.originator,
         },
         causation,
       ),

@@ -56,6 +56,8 @@ describe("EventEntity", () => {
         correlation_id,
         data,
         expected_events: 0,
+        origin: "test",
+        originator: null,
         previous_event_id: null,
       }),
     ).resolves.toStrictEqual(
@@ -69,6 +71,8 @@ describe("EventEntity", () => {
         correlation_id,
         data,
         expected_events: 0,
+        origin: "test",
+        originator: null,
         previous_event_id: null,
         timestamp: expect.any(Date),
       }),
@@ -91,6 +95,8 @@ describe("EventEntity", () => {
         correlation_id,
         data,
         expected_events: 0,
+        origin: "test",
+        originator: null,
         previous_event_id: null,
         timestamp: expect.any(Date),
       }),
@@ -121,6 +127,8 @@ describe("EventEntity", () => {
           correlation_id,
           data: { one: 1 },
           expected_events: 1,
+          origin: "test",
+          originator: null,
           previous_event_id,
         });
 
@@ -134,6 +142,8 @@ describe("EventEntity", () => {
           correlation_id: saved.correlation_id,
           data: { two: 2 },
           expected_events: saved.expected_events + 1,
+          origin: "test",
+          originator: null,
           previous_event_id: saved.id,
         });
       }),
@@ -156,6 +166,8 @@ describe("EventEntity", () => {
         correlation_id,
         data: { one: 1 },
         expected_events: 1,
+        origin: "test",
+        originator: null,
         previous_event_id,
         timestamp: expect.any(Date),
       }),
@@ -169,6 +181,8 @@ describe("EventEntity", () => {
         correlation_id,
         data: { two: 2 },
         expected_events: 2,
+        origin: "test",
+        originator: null,
         previous_event_id: id_1,
         timestamp: expect.any(Date),
       }),
@@ -199,6 +213,8 @@ describe("EventEntity", () => {
           correlation_id,
           data: { one: 1 },
           expected_events: 0,
+          origin: "test",
+          originator: null,
           previous_event_id: null,
         });
 
@@ -212,6 +228,8 @@ describe("EventEntity", () => {
           correlation_id: saved.correlation_id,
           data: { two: 2 },
           expected_events: 0,
+          origin: "test",
+          originator: null,
           previous_event_id,
         });
       }),
@@ -250,6 +268,8 @@ describe("EventEntity", () => {
           correlation_id,
           data: { one: 1 },
           expected_events: 1,
+          origin: "test",
+          originator: null,
           previous_event_id,
         });
 
@@ -263,6 +283,8 @@ describe("EventEntity", () => {
           correlation_id: saved.correlation_id,
           data: { two: 2 },
           expected_events: saved.expected_events + 1,
+          origin: "test",
+          originator: null,
           previous_event_id,
         });
       }),

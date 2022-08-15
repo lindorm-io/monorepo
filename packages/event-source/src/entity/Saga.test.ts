@@ -69,7 +69,7 @@ describe("Saga", () => {
         data: { dispatchedData: true },
         delay: 0,
         mandatory: true,
-        routingKey: "default.aggregate_name.dispatchedCommand",
+        topic: "default.aggregate_name.dispatchedCommand",
         timestamp: expect.any(Date),
         type: "command",
       }),

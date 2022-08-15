@@ -5,6 +5,7 @@ export const TEST_COMMAND_OPTIONS: MessageOptions = {
   aggregate: TEST_AGGREGATE_IDENTIFIER,
   name: "command_default",
   data: { commandData: true },
+  origin: "test",
 };
 
 export const TEST_COMMAND = TEST_COMMAND_OPTIONS;

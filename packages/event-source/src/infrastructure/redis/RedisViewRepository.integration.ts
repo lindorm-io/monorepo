@@ -65,8 +65,8 @@ describe("RedisViewRepository", () => {
         meta: {},
         revision: 1,
         state: { one: 1, common: "common" },
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }),
     );
     await connection.client.set(
@@ -80,8 +80,8 @@ describe("RedisViewRepository", () => {
         meta: {},
         revision: 2,
         state: { two: 2, common: "common" },
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }),
     );
     await connection.client.set(
@@ -95,8 +95,8 @@ describe("RedisViewRepository", () => {
         meta: {},
         revision: 3,
         state: { three: 3, common: "uncommon" },
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }),
     );
     await connection.client.set(
@@ -110,8 +110,8 @@ describe("RedisViewRepository", () => {
         meta: {},
         revision: 4,
         state: { four: 4, common: "common" },
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }),
     );
 
@@ -130,7 +130,8 @@ describe("RedisViewRepository", () => {
         context: view.context,
         revision: 1,
         state: { one: 1, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
       {
         id: view2,
@@ -138,7 +139,8 @@ describe("RedisViewRepository", () => {
         context: view.context,
         revision: 2,
         state: { two: 2, common: "common" },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
     ]);
   });
@@ -150,7 +152,8 @@ describe("RedisViewRepository", () => {
       context: view.context,
       revision: 3,
       state: { three: 3, common: "uncommon" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 
@@ -161,7 +164,8 @@ describe("RedisViewRepository", () => {
       context: view.context,
       revision: 1,
       state: { one: 1, common: "common" },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
   });
 });

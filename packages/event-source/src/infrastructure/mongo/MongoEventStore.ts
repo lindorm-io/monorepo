@@ -106,6 +106,8 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
       causationId: causation.id,
       events: array,
       expectedEvents,
+      origin: causation.origin,
+      originator: causation.originator,
       previousEventId,
       timestamp: new Date(),
     };
@@ -146,6 +148,8 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
         name: 1,
         context: 1,
         events: 1,
+        origin: 1,
+        originator: 1,
         timestamp: 1,
       },
       sort: {
@@ -182,6 +186,8 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
               causationId: event.causationId,
               correlationId: event.correlationId,
               data: event.data,
+              origin: attribute.origin,
+              originator: attribute.originator,
               timestamp: event.timestamp,
             }),
           );
@@ -207,6 +213,8 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
     const projection: Document = {
       events: 1,
       expectedEvents: 1,
+      origin: 1,
+      originator: 1,
     };
     const sort: Sort = {
       expectedEvents: 1,
@@ -249,6 +257,8 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
               causationId: event.causationId,
               correlationId: event.correlationId,
               data: event.data,
+              origin: attribute.origin,
+              originator: attribute.originator,
               timestamp: event.timestamp,
             }),
           );

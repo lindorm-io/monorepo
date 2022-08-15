@@ -1,10 +1,10 @@
+import { Data, State } from "./generic";
 import { DomainEvent } from "../message";
 import { HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
-import { State } from "./generic";
 
-export interface AggregateEventHandlerContext<S extends State = State> {
-  event: DomainEvent;
+export interface AggregateEventHandlerContext<S extends State = State, D extends Data = Data> {
+  event: DomainEvent<D>;
   logger: ILogger;
 
   destroy(): void;
@@ -14,8 +14,8 @@ export interface AggregateEventHandlerContext<S extends State = State> {
   setState(path: string, value: any): void;
 }
 
-export interface AggregateEventHandlerFile<S extends State = State> {
-  handler(ctx: AggregateEventHandlerContext<S>): Promise<void>;
+export interface AggregateEventHandlerFile<S extends State = State, D extends Data = Data> {
+  handler(ctx: AggregateEventHandlerContext<S, D>): Promise<void>;
 }
 
 export interface AggregateEventHandlerOptions<S extends State = State>
@@ -24,8 +24,8 @@ export interface AggregateEventHandlerOptions<S extends State = State>
   eventName: string;
 }
 
-export interface IAggregateEventHandler<S extends State = State> {
+export interface IAggregateEventHandler<S extends State = State, D extends Data = Data> {
   aggregate: HandlerIdentifier;
   eventName: string;
-  handler(ctx: AggregateEventHandlerContext<S>): Promise<void>;
+  handler(ctx: AggregateEventHandlerContext<S, D>): Promise<void>;
 }

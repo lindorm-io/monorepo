@@ -31,13 +31,13 @@ describe("AmqpMessageBus", () => {
     commandSub = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "command-queue",
-      routingKey: "context.aggregate.command_name",
+      topic: "context.aggregate.command_name",
     };
 
     domainEventSub = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "domain-event-queue",
-      routingKey: "context.aggregate.domain_event_name",
+      topic: "context.aggregate.domain_event_name",
     };
 
     await messageBus.subscribe([commandSub, domainEventSub]);
@@ -57,6 +57,7 @@ describe("AmqpMessageBus", () => {
         name: "aggregate",
         context: "context",
       },
+      origin: "test",
     });
 
     await expect(messageBus.publish([command])).resolves.toBeUndefined();
@@ -75,6 +76,7 @@ describe("AmqpMessageBus", () => {
         name: "aggregate",
         context: "context",
       },
+      origin: "test",
     });
 
     const domainEvent = new DomainEvent(
@@ -86,6 +88,7 @@ describe("AmqpMessageBus", () => {
           name: "aggregate",
           context: "context",
         },
+        origin: "test",
       },
       command,
     );

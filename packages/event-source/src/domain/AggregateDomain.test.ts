@@ -98,7 +98,7 @@ describe("AggregateDomain", () => {
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
       queue: "queue.aggregate.default.aggregate_name.command_default",
-      routingKey: "default.aggregate_name.command_default",
+      topic: "default.aggregate_name.command_default",
     });
   });
 
@@ -178,7 +178,7 @@ describe("AggregateDomain", () => {
             data: { commandData: true },
             delay: 0,
             mandatory: false,
-            routingKey: "default.aggregate_name.domain_event_create",
+            topic: "default.aggregate_name.domain_event_create",
             timestamp: expect.any(Date),
             type: "domain_event",
           }),
@@ -197,7 +197,7 @@ describe("AggregateDomain", () => {
         data: { commandData: true },
         delay: 0,
         mandatory: false,
-        routingKey: "default.aggregate_name.domain_event_create",
+        topic: "default.aggregate_name.domain_event_create",
         timestamp: expect.any(Date),
         type: "domain_event",
       }),

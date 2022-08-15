@@ -87,6 +87,8 @@ describe("SagaEntity", () => {
             },
             delay: 0,
             mandatory: true,
+            origin: "test",
+            originator: null,
             timestamp: expect.any(String),
             type: "command",
           },
@@ -96,8 +98,8 @@ describe("SagaEntity", () => {
           one: 1,
           two: 2,
         },
-        timestamp: expect.any(Date),
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       }),
     );
   }, 10000);

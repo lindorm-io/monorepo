@@ -90,7 +90,7 @@ describe("PostgresEventStore", () => {
         data: { created: true },
         delay: 0,
         mandatory: false,
-        routingKey: "default.aggregate_name.domain_event_create",
+        topic: "default.aggregate_name.domain_event_create",
         timestamp: expect.any(Date),
         type: "domain_event",
       }),

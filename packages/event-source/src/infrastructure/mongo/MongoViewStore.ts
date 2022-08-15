@@ -257,8 +257,8 @@ export class MongoViewStore implements IViewStore {
         meta: view.meta,
         revision: view.revision + 1,
         state: view.state,
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       this.logger.debug("Saved view", { view: result });
@@ -308,7 +308,7 @@ export class MongoViewStore implements IViewStore {
             meta: view.meta,
             revision: view.revision + 1,
             state: view.state,
-            timestamp_modified: new Date(),
+            updated_at: new Date(),
           },
           $push: {
             causation_list: (handlerOptions.mongo?.causationsCap &&

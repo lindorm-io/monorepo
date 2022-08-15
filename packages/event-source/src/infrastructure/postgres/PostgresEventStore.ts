@@ -60,6 +60,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             correlation_id: event.correlationId,
             data: event.data,
             expected_events,
+            origin: event.origin,
+            originator: event.originator,
             previous_event_id,
             timestamp: event.timestamp,
           });
@@ -131,6 +133,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             causationId: event.causation_id,
             correlationId: event.correlation_id,
             data: event.data,
+            origin: event.origin,
+            originator: event.originator,
             timestamp: event.timestamp,
           }),
         );
@@ -189,6 +193,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             causationId: entity.causation_id,
             correlationId: entity.correlation_id,
             data: entity.data,
+            origin: entity.origin,
+            originator: entity.originator,
             timestamp: entity.timestamp,
           }),
         );

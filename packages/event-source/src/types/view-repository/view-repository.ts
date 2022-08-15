@@ -4,5 +4,6 @@ export interface ViewRepositoryData<S> {
   context: string;
   revision: number;
   state: S;
-  timestamp_modified: Date;
+  created_at: Date;
+  updated_at: Date;
 }

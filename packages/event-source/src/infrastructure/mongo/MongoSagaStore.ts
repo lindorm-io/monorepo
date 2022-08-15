@@ -211,8 +211,8 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
         messages_to_dispatch: saga.messagesToDispatch,
         revision: saga.revision + 1,
         state: saga.state,
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       this.logger.debug("Saved saga", { saga: result });
@@ -263,7 +263,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
             messages_to_dispatch: saga.messagesToDispatch,
             revision: saga.revision + 1,
             state: saga.state,
-            timestamp_modified: new Date(),
+            updated_at: new Date(),
           },
           $push: {
             causation_list: (handlerOptions?.mongo?.causationsCap &&
@@ -322,7 +322,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
           $set: {
             revision: saga.revision + 1,
             messages_to_dispatch: [],
-            timestamp_modified: new Date(),
+            updated_at: new Date(),
           },
         },
       );

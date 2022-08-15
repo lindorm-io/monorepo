@@ -36,7 +36,8 @@ export class PostgresViewRepository<S = State>
           name: true,
           context: true,
           revision: true,
-          timestamp_modified: true,
+          created_at: true,
+          updated_at: true,
           // @ts-ignore
           state: true,
         },
@@ -57,7 +58,8 @@ export class PostgresViewRepository<S = State>
           context: item.context,
           revision: item.revision,
           state: item.state as S,
-          timestamp_modified: item.timestamp_modified,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
         });
       }
 
@@ -93,7 +95,8 @@ export class PostgresViewRepository<S = State>
           name: true,
           context: true,
           revision: true,
-          timestamp_modified: true,
+          created_at: true,
+          updated_at: true,
           // @ts-ignore
           state: true,
         },
@@ -118,7 +121,8 @@ export class PostgresViewRepository<S = State>
         context: entity.context,
         revision: entity.revision,
         state: entity.state as S,
-        timestamp_modified: entity.timestamp_modified,
+        created_at: entity.created_at,
+        updated_at: entity.updated_at,
       };
     } catch (err) {
       this.logger.error("Failed to find view", err);

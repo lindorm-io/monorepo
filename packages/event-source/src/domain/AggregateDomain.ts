@@ -78,7 +78,7 @@ export class AggregateDomain implements IAggregateDomain {
     await this.messageBus.subscribe({
       callback: (command: Command) => this.handleCommand(command),
       queue: AggregateDomain.getQueue(commandHandler),
-      routingKey: AggregateDomain.getRoutingKey(commandHandler),
+      topic: AggregateDomain.getTopic(commandHandler),
     });
 
     this.logger.verbose("Registered command handler", {
@@ -151,7 +151,7 @@ export class AggregateDomain implements IAggregateDomain {
 
     await this.messageBus.unsubscribe({
       queue: AggregateDomain.getQueue(commandHandler),
-      routingKey: AggregateDomain.getRoutingKey(commandHandler),
+      topic: AggregateDomain.getTopic(commandHandler),
     });
 
     this.logger.verbose("Command handler removed", {
@@ -316,6 +316,7 @@ export class AggregateDomain implements IAggregateDomain {
             aggregate: command.aggregate,
             data: { error, message: command },
             mandatory: true,
+            origin: "aggregate_domain",
           },
           command,
         ),
@@ -335,7 +336,7 @@ export class AggregateDomain implements IAggregateDomain {
     return `queue.aggregate.${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 
-  private static getRoutingKey(commandHandler: AggregateCommandHandler): string {
+  private static getTopic(commandHandler: AggregateCommandHandler): string {
     return `${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 }

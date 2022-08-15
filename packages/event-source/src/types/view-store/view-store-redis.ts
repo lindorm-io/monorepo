@@ -9,8 +9,8 @@ export interface RedisViewStoreAttributes {
   revision: number;
   state: Record<string, any>;
 
-  timestamp_created: Date;
-  timestamp_modified: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface RedisViewStoreHandlerOptions {

@@ -17,7 +17,8 @@ const projection: Partial<Record<keyof MongoViewStoreAttributes, number>> & { _i
   context: 1,
   revision: 1,
   state: 1,
-  timestamp_modified: 1,
+  created_at: 1,
+  updated_at: 1,
 };
 
 export class MongoViewRepository<S = State>
@@ -62,7 +63,8 @@ export class MongoViewRepository<S = State>
           context: item.context,
           revision: item.revision,
           state: item.state as S,
-          timestamp_modified: item.timestamp_modified,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
         });
       }
 
@@ -96,7 +98,8 @@ export class MongoViewRepository<S = State>
         context: result.context,
         revision: result.revision,
         state: result.state as S,
-        timestamp_modified: result.timestamp_modified,
+        created_at: result.created_at,
+        updated_at: result.updated_at,
       };
     } catch (err) {
       this.logger.error("Failed to find view", err);
@@ -136,7 +139,8 @@ export class MongoViewRepository<S = State>
         context: result.context,
         revision: result.revision,
         state: result.state as S,
-        timestamp_modified: result.timestamp_modified,
+        created_at: result.created_at,
+        updated_at: result.updated_at,
       };
     } catch (err) {
       this.logger.error("Failed to find view", err);

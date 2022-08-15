@@ -25,8 +25,8 @@ export abstract class ViewEntity {
   public revision: number;
 
   @CreateDateColumn()
-  public timestamp: Date;
+  public created_at: Date;
 
   @UpdateDateColumn()
-  public timestamp_modified: Date;
+  public updated_at: Date;
 }

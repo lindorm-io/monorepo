@@ -144,8 +144,8 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         meta: view.meta,
         revision: view.revision + 1,
         state: view.state,
-        timestamp_created: new Date(),
-        timestamp_modified: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
       let result: string | null;
@@ -208,8 +208,8 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         meta: view.meta,
         revision: view.revision + 1,
         state: view.state,
-        timestamp_created: attributes.timestamp_created,
-        timestamp_modified: new Date(),
+        created_at: attributes.created_at,
+        updated_at: new Date(),
       });
 
       let result: string | null;

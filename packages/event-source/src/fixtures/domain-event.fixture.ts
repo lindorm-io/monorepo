@@ -5,6 +5,7 @@ export const TEST_DOMAIN_EVENT_OPTIONS: MessageOptions = {
   aggregate: TEST_AGGREGATE_IDENTIFIER,
   name: "domain_event_default",
   data: { domainEventData: true },
+  origin: "test",
 };
 
 export const TEST_DOMAIN_EVENT = TEST_DOMAIN_EVENT_OPTIONS;

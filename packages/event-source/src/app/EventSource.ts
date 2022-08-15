@@ -308,6 +308,8 @@ export class EventSource implements IEventSource {
       correlationId: options.correlationId,
       delay: options.delay,
       mandatory: options.mandatory,
+      origin: options.origin || "event_source",
+      originator: options.originator,
     });
 
     await JOI_MESSAGE.validateAsync(command);

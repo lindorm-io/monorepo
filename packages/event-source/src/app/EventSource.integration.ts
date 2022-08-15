@@ -381,7 +381,8 @@ describe("App", () => {
       context: "default",
       revision: 3,
       state: { messages: ["Hi", "Hello There", "General Kenobi"] },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
 
     await expect(app.repositories.postgres("stored_greetings").findById(id)).resolves.toStrictEqual(
@@ -391,7 +392,8 @@ describe("App", () => {
         context: "default",
         revision: 3,
         state: { messages: ["Hi", "Hello There", "General Kenobi"] },
-        timestamp_modified: expect.any(Date),
+        created_at: expect.any(Date),
+        updated_at: expect.any(Date),
       },
     );
 
@@ -401,7 +403,8 @@ describe("App", () => {
       context: "default",
       revision: 3,
       state: { messages: ["Hi", "Hello There", "General Kenobi"] },
-      timestamp_modified: expect.any(Date),
+      created_at: expect.any(Date),
+      updated_at: expect.any(Date),
     });
 
     expect(onEventSpyAll).toHaveBeenCalledTimes(9);

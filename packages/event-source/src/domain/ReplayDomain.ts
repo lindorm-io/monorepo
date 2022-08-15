@@ -3,8 +3,8 @@ import { DomainEvent, ReplayEvent } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { ReplayEventName } from "../enum";
-import { last } from "lodash";
 import { intervalToDuration } from "date-fns";
+import { last } from "lodash";
 import {
   AggregateIdentifier,
   Data,
@@ -68,6 +68,7 @@ export class ReplayDomain implements IReplayDomain {
         aggregate: this.aggregate,
         data,
         mandatory: true,
+        origin: "replay",
       }),
     );
   }
@@ -77,17 +78,17 @@ export class ReplayDomain implements IReplayDomain {
       {
         callback: this.handleStart.bind(this),
         queue: this.getQueue(ReplayEventName.START),
-        routingKey: this.getRoutingKey(ReplayEventName.START),
+        topic: this.getTopic(ReplayEventName.START),
       },
       {
         callback: this.handlePublishEvents.bind(this),
         queue: this.getQueue(ReplayEventName.PUBLISH_EVENTS),
-        routingKey: this.getRoutingKey(ReplayEventName.PUBLISH_EVENTS),
+        topic: this.getTopic(ReplayEventName.PUBLISH_EVENTS),
       },
       {
         callback: this.handleStop.bind(this),
         queue: this.getQueue(ReplayEventName.STOP),
-        routingKey: this.getRoutingKey(ReplayEventName.STOP),
+        topic: this.getTopic(ReplayEventName.STOP),
       },
     ]);
   }
@@ -106,6 +107,7 @@ export class ReplayDomain implements IReplayDomain {
           aggregate: event.aggregate,
           data: event.data,
           delay: event.data.start.delay,
+          origin: "replay",
         },
         event,
       ),
@@ -125,6 +127,7 @@ export class ReplayDomain implements IReplayDomain {
           aggregate: event.aggregate,
           data: event.data,
           delay: event.data.publishEvents.delay,
+          origin: "replay",
         }),
       );
     }
@@ -151,6 +154,7 @@ export class ReplayDomain implements IReplayDomain {
           },
         },
         delay: event.data.publishEvents.delay,
+        origin: "replay",
       }),
     );
   }
@@ -205,7 +209,7 @@ export class ReplayDomain implements IReplayDomain {
     return `queue.replay.${this.context}.replay.${eventName}`;
   }
 
-  private getRoutingKey(eventName: string): string {
+  private getTopic(eventName: string): string {
     return `${this.context}.replay.${eventName}`;
   }
 }

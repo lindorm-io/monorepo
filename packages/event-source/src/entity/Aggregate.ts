@@ -106,6 +106,8 @@ export class Aggregate<S extends State = State> implements IAggregate {
           aggregate: { id: this.id, name: this.name, context: this.context },
           data: data,
           name: name,
+          origin: causation.origin,
+          originator: causation.originator,
         },
         causation,
       ),

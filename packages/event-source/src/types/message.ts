@@ -11,6 +11,8 @@ export interface MessageOptions<D extends Data = Data> {
   correlationId?: string;
   delay?: number;
   mandatory?: boolean;
+  origin: string;
+  originator?: string | null;
   timestamp?: Date;
   type?: string;
 }
@@ -19,4 +21,6 @@ export interface IMessage extends IMessageBase {
   aggregate: AggregateIdentifier;
   causationId: string;
   correlationId: string;
+  origin: string;
+  originator: string | null;
 }

@@ -28,6 +28,12 @@ export class EventEntity {
   @Column("uuid")
   public readonly correlation_id: string;
 
+  @Column()
+  public readonly origin: string;
+
+  @Column({ nullable: true })
+  public readonly originator: string | null;
+
   @Column("jsonb")
   public readonly data: Record<string, any>;
 

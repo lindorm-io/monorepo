@@ -101,7 +101,7 @@ describe("SagaDomain", () => {
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
       queue: "queue.saga.default.aggregate_name.domain_event_default.default.saga_name",
-      routingKey: "default.aggregate_name.domain_event_default",
+      topic: "default.aggregate_name.domain_event_default",
     });
   });
 
@@ -126,13 +126,13 @@ describe("SagaDomain", () => {
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
       queue: "queue.saga.one.aggregate_name.domain_event_default.default.saga_name",
-      routingKey: "one.aggregate_name.domain_event_default",
+      topic: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
       queue: "queue.saga.two.aggregate_name.domain_event_default.default.saga_name",
-      routingKey: "two.aggregate_name.domain_event_default",
+      topic: "two.aggregate_name.domain_event_default",
     });
   });
 
@@ -227,7 +227,7 @@ describe("SagaDomain", () => {
         data: { commandData: true },
         delay: 0,
         mandatory: true,
-        routingKey: "default.aggregate_name.command_default",
+        topic: "default.aggregate_name.command_default",
         timestamp: expect.any(Date),
         type: "command",
       }),

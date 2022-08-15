@@ -98,7 +98,7 @@ export class SagaDomain implements ISagaDomain {
       await this.messageBus.subscribe({
         callback: (event: DomainEvent | TimeoutEvent) => this.handleEvent(event, eventHandler.saga),
         queue: SagaDomain.getQueue(context, eventHandler),
-        routingKey: SagaDomain.getRoutingKey(context, eventHandler),
+        topic: SagaDomain.getTopic(context, eventHandler),
       });
 
       this.logger.verbose("Event handler registered", {
@@ -147,7 +147,7 @@ export class SagaDomain implements ISagaDomain {
 
       await this.messageBus.unsubscribe({
         queue: SagaDomain.getQueue(context, eventHandler),
-        routingKey: SagaDomain.getRoutingKey(context, eventHandler),
+        topic: SagaDomain.getTopic(context, eventHandler),
       });
 
       this.logger.verbose("Event handler removed", {
@@ -333,6 +333,7 @@ export class SagaDomain implements ISagaDomain {
               aggregate: { id: saga.id, name: saga.name, context: saga.context },
               data: { error: err, message: event },
               mandatory: false,
+              origin: "saga_domain",
             },
             event,
           ),
@@ -361,7 +362,7 @@ export class SagaDomain implements ISagaDomain {
     return `queue.saga.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.saga.context}.${eventHandler.saga.name}`;
   }
 
-  private static getRoutingKey(context: string, eventHandler: SagaEventHandler): string {
+  private static getTopic(context: string, eventHandler: SagaEventHandler): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

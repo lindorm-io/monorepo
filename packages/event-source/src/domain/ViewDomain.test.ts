@@ -88,7 +88,7 @@ describe("ViewDomain", () => {
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
       queue: "queue.view.default.aggregate_name.domain_event_default.default.view_name",
-      routingKey: "default.aggregate_name.domain_event_default",
+      topic: "default.aggregate_name.domain_event_default",
     });
   });
 
@@ -113,13 +113,13 @@ describe("ViewDomain", () => {
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
       queue: "queue.view.one.aggregate_name.domain_event_default.default.view_name",
-      routingKey: "one.aggregate_name.domain_event_default",
+      topic: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
       queue: "queue.view.two.aggregate_name.domain_event_default.default.view_name",
-      routingKey: "two.aggregate_name.domain_event_default",
+      topic: "two.aggregate_name.domain_event_default",
     });
   });
 
