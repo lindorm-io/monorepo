@@ -45,8 +45,8 @@ export const TEST_VIEW_EVENT_HANDLER_ADD_FIELD = new ViewEventHandler({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_ADD_FIELD.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.addField("field.string", "value");
-    ctx.addField("field.record", { record: true });
+    ctx.addListItem("field.string", "value");
+    ctx.addListItem("field.record", { record: true });
   }),
 });
 
@@ -62,7 +62,7 @@ export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new ViewEventHan
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.removeFieldWhereEqual("path.string", "value");
+    ctx.removeListItemWhereEqual("path.string", "value");
   }),
 });
 
@@ -70,7 +70,7 @@ export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH = new ViewEventHan
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.removeFieldWhereMatch("path.record", { record: true });
+    ctx.removeListItemWhereMatch("path.record", { record: true });
   }),
 });
 

@@ -1,6 +1,7 @@
 import { ILogger } from "@lindorm-io/winston";
 import { LindormError } from "@lindorm-io/errors";
 import { MongoViewStore } from "./mongo";
+import { PostgresViewStore } from "./postgres";
 import { RedisViewStore } from "./redis";
 import { View } from "../entity";
 import {
@@ -11,7 +12,6 @@ import {
   ViewStoreHandlerOptions,
   ViewStoreOptions,
 } from "../types";
-import { PostgresViewStore } from "./postgres";
 
 export class ViewStore implements IViewStore {
   private readonly custom: IViewStore;

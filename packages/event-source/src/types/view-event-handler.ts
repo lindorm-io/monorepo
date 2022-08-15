@@ -10,11 +10,11 @@ export interface ViewEventHandlerContext<S extends State = State, D extends Data
   event: DomainEvent<D>;
   logger: ILogger;
 
-  addField(path: string, value: any): void;
+  addListItem(path: string, value: any): void;
   destroy(): void;
   getState(): S;
-  removeFieldWhereEqual(path: string, value: any): void;
-  removeFieldWhereMatch(path: string, value: Record<string, any>): void;
+  removeListItemWhereEqual(path: string, value: any): void;
+  removeListItemWhereMatch(path: string, value: Record<string, any>): void;
   setState(path: string, value: any): void;
 }
 

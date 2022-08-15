@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { DomainEvent } from "../message";
+import { ILogger } from "@lindorm-io/winston";
 import { IView, ViewOptions, ViewData, State } from "../types";
 import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
-import { ILogger } from "@lindorm-io/winston";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, find, get, isEqual, isMatch, remove, set, some } from "lodash";
 import { isAfter, parseJSON } from "date-fns";
@@ -93,8 +93,8 @@ export class View<S extends State = State> implements IView<S> {
 
   // public context
 
-  public addField(causation: DomainEvent, path: string, value: any): void {
-    this.logger.debug("Add field", { causation, path, value });
+  public addListItem(causation: DomainEvent, path: string, value: any): void {
+    this.logger.debug("Add list item", { causation, path, value });
 
     assertSchema(
       Joi.object()
@@ -113,8 +113,8 @@ export class View<S extends State = State> implements IView<S> {
 
     const timestamp = causation.timestamp;
     const meta = get(this._meta, path, []) as Array<any>;
-    const field = get(this._state, path, []) as Array<any>;
-    const exists = find(field, (item) => isEqual(item, value));
+    const list = get(this._state, path, []) as Array<any>;
+    const exists = find(list, (item) => isEqual(item, value));
 
     const hasMoreRecentChange = some(
       meta,
@@ -134,10 +134,10 @@ export class View<S extends State = State> implements IView<S> {
     });
 
     if (!exists) {
-      field.push(value);
+      list.push(value);
     }
 
-    set(this._state, path, field);
+    set(this._state, path, list);
     set(this._meta, path, meta);
   }
 
@@ -155,8 +155,8 @@ export class View<S extends State = State> implements IView<S> {
     return cloneDeep(this._state);
   }
 
-  public removeFieldWhereEqual(causation: DomainEvent, path: string, value: any): void {
-    this.logger.debug("Remove field where equal", { causation, path, value });
+  public removeListItemWhereEqual(causation: DomainEvent, path: string, value: any): void {
+    this.logger.debug("Remove list item where equal", { causation, path, value });
 
     assertSchema(
       Joi.object()
@@ -175,8 +175,8 @@ export class View<S extends State = State> implements IView<S> {
 
     const timestamp = causation.timestamp;
     const meta = get(this._meta, path, []) as Array<any>;
-    const field = get(this._state, path, []) as Array<any>;
-    const exists = find(field, (item) => isEqual(item, value));
+    const list = get(this._state, path, []) as Array<any>;
+    const exists = find(list, (item) => isEqual(item, value));
 
     if (!exists) {
       throw new LindormError("No existing value can be found");
@@ -192,7 +192,7 @@ export class View<S extends State = State> implements IView<S> {
     }
 
     remove(meta, (item) => isEqual(item.value, value));
-    remove(field, (item) => isEqual(item, value));
+    remove(list, (item) => isEqual(item, value));
 
     meta.push({
       removed: true,
@@ -200,16 +200,16 @@ export class View<S extends State = State> implements IView<S> {
       value: exists,
     });
 
-    set(this._state, path, field);
+    set(this._state, path, list);
     set(this._meta, path, meta);
   }
 
-  public removeFieldWhereMatch(
+  public removeListItemWhereMatch(
     causation: DomainEvent,
     path: string,
     value: Record<string, any>,
   ): void {
-    this.logger.debug("Remove field where match", { causation, path, value });
+    this.logger.debug("Remove list item where match", { causation, path, value });
 
     assertSchema(
       Joi.object()
@@ -228,8 +228,8 @@ export class View<S extends State = State> implements IView<S> {
 
     const timestamp = causation.timestamp;
     const meta = get(this._meta, path, []) as Array<any>;
-    const field = get(this._state, path, []) as Array<any>;
-    const exists = find<Record<string, any>>(field, value);
+    const list = get(this._state, path, []) as Array<any>;
+    const exists = find<Record<string, any>>(list, value);
 
     if (!exists) {
       throw new LindormError("No matching value can be found");
@@ -245,7 +245,7 @@ export class View<S extends State = State> implements IView<S> {
     }
 
     remove(meta, (item) => isMatch(item.value, value));
-    remove(field, (item) => isMatch(item, value));
+    remove(list, (item) => isMatch(item, value));
 
     meta.push({
       removed: true,
@@ -253,7 +253,7 @@ export class View<S extends State = State> implements IView<S> {
       value: exists,
     });
 
-    set(this._state, path, field);
+    set(this._state, path, list);
     set(this._meta, path, meta);
   }
 

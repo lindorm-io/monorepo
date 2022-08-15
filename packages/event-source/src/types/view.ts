@@ -12,12 +12,6 @@ export interface ViewData<S extends State = State> extends ViewIdentifier {
   state: S;
 }
 
-export interface ViewEmitData<S extends State = State> extends StandardIdentifier {
-  destroyed: boolean;
-  revision: number;
-  state: S;
-}
-
 export interface ViewOptions<S extends State = State> extends ViewIdentifier {
   causationList?: Array<string>;
   destroyed?: boolean;
@@ -27,10 +21,10 @@ export interface ViewOptions<S extends State = State> extends ViewIdentifier {
 }
 
 export interface IView<S extends State = State> extends ViewData<S> {
-  addField(causation: DomainEvent, path: string, value: any): void;
+  addListItem(causation: DomainEvent, path: string, value: any): void;
   destroy(): void;
-  removeFieldWhereEqual(causation: DomainEvent, path: string, value: any): void;
-  removeFieldWhereMatch(causation: DomainEvent, path: string, value: Record<string, any>): void;
+  removeListItemWhereEqual(causation: DomainEvent, path: string, value: any): void;
+  removeListItemWhereMatch(causation: DomainEvent, path: string, value: Record<string, any>): void;
   setState(causation: DomainEvent, path: string, value: any): void;
   toJSON(): ViewData;
 }

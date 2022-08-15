@@ -51,7 +51,9 @@ describe("View", () => {
   });
 
   test("should add field to new array", () => {
-    expect(() => view.addField(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value")).not.toThrow();
+    expect(() =>
+      view.addListItem(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
+    ).not.toThrow();
 
     expect(view.state).toStrictEqual({
       path: ["value"],
@@ -71,7 +73,9 @@ describe("View", () => {
       logger,
     );
 
-    expect(() => view.addField(new DomainEvent(TEST_DOMAIN_EVENT), "path", "extra")).not.toThrow();
+    expect(() =>
+      view.addListItem(new DomainEvent(TEST_DOMAIN_EVENT), "path", "extra"),
+    ).not.toThrow();
 
     expect(view.state).toStrictEqual({
       path: ["value", "extra"],
@@ -85,9 +89,11 @@ describe("View", () => {
       timestamp,
     });
 
-    view.addField(event, "path", "value");
+    view.addListItem(event, "path", "value");
 
-    expect(() => view.addField(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value")).not.toThrow();
+    expect(() =>
+      view.addListItem(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
+    ).not.toThrow();
 
     expect(view.state).toStrictEqual({
       path: ["value"],
@@ -125,7 +131,7 @@ describe("View", () => {
     );
 
     expect(() =>
-      view.removeFieldWhereEqual(
+      view.removeListItemWhereEqual(
         new DomainEvent(TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL),
         "path",
         "value",
@@ -144,10 +150,10 @@ describe("View", () => {
       timestamp,
     });
 
-    view.addField(event, "path", "value");
+    view.addListItem(event, "path", "value");
 
     expect(() =>
-      view.removeFieldWhereEqual(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
+      view.removeListItemWhereEqual(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
     ).not.toThrow();
 
     expect(view.state).toStrictEqual({
@@ -168,7 +174,7 @@ describe("View", () => {
     );
 
     expect(() =>
-      view.removeFieldWhereMatch(
+      view.removeListItemWhereMatch(
         new DomainEvent(TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH),
         "path",
         { value: 1 },
@@ -187,10 +193,10 @@ describe("View", () => {
       timestamp,
     });
 
-    view.addField(event, "path", { value: 1 });
+    view.addListItem(event, "path", { value: 1 });
 
     expect(() =>
-      view.removeFieldWhereMatch(new DomainEvent(TEST_DOMAIN_EVENT), "path", { value: 1 }),
+      view.removeListItemWhereMatch(new DomainEvent(TEST_DOMAIN_EVENT), "path", { value: 1 }),
     ).not.toThrow();
 
     expect(view.state).toStrictEqual({
@@ -243,7 +249,7 @@ describe("View", () => {
       logger,
     );
 
-    expect(() => view.addField(new DomainEvent(TEST_DOMAIN_EVENT), "path", "extra")).toThrow(
+    expect(() => view.addListItem(new DomainEvent(TEST_DOMAIN_EVENT), "path", "extra")).toThrow(
       ViewDestroyedError,
     );
   });
@@ -270,7 +276,7 @@ describe("View", () => {
     );
 
     expect(() =>
-      view.removeFieldWhereEqual(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
+      view.removeListItemWhereEqual(new DomainEvent(TEST_DOMAIN_EVENT), "path", "value"),
     ).toThrow(ViewDestroyedError);
   });
 
@@ -284,7 +290,7 @@ describe("View", () => {
     );
 
     expect(() =>
-      view.removeFieldWhereMatch(new DomainEvent(TEST_DOMAIN_EVENT), "path", { value: 1 }),
+      view.removeListItemWhereMatch(new DomainEvent(TEST_DOMAIN_EVENT), "path", { value: 1 }),
     ).toThrow(ViewDestroyedError);
   });
 

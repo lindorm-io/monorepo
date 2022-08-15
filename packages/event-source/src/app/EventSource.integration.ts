@@ -212,7 +212,7 @@ describe("App", () => {
         persistence: { type: "mongo" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.initial);
+          ctx.addListItem("messages", ctx.event.data.initial);
         },
       }),
       new ViewEventHandler({
@@ -223,7 +223,7 @@ describe("App", () => {
         persistence: { type: "mongo" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.greeting);
+          ctx.addListItem("messages", ctx.event.data.greeting);
         },
       }),
       new ViewEventHandler({
@@ -234,7 +234,7 @@ describe("App", () => {
         persistence: { type: "mongo" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.respond);
+          ctx.addListItem("messages", ctx.event.data.respond);
         },
       }),
     ]);
@@ -251,7 +251,7 @@ describe("App", () => {
         },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.initial);
+          ctx.addListItem("messages", ctx.event.data.initial);
         },
       }),
       new ViewEventHandler({
@@ -265,7 +265,7 @@ describe("App", () => {
         },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.greeting);
+          ctx.addListItem("messages", ctx.event.data.greeting);
         },
       }),
       new ViewEventHandler({
@@ -279,7 +279,7 @@ describe("App", () => {
         },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.respond);
+          ctx.addListItem("messages", ctx.event.data.respond);
         },
       }),
     ]);
@@ -293,7 +293,7 @@ describe("App", () => {
         persistence: { type: "redis" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.initial);
+          ctx.addListItem("messages", ctx.event.data.initial);
         },
       }),
       new ViewEventHandler({
@@ -304,7 +304,7 @@ describe("App", () => {
         persistence: { type: "redis" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.greeting);
+          ctx.addListItem("messages", ctx.event.data.greeting);
         },
       }),
       new ViewEventHandler({
@@ -315,7 +315,7 @@ describe("App", () => {
         persistence: { type: "redis" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.addField("messages", ctx.event.data.respond);
+          ctx.addListItem("messages", ctx.event.data.respond);
         },
       }),
     ]);

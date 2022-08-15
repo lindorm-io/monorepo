@@ -250,11 +250,11 @@ export class ViewDomain implements IViewDomain {
         event,
         logger: this.logger.createChildLogger(["ViewEventHandler"]),
 
-        addField: view.addField.bind(view, event),
+        addListItem: view.addListItem.bind(view, event),
         destroy: view.destroy.bind(view),
         getState: view.getState.bind(view),
-        removeFieldWhereEqual: view.removeFieldWhereEqual.bind(view, event),
-        removeFieldWhereMatch: view.removeFieldWhereMatch.bind(view, event),
+        removeListItemWhereEqual: view.removeListItemWhereEqual.bind(view, event),
+        removeListItemWhereMatch: view.removeListItemWhereMatch.bind(view, event),
         setState: view.setState.bind(view, event),
       };
 
@@ -312,6 +312,7 @@ export class ViewDomain implements IViewDomain {
       id: view.id,
       name: view.name,
       context: view.context,
+      destroyed: view.destroyed,
       revision: view.revision,
       state: view.state,
     };
