@@ -10,7 +10,7 @@ export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
       const list = isArray(messages) ? messages : [messages];
 
       for (const message of list) {
-        const subscriptions = filter(array, { routingKey: message.routingKey });
+        const subscriptions = filter(array, { topic: message.topic });
 
         for (const subscription of subscriptions) {
           if (message.delay) {

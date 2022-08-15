@@ -16,14 +16,14 @@ export type LindormMessageBusOptions = BusOptions & MessageBusOptions;
 
 export interface SubscriptionData<Subscription extends ISubscription = ISubscription> {
   queue: string;
-  routingKey: string;
+  topic: string;
   consumerTag: string;
   subscription: Subscription;
 }
 
 export interface UnsubscribeOptions {
   queue: string;
-  routingKey: string;
+  topic: string;
 }
 
 export interface IMessageBus<

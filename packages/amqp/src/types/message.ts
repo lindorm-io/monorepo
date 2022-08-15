@@ -4,7 +4,7 @@ export interface IMessage {
   data: Record<string, any>;
   delay: number;
   mandatory: boolean;
-  routingKey: string;
   timestamp: Date;
+  topic: string;
   type: string;
 }

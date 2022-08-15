@@ -35,7 +35,7 @@ describe("MessageBusBase", () => {
     const subscription1: ISubscription = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "subscription-queue-1",
-      routingKey: "message-route-1",
+      topic: "message-route-1",
     };
 
     const message1: IMessage = {
@@ -44,7 +44,7 @@ describe("MessageBusBase", () => {
       data: {},
       delay: 0,
       mandatory: true,
-      routingKey: "message-route-1",
+      topic: "message-route-1",
       timestamp: new Date(),
       type: "type",
     };
@@ -62,13 +62,13 @@ describe("MessageBusBase", () => {
     const subscription2: ISubscription = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "subscription-queue-2",
-      routingKey: "message-route-2",
+      topic: "message-route-2",
     };
 
     const subscription3: ISubscription = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "subscription-queue-3",
-      routingKey: "message-route-3",
+      topic: "message-route-3",
     };
 
     const message2: IMessage = {
@@ -77,7 +77,7 @@ describe("MessageBusBase", () => {
       data: {},
       delay: 0,
       mandatory: true,
-      routingKey: "message-route-2",
+      topic: "message-route-2",
       timestamp: new Date(),
       type: "type",
     };
@@ -88,7 +88,7 @@ describe("MessageBusBase", () => {
       data: {},
       delay: 0,
       mandatory: true,
-      routingKey: "message-route-3",
+      topic: "message-route-3",
       timestamp: new Date(),
       type: "type",
     };
@@ -107,7 +107,7 @@ describe("MessageBusBase", () => {
     const subscription4: ISubscription = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "subscription-queue-4",
-      routingKey: "message-route-4",
+      topic: "message-route-4",
     };
 
     const message4: IMessage = {
@@ -116,7 +116,7 @@ describe("MessageBusBase", () => {
       data: {},
       delay: 1000,
       mandatory: true,
-      routingKey: "message-route-4",
+      topic: "message-route-4",
       timestamp: new Date(),
       type: "type",
     };
@@ -134,7 +134,7 @@ describe("MessageBusBase", () => {
     const subscription5: ISubscription = {
       callback: jest.fn().mockImplementation(async () => {}),
       queue: "subscription-queue-5",
-      routingKey: "message-route-5",
+      topic: "message-route-5",
     };
 
     const message5: IMessage = {
@@ -143,7 +143,7 @@ describe("MessageBusBase", () => {
       data: {},
       delay: 0,
       mandatory: true,
-      routingKey: "message-route-5",
+      topic: "message-route-5",
       timestamp: new Date(),
       type: "type",
     };

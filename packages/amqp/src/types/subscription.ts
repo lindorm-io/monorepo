@@ -3,5 +3,5 @@ import { IMessage } from "./message";
 export interface ISubscription {
   callback(message: IMessage): Promise<void>;
   queue: string;
-  routingKey: string;
+  topic: string;
 }

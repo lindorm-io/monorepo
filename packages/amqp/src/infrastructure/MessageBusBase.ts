@@ -119,9 +119,9 @@ export abstract class MessageBusBase<
 
   private async handleSubscription(subscription: Subscription): Promise<void> {
     const queue = sanitizeRouteKey(subscription.queue);
-    const routingKey = sanitizeRouteKey(subscription.routingKey);
+    const topic = sanitizeRouteKey(subscription.topic);
 
-    await this.connection.bindQueue(queue, routingKey, {
+    await this.connection.bindQueue(queue, topic, {
       deadLetterExchange: this.connection.exchange,
       deadLetterRoutingKey: this.connection.deadLetters,
     });
@@ -161,28 +161,28 @@ export abstract class MessageBusBase<
 
     this.logger.debug("Subscription created", { consumerTag, subscription });
 
-    this.subscriptions.push({ consumerTag, queue, routingKey, subscription });
+    this.subscriptions.push({ consumerTag, queue, topic, subscription });
   }
 
   private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {
-    const { queue, routingKey } = subscription;
-    const { consumerTag } = find(this.subscriptions, { queue, routingKey });
+    const { queue, topic } = subscription;
+    const { consumerTag } = find(this.subscriptions, { queue, topic });
 
     await this.connection.channel.cancel(consumerTag);
 
     remove(this.subscriptions, { consumerTag });
 
-    this.logger.debug("Unsubscribe successful", { consumerTag, queue, routingKey });
+    this.logger.debug("Unsubscribe successful", { consumerTag, queue, topic });
   }
 
   private async publishMessage(message: Message): Promise<void> {
     const content = Buffer.from(stringifyBlob(message));
-    const routingKey = sanitizeRouteKey(message.routingKey);
+    const topic = sanitizeRouteKey(message.topic);
 
     return new Promise((resolve, reject) => {
       this.connection.channel.publish(
         this.connection.exchange,
-        routingKey,
+        topic,
         content,
         {
           persistent: true,
@@ -193,7 +193,7 @@ export abstract class MessageBusBase<
             this.logger.error("Channel Publish failed", err);
             reject(err);
           } else {
-            this.logger.debug("Message published", { message, routingKey });
+            this.logger.debug("Message published", { message, topic });
             resolve();
           }
         },
@@ -203,13 +203,13 @@ export abstract class MessageBusBase<
 
   private async publishMessageWithDelay(message: Message): Promise<void> {
     const content = Buffer.from(stringifyBlob(message));
-    const routingKey = sanitizeRouteKey(message.routingKey);
-    const delayQueue = sanitizeRouteKey(`${message.routingKey}.delayed`);
+    const topic = sanitizeRouteKey(message.topic);
+    const delayQueue = sanitizeRouteKey(`${message.topic}.delayed`);
 
     await this.connection.channel.assertQueue(delayQueue, {
       durable: true,
       deadLetterExchange: this.connection.exchange,
-      deadLetterRoutingKey: routingKey,
+      deadLetterRoutingKey: topic,
     });
 
     return new Promise((resolve, reject) => {
@@ -227,7 +227,7 @@ export abstract class MessageBusBase<
             this.logger.error("Channel Publish failed", err);
             reject(err);
           } else {
-            this.logger.debug("Message published with delay", { message, delayQueue, routingKey });
+            this.logger.debug("Message published with delay", { message, delayQueue, topic });
             resolve();
           }
         },

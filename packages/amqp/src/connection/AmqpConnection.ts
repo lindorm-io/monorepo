@@ -85,17 +85,17 @@ export class AmqpConnection
 
   public async bindQueue(
     queue: string,
-    routingKey: string,
+    topic: string,
     options?: Options.AssertQueue,
   ): Promise<void> {
     await this.confirmChannel.assertQueue(queue, merge({ durable: true }, options));
-    await this.confirmChannel.bindQueue(queue, this.exchange, routingKey);
+    await this.confirmChannel.bindQueue(queue, this.exchange, topic);
 
     this.logger.debug("Successfully bound queue", {
       exchange: this.exchange,
       options,
       queue,
-      routingKey,
+      topic,
     });
   }
 
