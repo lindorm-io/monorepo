@@ -57,16 +57,4 @@ export class StructureScanner {
       return false;
     }
   }
-
-  public static getCommandName(file: string): string {
-    return basename(file, extname(file));
-  }
-
-  public static getEventName(file: string): string {
-    return basename(file, extname(file));
-  }
-
-  public static getAggregateName(directory: string): string {
-    return directory.split(sep).slice(0, -1).reverse()[0];
-  }
 }
