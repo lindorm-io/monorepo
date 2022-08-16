@@ -7,7 +7,8 @@ import { MongoViewStoreHandlerOptions } from "./view-store-mongo";
 import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
 import { RedisViewStoreHandlerOptions } from "./view-store-redis";
 import { View } from "../../entity";
-import { ViewStoreType } from "../../enum";
+
+export type ViewStorePersistence = "custom" | "mongo" | "postgres" | "redis";
 
 export interface ViewStoreOptions {
   custom?: IViewStore;
@@ -21,7 +22,7 @@ export interface ViewStoreHandlerOptions {
   mongo?: MongoViewStoreHandlerOptions;
   postgres?: PostgresViewStoreHandlerOptions;
   redis?: RedisViewStoreHandlerOptions;
-  type: ViewStoreType;
+  type: ViewStorePersistence;
 }
 
 export interface IViewStore {

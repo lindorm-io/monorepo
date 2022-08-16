@@ -5,7 +5,7 @@ const main: ViewEventHandlerFile = {
   persistence: { type: "redis" },
   getViewId: (event) => event.aggregate.id,
   handler: async (ctx) => {
-    ctx.addField("responses", ctx.event.data.respond);
+    ctx.addListItem("responses", ctx.event.data.respond);
   },
 };
 export default main;

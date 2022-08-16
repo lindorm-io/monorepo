@@ -2,11 +2,11 @@ import { Aggregate, Saga } from "../entity";
 import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
-import { IEventStore } from "./event-store";
+import { EventStorePersistence, IEventStore } from "./event-store";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
-import { ISagaStore } from "./saga-store";
+import { ISagaStore, SagaStorePersistence } from "./saga-store";
 import { IViewStore } from "./view-store";
 import { ReplayOptions } from "./replay-domain";
 import {
@@ -21,7 +21,7 @@ import {
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
-import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
+import { MessageBusQueue } from "./message-bus";
 
 export interface AppDomain {
   directory?: string;
@@ -36,17 +36,17 @@ export interface AppStructure {
 }
 
 export interface AggregateStructure extends AppStructure {
-  persistence?: EventStoreType;
+  persistence?: EventStorePersistence;
 }
 
 export interface SagaStructure extends AppStructure {
-  persistence?: SagaStoreType;
+  persistence?: SagaStorePersistence;
 }
 
 export type ViewStructure = AppStructure;
 
 export interface MessageBusStructure {
-  queue?: MessageBusType;
+  queue?: MessageBusQueue;
 }
 
 export interface PrivateAppOptions {

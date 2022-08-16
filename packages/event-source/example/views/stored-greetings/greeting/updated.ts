@@ -9,7 +9,7 @@ const main: ViewEventHandlerFile = {
   },
   getViewId: (event) => event.aggregate.id,
   handler: async (ctx) => {
-    ctx.addField("messages", ctx.event.data.greeting);
+    ctx.addListItem("messages", ctx.event.data.greeting);
   },
 };
 export default main;

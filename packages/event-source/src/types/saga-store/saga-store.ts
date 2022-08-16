@@ -4,13 +4,14 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { ISaga, SagaIdentifier } from "../saga";
 import { MongoSagaStoreHandlerOptions } from "./saga-store-mongo";
 import { Saga } from "../../entity";
-import { SagaStoreType } from "../../enum";
+
+export type SagaStorePersistence = "custom" | "mongo" | "postgres";
 
 export interface SagaStoreOptions {
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   custom?: ISagaStore;
-  type: SagaStoreType;
+  type: SagaStorePersistence;
 }
 
 export interface SagaStoreHandlerOptions {

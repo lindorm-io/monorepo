@@ -1,5 +1,5 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { EventEntity, EventSourceApp, SagaEntity, SagaCausationEntity } from "../src";
+import { EventEntity, EventSource, SagaCausationEntity, SagaEntity } from "../src";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
@@ -61,7 +61,7 @@ const main = async (): Promise<void> => {
     logger,
   );
 
-  const app = new EventSourceApp(
+  const app = new EventSource(
     {
       amqp,
       mongo,
@@ -82,8 +82,8 @@ const main = async (): Promise<void> => {
 
   await app.init();
 
-  app.on("view", (view) => {
-    logger.verbose("on:view", { view });
+  app.on("view", (data) => {
+    logger.verbose("on:view", { data });
   });
 
   const aggregateId = randomUUID();
