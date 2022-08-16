@@ -1,6 +1,5 @@
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
-
-export type MessageBusType = "amqp" | "custom";
+import { MessageBusType } from "../enum";
 
 export interface MessageBusOptions {
   amqp?: IAmqpConnection;

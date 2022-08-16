@@ -7,7 +7,7 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
 import { LindormError } from "@lindorm-io/errors";
-import { ReplayEventName } from "../enum";
+import { EventStoreType, MessageBusType, ReplayEventName, SagaStoreType } from "../enum";
 import { StructureScanner } from "../util";
 import { isArray, merge, snakeCase } from "lodash";
 import { join } from "path";
@@ -109,7 +109,7 @@ export class EventSource implements IEventSource {
           include: [/.*/],
           exclude: [],
           extensions: [".js", ".ts"],
-          persistence: "mongo",
+          persistence: EventStoreType.MONGO,
         },
         sagas: {
           directory: options.domain?.directory
@@ -118,7 +118,7 @@ export class EventSource implements IEventSource {
           include: [/.*/],
           exclude: [],
           extensions: [".js", ".ts"],
-          persistence: "mongo",
+          persistence: SagaStoreType.MONGO,
         },
         views: {
           directory: options.domain?.directory
@@ -129,7 +129,7 @@ export class EventSource implements IEventSource {
           extensions: [".js", ".ts"],
         },
         messageBus: {
-          persistence: "amqp",
+          queue: MessageBusType.AMQP,
         },
         require: require,
       },
@@ -174,7 +174,7 @@ export class EventSource implements IEventSource {
     this.messageBus = new MessageBus(
       {
         amqp: this.amqp,
-        type: this.options.messageBus?.persistence,
+        type: this.options.messageBus?.queue,
       },
       this.logger,
     );

@@ -2,6 +2,7 @@ export { Command, DomainEvent } from "./message";
 export { ConcurrencyError, DomainError } from "./error";
 export { EventEntity, SagaCausationEntity, SagaEntity } from "./infrastructure";
 export { EventSource } from "./app";
+export { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "./enum";
 export { createViewEntities } from "./util";
 export {
   AggregateCommandHandlerFile,

@@ -1,11 +1,10 @@
 import { Aggregate } from "../../entity";
 import { AggregateIdentifier, IAggregate } from "../aggregate";
 import { Command, DomainEvent } from "../../message";
+import { EventStoreType } from "../../enum";
 import { IAggregateEventHandler } from "../aggregate-event-handler";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-
-export type EventStoreType = "custom" | "postgres" | "mongo";
 
 export interface EventStoreOptions {
   custom?: IEventStore;

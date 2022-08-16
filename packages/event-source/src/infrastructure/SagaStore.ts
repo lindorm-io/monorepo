@@ -2,6 +2,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { MongoSagaStore } from "./mongo";
 import { PostgresSagaStore } from "./postgres";
 import { Saga } from "../entity";
+import { SagaStoreType } from "../enum";
 import {
   IMessage,
   ISaga,
@@ -16,17 +17,17 @@ export class SagaStore implements ISagaStore {
 
   public constructor(options: SagaStoreOptions, logger: ILogger) {
     switch (options.type) {
-      case "custom":
+      case SagaStoreType.CUSTOM:
         if (!options.custom) throw new Error("Connection not provided");
         this.store = options.custom;
         break;
 
-      case "mongo":
+      case SagaStoreType.MONGO:
         if (!options.mongo) throw new Error("Connection not provided");
         this.store = new MongoSagaStore(options.mongo, logger);
         break;
 
-      case "postgres":
+      case SagaStoreType.POSTGRES:
         if (!options.postgres) throw new Error("Connection not provided");
         this.store = new PostgresSagaStore(options.postgres, logger);
         break;

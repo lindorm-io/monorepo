@@ -4,6 +4,7 @@ import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
 import { RedisViewStore } from "./redis";
 import { View } from "../entity";
+import { ViewStoreType } from "../enum";
 import {
   IMessage,
   IView,
@@ -42,19 +43,19 @@ export class ViewStore implements IViewStore {
     handlerOptions: ViewStoreHandlerOptions,
   ): Promise<View> {
     switch (handlerOptions.type) {
-      case "custom":
+      case ViewStoreType.CUSTOM:
         if (!this.custom) throw new Error("Connection not provided");
         return this.custom.save(view, causation, handlerOptions);
 
-      case "mongo":
+      case ViewStoreType.MONGO:
         if (!this.mongo) throw new Error("Connection not provided");
         return this.mongo.save(view, causation, handlerOptions);
 
-      case "postgres":
+      case ViewStoreType.POSTGRES:
         if (!this.postgres) throw new Error("Connection not provided");
         return this.postgres.save(view, causation, handlerOptions);
 
-      case "redis":
+      case ViewStoreType.REDIS:
         if (!this.redis) throw new Error("Connection not provided");
         return this.redis.save(view, causation, handlerOptions);
 
@@ -65,19 +66,19 @@ export class ViewStore implements IViewStore {
 
   public load(identifier: ViewIdentifier, handlerOptions: ViewStoreHandlerOptions): Promise<View> {
     switch (handlerOptions.type) {
-      case "custom":
+      case ViewStoreType.CUSTOM:
         if (!this.custom) throw new Error("Connection not provided");
         return this.custom.load(identifier, handlerOptions);
 
-      case "mongo":
+      case ViewStoreType.MONGO:
         if (!this.mongo) throw new Error("Connection not provided");
         return this.mongo.load(identifier, handlerOptions);
 
-      case "postgres":
+      case ViewStoreType.POSTGRES:
         if (!this.postgres) throw new Error("Connection not provided");
         return this.postgres.load(identifier, handlerOptions);
 
-      case "redis":
+      case ViewStoreType.REDIS:
         if (!this.redis) throw new Error("Connection not provided");
         return this.redis.load(identifier, handlerOptions);
 

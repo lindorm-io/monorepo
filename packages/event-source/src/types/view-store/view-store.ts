@@ -4,9 +4,10 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
 import { IView, ViewIdentifier } from "../view";
 import { MongoViewStoreHandlerOptions } from "./view-store-mongo";
+import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
 import { RedisViewStoreHandlerOptions } from "./view-store-redis";
 import { View } from "../../entity";
-import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
+import { ViewStoreType } from "../../enum";
 
 export interface ViewStoreOptions {
   custom?: IViewStore;
@@ -20,7 +21,7 @@ export interface ViewStoreHandlerOptions {
   mongo?: MongoViewStoreHandlerOptions;
   postgres?: PostgresViewStoreHandlerOptions;
   redis?: RedisViewStoreHandlerOptions;
-  type: "custom" | "mongo" | "postgres" | "redis";
+  type: ViewStoreType;
 }
 
 export interface IViewStore {

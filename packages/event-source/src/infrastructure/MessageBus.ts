@@ -1,19 +1,20 @@
 import { AmqpMessageBus } from "./amqp";
-import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { ILogger } from "@lindorm-io/winston";
+import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { MessageBusOptions } from "../types/message-bus";
+import { MessageBusType } from "../enum";
 
 export class MessageBus implements IMessageBus {
   private readonly bus: IMessageBus;
 
   public constructor(options: MessageBusOptions, logger: ILogger) {
     switch (options.type) {
-      case "amqp":
+      case MessageBusType.AMQP:
         if (!options.amqp) throw new Error("Connection not provided");
         this.bus = new AmqpMessageBus(options.amqp, logger);
         break;
 
-      case "custom":
+      case MessageBusType.CUSTOM:
         if (!options.custom) throw new Error("IMessageBus not provided");
         this.bus = options.custom;
         break;

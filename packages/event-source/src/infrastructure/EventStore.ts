@@ -2,6 +2,7 @@ import { Aggregate } from "../entity";
 import { AggregateEventHandler } from "../handler";
 import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";
+import { EventStoreType } from "../enum";
 import { ILogger } from "@lindorm-io/winston";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
@@ -20,17 +21,17 @@ export class EventStore implements IDomainEventStore {
 
   public constructor(options: EventStoreOptions, logger: ILogger) {
     switch (options.type) {
-      case "custom":
+      case EventStoreType.CUSTOM:
         if (!options.custom) throw new Error("IEventStore not provided");
         this.store = options.custom;
         break;
 
-      case "mongo":
+      case EventStoreType.MONGO:
         if (!options.mongo) throw new Error("Connection not provided");
         this.store = new MongoEventStore(options.mongo, logger);
         break;
 
-      case "postgres":
+      case EventStoreType.POSTGRES:
         if (!options.postgres) throw new Error("Connection not provided");
         this.store = new PostgresEventStore(options.postgres, logger);
         break;
