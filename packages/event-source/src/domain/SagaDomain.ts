@@ -1,4 +1,4 @@
-import { DomainEvent, TimeoutEvent } from "../message";
+import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
@@ -96,7 +96,8 @@ export class SagaDomain implements ISagaDomain {
       );
 
       await this.messageBus.subscribe({
-        callback: (event: DomainEvent | TimeoutEvent) => this.handleEvent(event, eventHandler.saga),
+        callback: (event: DomainEvent | TimeoutMessage) =>
+          this.handleEvent(event, eventHandler.saga),
         queue: SagaDomain.getQueue(context, eventHandler),
         topic: SagaDomain.getTopic(context, eventHandler),
       });
@@ -174,7 +175,7 @@ export class SagaDomain implements ISagaDomain {
   // private
 
   private async handleEvent(
-    event: DomainEvent | TimeoutEvent,
+    event: DomainEvent | TimeoutMessage,
     sagaIdentifier: HandlerIdentifier,
   ): Promise<void> {
     this.logger.debug("Handling event", { event, sagaIdentifier });
@@ -288,7 +289,7 @@ export class SagaDomain implements ISagaDomain {
 
   private async handleSaga(
     saga: Saga,
-    event: DomainEvent | TimeoutEvent,
+    event: DomainEvent | TimeoutMessage,
     eventHandler: SagaEventHandler,
     conditionValidators: Array<(saga: Saga) => void>,
   ): Promise<Saga> {
@@ -327,7 +328,7 @@ export class SagaDomain implements ISagaDomain {
         this.logger.error("Failed to handle Saga", err);
 
         untouchedSaga.messagesToDispatch.push(
-          new DomainEvent(
+          new ErrorMessage(
             {
               name: err.name,
               aggregate: { id: saga.id, name: saga.name, context: saga.context },

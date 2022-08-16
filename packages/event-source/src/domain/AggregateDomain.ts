@@ -1,11 +1,11 @@
 import { Aggregate } from "../model";
 import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
-import { Command, DomainEvent } from "../message";
+import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { ILogger } from "@lindorm-io/winston";
+import { IMessageBus } from "@lindorm-io/amqp";
 import { assertSnakeCase } from "../util";
 import { filter, find, findLast, remove, some } from "lodash";
-import { IMessageBus } from "@lindorm-io/amqp";
 import {
   AggregateCommandHandlerContext,
   AggregateDomainOptions,
@@ -310,7 +310,7 @@ export class AggregateDomain implements IAggregateDomain {
 
     try {
       await this.messageBus.publish([
-        new DomainEvent(
+        new ErrorMessage(
           {
             name: error.name,
             aggregate: command.aggregate,

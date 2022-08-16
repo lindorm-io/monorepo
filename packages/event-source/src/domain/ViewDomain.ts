@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import { DomainEvent, Message } from "../message";
+import { DomainEvent, ErrorMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
@@ -24,6 +24,7 @@ import {
   ViewDomainOptions,
   ViewEventHandlerContext,
   IViewStore,
+  IMessage,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
@@ -106,7 +107,7 @@ export class ViewDomain implements IViewDomain {
       );
 
       await this.messageBus.subscribe({
-        callback: (message: Message) => this.handleEvent(message, eventHandler.view),
+        callback: (message: IMessage) => this.handleEvent(message, eventHandler.view),
         queue: ViewDomain.getQueue(context, eventHandler),
         topic: ViewDomain.getTopic(context, eventHandler),
       });
@@ -287,7 +288,7 @@ export class ViewDomain implements IViewDomain {
       this.logger.debug("Rejecting event", { event, view, error });
 
       await this.messageBus.publish([
-        new DomainEvent(
+        new ErrorMessage(
           {
             name: error.name,
             aggregate: { id: view.id, name: view.name, context: view.context },

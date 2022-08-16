@@ -16,7 +16,7 @@ export abstract class Message<D extends Data = Data> implements IMessage {
   public readonly timestamp: Date;
   public readonly type: string;
 
-  protected constructor(options: MessageOptions<D>, causation?: Message) {
+  protected constructor(options: MessageOptions<D>, causation?: IMessage) {
     this.id = options.id || randomUUID();
     this.name = options.name;
     this.data = options.data || ({} as unknown as D);

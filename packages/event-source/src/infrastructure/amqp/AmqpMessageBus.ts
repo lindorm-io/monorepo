@@ -1,5 +1,5 @@
 import { IAmqpConnection, ISubscription, MessageBusBase } from "@lindorm-io/amqp";
-import { Command, DomainEvent, ReplayEvent, TimeoutEvent } from "../../message";
+import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } from "../../message";
 import { DomainError } from "../../error";
 import { IMessage } from "../../types";
 import { JOI_MESSAGE, JOI_SUBSCRIPTION } from "../../schema";
@@ -11,7 +11,9 @@ export class AmqpMessageBus extends MessageBusBase<IMessage> {
     super({ connection, logger });
   }
 
-  protected createMessage(message: IMessage): Command | DomainEvent | ReplayEvent | TimeoutEvent {
+  protected createMessage(
+    message: IMessage,
+  ): Command | DomainEvent | ErrorMessage | ReplayMessage | TimeoutMessage {
     switch (message.type) {
       case MessageType.COMMAND:
         return new Command(message);
@@ -19,11 +21,14 @@ export class AmqpMessageBus extends MessageBusBase<IMessage> {
       case MessageType.DOMAIN_EVENT:
         return new DomainEvent(message);
 
-      case MessageType.REPLAY_EVENT:
-        return new ReplayEvent(message);
+      case MessageType.ERROR_MESSAGE:
+        return new ErrorMessage(message);
 
-      case MessageType.TIMEOUT_EVENT:
-        return new TimeoutEvent(message);
+      case MessageType.REPLAY_MESSAGE:
+        return new ReplayMessage(message);
+
+      case MessageType.TIMEOUT_MESSAGE:
+        return new TimeoutMessage(message);
 
       case MessageType.UNKNOWN:
         throw new DomainError("Unknown Message Type");

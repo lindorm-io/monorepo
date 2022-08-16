@@ -1,13 +1,13 @@
-import { Message } from "./Message";
 import { Data, IMessage, MessageOptions } from "../types";
+import { Message } from "./Message";
 import { MessageType } from "../enum";
 
-export class DomainEvent<D extends Data = Data> extends Message<D> implements IMessage {
+export class ErrorMessage<D extends Data = Data> extends Message<D> implements IMessage {
   public constructor(options: MessageOptions<D>, causation?: IMessage) {
     super(
       {
         ...options,
-        type: MessageType.DOMAIN_EVENT,
+        type: MessageType.ERROR_MESSAGE,
       },
       causation,
     );

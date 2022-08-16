@@ -1,4 +1,4 @@
-import { DomainEvent, TimeoutEvent } from "../message";
+import { DomainEvent, TimeoutMessage } from "../message";
 import { Saga } from "./Saga";
 import { SagaDestroyedError } from "../error";
 import { TEST_DOMAIN_EVENT } from "../fixtures/domain-event.fixture";
@@ -111,7 +111,7 @@ describe("Saga", () => {
       saga.timeout(new DomainEvent(TEST_DOMAIN_EVENT), "timeoutName", { timeoutData: true }, 250),
     ).not.toThrow();
 
-    expect(saga.messagesToDispatch).toStrictEqual([expect.any(TimeoutEvent)]);
+    expect(saga.messagesToDispatch).toStrictEqual([expect.any(TimeoutMessage)]);
   });
 
   test("should throw on destroy when destroyed", () => {

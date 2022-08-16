@@ -1,14 +1,14 @@
 import { Data, State } from "./generic";
-import { DomainEvent, TimeoutEvent } from "../message";
+import { DomainEvent, TimeoutMessage } from "../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 import { SagaDispatchOptions } from "./saga";
 import { SagaStoreHandlerOptions } from "./saga-store";
 
-export type GetSagaIdFunction = (event: DomainEvent | TimeoutEvent) => string;
+export type GetSagaIdFunction = (event: DomainEvent | TimeoutMessage) => string;
 
 export interface SagaEventHandlerContext<S extends State = State, D extends Data = Data> {
-  event: DomainEvent<D> | TimeoutEvent<D>;
+  event: DomainEvent<D> | TimeoutMessage<D>;
   logger: ILogger;
 
   destroy(): void;

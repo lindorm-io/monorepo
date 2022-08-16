@@ -22,6 +22,12 @@ export const JOI_MESSAGE = Joi.object<IMessage>().keys({
   topic: Joi.string().required(),
   timestamp: Joi.date().required(),
   type: Joi.string()
-    .allow(MessageType.COMMAND, MessageType.DOMAIN_EVENT, MessageType.TIMEOUT_EVENT)
+    .allow(
+      MessageType.COMMAND,
+      MessageType.DOMAIN_EVENT,
+      MessageType.ERROR_MESSAGE,
+      MessageType.REPLAY_MESSAGE,
+      MessageType.TIMEOUT_MESSAGE,
+    )
     .required(),
 });

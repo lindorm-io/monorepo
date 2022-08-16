@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { Command, DomainEvent, TimeoutEvent } from "../message";
+import { Command, DomainEvent, TimeoutMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
@@ -20,7 +20,7 @@ export class Saga<S extends State = State> implements ISaga {
   public readonly context: string;
 
   private readonly _causationList: Array<string>;
-  private readonly _messagesToDispatch: Array<Command | TimeoutEvent>;
+  private readonly _messagesToDispatch: Array<Command | TimeoutMessage>;
   private readonly _revision: number;
   private readonly _state: S;
   private _destroyed: boolean;
@@ -231,7 +231,7 @@ export class Saga<S extends State = State> implements ISaga {
     }
 
     this._messagesToDispatch.push(
-      new TimeoutEvent(
+      new TimeoutMessage(
         {
           aggregate: {
             id: this.id,
