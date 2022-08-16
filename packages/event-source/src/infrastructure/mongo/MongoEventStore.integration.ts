@@ -1,4 +1,4 @@
-import { Aggregate } from "../../entity";
+import { Aggregate } from "../../model";
 import { AggregateIdentifier, EventStoreSaveOptions, IAggregate, IMessage } from "../../types";
 import { Command, DomainEvent } from "../../message";
 import { MongoConnection } from "@lindorm-io/mongo";

@@ -4,7 +4,7 @@ import { MessageBus } from "../infrastructure";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandler } from "../handler";
 import { IViewDomain, ViewIdentifier } from "../types";

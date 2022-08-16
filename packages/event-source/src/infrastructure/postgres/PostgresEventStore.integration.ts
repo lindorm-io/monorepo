@@ -1,4 +1,4 @@
-import { Aggregate } from "../../entity";
+import { Aggregate } from "../../model";
 import { EventEntity } from "./entity";
 import { AggregateIdentifier, EventStoreSaveOptions, IAggregate, IMessage } from "../../types";
 import { Command, DomainEvent } from "../../message";

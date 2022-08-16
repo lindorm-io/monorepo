@@ -2,7 +2,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IRedisConnection } from "@lindorm-io/redis";
 import { RedisBase } from "./RedisBase";
 import { RedisIndex } from "./RedisIndex";
-import { View } from "../../entity";
+import { View } from "../../model";
 import { ViewNotSavedError, ViewNotUpdatedError } from "../../error";
 import { difference, find, snakeCase } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";

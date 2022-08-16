@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../entity";
+import { Aggregate, Saga } from "../model";
 import { AggregateDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";

@@ -3,7 +3,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../../error";
-import { Saga } from "../../entity";
+import { Saga } from "../../model";
 import {
   IMessage,
   ISaga,

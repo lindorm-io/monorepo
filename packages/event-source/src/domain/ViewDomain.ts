@@ -3,7 +3,7 @@ import { DomainEvent, Message } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewEventHandler } from "../handler";
 import { assertSnakeCase } from "../util";
 import { find, findLast, isArray, isUndefined, remove, some } from "lodash";

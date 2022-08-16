@@ -3,7 +3,7 @@ import { ISagaStore } from "./saga-store";
 import { ISagaEventHandler } from "./saga-event-handler";
 import { State } from "./generic";
 import { SagaIdentifier } from "./saga";
-import { Saga } from "../entity";
+import { Saga } from "../model";
 
 export interface SagaDomainOptions {
   messageBus: IMessageBus;

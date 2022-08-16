@@ -3,7 +3,7 @@ import { FindOneOptions } from "typeorm";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
-import { View } from "../../entity";
+import { View } from "../../model";
 import { ViewCausationEntity, ViewEntity } from "./entity";
 import { find } from "lodash";
 import {

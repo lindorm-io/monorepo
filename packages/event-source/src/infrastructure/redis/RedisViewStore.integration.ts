@@ -4,7 +4,7 @@ import { RedisConnection } from "@lindorm-io/redis";
 import { RedisViewStore } from "./RedisViewStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
-import { View } from "../../entity";
+import { View } from "../../model";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import {

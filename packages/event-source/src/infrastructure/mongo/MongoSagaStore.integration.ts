@@ -2,7 +2,7 @@ import { AggregateIdentifier, SagaIdentifier } from "../../types";
 import { DomainEvent } from "../../message";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoSagaStore } from "./MongoSagaStore";
-import { Saga } from "../../entity";
+import { Saga } from "../../model";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/winston";

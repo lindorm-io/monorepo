@@ -2,7 +2,7 @@ import { AggregateIdentifier, SagaIdentifier } from "../../types";
 import { DomainEvent } from "../../message";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { PostgresSagaStore } from "./PostgresSagaStore";
-import { Saga } from "../../entity";
+import { Saga } from "../../model";
 import { SagaCausationEntity, SagaEntity } from "./entity";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";

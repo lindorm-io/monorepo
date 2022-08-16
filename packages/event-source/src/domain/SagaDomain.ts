@@ -2,7 +2,7 @@ import { DomainEvent, TimeoutEvent } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { Saga } from "../entity";
+import { Saga } from "../model";
 import { SagaEventHandler } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State } from "../types";
 import { assertSnakeCase } from "../util";

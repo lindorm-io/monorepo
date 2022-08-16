@@ -1,4 +1,4 @@
-import { Aggregate } from "../entity";
+import { Aggregate } from "../model";
 import { AggregateIdentifier } from "../types";
 import { CausationMissingEventsError } from "../error";
 import { Command } from "../message";

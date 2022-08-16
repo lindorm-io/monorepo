@@ -3,7 +3,7 @@ import { LindormError } from "@lindorm-io/errors";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
 import { RedisViewStore } from "./redis";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewStoreType } from "../enum";
 import {
   IMessage,

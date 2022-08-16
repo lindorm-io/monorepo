@@ -2,7 +2,7 @@ import { Collection, Filter, FindOptions } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../../error";
-import { View } from "../../entity";
+import { View } from "../../model";
 import { flatten, snakeCase } from "lodash";
 import {
   HandlerIdentifier,

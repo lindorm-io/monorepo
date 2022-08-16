@@ -1,4 +1,4 @@
-import { Aggregate } from "../entity";
+import { Aggregate } from "../model";
 import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
 import { Command, DomainEvent } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";

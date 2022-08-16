@@ -1,7 +1,7 @@
 import { Command, DomainEvent, Message } from "../message";
 import { ISagaDomain, SagaIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
-import { Saga } from "../entity";
+import { Saga } from "../model";
 import { SagaDomain } from "./SagaDomain";
 import { SagaEventHandler } from "../handler";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";

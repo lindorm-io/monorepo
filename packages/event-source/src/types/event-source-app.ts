@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../entity";
+import { Aggregate, Saga } from "../model";
 import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";

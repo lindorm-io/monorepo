@@ -3,7 +3,7 @@ import { FindOneOptions } from "typeorm";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
-import { Saga } from "../../entity";
+import { Saga } from "../../model";
 import { SagaCausationEntity, SagaEntity } from "./entity";
 import { find } from "lodash";
 import {

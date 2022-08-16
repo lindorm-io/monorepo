@@ -6,7 +6,7 @@ import { IView, ViewIdentifier } from "../view";
 import { MongoViewStoreHandlerOptions } from "./view-store-mongo";
 import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
 import { RedisViewStoreHandlerOptions } from "./view-store-redis";
-import { View } from "../../entity";
+import { View } from "../../model";
 
 export type ViewStorePersistence = "custom" | "mongo" | "postgres" | "redis";
 

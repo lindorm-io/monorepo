@@ -1,7 +1,7 @@
 import { ILogger } from "@lindorm-io/winston";
 import { MongoSagaStore } from "./mongo";
 import { PostgresSagaStore } from "./postgres";
-import { Saga } from "../entity";
+import { Saga } from "../model";
 import { SagaStoreType } from "../enum";
 import {
   IMessage,
