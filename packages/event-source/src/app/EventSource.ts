@@ -8,7 +8,12 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
 import { LindormError } from "@lindorm-io/errors";
 import { EventStoreType, MessageBusType, ReplayEventName, SagaStoreType } from "../enum";
-import { StructureScanner } from "../util";
+import {
+  defaultAggregateCommandHandlerSchema,
+  defaultSagaIdFunction,
+  defaultViewIdFunction,
+  StructureScanner,
+} from "../util";
 import { isArray, merge, snakeCase } from "lodash";
 import { join } from "path";
 import {
@@ -35,6 +40,8 @@ import {
   JOI_VIEW_EVENT_HANDLER_FILE,
 } from "../schema";
 import {
+  AggregateCommandHandlerFile,
+  AggregateEventHandlerFile,
   AppAdmin,
   AppInspectOptions,
   AppOptions,
@@ -495,10 +502,12 @@ export class EventSource implements IEventSource {
 
       if (!this.isValid("aggregate", aggregateName, this.options.aggregates)) break;
 
-      const handler = this.options.require(file.path).default;
+      let handler: AggregateCommandHandlerFile | AggregateEventHandlerFile;
 
       switch (type) {
         case "commands":
+          handler = this.getFileHandler<AggregateCommandHandlerFile>(file.path);
+
           this.logger.debug("Found aggregate command handler", { handler });
 
           await JOI_AGGREGATE_COMMAND_HANDLER_FILE.required().validateAsync(handler);
@@ -511,13 +520,15 @@ export class EventSource implements IEventSource {
                 context: snakeCase(this.options.domain.context),
               },
               conditions: handler.conditions,
-              schema: handler.schema,
+              schema: handler.schema ? handler.schema : defaultAggregateCommandHandlerSchema,
               handler: handler.handler,
             }),
           );
           break;
 
         case "events":
+          handler = this.getFileHandler<AggregateEventHandlerFile>(file.path);
+
           this.logger.debug("Found aggregate event handler", { handler });
 
           await JOI_AGGREGATE_EVENT_HANDLER_FILE.required().validateAsync(handler);
@@ -564,7 +575,7 @@ export class EventSource implements IEventSource {
 
       if (!this.isValid("saga", sagaName, this.options.sagas)) break;
 
-      const handler: SagaEventHandlerFile = this.options.require(file.path).default;
+      const handler = this.getFileHandler<SagaEventHandlerFile>(file.path);
 
       this.logger.debug("Found saga event handler", { handler });
 
@@ -585,7 +596,7 @@ export class EventSource implements IEventSource {
           },
           conditions: handler.conditions,
           options: handler.options,
-          getSagaId: handler.getSagaId,
+          getSagaId: handler.getSagaId ? handler.getSagaId : defaultSagaIdFunction,
           handler: handler.handler,
         }),
       );
@@ -614,7 +625,7 @@ export class EventSource implements IEventSource {
 
       if (!this.isValid("view", viewName, this.options.views)) break;
 
-      const handler: ViewEventHandlerFile = this.options.require(file.path).default;
+      const handler = this.getFileHandler<ViewEventHandlerFile>(file.path);
 
       this.logger.debug("Found view event handler", { handler });
 
@@ -635,7 +646,7 @@ export class EventSource implements IEventSource {
           },
           conditions: handler.conditions,
           persistence: handler.persistence,
-          getViewId: handler.getViewId,
+          getViewId: handler.getViewId ? handler.getViewId : defaultViewIdFunction,
           handler: handler.handler,
         }),
       );
@@ -657,6 +668,17 @@ export class EventSource implements IEventSource {
     if (this.options.dangerouslyRegisterHandlersManually) return;
 
     throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
+  }
+
+  private getFileHandler<Handler>(path: string): Handler {
+    const required = this.options.require(path);
+    const handler = required.default || required.main || required.handler;
+
+    if (!handler) {
+      throw new Error(`Expected methods [ default | main | handler ] from [ ${path} ]`);
+    }
+
+    return handler as Handler;
   }
 
   private isValid(type: string, name: string, structure: AppStructure): boolean {

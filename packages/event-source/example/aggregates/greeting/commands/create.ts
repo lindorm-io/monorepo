@@ -1,7 +1,10 @@
 import Joi from "joi";
 import { AggregateCommandHandlerFile } from "../../../../src";
 
-const main: AggregateCommandHandlerFile = {
+/**
+ * Exporting handler with name [ main ]
+ */
+export const main: AggregateCommandHandlerFile = {
   conditions: { created: false },
   schema: Joi.object()
     .keys({
@@ -12,4 +15,3 @@ const main: AggregateCommandHandlerFile = {
     await ctx.apply("created", ctx.command.data);
   },
 };
-export default main;

@@ -14,7 +14,7 @@ export interface AggregateCommandHandlerContext<S extends State = State, D exten
 
 export interface AggregateCommandHandlerFile<S extends State = State, D extends Data = Data> {
   conditions?: HandlerConditions;
-  schema: Joi.Schema;
+  schema?: Joi.Schema;
   handler(ctx: AggregateCommandHandlerContext<S, D>): Promise<void>;
 }
 

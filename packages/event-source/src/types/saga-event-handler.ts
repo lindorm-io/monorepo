@@ -27,7 +27,7 @@ export interface SagaEventHandlerFile<S extends State = State, D extends Data = 
   aggregate?: SagaEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   options?: SagaStoreHandlerOptions;
-  getSagaId: GetSagaIdFunction;
+  getSagaId?: GetSagaIdFunction;
   handler(ctx: SagaEventHandlerContext<S, D>): Promise<void>;
 }
 

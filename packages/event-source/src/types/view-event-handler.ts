@@ -26,7 +26,7 @@ export interface ViewEventHandlerFile<S extends State = State, D extends Data = 
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   persistence: ViewStoreHandlerOptions;
-  getViewId: GetViewIdFunction;
+  getViewId?: GetViewIdFunction;
   handler(ctx: ViewEventHandlerContext<S, D>): Promise<void>;
 }
 

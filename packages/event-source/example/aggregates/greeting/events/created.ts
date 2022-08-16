@@ -6,4 +6,8 @@ const main: AggregateEventHandlerFile = {
     ctx.mergeState(ctx.event.data);
   },
 };
+
+/**
+ * Exporting handler as [ default ]
+ */
 export default main;
