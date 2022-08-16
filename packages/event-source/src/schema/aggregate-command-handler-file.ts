@@ -9,5 +9,6 @@ export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<AggregateCommandHan
     })
     .optional(),
   schema: Joi.object().required(),
+  version: Joi.number().optional(),
   handler: Joi.function().required(),
 });

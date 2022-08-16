@@ -1,9 +1,9 @@
 import { IMessageBus } from "@lindorm-io/amqp";
-import { ISagaStore } from "./saga-store";
-import { ISagaEventHandler } from "./saga-event-handler";
-import { State } from "./generic";
-import { SagaIdentifier } from "./saga";
-import { Saga } from "../model";
+import { ISagaEventHandler } from "../handler";
+import { ISagaStore } from "../saga-store";
+import { Saga } from "../../model";
+import { SagaIdentifier } from "../model";
+import { State } from "../generic";
 
 export interface SagaDomainOptions {
   messageBus: IMessageBus;

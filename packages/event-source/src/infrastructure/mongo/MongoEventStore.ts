@@ -94,6 +94,7 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
         causationId: event.causationId,
         correlationId: event.correlationId,
         data: event.data,
+        version: event.version,
         timestamp: event.timestamp,
       });
     }
@@ -188,6 +189,7 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
               data: event.data,
               origin: attribute.origin,
               originator: attribute.originator,
+              version: event.version,
               timestamp: event.timestamp,
             }),
           );
@@ -259,6 +261,7 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
               data: event.data,
               origin: attribute.origin,
               originator: attribute.originator,
+              version: event.version,
               timestamp: event.timestamp,
             }),
           );

@@ -1,14 +1,15 @@
 import { Aggregate, Saga } from "../model";
 import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
-import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { EventStorePersistence, IEventStore } from "./event-store";
+import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
 import { ISagaStore, SagaStorePersistence } from "./saga-store";
 import { IViewStore } from "./view-store";
-import { ReplayOptions } from "./replay-domain";
+import { MessageBusQueue } from "./message-bus";
+import { ReplayOptions } from "./domain";
 import {
   MongoViewRepository,
   PostgresViewRepository,
@@ -21,7 +22,6 @@ import {
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
-import { MessageBusQueue } from "./message-bus";
 
 export interface AppDomain {
   directory?: string;

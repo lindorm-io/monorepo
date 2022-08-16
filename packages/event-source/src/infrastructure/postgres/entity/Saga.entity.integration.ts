@@ -91,6 +91,7 @@ describe("SagaEntity", () => {
             originator: null,
             timestamp: expect.any(String),
             type: "command",
+            version: 1,
           },
         ],
         revision: 2,

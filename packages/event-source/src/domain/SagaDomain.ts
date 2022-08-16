@@ -60,6 +60,7 @@ export class SagaDomain implements ISagaDomain {
     for (const context of contexts) {
       const existingHandler = some(this.eventHandlers, {
         eventName: eventHandler.eventName,
+        version: eventHandler.version,
         aggregate: {
           name: eventHandler.aggregate.name,
           context: eventHandler.aggregate.context,
@@ -71,7 +72,20 @@ export class SagaDomain implements ISagaDomain {
       });
 
       if (existingHandler) {
-        throw new LindormError("Event handler has already been registered");
+        throw new LindormError("Event handler has already been registered", {
+          debug: {
+            eventName: eventHandler.eventName,
+            version: eventHandler.version,
+            aggregate: {
+              name: eventHandler.aggregate.name,
+              context: eventHandler.aggregate.context,
+            },
+            saga: {
+              name: eventHandler.saga.name,
+              context: eventHandler.saga.context,
+            },
+          },
+        });
       }
 
       assertSnakeCase(context);
@@ -184,6 +198,7 @@ export class SagaDomain implements ISagaDomain {
 
     const eventHandler = find(this.eventHandlers, {
       eventName: event.name,
+      version: event.version,
       aggregate: {
         name: event.aggregate.name,
         context: event.aggregate.context,

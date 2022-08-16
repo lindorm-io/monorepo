@@ -1,6 +1,6 @@
-import { DomainEvent } from "../message";
-import { StandardIdentifier } from "./standard-identifier";
-import { State } from "./generic";
+import { DomainEvent } from "../../message";
+import { StandardIdentifier } from "../standard-identifier";
+import { State } from "../generic";
 
 export type ViewIdentifier = StandardIdentifier;
 

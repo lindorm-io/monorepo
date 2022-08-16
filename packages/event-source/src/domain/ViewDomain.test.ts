@@ -1,4 +1,4 @@
-import { DomainEvent, Message } from "../message";
+import { DomainEvent } from "../message";
 import { LindormError } from "@lindorm-io/errors";
 import { MessageBus } from "../infrastructure";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
@@ -7,7 +7,7 @@ import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { View } from "../model";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandler } from "../handler";
-import { IViewDomain, ViewIdentifier } from "../types";
+import { IMessage, IViewDomain, ViewIdentifier } from "../types";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomUUID } from "crypto";
@@ -65,7 +65,7 @@ describe("ViewDomain", () => {
     }
 
     store.save.mockImplementation(
-      async (view: View, causation: Message) =>
+      async (view: View, causation: IMessage) =>
         new View(
           {
             ...view.toJSON(),

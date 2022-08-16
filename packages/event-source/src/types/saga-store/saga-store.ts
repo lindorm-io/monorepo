@@ -1,7 +1,7 @@
 import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { ISaga, SagaIdentifier } from "../saga";
+import { ISaga, SagaIdentifier } from "../model";
 import { MongoSagaStoreHandlerOptions } from "./saga-store-mongo";
 import { Saga } from "../../model";
 

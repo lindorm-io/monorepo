@@ -160,6 +160,7 @@ export class Aggregate<S extends State = State> implements IAggregate {
 
       const eventHandler: AggregateEventHandler = find(this._eventHandlers, {
         eventName: event.name,
+        version: event.version,
       });
 
       if (!(eventHandler instanceof AggregateEventHandler)) {

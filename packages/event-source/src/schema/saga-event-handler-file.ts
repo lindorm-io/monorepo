@@ -24,6 +24,7 @@ export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandlerFile>().ke
       mongo: Joi.object<MongoSagaStoreHandlerOptions>().optional(),
     })
     .optional(),
+  version: Joi.number().optional(),
   getSagaId: Joi.function().required(),
   handler: Joi.function().required(),
 });

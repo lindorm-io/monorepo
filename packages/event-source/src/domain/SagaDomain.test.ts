@@ -1,5 +1,5 @@
-import { Command, DomainEvent, Message } from "../message";
-import { ISagaDomain, SagaIdentifier } from "../types";
+import { Command, DomainEvent } from "../message";
+import { IMessage, ISagaDomain, SagaIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
 import { Saga } from "../model";
 import { SagaDomain } from "./SagaDomain";
@@ -66,7 +66,7 @@ describe("SagaDomain", () => {
     }
 
     store.save.mockImplementation(
-      async (saga: Saga, causation: Message) =>
+      async (saga: Saga, causation: IMessage) =>
         new Saga(
           {
             ...saga.toJSON(),

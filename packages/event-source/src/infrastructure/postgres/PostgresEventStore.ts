@@ -63,6 +63,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             origin: event.origin,
             originator: event.originator,
             previous_event_id,
+            version: event.version,
             timestamp: event.timestamp,
           });
 
@@ -135,6 +136,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             data: event.data,
             origin: event.origin,
             originator: event.originator,
+            version: event.version,
             timestamp: event.timestamp,
           }),
         );
@@ -195,6 +197,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
             data: entity.data,
             origin: entity.origin,
             originator: entity.originator,
+            version: entity.version,
             timestamp: entity.timestamp,
           }),
         );

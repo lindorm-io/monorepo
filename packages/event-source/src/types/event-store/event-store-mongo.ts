@@ -4,6 +4,7 @@ export interface MongoEventAttributes {
   causationId: string;
   correlationId: string;
   data: Record<string, any>;
+  version: number;
   timestamp: Date;
 }
 

@@ -1,6 +1,6 @@
-import { AggregateEventHandler } from "../handler";
-import { Command, DomainEvent } from "../message";
-import { StandardIdentifier } from "./standard-identifier";
+import { AggregateEventHandler } from "../../handler";
+import { Command, DomainEvent } from "../../message";
+import { StandardIdentifier } from "../standard-identifier";
 
 export type AggregateIdentifier = StandardIdentifier;
 

@@ -1,15 +1,14 @@
-import { Data, State } from "./generic";
-import { DomainEvent } from "../message";
+import { Data, State } from "../generic";
+import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
-import { ViewStoreHandlerOptions } from "./view-store";
+import { ViewStoreHandlerOptions } from "../view-store";
 
 export type GetViewIdFunction = (event: DomainEvent) => string;
 
 export interface ViewEventHandlerContext<S extends State = State, D extends Data = Data> {
   event: DomainEvent<D>;
   logger: ILogger;
-
   addListItem(path: string, value: any): void;
   destroy(): void;
   getState(): S;
@@ -26,7 +25,8 @@ export interface ViewEventHandlerFile<S extends State = State, D extends Data = 
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   persistence: ViewStoreHandlerOptions;
-  getViewId?: GetViewIdFunction;
+  version?: number;
+  getViewId?(event: DomainEvent): string;
   handler(ctx: ViewEventHandlerContext<S, D>): Promise<void>;
 }
 
@@ -41,7 +41,8 @@ export interface IViewEventHandler<S extends State = State, D extends Data = Dat
   conditions: HandlerConditions;
   eventName: string;
   persistence: ViewStoreHandlerOptions;
+  version: number;
   view: HandlerIdentifier;
-  getViewId: GetViewIdFunction;
+  getViewId(event: DomainEvent): string;
   handler(ctx: ViewEventHandlerContext<S, D>): Promise<void>;
 }

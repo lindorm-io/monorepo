@@ -43,6 +43,9 @@ export class EventEntity {
   @Column("uuid", { nullable: true })
   public readonly previous_event_id: string | null;
 
+  @Column("integer")
+  public readonly version: number;
+
   // automatic
 
   @CreateDateColumn()

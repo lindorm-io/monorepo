@@ -2,8 +2,9 @@ import Joi from "joi";
 import { AggregateCommandHandlerFile } from "../../../../src";
 
 /**
- * Exporting handler with name [ main ]
+ * Exporting handler as [ main ]
  */
+
 export const main: AggregateCommandHandlerFile = {
   conditions: { created: false },
   schema: Joi.object()

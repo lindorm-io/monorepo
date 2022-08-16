@@ -1,4 +1,4 @@
-import { IDomainEventStore } from "./event-store";
+import { IDomainEventStore } from "../event-store";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 

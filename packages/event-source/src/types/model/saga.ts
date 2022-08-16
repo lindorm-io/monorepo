@@ -1,7 +1,7 @@
-import { Command, DomainEvent } from "../message";
-import { StandardIdentifier } from "./standard-identifier";
 import { AggregateIdentifier } from "./aggregate";
-import { State } from "./generic";
+import { Command, DomainEvent } from "../../message";
+import { StandardIdentifier } from "../standard-identifier";
+import { State } from "../generic";
 
 export type SagaIdentifier = StandardIdentifier;
 

@@ -16,6 +16,7 @@ export class AggregateCommandHandler<S extends State = State, D extends Data = D
   public readonly commandName: string;
   public readonly conditions: HandlerConditions;
   public readonly schema: Joi.Schema;
+  public readonly version: number;
   public readonly handler: (ctx: AggregateCommandHandlerContext<S, D>) => Promise<void>;
 
   public constructor(options: AggregateCommandHandlerOptions<S>) {
@@ -23,6 +24,7 @@ export class AggregateCommandHandler<S extends State = State, D extends Data = D
     this.commandName = options.commandName;
     this.conditions = options.conditions || {};
     this.schema = options.schema;
+    this.version = options.version || 1;
     this.handler = options.handler;
   }
 }

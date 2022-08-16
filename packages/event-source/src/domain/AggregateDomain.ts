@@ -45,7 +45,9 @@ export class AggregateDomain implements IAggregateDomain {
 
   public async registerCommandHandler(commandHandler: AggregateCommandHandler): Promise<void> {
     this.logger.debug("Registering command handler", {
-      name: commandHandler.commandName,
+      aggregate: commandHandler.aggregate,
+      commandName: commandHandler.commandName,
+      version: commandHandler.version,
     });
 
     if (!(commandHandler instanceof AggregateCommandHandler)) {
@@ -58,15 +60,25 @@ export class AggregateDomain implements IAggregateDomain {
     }
 
     const existingHandler = some(this.commandHandlers, {
+      commandName: commandHandler.commandName,
+      version: commandHandler.version,
       aggregate: {
         name: commandHandler.aggregate.name,
         context: commandHandler.aggregate.context,
       },
-      commandName: commandHandler.commandName,
     });
 
     if (existingHandler) {
-      throw new LindormError("Command handler already registered");
+      throw new LindormError("Command handler already registered", {
+        debug: {
+          commandName: commandHandler.commandName,
+          version: commandHandler.version,
+          aggregate: {
+            name: commandHandler.aggregate.name,
+            context: commandHandler.aggregate.context,
+          },
+        },
+      });
     }
 
     assertSnakeCase(commandHandler.aggregate.context);
@@ -82,15 +94,18 @@ export class AggregateDomain implements IAggregateDomain {
     });
 
     this.logger.verbose("Registered command handler", {
-      name: commandHandler.commandName,
+      commandName: commandHandler.commandName,
       aggregate: commandHandler.aggregate,
+      version: commandHandler.version,
       conditions: commandHandler.conditions,
     });
   }
 
   public async registerEventHandler(eventHandler: AggregateEventHandler): Promise<void> {
     this.logger.debug("Registering event handler", {
-      name: eventHandler.eventName,
+      aggregate: eventHandler.aggregate,
+      eventName: eventHandler.eventName,
+      version: eventHandler.version,
     });
 
     if (!(eventHandler instanceof AggregateEventHandler)) {
@@ -103,15 +118,26 @@ export class AggregateDomain implements IAggregateDomain {
     }
 
     const existingHandler = some(this.eventHandlers, {
+      eventName: eventHandler.eventName,
+      version: eventHandler.version,
       aggregate: {
         name: eventHandler.aggregate.name,
         context: eventHandler.aggregate.context,
       },
-      eventName: eventHandler.eventName,
     });
 
     if (existingHandler) {
-      throw new LindormError("Event handler already registered");
+      console.log(this.eventHandlers);
+      throw new LindormError("Event handler already registered", {
+        debug: {
+          eventName: eventHandler.eventName,
+          version: eventHandler.version,
+          aggregate: {
+            name: eventHandler.aggregate.name,
+            context: eventHandler.aggregate.context,
+          },
+        },
+      });
     }
 
     assertSnakeCase(eventHandler.aggregate.context);
@@ -121,15 +147,17 @@ export class AggregateDomain implements IAggregateDomain {
     this.eventHandlers.push(eventHandler);
 
     this.logger.debug("Event handler registered", {
-      name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
+      eventName: eventHandler.eventName,
+      version: eventHandler.version,
     });
   }
 
   public async removeCommandHandler(commandHandler: AggregateCommandHandler): Promise<void> {
     this.logger.debug("Removing command handler", {
-      name: commandHandler.commandName,
       aggregate: commandHandler.aggregate,
+      commandName: commandHandler.commandName,
+      version: commandHandler.version,
     });
 
     if (!(commandHandler instanceof AggregateCommandHandler)) {
@@ -147,6 +175,7 @@ export class AggregateDomain implements IAggregateDomain {
         context: commandHandler.aggregate.context,
       },
       commandName: commandHandler.commandName,
+      version: commandHandler.version,
     });
 
     await this.messageBus.unsubscribe({
@@ -155,16 +184,17 @@ export class AggregateDomain implements IAggregateDomain {
     });
 
     this.logger.verbose("Command handler removed", {
-      name: commandHandler.commandName,
       aggregate: commandHandler.aggregate,
-      conditions: commandHandler.conditions,
+      commandName: commandHandler.commandName,
+      version: commandHandler.version,
     });
   }
 
   public async removeEventHandler(eventHandler: AggregateEventHandler): Promise<void> {
     this.logger.debug("Removing event handler", {
-      name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
+      eventName: eventHandler.eventName,
+      version: eventHandler.version,
     });
 
     if (!(eventHandler instanceof AggregateEventHandler)) {
@@ -185,8 +215,9 @@ export class AggregateDomain implements IAggregateDomain {
     });
 
     this.logger.verbose("Event handler removed", {
-      name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
+      eventName: eventHandler.eventName,
+      version: eventHandler.version,
     });
   }
 
@@ -216,11 +247,12 @@ export class AggregateDomain implements IAggregateDomain {
     const conditionValidators = [];
 
     const commandHandler = find(this.commandHandlers, {
+      commandName: command.name,
+      version: command.version,
       aggregate: {
         name: command.aggregate.name,
         context: command.aggregate.context,
       },
-      commandName: command.name,
     });
 
     if (!(commandHandler instanceof AggregateCommandHandler)) {

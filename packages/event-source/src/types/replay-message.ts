@@ -1,4 +1,4 @@
-export interface ReplayEventData {
+export interface ReplayMessageData {
   error?: Error;
   publishEvents: {
     amount: number;

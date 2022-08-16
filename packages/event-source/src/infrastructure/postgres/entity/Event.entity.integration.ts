@@ -59,6 +59,7 @@ describe("EventEntity", () => {
         origin: "test",
         originator: null,
         previous_event_id: null,
+        version: 1,
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
@@ -75,6 +76,7 @@ describe("EventEntity", () => {
         originator: null,
         previous_event_id: null,
         timestamp: expect.any(Date),
+        version: 1,
       }),
     );
 
@@ -99,6 +101,7 @@ describe("EventEntity", () => {
         originator: null,
         previous_event_id: null,
         timestamp: expect.any(Date),
+        version: 1,
       }),
     ]);
   }, 10000);
@@ -130,6 +133,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id,
+          version: 1,
         });
 
         await repository.save({
@@ -145,6 +149,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id: saved.id,
+          version: 1,
         });
       }),
     ).resolves.not.toThrow();
@@ -170,6 +175,7 @@ describe("EventEntity", () => {
         originator: null,
         previous_event_id,
         timestamp: expect.any(Date),
+        version: 1,
       }),
       expect.objectContaining({
         id: id_2,
@@ -185,6 +191,7 @@ describe("EventEntity", () => {
         originator: null,
         previous_event_id: id_1,
         timestamp: expect.any(Date),
+        version: 1,
       }),
     ]);
   }, 10000);
@@ -216,6 +223,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id: null,
+          version: 1,
         });
 
         await repository.save({
@@ -231,6 +239,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id,
+          version: 1,
         });
       }),
     ).rejects.toThrow();
@@ -271,6 +280,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id,
+          version: 1,
         });
 
         await repository.save({
@@ -286,6 +296,7 @@ describe("EventEntity", () => {
           origin: "test",
           originator: null,
           previous_event_id,
+          version: 1,
         });
       }),
     ).rejects.toThrow();

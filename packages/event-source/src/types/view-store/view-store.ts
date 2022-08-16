@@ -2,7 +2,7 @@ import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IRedisConnection } from "@lindorm-io/redis";
-import { IView, ViewIdentifier } from "../view";
+import { IView, ViewIdentifier } from "../model";
 import { MongoViewStoreHandlerOptions } from "./view-store-mongo";
 import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
 import { RedisViewStoreHandlerOptions } from "./view-store-redis";

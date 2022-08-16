@@ -12,7 +12,7 @@ import {
   IDomainEventStore,
   IReplayDomain,
   ReplayDomainOptions,
-  ReplayEventData,
+  ReplayMessageData,
   ReplayOptions,
 } from "../types";
 
@@ -49,7 +49,7 @@ export class ReplayDomain implements IReplayDomain {
   }
 
   public async replay(options: ReplayOptions = {}): Promise<void> {
-    const data: ReplayEventData = {
+    const data: ReplayMessageData = {
       publishEvents: {
         amount: 0,
         contexts: options.aggregateContexts || [this.context],
@@ -63,7 +63,7 @@ export class ReplayDomain implements IReplayDomain {
     };
 
     await this.messageBus.publish(
-      new ReplayMessage<ReplayEventData>({
+      new ReplayMessage<ReplayMessageData>({
         name: ReplayEventName.START,
         aggregate: this.aggregate,
         data,
@@ -95,13 +95,13 @@ export class ReplayDomain implements IReplayDomain {
 
   // private
 
-  private async handleStart(event: ReplayMessage<ReplayEventData>): Promise<void> {
+  private async handleStart(event: ReplayMessage<ReplayMessageData>): Promise<void> {
     this.logger.debug("Handling event", { event });
 
     this.eventEmitter.emit(ReplayEventName.START);
 
     await this.messageBus.publish(
-      new ReplayMessage<ReplayEventData>(
+      new ReplayMessage<ReplayMessageData>(
         {
           name: ReplayEventName.PUBLISH_EVENTS,
           aggregate: event.aggregate,
@@ -114,7 +114,7 @@ export class ReplayDomain implements IReplayDomain {
     );
   }
 
-  private async handlePublishEvents(event: ReplayMessage<ReplayEventData>): Promise<void> {
+  private async handlePublishEvents(event: ReplayMessage<ReplayMessageData>): Promise<void> {
     this.logger.debug("Handling event", { event });
 
     const queriedEvents = await this.queryEvents(event);
@@ -122,7 +122,7 @@ export class ReplayDomain implements IReplayDomain {
 
     if (!filteredEvents.length) {
       return this.messageBus.publish(
-        new ReplayMessage<ReplayEventData>({
+        new ReplayMessage<ReplayMessageData>({
           name: ReplayEventName.STOP,
           aggregate: event.aggregate,
           data: event.data,
@@ -141,7 +141,7 @@ export class ReplayDomain implements IReplayDomain {
     this.logger.debug("Published events", { published });
 
     await this.messageBus.publish(
-      new ReplayMessage<ReplayEventData>({
+      new ReplayMessage<ReplayMessageData>({
         name: ReplayEventName.PUBLISH_EVENTS,
         aggregate: event.aggregate,
         data: {
@@ -159,7 +159,7 @@ export class ReplayDomain implements IReplayDomain {
     );
   }
 
-  private async handleStop(event: ReplayMessage<ReplayEventData>): Promise<void> {
+  private async handleStop(event: ReplayMessage<ReplayMessageData>): Promise<void> {
     this.logger.debug("Handling event", { event });
 
     this.eventEmitter.emit(ReplayEventName.STOP);
@@ -177,7 +177,7 @@ export class ReplayDomain implements IReplayDomain {
 
   // private helpers
 
-  private async queryEvents(event: ReplayMessage<ReplayEventData>): Promise<Array<DomainEvent>> {
+  private async queryEvents(event: ReplayMessage<ReplayMessageData>): Promise<Array<DomainEvent>> {
     return await this.eventStore.events(
       event.data.publishEvents.timestamp || new Date("1970-01-01T00:00:00T00:00:01.000Z"),
       25,
@@ -186,7 +186,7 @@ export class ReplayDomain implements IReplayDomain {
 
   private filterDomainEvents(
     events: Array<DomainEvent>,
-    replayEvent: ReplayMessage<ReplayEventData>,
+    replayEvent: ReplayMessage<ReplayMessageData>,
   ): Array<DomainEvent> {
     this.logger.debug("Filtering domain events", { events });
 

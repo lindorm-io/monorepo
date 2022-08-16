@@ -1,10 +1,9 @@
-import { Aggregate } from "../model";
-import { AggregateIdentifier } from "./aggregate";
-import { IAggregateCommandHandler } from "./aggregate-command-handler";
-import { IAggregateEventHandler } from "./aggregate-event-handler";
-import { IDomainEventStore } from "./event-store";
+import { Aggregate } from "../../model";
+import { AggregateIdentifier } from "../model";
+import { IAggregateCommandHandler, IAggregateEventHandler } from "../handler";
+import { IDomainEventStore } from "../event-store";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { State } from "./generic";
+import { State } from "../generic";
 
 export interface AggregateDomainOptions {
   messageBus: IMessageBus;

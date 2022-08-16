@@ -30,4 +30,5 @@ export const JOI_MESSAGE = Joi.object<IMessage>().keys({
       MessageType.TIMEOUT_MESSAGE,
     )
     .required(),
+  version: Joi.number().required(),
 });

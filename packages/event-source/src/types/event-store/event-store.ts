@@ -1,7 +1,7 @@
 import { Aggregate } from "../../model";
-import { AggregateIdentifier, IAggregate } from "../aggregate";
+import { AggregateIdentifier, IAggregate } from "../model";
 import { Command, DomainEvent } from "../../message";
-import { IAggregateEventHandler } from "../aggregate-event-handler";
+import { IAggregateEventHandler } from "../handler";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 
