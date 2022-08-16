@@ -24,6 +24,7 @@ import {
   TEST_DOMAIN_EVENT_MERGE_STATE,
   TEST_DOMAIN_EVENT_SET_STATE,
 } from "../fixtures/domain-event.fixture";
+import { MessageBusType, SagaStoreType } from "../enum";
 
 describe("SagaDomain", () => {
   const logger = createMockLogger();
@@ -57,8 +58,8 @@ describe("SagaDomain", () => {
       logger,
     );
 
-    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
-    store = new SagaStore({ mongo, type: "mongo" }, logger);
+    messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
+    store = new SagaStore({ mongo, type: SagaStoreType.MONGO }, logger);
     domain = new SagaDomain({ messageBus, store }, logger);
 
     eventHandlers = [

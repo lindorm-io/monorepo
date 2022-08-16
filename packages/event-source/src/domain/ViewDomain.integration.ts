@@ -9,10 +9,11 @@ import { ViewEventHandler } from "../handler";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
+import { MessageBusType } from "../enum";
 import {
   TEST_VIEW_EVENT_HANDLER,
-  TEST_VIEW_EVENT_HANDLER_CREATE,
   TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
+  TEST_VIEW_EVENT_HANDLER_CREATE,
   TEST_VIEW_EVENT_HANDLER_DESTROY,
   TEST_VIEW_EVENT_HANDLER_SET_STATE,
 } from "../fixtures/view-event-handler.fixture";
@@ -56,7 +57,7 @@ describe("ViewDomain", () => {
       logger,
     );
 
-    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
+    messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
     store = new ViewStore({ mongo }, logger);
     domain = new ViewDomain({ messageBus, store }, logger);
 

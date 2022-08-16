@@ -16,6 +16,7 @@ import {
   SagaEventHandler,
   ViewEventHandler,
 } from "../handler";
+import { EventStoreType, ViewStoreType } from "../enum";
 
 describe("App", () => {
   const logger = createMockLogger();
@@ -83,7 +84,7 @@ describe("App", () => {
         redis,
         domain: { context: "default" },
         dangerouslyRegisterHandlersManually: true,
-        aggregates: { persistence: "postgres" },
+        aggregates: { persistence: EventStoreType.POSTGRES },
       },
       logger,
     );
@@ -209,7 +210,7 @@ describe("App", () => {
         aggregate: { name: "greeting", context: "default" },
         view: { name: "saved_greetings", context: "default" },
         conditions: { created: false },
-        persistence: { type: "mongo" },
+        persistence: { type: ViewStoreType.MONGO },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.initial);
@@ -220,7 +221,7 @@ describe("App", () => {
         aggregate: { name: "greeting", context: "default" },
         view: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
-        persistence: { type: "mongo" },
+        persistence: { type: ViewStoreType.MONGO },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.greeting);
@@ -231,7 +232,7 @@ describe("App", () => {
         aggregate: { name: "response", context: "default" },
         view: { name: "saved_greetings", context: "default" },
         conditions: { created: true },
-        persistence: { type: "mongo" },
+        persistence: { type: ViewStoreType.MONGO },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.respond);
@@ -246,7 +247,7 @@ describe("App", () => {
         view: { name: "stored_greetings", context: "default" },
         conditions: { created: false },
         persistence: {
-          type: "postgres",
+          type: ViewStoreType.POSTGRES,
           postgres: { viewEntity: ViewEntity, causationEntity: ViewCausationEntity },
         },
         getViewId: (event) => event.aggregate.id,
@@ -260,7 +261,7 @@ describe("App", () => {
         view: { name: "stored_greetings", context: "default" },
         conditions: { created: true },
         persistence: {
-          type: "postgres",
+          type: ViewStoreType.POSTGRES,
           postgres: { viewEntity: ViewEntity, causationEntity: ViewCausationEntity },
         },
         getViewId: (event) => event.aggregate.id,
@@ -274,7 +275,7 @@ describe("App", () => {
         view: { name: "stored_greetings", context: "default" },
         conditions: { created: true },
         persistence: {
-          type: "postgres",
+          type: ViewStoreType.POSTGRES,
           postgres: { viewEntity: ViewEntity, causationEntity: ViewCausationEntity },
         },
         getViewId: (event) => event.aggregate.id,
@@ -290,7 +291,7 @@ describe("App", () => {
         aggregate: { name: "greeting", context: "default" },
         view: { name: "cached_greetings", context: "default" },
         conditions: { created: false },
-        persistence: { type: "redis" },
+        persistence: { type: ViewStoreType.REDIS },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.initial);
@@ -301,7 +302,7 @@ describe("App", () => {
         aggregate: { name: "greeting", context: "default" },
         view: { name: "cached_greetings", context: "default" },
         conditions: { created: true },
-        persistence: { type: "redis" },
+        persistence: { type: ViewStoreType.REDIS },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.greeting);
@@ -312,7 +313,7 @@ describe("App", () => {
         aggregate: { name: "response", context: "default" },
         view: { name: "cached_greetings", context: "default" },
         conditions: { created: true },
-        persistence: { type: "redis" },
+        persistence: { type: ViewStoreType.REDIS },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.addListItem("messages", ctx.event.data.respond);

@@ -11,10 +11,11 @@ import {
   TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_SET_STATE,
 } from "../../fixtures/domain-event.fixture";
+import { ViewStoreType } from "../../enum";
 
 describe("MongoViewStore", () => {
   const logger = createMockLogger();
-  const handlerOptions: ViewStoreHandlerOptions = { type: "mongo" };
+  const handlerOptions: ViewStoreHandlerOptions = { type: ViewStoreType.MONGO };
 
   let aggregate: AggregateIdentifier;
   let connection: MongoConnection;

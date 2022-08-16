@@ -12,13 +12,14 @@ import {
   TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_SET_STATE,
 } from "../../fixtures/domain-event.fixture";
+import { ViewStoreType } from "../../enum";
 
 describe("PostgresViewStore", () => {
   const logger = createMockLogger();
   const { ViewEntity, ViewCausationEntity } = createViewEntities("ViewCausationEntity");
 
   const handlerOptions: ViewStoreHandlerOptions = {
-    type: "postgres",
+    type: ViewStoreType.POSTGRES,
     postgres: {
       viewEntity: ViewEntity,
       causationEntity: ViewCausationEntity,

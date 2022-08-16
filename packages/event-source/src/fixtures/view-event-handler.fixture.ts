@@ -2,15 +2,16 @@ import { TEST_AGGREGATE_IDENTIFIER } from "./aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "./view.fixture";
 import { ViewEventHandler } from "../handler";
 import { ViewEventHandlerOptions } from "../types";
+import { ViewStoreType } from "../enum";
 import {
-  TEST_DOMAIN_EVENT_ADD_FIELD,
   TEST_DOMAIN_EVENT,
+  TEST_DOMAIN_EVENT_ADD_FIELD,
+  TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_DESTROY,
   TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL,
   TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH,
   TEST_DOMAIN_EVENT_SET_STATE,
   TEST_DOMAIN_EVENT_THROWS,
-  TEST_DOMAIN_EVENT_CREATE,
 } from "./domain-event.fixture";
 
 export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
@@ -25,7 +26,7 @@ export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
   eventName: TEST_DOMAIN_EVENT.name,
 
   conditions: { created: true },
-  persistence: { type: "mongo" },
+  persistence: { type: ViewStoreType.MONGO },
   getViewId: (event) => event.aggregate.id,
   handler: jest.fn().mockImplementation(async () => {}),
 };

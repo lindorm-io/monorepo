@@ -17,17 +17,18 @@ import {
 import {
   TEST_AGGREGATE_COMMAND_HANDLER,
   TEST_AGGREGATE_COMMAND_HANDLER_CREATE,
-  TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
   TEST_AGGREGATE_COMMAND_HANDLER_DESTROY,
   TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT,
+  TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE,
 } from "../fixtures/aggregate-command-handler.fixture";
 import {
   TEST_AGGREGATE_EVENT_HANDLER,
   TEST_AGGREGATE_EVENT_HANDLER_CREATE,
-  TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
   TEST_AGGREGATE_EVENT_HANDLER_DESTROY,
   TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
+  TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
 } from "../fixtures/aggregate-event-handler.fixture";
+import { EventStoreType, MessageBusType } from "../enum";
 
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
@@ -62,8 +63,8 @@ describe("AggregateDomain", () => {
       logger,
     );
 
-    messageBus = new MessageBus({ amqp, type: "amqp" }, logger);
-    store = new EventStore({ mongo, type: "mongo" }, logger);
+    messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
+    store = new EventStore({ mongo, type: EventStoreType.MONGO }, logger);
     domain = new AggregateDomain({ messageBus, store }, logger);
 
     commandHandlers = [

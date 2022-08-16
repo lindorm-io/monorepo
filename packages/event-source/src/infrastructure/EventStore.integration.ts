@@ -17,6 +17,7 @@ import {
   TEST_AGGREGATE_EVENT_HANDLER_SET_STATE,
   TEST_AGGREGATE_EVENT_HANDLER_THROWS,
 } from "../fixtures/aggregate-event-handler.fixture";
+import { EventStoreType } from "../enum";
 
 describe("EventStore", () => {
   const logger = createMockLogger();
@@ -46,7 +47,7 @@ describe("EventStore", () => {
       logger,
     );
 
-    store = new EventStore({ mongo: connection, type: "mongo" }, logger);
+    store = new EventStore({ mongo: connection, type: EventStoreType.MONGO }, logger);
 
     await connection.connect();
   }, 10000);

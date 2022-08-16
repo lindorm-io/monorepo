@@ -11,10 +11,11 @@ import {
   TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_SET_STATE,
 } from "../../fixtures/domain-event.fixture";
+import { ViewStoreType } from "../../enum";
 
 describe("RedisViewStore", () => {
   const logger = createMockLogger();
-  const handlerOptions: ViewStoreHandlerOptions = { type: "redis" };
+  const handlerOptions: ViewStoreHandlerOptions = { type: ViewStoreType.REDIS };
 
   let aggregate: AggregateIdentifier;
   let connection: RedisConnection;
