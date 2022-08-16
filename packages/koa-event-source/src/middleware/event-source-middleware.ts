@@ -13,7 +13,12 @@ export const eventSourceMiddleware =
 
     ctx.eventSource = {
       publish: (options) =>
-        app.publish({ correlationId: ctx.metadata.identifiers.correlationId, ...options }),
+        app.publish({
+          correlationId: ctx.metadata.identifiers.correlationId,
+          origin: ctx.token?.bearerToken?.subject ? "identity" : "koa",
+          originator: ctx.token?.bearerToken?.subject || undefined,
+          ...options,
+        }),
       admin: app.admin,
       repositories: app.repositories,
     };
