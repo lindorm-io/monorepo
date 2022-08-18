@@ -5,13 +5,13 @@ import { IAggregateEventHandler } from "../handler";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 
-export type EventStorePersistence = "custom" | "mongo" | "postgres";
+export type EventStorePersistenceType = "custom" | "mongo" | "postgres";
 
 export interface EventStoreOptions {
   custom?: IEventStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-  type: EventStorePersistence;
+  type: EventStorePersistenceType;
 }
 
 export interface EventStoreSaveOptions {

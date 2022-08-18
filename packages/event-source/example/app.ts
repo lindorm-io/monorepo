@@ -71,10 +71,10 @@ const main = async (): Promise<void> => {
         directory: join(__dirname),
       },
       aggregates: {
-        persistence: "postgres",
+        type: "postgres",
       },
       sagas: {
-        persistence: "postgres",
+        type: "postgres",
       },
     },
     logger,

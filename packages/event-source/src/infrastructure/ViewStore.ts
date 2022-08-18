@@ -12,6 +12,7 @@ import {
   ViewIdentifier,
   ViewStoreHandlerOptions,
   ViewStoreOptions,
+  ViewStorePersistenceType,
 } from "../types";
 
 export class ViewStore implements IViewStore {
@@ -19,6 +20,7 @@ export class ViewStore implements IViewStore {
   private readonly mongo: IViewStore;
   private readonly postgres: IViewStore;
   private readonly redis: IViewStore;
+  private readonly type: ViewStorePersistenceType | undefined;
 
   public constructor(options: ViewStoreOptions, logger: ILogger) {
     if (options.custom) {
@@ -33,6 +35,8 @@ export class ViewStore implements IViewStore {
     if (options.redis) {
       this.redis = new RedisViewStore(options.redis, logger);
     }
+
+    this.type = options.type;
   }
 
   // public
@@ -42,7 +46,9 @@ export class ViewStore implements IViewStore {
     causation: IMessage,
     handlerOptions: ViewStoreHandlerOptions,
   ): Promise<View> {
-    switch (handlerOptions.type) {
+    const type = handlerOptions.type || this.type;
+
+    switch (type) {
       case ViewStoreType.CUSTOM:
         if (!this.custom) throw new Error("Connection not provided");
         return this.custom.save(view, causation, handlerOptions);
@@ -65,7 +71,9 @@ export class ViewStore implements IViewStore {
   }
 
   public load(identifier: ViewIdentifier, handlerOptions: ViewStoreHandlerOptions): Promise<View> {
-    switch (handlerOptions.type) {
+    const type = handlerOptions.type || this.type;
+
+    switch (type) {
       case ViewStoreType.CUSTOM:
         if (!this.custom) throw new Error("Connection not provided");
         return this.custom.load(identifier, handlerOptions);

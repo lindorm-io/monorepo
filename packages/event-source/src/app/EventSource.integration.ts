@@ -84,7 +84,7 @@ describe("App", () => {
         redis,
         domain: { context: "default" },
         dangerouslyRegisterHandlersManually: true,
-        aggregates: { persistence: EventStoreType.POSTGRES },
+        aggregates: { type: EventStoreType.POSTGRES },
       },
       logger,
     );

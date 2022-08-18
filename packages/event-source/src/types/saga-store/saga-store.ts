@@ -5,13 +5,13 @@ import { ISaga, SagaIdentifier } from "../model";
 import { MongoSagaStoreHandlerOptions } from "./saga-store-mongo";
 import { Saga } from "../../model";
 
-export type SagaStorePersistence = "custom" | "mongo" | "postgres";
+export type SagaStorePersistenceType = "custom" | "mongo" | "postgres";
 
 export interface SagaStoreOptions {
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   custom?: ISagaStore;
-  type: SagaStorePersistence;
+  type: SagaStorePersistenceType;
 }
 
 export interface SagaStoreHandlerOptions {

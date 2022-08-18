@@ -117,7 +117,7 @@ export class EventSource implements IEventSource {
           include: [/.*/],
           exclude: [],
           extensions: [".js", ".ts"],
-          persistence: EventStoreType.MONGO,
+          type: EventStoreType.MONGO,
         },
         sagas: {
           directory: options.domain?.directory
@@ -126,7 +126,7 @@ export class EventSource implements IEventSource {
           include: [/.*/],
           exclude: [],
           extensions: [".js", ".ts"],
-          persistence: SagaStoreType.MONGO,
+          type: SagaStoreType.MONGO,
         },
         views: {
           directory: options.domain?.directory
@@ -137,7 +137,7 @@ export class EventSource implements IEventSource {
           extensions: [".js", ".ts"],
         },
         messageBus: {
-          queue: MessageBusType.AMQP,
+          type: MessageBusType.AMQP,
         },
         require: require,
       },
@@ -154,7 +154,7 @@ export class EventSource implements IEventSource {
         custom: options.custom?.eventStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.aggregates.persistence,
+        type: this.options.aggregates.type,
       },
       this.logger,
     );
@@ -164,7 +164,7 @@ export class EventSource implements IEventSource {
         custom: options.custom?.sagaStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.sagas.persistence,
+        type: this.options.sagas.type,
       },
       this.logger,
     );
@@ -175,6 +175,7 @@ export class EventSource implements IEventSource {
         mongo: this.mongo,
         postgres: this.postgres,
         redis: this.redis,
+        type: this.options.views.type,
       },
       this.logger,
     );
@@ -182,7 +183,8 @@ export class EventSource implements IEventSource {
     this.messageBus = new MessageBus(
       {
         amqp: this.amqp,
-        type: this.options.messageBus?.queue,
+        custom: options.custom?.messageBus,
+        type: this.options.messageBus?.type,
       },
       this.logger,
     );

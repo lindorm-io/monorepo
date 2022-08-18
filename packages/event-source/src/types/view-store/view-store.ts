@@ -8,13 +8,14 @@ import { PostgresViewStoreHandlerOptions } from "./view-store-postgres";
 import { RedisViewStoreHandlerOptions } from "./view-store-redis";
 import { View } from "../../model";
 
-export type ViewStorePersistence = "custom" | "mongo" | "postgres" | "redis";
+export type ViewStorePersistenceType = "custom" | "mongo" | "postgres" | "redis";
 
 export interface ViewStoreOptions {
   custom?: IViewStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   redis?: IRedisConnection;
+  type?: ViewStorePersistenceType;
 }
 
 export interface ViewStoreHandlerOptions {
@@ -22,7 +23,7 @@ export interface ViewStoreHandlerOptions {
   mongo?: MongoViewStoreHandlerOptions;
   postgres?: PostgresViewStoreHandlerOptions;
   redis?: RedisViewStoreHandlerOptions;
-  type: ViewStorePersistence;
+  type?: ViewStorePersistenceType;
 }
 
 export interface IViewStore {
