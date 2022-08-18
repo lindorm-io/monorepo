@@ -70,7 +70,7 @@ describe("ViewDomain", () => {
           {
             ...view.toJSON(),
             revision: view.revision + 1,
-            causationList: [...view.causationList, causation.id],
+            processedCausationIds: [...view.processedCausationIds, causation.id],
           },
           logger,
         ),
@@ -165,7 +165,7 @@ describe("ViewDomain", () => {
         id: event.aggregate.id,
         name: "view_name",
         context: "default",
-        causationList: [],
+        processedCausationIds: [],
         destroyed: false,
         meta: { created: { removed: false, timestamp: expect.any(Date), value: true } },
         revision: 0,
@@ -186,7 +186,7 @@ describe("ViewDomain", () => {
           {
             ...v,
             revision: 1,
-            causationList: [event.id],
+            processedCausationIds: [event.id],
           },
           logger,
         ),

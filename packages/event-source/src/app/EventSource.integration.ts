@@ -364,7 +364,7 @@ describe("App", () => {
         id: id,
         name: "log_greeting",
         context: "default",
-        causationList: [expect.any(String), expect.any(String), expect.any(String)],
+        processedCausationIds: [expect.any(String), expect.any(String), expect.any(String)],
         destroyed: false,
         messagesToDispatch: [],
         revision: 5,

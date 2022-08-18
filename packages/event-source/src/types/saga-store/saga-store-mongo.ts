@@ -5,7 +5,7 @@ export interface MongoSagaStoreAttributes {
   name: string;
   context: string;
 
-  causation_list: Array<string>;
+  processed_causation_ids: Array<string>;
   destroyed: boolean;
   messages_to_dispatch: Array<Command>;
   revision: number;

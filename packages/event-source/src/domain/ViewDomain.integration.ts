@@ -106,7 +106,12 @@ describe("ViewDomain", () => {
         id: aggregate.id,
         name: "view_name",
         context: "default",
-        causationList: [eventCreate.id, eventAddField.id, eventSetState.id, eventDestroy.id],
+        processedCausationIds: [
+          eventCreate.id,
+          eventAddField.id,
+          eventSetState.id,
+          eventDestroy.id,
+        ],
         destroyed: true,
         meta: {
           created: {

@@ -248,14 +248,14 @@ export class SagaDomain implements ISagaDomain {
       id: saga.id,
       name: saga.name,
       context: saga.context,
-      causationList: saga.causationList,
+      processedCausationIds: saga.processedCausationIds,
       messagesToDispatch: saga.messagesToDispatch,
       revision: saga.revision,
       state: saga.state,
     });
 
     const lastCausationMatchesEventId = findLast(
-      saga.causationList,
+      saga.processedCausationIds,
       (causationId) => causationId === event.id,
     );
 
@@ -269,7 +269,7 @@ export class SagaDomain implements ISagaDomain {
           id: savedSaga.id,
           name: savedSaga.name,
           context: savedSaga.context,
-          causationList: savedSaga.causationList,
+          processedCausationIds: savedSaga.processedCausationIds,
           messagesToDispatch: savedSaga.messagesToDispatch,
           revision: savedSaga.revision,
           state: savedSaga.state,
@@ -281,7 +281,7 @@ export class SagaDomain implements ISagaDomain {
           id: saga.id,
           name: saga.name,
           context: saga.context,
-          causationList: saga.causationList,
+          processedCausationIds: saga.processedCausationIds,
           messagesToDispatch: saga.messagesToDispatch,
           revision: saga.revision,
           state: saga.state,

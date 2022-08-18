@@ -19,7 +19,7 @@ export class Saga<S extends State = State> implements ISaga {
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _causationList: Array<string>;
+  private readonly _processedCausationIds: Array<string>;
   private readonly _messagesToDispatch: Array<Command | TimeoutMessage>;
   private readonly _revision: number;
   private readonly _state: S;
@@ -37,7 +37,7 @@ export class Saga<S extends State = State> implements ISaga {
     this.name = options.name;
     this.context = options.context;
 
-    this._causationList = options.causationList || [];
+    this._processedCausationIds = options.processedCausationIds || [];
     this._destroyed = options.destroyed || false;
     this._messagesToDispatch = options.messagesToDispatch || [];
     this._revision = options.revision || 0;
@@ -46,10 +46,10 @@ export class Saga<S extends State = State> implements ISaga {
 
   // public properties
 
-  public get causationList(): Array<string> {
-    return this._causationList;
+  public get processedCausationIds(): Array<string> {
+    return this._processedCausationIds;
   }
-  public set causationList(_) {
+  public set processedCausationIds(_) {
     throw new IllegalEntityChangeError();
   }
 
@@ -88,7 +88,7 @@ export class Saga<S extends State = State> implements ISaga {
       id: this.id,
       name: this.name,
       context: this.context,
-      causationList: cloneDeep(this.causationList),
+      processedCausationIds: cloneDeep(this.processedCausationIds),
       destroyed: this.destroyed,
       messagesToDispatch: cloneDeep(this.messagesToDispatch),
       revision: this.revision,

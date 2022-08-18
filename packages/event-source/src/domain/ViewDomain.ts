@@ -251,7 +251,7 @@ export class ViewDomain implements IViewDomain {
     );
 
     const lastCausationMatchesEventId = findLast(
-      view.causationList,
+      view.processedCausationIds,
       (causationId) => causationId === event.id,
     );
 

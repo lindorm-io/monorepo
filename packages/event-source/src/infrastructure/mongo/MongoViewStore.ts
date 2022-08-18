@@ -43,7 +43,7 @@ export class MongoViewStore implements IViewStore {
           id: 1,
           name: 1,
           context: 1,
-          causation_list: 1,
+          processed_causation_ids: 1,
         },
         createIndexesOptions: {
           name: "unique_causation",
@@ -104,7 +104,7 @@ export class MongoViewStore implements IViewStore {
         context: json.context,
       },
       {
-        causation_list: { $in: [causation.id] },
+        processed_causation_ids: { $in: [causation.id] },
       },
     );
 
@@ -189,7 +189,7 @@ export class MongoViewStore implements IViewStore {
       id: 1,
       name: 1,
       context: 1,
-      causation_list: 1,
+      processed_causation_ids: 1,
       destroyed: 1,
       meta: 1,
       revision: 1,
@@ -220,7 +220,7 @@ export class MongoViewStore implements IViewStore {
           id: result.id,
           name: result.name,
           context: result.context,
-          causationList: result.causation_list,
+          processedCausationIds: result.processed_causation_ids,
           destroyed: result.destroyed,
           meta: result.meta,
           revision: result.revision,
@@ -252,7 +252,7 @@ export class MongoViewStore implements IViewStore {
         id: view.id,
         name: view.name,
         context: view.context,
-        causation_list: [causation.id],
+        processed_causation_ids: [causation.id],
         destroyed: view.destroyed,
         meta: view.meta,
         revision: view.revision + 1,
@@ -266,7 +266,7 @@ export class MongoViewStore implements IViewStore {
       return new View(
         {
           ...view,
-          causationList: [causation.id],
+          processedCausationIds: [causation.id],
           revision: view.revision + 1,
         },
         this.logger,
@@ -311,7 +311,7 @@ export class MongoViewStore implements IViewStore {
             updated_at: new Date(),
           },
           $push: {
-            causation_list: (handlerOptions.mongo?.causationsCap &&
+            processed_causation_ids: (handlerOptions.mongo?.causationsCap &&
             handlerOptions.mongo?.causationsCap > 0
               ? { $each: [causation.id], $slice: handlerOptions.mongo.causationsCap * -1 }
               : causation.id) as never,
@@ -328,10 +328,12 @@ export class MongoViewStore implements IViewStore {
       return new View(
         {
           ...view,
-          causationList:
+          processedCausationIds:
             handlerOptions.mongo?.causationsCap && handlerOptions.mongo?.causationsCap > 0
-              ? [...view.causationList, causation.id].slice(handlerOptions.mongo.causationsCap * -1)
-              : [...view.causationList, causation.id],
+              ? [...view.processedCausationIds, causation.id].slice(
+                  handlerOptions.mongo.causationsCap * -1,
+                )
+              : [...view.processedCausationIds, causation.id],
           revision: view.revision + 1,
         },
         this.logger,

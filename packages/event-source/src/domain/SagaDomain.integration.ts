@@ -109,7 +109,12 @@ describe("SagaDomain", () => {
         id: aggregate.id,
         name: "saga_name",
         context: "default",
-        causationList: [eventCreate.id, eventMergeState.id, eventSetState.id, eventDestroy.id],
+        processedCausationIds: [
+          eventCreate.id,
+          eventMergeState.id,
+          eventSetState.id,
+          eventDestroy.id,
+        ],
         destroyed: true,
         messagesToDispatch: [],
         revision: 4,

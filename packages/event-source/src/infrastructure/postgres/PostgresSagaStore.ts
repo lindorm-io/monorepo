@@ -45,7 +45,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       { where: { causation_id: causation.id } },
     );
 
-    if (existing && find(existing.causationList, causation.id)) {
+    if (existing && find(existing.processedCausationIds, causation.id)) {
       this.logger.debug("Found existing saga matching causation", { saga: existing.toJSON() });
 
       return existing;
@@ -141,9 +141,9 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       this.logger.debug("Found causation entities", { causationEntities });
 
-      const causationList: Array<string> = [];
+      const processedCausationIds: Array<string> = [];
       for (const entity of causationEntities) {
-        causationList.push(entity.causation_id);
+        processedCausationIds.push(entity.causation_id);
       }
 
       return new Saga(
@@ -151,7 +151,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           id: sagaEntity.id,
           name: sagaEntity.name,
           context: sagaEntity.context,
-          causationList,
+          processedCausationIds,
           destroyed: sagaEntity.destroyed,
           messagesToDispatch: sagaEntity.messages_to_dispatch,
           revision: sagaEntity.revision,
@@ -205,7 +205,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         return new Saga(
           {
             ...saga,
-            causationList: [causation.id],
+            processedCausationIds: [causation.id],
             revision: savedSaga.revision,
           },
           this.logger,
@@ -262,7 +262,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         return new Saga(
           {
             ...saga,
-            causationList: [...saga.causationList, causation.id],
+            processedCausationIds: [...saga.processedCausationIds, causation.id],
             revision: saga.revision + 1,
           },
           this.logger,

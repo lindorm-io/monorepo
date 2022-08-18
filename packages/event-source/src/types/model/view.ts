@@ -5,7 +5,7 @@ import { State } from "../generic";
 export type ViewIdentifier = StandardIdentifier;
 
 export interface ViewData<S extends State = State> extends ViewIdentifier {
-  causationList: Array<string>;
+  processedCausationIds: Array<string>;
   destroyed: boolean;
   meta: Record<string, any>;
   revision: number;
@@ -13,7 +13,7 @@ export interface ViewData<S extends State = State> extends ViewIdentifier {
 }
 
 export interface ViewOptions<S extends State = State> extends ViewIdentifier {
-  causationList?: Array<string>;
+  processedCausationIds?: Array<string>;
   destroyed?: boolean;
   meta?: Record<string, any>;
   revision?: number;

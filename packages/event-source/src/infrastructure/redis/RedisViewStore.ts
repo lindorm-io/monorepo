@@ -42,7 +42,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
 
     const existing = await this.find(json);
 
-    if (existing && find(existing.causationList, causation.id)) {
+    if (existing && find(existing.processedCausationIds, causation.id)) {
       this.logger.debug("Found existing view matching causation", { view: existing.toJSON() });
 
       return existing;
@@ -105,7 +105,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
           id: result.id,
           name: result.name,
           context: result.context,
-          causationList: result.causation_list,
+          processedCausationIds: result.processed_causation_ids,
           destroyed: result.destroyed,
           meta: result.meta,
           revision: result.revision,
@@ -139,7 +139,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         id: view.id,
         name: view.name,
         context: view.context,
-        causation_list: [causation.id],
+        processed_causation_ids: [causation.id],
         destroyed: view.destroyed,
         meta: view.meta,
         revision: view.revision + 1,
@@ -166,7 +166,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
       return new View(
         {
           ...view,
-          causationList: [causation.id],
+          processedCausationIds: [causation.id],
           revision: view.revision + 1,
         },
         this.logger,
@@ -192,10 +192,12 @@ export class RedisViewStore extends RedisBase implements IViewStore {
     });
 
     const attributes = await this.findVerifiedView(view);
-    const causationList =
+    const processedCausationIds =
       handlerOptions.redis?.causationsCap && handlerOptions.redis?.causationsCap > 0
-        ? [...view.causationList, causation.id].slice(handlerOptions.redis.causationsCap * -1)
-        : [...view.causationList, causation.id];
+        ? [...view.processedCausationIds, causation.id].slice(
+            handlerOptions.redis.causationsCap * -1,
+          )
+        : [...view.processedCausationIds, causation.id];
 
     try {
       const key = RedisViewStore.getKey(view);
@@ -203,7 +205,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         id: view.id,
         name: view.name,
         context: view.context,
-        causation_list: causationList,
+        processed_causation_ids: processedCausationIds,
         destroyed: view.destroyed,
         meta: view.meta,
         revision: view.revision + 1,
@@ -232,7 +234,7 @@ export class RedisViewStore extends RedisBase implements IViewStore {
       return new View(
         {
           ...view,
-          causationList,
+          processedCausationIds,
           revision: view.revision + 1,
         },
         this.logger,
@@ -261,14 +263,14 @@ export class RedisViewStore extends RedisBase implements IViewStore {
         throw new ViewNotUpdatedError("Incorrect document revision");
       }
 
-      const diff = difference(view.causationList, attributes.causation_list);
+      const diff = difference(view.processedCausationIds, attributes.processed_causation_ids);
 
       if (diff.length) {
         throw new ViewNotUpdatedError("Incorrect causation list");
       }
 
       this.logger.debug("Asserted view revision", {
-        causationList: view.causationList,
+        processedCausationIds: view.processedCausationIds,
         diff,
         key,
         revision: view.revision,

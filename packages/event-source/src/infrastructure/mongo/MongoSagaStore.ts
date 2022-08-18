@@ -37,7 +37,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
               id: 1,
               name: 1,
               context: 1,
-              causation_list: 1,
+              processed_causation_ids: 1,
             },
             createIndexesOptions: {
               name: "unique_causation",
@@ -84,7 +84,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
         context: json.context,
       },
       {
-        causation_list: { $in: [causation.id] },
+        processed_causation_ids: { $in: [causation.id] },
       },
     );
 
@@ -142,7 +142,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
       id: 1,
       name: 1,
       context: 1,
-      causation_list: 1,
+      processed_causation_ids: 1,
       destroyed: 1,
       messages_to_dispatch: 1,
       revision: 1,
@@ -173,7 +173,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
           id: result.id,
           name: result.name,
           context: result.context,
-          causationList: result.causation_list,
+          processedCausationIds: result.processed_causation_ids,
           destroyed: result.destroyed,
           messagesToDispatch: result.messages_to_dispatch,
           revision: result.revision,
@@ -206,7 +206,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
         id: saga.id,
         name: saga.name,
         context: saga.context,
-        causation_list: [causation.id],
+        processed_causation_ids: [causation.id],
         destroyed: saga.destroyed,
         messages_to_dispatch: saga.messagesToDispatch,
         revision: saga.revision + 1,
@@ -220,7 +220,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
       return new Saga(
         {
           ...saga,
-          causationList: [causation.id],
+          processedCausationIds: [causation.id],
           revision: saga.revision + 1,
         },
         this.logger,
@@ -266,7 +266,7 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
             updated_at: new Date(),
           },
           $push: {
-            causation_list: (handlerOptions?.mongo?.causationsCap &&
+            processed_causation_ids: (handlerOptions?.mongo?.causationsCap &&
             handlerOptions?.mongo?.causationsCap > 0
               ? { $each: [causation.id], $slice: handlerOptions.mongo.causationsCap * -1 }
               : causation.id) as never,
@@ -283,10 +283,12 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
       return new Saga(
         {
           ...saga,
-          causationList:
+          processedCausationIds:
             handlerOptions?.mongo?.causationsCap && handlerOptions?.mongo?.causationsCap > 0
-              ? [...saga.causationList, causation.id].slice(handlerOptions.mongo.causationsCap * -1)
-              : [...saga.causationList, causation.id],
+              ? [...saga.processedCausationIds, causation.id].slice(
+                  handlerOptions.mongo.causationsCap * -1,
+                )
+              : [...saga.processedCausationIds, causation.id],
           revision: saga.revision + 1,
         },
         this.logger,

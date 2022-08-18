@@ -11,13 +11,6 @@ import { LindormError } from "@lindorm-io/errors";
 import { isArray, merge, snakeCase } from "lodash";
 import { join } from "path";
 import {
-  assertSchema,
-  defaultAggregateCommandHandlerSchema,
-  defaultSagaIdFunction,
-  defaultViewIdFunction,
-  StructureScanner,
-} from "../util";
-import {
   AggregateCommandHandler,
   AggregateEventHandler,
   SagaEventHandler,
@@ -67,6 +60,13 @@ import {
   State,
   ViewEventHandlerFile,
 } from "../types";
+import {
+  StructureScanner,
+  assertSchema,
+  defaultAggregateCommandHandlerSchema,
+  defaultSagaIdFunction,
+  defaultViewIdFunction,
+} from "../util";
 
 export class EventSource implements IEventSource {
   private readonly amqp: IAmqpConnection;
@@ -315,7 +315,6 @@ export class EventSource implements IEventSource {
       data: options.data,
       correlationId: options.correlationId,
       delay: options.delay,
-      mandatory: options.mandatory,
       origin: options.origin || "event_source",
       originator: options.originator,
     });

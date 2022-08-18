@@ -3,7 +3,7 @@ export interface RedisViewStoreAttributes {
   name: string;
   context: string;
 
-  causation_list: Array<string>;
+  processed_causation_ids: Array<string>;
   destroyed: boolean;
   meta: Record<string, any>;
   revision: number;

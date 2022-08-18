@@ -71,7 +71,7 @@ describe("SagaDomain", () => {
           {
             ...saga.toJSON(),
             revision: saga.revision + 1,
-            causationList: [...saga.causationList, causation.id],
+            processedCausationIds: [...saga.processedCausationIds, causation.id],
           },
           logger,
         ),
@@ -173,7 +173,7 @@ describe("SagaDomain", () => {
         id: event.aggregate.id,
         name: "saga_name",
         context: "default",
-        causationList: [],
+        processedCausationIds: [],
         destroyed: false,
         messagesToDispatch: [],
         revision: 0,
@@ -196,7 +196,7 @@ describe("SagaDomain", () => {
 
     store.load.mockImplementation(
       async (s: SagaIdentifier) =>
-        new Saga({ ...s, revision: 1, causationList: [causationId] }, logger),
+        new Saga({ ...s, revision: 1, processedCausationIds: [causationId] }, logger),
     );
 
     // @ts-ignore // private domain.handleEvent
@@ -207,7 +207,7 @@ describe("SagaDomain", () => {
         id: event.aggregate.id,
         name: "saga_name",
         context: "default",
-        causationList: [causationId],
+        processedCausationIds: [causationId],
         destroyed: false,
         messagesToDispatch: [expect.any(Command)],
         revision: 1,
@@ -245,7 +245,7 @@ describe("SagaDomain", () => {
           {
             ...s,
             revision: 1,
-            causationList: [event.id],
+            processedCausationIds: [event.id],
           },
           logger,
         ),

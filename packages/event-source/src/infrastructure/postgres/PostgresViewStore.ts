@@ -45,7 +45,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       handlerOptions,
     );
 
-    if (existing && find(existing.causationList, causation.id)) {
+    if (existing && find(existing.processedCausationIds, causation.id)) {
       this.logger.debug("Found existing view matching causation", { view: existing.toJSON() });
 
       return existing;
@@ -135,9 +135,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       this.logger.debug("Found causation entities", { causationEntities });
 
-      const causationList: Array<string> = [];
+      const processedCausationIds: Array<string> = [];
       for (const entity of causationEntities) {
-        causationList.push(entity.causation_id);
+        processedCausationIds.push(entity.causation_id);
       }
 
       return new View(
@@ -145,7 +145,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
           id: viewEntity.id,
           name: viewEntity.name,
           context: viewEntity.context,
-          causationList,
+          processedCausationIds,
           destroyed: viewEntity.destroyed,
           meta: viewEntity.meta,
           revision: viewEntity.revision,
@@ -201,7 +201,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         return new View(
           {
             ...view,
-            causationList: [causation.id],
+            processedCausationIds: [causation.id],
             revision: savedView.revision,
           },
           this.logger,
@@ -260,7 +260,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         return new View(
           {
             ...view,
-            causationList: [...view.causationList, causation.id],
+            processedCausationIds: [...view.processedCausationIds, causation.id],
             revision: view.revision + 1,
           },
           this.logger,
