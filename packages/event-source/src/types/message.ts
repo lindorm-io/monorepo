@@ -1,6 +1,14 @@
 import { AggregateIdentifier } from "./model";
 import { Data } from "./generic";
-import { IMessage as IMessageBase } from "@lindorm-io/amqp";
+import { IMessage as IAmqpMessage } from "@lindorm-io/amqp";
+
+export type MessageBaseType =
+  | "command"
+  | "domain_event"
+  | "error_message"
+  | "replay_message"
+  | "timeout_message"
+  | "unknown";
 
 export interface MessageOptions<D extends Data = Data> {
   id?: string;
@@ -14,15 +22,19 @@ export interface MessageOptions<D extends Data = Data> {
   origin?: string;
   originator?: string | null;
   timestamp?: Date;
-  type?: string;
   version?: number;
 }
 
-export interface IMessage extends IMessageBase {
+export interface MessageBaseOptions<D extends Data = Data> extends MessageOptions<D> {
+  type: MessageBaseType;
+}
+
+export interface IMessage extends IAmqpMessage {
   aggregate: AggregateIdentifier;
   causationId: string;
   correlationId: string;
   origin: string;
   originator: string | null;
   version: number;
+  type: MessageBaseType;
 }

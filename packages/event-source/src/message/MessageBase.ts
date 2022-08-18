@@ -1,8 +1,8 @@
-import { AggregateIdentifier, Data, IMessage, MessageOptions } from "../types";
+import { AggregateIdentifier, Data, IMessage, MessageBaseOptions, MessageBaseType } from "../types";
 import { MessageType } from "../enum";
 import { randomUUID } from "crypto";
 
-export abstract class Message<D extends Data = Data> implements IMessage {
+export abstract class MessageBase<D extends Data = Data> implements IMessage {
   public readonly id: string;
   public readonly aggregate: AggregateIdentifier;
   public readonly causationId: string;
@@ -14,10 +14,10 @@ export abstract class Message<D extends Data = Data> implements IMessage {
   public readonly origin: string;
   public readonly originator: string | null;
   public readonly timestamp: Date;
-  public readonly type: string;
+  public readonly type: MessageBaseType;
   public readonly version: number;
 
-  protected constructor(options: MessageOptions<D>, causation?: IMessage) {
+  protected constructor(options: MessageBaseOptions<D>, causation?: IMessage) {
     this.id = options.id || randomUUID();
     this.aggregate = options.aggregate;
     this.causationId = options.causationId || causation?.id || this.id;
