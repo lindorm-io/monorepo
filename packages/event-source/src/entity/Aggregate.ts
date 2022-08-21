@@ -86,7 +86,12 @@ export class Aggregate<S extends State = State> implements IAggregate {
 
   // public
 
-  public async apply(causation: Command, name: string, data?: Record<string, any>): Promise<void> {
+  public async apply(
+    causation: Command,
+    name: string,
+    data?: Record<string, any>,
+    version?: number,
+  ): Promise<void> {
     this.logger.debug("Apply Command", { causation, name, data });
 
     await assertSchemaAsync(
@@ -108,6 +113,7 @@ export class Aggregate<S extends State = State> implements IAggregate {
           name: name,
           origin: causation.origin,
           originator: causation.originator,
+          version,
         },
         causation,
       ),

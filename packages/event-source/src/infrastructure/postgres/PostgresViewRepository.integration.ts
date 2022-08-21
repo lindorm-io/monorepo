@@ -1,21 +1,24 @@
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { PostgresViewRepository } from "./PostgresViewRepository";
+import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
 import { ViewIdentifier } from "../../types";
 import { createMockLogger } from "@lindorm-io/winston";
+import { createTypeormViewEntity } from "../../util";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
-import { createViewEntities } from "../../util";
 
 describe("PostgresViewRepository", () => {
   const logger = createMockLogger();
-  const { ViewEntity } = createViewEntities("PostgresViewRepository");
+  const ViewEntity = createTypeormViewEntity(TEST_VIEW_IDENTIFIER);
 
   let connection: PostgresConnection;
+  let identifier: ViewIdentifier;
   let repository: PostgresViewRepository;
-  let view: ViewIdentifier;
 
   let view1: string;
   let view2: string;
   let view3: string;
+  let view4: string;
 
   beforeAll(async () => {
     connection = new PostgresConnection(
@@ -31,9 +34,9 @@ describe("PostgresViewRepository", () => {
       logger,
     );
 
-    view = { context: "view_repository", name: "view_name", id: randomUUID() };
+    identifier = { ...TEST_VIEW_IDENTIFIER, id: randomUUID() };
 
-    repository = new PostgresViewRepository({ connection, viewEntity: ViewEntity }, logger);
+    repository = new PostgresViewRepository({ connection, view: identifier, ViewEntity }, logger);
 
     await connection.connect();
 
@@ -42,42 +45,62 @@ describe("PostgresViewRepository", () => {
     view1 = randomUUID();
     view2 = randomUUID();
     view3 = randomUUID();
+    view4 = randomUUID();
 
     await repo.save({
       id: view1,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       destroyed: false,
+      hash: randomString(16),
       meta: {},
+      processed_causation_ids: [],
       revision: 1,
       state: { one: 1, common: "common" },
+      created_at: new Date(),
+      updated_at: new Date(),
     });
+
     await repo.save({
       id: view2,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       destroyed: false,
+      hash: randomString(16),
       meta: {},
+      processed_causation_ids: [],
       revision: 2,
       state: { two: 2, common: "common" },
+      created_at: new Date(),
+      updated_at: new Date(),
     });
+
     await repo.save({
       id: view3,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       destroyed: false,
+      hash: randomString(16),
       meta: {},
+      processed_causation_ids: [],
       revision: 3,
       state: { three: 3, common: "uncommon" },
+      created_at: new Date(),
+      updated_at: new Date(),
     });
+
     await repo.save({
-      id: randomUUID(),
-      name: view.name,
-      context: view.context,
+      id: view4,
+      name: identifier.name,
+      context: identifier.context,
       destroyed: true,
+      hash: randomString(16),
       meta: {},
+      processed_causation_ids: [],
       revision: 4,
       state: { four: 4, common: "common" },
+      created_at: new Date(),
+      updated_at: new Date(),
     });
   }, 30000);
 
@@ -89,8 +112,8 @@ describe("PostgresViewRepository", () => {
     await expect(repository.find({})).resolves.toStrictEqual([
       {
         id: view1,
-        name: view.name,
-        context: view.context,
+        name: identifier.name,
+        context: identifier.context,
         revision: 1,
         state: { one: 1, common: "common" },
         created_at: expect.any(Date),
@@ -98,8 +121,8 @@ describe("PostgresViewRepository", () => {
       },
       {
         id: view2,
-        name: view.name,
-        context: view.context,
+        name: identifier.name,
+        context: identifier.context,
         revision: 2,
         state: { two: 2, common: "common" },
         created_at: expect.any(Date),
@@ -107,8 +130,8 @@ describe("PostgresViewRepository", () => {
       },
       {
         id: view3,
-        name: view.name,
-        context: view.context,
+        name: identifier.name,
+        context: identifier.context,
         revision: 3,
         state: { three: 3, common: "uncommon" },
         created_at: expect.any(Date),
@@ -120,8 +143,8 @@ describe("PostgresViewRepository", () => {
   test("should find by id", async () => {
     await expect(repository.findById(view3)).resolves.toStrictEqual({
       id: view3,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       revision: 3,
       state: { three: 3, common: "uncommon" },
       created_at: expect.any(Date),
@@ -132,8 +155,8 @@ describe("PostgresViewRepository", () => {
   test("should find one", async () => {
     await expect(repository.findOne({ where: { id: view1 } })).resolves.toStrictEqual({
       id: view1,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       revision: 1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),

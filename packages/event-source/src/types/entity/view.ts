@@ -5,17 +5,19 @@ import { State } from "../generic";
 export type ViewIdentifier = StandardIdentifier;
 
 export interface ViewData<S extends State = State> extends ViewIdentifier {
-  processedCausationIds: Array<string>;
   destroyed: boolean;
+  hash: string;
   meta: Record<string, any>;
+  processedCausationIds: Array<string>;
   revision: number;
   state: S;
 }
 
 export interface ViewOptions<S extends State = State> extends ViewIdentifier {
-  processedCausationIds?: Array<string>;
   destroyed?: boolean;
+  hash?: string;
   meta?: Record<string, any>;
+  processedCausationIds?: Array<string>;
   revision?: number;
   state?: S;
 }

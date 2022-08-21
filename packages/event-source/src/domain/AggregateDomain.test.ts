@@ -1,4 +1,4 @@
-import { Aggregate } from "../model";
+import { Aggregate } from "../entity";
 import { AggregateDomain } from "./AggregateDomain";
 import { AggregateIdentifier, IAggregateDomain } from "../types";
 import { Command, DomainEvent } from "../message";

@@ -13,14 +13,16 @@ import {
   SagaOptions,
   State,
 } from "../types";
+import { randomString } from "@lindorm-io/core";
 
 export class Saga<S extends State = State> implements ISaga {
   public readonly id: string;
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _processedCausationIds: Array<string>;
+  private readonly _hash: string;
   private readonly _messagesToDispatch: Array<Command | TimeoutMessage>;
+  private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
   private readonly _state: S;
   private _destroyed: boolean;
@@ -37,19 +39,27 @@ export class Saga<S extends State = State> implements ISaga {
     this.name = options.name;
     this.context = options.context;
 
-    this._processedCausationIds = options.processedCausationIds || [];
     this._destroyed = options.destroyed || false;
+    this._hash = options.hash || randomString(16);
     this._messagesToDispatch = options.messagesToDispatch || [];
+    this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
     this._state = options.state || ({} as unknown as S);
   }
 
   // public properties
 
-  public get processedCausationIds(): Array<string> {
-    return this._processedCausationIds;
+  public get destroyed(): boolean {
+    return this._destroyed;
   }
-  public set processedCausationIds(_) {
+  public set destroyed(_) {
+    throw new IllegalEntityChangeError();
+  }
+
+  public get hash(): string {
+    return this._hash;
+  }
+  public set hash(_) {
     throw new IllegalEntityChangeError();
   }
 
@@ -60,10 +70,10 @@ export class Saga<S extends State = State> implements ISaga {
     throw new IllegalEntityChangeError();
   }
 
-  public get destroyed(): boolean {
-    return this._destroyed;
+  public get processedCausationIds(): Array<string> {
+    return this._processedCausationIds;
   }
-  public set destroyed(_) {
+  public set processedCausationIds(_) {
     throw new IllegalEntityChangeError();
   }
 
@@ -88,9 +98,10 @@ export class Saga<S extends State = State> implements ISaga {
       id: this.id,
       name: this.name,
       context: this.context,
-      processedCausationIds: cloneDeep(this.processedCausationIds),
       destroyed: this.destroyed,
+      hash: this.hash,
       messagesToDispatch: cloneDeep(this.messagesToDispatch),
+      processedCausationIds: cloneDeep(this.processedCausationIds),
       revision: this.revision,
       state: cloneDeep(this.state),
     };

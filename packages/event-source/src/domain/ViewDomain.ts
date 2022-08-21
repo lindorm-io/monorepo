@@ -3,10 +3,11 @@ import { DomainEvent, ErrorMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { View } from "../model";
+import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
+import { View } from "../entity";
 import { ViewEventHandler } from "../handler";
 import { assertSnakeCase } from "../util";
-import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
+import { find, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -23,8 +24,9 @@ import {
   State,
   ViewDomainOptions,
   ViewEventHandlerContext,
-  IViewStore,
   IMessage,
+  ViewIdentifier,
+  IDomainViewStore,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
@@ -32,7 +34,7 @@ export class ViewDomain implements IViewDomain {
   private readonly eventHandlers: Array<ViewEventHandler>;
   private readonly logger: ILogger;
   private messageBus: IMessageBus;
-  private store: IViewStore;
+  private store: IDomainViewStore;
 
   public constructor(options: ViewDomainOptions, logger: ILogger) {
     this.logger = logger.createChildLogger(["ViewDomain"]);
@@ -107,13 +109,13 @@ export class ViewDomain implements IViewDomain {
 
       this.eventHandlers.push(
         new ViewEventHandler({
+          adapters: eventHandler.adapters,
           eventName: eventHandler.eventName,
           aggregate: {
             name: eventHandler.aggregate.name,
             context: context,
           },
           conditions: eventHandler.conditions,
-          persistence: eventHandler.persistence,
           getViewId: eventHandler.getViewId,
           handler: eventHandler.handler,
           view: eventHandler.view,
@@ -241,46 +243,28 @@ export class ViewDomain implements IViewDomain {
       });
     }
 
-    const view = await this.store.load(
-      {
-        id: eventHandler.getViewId(event),
-        name: viewIdentifier.name,
-        context: viewIdentifier.context,
-      },
-      eventHandler.persistence,
-    );
+    const identifier: ViewIdentifier = {
+      id: eventHandler.getViewId(event),
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+    };
 
-    const lastCausationMatchesEventId = findLast(
-      view.processedCausationIds,
-      (causationId) => causationId === event.id,
-    );
+    let view = await this.store.load(identifier, eventHandler.adapters);
 
-    if (lastCausationMatchesEventId) return;
+    this.logger.debug("View loaded", { view: view.toJSON() });
+
+    const exists = await this.store.causationExists(identifier, event);
+
+    this.logger.debug("Causation exists", { exists });
 
     try {
-      for (const validator of conditionValidators) {
-        validator(view);
+      if (!exists && !view.processedCausationIds.includes(event.id)) {
+        view = await this.handleView(view, event, eventHandler, conditionValidators);
       }
 
-      const context: ViewEventHandlerContext = {
-        event,
-        logger: this.logger.createChildLogger(["ViewEventHandler"]),
+      view = await this.processCausationIds(view, eventHandler);
 
-        addListItem: view.addListItem.bind(view, event),
-        destroy: view.destroy.bind(view),
-        getState: view.getState.bind(view),
-        removeListItemWhereEqual: view.removeListItemWhereEqual.bind(view, event),
-        removeListItemWhereMatch: view.removeListItemWhereMatch.bind(view, event),
-        setState: view.setState.bind(view, event),
-      };
-
-      await eventHandler.handler(context);
-
-      const saved = await this.store.save(view, event, eventHandler.persistence);
-
-      this.emit(saved);
-
-      this.logger.verbose("Handled event", { event, viewIdentifier });
+      this.logger.verbose("Handled event", { event, view: view.toJSON() });
     } catch (err) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
@@ -296,6 +280,64 @@ export class ViewDomain implements IViewDomain {
 
       throw err;
     }
+  }
+
+  private async handleView(
+    view: View,
+    event: DomainEvent,
+    eventHandler: ViewEventHandler,
+    conditionValidators: Array<(view: View) => void>,
+  ): Promise<View> {
+    const json = view.toJSON();
+
+    this.logger.debug("Handling View", { view: json, event });
+
+    for (const validator of conditionValidators) {
+      validator(view);
+    }
+
+    const context: ViewEventHandlerContext = {
+      event,
+      logger: this.logger.createChildLogger(["ViewEventHandler"]),
+
+      addListItem: view.addListItem.bind(view, event),
+      destroy: view.destroy.bind(view),
+      getState: view.getState.bind(view),
+      removeListItemWhereEqual: view.removeListItemWhereEqual.bind(view, event),
+      removeListItemWhereMatch: view.removeListItemWhereMatch.bind(view, event),
+      setState: view.setState.bind(view, event),
+    };
+
+    await eventHandler.handler(context);
+
+    const saved = await this.store.save(view, event, eventHandler.adapters);
+
+    this.emit(saved);
+
+    this.logger.debug("Saved view at new revision", {
+      id: saved.id,
+      name: saved.name,
+      context: saved.context,
+      revision: saved.revision,
+    });
+
+    return saved;
+  }
+
+  private async processCausationIds(view: View, eventHandler: ViewEventHandler): Promise<View> {
+    if (view.processedCausationIds.length < MAX_PROCESSED_CAUSATION_IDS_LENGTH) {
+      return view;
+    }
+
+    this.logger.debug("Processing causation ids for view", {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+      processedCausationIds: view.processedCausationIds,
+    });
+
+    await this.store.processCausationIds(view);
+    return await this.store.clearProcessedCausationIds(view, eventHandler.adapters);
   }
 
   private async rejectEvent(event: DomainEvent, view: View, error: DomainError): Promise<void> {

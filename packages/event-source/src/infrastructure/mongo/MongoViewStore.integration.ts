@@ -1,26 +1,30 @@
-import { AggregateIdentifier, ViewIdentifier, ViewStoreHandlerOptions } from "../../types";
 import { DomainEvent } from "../../message";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoViewStore } from "./MongoViewStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
-import { View } from "../../model";
+import { VIEW_CAUSATION_COLLECTION } from "../../constant";
 import { createMockLogger } from "@lindorm-io/winston";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
-  TEST_DOMAIN_EVENT_CREATE,
-  TEST_DOMAIN_EVENT_SET_STATE,
-} from "../../fixtures/domain-event.fixture";
-import { ViewStoreType } from "../../enum";
+  AggregateIdentifier,
+  ViewStoreAttributes,
+  ViewStoreCausationAttributes,
+  ViewClearProcessedCausationIdsData,
+  ViewIdentifier,
+  ViewUpdateData,
+  ViewUpdateFilter,
+} from "../../types";
 
 describe("MongoViewStore", () => {
   const logger = createMockLogger();
-  const handlerOptions: ViewStoreHandlerOptions = { type: ViewStoreType.MONGO };
 
-  let aggregate: AggregateIdentifier;
+  let aggregateIdentifier: AggregateIdentifier;
   let connection: MongoConnection;
   let store: MongoViewStore;
-  let view: ViewIdentifier;
+  let viewIdentifier: ViewIdentifier;
 
   beforeAll(async () => {
     connection = new MongoConnection(
@@ -37,109 +41,228 @@ describe("MongoViewStore", () => {
     store = new MongoViewStore(connection, logger);
 
     await connection.connect();
-  }, 30000);
+  }, 10000);
 
   beforeEach(() => {
-    aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
+    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    viewIdentifier = { ...TEST_VIEW_IDENTIFIER, id: aggregateIdentifier.id };
   });
 
   afterAll(async () => {
     await connection.disconnect();
   });
 
-  test("should save new view", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View(view, logger);
+  test("should resolve existing causation", async () => {
+    const event = new DomainEvent(TEST_COMMAND);
 
-    await expect(store.save(entity, event, handlerOptions)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        meta: {},
-        revision: 1,
-        state: {},
-      }),
-    );
-  }, 10000);
+    const document: ViewStoreCausationAttributes = {
+      view_id: viewIdentifier.id,
+      view_name: viewIdentifier.name,
+      view_context: viewIdentifier.context,
+      causation_id: event.id,
+      timestamp: new Date(),
+    };
 
-  test("should save existing view", async () => {
-    const event1 = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View(
-      {
-        ...view,
-        state: {
-          created: true,
+    await connection.client
+      .db("MongoViewStore")
+      .collection(VIEW_CAUSATION_COLLECTION)
+      .insertOne(document);
+
+    await expect(store.causationExists(viewIdentifier, event)).resolves.toBe(true);
+
+    await expect(
+      store.causationExists(
+        {
+          ...viewIdentifier,
+          id: randomUUID(),
         },
-      },
-      logger,
-    );
+        event,
+      ),
+    ).resolves.toBe(false);
+  });
 
-    const saved = await store.save(entity, event1, handlerOptions);
-    const event2 = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
-    const json = saved.toJSON();
-    const changed = new View(
-      {
-        ...json,
-        state: {
-          ...json.state,
-          changed: true,
-        },
-      },
-      logger,
-    );
+  test("should clear processed causation ids", async () => {
+    const attributes: ViewStoreAttributes = {
+      id: viewIdentifier.id,
+      name: "view_name",
+      context: "default",
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: ["processed"],
+      revision: 1,
+      state: {},
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
 
-    await expect(store.save(changed, event2, handlerOptions)).resolves.toStrictEqual(
+    await connection.client
+      .db("MongoViewStore")
+      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .insertOne(attributes);
+
+    const filter: ViewUpdateFilter = {
+      id: attributes.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      hash: attributes.hash,
+      revision: attributes.revision,
+    };
+
+    const update: ViewClearProcessedCausationIdsData = {
+      hash: randomString(16),
+      processed_causation_ids: [],
+      revision: 2,
+    };
+
+    await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
+
+    await expect(
+      connection.client
+        .db("MongoViewStore")
+        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .findOne({ id: viewIdentifier.id }),
+    ).resolves.toStrictEqual(
       expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event1.id, event2.id],
-        destroyed: false,
-        meta: {},
+        hash: update.hash,
+        processed_causation_ids: [],
         revision: 2,
-        state: {
-          created: true,
-          changed: true,
-        },
-      }),
-    );
-  }, 10000);
-
-  test("should load new view", async () => {
-    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [],
-        destroyed: false,
-        meta: {},
-        revision: 0,
-        state: {},
       }),
     );
   });
 
-  test("should load existing view", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View({ ...view, state: { created: true } }, logger);
+  test("should find view", async () => {
+    const attributes: ViewStoreAttributes = {
+      id: viewIdentifier.id,
+      name: "view_name",
+      context: "default",
+      destroyed: false,
+      hash: randomString(16),
+      processed_causation_ids: [],
+      revision: 1,
+      meta: {},
+      state: { found: true },
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
 
-    await store.save(entity, event, handlerOptions);
+    await connection.client
+      .db("MongoViewStore")
+      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .insertOne(attributes);
 
-    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
+    await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
       expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        meta: {},
-        revision: 1,
-        state: { created: true },
+        hash: attributes.hash,
+        state: { found: true },
+      }),
+    );
+  });
+
+  test("should insert view", async () => {
+    const attributes: ViewStoreAttributes = {
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 1,
+      state: { inserted: true },
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    await expect(store.insert(attributes, {})).resolves.toBeUndefined();
+
+    await expect(
+      connection.client
+        .db("MongoViewStore")
+        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .findOne({ id: viewIdentifier.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: attributes.hash,
+        state: { inserted: true },
+      }),
+    );
+  });
+
+  test("should insert processed causation ids", async () => {
+    const one = randomUUID();
+    const two = randomUUID();
+    const three = randomUUID();
+
+    await expect(
+      store.insertProcessedCausationIds(viewIdentifier, [one, two, three]),
+    ).resolves.toBeUndefined();
+
+    const cursor = connection.client
+      .db("MongoViewStore")
+      .collection(VIEW_CAUSATION_COLLECTION)
+      .find({
+        view_id: viewIdentifier.id,
+        view_name: viewIdentifier.name,
+        view_context: viewIdentifier.context,
+      });
+
+    await expect(cursor.toArray()).resolves.toStrictEqual([
+      expect.objectContaining({ causation_id: one }),
+      expect.objectContaining({ causation_id: two }),
+      expect.objectContaining({ causation_id: three }),
+    ]);
+  });
+
+  test("should update view", async () => {
+    const attributes: ViewStoreAttributes = {
+      id: viewIdentifier.id,
+      name: "view_name",
+      context: "default",
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 1,
+      state: { found: true },
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    await connection.client
+      .db("MongoViewStore")
+      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .insertOne(attributes);
+
+    const filter: ViewUpdateFilter = {
+      id: attributes.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      hash: attributes.hash,
+      revision: attributes.revision,
+    };
+
+    const update: ViewUpdateData = {
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 2,
+      state: { updated: true },
+    };
+
+    await expect(store.update(filter, update, {})).resolves.toBeUndefined();
+
+    await expect(
+      connection.client
+        .db("MongoViewStore")
+        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .findOne({ id: viewIdentifier.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: update.hash,
+        revision: 2,
+        state: { updated: true },
       }),
     );
   });

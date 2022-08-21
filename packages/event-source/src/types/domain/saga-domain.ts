@@ -1,13 +1,13 @@
+import { IDomainSagaStore } from "../saga-store";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { ISagaEventHandler } from "../handler";
-import { ISagaStore } from "../saga-store";
-import { Saga } from "../../model";
-import { SagaIdentifier } from "../model";
+import { Saga } from "../../entity";
+import { SagaIdentifier } from "../entity";
 import { State } from "../generic";
 
 export interface SagaDomainOptions {
   messageBus: IMessageBus;
-  store: ISagaStore;
+  store: IDomainSagaStore;
 }
 
 export interface ISagaDomain {

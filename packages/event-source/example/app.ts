@@ -3,7 +3,6 @@ import { EventEntity, EventSource, SagaCausationEntity, SagaEntity } from "../sr
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
-import { RedisConnection } from "@lindorm-io/redis";
 import { StoredGreeting, StoredGreetingCausation } from "./entities";
 import { join } from "path";
 import { randomUUID } from "crypto";
@@ -53,20 +52,11 @@ const main = async (): Promise<void> => {
     logger,
   );
 
-  const redis = new RedisConnection(
-    {
-      host: "localhost",
-      port: 6371,
-    },
-    logger,
-  );
-
   const app = new EventSource(
     {
       amqp,
       mongo,
       postgres,
-      redis,
       domain: {
         directory: join(__dirname),
       },
@@ -124,10 +114,6 @@ const main = async (): Promise<void> => {
 
   repositories.storedGreetings = await app.repositories
     .postgres("stored_greetings")
-    .findById(aggregateId);
-
-  repositories.cachedGreetings = await app.repositories
-    .redis("cached_greetings")
     .findById(aggregateId);
 
   logger.info("repositories", { repositories });

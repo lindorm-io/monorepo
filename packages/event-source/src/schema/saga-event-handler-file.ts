@@ -1,11 +1,5 @@
 import Joi from "joi";
-import {
-  HandlerConditions,
-  MongoSagaStoreHandlerOptions,
-  SagaEventHandlerFile,
-  SagaEventHandlerFileAggregate,
-  SagaStoreHandlerOptions,
-} from "../types";
+import { HandlerConditions, SagaEventHandlerFile, SagaEventHandlerFileAggregate } from "../types";
 
 export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandlerFile>().keys({
   aggregate: Joi.object<SagaEventHandlerFileAggregate>()
@@ -17,11 +11,6 @@ export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandlerFile>().ke
     .keys({
       created: Joi.boolean().optional(),
       permanent: Joi.boolean().optional(),
-    })
-    .optional(),
-  options: Joi.object<SagaStoreHandlerOptions>()
-    .keys({
-      mongo: Joi.object<MongoSagaStoreHandlerOptions>().optional(),
     })
     .optional(),
   version: Joi.number().optional(),

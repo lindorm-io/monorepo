@@ -1,21 +1,15 @@
-import { Aggregate, Saga } from "../model";
+import { Aggregate, Saga } from "../entity";
 import { Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
-import { EventStorePersistenceType, IEventStore } from "./event-store";
+import { EventStoreAdapterType, IEventStore } from "./event-store";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { IMongoConnection } from "@lindorm-io/mongo";
+import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { IRedisConnection } from "@lindorm-io/redis";
-import { ISagaStore, SagaStorePersistenceType } from "./saga-store";
-import { IViewStore, ViewStorePersistenceType } from "./view-store";
+import { IViewStore, ViewStoreAdapterType } from "./view-store";
 import { MessageBusQueueType } from "./message-bus";
 import { ReplayOptions } from "./domain";
-import {
-  MongoViewRepository,
-  PostgresViewRepository,
-  RedisViewRepository,
-  ViewEntity,
-} from "../infrastructure";
+import { MongoViewRepository, PostgresViewRepository } from "../infrastructure";
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
@@ -36,15 +30,15 @@ export interface AppStructure {
 }
 
 export interface AggregateStructure extends AppStructure {
-  type?: EventStorePersistenceType;
+  type?: EventStoreAdapterType;
 }
 
 export interface SagaStructure extends AppStructure {
-  type?: SagaStorePersistenceType;
+  type?: SagaStoreAdapterType;
 }
 
 export interface ViewStructure extends AppStructure {
-  type?: ViewStorePersistenceType;
+  type?: ViewStoreAdapterType;
 }
 
 export interface MessageBusStructure {
@@ -65,7 +59,6 @@ export interface AppOptions extends PrivateAppOptions {
   amqp?: IAmqpConnection;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-  redis?: IRedisConnection;
   custom?: {
     messageBus?: IMessageBus;
     eventStore?: IEventStore;
@@ -106,9 +99,8 @@ export interface AppAdmin {
 }
 
 export interface AppRepositories {
-  mongo<S>(name: string, collection?: string): MongoViewRepository<S>;
-  postgres<S>(name: string, entity?: typeof ViewEntity): PostgresViewRepository<S>;
-  redis<S>(name: string): RedisViewRepository<S>;
+  mongo<S>(name: string, context?: string): MongoViewRepository<S>;
+  postgres<S>(name: string, context?: string): PostgresViewRepository<S>;
 }
 
 export interface AppSetup {

@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, PrimaryColumn, UpdateDateColumn, VersionColumn } from "typeorm";
+import { ViewStoreAttributes } from "../../../types";
 
-export abstract class ViewEntity {
+export abstract class ViewEntity implements ViewStoreAttributes {
   @PrimaryColumn()
   public id: string;
 
@@ -13,8 +14,14 @@ export abstract class ViewEntity {
   @Column("boolean")
   public destroyed: boolean;
 
+  @Column()
+  public hash: string;
+
   @Column("jsonb")
   public meta: Record<string, any>;
+
+  @Column("jsonb")
+  public processed_causation_ids: Array<string>;
 
   @Column("jsonb")
   public state: Record<string, any>;

@@ -1,233 +1,113 @@
-import { Collection, Filter, FindOptions } from "mongodb";
+import { Collection } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../../error";
-import { View } from "../../model";
-import { flatten, snakeCase } from "lodash";
+import { MongoBase } from "./MongoBase";
+import { MongoNotUpdatedError } from "../../error";
+import { snakeCase } from "lodash";
+import {
+  VIEW_CAUSATION_COLLECTION,
+  VIEW_CAUSATION_COLLECTION_INDICES,
+  VIEW_COLLECTION_INDICES,
+} from "../../constant";
 import {
   HandlerIdentifier,
   IMessage,
-  IView,
   IViewStore,
-  MongoIndex,
-  MongoViewStoreAttributes,
-  MongoViewStoreCollectionOptions,
-  ViewData,
+  ViewClearProcessedCausationIdsData,
+  ViewEventHandlerAdapters,
   ViewIdentifier,
-  ViewStoreHandlerOptions,
+  ViewStoreAttributes,
+  ViewStoreCausationAttributes,
+  ViewUpdateData,
+  ViewUpdateFilter,
 } from "../../types";
 
-export class MongoViewStore implements IViewStore {
-  private readonly connection: IMongoConnection;
-  private readonly indices: Array<MongoIndex>;
-  private readonly logger: ILogger;
-
+export class MongoViewStore extends MongoBase implements IViewStore {
   public constructor(connection: IMongoConnection, logger: ILogger) {
-    this.connection = connection;
-    this.logger = logger.createChildLogger(["ViewStore"]);
-
-    this.indices = [
-      {
-        indexSpecification: {
-          id: 1,
-          name: 1,
-          context: 1,
-        },
-        createIndexesOptions: {
-          name: "unique_path",
-          unique: true,
-        },
-      },
-      {
-        indexSpecification: {
-          id: 1,
-          name: 1,
-          context: 1,
-          processed_causation_ids: 1,
-        },
-        createIndexesOptions: {
-          name: "unique_causation",
-          unique: true,
-        },
-      },
-      {
-        indexSpecification: {
-          id: 1,
-          name: 1,
-          context: 1,
-          destroyed: 1,
-        },
-        createIndexesOptions: {
-          name: "unique_destroyed",
-          unique: true,
-        },
-      },
-      {
-        indexSpecification: {
-          id: 1,
-          name: 1,
-          context: 1,
-          revision: 1,
-        },
-        createIndexesOptions: {
-          name: "unique_revision",
-          unique: true,
-        },
-      },
-    ];
+    super(connection, logger);
   }
 
-  public async save(
-    view: IView,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    const json = view.toJSON();
+  // public
 
-    this.logger.debug("Saving view", {
-      view: json,
-      causation,
-      handlerOptions,
-    });
-
-    const collection = await this.collection({
-      collection: handlerOptions.mongo?.collection,
-      indices: handlerOptions.mongo?.indices,
-      view,
-    });
-
-    const existing = await this.find(
-      collection,
-      {
-        id: json.id,
-        name: json.name,
-        context: json.context,
-      },
-      {
-        processed_causation_ids: { $in: [causation.id] },
-      },
-    );
-
-    if (existing) {
-      this.logger.debug("Found existing view matching causation", { view: existing.toJSON() });
-
-      return existing;
-    }
-
-    if (json.revision === 0) {
-      return await this.insert(collection, json, causation, handlerOptions);
-    }
-
-    return await this.update(collection, json, causation, handlerOptions);
-  }
-
-  public async load(
-    identifier: ViewIdentifier,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    this.logger.debug("Loading view", { identifier, handlerOptions });
-
-    const collection = await this.collection({
-      collection: handlerOptions.mongo?.collection,
-      view: identifier,
-    });
-
-    const existing = await this.find(collection, identifier);
-
-    if (existing) {
-      this.logger.debug("Loading existing view", { view: existing.toJSON() });
-
-      return existing;
-    }
-
-    const view = new View(identifier, this.logger);
-
-    this.logger.debug("Loading ephemeral view", { view: view.toJSON() });
-
-    return view;
-  }
-
-  // private
-
-  private async collection(
-    options: MongoViewStoreCollectionOptions,
-  ): Promise<Collection<MongoViewStoreAttributes>> {
-    const start = Date.now();
-
-    const collectionName = options.collection || MongoViewStore.getCollectionName(options.view);
-    const indices = flatten([this.indices, options.indices || []]);
-
-    this.logger.debug("Establishing collection", {
-      collection: options.collection,
-      indices,
-    });
-
-    await this.connection.connect();
-
-    const collection =
-      this.connection.database.collection<MongoViewStoreAttributes>(collectionName);
-
-    for (const { indexSpecification, createIndexesOptions } of indices) {
-      await collection.createIndex(indexSpecification, createIndexesOptions);
-    }
-
-    this.logger.debug("Returning collection", {
-      time: Date.now() - start,
-    });
-
-    return collection;
-  }
-
-  private async find(
-    collection: Collection<MongoViewStoreAttributes>,
-    identifier: ViewIdentifier,
-    findFilter: Filter<MongoViewStoreAttributes> = {},
-    findOptions: FindOptions = {},
-  ): Promise<View | undefined> {
-    const filter = { ...identifier, ...findFilter };
-    const projection: Partial<Record<keyof MongoViewStoreAttributes, number>> = {
-      id: 1,
-      name: 1,
-      context: 1,
-      processed_causation_ids: 1,
-      destroyed: 1,
-      meta: 1,
-      revision: 1,
-      state: 1,
-    };
-    const options = {
-      ...findOptions,
-      projection: findOptions.projection || projection,
-    };
-
-    this.logger.debug("Finding view", {
-      filter,
-      options,
-    });
+  public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
+    this.logger.debug("Verifying if causation exists", { identifier, causation });
 
     try {
-      const result = await collection.findOne(filter, options);
+      const collection = await this.causationCollection();
+
+      const result = await collection.findOne({
+        view_id: identifier.id,
+        view_name: identifier.name,
+        view_context: identifier.context,
+        causation_id: causation.id,
+      });
+
+      return !!result;
+    } catch (err) {
+      this.logger.error("Failed to verify if causation exists", err);
+
+      throw err;
+    }
+  }
+
+  public async clearProcessedCausationIds(
+    filter: ViewUpdateFilter,
+    data: ViewClearProcessedCausationIdsData,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Clearing processed causation ids", { filter, data });
+
+    try {
+      const collection = await this.viewCollection(filter, adapterOptions);
+
+      const result = await collection.updateOne(
+        {
+          id: filter.id,
+          hash: filter.hash,
+          revision: filter.revision,
+        },
+        {
+          $set: {
+            hash: data.hash,
+            processed_causation_ids: data.processed_causation_ids,
+            revision: data.revision,
+            updated_at: new Date(),
+          },
+        },
+      );
+
+      if (!result.acknowledged) {
+        throw new MongoNotUpdatedError();
+      }
+
+      this.logger.debug("Cleared processed causation ids", { result });
+    } catch (err) {
+      this.logger.error("Failed to clear processed causation ids", err);
+
+      throw err;
+    }
+  }
+
+  public async find(
+    identifier: ViewIdentifier,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<ViewStoreAttributes | undefined> {
+    this.logger.debug("Finding view", { identifier });
+
+    try {
+      const collection = await this.viewCollection(identifier, adapterOptions);
+
+      const result = await collection.findOne({ id: identifier.id });
 
       if (!result) {
         this.logger.debug("View not found");
+
         return;
       }
 
-      this.logger.debug("Found view document", { result });
+      this.logger.debug("Found view", { result });
 
-      return new View(
-        {
-          id: result.id,
-          name: result.name,
-          context: result.context,
-          processedCausationIds: result.processed_causation_ids,
-          destroyed: result.destroyed,
-          meta: result.meta,
-          revision: result.revision,
-          state: result.state,
-        },
-        this.logger,
-      );
+      return result;
     } catch (err) {
       this.logger.error("Failed to find view", err);
 
@@ -235,123 +115,118 @@ export class MongoViewStore implements IViewStore {
     }
   }
 
-  private async insert(
-    collection: Collection<MongoViewStoreAttributes>,
-    view: ViewData,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    this.logger.debug("Inserting view", {
-      view,
-      causation,
-      handlerOptions,
-    });
+  public async insert(
+    attributes: ViewStoreAttributes,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Inserting view", { attributes });
 
     try {
-      const result = await collection.insertOne({
-        id: view.id,
-        name: view.name,
-        context: view.context,
-        processed_causation_ids: [causation.id],
-        destroyed: view.destroyed,
-        meta: view.meta,
-        revision: view.revision + 1,
-        state: view.state,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
-
-      this.logger.debug("Saved view", { view: result });
-
-      return new View(
+      const collection = await this.viewCollection(
         {
-          ...view,
-          processedCausationIds: [causation.id],
-          revision: view.revision + 1,
+          name: attributes.name,
+          context: attributes.context,
         },
-        this.logger,
+        adapterOptions,
       );
+
+      const result = await collection.insertOne(attributes);
+
+      this.logger.debug("Inserted view", { result });
     } catch (err) {
       this.logger.error("Failed to insert view", err);
 
-      if (err.code === 11000) {
-        throw new MongoDuplicateKeyError(err.message, err);
-      }
+      throw err;
+    }
+  }
+
+  public async insertProcessedCausationIds(
+    identifier: ViewIdentifier,
+    causationIds: Array<string>,
+  ): Promise<void> {
+    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+
+    try {
+      const collection = await this.causationCollection();
+
+      const documents: Array<ViewStoreCausationAttributes> = causationIds.map((causationId) => ({
+        view_id: identifier.id,
+        view_name: identifier.name,
+        view_context: identifier.context,
+        causation_id: causationId,
+        timestamp: new Date(),
+      }));
+
+      const result = await collection.insertMany(documents);
+
+      this.logger.debug("Inserted processed causation ids", { result });
+    } catch (err) {
+      this.logger.error("Failed to insert processed causation ids", err);
 
       throw err;
     }
   }
 
-  private async update(
-    collection: Collection<MongoViewStoreAttributes>,
-    view: ViewData,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    this.logger.debug("Updating view", {
-      view,
-      causation,
-      handlerOptions,
-    });
+  public async update(
+    filter: ViewUpdateFilter,
+    data: ViewUpdateData,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Updating view", { filter, data });
 
     try {
-      const result = await collection.findOneAndUpdate(
+      const collection = await this.viewCollection(filter, adapterOptions);
+
+      const result = await collection.updateOne(
         {
-          id: view.id,
-          name: view.name,
-          context: view.context,
-          revision: view.revision,
+          id: filter.id,
+          hash: filter.hash,
+          revision: filter.revision,
         },
         {
           $set: {
-            destroyed: view.destroyed,
-            meta: view.meta,
-            revision: view.revision + 1,
-            state: view.state,
+            destroyed: data.destroyed,
+            hash: data.hash,
+            meta: data.meta,
+            processed_causation_ids: data.processed_causation_ids,
+            revision: data.revision,
+            state: data.state,
             updated_at: new Date(),
-          },
-          $push: {
-            processed_causation_ids: (handlerOptions.mongo?.causationsCap &&
-            handlerOptions.mongo?.causationsCap > 0
-              ? { $each: [causation.id], $slice: handlerOptions.mongo.causationsCap * -1 }
-              : causation.id) as never,
           },
         },
       );
 
-      if (!result.ok) {
+      if (!result.acknowledged) {
         throw new MongoNotUpdatedError();
       }
 
-      this.logger.debug("Updated view document", { result });
-
-      return new View(
-        {
-          ...view,
-          processedCausationIds:
-            handlerOptions.mongo?.causationsCap && handlerOptions.mongo?.causationsCap > 0
-              ? [...view.processedCausationIds, causation.id].slice(
-                  handlerOptions.mongo.causationsCap * -1,
-                )
-              : [...view.processedCausationIds, causation.id],
-          revision: view.revision + 1,
-        },
-        this.logger,
-      );
+      this.logger.debug("Updated view", { result });
     } catch (err) {
       this.logger.error("Failed to update view", err);
-
-      if (err.code === 11000) {
-        throw new MongoDuplicateKeyError(err.message, err);
-      }
 
       throw err;
     }
   }
 
-  // public static
+  // private
 
-  public static getCollectionName(identifier: HandlerIdentifier): string {
-    return `views_${snakeCase(identifier.context)}_${snakeCase(identifier.name)}`;
+  private async viewCollection(
+    view: HandlerIdentifier,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<Collection<ViewStoreAttributes>> {
+    return this.collection(
+      adapterOptions.mongo?.collection || MongoViewStore.getCollectionName(view),
+      VIEW_COLLECTION_INDICES,
+    );
+  }
+
+  private async causationCollection(): Promise<Collection<ViewStoreCausationAttributes>> {
+    return this.collection(VIEW_CAUSATION_COLLECTION, VIEW_CAUSATION_COLLECTION_INDICES);
+  }
+
+  // private static
+
+  public static getCollectionName(view: HandlerIdentifier): string {
+    return `view_${snakeCase(view.context)}_${snakeCase(view.name)}`;
   }
 }

@@ -33,12 +33,13 @@ describe("Saga", () => {
 
   test("should return json object", async () => {
     expect(saga.toJSON()).toStrictEqual({
-      processedCausationIds: [],
+      id: expect.any(String),
+      name: "saga_name",
       context: "default",
       destroyed: false,
-      id: expect.any(String),
+      hash: expect.any(String),
       messagesToDispatch: [],
-      name: "saga_name",
+      processedCausationIds: [],
       revision: 0,
       state: {},
     });

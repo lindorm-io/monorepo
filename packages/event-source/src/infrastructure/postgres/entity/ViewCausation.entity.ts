@@ -1,6 +1,12 @@
-import { CreateDateColumn, PrimaryColumn } from "typeorm";
+import { CreateDateColumn, Entity, Index, PrimaryColumn } from "typeorm";
+import { ViewStoreCausationAttributes } from "../../../types";
 
-export abstract class ViewCausationEntity {
+@Entity({ name: "view_causation" })
+@Index(["view_id", "view_name", "view_context"])
+@Index(["view_id", "view_name", "view_context", "causation_id"], {
+  unique: true,
+})
+export class ViewCausationEntity implements ViewStoreCausationAttributes {
   @PrimaryColumn()
   public view_id: string;
 
