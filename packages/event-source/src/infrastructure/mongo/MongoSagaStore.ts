@@ -1,186 +1,153 @@
-import { Filter, FindOptions } from "mongodb";
+import { Collection } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
-import { MongoDuplicateKeyError, MongoNotUpdatedError } from "../../error";
-import { Saga } from "../../model";
+import { MongoNotUpdatedError } from "../../error";
+import {
+  SAGA_CAUSATION_COLLECTION,
+  SAGA_CAUSATION_COLLECTION_INDICES,
+  SAGA_COLLECTION,
+  SAGA_COLLECTION_INDICES,
+} from "../../constant";
 import {
   IMessage,
-  ISaga,
   ISagaStore,
-  MongoSagaStoreAttributes,
-  SagaData,
+  SagaStoreAttributes,
+  SagaStoreCausationAttributes,
+  SagaClearMessagesToDispatchData,
+  SagaClearProcessedCausationIdsData,
   SagaIdentifier,
-  SagaStoreHandlerOptions,
+  SagaUpdateData,
+  SagaUpdateFilter,
 } from "../../types";
 
-export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implements ISagaStore {
+export class MongoSagaStore extends MongoBase implements ISagaStore {
   public constructor(connection: IMongoConnection, logger: ILogger) {
-    super(
-      {
-        connection,
-        collection: "sagas",
-        indices: [
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_path",
-              unique: true,
-            },
-          },
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-              processed_causation_ids: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_causation",
-              unique: true,
-            },
-          },
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-              revision: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_revision",
-              unique: true,
-            },
-          },
-        ],
-      },
-      logger,
-    );
+    super(connection, logger);
   }
 
   // public
 
-  public async save(
-    saga: ISaga,
-    causation: IMessage,
-    handlerOptions: SagaStoreHandlerOptions = {},
-  ): Promise<Saga> {
-    const json = saga.toJSON();
+  public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
+    this.logger.debug("Verifying if causation exists", { identifier, causation });
 
-    this.logger.debug("Saving saga", {
-      saga: json,
-      causation,
-      handlerOptions,
-    });
+    try {
+      const collection = await this.causationCollection();
 
-    const existing = await this.find(
-      {
-        id: json.id,
-        name: json.name,
-        context: json.context,
-      },
-      {
-        processed_causation_ids: { $in: [causation.id] },
-      },
-    );
+      const result = await collection.findOne({
+        saga_id: identifier.id,
+        saga_name: identifier.name,
+        saga_context: identifier.context,
+        causation_id: causation.id,
+      });
 
-    if (existing) {
-      this.logger.debug("Found existing saga matching causation", { saga: existing.toJSON() });
+      return !!result;
+    } catch (err) {
+      this.logger.error("Failed to verify if causation exists", err);
 
-      return existing;
+      throw err;
     }
-
-    if (json.revision === 0) {
-      return await this.insert(json, causation, handlerOptions);
-    }
-
-    return await this.update(json, causation, handlerOptions);
-  }
-
-  public async load(identifier: SagaIdentifier): Promise<Saga> {
-    this.logger.debug("Loading saga", { identifier });
-
-    const existing = await this.find(identifier);
-
-    if (existing) {
-      this.logger.debug("Loading existing saga", { saga: existing.toJSON() });
-
-      return existing;
-    }
-
-    const saga = new Saga(identifier, this.logger);
-
-    this.logger.debug("Loading ephemeral saga", { saga: saga.toJSON() });
-
-    return saga;
   }
 
   public async clearMessagesToDispatch(
-    saga: ISaga,
-    handlerOptions: SagaStoreHandlerOptions = {},
-  ): Promise<Saga> {
-    const json = saga.toJSON();
-
-    return await this.clear(json, handlerOptions);
-  }
-
-  // private
-
-  private async find(
-    identifier: SagaIdentifier,
-    findFilter: Filter<MongoSagaStoreAttributes> = {},
-    findOptions: FindOptions = {},
-  ): Promise<Saga | undefined> {
-    await this.promise();
-
-    const filter = { ...identifier, ...findFilter };
-    const projection: Partial<Record<keyof MongoSagaStoreAttributes, number>> = {
-      id: 1,
-      name: 1,
-      context: 1,
-      processed_causation_ids: 1,
-      destroyed: 1,
-      messages_to_dispatch: 1,
-      revision: 1,
-      state: 1,
-    };
-    const options = {
-      ...findOptions,
-      projection: findOptions.projection || projection,
-    };
-
-    this.logger.debug("Finding saga", {
-      filter,
-      options,
-    });
+    filter: SagaUpdateFilter,
+    data: SagaClearMessagesToDispatchData,
+  ): Promise<void> {
+    this.logger.debug("Clearing messages", { filter, data });
 
     try {
-      const result = await this.collection.findOne(filter, options);
+      const collection = await this.sagaCollection();
+
+      const result = await collection.updateOne(
+        {
+          id: filter.id,
+          name: filter.name,
+          context: filter.context,
+          hash: filter.hash,
+          revision: filter.revision,
+        },
+        {
+          $set: {
+            hash: data.hash,
+            messages_to_dispatch: data.messages_to_dispatch,
+            revision: data.revision,
+            updated_at: new Date(),
+          },
+        },
+      );
+
+      if (!result.acknowledged) {
+        throw new MongoNotUpdatedError();
+      }
+
+      this.logger.debug("Cleared messages", { result });
+    } catch (err) {
+      this.logger.error("Failed to clear messages", err);
+
+      throw err;
+    }
+  }
+
+  public async clearProcessedCausationIds(
+    filter: SagaUpdateFilter,
+    data: SagaClearProcessedCausationIdsData,
+  ): Promise<void> {
+    this.logger.debug("Clearing processed causation ids", { filter, data });
+
+    try {
+      const collection = await this.sagaCollection();
+
+      const result = await collection.updateOne(
+        {
+          id: filter.id,
+          name: filter.name,
+          context: filter.context,
+          hash: filter.hash,
+          revision: filter.revision,
+        },
+        {
+          $set: {
+            hash: data.hash,
+            processed_causation_ids: data.processed_causation_ids,
+            revision: data.revision,
+            updated_at: new Date(),
+          },
+        },
+      );
+
+      if (!result.acknowledged) {
+        throw new MongoNotUpdatedError();
+      }
+
+      this.logger.debug("Cleared processed causation ids", { result });
+    } catch (err) {
+      this.logger.error("Failed to clear processed causation ids", err);
+
+      throw err;
+    }
+  }
+
+  public async find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
+    this.logger.debug("Finding saga", { identifier });
+
+    try {
+      const collection = await this.sagaCollection();
+
+      const result = await collection.findOne({
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
+      });
 
       if (!result) {
         this.logger.debug("Saga not found");
+
         return;
       }
 
-      this.logger.debug("Found saga document", { result });
+      this.logger.debug("Found saga", { result });
 
-      return new Saga(
-        {
-          id: result.id,
-          name: result.name,
-          context: result.context,
-          processedCausationIds: result.processed_causation_ids,
-          destroyed: result.destroyed,
-          messagesToDispatch: result.messages_to_dispatch,
-          revision: result.revision,
-          state: result.state,
-        },
-        this.logger,
-      );
+      return result;
     } catch (err) {
       this.logger.error("Failed to find saga", err);
 
@@ -188,165 +155,95 @@ export class MongoSagaStore extends MongoBase<MongoSagaStoreAttributes> implemen
     }
   }
 
-  private async insert(
-    saga: SagaData,
-    causation: IMessage,
-    handlerOptions: SagaStoreHandlerOptions,
-  ): Promise<Saga> {
-    await this.promise();
-
-    this.logger.debug("Inserting saga", {
-      saga,
-      causation,
-      handlerOptions,
-    });
+  public async insert(attributes: SagaStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting saga", { attributes });
 
     try {
-      const result = await this.collection.insertOne({
-        id: saga.id,
-        name: saga.name,
-        context: saga.context,
-        processed_causation_ids: [causation.id],
-        destroyed: saga.destroyed,
-        messages_to_dispatch: saga.messagesToDispatch,
-        revision: saga.revision + 1,
-        state: saga.state,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+      const collection = await this.sagaCollection();
 
-      this.logger.debug("Saved saga", { saga: result });
+      const result = await collection.insertOne(attributes);
 
-      return new Saga(
-        {
-          ...saga,
-          processedCausationIds: [causation.id],
-          revision: saga.revision + 1,
-        },
-        this.logger,
-      );
+      this.logger.debug("Inserted saga", { result });
     } catch (err) {
       this.logger.error("Failed to insert saga", err);
 
-      if (err.code === 11000) {
-        throw new MongoDuplicateKeyError(err.message, err);
-      }
+      throw err;
+    }
+  }
+
+  public async insertProcessedCausationIds(
+    identifier: SagaIdentifier,
+    causationIds: Array<string>,
+  ): Promise<void> {
+    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+
+    try {
+      const collection = await this.causationCollection();
+
+      const documents: Array<SagaStoreCausationAttributes> = causationIds.map((causationId) => ({
+        saga_id: identifier.id,
+        saga_name: identifier.name,
+        saga_context: identifier.context,
+        causation_id: causationId,
+        timestamp: new Date(),
+      }));
+
+      const result = await collection.insertMany(documents);
+
+      this.logger.debug("Inserted processed causation ids", { result });
+    } catch (err) {
+      this.logger.error("Failed to insert processed causation ids", err);
 
       throw err;
     }
   }
 
-  private async update(
-    saga: SagaData,
-    causation: IMessage,
-    handlerOptions: SagaStoreHandlerOptions,
-  ): Promise<Saga> {
-    await this.promise();
-
-    this.logger.debug("Updating saga", {
-      saga,
-      causation,
-      handlerOptions,
-    });
+  public async update(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
+    this.logger.debug("Updating saga", { filter, data });
 
     try {
-      const result = await this.collection.findOneAndUpdate(
+      const collection = await this.sagaCollection();
+
+      const result = await collection.updateOne(
         {
-          id: saga.id,
-          name: saga.name,
-          context: saga.context,
-          revision: saga.revision,
+          id: filter.id,
+          name: filter.name,
+          context: filter.context,
+          hash: filter.hash,
+          revision: filter.revision,
         },
         {
           $set: {
-            destroyed: saga.destroyed,
-            messages_to_dispatch: saga.messagesToDispatch,
-            revision: saga.revision + 1,
-            state: saga.state,
+            destroyed: data.destroyed,
+            hash: data.hash,
+            messages_to_dispatch: data.messages_to_dispatch,
+            processed_causation_ids: data.processed_causation_ids,
+            revision: data.revision,
+            state: data.state,
             updated_at: new Date(),
-          },
-          $push: {
-            processed_causation_ids: (handlerOptions?.mongo?.causationsCap &&
-            handlerOptions?.mongo?.causationsCap > 0
-              ? { $each: [causation.id], $slice: handlerOptions.mongo.causationsCap * -1 }
-              : causation.id) as never,
           },
         },
       );
 
-      if (!result.ok) {
+      if (!result.acknowledged) {
         throw new MongoNotUpdatedError();
       }
 
-      this.logger.debug("Updated saga document", { result });
-
-      return new Saga(
-        {
-          ...saga,
-          processedCausationIds:
-            handlerOptions?.mongo?.causationsCap && handlerOptions?.mongo?.causationsCap > 0
-              ? [...saga.processedCausationIds, causation.id].slice(
-                  handlerOptions.mongo.causationsCap * -1,
-                )
-              : [...saga.processedCausationIds, causation.id],
-          revision: saga.revision + 1,
-        },
-        this.logger,
-      );
+      this.logger.debug("Updated saga", { result });
     } catch (err) {
       this.logger.error("Failed to update saga", err);
 
-      if (err.code === 11000) {
-        throw new MongoDuplicateKeyError(err.message, err);
-      }
-
       throw err;
     }
   }
 
-  private async clear(saga: SagaData, handlerOptions: SagaStoreHandlerOptions): Promise<Saga> {
-    await this.promise();
+  // private
 
-    this.logger.debug("Clearing saga messages", {
-      saga: saga,
-      handlerOptions,
-    });
+  private async sagaCollection(): Promise<Collection<SagaStoreAttributes>> {
+    return this.collection(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
+  }
 
-    try {
-      const result = await this.collection.findOneAndUpdate(
-        {
-          id: saga.id,
-          name: saga.name,
-          context: saga.context,
-          revision: saga.revision,
-        },
-        {
-          $set: {
-            revision: saga.revision + 1,
-            messages_to_dispatch: [],
-            updated_at: new Date(),
-          },
-        },
-      );
-
-      if (!result.ok) {
-        throw new MongoNotUpdatedError();
-      }
-
-      this.logger.debug("Cleared saga messages", { result });
-
-      return new Saga(
-        {
-          ...saga,
-          messagesToDispatch: [],
-          revision: saga.revision + 1,
-        },
-        this.logger,
-      );
-    } catch (err) {
-      this.logger.error("Failed to clear saga messages", err);
-
-      throw err;
-    }
+  private async causationCollection(): Promise<Collection<SagaStoreCausationAttributes>> {
+    return this.collection(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
   }
 }

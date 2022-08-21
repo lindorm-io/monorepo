@@ -3,48 +3,48 @@ import { ILogger } from "@lindorm-io/winston";
 import { MongoBase } from "./MongoBase";
 import { MongoViewStore } from "./MongoViewStore";
 import {
+  HandlerIdentifier,
   IMongoRepository,
   MongoViewRepositoryOptions,
-  MongoViewStoreAttributes,
   State,
   ViewRepositoryData,
+  ViewStoreAttributes,
 } from "../../types";
 
-const projection: Partial<Record<keyof MongoViewStoreAttributes, number>> & { _id: 0 } = {
+const projection: Partial<Record<keyof ViewStoreAttributes, number>> & { _id: 0 } = {
   _id: 0,
   id: 1,
-  name: 1,
-  context: 1,
   revision: 1,
   state: 1,
   created_at: 1,
   updated_at: 1,
 };
 
-export class MongoViewRepository<S = State>
-  extends MongoBase<MongoViewStoreAttributes>
-  implements IMongoRepository<S>
-{
+export class MongoViewRepository<S = State> extends MongoBase implements IMongoRepository<S> {
+  private readonly collectionName: string;
+  private readonly viewIdentifier: HandlerIdentifier;
+
   public constructor(options: MongoViewRepositoryOptions, logger: ILogger) {
-    super(
-      {
-        connection: options.connection,
-        collection: options.collection || MongoViewStore.getCollectionName(options.view),
-      },
-      logger,
-    );
+    super(options.connection, logger);
+
+    this.collectionName = MongoViewStore.getCollectionName(options.view);
+    this.viewIdentifier = options.view;
   }
 
   public async find(
-    filter: Filter<MongoViewStoreAttributes> = {},
-    options: FindOptions<MongoViewStoreAttributes> = {},
+    filter: Filter<ViewStoreAttributes> = {},
+    options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<Array<ViewRepositoryData<S>>> {
-    await this.promise();
+    await this.connection.connect();
+
+    const collection = this.connection.database.collection<ViewStoreAttributes>(
+      this.collectionName,
+    );
 
     this.logger.debug("Finding views", { filter, options });
 
     try {
-      const cursor = this.collection.find<MongoViewStoreAttributes>(
+      const cursor = collection.find<ViewStoreAttributes>(
         {
           destroyed: false,
           ...filter,
@@ -59,8 +59,8 @@ export class MongoViewRepository<S = State>
       for (const item of result) {
         array.push({
           id: item.id,
-          name: item.name,
-          context: item.context,
+          name: this.viewIdentifier.name,
+          context: this.viewIdentifier.context,
           revision: item.revision,
           state: item.state as S,
           created_at: item.created_at,
@@ -77,12 +77,16 @@ export class MongoViewRepository<S = State>
   }
 
   public async findById(id: string): Promise<ViewRepositoryData<S>> {
+    await this.connection.connect();
+
+    const collection = this.connection.database.collection<ViewStoreAttributes>(
+      this.collectionName,
+    );
+
     this.logger.debug("Finding view", { id });
 
-    await this.promise();
-
     try {
-      const result = await this.collection.findOne({ id, destroyed: false }, { projection });
+      const result = await collection.findOne({ id, destroyed: false }, { projection });
 
       if (!result) {
         this.logger.debug("View not found");
@@ -94,8 +98,8 @@ export class MongoViewRepository<S = State>
 
       return {
         id: result.id,
-        name: result.name,
-        context: result.context,
+        name: this.viewIdentifier.name,
+        context: this.viewIdentifier.context,
         revision: result.revision,
         state: result.state as S,
         created_at: result.created_at,
@@ -109,18 +113,22 @@ export class MongoViewRepository<S = State>
   }
 
   public async findOne(
-    filter: Filter<MongoViewStoreAttributes>,
-    options: FindOptions<MongoViewStoreAttributes> = {},
+    filter: Filter<ViewStoreAttributes>,
+    options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<ViewRepositoryData<S>> {
+    await this.connection.connect();
+
+    const collection = this.connection.database.collection<ViewStoreAttributes>(
+      this.collectionName,
+    );
+
     this.logger.debug("Finding view", {
       filter,
       options,
     });
 
-    await this.promise();
-
     try {
-      const result = await this.collection.findOne(
+      const result = await collection.findOne(
         { ...filter, destroyed: false },
         { ...options, projection },
       );
@@ -135,8 +143,8 @@ export class MongoViewRepository<S = State>
 
       return {
         id: result.id,
-        name: result.name,
-        context: result.context,
+        name: this.viewIdentifier.name,
+        context: this.viewIdentifier.context,
         revision: result.revision,
         state: result.state as S,
         created_at: result.created_at,

@@ -1,18 +1,16 @@
-import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
-import { FindOneOptions } from "typeorm";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
-import { View } from "../../model";
 import { ViewCausationEntity, ViewEntity } from "./entity";
-import { find } from "lodash";
 import {
   IMessage,
-  IView,
   IViewStore,
-  ViewData,
-  ViewIdentifier,
-  ViewStoreHandlerOptions,
+  StandardIdentifier,
+  ViewClearProcessedCausationIdsData,
+  ViewEventHandlerAdapters,
+  ViewStoreAttributes,
+  ViewUpdateData,
+  ViewUpdateFilter,
 } from "../../types";
 
 export class PostgresViewStore extends PostgresBase implements IViewStore {
@@ -20,139 +18,83 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     super(connection, logger);
   }
 
-  // public
-
-  public async save(
-    view: IView,
+  public async causationExists(
+    identifier: StandardIdentifier,
     causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    const json = view.toJSON();
+  ): Promise<boolean> {
+    this.logger.debug("Verifying if causation exists", { identifier, causation });
 
-    this.logger.debug("Saving view", {
-      view: json,
-      causation,
-      handlerOptions,
-    });
-
-    const existing = await this.find(
-      {
-        id: json.id,
-        name: json.name,
-        context: json.context,
-      },
-      { where: { causation_id: causation.id } },
-      handlerOptions,
-    );
-
-    if (existing && find(existing.processedCausationIds, causation.id)) {
-      this.logger.debug("Found existing view matching causation", { view: existing.toJSON() });
-
-      return existing;
-    }
-
-    if (json.revision === 0) {
-      return await this.insert(json, causation, handlerOptions);
-    }
-
-    return await this.update(json, causation, handlerOptions);
-  }
-
-  public async load(
-    identifier: ViewIdentifier,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    this.logger.debug("Loading view", { identifier });
-
-    const existing = await this.find(identifier, {}, handlerOptions);
-
-    if (existing) {
-      this.logger.debug("Loading existing view", { view: existing.toJSON() });
-
-      return existing;
-    }
-
-    const view = new View(identifier, this.logger);
-
-    this.logger.debug("Loading ephemeral view", { view: view.toJSON() });
-
-    return view;
-  }
-
-  // private
-
-  private async find(
-    identifier: ViewIdentifier,
-    causationOptions: FindManyOptions<ViewCausationEntity> = {},
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View | undefined> {
-    await this.promise();
-
-    const viewFilter: FindOneOptions<ViewEntity> = {
-      cache: false,
-      where: {
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
-      },
-    };
-
-    const causationFilter: FindManyOptions<ViewCausationEntity> = {
-      cache: true,
-      order: {
-        timestamp: "ASC",
-        ...(causationOptions.order || {}),
-      },
-      where: {
+    try {
+      const result = await this.connection.getRepository(ViewCausationEntity).findOneBy({
         view_id: identifier.id,
         view_name: identifier.name,
         view_context: identifier.context,
-        ...(causationOptions.where || {}),
-      },
-      ...causationOptions,
-    };
+        causation_id: causation.id,
+      });
 
-    this.logger.debug("Finding view", {
-      viewFilter,
-      causationFilter,
-    });
+      return !!result;
+    } catch (err) {
+      this.logger.error("Failed to verify if causation exists", err);
+
+      throw err;
+    }
+  }
+
+  public async clearProcessedCausationIds(
+    filter: ViewUpdateFilter,
+    data: ViewClearProcessedCausationIdsData,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
-      const viewEntity = await this.connection
-        .getRepository(handlerOptions.postgres.viewEntity)
-        .findOne(viewFilter);
+      const ViewEntity = this.viewEntity(adapterOptions);
 
-      if (!viewEntity) {
+      const result = await this.connection.getRepository(ViewEntity).update(
+        {
+          id: filter.id,
+          hash: filter.hash,
+          revision: filter.revision,
+        },
+        {
+          hash: data.hash,
+          processed_causation_ids: data.processed_causation_ids,
+          revision: data.revision,
+        },
+      );
+
+      this.logger.debug("Cleared processed causation ids", { result });
+    } catch (err) {
+      this.logger.error("Failed to clear processed causation ids", err);
+
+      throw err;
+    }
+  }
+
+  public async find(
+    identifier: StandardIdentifier,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<ViewStoreAttributes> {
+    this.logger.debug("Finding view", { identifier });
+
+    try {
+      const ViewEntity = this.viewEntity(adapterOptions);
+
+      const result = await this.connection.getRepository(ViewEntity).findOneBy({
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
+      });
+
+      if (!result) {
         this.logger.debug("View not found");
+
         return;
       }
 
-      this.logger.debug("Found view entity", { viewEntity });
+      this.logger.debug("Found view", { result });
 
-      const causationEntities = await this.connection
-        .getRepository(handlerOptions.postgres.causationEntity)
-        .find(causationFilter);
-
-      this.logger.debug("Found causation entities", { causationEntities });
-
-      const processedCausationIds: Array<string> = [];
-      for (const entity of causationEntities) {
-        processedCausationIds.push(entity.causation_id);
-      }
-
-      return new View(
-        {
-          id: viewEntity.id,
-          name: viewEntity.name,
-          context: viewEntity.context,
-          processedCausationIds,
-          destroyed: viewEntity.destroyed,
-          meta: viewEntity.meta,
-          revision: viewEntity.revision,
-          state: viewEntity.state,
-        },
-        this.logger,
-      );
+      return result;
     } catch (err) {
       this.logger.error("Failed to find view", err);
 
@@ -160,53 +102,30 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     }
   }
 
-  private async insert(
-    view: ViewData,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    await this.promise();
-
-    this.logger.debug("Inserting view", {
-      view,
-      causation,
-      handlerOptions,
-    });
+  public async insert(
+    attributes: ViewStoreAttributes,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Inserting view", { attributes });
 
     try {
-      return await this.connection.transaction<View>(async (manager) => {
-        const savedView = await manager.getRepository(handlerOptions.postgres.viewEntity).save({
-          id: view.id,
-          name: view.name,
-          context: view.context,
-          destroyed: view.destroyed,
-          meta: view.meta,
-          state: view.state,
-        });
+      const ViewEntity = this.viewEntity(adapterOptions);
 
-        const savedCausation = await manager
-          .getRepository(handlerOptions.postgres.causationEntity)
-          .save({
-            view_id: view.id,
-            view_name: view.name,
-            view_context: view.context,
-            causation_id: causation.id,
-          });
-
-        this.logger.debug("Saved view", {
-          savedCausation,
-          savedView,
-        });
-
-        return new View(
-          {
-            ...view,
-            processedCausationIds: [causation.id],
-            revision: savedView.revision,
-          },
-          this.logger,
-        );
+      const result = await this.connection.getRepository(ViewEntity).insert({
+        id: attributes.id,
+        name: attributes.name,
+        context: attributes.context,
+        destroyed: attributes.destroyed,
+        hash: attributes.hash,
+        meta: attributes.meta,
+        processed_causation_ids: attributes.processed_causation_ids,
+        revision: attributes.revision,
+        state: attributes.state,
+        created_at: attributes.created_at,
+        updated_at: attributes.updated_at,
       });
+
+      this.logger.debug("Inserted view", { result });
     } catch (err) {
       this.logger.error("Failed to insert view", err);
 
@@ -214,62 +133,75 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     }
   }
 
-  private async update(
-    view: ViewData,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    await this.promise();
-
-    this.logger.debug("Updating view", {
-      view,
-      causation,
-      handlerOptions,
-    });
+  public async insertProcessedCausationIds(
+    identifier: StandardIdentifier,
+    causationIds: Array<string>,
+  ): Promise<void> {
+    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
 
     try {
-      return await this.connection.transaction<View>(async (manager) => {
-        const result = await manager.getRepository(handlerOptions.postgres.viewEntity).update(
-          {
-            id: view.id,
-            name: view.name,
-            context: view.context,
-            revision: view.revision,
-          },
-          {
-            destroyed: view.destroyed,
-            meta: view.meta,
-            state: view.state,
-          },
-        );
+      const result = await this.connection.client
+        .createQueryBuilder()
+        .insert()
+        .into(ViewCausationEntity)
+        .values(
+          causationIds.map((causationId) => ({
+            view_id: identifier.id,
+            view_name: identifier.name,
+            view_context: identifier.context,
+            causation_id: causationId,
+          })),
+        )
+        .execute();
 
-        const causationEntity = await manager
-          .getRepository(handlerOptions.postgres.causationEntity)
-          .save({
-            view_id: view.id,
-            view_name: view.name,
-            view_context: view.context,
-            causation_id: causation.id,
-          });
-
-        this.logger.debug("Updated view entity", {
-          result,
-          causation: causationEntity,
-        });
-
-        return new View(
-          {
-            ...view,
-            processedCausationIds: [...view.processedCausationIds, causation.id],
-            revision: view.revision + 1,
-          },
-          this.logger,
-        );
-      });
+      this.logger.debug("Inserted processed causation ids", { result });
     } catch (err) {
-      this.logger.error("Failed to update view", err);
+      this.logger.error("Failed to ", err);
 
       throw err;
     }
+  }
+
+  public async update(
+    filter: ViewUpdateFilter,
+    data: ViewUpdateData,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    this.logger.debug("Updating view", { filter, data });
+
+    try {
+      const ViewEntity = this.viewEntity(adapterOptions);
+
+      const result = await this.connection.getRepository(ViewEntity).update(
+        {
+          id: filter.id,
+          hash: filter.hash,
+          revision: filter.revision,
+        },
+        {
+          destroyed: data.destroyed,
+          hash: data.hash,
+          meta: data.meta,
+          processed_causation_ids: data.processed_causation_ids,
+          revision: data.revision,
+          state: data.state,
+        },
+      );
+
+      this.logger.debug("Updated view", { result });
+    } catch (err) {
+      this.logger.error("Failed to ", err);
+
+      throw err;
+    }
+  }
+
+  // private
+
+  private viewEntity(adapterOptions: ViewEventHandlerAdapters): typeof ViewEntity {
+    if (!adapterOptions.postgres?.ViewEntity) {
+      throw new Error("ViewEntity not in adapter options");
+    }
+    return adapterOptions.postgres.ViewEntity;
   }
 }

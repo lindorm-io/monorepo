@@ -1,32 +1,40 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryColumn } from "typeorm";
+import { EventStoreAttributes } from "../../../types";
 
 @Entity({ name: "event_store" })
-@Index(["aggregate_id", "aggregate_name", "aggregate_context"])
-@Index(["aggregate_id", "aggregate_name", "aggregate_context", "previous_event_id"], {
+@Index(["id", "name", "context"], {
+  unique: false,
+})
+@Index(["id", "name", "context", "causation_id"], {
   unique: true,
 })
-@Index(["aggregate_id", "aggregate_name", "aggregate_context", "expected_events"], { unique: true })
-export class EventEntity {
-  @PrimaryColumn("uuid", { unique: true })
+@Index(["id", "name", "context", "previous_event_id"], {
+  unique: true,
+})
+@Index(["id", "name", "context", "expected_events"], {
+  unique: true,
+})
+export class EventEntity implements EventStoreAttributes {
+  @PrimaryColumn("uuid")
   public readonly id: string;
 
-  @Column()
+  @PrimaryColumn()
   public readonly name: string;
 
-  @Column("uuid")
-  public readonly aggregate_id: string;
+  @PrimaryColumn()
+  public readonly context: string;
 
-  @Column()
-  public readonly aggregate_name: string;
-
-  @Column()
-  public readonly aggregate_context: string;
-
-  @Column("uuid")
+  @PrimaryColumn("uuid")
   public readonly causation_id: string;
 
   @Column("uuid")
   public readonly correlation_id: string;
+
+  @Column("jsonb")
+  public readonly events: any;
+
+  @Column("integer")
+  public readonly expected_events: number;
 
   @Column()
   public readonly origin: string;
@@ -34,17 +42,8 @@ export class EventEntity {
   @Column({ nullable: true })
   public readonly originator: string | null;
 
-  @Column("jsonb")
-  public readonly data: Record<string, any>;
-
-  @Column("integer")
-  public readonly expected_events: number;
-
   @Column("uuid", { nullable: true })
   public readonly previous_event_id: string | null;
-
-  @Column("integer")
-  public readonly version: number;
 
   // automatic
 

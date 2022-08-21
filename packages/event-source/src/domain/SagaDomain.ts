@@ -1,18 +1,14 @@
 import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
+import { HandlerIdentifier, ISagaEventHandler, SagaEventHandlerContext } from "../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
-import { Saga } from "../model";
+import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
+import { Saga } from "../entity";
 import { SagaEventHandler } from "../handler";
-import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State } from "../types";
+import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { find, findLast, isArray, isUndefined, remove, some } from "lodash";
-import {
-  HandlerIdentifier,
-  ISagaEventHandler,
-  ISagaStore,
-  SagaEventHandlerContext,
-} from "../types";
+import { find, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -26,7 +22,7 @@ export class SagaDomain implements ISagaDomain {
   private readonly eventHandlers: Array<ISagaEventHandler>;
   private readonly logger: ILogger;
   private messageBus: IMessageBus;
-  private store: ISagaStore;
+  private store: IDomainSagaStore;
 
   public constructor(options: SagaDomainOptions, logger: ILogger) {
     this.logger = logger.createChildLogger(["SagaDomain"]);
@@ -105,7 +101,6 @@ export class SagaDomain implements ISagaDomain {
           getSagaId: eventHandler.getSagaId,
           handler: eventHandler.handler,
           saga: eventHandler.saga,
-          options: eventHandler.options,
         }),
       );
 
@@ -238,57 +233,29 @@ export class SagaDomain implements ISagaDomain {
       });
     }
 
-    const saga = await this.store.load({
+    const identifier: SagaIdentifier = {
       id: eventHandler.getSagaId(event),
       name: sagaIdentifier.name,
       context: sagaIdentifier.context,
-    });
+    };
 
-    this.logger.debug("Saga identified", {
-      id: saga.id,
-      name: saga.name,
-      context: saga.context,
-      processedCausationIds: saga.processedCausationIds,
-      messagesToDispatch: saga.messagesToDispatch,
-      revision: saga.revision,
-      state: saga.state,
-    });
+    let saga: Saga = await this.store.load(identifier);
 
-    const lastCausationMatchesEventId = findLast(
-      saga.processedCausationIds,
-      (causationId) => causationId === event.id,
-    );
+    this.logger.debug("Saga loaded", { saga: saga.toJSON() });
+
+    const exists = await this.store.causationExists(identifier, event);
+
+    this.logger.debug("Causation exists", { exists });
 
     try {
-      if (!lastCausationMatchesEventId) {
-        const savedSaga = await this.handleSaga(saga, event, eventHandler, conditionValidators);
-
-        await this.publishCommands(savedSaga);
-
-        this.logger.debug("Published commands for saved saga at new revision", {
-          id: savedSaga.id,
-          name: savedSaga.name,
-          context: savedSaga.context,
-          processedCausationIds: savedSaga.processedCausationIds,
-          messagesToDispatch: savedSaga.messagesToDispatch,
-          revision: savedSaga.revision,
-          state: savedSaga.state,
-        });
-      } else {
-        await this.publishCommands(saga);
-
-        this.logger.debug("Published commands for saga at same revision", {
-          id: saga.id,
-          name: saga.name,
-          context: saga.context,
-          processedCausationIds: saga.processedCausationIds,
-          messagesToDispatch: saga.messagesToDispatch,
-          revision: saga.revision,
-          state: saga.state,
-        });
+      if (!exists && !saga.processedCausationIds.includes(event.id)) {
+        saga = await this.handleSaga(saga, event, eventHandler, conditionValidators);
       }
 
-      this.logger.verbose("Handled event", { event, sagaIdentifier });
+      saga = await this.publishCommands(saga);
+      saga = await this.processCausationIds(saga);
+
+      this.logger.verbose("Handled event", { event, saga: saga.toJSON() });
     } catch (err) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
@@ -333,11 +300,16 @@ export class SagaDomain implements ISagaDomain {
 
       await eventHandler.handler(context);
 
-      this.logger.debug("Messages to dispatch", {
-        messagesToDispatch: saga.messagesToDispatch,
+      const saved = await this.store.save(saga, event);
+
+      this.logger.debug("Saved saga at new revision", {
+        id: saved.id,
+        name: saved.name,
+        context: saved.context,
+        revision: saved.revision,
       });
 
-      return await this.store.save(saga, event, eventHandler.options);
+      return saved;
     } catch (err) {
       if (err instanceof DomainError && err.permanent) {
         this.logger.error("Failed to handle Saga", err);
@@ -362,14 +334,41 @@ export class SagaDomain implements ISagaDomain {
     }
   }
 
-  private async publishCommands(saga: Saga): Promise<void> {
-    if (!saga.messagesToDispatch.length) return;
+  private async publishCommands(saga: Saga): Promise<Saga> {
+    if (!saga.messagesToDispatch.length) {
+      return saga;
+    }
 
     await this.messageBus.publish(saga.messagesToDispatch);
 
-    if (saga.revision > 0) {
-      await this.store.clearMessagesToDispatch(saga);
+    this.logger.debug("Published commands for saga", {
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
+      messagesToDispatch: saga.messagesToDispatch,
+    });
+
+    if (saga.revision === 0) {
+      return saga;
     }
+
+    return await this.store.clearMessagesToDispatch(saga);
+  }
+
+  private async processCausationIds(saga: Saga): Promise<Saga> {
+    if (saga.processedCausationIds.length < MAX_PROCESSED_CAUSATION_IDS_LENGTH) {
+      return saga;
+    }
+
+    this.logger.debug("Processing causation ids for saga", {
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
+      processedCausationIds: saga.processedCausationIds,
+    });
+
+    await this.store.processCausationIds(saga);
+    return await this.store.clearProcessedCausationIds(saga);
   }
 
   // private static

@@ -1,128 +1,65 @@
-import { Command, DomainEvent } from "../../message";
-import { Document, Filter, FindOptions, Sort } from "mongodb";
+import { Collection } from "mongodb";
+import { EVENT_COLLECTION, EVENT_COLLECTION_INDICES } from "../../constant/event-store";
+import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoDuplicateKeyError } from "../../error";
-import {
-  AggregateIdentifier,
-  EventStoreSaveOptions,
-  IAggregate,
-  IEventStore,
-  MongoEventAttributes,
-  MongoEventStoreAttributes,
-} from "../../types";
 
-export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implements IEventStore {
+export class MongoEventStore extends MongoBase implements IEventStore {
   public constructor(connection: IMongoConnection, logger: ILogger) {
-    super(
-      {
-        connection,
-        collection: "events",
-        indices: [
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-              causationId: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_causation",
-              unique: true,
-            },
-          },
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-              expectedEvents: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_expected_events",
-              unique: true,
-            },
-          },
-          {
-            indexSpecification: {
-              id: 1,
-              name: 1,
-              context: 1,
-              previousEventId: 1,
-            },
-            createIndexesOptions: {
-              name: "unique_previous_event_id",
-              unique: true,
-            },
-          },
-        ],
-      },
-      logger,
-    );
+    super(connection, logger);
   }
 
   // public
 
-  public async save(
-    aggregate: IAggregate,
-    causation: Command,
-    options: EventStoreSaveOptions,
-  ): Promise<Array<DomainEvent>> {
-    const { causationEvents, expectedEvents, previousEventId } = options;
-
-    const events = await this.find(
-      {
-        id: aggregate.id,
-        name: aggregate.name,
-        context: aggregate.context,
-      },
-      { causationId: causation.id },
-    );
-
-    if (events.length) {
-      this.logger.debug("Found events matching causation");
-
-      return events;
-    }
-
-    const array: Array<MongoEventAttributes> = [];
-    for (const event of causationEvents) {
-      array.push({
-        id: event.id,
-        name: event.name,
-        causationId: event.causationId,
-        correlationId: event.correlationId,
-        data: event.data,
-        version: event.version,
-        timestamp: event.timestamp,
-      });
-    }
-
-    const doc: MongoEventStoreAttributes = {
-      id: aggregate.id,
-      name: aggregate.name,
-      context: aggregate.context,
-
-      causationId: causation.id,
-      events: array,
-      expectedEvents,
-      origin: causation.origin,
-      originator: causation.originator,
-      previousEventId,
-      timestamp: new Date(),
-    };
-
-    this.logger.debug("Inserting event document", { doc });
+  public async find(filter: EventStoreFindFilter): Promise<Array<EventData>> {
+    this.logger.debug("Finding event documents", { filter });
 
     try {
-      const result = await this.collection.insertOne(doc);
+      const collection = await this.eventCollection();
 
-      this.logger.debug("Aggregate saved", { result });
+      const cursor = collection.find(filter, {
+        sort: { expected_events: 1 },
+      });
 
-      return causationEvents;
+      const documents = await cursor.toArray();
+
+      this.logger.debug("Found event documents", { documents });
+
+      if (!documents.length) return [];
+
+      return MongoEventStore.toEventData(documents);
     } catch (err) {
-      this.logger.error("Failed to save Aggregate", err);
+      this.logger.error("Failed to find event documents", err);
+
+      throw err;
+    }
+  }
+
+  public async insert(data: EventStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting event document", { data });
+
+    try {
+      const collection = await this.eventCollection();
+
+      const result = await collection.insertOne({
+        id: data.id,
+        name: data.name,
+        context: data.context,
+        causation_id: data.causation_id,
+        correlation_id: data.correlation_id,
+        events: data.events,
+        expected_events: data.expected_events,
+        origin: data.origin,
+        originator: data.originator,
+        previous_event_id: data.previous_event_id,
+        timestamp: data.timestamp,
+      });
+
+      this.logger.verbose("Inserted event document", { result });
+    } catch (err) {
+      this.logger.error("Failed to insert event document", err);
 
       if (err.code === 11000) {
         throw new MongoDuplicateKeyError(err.message, err);
@@ -132,73 +69,27 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
     }
   }
 
-  public async load(identifier: AggregateIdentifier): Promise<Array<DomainEvent>> {
-    await this.promise();
-
-    return await this.find(identifier);
-  }
-
-  public async events(from: Date, limit: number): Promise<Array<DomainEvent>> {
-    await this.promise();
-
-    const filter: Filter<MongoEventStoreAttributes> = { timestamp: { $gte: from } };
-    const options: FindOptions<MongoEventStoreAttributes> = {
-      projection: {
-        _id: 0,
-        id: 1,
-        name: 1,
-        context: 1,
-        events: 1,
-        origin: 1,
-        originator: 1,
-        timestamp: 1,
-      },
-      sort: {
-        timestamp: 1,
-      },
-      limit,
-    };
-
-    this.logger.debug("Querying events", {
-      from,
-      limit,
-      filter,
-      options,
-    });
+  public async listEvents(from: Date, limit: number): Promise<Array<EventData>> {
+    this.logger.debug("Listing event documents", { from, limit });
 
     try {
-      const cursor = this.collection.find(filter, options);
-      const docs = await cursor.toArray();
+      const collection = await this.eventCollection();
 
-      this.logger.debug("Found events", { docs });
+      const cursor = collection.find(
+        { timestamp: { $gte: from } },
+        {
+          sort: { timestamp: 1 },
+          limit,
+        },
+      );
 
-      const array: Array<DomainEvent> = [];
-      for (const attribute of docs) {
-        for (const event of attribute.events) {
-          array.push(
-            new DomainEvent({
-              id: event.id,
-              name: event.name,
-              aggregate: {
-                id: attribute.id,
-                name: attribute.name,
-                context: attribute.context,
-              },
-              causationId: event.causationId,
-              correlationId: event.correlationId,
-              data: event.data,
-              origin: attribute.origin,
-              originator: attribute.originator,
-              version: event.version,
-              timestamp: event.timestamp,
-            }),
-          );
-        }
-      }
+      const documents = await cursor.toArray();
 
-      return array;
+      this.logger.debug("Found event documents", { documents });
+
+      return MongoEventStore.toEventData(documents);
     } catch (err) {
-      this.logger.error("Failed to query events", err);
+      this.logger.error("Failed to list event documents", err);
 
       throw err;
     }
@@ -206,75 +97,34 @@ export class MongoEventStore extends MongoBase<MongoEventStoreAttributes> implem
 
   // private
 
-  private async find(
-    identifier: AggregateIdentifier,
-    findFilter: Filter<MongoEventStoreAttributes> = {},
-    findOptions: FindOptions = {},
-  ): Promise<Array<DomainEvent>> {
-    const filter = { ...identifier, ...findFilter };
-    const projection: Document = {
-      events: 1,
-      expectedEvents: 1,
-      origin: 1,
-      originator: 1,
-    };
-    const sort: Sort = {
-      expectedEvents: 1,
-    };
-    const options = {
-      ...findOptions,
-      projection: findOptions.projection || projection,
-      sort: findOptions.sort || sort,
-    };
+  private async eventCollection(): Promise<Collection<EventStoreAttributes>> {
+    return await this.collection<EventStoreAttributes>(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
+  }
 
-    this.logger.debug("Finding events", {
-      filter,
-      options,
-    });
+  private static toEventData(documents: Array<EventStoreAttributes>): Array<EventData> {
+    const result: Array<EventData> = [];
 
-    await this.promise();
-
-    try {
-      const cursor = this.collection.find(filter, options);
-      const docs = await cursor.toArray();
-
-      if (!docs.length) {
-        this.logger.debug("No events found");
-
-        return [];
+    for (const item of documents) {
+      for (const event of item.events) {
+        result.push({
+          id: event.id,
+          name: event.name,
+          aggregate: {
+            id: item.id,
+            name: item.name,
+            context: item.context,
+          },
+          causation_id: item.causation_id,
+          correlation_id: item.correlation_id,
+          data: event.data,
+          origin: item.origin,
+          originator: item.originator,
+          timestamp: event.timestamp,
+          version: event.version,
+        });
       }
-
-      const array: Array<DomainEvent> = [];
-      for (const attribute of docs) {
-        for (const event of attribute.events) {
-          array.push(
-            new DomainEvent({
-              id: event.id,
-              name: event.name,
-              aggregate: {
-                id: identifier.id,
-                name: identifier.name,
-                context: identifier.context,
-              },
-              causationId: event.causationId,
-              correlationId: event.correlationId,
-              data: event.data,
-              origin: attribute.origin,
-              originator: attribute.originator,
-              version: event.version,
-              timestamp: event.timestamp,
-            }),
-          );
-        }
-      }
-
-      this.logger.debug("Found events", { events: array });
-
-      return array;
-    } catch (err) {
-      this.logger.error("Failed to find events", err);
-
-      throw err;
     }
+
+    return result;
   }
 }

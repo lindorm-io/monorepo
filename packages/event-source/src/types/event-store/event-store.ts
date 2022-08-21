@@ -1,40 +1,51 @@
-import { Aggregate } from "../../model";
-import { AggregateIdentifier, IAggregate } from "../model";
+import { Aggregate } from "../../entity";
+import { AggregateIdentifier, IAggregate } from "../entity";
 import { Command, DomainEvent } from "../../message";
+import { EventStoreAttributes } from "./event-store-attributes";
 import { IAggregateEventHandler } from "../handler";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 
-export type EventStorePersistenceType = "custom" | "mongo" | "postgres";
+export type EventStoreAdapterType = "custom" | "mongo" | "postgres";
 
 export interface EventStoreOptions {
   custom?: IEventStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-  type: EventStorePersistenceType;
+  type: EventStoreAdapterType;
 }
 
-export interface EventStoreSaveOptions {
-  causationEvents: Array<DomainEvent>;
-  expectedEvents: number;
-  previousEventId: string | null;
+export interface EventData {
+  id: string;
+  name: string;
+  aggregate: AggregateIdentifier;
+  causation_id: string;
+  correlation_id: string;
+  data: Record<string, any>;
+  origin: string;
+  originator: string | null;
+  timestamp: Date;
+  version: number;
 }
 
-export interface IEventStore {
-  save(
-    aggregate: IAggregate,
-    causation: Command,
-    options: EventStoreSaveOptions,
-  ): Promise<Array<DomainEvent>>;
-  load(aggregateIdentifier: AggregateIdentifier): Promise<Array<DomainEvent>>;
-  events(from: Date, limit: number): Promise<Array<DomainEvent>>;
+export interface EventStoreFindFilter {
+  id: string;
+  name: string;
+  context: string;
+  causation_id?: string;
 }
 
 export interface IDomainEventStore {
-  save(aggregate: IAggregate, causation: Command): Promise<Array<DomainEvent>>;
+  listEvents(from: Date, limit: number): Promise<Array<DomainEvent>>;
   load(
     aggregateIdentifier: AggregateIdentifier,
     eventHandlers: Array<IAggregateEventHandler>,
   ): Promise<Aggregate>;
-  events(from: Date, limit: number): Promise<Array<DomainEvent>>;
+  save(aggregate: IAggregate, causation: Command): Promise<Array<DomainEvent>>;
+}
+
+export interface IEventStore {
+  find(filter: EventStoreFindFilter): Promise<Array<EventData>>;
+  insert(data: EventStoreAttributes): Promise<void>;
+  listEvents(from: Date, limit: number): Promise<Array<EventData>>;
 }

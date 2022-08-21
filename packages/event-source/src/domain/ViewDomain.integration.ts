@@ -1,6 +1,7 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { DomainEvent } from "../message";
 import { MessageBus, ViewStore } from "../infrastructure";
+import { MessageBusType, ViewStoreType } from "../enum";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
@@ -9,7 +10,6 @@ import { ViewEventHandler } from "../handler";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
-import { MessageBusType } from "../enum";
 import {
   TEST_VIEW_EVENT_HANDLER,
   TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
@@ -26,7 +26,6 @@ import {
 
 describe("ViewDomain", () => {
   const logger = createMockLogger();
-  const handlerOptions = TEST_VIEW_EVENT_HANDLER.persistence;
 
   let amqp: AmqpConnection;
   let domain: ViewDomain;
@@ -58,7 +57,7 @@ describe("ViewDomain", () => {
     );
 
     messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
-    store = new ViewStore({ mongo }, logger);
+    store = new ViewStore({ mongo, type: ViewStoreType.MONGO }, logger);
     domain = new ViewDomain({ messageBus, store }, logger);
 
     eventHandlers = [
@@ -101,18 +100,13 @@ describe("ViewDomain", () => {
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(2000);
 
-    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
+    await expect(store.load(view, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
         name: "view_name",
         context: "default",
-        processedCausationIds: [
-          eventCreate.id,
-          eventAddField.id,
-          eventSetState.id,
-          eventDestroy.id,
-        ],
         destroyed: true,
+        hash: expect.any(String),
         meta: {
           created: {
             removed: false,
@@ -141,6 +135,12 @@ describe("ViewDomain", () => {
             value: { value: { domainEventData: true } },
           },
         },
+        processedCausationIds: [
+          eventCreate.id,
+          eventAddField.id,
+          eventSetState.id,
+          eventDestroy.id,
+        ],
         revision: 4,
         state: {
           created: true,

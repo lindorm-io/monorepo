@@ -1,4 +1,4 @@
-import { Aggregate } from "../model";
+import { Aggregate } from "../entity";
 import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
@@ -127,7 +127,6 @@ export class AggregateDomain implements IAggregateDomain {
     });
 
     if (existingHandler) {
-      console.log(this.eventHandlers);
       throw new LindormError("Event handler already registered", {
         debug: {
           eventName: eventHandler.eventName,

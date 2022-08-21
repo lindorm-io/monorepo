@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../model";
+import { Aggregate, Saga } from "../entity";
 import { AggregateDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
 import { EventStoreType, MessageBusType, ReplayEventName, SagaStoreType } from "../enum";
@@ -6,7 +6,6 @@ import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { IRedisConnection } from "@lindorm-io/redis";
 import { LindormError } from "@lindorm-io/errors";
 import { isArray, merge, snakeCase } from "lodash";
 import { join } from "path";
@@ -20,9 +19,8 @@ import {
   EventStore,
   MessageBus,
   MongoViewRepository,
-  PostgresViewRepository,
-  RedisViewRepository,
   SagaStore,
+  PostgresViewRepository,
   ViewEntity,
   ViewStore,
 } from "../infrastructure";
@@ -73,7 +71,6 @@ export class EventSource implements IEventSource {
   private readonly messageBus: IMessageBus;
   private readonly mongo: IMongoConnection;
   private readonly postgres: IPostgresConnection;
-  private readonly redis: IRedisConnection;
 
   private readonly logger: ILogger;
   private readonly options: PrivateAppOptions;
@@ -96,7 +93,7 @@ export class EventSource implements IEventSource {
   private promise: () => Promise<void>;
 
   public constructor(options: AppOptions, logger: ILogger) {
-    const { amqp, mongo, postgres, redis, ...appOptions } = options;
+    const { amqp, mongo, postgres, ...appOptions } = options;
 
     this.logger = logger.createChildLogger(["App"]);
 
@@ -147,7 +144,6 @@ export class EventSource implements IEventSource {
     this.amqp = amqp;
     this.mongo = mongo;
     this.postgres = postgres;
-    this.redis = redis;
 
     const eventStore = new EventStore(
       {
@@ -174,7 +170,6 @@ export class EventSource implements IEventSource {
         custom: options.custom?.viewStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        redis: this.redis,
         type: this.options.views.type,
       },
       this.logger,
@@ -259,28 +254,20 @@ export class EventSource implements IEventSource {
 
   public get repositories(): AppRepositories {
     return {
-      mongo: <S>(name: string, collection?: string) =>
+      mongo: <S>(name: string, context?: string) =>
         new MongoViewRepository<S>(
           {
-            collection,
             connection: this.mongo,
-            view: { name, context: this.options.domain.context },
+            view: { name, context: context || this.options.domain.context },
           },
           this.logger,
         ),
-      postgres: <S>(name: string, entity?: typeof ViewEntity) =>
+      postgres: <S>(name: string, context?: string) =>
         new PostgresViewRepository<S>(
           {
             connection: this.postgres,
-            viewEntity: entity || this.entities[name],
-          },
-          this.logger,
-        ),
-      redis: <S>(name: string) =>
-        new RedisViewRepository<S>(
-          {
-            connection: this.redis,
-            view: { name, context: this.options.domain.context },
+            ViewEntity: this.entities[this.viewEntityName(name, context)],
+            view: { name, context: context || this.options.domain.context },
           },
           this.logger,
         ),
@@ -416,6 +403,7 @@ export class EventSource implements IEventSource {
     for (const handler of handlers) {
       await this.viewDomain.registerEventHandler(handler);
     }
+
     this.registerViewEntities(handlers);
   }
 
@@ -423,22 +411,20 @@ export class EventSource implements IEventSource {
     this.assertRegister();
 
     for (const handler of handlers) {
-      if (handler.persistence.type !== "postgres") continue;
+      if (handler.adapters.type !== "postgres" && !handler.adapters.postgres) continue;
 
-      if (
-        !handler.persistence.postgres?.viewEntity ||
-        !handler.persistence.postgres?.causationEntity
-      ) {
+      if (!handler.adapters.postgres?.ViewEntity) {
         throw new LindormError("Invalid ViewEventHandler", {
-          description: "View Event Handler registered without entities",
+          description: "View Event Handler registered without ViewEntity",
           data: {
-            persistence: handler.persistence,
+            adapters: handler.adapters,
             view: handler.view,
           },
         });
       }
 
-      this.entities[handler.view.name] = handler.persistence.postgres.viewEntity;
+      this.entities[this.viewEntityName(handler.view.name, handler.view.context)] =
+        handler.adapters.postgres.ViewEntity;
     }
   }
 
@@ -602,7 +588,6 @@ export class EventSource implements IEventSource {
               context: snakeCase(this.options.domain.context),
             },
             conditions: handler.conditions,
-            options: handler.options,
             version: handler.version,
             getSagaId: handler.getSagaId ? handler.getSagaId : defaultSagaIdFunction,
             handler: handler.handler,
@@ -643,6 +628,7 @@ export class EventSource implements IEventSource {
 
         this.viewEventHandlers.push(
           new ViewEventHandler({
+            adapters: handler.adapters,
             eventName: snakeCase(file.name),
             aggregate: {
               name: snakeCase(aggregateName),
@@ -655,7 +641,6 @@ export class EventSource implements IEventSource {
               context: snakeCase(this.options.domain.context),
             },
             conditions: handler.conditions,
-            persistence: handler.persistence,
             version: handler.version,
             getViewId: handler.getViewId ? handler.getViewId : defaultViewIdFunction,
             handler: handler.handler,
@@ -713,6 +698,10 @@ export class EventSource implements IEventSource {
     }
 
     return true;
+  }
+
+  private viewEntityName(name: string, context?: string): string {
+    return `${context || this.options.domain.context}_${name}`;
   }
 
   // private event listeners

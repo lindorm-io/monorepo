@@ -6,17 +6,19 @@ import { State } from "../generic";
 export type SagaIdentifier = StandardIdentifier;
 
 export interface SagaData extends SagaIdentifier {
-  processedCausationIds: Array<string>;
   destroyed: boolean;
+  hash: string;
   messagesToDispatch: Array<Command>;
+  processedCausationIds: Array<string>;
   revision: number;
   state: Record<string, any>;
 }
 
 export interface SagaOptions<S extends State = State> extends SagaIdentifier {
-  processedCausationIds?: Array<string>;
   destroyed?: boolean;
+  hash?: string;
   messagesToDispatch?: Array<Command>;
+  processedCausationIds?: Array<string>;
   revision?: number;
   state?: S;
 }

@@ -1,35 +1,33 @@
-import { AggregateIdentifier, ViewIdentifier, ViewStoreHandlerOptions } from "../../types";
 import { DomainEvent } from "../../message";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { PostgresViewStore } from "./PostgresViewStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
-import { View } from "../../model";
+import { ViewCausationEntity } from "./entity";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createViewEntities } from "../../util";
+import { createTypeormViewEntity } from "../../util";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
-  TEST_DOMAIN_EVENT_CREATE,
-  TEST_DOMAIN_EVENT_SET_STATE,
-} from "../../fixtures/domain-event.fixture";
-import { ViewStoreType } from "../../enum";
+  AggregateIdentifier,
+  ViewClearProcessedCausationIdsData,
+  ViewEventHandlerAdapters,
+  ViewIdentifier,
+  ViewStoreAttributes,
+  ViewUpdateData,
+  ViewUpdateFilter,
+} from "../../types";
 
 describe("PostgresViewStore", () => {
   const logger = createMockLogger();
-  const { ViewEntity, ViewCausationEntity } = createViewEntities("ViewCausationEntity");
+  const ViewEntity = createTypeormViewEntity(TEST_VIEW_IDENTIFIER);
+  const adapterOptions: ViewEventHandlerAdapters = { postgres: { ViewEntity } };
 
-  const handlerOptions: ViewStoreHandlerOptions = {
-    type: ViewStoreType.POSTGRES,
-    postgres: {
-      viewEntity: ViewEntity,
-      causationEntity: ViewCausationEntity,
-    },
-  };
-
-  let aggregate: AggregateIdentifier;
+  let aggregateIdentifier: AggregateIdentifier;
   let connection: PostgresConnection;
   let store: PostgresViewStore;
-  let view: ViewIdentifier;
+  let viewIdentifier: ViewIdentifier;
 
   beforeAll(async () => {
     connection = new PostgresConnection(
@@ -51,106 +49,202 @@ describe("PostgresViewStore", () => {
   }, 30000);
 
   beforeEach(() => {
-    aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
+    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    viewIdentifier = { ...TEST_VIEW_IDENTIFIER, id: aggregateIdentifier.id };
   });
 
   afterAll(async () => {
     await connection.disconnect();
   });
 
-  test("should save new view", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View(view, logger);
+  test("should resolve existing causation", async () => {
+    const repository = connection.getRepository(ViewCausationEntity);
 
-    await expect(store.save(entity, event, handlerOptions)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        meta: {},
-        revision: 1,
-        state: {},
-      }),
-    );
-  }, 10000);
+    const command = new DomainEvent(TEST_COMMAND);
 
-  test("should save existing view", async () => {
-    const event1 = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View(
-      {
-        ...view,
-        state: {
-          created: true,
+    await repository.insert({
+      view_id: viewIdentifier.id,
+      view_name: viewIdentifier.name,
+      view_context: viewIdentifier.context,
+      causation_id: command.id,
+    });
+
+    await expect(store.causationExists(viewIdentifier, command)).resolves.toBe(true);
+
+    await expect(
+      store.causationExists(
+        {
+          ...viewIdentifier,
+          id: randomUUID(),
         },
-      },
-      logger,
-    );
+        command,
+      ),
+    ).resolves.toBe(false);
+  });
 
-    const saved = await store.save(entity, event1, handlerOptions);
-    const event2 = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
-    const json = saved.toJSON();
-    const changed = new View(
-      {
-        ...json,
-        state: {
-          ...json.state,
-          changed: true,
-        },
-      },
-      logger,
-    );
+  test("should clear processed causation ids", async () => {
+    const repository = connection.getRepository(ViewEntity);
 
-    await expect(store.save(changed, event2, handlerOptions)).resolves.toStrictEqual(
+    const entity = repository.create({
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: ["processed"],
+      revision: 1,
+      state: {},
+    });
+
+    await repository.save(entity);
+
+    const filter: ViewUpdateFilter = {
+      id: entity.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      hash: entity.hash,
+      revision: entity.revision,
+    };
+
+    const update: ViewClearProcessedCausationIdsData = {
+      hash: randomString(16),
+      processed_causation_ids: [],
+      revision: 2,
+    };
+
+    await expect(
+      store.clearProcessedCausationIds(filter, update, adapterOptions),
+    ).resolves.toBeUndefined();
+
+    await expect(repository.findOneBy(viewIdentifier)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event1.id, event2.id],
-        destroyed: false,
-        meta: {},
+        hash: update.hash,
+        processed_causation_ids: [],
         revision: 2,
-        state: {
-          created: true,
-          changed: true,
-        },
-      }),
-    );
-  }, 10000);
-
-  test("should load new view", async () => {
-    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [],
-        destroyed: false,
-        meta: {},
-        revision: 0,
-        state: {},
       }),
     );
   });
 
-  test("should load existing view", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new View({ ...view, state: { created: true } }, logger);
+  test("should find view", async () => {
+    const repository = connection.getRepository(ViewEntity);
 
-    await store.save(entity, event, handlerOptions);
+    const entity = repository.create({
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 1,
+      state: { found: true },
+    });
 
-    await expect(store.load(view, handlerOptions)).resolves.toStrictEqual(
+    await repository.save(entity);
+
+    await expect(store.find(viewIdentifier, adapterOptions)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: view.id,
-        name: "view_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        meta: {},
-        revision: 1,
-        state: { created: true },
+        hash: entity.hash,
+        state: { found: true },
+      }),
+    );
+  });
+
+  test("should insert view", async () => {
+    const repository = connection.getRepository(ViewEntity);
+
+    const data: ViewStoreAttributes = {
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 1,
+      state: { inserted: true },
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    await expect(store.insert(data, adapterOptions)).resolves.toBeUndefined();
+
+    await expect(repository.findOneBy(viewIdentifier)).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: data.hash,
+        state: { inserted: true },
+      }),
+    );
+  });
+
+  test("should insert processed causation ids", async () => {
+    const repository = connection.getRepository(ViewCausationEntity);
+
+    const one = randomUUID();
+    const two = randomUUID();
+    const three = randomUUID();
+
+    await expect(
+      store.insertProcessedCausationIds(viewIdentifier, [one, two, three]),
+    ).resolves.toBeUndefined();
+
+    await expect(
+      repository.findBy({
+        view_id: viewIdentifier.id,
+        view_name: viewIdentifier.name,
+        view_context: viewIdentifier.context,
+      }),
+    ).resolves.toStrictEqual([
+      expect.objectContaining({ causation_id: one }),
+      expect.objectContaining({ causation_id: two }),
+      expect.objectContaining({ causation_id: three }),
+    ]);
+  });
+
+  test("should update view", async () => {
+    const repository = connection.getRepository(ViewEntity);
+
+    const entity = repository.create({
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 1,
+      state: { found: true },
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+
+    await repository.save(entity);
+
+    const filter: ViewUpdateFilter = {
+      id: entity.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+      hash: entity.hash,
+      revision: entity.revision,
+    };
+
+    const update: ViewUpdateData = {
+      destroyed: false,
+      hash: randomString(16),
+      meta: {},
+      processed_causation_ids: [],
+      revision: 2,
+      state: { updated: true },
+    };
+
+    await expect(store.update(filter, update, adapterOptions)).resolves.toBeUndefined();
+
+    await expect(repository.findOneBy(viewIdentifier)).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: update.hash,
+        revision: 2,
+        state: { updated: true },
       }),
     );
   });

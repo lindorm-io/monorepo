@@ -1,6 +1,5 @@
-import { ViewCausationEntity, ViewEntity } from "../../infrastructure";
+import { ViewEntity } from "../../infrastructure";
 
-export interface PostgresViewStoreHandlerOptions {
-  causationEntity: typeof ViewCausationEntity;
-  viewEntity: typeof ViewEntity;
+export interface PostgresViewEventHandlerAdapterOptions {
+  ViewEntity: typeof ViewEntity;
 }

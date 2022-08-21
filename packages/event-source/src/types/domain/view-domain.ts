@@ -1,12 +1,12 @@
 import { EventEmitterListener } from "../event-emitter";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { IViewEventHandler } from "../handler";
-import { IViewStore } from "../view-store";
+import { IDomainViewStore } from "../view-store";
 import { State } from "../generic";
 
 export interface ViewDomainOptions {
   messageBus: IMessageBus;
-  store: IViewStore;
+  store: IDomainViewStore;
 }
 
 export interface IViewDomain {

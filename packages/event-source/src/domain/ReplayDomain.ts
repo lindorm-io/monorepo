@@ -178,7 +178,7 @@ export class ReplayDomain implements IReplayDomain {
   // private helpers
 
   private async queryEvents(event: ReplayMessage<ReplayMessageData>): Promise<Array<DomainEvent>> {
-    return await this.eventStore.events(
+    return await this.eventStore.listEvents(
       event.data.publishEvents.timestamp || new Date("1970-01-01T00:00:00T00:00:01.000Z"),
       25,
     );

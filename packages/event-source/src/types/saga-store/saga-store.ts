@@ -1,25 +1,69 @@
 import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
+import { ISaga, SagaIdentifier } from "../entity";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { ISaga, SagaIdentifier } from "../model";
-import { MongoSagaStoreHandlerOptions } from "./saga-store-mongo";
-import { Saga } from "../../model";
+import { Saga } from "../../entity";
+import { SagaStoreAttributes } from "./saga-store-attributes";
 
-export type SagaStorePersistenceType = "custom" | "mongo" | "postgres";
+export type SagaStoreAdapterType = "custom" | "mongo" | "postgres";
 
 export interface SagaStoreOptions {
+  custom?: ISagaStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-  custom?: ISagaStore;
-  type: SagaStorePersistenceType;
+  type: SagaStoreAdapterType;
 }
 
-export interface SagaStoreHandlerOptions {
-  mongo?: MongoSagaStoreHandlerOptions;
+export interface SagaUpdateFilter extends SagaIdentifier {
+  hash: string;
+  revision: number;
+}
+
+export interface SagaUpdateData {
+  destroyed: boolean;
+  hash: string;
+  messages_to_dispatch: Array<IMessage>;
+  processed_causation_ids: Array<string>;
+  revision: number;
+  state: Record<string, any>;
+}
+
+export interface SagaClearMessagesToDispatchData {
+  hash: string;
+  messages_to_dispatch: Array<IMessage>;
+  revision: number;
+}
+
+export interface SagaClearProcessedCausationIdsData {
+  hash: string;
+  processed_causation_ids: Array<string>;
+  revision: number;
+}
+
+export interface IDomainSagaStore {
+  causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
+  clearMessagesToDispatch(saga: ISaga): Promise<Saga>;
+  clearProcessedCausationIds(saga: ISaga): Promise<Saga>;
+  load(identifier: SagaIdentifier): Promise<Saga>;
+  processCausationIds(saga: ISaga): Promise<void>;
+  save(saga: ISaga, causation: IMessage): Promise<Saga>;
 }
 
 export interface ISagaStore {
-  save(saga: ISaga, causation: IMessage, handlerOptions?: SagaStoreHandlerOptions): Promise<Saga>;
-  load(identifier: SagaIdentifier): Promise<Saga>;
-  clearMessagesToDispatch(saga: ISaga, handlerOptions?: SagaStoreHandlerOptions): Promise<Saga>;
+  causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
+  clearMessagesToDispatch(
+    filter: SagaUpdateFilter,
+    data: SagaClearMessagesToDispatchData,
+  ): Promise<void>;
+  clearProcessedCausationIds(
+    filter: SagaUpdateFilter,
+    data: SagaClearProcessedCausationIdsData,
+  ): Promise<void>;
+  find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined>;
+  insert(attributes: SagaStoreAttributes): Promise<void>;
+  insertProcessedCausationIds(
+    identifier: SagaIdentifier,
+    causationIds: Array<string>,
+  ): Promise<void>;
+  update(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void>;
 }

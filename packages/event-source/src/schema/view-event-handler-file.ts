@@ -1,13 +1,12 @@
 import Joi from "joi";
 import {
   HandlerConditions,
-  MongoViewStoreHandlerOptions,
-  RedisViewStoreHandlerOptions,
+  MongoViewEventHandlerAdapterOptions,
+  PostgresViewEventHandlerAdapterOptions,
+  ViewEventHandlerAdapters,
   ViewEventHandlerFile,
   ViewEventHandlerFileAggregate,
-  ViewStoreHandlerOptions,
 } from "../types";
-import { PostgresViewStoreHandlerOptions } from "../types/view-store/view-store-postgres";
 
 export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandlerFile>().keys({
   aggregate: Joi.object<ViewEventHandlerFileAggregate>()
@@ -21,12 +20,11 @@ export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandlerFile>().ke
       permanent: Joi.boolean().optional(),
     })
     .optional(),
-  persistence: Joi.object<ViewStoreHandlerOptions>()
+  adapters: Joi.object<ViewEventHandlerAdapters>()
     .keys({
-      mongo: Joi.object<MongoViewStoreHandlerOptions>().optional(),
-      postgres: Joi.object<PostgresViewStoreHandlerOptions>().optional(),
-      redis: Joi.object<RedisViewStoreHandlerOptions>().optional(),
-      type: Joi.string().allow("custom", "mongo", "postgres", "redis"),
+      mongo: Joi.object<MongoViewEventHandlerAdapterOptions>().optional(),
+      postgres: Joi.object<PostgresViewEventHandlerAdapterOptions>().optional(),
+      type: Joi.string().allow("custom", "mongo", "postgres"),
     })
     .optional(),
   version: Joi.number().optional(),

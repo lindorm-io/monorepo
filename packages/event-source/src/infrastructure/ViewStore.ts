@@ -1,97 +1,211 @@
 import { ILogger } from "@lindorm-io/winston";
-import { LindormError } from "@lindorm-io/errors";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
-import { RedisViewStore } from "./redis";
-import { View } from "../model";
+import { View } from "../entity";
 import { ViewStoreType } from "../enum";
+import { flatten } from "lodash";
+import { randomString } from "@lindorm-io/core";
 import {
+  IDomainViewStore,
   IMessage,
   IView,
   IViewStore,
+  ViewClearProcessedCausationIdsData,
+  ViewData,
+  ViewEventHandlerAdapters,
   ViewIdentifier,
-  ViewStoreHandlerOptions,
+  ViewStoreAttributes,
   ViewStoreOptions,
-  ViewStorePersistenceType,
+  ViewUpdateData,
+  ViewUpdateFilter,
 } from "../types";
 
-export class ViewStore implements IViewStore {
-  private readonly custom: IViewStore;
-  private readonly mongo: IViewStore;
-  private readonly postgres: IViewStore;
-  private readonly redis: IViewStore;
-  private readonly type: ViewStorePersistenceType | undefined;
+export class ViewStore implements IDomainViewStore {
+  private readonly store: IViewStore;
+  private readonly logger: ILogger;
 
   public constructor(options: ViewStoreOptions, logger: ILogger) {
-    if (options.custom) {
-      this.custom = options.custom;
-    }
-    if (options.mongo) {
-      this.mongo = new MongoViewStore(options.mongo, logger);
-    }
-    if (options.postgres) {
-      this.postgres = new PostgresViewStore(options.postgres, logger);
-    }
-    if (options.redis) {
-      this.redis = new RedisViewStore(options.redis, logger);
-    }
+    this.logger = logger.createChildLogger(["ViewStore"]);
 
-    this.type = options.type;
+    switch (options.type) {
+      case ViewStoreType.CUSTOM:
+        if (!options.custom) throw new Error("Connection not provided");
+        this.store = options.custom;
+        break;
+
+      case ViewStoreType.MONGO:
+        if (!options.mongo) throw new Error("Connection not provided");
+        this.store = new MongoViewStore(options.mongo, logger);
+        break;
+
+      case ViewStoreType.POSTGRES:
+        if (!options.postgres) throw new Error("Connection not provided");
+        this.store = new PostgresViewStore(options.postgres, logger);
+        break;
+
+      default:
+        throw new Error("Invalid ViewStore type");
+        break;
+    }
   }
 
   // public
 
-  public save(
-    view: IView,
-    causation: IMessage,
-    handlerOptions: ViewStoreHandlerOptions,
-  ): Promise<View> {
-    const type = handlerOptions.type || this.type;
-
-    switch (type) {
-      case ViewStoreType.CUSTOM:
-        if (!this.custom) throw new Error("Connection not provided");
-        return this.custom.save(view, causation, handlerOptions);
-
-      case ViewStoreType.MONGO:
-        if (!this.mongo) throw new Error("Connection not provided");
-        return this.mongo.save(view, causation, handlerOptions);
-
-      case ViewStoreType.POSTGRES:
-        if (!this.postgres) throw new Error("Connection not provided");
-        return this.postgres.save(view, causation, handlerOptions);
-
-      case ViewStoreType.REDIS:
-        if (!this.redis) throw new Error("Connection not provided");
-        return this.redis.save(view, causation, handlerOptions);
-
-      default:
-        throw new LindormError("Invalid store type");
-    }
+  public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
+    return await this.store.causationExists(identifier, causation);
   }
 
-  public load(identifier: ViewIdentifier, handlerOptions: ViewStoreHandlerOptions): Promise<View> {
-    const type = handlerOptions.type || this.type;
+  public async clearProcessedCausationIds(
+    view: IView,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<View> {
+    const filter: ViewUpdateFilter = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+      hash: view.hash,
+      revision: view.revision,
+    };
 
-    switch (type) {
-      case ViewStoreType.CUSTOM:
-        if (!this.custom) throw new Error("Connection not provided");
-        return this.custom.load(identifier, handlerOptions);
+    const data: ViewClearProcessedCausationIdsData = {
+      hash: randomString(16),
+      processed_causation_ids: [],
+      revision: view.revision + 1,
+    };
 
-      case ViewStoreType.MONGO:
-        if (!this.mongo) throw new Error("Connection not provided");
-        return this.mongo.load(identifier, handlerOptions);
+    await this.store.clearProcessedCausationIds(filter, data, adapterOptions);
 
-      case ViewStoreType.POSTGRES:
-        if (!this.postgres) throw new Error("Connection not provided");
-        return this.postgres.load(identifier, handlerOptions);
+    return new View({ ...view.toJSON(), ...data }, this.logger);
+  }
 
-      case ViewStoreType.REDIS:
-        if (!this.redis) throw new Error("Connection not provided");
-        return this.redis.load(identifier, handlerOptions);
+  public async load(
+    identifier: ViewIdentifier,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<View> {
+    this.logger.debug("Loading view", { identifier });
 
-      default:
-        throw new LindormError("Invalid store type");
+    const existing = await this.store.find(identifier, adapterOptions);
+
+    if (existing) {
+      this.logger.debug("Loading existing view", { existing });
+
+      return new View(ViewStore.toData(existing), this.logger);
     }
+
+    const view = new View(identifier, this.logger);
+
+    this.logger.debug("Loading ephemeral view", { view: view.toJSON() });
+
+    return view;
+  }
+
+  public async processCausationIds(view: IView): Promise<void> {
+    const identifier: ViewIdentifier = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+    };
+
+    await this.store.insertProcessedCausationIds(identifier, view.processedCausationIds);
+  }
+
+  public async save(
+    view: IView,
+    causation: IMessage,
+    adapterOptions: ViewEventHandlerAdapters,
+  ): Promise<View> {
+    this.logger.debug("Saving view", { view: view.toJSON(), causation });
+
+    const identifier: ViewIdentifier = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+    };
+
+    const existing = await this.store.find(identifier, adapterOptions);
+
+    if (existing) {
+      const included = existing.processed_causation_ids.includes(causation.id);
+
+      if (included) {
+        this.logger.debug("Found existing view matching causation", { existing });
+
+        return new View(ViewStore.toData(existing), this.logger);
+      }
+
+      const causationExists = await this.store.causationExists(view, causation);
+
+      if (causationExists) {
+        this.logger.debug("Found existing view matching causation", { existing });
+
+        return new View(ViewStore.toData(existing), this.logger);
+      }
+    }
+
+    if (view.revision === 0) {
+      const data: ViewData = {
+        ...view.toJSON(),
+        hash: randomString(16),
+        processedCausationIds: [causation.id],
+        revision: view.revision + 1,
+      };
+
+      await this.store.insert(ViewStore.toAttributes(data), adapterOptions);
+
+      return new View(data, this.logger);
+    }
+
+    const filter: ViewUpdateFilter = {
+      id: view.id,
+      name: view.name,
+      context: view.context,
+      hash: view.hash,
+      revision: view.revision,
+    };
+
+    const data: ViewUpdateData = {
+      destroyed: view.destroyed,
+      hash: randomString(16),
+      meta: view.meta,
+      processed_causation_ids: flatten([view.processedCausationIds, causation.id]),
+      revision: view.revision + 1,
+      state: view.state,
+    };
+
+    await this.store.update(filter, data, adapterOptions);
+
+    return new View({ ...view.toJSON(), ...data }, this.logger);
+  }
+
+  // private
+
+  private static toAttributes(data: ViewData): ViewStoreAttributes {
+    return {
+      id: data.id,
+      name: data.name,
+      context: data.context,
+      destroyed: data.destroyed,
+      hash: data.hash,
+      meta: data.meta,
+      processed_causation_ids: data.processedCausationIds,
+      revision: data.revision,
+      state: data.state,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+  }
+
+  private static toData(attributes: ViewStoreAttributes): ViewData {
+    return {
+      id: attributes.id,
+      name: attributes.name,
+      context: attributes.context,
+      destroyed: attributes.destroyed,
+      hash: attributes.hash,
+      meta: attributes.meta,
+      processedCausationIds: attributes.processed_causation_ids,
+      revision: attributes.revision,
+      state: attributes.state,
+    };
   }
 }

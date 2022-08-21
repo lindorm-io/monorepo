@@ -1,24 +1,33 @@
-import { AggregateIdentifier, SagaIdentifier } from "../../types";
-import { DomainEvent } from "../../message";
+import { Collection } from "mongodb";
+import { Command, DomainEvent } from "../../message";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoSagaStore } from "./MongoSagaStore";
-import { Saga } from "../../model";
+import { SAGA_CAUSATION_COLLECTION, SAGA_COLLECTION } from "../../constant";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
-  TEST_DOMAIN_EVENT_CREATE,
-  TEST_DOMAIN_EVENT_DISPATCH,
-  TEST_DOMAIN_EVENT_SET_STATE,
-} from "../../fixtures/domain-event.fixture";
+  AggregateIdentifier,
+  SagaStoreAttributes,
+  SagaStoreCausationAttributes,
+  SagaClearMessagesToDispatchData,
+  SagaClearProcessedCausationIdsData,
+  SagaIdentifier,
+  SagaUpdateData,
+  SagaUpdateFilter,
+} from "../../types";
 
 describe("MongoSagaStore", () => {
   const logger = createMockLogger();
 
-  let aggregate: AggregateIdentifier;
+  let aggregateIdentifier: AggregateIdentifier;
+  let attributes: SagaStoreAttributes;
+  let collection: Collection<SagaStoreAttributes>;
   let connection: MongoConnection;
-  let saga: SagaIdentifier;
+  let sagaIdentifier: SagaIdentifier;
   let store: MongoSagaStore;
 
   beforeAll(async () => {
@@ -33,139 +42,198 @@ describe("MongoSagaStore", () => {
       logger,
     );
 
-    store = new MongoSagaStore(connection, logger);
-
     await connection.connect();
+
+    collection = connection.database.collection("saga_store");
+
+    store = new MongoSagaStore(connection, logger);
   }, 10000);
 
   beforeEach(() => {
-    aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    saga = { ...TEST_SAGA_IDENTIFIER, id: aggregate.id };
+    aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
+    sagaIdentifier = { ...TEST_SAGA_IDENTIFIER, id: aggregateIdentifier.id };
+    attributes = {
+      id: sagaIdentifier.id,
+      name: sagaIdentifier.name,
+      context: sagaIdentifier.context,
+      destroyed: false,
+      hash: randomString(16),
+      messages_to_dispatch: [new Command(TEST_COMMAND)],
+      processed_causation_ids: [randomUUID()],
+      revision: 1,
+      state: { state: "state" },
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
   });
 
   afterAll(async () => {
     await connection.disconnect();
   });
 
-  test("should save new saga", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new Saga(saga, logger);
+  test("should resolve existing causation", async () => {
+    const event = new DomainEvent(TEST_COMMAND);
 
-    await expect(store.save(entity, event)).resolves.toStrictEqual(
+    const document: SagaStoreCausationAttributes = {
+      saga_id: sagaIdentifier.id,
+      saga_name: sagaIdentifier.name,
+      saga_context: sagaIdentifier.context,
+      causation_id: event.id,
+      timestamp: new Date(),
+    };
+
+    await connection.client
+      .db("MongoSagaStore")
+      .collection(SAGA_CAUSATION_COLLECTION)
+      .insertOne(document);
+
+    await expect(store.causationExists(sagaIdentifier, event)).resolves.toBe(true);
+
+    await expect(
+      store.causationExists(
+        {
+          ...sagaIdentifier,
+          id: randomUUID(),
+        },
+        event,
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("should clear messages", async () => {
+    await collection.insertOne({ ...attributes });
+
+    const filter: SagaUpdateFilter = {
+      id: attributes.id,
+      name: attributes.name,
+      context: attributes.context,
+      hash: attributes.hash,
+      revision: attributes.revision,
+    };
+
+    const update: SagaClearMessagesToDispatchData = {
+      hash: randomString(16),
+      messages_to_dispatch: [],
+      revision: 2,
+    };
+
+    await expect(store.clearMessagesToDispatch(filter, update)).resolves.toBeUndefined();
+
+    await expect(collection.findOne(sagaIdentifier)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: saga.id,
-        name: "saga_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        messagesToDispatch: [],
-        revision: 1,
-        state: {},
+        hash: update.hash,
+        messages_to_dispatch: [],
+        revision: update.revision,
       }),
     );
   });
 
-  test("should save existing saga", async () => {
-    const event1 = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new Saga(
-      {
-        ...saga,
-        state: {
-          created: true,
-        },
-      },
-      logger,
-    );
+  test("should clear processed causation ids", async () => {
+    await collection.insertOne({ ...attributes });
 
-    const saved = await store.save(entity, event1);
-    const event2 = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
-    const json = saved.toJSON();
-    const changed = new Saga(
-      {
-        ...json,
-        state: {
-          ...json.state,
-          changed: true,
-        },
-      },
-      logger,
-    );
+    const filter: SagaUpdateFilter = {
+      id: attributes.id,
+      name: attributes.name,
+      context: attributes.context,
+      hash: attributes.hash,
+      revision: attributes.revision,
+    };
 
-    await expect(store.save(changed, event2)).resolves.toStrictEqual(
+    const update: SagaClearProcessedCausationIdsData = {
+      hash: randomString(16),
+      processed_causation_ids: [],
+      revision: 2,
+    };
+
+    await expect(store.clearProcessedCausationIds(filter, update)).resolves.toBeUndefined();
+
+    await expect(
+      connection.client.db("MongoSagaStore").collection(SAGA_COLLECTION).findOne(sagaIdentifier),
+    ).resolves.toStrictEqual(
       expect.objectContaining({
-        id: saga.id,
-        name: "saga_name",
-        context: "default",
-        processedCausationIds: [event1.id, event2.id],
-        destroyed: false,
-        messagesToDispatch: [],
+        hash: update.hash,
+        processed_causation_ids: [],
+        revision: update.revision,
+      }),
+    );
+  });
+
+  test("should find saga", async () => {
+    await collection.insertOne({ ...attributes });
+
+    await expect(store.find(sagaIdentifier)).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: attributes.hash,
+        state: { state: "state" },
+      }),
+    );
+  });
+
+  test("should insert saga", async () => {
+    await expect(store.insert(attributes)).resolves.toBeUndefined();
+
+    await expect(collection.findOne(sagaIdentifier)).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: attributes.hash,
+        state: { state: "state" },
+      }),
+    );
+  });
+
+  test("should insert processed causation ids", async () => {
+    const one = randomUUID();
+    const two = randomUUID();
+    const three = randomUUID();
+
+    await expect(
+      store.insertProcessedCausationIds(sagaIdentifier, [one, two, three]),
+    ).resolves.toBeUndefined();
+
+    const cursor = connection.client
+      .db("MongoSagaStore")
+      .collection(SAGA_CAUSATION_COLLECTION)
+      .find({
+        saga_id: sagaIdentifier.id,
+        saga_name: sagaIdentifier.name,
+        saga_context: sagaIdentifier.context,
+      });
+
+    await expect(cursor.toArray()).resolves.toStrictEqual([
+      expect.objectContaining({ causation_id: one }),
+      expect.objectContaining({ causation_id: two }),
+      expect.objectContaining({ causation_id: three }),
+    ]);
+  });
+
+  test("should update saga", async () => {
+    await collection.insertOne({ ...attributes });
+
+    const filter: SagaUpdateFilter = {
+      id: attributes.id,
+      name: attributes.name,
+      context: attributes.context,
+      hash: attributes.hash,
+      revision: attributes.revision,
+    };
+
+    const update: SagaUpdateData = {
+      destroyed: false,
+      hash: randomString(16),
+      messages_to_dispatch: [],
+      processed_causation_ids: [],
+      revision: 2,
+      state: { updated: true },
+    };
+
+    await expect(store.update(filter, update)).resolves.toBeUndefined();
+
+    await expect(
+      connection.client.db("MongoSagaStore").collection(SAGA_COLLECTION).findOne(sagaIdentifier),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        hash: update.hash,
         revision: 2,
-        state: {
-          created: true,
-          changed: true,
-        },
-      }),
-    );
-  });
-
-  test("should load new saga", async () => {
-    await expect(store.load(saga)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: saga.id,
-        name: "saga_name",
-        context: "default",
-        processedCausationIds: [],
-        destroyed: false,
-        messagesToDispatch: [],
-        revision: 0,
-        state: {},
-      }),
-    );
-  });
-
-  test("should load existing saga", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new Saga({ ...saga, state: { created: true } }, logger);
-
-    await store.save(entity, event);
-
-    await expect(store.load(saga)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: saga.id,
-        name: "saga_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        messagesToDispatch: [],
-        revision: 1,
-        state: { created: true },
-      }),
-    );
-  });
-
-  test("should clear messages to dispatch", async () => {
-    const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const entity = new Saga(
-      {
-        ...saga,
-        messagesToDispatch: [new DomainEvent({ ...TEST_DOMAIN_EVENT_DISPATCH, aggregate })],
-        state: { created: true },
-      },
-      logger,
-    );
-
-    const saved = await store.save(entity, event);
-
-    await expect(store.clearMessagesToDispatch(saved)).resolves.toStrictEqual(
-      expect.objectContaining({
-        id: saga.id,
-        name: "saga_name",
-        context: "default",
-        processedCausationIds: [event.id],
-        destroyed: false,
-        messagesToDispatch: [],
-        revision: 2,
-        state: { created: true },
+        state: { updated: true },
       }),
     );
   });

@@ -1,4 +1,4 @@
-import { IMessage } from "../../../types";
+import { IMessage, SagaStoreAttributes } from "../../../types";
 import {
   Column,
   CreateDateColumn,
@@ -11,8 +11,8 @@ import {
 
 @Entity({ name: "saga" })
 @Index(["id", "name", "context"], { unique: true })
-@Index(["id", "name", "context", "revision"], { unique: true })
-export class SagaEntity {
+@Index(["id", "name", "context", "hash", "revision"], { unique: true })
+export class SagaEntity implements SagaStoreAttributes {
   @PrimaryColumn()
   public id: string;
 
@@ -25,8 +25,14 @@ export class SagaEntity {
   @Column("boolean")
   public destroyed: boolean;
 
+  @Column()
+  public hash: string;
+
   @Column("jsonb")
   public messages_to_dispatch: Array<IMessage>;
+
+  @Column("jsonb")
+  public processed_causation_ids: Array<string>;
 
   @Column("jsonb")
   public state: Record<string, any>;

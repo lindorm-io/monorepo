@@ -1,4 +1,4 @@
-import { createViewEntities } from "../src";
+import { createTypeormViewEntity } from "../src";
 
 export const { ViewEntity: StoredGreeting, ViewCausationEntity: StoredGreetingCausation } =
-  createViewEntities("stored_greeting");
+  createTypeormViewEntity("stored_greeting");

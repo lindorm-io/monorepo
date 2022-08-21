@@ -1,5 +1,6 @@
 import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
 import { FindOneOptions } from "typeorm";
+import { HandlerIdentifier } from "../handler";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { State } from "../generic";
 import { ViewEntity } from "../../infrastructure";
@@ -7,7 +8,8 @@ import { ViewRepositoryData } from "./view-repository";
 
 export interface PostgresViewRepositoryOptions {
   connection: IPostgresConnection;
-  viewEntity: typeof ViewEntity;
+  ViewEntity: typeof ViewEntity;
+  view: HandlerIdentifier;
 }
 
 export interface IPostgresRepository<S = State> {

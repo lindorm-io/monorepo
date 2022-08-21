@@ -8,14 +8,16 @@ import { LindormError } from "@lindorm-io/errors";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, find, get, isEqual, isMatch, remove, set, some } from "lodash";
 import { isAfter, parseJSON } from "date-fns";
+import { randomString } from "@lindorm-io/core";
 
 export class View<S extends State = State> implements IView<S> {
   public readonly id: string;
   public readonly name: string;
   public readonly context: string;
 
-  private readonly _processedCausationIds: Array<string>;
+  private readonly _hash: string;
   private readonly _meta: Record<string, any>;
+  private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
   private readonly _state: S;
   private _destroyed: boolean;
@@ -32,21 +34,15 @@ export class View<S extends State = State> implements IView<S> {
     this.name = options.name;
     this.context = options.context;
 
-    this._processedCausationIds = options.processedCausationIds || [];
     this._destroyed = options.destroyed || false;
+    this._hash = options.hash || randomString(16);
     this._meta = options.meta || {};
+    this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
     this._state = options.state || ({} as unknown as S);
   }
 
   // public properties
-
-  public get processedCausationIds(): Array<string> {
-    return this._processedCausationIds;
-  }
-  public set processedCausationIds(_) {
-    throw new IllegalEntityChangeError();
-  }
 
   public get destroyed(): boolean {
     return this._destroyed;
@@ -55,10 +51,24 @@ export class View<S extends State = State> implements IView<S> {
     throw new IllegalEntityChangeError();
   }
 
+  public get hash(): string {
+    return this._hash;
+  }
+  public set hash(_) {
+    throw new IllegalEntityChangeError();
+  }
+
   public get meta(): Record<string, any> {
     return this._meta;
   }
   public set meta(_) {
+    throw new IllegalEntityChangeError();
+  }
+
+  public get processedCausationIds(): Array<string> {
+    return this._processedCausationIds;
+  }
+  public set processedCausationIds(_) {
     throw new IllegalEntityChangeError();
   }
 
@@ -83,9 +93,10 @@ export class View<S extends State = State> implements IView<S> {
       id: this.id,
       name: this.name,
       context: this.context,
-      processedCausationIds: cloneDeep(this.processedCausationIds),
       destroyed: this.destroyed,
+      hash: this.hash,
       meta: cloneDeep(this.meta),
+      processedCausationIds: cloneDeep(this.processedCausationIds),
       revision: this.revision,
       state: cloneDeep(this.state),
     };

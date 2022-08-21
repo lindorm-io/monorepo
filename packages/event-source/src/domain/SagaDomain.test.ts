@@ -1,7 +1,7 @@
 import { Command, DomainEvent } from "../message";
 import { IMessage, ISagaDomain, SagaIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
-import { Saga } from "../model";
+import { Saga } from "../entity";
 import { SagaDomain } from "./SagaDomain";
 import { SagaEventHandler } from "../handler";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
@@ -33,6 +33,7 @@ import {
   TEST_DOMAIN_EVENT_MERGE_STATE,
   TEST_DOMAIN_EVENT_THROWS,
 } from "../fixtures/domain-event.fixture";
+import { randomString } from "@lindorm-io/core";
 
 describe("SagaDomain", () => {
   const logger = createMockLogger();
@@ -54,9 +55,12 @@ describe("SagaDomain", () => {
   beforeEach(async () => {
     messageBus = createMockMessageBus();
     store = {
-      save: jest.fn(),
-      load: jest.fn(),
+      causationExists: jest.fn(),
       clearMessagesToDispatch: jest.fn(),
+      clearProcessedCausationIds: jest.fn(),
+      load: jest.fn(),
+      processCausationIds: jest.fn(),
+      save: jest.fn(),
     };
 
     domain = new SagaDomain({ messageBus, store: store as any }, logger);
@@ -65,6 +69,40 @@ describe("SagaDomain", () => {
       await domain.registerEventHandler(handler);
     }
 
+    store.causationExists.mockResolvedValue(false);
+
+    store.clearMessagesToDispatch.mockImplementation(
+      async (saga: Saga) =>
+        new Saga(
+          {
+            ...saga.toJSON(),
+            hash: randomString(16),
+            revision: saga.revision + 1,
+            messagesToDispatch: [],
+          },
+          logger,
+        ),
+    );
+
+    store.clearProcessedCausationIds.mockImplementation(
+      async (saga: Saga) =>
+        new Saga(
+          {
+            ...saga.toJSON(),
+            hash: randomString(16),
+            revision: saga.revision + 1,
+            processedCausationIds: [],
+          },
+          logger,
+        ),
+    );
+
+    store.load.mockImplementation(
+      async (identifier: SagaIdentifier) => new Saga(identifier, logger),
+    );
+
+    store.processCausationIds.mockResolvedValue(undefined);
+
     store.save.mockImplementation(
       async (saga: Saga, causation: IMessage) =>
         new Saga(
@@ -72,20 +110,6 @@ describe("SagaDomain", () => {
             ...saga.toJSON(),
             revision: saga.revision + 1,
             processedCausationIds: [...saga.processedCausationIds, causation.id],
-          },
-          logger,
-        ),
-    );
-
-    store.load.mockImplementation(async (s: SagaIdentifier) => new Saga(s, logger));
-
-    store.clearMessagesToDispatch.mockImplementation(
-      async (saga: Saga) =>
-        new Saga(
-          {
-            ...saga.toJSON(),
-            revision: saga.revision + 1,
-            messagesToDispatch: [],
           },
           logger,
         ),
@@ -182,7 +206,6 @@ describe("SagaDomain", () => {
         },
       }),
       event,
-      {},
     );
 
     expect(messageBus.publish).not.toHaveBeenCalled();
@@ -214,7 +237,6 @@ describe("SagaDomain", () => {
         state: {},
       }),
       event,
-      {},
     );
 
     expect(messageBus.publish).toHaveBeenCalledWith([

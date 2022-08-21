@@ -2,7 +2,11 @@ import { Data, State } from "../generic";
 import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
-import { ViewStoreHandlerOptions } from "../view-store";
+import {
+  MongoViewEventHandlerAdapterOptions,
+  PostgresViewEventHandlerAdapterOptions,
+  ViewStoreAdapterType,
+} from "../view-store";
 
 export type GetViewIdFunction = (event: DomainEvent) => string;
 
@@ -21,10 +25,17 @@ export interface ViewEventHandlerFileAggregate {
   context?: Array<string> | string;
 }
 
+export interface ViewEventHandlerAdapters {
+  custom?: Record<string, any>;
+  mongo?: MongoViewEventHandlerAdapterOptions;
+  postgres?: PostgresViewEventHandlerAdapterOptions;
+  type?: ViewStoreAdapterType;
+}
+
 export interface ViewEventHandlerFile<S extends State = State, D extends Data = Data> {
+  adapters: ViewEventHandlerAdapters;
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  persistence: ViewStoreHandlerOptions;
   version?: number;
   getViewId?(event: DomainEvent): string;
   handler(ctx: ViewEventHandlerContext<S, D>): Promise<void>;
@@ -37,10 +48,10 @@ export interface ViewEventHandlerOptions<S extends State = State> extends ViewEv
 }
 
 export interface IViewEventHandler<S extends State = State, D extends Data = Data> {
+  adapters: ViewEventHandlerAdapters;
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;
   eventName: string;
-  persistence: ViewStoreHandlerOptions;
   version: number;
   view: HandlerIdentifier;
   getViewId(event: DomainEvent): string;

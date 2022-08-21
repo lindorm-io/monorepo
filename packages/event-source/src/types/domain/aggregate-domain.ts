@@ -1,5 +1,5 @@
-import { Aggregate } from "../../model";
-import { AggregateIdentifier } from "../model";
+import { Aggregate } from "../../entity";
+import { AggregateIdentifier } from "../entity";
 import { IAggregateCommandHandler, IAggregateEventHandler } from "../handler";
 import { IDomainEventStore } from "../event-store";
 import { IMessageBus } from "@lindorm-io/amqp";

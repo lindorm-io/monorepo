@@ -1,15 +1,17 @@
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoViewRepository } from "./MongoViewRepository";
-import { MongoViewStoreAttributes, ViewIdentifier } from "../../types";
+import { ViewStoreAttributes, ViewIdentifier } from "../../types";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
+import { MongoViewStore } from "./MongoViewStore";
+import { randomString } from "@lindorm-io/core";
 
 describe("MongoViewRepository", () => {
   const logger = createMockLogger();
 
   let connection: MongoConnection;
+  let identifier: ViewIdentifier;
   let repository: MongoViewRepository;
-  let view: ViewIdentifier;
 
   let view1: string;
   let view2: string;
@@ -27,16 +29,15 @@ describe("MongoViewRepository", () => {
       logger,
     );
 
-    view = { context: "view_repository", name: "view_name", id: randomUUID() };
+    identifier = { context: "view_repository", name: "view_name", id: randomUUID() };
 
-    repository = new MongoViewRepository(
-      { connection, collection: "views_collection", view },
-      logger,
-    );
+    repository = new MongoViewRepository({ connection, view: identifier }, logger);
 
     await connection.connect();
 
-    const collection = connection.database.collection<MongoViewStoreAttributes>("views_collection");
+    const collection = connection.database.collection<ViewStoreAttributes>(
+      MongoViewStore.getCollectionName({ context: "view_repository", name: "view_name" }),
+    );
 
     view1 = randomUUID();
     view2 = randomUUID();
@@ -45,10 +46,11 @@ describe("MongoViewRepository", () => {
     await collection.insertMany([
       {
         id: view1,
-        name: view.name,
-        context: view.context,
-        processed_causation_ids: [],
+        name: "view_name",
+        context: "view_repository",
         destroyed: false,
+        processed_causation_ids: [],
+        hash: randomString(16),
         meta: {},
         revision: 1,
         state: { one: 1, common: "common" },
@@ -57,10 +59,11 @@ describe("MongoViewRepository", () => {
       },
       {
         id: view2,
-        name: view.name,
-        context: view.context,
-        processed_causation_ids: [],
+        name: "view_name",
+        context: "view_repository",
         destroyed: false,
+        processed_causation_ids: [],
+        hash: randomString(16),
         meta: {},
         revision: 2,
         state: { two: 2, common: "common" },
@@ -69,10 +72,11 @@ describe("MongoViewRepository", () => {
       },
       {
         id: view3,
-        name: view.name,
-        context: view.context,
-        processed_causation_ids: [],
+        name: "view_name",
+        context: "view_repository",
         destroyed: false,
+        processed_causation_ids: [],
+        hash: randomString(16),
         meta: {},
         revision: 3,
         state: { three: 3, common: "uncommon" },
@@ -81,10 +85,11 @@ describe("MongoViewRepository", () => {
       },
       {
         id: randomUUID(),
-        name: view.name,
-        context: view.context,
-        processed_causation_ids: [],
+        name: "view_name",
+        context: "view_repository",
         destroyed: true,
+        processed_causation_ids: [],
+        hash: randomString(16),
         meta: {},
         revision: 4,
         state: { four: 4, common: "common" },
@@ -102,8 +107,8 @@ describe("MongoViewRepository", () => {
     await expect(repository.find({ "state.common": "common" })).resolves.toStrictEqual([
       {
         id: view1,
-        name: view.name,
-        context: view.context,
+        name: identifier.name,
+        context: identifier.context,
         revision: 1,
         state: { one: 1, common: "common" },
         created_at: expect.any(Date),
@@ -111,8 +116,8 @@ describe("MongoViewRepository", () => {
       },
       {
         id: view2,
-        name: view.name,
-        context: view.context,
+        name: identifier.name,
+        context: identifier.context,
         revision: 2,
         state: { two: 2, common: "common" },
         created_at: expect.any(Date),
@@ -124,8 +129,8 @@ describe("MongoViewRepository", () => {
   test("should find by id", async () => {
     await expect(repository.findById(view3)).resolves.toStrictEqual({
       id: view3,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       revision: 3,
       state: { three: 3, common: "uncommon" },
       created_at: expect.any(Date),
@@ -136,8 +141,8 @@ describe("MongoViewRepository", () => {
   test("should find one", async () => {
     await expect(repository.findOne({ id: view1 })).resolves.toStrictEqual({
       id: view1,
-      name: view.name,
-      context: view.context,
+      name: identifier.name,
+      context: identifier.context,
       revision: 1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),

@@ -1,15 +1,16 @@
 import { DomainEvent } from "../message";
+import { IMessage, IViewDomain, ViewIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
 import { MessageBus } from "../infrastructure";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
-import { View } from "../model";
+import { View } from "../entity";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandler } from "../handler";
-import { IMessage, IViewDomain, ViewIdentifier } from "../types";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
   HandlerNotRegisteredError,
@@ -54,8 +55,11 @@ describe("ViewDomain", () => {
   beforeEach(async () => {
     messageBus = createMockMessageBus();
     store = {
-      save: jest.fn(),
+      causationExists: jest.fn(),
+      clearProcessedCausationIds: jest.fn(),
       load: jest.fn(),
+      processCausationIds: jest.fn(),
+      save: jest.fn(),
     };
 
     domain = new ViewDomain({ messageBus, store: store as any }, logger);
@@ -64,19 +68,39 @@ describe("ViewDomain", () => {
       await domain.registerEventHandler(handler);
     }
 
+    store.causationExists.mockResolvedValue(false);
+
+    store.clearProcessedCausationIds.mockImplementation(
+      async (view: View) =>
+        new View(
+          {
+            ...view.toJSON(),
+            hash: randomString(16),
+            revision: view.revision + 1,
+            processedCausationIds: [],
+          },
+          logger,
+        ),
+    );
+
+    store.load.mockImplementation(
+      async (identifier: ViewIdentifier) => new View(identifier, logger),
+    );
+
+    store.processCausationIds.mockResolvedValue(undefined);
+
     store.save.mockImplementation(
       async (view: View, causation: IMessage) =>
         new View(
           {
             ...view.toJSON(),
+            hash: randomString(16),
             revision: view.revision + 1,
             processedCausationIds: [...view.processedCausationIds, causation.id],
           },
           logger,
         ),
     );
-
-    store.load.mockImplementation(async (v: ViewIdentifier) => new View(v, logger));
   });
 
   test("should register event handler", async () => {

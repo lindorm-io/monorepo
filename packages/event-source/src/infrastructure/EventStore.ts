@@ -1,4 +1,4 @@
-import { Aggregate } from "../model";
+import { Aggregate } from "../entity";
 import { AggregateEventHandler } from "../handler";
 import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";
@@ -9,6 +9,7 @@ import { PostgresEventStore } from "./postgres";
 import { filter, last, take } from "lodash";
 import {
   AggregateIdentifier,
+  EventData,
   EventStoreOptions,
   IAggregate,
   IDomainEventStore,
@@ -46,6 +47,21 @@ export class EventStore implements IDomainEventStore {
   // public
 
   public async save(aggregate: IAggregate, causation: Command): Promise<Array<DomainEvent>> {
+    this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
+
+    const events = await this.store.find({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context,
+      causation_id: causation.id,
+    });
+
+    if (events?.length) {
+      this.logger.debug("Found events matching causation", { events });
+
+      return events.map((item) => new DomainEvent(item));
+    }
+
     const causationEvents = filter<DomainEvent>(aggregate.events, { causationId: causation.id });
     const expectedEvents = take<DomainEvent>(aggregate.events, aggregate.numberOfLoadedEvents);
     const lastExpectedEvent = last<DomainEvent>(expectedEvents);
@@ -54,37 +70,81 @@ export class EventStore implements IDomainEventStore {
       throw new CausationMissingEventsError();
     }
 
-    this.logger.debug("Saving Aggregate", {
+    this.logger.debug("Saving aggregate", {
       aggregate,
       causationEvents,
       expectedEvents,
       lastExpectedEvent,
     });
 
-    return this.store.save(aggregate, causation, {
-      causationEvents,
-      expectedEvents: expectedEvents.length,
-      previousEventId: lastExpectedEvent ? lastExpectedEvent.id : null,
+    await this.store.insert({
+      id: aggregate.id,
+      name: aggregate.name,
+      context: aggregate.context,
+      causation_id: causation.id,
+      correlation_id: causation.correlationId,
+      events: causationEvents.map((item) => ({
+        id: item.id,
+        name: item.name,
+        data: item.data,
+        version: item.version,
+        timestamp: item.timestamp,
+      })),
+      expected_events: expectedEvents.length,
+      origin: causation.origin,
+      originator: causation.originator,
+      previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
+      timestamp: new Date(),
     });
+
+    return causationEvents;
   }
 
   public async load(
-    aggregateIdentifier: AggregateIdentifier,
+    identifier: AggregateIdentifier,
     eventHandlers: Array<AggregateEventHandler>,
   ): Promise<Aggregate> {
-    const events = await this.store.load(aggregateIdentifier);
-    const aggregate = new Aggregate({ ...aggregateIdentifier, eventHandlers }, this.logger);
+    this.logger.debug("Loading aggregate", { identifier });
+
+    const data = await this.store.find({
+      id: identifier.id,
+      name: identifier.name,
+      context: identifier.context,
+    });
+
+    const events = data.map((item) => this.toDomainEvent(item));
+
+    const aggregate = new Aggregate({ ...identifier, eventHandlers }, this.logger);
 
     for (const event of events) {
       await aggregate.load(event);
     }
 
-    this.logger.debug("Loaded Aggregate", { aggregate: aggregate.toJSON() });
+    this.logger.debug("Loaded aggregate", { aggregate: aggregate.toJSON() });
 
     return aggregate;
   }
 
-  public async events(from: Date, limit: number): Promise<Array<DomainEvent>> {
-    return await this.store.events(from, limit);
+  public async listEvents(from: Date, limit: number): Promise<Array<DomainEvent>> {
+    const dataArray = await this.store.listEvents(from, limit);
+
+    return dataArray.map((item) => this.toDomainEvent(item));
+  }
+
+  // private
+
+  private toDomainEvent(data: EventData): DomainEvent {
+    return new DomainEvent({
+      id: data.id,
+      name: data.name,
+      aggregate: data.aggregate,
+      causationId: data.causation_id,
+      correlationId: data.correlation_id,
+      data: data.data,
+      origin: data.origin,
+      originator: data.originator,
+      timestamp: data.timestamp,
+      version: data.version,
+    });
   }
 }
