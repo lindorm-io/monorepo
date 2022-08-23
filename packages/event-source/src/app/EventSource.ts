@@ -41,7 +41,7 @@ import {
   AppPublishResult,
   AppRepositories,
   AppSetup,
-  ClassConstructor,
+  ClassDTO,
   Data,
   EventEmitterListener,
   HandlerIdentifier,
@@ -73,9 +73,7 @@ import {
 } from "../util";
 import { randomUUID } from "crypto";
 
-export class EventSource<TCommand extends ClassConstructor = ClassConstructor>
-  implements IEventSource<TCommand>
-{
+export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEventSource<TCommand> {
   private readonly amqp: IAmqpConnection;
   private readonly messageBus: IMessageBus;
   private readonly mongo: IMongoConnection;

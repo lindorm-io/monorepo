@@ -7,7 +7,7 @@ import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, set, snakeCase } from "lodash";
 import {
   AggregateIdentifier,
-  ClassConstructor,
+  ClassDTO,
   ISaga,
   SagaData,
   SagaDispatchOptions,
@@ -122,7 +122,7 @@ export class Saga<TState extends State = State> implements ISaga {
 
   public dispatch(
     causation: DomainEvent,
-    command: ClassConstructor,
+    command: ClassDTO,
     options: SagaDispatchOptions = {},
   ): void {
     this.logger.debug("Dispatch", { causation, command, options });

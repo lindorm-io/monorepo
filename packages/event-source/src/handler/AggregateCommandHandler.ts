@@ -2,7 +2,7 @@ import Joi from "joi";
 import {
   AggregateCommandHandlerContext,
   AggregateCommandHandlerOptions,
-  ClassConstructor,
+  ClassDTO,
   HandlerConditions,
   HandlerIdentifier,
   IAggregateCommandHandler,
@@ -10,8 +10,8 @@ import {
 } from "../types";
 
 export class AggregateCommandHandlerImplementation<
-  TCommand extends ClassConstructor = ClassConstructor,
-  TEvent extends ClassConstructor = ClassConstructor,
+  TCommand extends ClassDTO = ClassDTO,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
 > implements IAggregateCommandHandler<TCommand, TEvent, TState>
 {

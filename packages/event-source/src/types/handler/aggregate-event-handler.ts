@@ -1,9 +1,9 @@
-import { ClassConstructor, State } from "../generic";
+import { ClassDTO, State } from "../generic";
 import { HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 
 export interface AggregateEventHandlerContext<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
 > {
   event: TEvent;
@@ -15,16 +15,13 @@ export interface AggregateEventHandlerContext<
   setState(path: string, value: any): void;
 }
 
-export interface AggregateEventHandler<
-  TEvent extends ClassConstructor,
-  TState extends State = State,
-> {
+export interface AggregateEventHandler<TEvent extends ClassDTO, TState extends State = State> {
   version?: number;
   handler(ctx: AggregateEventHandlerContext<TEvent, TState>): Promise<void>;
 }
 
 export interface AggregateEventHandlerOptions<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
 > extends AggregateEventHandler<TEvent, TState> {
   aggregate: HandlerIdentifier;
@@ -32,7 +29,7 @@ export interface AggregateEventHandlerOptions<
 }
 
 export interface IAggregateEventHandler<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
 > {
   aggregate: HandlerIdentifier;

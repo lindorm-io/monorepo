@@ -1,14 +1,14 @@
 import {
   AggregateEventHandlerContext,
   AggregateEventHandlerOptions,
-  ClassConstructor,
+  ClassDTO,
   HandlerIdentifier,
   IAggregateEventHandler,
   State,
 } from "../types";
 
 export class AggregateEventHandlerImplementation<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
 > implements IAggregateEventHandler<TEvent, TState>
 {

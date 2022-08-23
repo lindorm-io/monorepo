@@ -1,17 +1,17 @@
-import { ClassConstructor, State } from "../generic";
+import { ClassDTO, State } from "../generic";
 import { DomainEvent, TimeoutMessage } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 import { SagaDispatchOptions } from "../entity";
 
-export type GetSagaIdFunction<TEvent extends ClassConstructor = ClassConstructor> = (
+export type GetSagaIdFunction<TEvent extends ClassDTO = ClassDTO> = (
   event: DomainEvent<TEvent> | TimeoutMessage<TEvent>,
 ) => string;
 
 export interface SagaEventHandlerContext<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
-  TDispatch extends ClassConstructor = ClassConstructor,
+  TDispatch extends ClassDTO = ClassDTO,
 > {
   event: TEvent;
   logger: ILogger;
@@ -28,9 +28,9 @@ export interface SagaEventHandlerFileAggregate {
 }
 
 export interface SagaEventHandler<
-  TEvent extends ClassConstructor,
+  TEvent extends ClassDTO,
   TState extends State = State,
-  TDispatch extends ClassConstructor = ClassConstructor,
+  TDispatch extends ClassDTO = ClassDTO,
 > {
   name: string;
   aggregate?: SagaEventHandlerFileAggregate;
@@ -41,9 +41,9 @@ export interface SagaEventHandler<
 }
 
 export interface SagaEventHandlerOptions<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
-  TDispatch extends ClassConstructor = ClassConstructor,
+  TDispatch extends ClassDTO = ClassDTO,
 > {
   aggregate: HandlerIdentifierMultipleContexts;
   conditions?: HandlerConditions;
@@ -55,9 +55,9 @@ export interface SagaEventHandlerOptions<
 }
 
 export interface ISagaEventHandler<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
-  TDispatch extends ClassConstructor = ClassConstructor,
+  TDispatch extends ClassDTO = ClassDTO,
 > {
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;

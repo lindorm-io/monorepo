@@ -1,5 +1,5 @@
 import {
-  ClassConstructor,
+  ClassDTO,
   GetSagaIdFunction,
   HandlerConditions,
   HandlerIdentifier,
@@ -11,9 +11,9 @@ import {
 } from "../types";
 
 export class SagaEventHandlerImplementation<
-  TEvent extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassDTO = ClassDTO,
   TState extends State = State,
-  TDispatch extends ClassConstructor = ClassConstructor,
+  TDispatch extends ClassDTO = ClassDTO,
 > implements ISagaEventHandler<TEvent, TState, TDispatch>
 {
   public readonly aggregate: HandlerIdentifierMultipleContexts;
