@@ -19,6 +19,7 @@ import {
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../types";
+import { MemorySagaStore } from "./memory/MemorySagaStore";
 
 export class SagaStore implements IDomainSagaStore {
   private readonly store: ISagaStore;
@@ -31,6 +32,10 @@ export class SagaStore implements IDomainSagaStore {
       case SagaStoreType.CUSTOM:
         if (!options.custom) throw new Error("Connection not provided");
         this.store = options.custom;
+        break;
+
+      case SagaStoreType.MEMORY:
+        this.store = new MemorySagaStore();
         break;
 
       case SagaStoreType.MONGO:

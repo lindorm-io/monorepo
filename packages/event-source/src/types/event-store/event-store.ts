@@ -48,6 +48,6 @@ export interface IDomainEventStore {
 export interface IEventStore {
   initialise(): Promise<void>;
   find(filter: EventStoreFindFilter): Promise<Array<EventData>>;
-  insert(data: EventStoreAttributes): Promise<void>;
+  insert(attributes: EventStoreAttributes): Promise<void>;
   listEvents(from: Date, limit: number): Promise<Array<EventData>>;
 }

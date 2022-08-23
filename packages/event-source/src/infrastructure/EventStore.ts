@@ -15,6 +15,7 @@ import {
   IDomainEventStore,
   IEventStore,
 } from "../types";
+import { MemoryEventStore } from "./memory/MemoryEventStore";
 
 export class EventStore implements IDomainEventStore {
   private readonly store: IEventStore;
@@ -25,6 +26,10 @@ export class EventStore implements IDomainEventStore {
       case EventStoreType.CUSTOM:
         if (!options.custom) throw new Error("IEventStore not provided");
         this.store = options.custom;
+        break;
+
+      case EventStoreType.MEMORY:
+        this.store = new MemoryEventStore();
         break;
 
       case EventStoreType.MONGO:

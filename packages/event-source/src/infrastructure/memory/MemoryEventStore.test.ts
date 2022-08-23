@@ -1,51 +1,26 @@
-import { AggregateIdentifier, EventStoreAttributes } from "../../types";
-import { Collection } from "mongodb";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { MongoEventStore } from "./MongoEventStore";
+import { AggregateIdentifier } from "../../types";
+import { MemoryEventStore } from "./MemoryEventStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { find } from "lodash";
 import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
 
-describe("MongoEventStore", () => {
-  const logger = createMockLogger();
-
-  let collection: Collection<EventStoreAttributes>;
-  let connection: MongoConnection;
+describe("MemoryEventStore", () => {
   let identifier: AggregateIdentifier;
-  let store: MongoEventStore;
+  let store: MemoryEventStore;
 
   beforeAll(async () => {
-    connection = new MongoConnection(
-      {
-        host: "localhost",
-        port: 27011,
-        auth: { username: "root", password: "example" },
-        authSource: "admin",
-        database: "MongoEventStore",
-      },
-      logger,
-    );
-
-    await connection.connect();
-
-    collection = connection.database.collection("event_store");
-
-    store = new MongoEventStore(connection, logger);
+    store = new MemoryEventStore();
   }, 10000);
 
   beforeEach(() => {
     identifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
   });
 
-  afterAll(async () => {
-    await connection.disconnect();
-  });
-
   test("should find events", async () => {
     const causationId = randomUUID();
 
-    await collection.insertOne({
+    store.events.push({
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -117,7 +92,7 @@ describe("MongoEventStore", () => {
       }),
     ).resolves.toBeUndefined();
 
-    await expect(collection.findOne({ ...identifier })).resolves.toStrictEqual(
+    expect(find(store.events, { ...identifier })).toStrictEqual(
       expect.objectContaining({ causation_id: causationId }),
     );
   });
@@ -125,7 +100,7 @@ describe("MongoEventStore", () => {
   test("should list events", async () => {
     const causationId = randomUUID();
 
-    await collection.insertOne({
+    store.events.push({
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),

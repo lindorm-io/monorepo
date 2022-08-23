@@ -20,6 +20,7 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../types";
+import { MemoryViewStore } from "./memory/MemoryViewStore";
 
 export class ViewStore implements IDomainViewStore {
   private readonly store: IViewStore;
@@ -32,6 +33,10 @@ export class ViewStore implements IDomainViewStore {
       case ViewStoreType.CUSTOM:
         if (!options.custom) throw new Error("Connection not provided");
         this.store = options.custom;
+        break;
+
+      case ViewStoreType.MEMORY:
+        this.store = new MemoryViewStore();
         break;
 
       case ViewStoreType.MONGO:
