@@ -7,7 +7,6 @@ import { RespondGreeting } from "./aggregates/response/commands/respond-greeting
 import { StoredGreeting } from "./entities";
 import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
 import { join } from "path";
-import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
 import {
   EventEntity,
@@ -79,9 +78,9 @@ const main = async (): Promise<void> => {
     logger.verbose("on:view", { data });
   });
 
-  const aggregateId = randomUUID();
-
-  await app.publish(new CreateGreeting("Hi"), { id: aggregateId });
+  const {
+    aggregate: { id: aggregateId },
+  } = await app.publish(new CreateGreeting("Hi"));
 
   await sleep(5000);
 

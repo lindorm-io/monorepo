@@ -59,11 +59,13 @@ export interface AppOptions extends PrivateAppOptions {
 }
 
 export interface AppPublishOptions {
+  aggregate?: Partial<AggregateIdentifier>;
   correlationId?: string;
   delay?: number;
   mandatory?: boolean;
   origin?: string;
   originator?: string | null;
+  version?: number;
 }
 
 export type AppPublishResult = {
@@ -104,11 +106,7 @@ export interface AppSetup {
 }
 
 export interface IEventSource<TCommand extends ClassDTO = ClassDTO> {
-  publish(
-    command: TCommand,
-    aggregate: Partial<AggregateIdentifier>,
-    options: AppPublishOptions,
-  ): Promise<AppPublishResult>;
+  publish(command: TCommand, options: AppPublishOptions): Promise<AppPublishResult>;
   on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
   init(): Promise<void>;
   initialise(): Promise<void>;

@@ -214,7 +214,7 @@ describe("EventSource (Postgres)", () => {
     app.on("view.es_postgres.test_view", onEventSpyName);
     app.on(`view.es_postgres.test_view.${id}`, onEventSpyId);
 
-    await app.publish(new CreateGreeting(true), { id });
+    await app.publish(new CreateGreeting(true), { aggregate: { id } });
 
     await sleep(8000);
 

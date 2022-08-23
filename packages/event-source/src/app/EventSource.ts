@@ -33,7 +33,6 @@ import {
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
-  AggregateIdentifier,
   AppAdmin,
   AppInspectOptions,
   AppOptions,
@@ -301,7 +300,6 @@ export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEvent
 
   public async publish(
     command: TCommand,
-    aggregate: Partial<AggregateIdentifier> = {},
     options: AppPublishOptions = {},
   ): Promise<AppPublishResult> {
     await this.promise();
@@ -329,9 +327,9 @@ export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEvent
     const [aggregateName] = commandAggregates;
 
     const resolvedAggregate = {
-      id: aggregate.id || randomUUID(),
-      name: aggregate.name || aggregateName,
-      context: this.context(aggregate.context),
+      id: options.aggregate?.id || randomUUID(),
+      name: options.aggregate?.name || aggregateName,
+      context: this.context(options.aggregate?.context),
     };
 
     const generated = new Command({
@@ -342,6 +340,7 @@ export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEvent
       delay: options.delay,
       origin: options.origin || "event_source",
       originator: options.originator,
+      version: options.version,
     });
 
     await JOI_MESSAGE.validateAsync(generated);

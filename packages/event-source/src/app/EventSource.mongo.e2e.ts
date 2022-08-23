@@ -204,7 +204,7 @@ describe("EventSource (Mongo)", () => {
     app.on("view.es_mongo.test_view", onEventSpyName);
     app.on(`view.es_mongo.test_view.${id}`, onEventSpyId);
 
-    await app.publish(new CreateGreeting(true), { id });
+    await app.publish(new CreateGreeting(true), { aggregate: { id } });
 
     await sleep(8000);
 
