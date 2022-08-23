@@ -1,4 +1,5 @@
 import { find, findIndex } from "lodash";
+import { viewStoreSingleton } from "./singleton/view-store-singleton";
 import {
   IMessage,
   IViewStore,
@@ -13,11 +14,9 @@ import {
 
 export class MemoryViewStore implements IViewStore {
   public readonly causations: Array<ViewStoreCausationAttributes>;
-  public readonly views: Array<ViewStoreAttributes>;
 
   public constructor() {
     this.causations = [];
-    this.views = [];
   }
 
   public async initialise(): Promise<void> {
@@ -38,24 +37,24 @@ export class MemoryViewStore implements IViewStore {
     data: ViewClearProcessedCausationIdsData,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(this.views, updateFilter);
-    const index = findIndex(this.views, updateFilter);
+    const found = find<ViewStoreAttributes>(viewStoreSingleton, updateFilter);
+    const index = findIndex(viewStoreSingleton, updateFilter);
 
-    this.views[index] = { ...found, ...data };
+    viewStoreSingleton[index] = { ...found, ...data };
   }
 
   public async find(
     identifier: ViewIdentifier,
     adapters: ViewEventHandlerAdapters,
   ): Promise<ViewStoreAttributes | undefined> {
-    return find<ViewStoreAttributes>(this.views, identifier);
+    return find<ViewStoreAttributes>(viewStoreSingleton, identifier);
   }
 
   public async insert(
     attributes: ViewStoreAttributes,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find(this.views, {
+    const found = find(viewStoreSingleton, {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
@@ -65,7 +64,7 @@ export class MemoryViewStore implements IViewStore {
       throw new Error("Causation already exists");
     }
 
-    this.views.push(attributes);
+    viewStoreSingleton.push(attributes);
   }
 
   public async insertProcessedCausationIds(
@@ -88,9 +87,9 @@ export class MemoryViewStore implements IViewStore {
     data: ViewUpdateData,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(this.views, updateFilter);
-    const index = findIndex(this.views, updateFilter);
+    const found = find<ViewStoreAttributes>(viewStoreSingleton, updateFilter);
+    const index = findIndex(viewStoreSingleton, updateFilter);
 
-    this.views[index] = { ...found, ...data };
+    viewStoreSingleton[index] = { ...found, ...data };
   }
 }

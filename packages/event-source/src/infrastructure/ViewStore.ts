@@ -1,4 +1,5 @@
 import { ILogger } from "@lindorm-io/winston";
+import { MemoryViewStore } from "./memory";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
 import { View } from "../entity";
@@ -20,7 +21,6 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../types";
-import { MemoryViewStore } from "./memory/MemoryViewStore";
 
 export class ViewStore implements IDomainViewStore {
   private readonly store: IViewStore;

@@ -4,6 +4,7 @@ import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";
 import { EventStoreType } from "../enum";
 import { ILogger } from "@lindorm-io/winston";
+import { MemoryEventStore } from "./memory";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
 import { filter, last, take } from "lodash";
@@ -15,7 +16,6 @@ import {
   IDomainEventStore,
   IEventStore,
 } from "../types";
-import { MemoryEventStore } from "./memory/MemoryEventStore";
 
 export class EventStore implements IDomainEventStore {
   private readonly store: IEventStore;

@@ -1,9 +1,9 @@
 import { AmqpMessageBus } from "./amqp";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
+import { MemoryMessageBus } from "./memory";
 import { MessageBusOptions } from "../types/message-bus";
 import { MessageBusType } from "../enum";
-import { MemoryMessageBus } from "./memory";
 
 export class MessageBus implements IMessageBus {
   private readonly bus: IMessageBus;

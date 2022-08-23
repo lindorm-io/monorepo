@@ -15,6 +15,7 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { viewStoreSingleton } from "./singleton/view-store-singleton";
 
 describe("MemoryViewStore", () => {
   let aggregateIdentifier: AggregateIdentifier;
@@ -71,7 +72,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    store.views.push(attributes);
+    viewStoreSingleton.push(attributes);
 
     const filter: ViewUpdateFilter = {
       id: attributes.id,
@@ -89,7 +90,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
 
-    expect(find(store.views, viewIdentifier)).toStrictEqual(
+    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         processed_causation_ids: [],
@@ -113,7 +114,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    store.views.push(attributes);
+    viewStoreSingleton.push(attributes);
 
     await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
       expect.objectContaining({
@@ -140,7 +141,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.insert(attributes, {})).resolves.toBeUndefined();
 
-    expect(find(store.views, viewIdentifier)).toStrictEqual(
+    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { inserted: true },
@@ -185,7 +186,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    store.views.push(attributes);
+    viewStoreSingleton.push(attributes);
 
     const filter: ViewUpdateFilter = {
       id: attributes.id,
@@ -206,7 +207,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.update(filter, update, {})).resolves.toBeUndefined();
 
-    expect(find(store.views, viewIdentifier)).toStrictEqual(
+    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         revision: 2,

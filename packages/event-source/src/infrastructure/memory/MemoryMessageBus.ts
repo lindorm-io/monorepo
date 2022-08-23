@@ -23,9 +23,13 @@ export class MemoryMessageBus implements IMessageBus {
 
       for (const subscription of subscriptions) {
         if (message.delay) {
-          setTimeout(() => subscription.callback(this.createMessage(message)), message.delay);
+          setTimeout(
+            () =>
+              subscription.callback(this.createMessage(message)).catch(() => this.publish(message)),
+            message.delay,
+          );
         } else {
-          await subscription.callback(this.createMessage(message));
+          subscription.callback(this.createMessage(message)).catch(() => this.publish(message));
         }
       }
     }

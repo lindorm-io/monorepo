@@ -1,8 +1,9 @@
 import { ILogger } from "@lindorm-io/winston";
+import { MemorySagaStore } from "./memory";
 import { MongoSagaStore } from "./mongo";
+import { PostgresSagaStore } from "./postgres";
 import { Saga } from "../entity";
 import { SagaStoreType } from "../enum";
-import { PostgresSagaStore } from "./postgres";
 import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/core";
 import {
@@ -19,7 +20,6 @@ import {
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../types";
-import { MemorySagaStore } from "./memory/MemorySagaStore";
 
 export class SagaStore implements IDomainSagaStore {
   private readonly store: ISagaStore;
