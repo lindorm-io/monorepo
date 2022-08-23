@@ -15,5 +15,5 @@ export interface ISagaDomain {
   removeEventHandler(eventHandler: ISagaEventHandler): Promise<void>;
   removeAllEventHandlers(): Promise<void>;
 
-  inspect<S extends State = State>(identifier: SagaIdentifier): Promise<Saga<S>>;
+  inspect<TState extends State = State>(identifier: SagaIdentifier): Promise<Saga<TState>>;
 }

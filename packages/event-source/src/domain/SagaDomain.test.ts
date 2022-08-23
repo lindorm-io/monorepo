@@ -3,7 +3,7 @@ import { IMessage, ISagaDomain, SagaIdentifier } from "../types";
 import { LindormError } from "@lindorm-io/errors";
 import { Saga } from "../entity";
 import { SagaDomain } from "./SagaDomain";
-import { SagaEventHandler } from "../handler";
+import { SagaEventHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
@@ -135,7 +135,7 @@ describe("SagaDomain", () => {
 
     await expect(
       domain.registerEventHandler(
-        new SagaEventHandler({
+        new SagaEventHandlerImplementation({
           ...TEST_SAGA_EVENT_HANDLER,
           aggregate: {
             ...TEST_SAGA_EVENT_HANDLER.aggregate,
@@ -346,7 +346,7 @@ describe("SagaDomain", () => {
     domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
-      new SagaEventHandler({
+      new SagaEventHandlerImplementation({
         ...TEST_SAGA_EVENT_HANDLER_MERGE_STATE,
         conditions: {
           created: true,
@@ -386,7 +386,7 @@ describe("SagaDomain", () => {
     domain = new SagaDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
-      new SagaEventHandler({
+      new SagaEventHandlerImplementation({
         ...TEST_SAGA_EVENT_HANDLER_CREATE,
         conditions: {
           created: false,

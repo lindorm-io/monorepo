@@ -2,12 +2,12 @@ import { AggregateIdentifier, Data, IMessage, MessageBaseOptions, MessageBaseTyp
 import { MessageType } from "../enum";
 import { randomUUID } from "crypto";
 
-export abstract class MessageBase<D extends Data = Data> implements IMessage {
+export abstract class MessageBase<TData extends Data = Data> implements IMessage {
   public readonly id: string;
   public readonly aggregate: AggregateIdentifier;
   public readonly causationId: string;
   public readonly correlationId: string;
-  public readonly data: D;
+  public readonly data: TData;
   public readonly delay: number;
   public readonly mandatory: boolean;
   public readonly name: string;
@@ -17,12 +17,12 @@ export abstract class MessageBase<D extends Data = Data> implements IMessage {
   public readonly type: MessageBaseType;
   public readonly version: number;
 
-  protected constructor(options: MessageBaseOptions<D>, causation?: IMessage) {
+  protected constructor(options: MessageBaseOptions<TData>, causation?: IMessage) {
     this.id = options.id || randomUUID();
     this.aggregate = options.aggregate;
     this.causationId = options.causationId || causation?.id || this.id;
     this.correlationId = options.correlationId || causation?.correlationId || randomUUID();
-    this.data = options.data || ({} as unknown as D);
+    this.data = options.data || ({} as unknown as TData);
     this.delay = options.delay || 0;
     this.mandatory = options.mandatory || false;
     this.name = options.name;

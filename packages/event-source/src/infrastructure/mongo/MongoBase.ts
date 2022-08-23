@@ -1,4 +1,3 @@
-import { Collection } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoIndex } from "../../types";
@@ -14,18 +13,13 @@ export abstract class MongoBase {
 
   // protected
 
-  protected async collection<Attributes>(
-    name: string,
-    indices: Array<MongoIndex>,
-  ): Promise<Collection<Attributes>> {
+  protected async createIndices(name: string, indices: Array<MongoIndex>): Promise<void> {
     await this.connection.connect();
 
-    const collection = this.connection.database.collection<Attributes>(name);
+    const collection = this.connection.database.collection(name);
 
     for (const { indexSpecification, createIndexesOptions } of indices) {
       await collection.createIndex(indexSpecification, createIndexesOptions);
     }
-
-    return collection;
   }
 }

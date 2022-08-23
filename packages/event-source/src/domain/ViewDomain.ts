@@ -5,9 +5,9 @@ import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { View } from "../entity";
-import { ViewEventHandler } from "../handler";
+import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { find, isArray, isUndefined, remove, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -31,7 +31,7 @@ import {
 
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
-  private readonly eventHandlers: Array<ViewEventHandler>;
+  private readonly eventHandlers: Array<ViewEventHandlerImplementation>;
   private readonly logger: ILogger;
   private messageBus: IMessageBus;
   private store: IDomainViewStore;
@@ -46,18 +46,21 @@ export class ViewDomain implements IViewDomain {
     this.eventHandlers = [];
   }
 
-  public on<S extends State = State>(eventName: string, listener: EventEmitterListener<S>): void {
+  public on<TState extends State = State>(
+    eventName: string,
+    listener: EventEmitterListener<TState>,
+  ): void {
     this.eventEmitter.on(eventName, listener);
   }
 
-  public async registerEventHandler(eventHandler: ViewEventHandler): Promise<void> {
+  public async registerEventHandler(eventHandler: ViewEventHandlerImplementation): Promise<void> {
     this.logger.debug("Registering event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
       view: eventHandler.view,
     });
 
-    if (!(eventHandler instanceof ViewEventHandler)) {
+    if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "ViewEventHandler",
@@ -108,9 +111,9 @@ export class ViewDomain implements IViewDomain {
       assertSnakeCase(eventHandler.eventName);
 
       this.eventHandlers.push(
-        new ViewEventHandler({
-          adapters: eventHandler.adapters,
+        new ViewEventHandlerImplementation({
           eventName: eventHandler.eventName,
+          adapters: eventHandler.adapters,
           aggregate: {
             name: eventHandler.aggregate.name,
             context: context,
@@ -139,14 +142,14 @@ export class ViewDomain implements IViewDomain {
     }
   }
 
-  public async removeEventHandler(eventHandler: ViewEventHandler): Promise<void> {
+  public async removeEventHandler(eventHandler: ViewEventHandlerImplementation): Promise<void> {
     this.logger.debug("Removing event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
       view: eventHandler.view,
     });
 
-    if (!(eventHandler instanceof ViewEventHandler)) {
+    if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "ViewEventHandler",
@@ -214,7 +217,7 @@ export class ViewDomain implements IViewDomain {
       },
     });
 
-    if (!(eventHandler instanceof ViewEventHandler)) {
+    if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
     }
 
@@ -285,7 +288,7 @@ export class ViewDomain implements IViewDomain {
   private async handleView(
     view: View,
     event: DomainEvent,
-    eventHandler: ViewEventHandler,
+    eventHandler: ViewEventHandlerImplementation,
     conditionValidators: Array<(view: View) => void>,
   ): Promise<View> {
     const json = view.toJSON();
@@ -297,7 +300,7 @@ export class ViewDomain implements IViewDomain {
     }
 
     const context: ViewEventHandlerContext = {
-      event,
+      event: cloneDeep(event.data),
       logger: this.logger.createChildLogger(["ViewEventHandler"]),
 
       addListItem: view.addListItem.bind(view, event),
@@ -324,7 +327,10 @@ export class ViewDomain implements IViewDomain {
     return saved;
   }
 
-  private async processCausationIds(view: View, eventHandler: ViewEventHandler): Promise<View> {
+  private async processCausationIds(
+    view: View,
+    eventHandler: ViewEventHandlerImplementation,
+  ): Promise<View> {
     if (view.processedCausationIds.length < MAX_PROCESSED_CAUSATION_IDS_LENGTH) {
       return view;
     }
@@ -383,11 +389,11 @@ export class ViewDomain implements IViewDomain {
 
   // private static
 
-  private static getQueue(context: string, eventHandler: ViewEventHandler): string {
+  private static getQueue(context: string, eventHandler: ViewEventHandlerImplementation): string {
     return `queue.view.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.view.context}.${eventHandler.view.name}`;
   }
 
-  private static getTopic(context: string, eventHandler: ViewEventHandler): string {
+  private static getTopic(context: string, eventHandler: ViewEventHandlerImplementation): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

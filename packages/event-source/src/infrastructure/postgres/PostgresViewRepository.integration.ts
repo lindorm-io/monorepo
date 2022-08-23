@@ -9,7 +9,7 @@ import { randomUUID } from "crypto";
 
 describe("PostgresViewRepository", () => {
   const logger = createMockLogger();
-  const ViewEntity = createTypeormViewEntity(TEST_VIEW_IDENTIFIER);
+  const ViewEntity = createTypeormViewEntity(TEST_VIEW_IDENTIFIER.name, "postgres_view_repository");
 
   let connection: PostgresConnection;
   let identifier: ViewIdentifier;
@@ -34,7 +34,11 @@ describe("PostgresViewRepository", () => {
       logger,
     );
 
-    identifier = { ...TEST_VIEW_IDENTIFIER, id: randomUUID() };
+    identifier = {
+      id: randomUUID(),
+      name: TEST_VIEW_IDENTIFIER.name,
+      context: "postgres_view_repository",
+    };
 
     repository = new PostgresViewRepository({ connection, view: identifier, ViewEntity }, logger);
 

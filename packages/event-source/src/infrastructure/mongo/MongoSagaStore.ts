@@ -28,6 +28,11 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
 
   // public
 
+  public async initialise(): Promise<void> {
+    await this.createIndices(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
+    await this.createIndices(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
+  }
+
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
     this.logger.debug("Verifying if causation exists", { identifier, causation });
 
@@ -240,10 +245,10 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   // private
 
   private async sagaCollection(): Promise<Collection<SagaStoreAttributes>> {
-    return this.collection(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
+    return this.connection.database.collection(SAGA_COLLECTION);
   }
 
   private async causationCollection(): Promise<Collection<SagaStoreCausationAttributes>> {
-    return this.collection(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
+    return this.connection.database.collection(SAGA_CAUSATION_COLLECTION);
   }
 }

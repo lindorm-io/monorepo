@@ -7,7 +7,7 @@ import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { View } from "../entity";
 import { ViewDomain } from "./ViewDomain";
-import { ViewEventHandler } from "../handler";
+import { ViewEventHandlerImplementation } from "../handler";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomString } from "@lindorm-io/core";
@@ -122,7 +122,7 @@ describe("ViewDomain", () => {
 
     await expect(
       domain.registerEventHandler(
-        new ViewEventHandler({
+        new ViewEventHandlerImplementation({
           ...TEST_VIEW_EVENT_HANDLER,
           aggregate: {
             ...TEST_VIEW_EVENT_HANDLER.aggregate,
@@ -181,7 +181,7 @@ describe("ViewDomain", () => {
         context: "default",
         name: "view_name",
       },
-      { type: "mongo" },
+      {},
     );
 
     expect(store.save).toHaveBeenCalledWith(
@@ -196,7 +196,7 @@ describe("ViewDomain", () => {
         state: { created: true },
       }),
       event,
-      { type: "mongo" },
+      {},
     );
   });
 
@@ -287,7 +287,7 @@ describe("ViewDomain", () => {
     domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
-      new ViewEventHandler({
+      new ViewEventHandlerImplementation({
         ...TEST_VIEW_EVENT_HANDLER_SET_STATE,
         conditions: {
           created: true,
@@ -327,7 +327,7 @@ describe("ViewDomain", () => {
     domain = new ViewDomain({ messageBus, store: store as any }, logger);
 
     await domain.registerEventHandler(
-      new ViewEventHandler({
+      new ViewEventHandlerImplementation({
         ...TEST_VIEW_EVENT_HANDLER_CREATE,
         conditions: {
           created: false,

@@ -1,7 +1,9 @@
 import Joi from "joi";
-import { AggregateCommandHandlerFile, HandlerConditions } from "../types";
+import { AggregateCommandHandler, HandlerConditions } from "../types";
 
-export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<AggregateCommandHandlerFile>().keys({
+export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<
+  AggregateCommandHandler<unknown, unknown>
+>().keys({
   conditions: Joi.object<HandlerConditions>()
     .keys({
       created: Joi.boolean().optional(),

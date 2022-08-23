@@ -18,6 +18,7 @@ import {
   ViewIdentifier,
   ViewStoreAttributes,
   ViewStoreCausationAttributes,
+  ViewStoreInitialiseData,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
@@ -28,6 +29,17 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   // public
+
+  public async initialise(data: Array<ViewStoreInitialiseData>): Promise<void> {
+    await this.createIndices(VIEW_CAUSATION_COLLECTION, VIEW_CAUSATION_COLLECTION_INDICES);
+
+    for (const item of data) {
+      await this.createIndices(MongoViewStore.getCollectionName(item.view, item.collection), [
+        ...VIEW_COLLECTION_INDICES,
+        ...(item.indices || []),
+      ]);
+    }
+  }
 
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     this.logger.debug("Verifying if causation exists", { identifier, causation });
@@ -53,12 +65,12 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   public async clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
-      const collection = await this.viewCollection(filter, adapterOptions);
+      const collection = await this.viewCollection(filter, adapters);
 
       const result = await collection.updateOne(
         {
@@ -90,12 +102,12 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   public async find(
     identifier: ViewIdentifier,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { identifier });
 
     try {
-      const collection = await this.viewCollection(identifier, adapterOptions);
+      const collection = await this.viewCollection(identifier, adapters);
 
       const result = await collection.findOne({ id: identifier.id });
 
@@ -117,7 +129,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   public async insert(
     attributes: ViewStoreAttributes,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
@@ -127,7 +139,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
           name: attributes.name,
           context: attributes.context,
         },
-        adapterOptions,
+        adapters,
       );
 
       const result = await collection.insertOne(attributes);
@@ -170,12 +182,12 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   public async update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
     try {
-      const collection = await this.viewCollection(filter, adapterOptions);
+      const collection = await this.viewCollection(filter, adapters);
 
       const result = await collection.updateOne(
         {
@@ -212,21 +224,21 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   private async viewCollection(
     view: HandlerIdentifier,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<Collection<ViewStoreAttributes>> {
-    return this.collection(
-      adapterOptions.mongo?.collection || MongoViewStore.getCollectionName(view),
-      VIEW_COLLECTION_INDICES,
-    );
+    const name = MongoViewStore.getCollectionName(view, adapters.mongo?.collection);
+    await this.createIndices(name, VIEW_COLLECTION_INDICES);
+
+    return this.connection.database.collection(name);
   }
 
   private async causationCollection(): Promise<Collection<ViewStoreCausationAttributes>> {
-    return this.collection(VIEW_CAUSATION_COLLECTION, VIEW_CAUSATION_COLLECTION_INDICES);
+    return this.connection.database.collection(VIEW_CAUSATION_COLLECTION);
   }
 
   // private static
 
-  public static getCollectionName(view: HandlerIdentifier): string {
-    return `view_${snakeCase(view.context)}_${snakeCase(view.name)}`;
+  public static getCollectionName(view: HandlerIdentifier, collection?: string): string {
+    return collection || `view_${snakeCase(view.context)}_${snakeCase(view.name)}`;
   }
 }

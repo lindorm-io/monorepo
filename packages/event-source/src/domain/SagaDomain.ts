@@ -5,10 +5,10 @@ import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { Saga } from "../entity";
-import { SagaEventHandler } from "../handler";
+import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { find, isArray, isUndefined, remove, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, remove, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -33,14 +33,14 @@ export class SagaDomain implements ISagaDomain {
     this.eventHandlers = [];
   }
 
-  public async registerEventHandler(eventHandler: SagaEventHandler): Promise<void> {
+  public async registerEventHandler(eventHandler: SagaEventHandlerImplementation): Promise<void> {
     this.logger.debug("Registering event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
       saga: eventHandler.saga,
     });
 
-    if (!(eventHandler instanceof SagaEventHandler)) {
+    if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "SagaEventHandler",
@@ -91,7 +91,7 @@ export class SagaDomain implements ISagaDomain {
       assertSnakeCase(eventHandler.eventName);
 
       this.eventHandlers.push(
-        new SagaEventHandler({
+        new SagaEventHandlerImplementation({
           eventName: eventHandler.eventName,
           aggregate: {
             name: eventHandler.aggregate.name,
@@ -122,14 +122,14 @@ export class SagaDomain implements ISagaDomain {
     }
   }
 
-  public async removeEventHandler(eventHandler: SagaEventHandler): Promise<void> {
+  public async removeEventHandler(eventHandler: SagaEventHandlerImplementation): Promise<void> {
     this.logger.debug("Removing event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
       saga: eventHandler.saga,
     });
 
-    if (!(eventHandler instanceof SagaEventHandler)) {
+    if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "SagaEventHandler",
@@ -177,8 +177,10 @@ export class SagaDomain implements ISagaDomain {
     }
   }
 
-  public async inspect<S extends State = State>(identifier: SagaIdentifier): Promise<Saga<S>> {
-    return (await this.store.load(identifier)) as Saga<S>;
+  public async inspect<TState extends State = State>(
+    identifier: SagaIdentifier,
+  ): Promise<Saga<TState>> {
+    return (await this.store.load(identifier)) as Saga<TState>;
   }
 
   // private
@@ -204,7 +206,7 @@ export class SagaDomain implements ISagaDomain {
       },
     });
 
-    if (!(eventHandler instanceof SagaEventHandler)) {
+    if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
     }
 
@@ -272,7 +274,7 @@ export class SagaDomain implements ISagaDomain {
   private async handleSaga(
     saga: Saga,
     event: DomainEvent | TimeoutMessage,
-    eventHandler: SagaEventHandler,
+    eventHandler: SagaEventHandlerImplementation,
     conditionValidators: Array<(saga: Saga) => void>,
   ): Promise<Saga> {
     const json = saga.toJSON();
@@ -287,7 +289,7 @@ export class SagaDomain implements ISagaDomain {
       }
 
       const context: SagaEventHandlerContext = {
-        event,
+        event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["SagaEventHandler"]),
 
         destroy: saga.destroy.bind(saga),
@@ -373,11 +375,11 @@ export class SagaDomain implements ISagaDomain {
 
   // private static
 
-  private static getQueue(context: string, eventHandler: SagaEventHandler): string {
+  private static getQueue(context: string, eventHandler: SagaEventHandlerImplementation): string {
     return `queue.saga.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.saga.context}.${eventHandler.saga.name}`;
   }
 
-  private static getTopic(context: string, eventHandler: SagaEventHandler): string {
+  private static getTopic(context: string, eventHandler: SagaEventHandlerImplementation): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

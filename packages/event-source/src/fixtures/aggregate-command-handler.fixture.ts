@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AggregateCommandHandler } from "../handler";
+import { AggregateCommandHandlerImplementation } from "../handler";
 import { AggregateCommandHandlerOptions } from "../types";
 import { TEST_AGGREGATE_OPTIONS } from "./aggregate.fixture";
 import {
@@ -16,19 +16,6 @@ import {
   TEST_COMMAND_THROWS,
   TEST_COMMAND_TIMEOUT,
 } from "./command.fixture";
-import {
-  TEST_DOMAIN_EVENT_ADD_FIELD,
-  TEST_DOMAIN_EVENT_CREATE,
-  TEST_DOMAIN_EVENT_DESTROY,
-  TEST_DOMAIN_EVENT_DESTROY_NEXT,
-  TEST_DOMAIN_EVENT_DISPATCH,
-  TEST_DOMAIN_EVENT_MERGE_STATE,
-  TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL,
-  TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH,
-  TEST_DOMAIN_EVENT_SET_STATE,
-  TEST_DOMAIN_EVENT_THROWS,
-  TEST_DOMAIN_EVENT_TIMEOUT,
-} from "./domain-event.fixture";
 
 export const TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS: AggregateCommandHandlerOptions = {
   aggregate: {
@@ -47,95 +34,133 @@ export const TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS: AggregateCommandHandlerOpti
   handler: jest.fn().mockImplementation(async () => {}),
 };
 
-export const TEST_AGGREGATE_COMMAND_HANDLER = new AggregateCommandHandler(
+export const TEST_AGGREGATE_COMMAND_HANDLER = new AggregateCommandHandlerImplementation(
   TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
 );
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_CREATE = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_CREATE = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_CREATE.name,
   conditions: { created: false },
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_CREATE.name, ctx.command.data);
+    class DomainEventCreate {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventCreate(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_ADD_FIELD = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_ADD_FIELD = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_ADD_FIELD.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_ADD_FIELD.name, ctx.command.data);
+    class DomainEventAddField {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventAddField(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_DESTROY = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_DESTROY = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_DESTROY.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_DESTROY.name, ctx.command.data);
+    class DomainEventDestroy {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventDestroy(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT = new AggregateCommandHandler({
-  ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
-  commandName: TEST_COMMAND_DESTROY_NEXT.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_DESTROY_NEXT.name, ctx.command.data);
-  }),
-});
+export const TEST_AGGREGATE_COMMAND_HANDLER_DESTROY_NEXT =
+  new AggregateCommandHandlerImplementation({
+    ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
+    commandName: TEST_COMMAND_DESTROY_NEXT.name,
+    handler: jest.fn().mockImplementation(async (ctx) => {
+      class DomainEventDestroyNext {
+        constructor(public readonly dataFromCommand: any) {}
+      }
+      await ctx.apply(new DomainEventDestroyNext(ctx.command));
+    }),
+  });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_DISPATCH = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_DISPATCH = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_DISPATCH.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_DISPATCH.name, ctx.command.data);
+    class DomainEventDispatch {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventDispatch(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE = new AggregateCommandHandler({
-  ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
-  commandName: TEST_COMMAND_MERGE_STATE.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_MERGE_STATE.name, ctx.command.data);
-  }),
-});
+export const TEST_AGGREGATE_COMMAND_HANDLER_MERGE_STATE = new AggregateCommandHandlerImplementation(
+  {
+    ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
+    commandName: TEST_COMMAND_MERGE_STATE.name,
+    handler: jest.fn().mockImplementation(async (ctx) => {
+      class DomainEventMergeState {
+        constructor(public readonly dataFromCommand: any) {}
+      }
+      await ctx.apply(new DomainEventMergeState(ctx.command));
+    }),
+  },
+);
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new AggregateCommandHandler({
-  ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
-  commandName: TEST_COMMAND_REMOVE_FIELD_WHERE_EQUAL.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL.name, ctx.command.data);
-  }),
-});
+export const TEST_AGGREGATE_COMMAND_HANDLER_REMOVE_FIELD_WHERE_EQUAL =
+  new AggregateCommandHandlerImplementation({
+    ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
+    commandName: TEST_COMMAND_REMOVE_FIELD_WHERE_EQUAL.name,
+    handler: jest.fn().mockImplementation(async (ctx) => {
+      class DomainEventRemoveFieldWhereEqual {
+        constructor(public readonly dataFromCommand: any) {}
+      }
+      await ctx.apply(new DomainEventRemoveFieldWhereEqual(ctx.command));
+    }),
+  });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_REMOVE_FIELD_WHERE_MATCH = new AggregateCommandHandler({
-  ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
-  commandName: TEST_COMMAND_REMOVE_FIELD_WHERE_MATCH.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH.name, ctx.command.data);
-  }),
-});
+export const TEST_AGGREGATE_COMMAND_HANDLER_REMOVE_FIELD_WHERE_MATCH =
+  new AggregateCommandHandlerImplementation({
+    ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
+    commandName: TEST_COMMAND_REMOVE_FIELD_WHERE_MATCH.name,
+    handler: jest.fn().mockImplementation(async (ctx) => {
+      class DomainEventRemoveFieldWhereMatch {
+        constructor(public readonly dataFromCommand: any) {}
+      }
+      await ctx.apply(new DomainEventRemoveFieldWhereMatch(ctx.command));
+    }),
+  });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_SET_STATE = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_SET_STATE = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_SET_STATE.name, ctx.command.data);
+    class DomainEventSetState {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventSetState(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_THROWS = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_THROWS = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_THROWS.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_THROWS.name, ctx.command.data);
+    class DomainEventThrows {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventThrows(ctx.command));
   }),
 });
 
-export const TEST_AGGREGATE_COMMAND_HANDLER_TIMEOUT = new AggregateCommandHandler({
+export const TEST_AGGREGATE_COMMAND_HANDLER_TIMEOUT = new AggregateCommandHandlerImplementation({
   ...TEST_AGGREGATE_COMMAND_HANDLER_OPTIONS,
   commandName: TEST_COMMAND_TIMEOUT.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    await ctx.apply(TEST_DOMAIN_EVENT_TIMEOUT.name, ctx.command.data);
+    class DomainEventTimeout {
+      constructor(public readonly dataFromCommand: any) {}
+    }
+    await ctx.apply(new DomainEventTimeout(ctx.command));
   }),
 });

@@ -1,14 +1,15 @@
 import Joi from "joi";
-import { AggregateEventHandler } from "../handler";
+import { AggregateEventHandlerImplementation } from "../handler";
 import { Command, DomainEvent } from "../message";
 import { JOI_MESSAGE } from "../schema";
 import { ILogger } from "@lindorm-io/winston";
 import { assertSnakeCase, assertSchema, assertSchemaAsync } from "../util";
-import { cloneDeep, find, merge, set } from "lodash";
+import { cloneDeep, find, merge, set, snakeCase } from "lodash";
 import {
   AggregateData,
   AggregateEventHandlerContext,
   AggregateOptions,
+  ClassConstructor,
   IAggregate,
   IAggregateEventHandler,
   State,
@@ -21,14 +22,14 @@ import {
   MessageTypeError,
 } from "../error";
 
-export class Aggregate<S extends State = State> implements IAggregate {
+export class Aggregate<TState extends State = State> implements IAggregate {
   public readonly id: string;
   public readonly name: string;
   public readonly context: string;
 
   private readonly _eventHandlers: Array<IAggregateEventHandler>;
   private readonly _events: Array<DomainEvent>;
-  private readonly _state: S;
+  private readonly _state: TState;
 
   private _destroyed: boolean;
   private _destroying: boolean;
@@ -51,7 +52,7 @@ export class Aggregate<S extends State = State> implements IAggregate {
     this._eventHandlers = options.eventHandlers || [];
     this._events = [];
     this._numberOfLoadedEvents = 0;
-    this._state = {} as unknown as S;
+    this._state = {} as unknown as TState;
   }
 
   // public properties
@@ -86,31 +87,27 @@ export class Aggregate<S extends State = State> implements IAggregate {
 
   // public
 
-  public async apply(
-    causation: Command,
-    name: string,
-    data?: Record<string, any>,
-    version?: number,
-  ): Promise<void> {
-    this.logger.debug("Apply Command", { causation, name, data });
+  public async apply(causation: Command, event: ClassConstructor, version?: number): Promise<void> {
+    this.logger.debug("Apply Command", { causation, event });
 
     await assertSchemaAsync(
       Joi.object()
         .keys({
           causation: JOI_MESSAGE.required(),
-          name: Joi.string().required(),
-          data: Joi.object().optional(),
+          event: Joi.object().optional(),
         })
         .required()
-        .validateAsync({ causation, name, data }),
+        .validateAsync({ causation, event }),
     );
+
+    const { ...data } = event;
 
     await this.handleEvent(
       new DomainEvent(
         {
           aggregate: { id: this.id, name: this.name, context: this.context },
-          data: data,
-          name: name,
+          data,
+          name: snakeCase(event.constructor.name),
           origin: causation.origin,
           originator: causation.originator,
           version,
@@ -120,7 +117,7 @@ export class Aggregate<S extends State = State> implements IAggregate {
     );
   }
 
-  public getState(): S {
+  public getState(): TState {
     return cloneDeep(this._state);
   }
 
@@ -164,17 +161,17 @@ export class Aggregate<S extends State = State> implements IAggregate {
 
       const destroying = this._destroying;
 
-      const eventHandler: AggregateEventHandler = find(this._eventHandlers, {
+      const eventHandler: AggregateEventHandlerImplementation = find(this._eventHandlers, {
         eventName: event.name,
         version: event.version,
       });
 
-      if (!(eventHandler instanceof AggregateEventHandler)) {
+      if (!(eventHandler instanceof AggregateEventHandlerImplementation)) {
         throw new HandlerNotRegisteredError();
       }
 
       const context: AggregateEventHandlerContext = {
-        event,
+        event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["AggregateEventHandler"]),
 
         destroy: this.destroy.bind(this),

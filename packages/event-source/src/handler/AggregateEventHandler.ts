@@ -1,21 +1,23 @@
 import {
-  IAggregateEventHandler,
   AggregateEventHandlerContext,
   AggregateEventHandlerOptions,
+  ClassConstructor,
   HandlerIdentifier,
+  IAggregateEventHandler,
   State,
-  Data,
 } from "../types";
 
-export class AggregateEventHandler<S extends State = State, D extends Data = Data>
-  implements IAggregateEventHandler<S, D>
+export class AggregateEventHandlerImplementation<
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> implements IAggregateEventHandler<TEvent, TState>
 {
   public readonly aggregate: HandlerIdentifier;
   public readonly eventName: string;
   public readonly version: number;
-  public readonly handler: (ctx: AggregateEventHandlerContext<S, D>) => Promise<void>;
+  public readonly handler: (ctx: AggregateEventHandlerContext<TEvent, TState>) => Promise<void>;
 
-  public constructor(options: AggregateEventHandlerOptions<S>) {
+  public constructor(options: AggregateEventHandlerOptions<TEvent, TState>) {
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.eventName = options.eventName;
     this.version = options.version || 1;

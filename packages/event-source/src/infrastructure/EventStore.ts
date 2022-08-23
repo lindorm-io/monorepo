@@ -1,5 +1,5 @@
 import { Aggregate } from "../entity";
-import { AggregateEventHandler } from "../handler";
+import { AggregateEventHandlerImplementation } from "../handler";
 import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";
 import { EventStoreType } from "../enum";
@@ -38,13 +38,17 @@ export class EventStore implements IDomainEventStore {
         break;
 
       default:
-        break;
+        throw new Error("Invalid EventStore type");
     }
 
     this.logger = logger.createChildLogger(["EventStore"]);
   }
 
   // public
+
+  public async initialise(): Promise<void> {
+    await this.store.initialise();
+  }
 
   public async save(aggregate: IAggregate, causation: Command): Promise<Array<DomainEvent>> {
     this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
@@ -102,7 +106,7 @@ export class EventStore implements IDomainEventStore {
 
   public async load(
     identifier: AggregateIdentifier,
-    eventHandlers: Array<AggregateEventHandler>,
+    eventHandlers: Array<AggregateEventHandlerImplementation>,
   ): Promise<Aggregate> {
     this.logger.debug("Loading aggregate", { identifier });
 

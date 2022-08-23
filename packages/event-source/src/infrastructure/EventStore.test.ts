@@ -66,9 +66,13 @@ describe("EventStore (MongoConnection)", () => {
   });
 
   test("should save new aggregate", async () => {
+    class DomainEventCreate {
+      public constructor(public readonly create: boolean) {}
+    }
+
     const aggregate = new Aggregate({ ...identifier, eventHandlers }, logger);
     const command = new Command({ ...TEST_COMMAND_CREATE, aggregate: identifier });
-    await aggregate.apply(command, "domain_event_create", { create: true });
+    await aggregate.apply(command, new DomainEventCreate(true));
 
     mock.find.mockResolvedValue([]);
 
@@ -109,12 +113,16 @@ describe("EventStore (MongoConnection)", () => {
   });
 
   test("should save existing aggregate", async () => {
+    class DomainEventMergeState {
+      public constructor(public readonly merge: boolean) {}
+    }
+
     const aggregate = new Aggregate({ ...identifier, eventHandlers }, logger);
     const event = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate: identifier });
     await aggregate.load(event);
 
     const command = new Command({ ...TEST_COMMAND_MERGE_STATE, aggregate: identifier });
-    await aggregate.apply(command, "domain_event_merge_state", { merge: true });
+    await aggregate.apply(command, new DomainEventMergeState(true));
 
     mock.find.mockResolvedValue([]);
 
@@ -227,9 +235,13 @@ describe("EventStore (MongoConnection)", () => {
   });
 
   test("should throw on causation missing events", async () => {
+    class DomainEventCreate {
+      public constructor(public readonly create: boolean) {}
+    }
+
     const aggregate = new Aggregate({ ...identifier, eventHandlers }, logger);
     const command = new Command({ ...TEST_COMMAND_CREATE, aggregate: identifier });
-    await aggregate.apply(command, "domain_event_create", { create: true });
+    await aggregate.apply(command, new DomainEventCreate(true));
 
     const testCommand = new Command({ ...TEST_COMMAND, aggregate: identifier });
 

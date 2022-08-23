@@ -3,7 +3,7 @@ import { DomainEvent } from "../message";
 import { MessageBus, SagaStore } from "../infrastructure";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { SagaDomain } from "./SagaDomain";
-import { SagaEventHandler } from "../handler";
+import { SagaEventHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -31,7 +31,7 @@ describe("SagaDomain", () => {
 
   let amqp: AmqpConnection;
   let domain: SagaDomain;
-  let eventHandlers: Array<SagaEventHandler>;
+  let eventHandlers: Array<SagaEventHandlerImplementation>;
   let messageBus: MessageBus;
   let mongo: MongoConnection;
   let store: SagaStore;

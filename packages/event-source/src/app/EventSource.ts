@@ -1,19 +1,18 @@
 import { Aggregate, Saga } from "../entity";
 import { AggregateDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
-import { EventStoreType, MessageBusType, ReplayEventName, SagaStoreType } from "../enum";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { LindormError } from "@lindorm-io/errors";
-import { isArray, merge, snakeCase } from "lodash";
-import { join } from "path";
+import { ReplayEventName } from "../enum";
+import { flatten, isArray, merge, snakeCase, uniq } from "lodash";
 import {
-  AggregateCommandHandler,
-  AggregateEventHandler,
-  SagaEventHandler,
-  ViewEventHandler,
+  AggregateCommandHandlerImplementation,
+  AggregateEventHandlerImplementation,
+  SagaEventHandlerImplementation,
+  ViewEventHandlerImplementation,
 } from "../handler";
 import {
   EventStore,
@@ -32,8 +31,9 @@ import {
   JOI_VIEW_EVENT_HANDLER_FILE,
 } from "../schema";
 import {
-  AggregateCommandHandlerFile,
-  AggregateEventHandlerFile,
+  AggregateCommandHandler,
+  AggregateEventHandler,
+  AggregateIdentifier,
   AppAdmin,
   AppInspectOptions,
   AppOptions,
@@ -41,32 +41,41 @@ import {
   AppPublishResult,
   AppRepositories,
   AppSetup,
-  AppStructure,
+  ClassConstructor,
   Data,
   EventEmitterListener,
+  HandlerIdentifier,
   IAggregateCommandHandler,
   IAggregateDomain,
   IAggregateEventHandler,
+  IDomainEventStore,
+  IDomainSagaStore,
+  IDomainViewStore,
   IEventSource,
   IReplayDomain,
   ISagaDomain,
   ISagaEventHandler,
   IViewDomain,
   IViewEventHandler,
+  MongoIndex,
   PrivateAppOptions,
-  SagaEventHandlerFile,
+  SagaEventHandler,
+  ScanFileData,
   State,
-  ViewEventHandlerFile,
+  ViewEventHandler,
 } from "../types";
 import {
-  StructureScanner,
   assertSchema,
   defaultAggregateCommandHandlerSchema,
   defaultSagaIdFunction,
   defaultViewIdFunction,
+  StructureScanner,
 } from "../util";
+import { randomUUID } from "crypto";
 
-export class EventSource implements IEventSource {
+export class EventSource<TCommand extends ClassConstructor = ClassConstructor>
+  implements IEventSource<TCommand>
+{
   private readonly amqp: IAmqpConnection;
   private readonly messageBus: IMessageBus;
   private readonly mongo: IMongoConnection;
@@ -74,18 +83,31 @@ export class EventSource implements IEventSource {
 
   private readonly logger: ILogger;
   private readonly options: PrivateAppOptions;
+  private readonly require: NodeJS.Require;
 
   private readonly aggregateDomain: IAggregateDomain;
   private readonly sagaDomain: ISagaDomain;
   private readonly replayDomain: IReplayDomain;
   private readonly viewDomain: IViewDomain;
 
+  private readonly eventStore: IDomainEventStore;
+  private readonly sagaStore: IDomainSagaStore;
+  private readonly viewStore: IDomainViewStore;
+
   private readonly aggregateCommandHandlers: Array<IAggregateCommandHandler>;
   private readonly aggregateEventHandlers: Array<IAggregateEventHandler>;
   private readonly sagaEventHandlers: Array<ISagaEventHandler>;
   private readonly viewEventHandlers: Array<IViewEventHandler>;
 
-  private readonly entities: Record<string, typeof ViewEntity>;
+  private readonly commandAggregates: Record<string, Array<string>>;
+  private readonly eventAggregates: Record<string, Array<string>>;
+
+  private readonly viewEntities: Record<string, typeof ViewEntity>;
+  private readonly viewIndices: Record<
+    string,
+    { collection?: string; indices?: Array<MongoIndex>; view: HandlerIdentifier }
+  >;
+
   private initialised: boolean;
   private initialising: boolean;
   private replaying: boolean;
@@ -93,84 +115,64 @@ export class EventSource implements IEventSource {
   private promise: () => Promise<void>;
 
   public constructor(options: AppOptions, logger: ILogger) {
-    const { amqp, mongo, postgres, ...appOptions } = options;
+    const { connections = {}, custom = {}, ...appOptions } = options;
 
-    this.logger = logger.createChildLogger(["App"]);
+    this.logger = logger.createChildLogger(["EventSource"]);
+    this.require = custom.require || require;
 
-    this.entities = {};
     this.initialising = false;
     this.initialised = false;
 
     this.options = merge<Partial<PrivateAppOptions>, PrivateAppOptions>(
       {
-        domain: {
-          directory: null,
-          context: "default",
+        adapters: {
+          eventStore: "memory",
+          sagaStore: "memory",
+          viewStore: "memory",
+          messageBus: "memory",
         },
-        aggregates: {
-          directory: options.domain?.directory
-            ? join(options.domain?.directory, "aggregates")
-            : options.aggregates?.directory,
+        context: "default",
+        directory: null,
+        scanner: {
+          extensions: [".js", ".ts"],
           include: [/.*/],
           exclude: [],
-          extensions: [".js", ".ts"],
-          type: EventStoreType.MONGO,
         },
-        sagas: {
-          directory: options.domain?.directory
-            ? join(options.domain?.directory, "sagas")
-            : options.aggregates?.directory,
-          include: [/.*/],
-          exclude: [],
-          extensions: [".js", ".ts"],
-          type: SagaStoreType.MONGO,
-        },
-        views: {
-          directory: options.domain?.directory
-            ? join(options.domain?.directory, "views")
-            : options.aggregates?.directory,
-          include: [/.*/],
-          exclude: [],
-          extensions: [".js", ".ts"],
-        },
-        messageBus: {
-          type: MessageBusType.AMQP,
-        },
-        require: require,
+        dangerouslyRegisterHandlersManually: false,
       },
       appOptions,
     );
 
-    this.amqp = amqp;
-    this.mongo = mongo;
-    this.postgres = postgres;
+    this.amqp = connections.amqp;
+    this.mongo = connections.mongo;
+    this.postgres = connections.postgres;
 
-    const eventStore = new EventStore(
+    this.eventStore = new EventStore(
       {
-        custom: options.custom?.eventStore,
+        custom: custom.eventStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.aggregates.type,
+        type: this.options.adapters.eventStore,
       },
       this.logger,
     );
 
-    const sagaStore = new SagaStore(
+    this.sagaStore = new SagaStore(
       {
-        custom: options.custom?.sagaStore,
+        custom: custom.sagaStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.sagas.type,
+        type: this.options.adapters.sagaStore,
       },
       this.logger,
     );
 
-    const viewStore = new ViewStore(
+    this.viewStore = new ViewStore(
       {
-        custom: options.custom?.viewStore,
+        custom: custom.viewStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.views.type,
+        type: this.options.adapters.viewStore,
       },
       this.logger,
     );
@@ -178,8 +180,8 @@ export class EventSource implements IEventSource {
     this.messageBus = new MessageBus(
       {
         amqp: this.amqp,
-        custom: options.custom?.messageBus,
-        type: this.options.messageBus?.type,
+        custom: custom.messageBus,
+        type: this.options.adapters.messageBus,
       },
       this.logger,
     );
@@ -187,7 +189,7 @@ export class EventSource implements IEventSource {
     this.aggregateDomain = new AggregateDomain(
       {
         messageBus: this.messageBus,
-        store: eventStore,
+        store: this.eventStore,
       },
       this.logger,
     );
@@ -195,7 +197,7 @@ export class EventSource implements IEventSource {
     this.sagaDomain = new SagaDomain(
       {
         messageBus: this.messageBus,
-        store: sagaStore,
+        store: this.sagaStore,
       },
       this.logger,
     );
@@ -203,14 +205,14 @@ export class EventSource implements IEventSource {
     this.replayDomain = new ReplayDomain({
       messageBus: this.messageBus,
       logger: this.logger,
-      eventStore: eventStore,
-      context: this.options.domain.context,
+      eventStore: this.eventStore,
+      context: this.options.context,
     });
 
     this.viewDomain = new ViewDomain(
       {
         messageBus: this.messageBus,
-        store: viewStore,
+        store: this.viewStore,
       },
       this.logger,
     );
@@ -219,6 +221,12 @@ export class EventSource implements IEventSource {
     this.aggregateEventHandlers = [];
     this.sagaEventHandlers = [];
     this.viewEventHandlers = [];
+
+    this.commandAggregates = {};
+    this.eventAggregates = {};
+
+    this.viewEntities = {};
+    this.viewIndices = {};
 
     this.promise = this.handleInitialise;
   }
@@ -258,7 +266,7 @@ export class EventSource implements IEventSource {
         new MongoViewRepository<S>(
           {
             connection: this.mongo,
-            view: { name, context: context || this.options.domain.context },
+            view: { name, context: this.context(context) },
           },
           this.logger,
         ),
@@ -266,8 +274,8 @@ export class EventSource implements IEventSource {
         new PostgresViewRepository<S>(
           {
             connection: this.postgres,
-            ViewEntity: this.entities[this.viewEntityName(name, context)],
-            view: { name, context: context || this.options.domain.context },
+            ViewEntity: this.viewEntities[this.viewEntityName(name, context)],
+            view: { name, context: this.context(context) },
           },
           this.logger,
         ),
@@ -283,6 +291,8 @@ export class EventSource implements IEventSource {
       registerAggregateEventHandlers: this.registerAggregateEventHandlers.bind(this),
       registerSagaEventHandlers: this.registerSagaEventHandlers.bind(this),
       registerViewEventHandlers: this.registerViewEventHandlers.bind(this),
+      registerCommandAggregate: this.registerCommandAggregate.bind(this),
+      registerEventAggregate: this.registerEventAggregate.bind(this),
     };
   }
   public set setup(_: AppSetup) {
@@ -291,38 +301,68 @@ export class EventSource implements IEventSource {
 
   // public app
 
-  public async publish(options: AppPublishOptions): Promise<AppPublishResult> {
+  public async publish(
+    command: TCommand,
+    aggregate: Partial<AggregateIdentifier> = {},
+    options: AppPublishOptions = {},
+  ): Promise<AppPublishResult> {
     await this.promise();
 
-    const command = new Command({
-      aggregate: {
-        id: options.aggregate.id,
-        name: options.aggregate.name,
-        context: options.aggregate.context || this.options.domain.context,
-      },
-      name: options.name,
-      data: options.data,
+    const name = snakeCase(command.constructor.name);
+    const { ...data } = command;
+
+    const commandAggregates = this.commandAggregates[name];
+
+    if (!commandAggregates.length) {
+      throw new LindormError("Invalid Command", {
+        data: { commandAggregates },
+        description: "Aggregate not registered to command",
+      });
+    }
+
+    if (commandAggregates.length > 1) {
+      throw new LindormError("Invalid Command", {
+        data: { commandAggregates },
+        description:
+          "Multiple aggregates registered to command. You need to specify which aggregate in options",
+      });
+    }
+
+    const [aggregateName] = commandAggregates;
+
+    const resolvedAggregate = {
+      id: aggregate.id || randomUUID(),
+      name: aggregate.name || aggregateName,
+      context: this.context(aggregate.context),
+    };
+
+    const generated = new Command({
+      aggregate: resolvedAggregate,
+      name,
+      data,
       correlationId: options.correlationId,
       delay: options.delay,
       origin: options.origin || "event_source",
       originator: options.originator,
     });
 
-    await JOI_MESSAGE.validateAsync(command);
+    await JOI_MESSAGE.validateAsync(generated);
 
-    if (!(command instanceof Command)) {
+    if (!(generated instanceof Command)) {
       throw new LindormError("Invalid operation", {
         data: {
           expect: "Command",
-          actual: typeof command,
+          actual: typeof generated,
         },
       });
     }
 
-    await this.messageBus.publish(command);
+    await this.messageBus.publish(generated);
 
-    if (this.replaying) return "QUEUED";
-    return "OK";
+    return {
+      result: this.replaying ? "QUEUED" : "OK",
+      aggregate: resolvedAggregate,
+    };
   }
 
   public on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void {
@@ -345,32 +385,34 @@ export class EventSource implements IEventSource {
 
   // private admin
 
-  private async inspectAggregate<S extends State = State>(
+  private async inspectAggregate<TState extends State = State>(
     aggregate: AppInspectOptions,
-  ): Promise<Aggregate<S>> {
+  ): Promise<Aggregate<TState>> {
     await this.promise();
 
-    return this.aggregateDomain.inspect<S>({
+    return this.aggregateDomain.inspect<TState>({
       id: aggregate.id,
       name: aggregate.name,
-      context: aggregate.context || this.options.domain.context,
+      context: this.context(aggregate.context),
     });
   }
 
-  private async inspectSaga<S extends State = State>(saga: AppInspectOptions): Promise<Saga<S>> {
+  private async inspectSaga<TState extends State = State>(
+    saga: AppInspectOptions,
+  ): Promise<Saga<TState>> {
     await this.promise();
 
-    return this.sagaDomain.inspect<S>({
+    return this.sagaDomain.inspect<TState>({
       id: saga.id,
       name: saga.name,
-      context: saga.context || this.options.domain.context,
+      context: this.context(saga.context),
     });
   }
 
   // private admin register methods
 
   private async registerAggregateCommandHandlers(
-    handlers: Array<AggregateCommandHandler>,
+    handlers: Array<AggregateCommandHandlerImplementation>,
   ): Promise<void> {
     this.assertRegister();
 
@@ -380,7 +422,7 @@ export class EventSource implements IEventSource {
   }
 
   private async registerAggregateEventHandlers(
-    handlers: Array<AggregateEventHandler>,
+    handlers: Array<AggregateEventHandlerImplementation>,
   ): Promise<void> {
     this.assertRegister();
 
@@ -389,7 +431,9 @@ export class EventSource implements IEventSource {
     }
   }
 
-  private async registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void> {
+  private async registerSagaEventHandlers(
+    handlers: Array<SagaEventHandlerImplementation>,
+  ): Promise<void> {
     this.assertRegister();
 
     for (const handler of handlers) {
@@ -397,7 +441,9 @@ export class EventSource implements IEventSource {
     }
   }
 
-  private async registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void> {
+  private async registerViewEventHandlers(
+    handlers: Array<ViewEventHandlerImplementation>,
+  ): Promise<void> {
     this.assertRegister();
 
     for (const handler of handlers) {
@@ -405,13 +451,14 @@ export class EventSource implements IEventSource {
     }
 
     this.registerViewEntities(handlers);
+    this.registerViewIndices(handlers);
   }
 
-  private registerViewEntities(handlers: Array<ViewEventHandler>): void {
+  private registerViewEntities(handlers: Array<ViewEventHandlerImplementation>): void {
     this.assertRegister();
 
     for (const handler of handlers) {
-      if (handler.adapters.type !== "postgres" && !handler.adapters.postgres) continue;
+      if (!handler.adapters.postgres) continue;
 
       if (!handler.adapters.postgres?.ViewEntity) {
         throw new LindormError("Invalid ViewEventHandler", {
@@ -423,9 +470,33 @@ export class EventSource implements IEventSource {
         });
       }
 
-      this.entities[this.viewEntityName(handler.view.name, handler.view.context)] =
+      this.viewEntities[this.viewEntityName(handler.view.name, handler.view.context)] =
         handler.adapters.postgres.ViewEntity;
     }
+  }
+
+  private registerViewIndices(handlers: Array<ViewEventHandlerImplementation>): void {
+    this.assertRegister();
+
+    for (const handler of handlers) {
+      if (!handler.adapters.mongo) continue;
+
+      this.viewIndices[this.viewEntityName(handler.view.name, handler.view.context)] = {
+        view: handler.view,
+        collection: handler.adapters.mongo.collection,
+        indices: handler.adapters.mongo.indices,
+      };
+    }
+  }
+
+  private registerCommandAggregate(name: string, aggregate: string): void {
+    const current = this.commandAggregates[name] || [];
+    this.commandAggregates[name] = uniq(flatten([current, aggregate]));
+  }
+
+  private registerEventAggregate(name: string, aggregate: string): void {
+    const current = this.eventAggregates[name] || [];
+    this.eventAggregates[name] = uniq(flatten([current, aggregate]));
   }
 
   // private initialisation handler
@@ -442,21 +513,18 @@ export class EventSource implements IEventSource {
       this.promise = (): Promise<void> => Promise.resolve();
     }
 
-    if (StructureScanner.hasFiles(this.options.aggregates.directory)) {
-      await this.scanAggregates();
+    if (StructureScanner.hasFiles(this.options.directory)) {
+      await this.scanFiles();
+
       await this.registerAggregateCommandHandlers(this.aggregateCommandHandlers);
       await this.registerAggregateEventHandlers(this.aggregateEventHandlers);
-    }
-
-    if (StructureScanner.hasFiles(this.options.sagas.directory)) {
-      await this.scanSagas();
       await this.registerSagaEventHandlers(this.sagaEventHandlers);
-    }
-
-    if (StructureScanner.hasFiles(this.options.views.directory)) {
-      await this.scanViews();
       await this.registerViewEventHandlers(this.viewEventHandlers);
     }
+
+    await this.eventStore.initialise();
+    await this.sagaStore.initialise();
+    await this.viewStore.initialise(Object.values(this.viewIndices).map((item) => item));
 
     await this.setupReplayDomain();
 
@@ -466,13 +534,10 @@ export class EventSource implements IEventSource {
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
-  // private scan handlers
+  // private handler scanner
 
-  private async scanAggregates(): Promise<void> {
-    const scanner = new StructureScanner(
-      this.options.aggregates.directory,
-      this.options.aggregates.extensions,
-    );
+  private async scanFiles(): Promise<void> {
+    const scanner = new StructureScanner(this.options.directory, this.options.scanner.extensions);
 
     const files = scanner.scan();
 
@@ -481,176 +546,203 @@ export class EventSource implements IEventSource {
 
       if (file.parents.length !== 2) {
         throw new Error(
-          "Expecting folder structure: [ ./aggregates/{aggregateName}/{commands|events}/{commandName|eventName} ]",
+          "Expecting file structure: [ ./ aggregates / {commands|events} / {commandName|eventName} . {command|command-handler|event|event-handler|saga-handler|view-handler} . {js|ts} ]",
         );
       }
 
-      const type = file.parents[0];
-      const aggregateName = file.parents[1];
+      if (!this.isValid("aggregate", file.name)) continue;
 
-      if (!this.isValid("aggregate", aggregateName, this.options.aggregates)) break;
+      const [directory] = file.parents;
 
-      const handlers = this.getFileHandlers(file.path);
-
-      switch (type) {
-        case "commands":
-          for (const handler of handlers as Array<AggregateCommandHandlerFile>) {
-            this.logger.debug("Found aggregate command handler", { handler: file.path });
-
-            assertSchema(JOI_AGGREGATE_COMMAND_HANDLER_FILE.required().validate(handler));
-
-            this.aggregateCommandHandlers.push(
-              new AggregateCommandHandler({
-                commandName: snakeCase(file.name),
-                aggregate: {
-                  name: snakeCase(aggregateName),
-                  context: snakeCase(this.options.domain.context),
-                },
-                conditions: handler.conditions,
-                schema: handler.schema ? handler.schema : defaultAggregateCommandHandlerSchema,
-                version: handler.version,
-                handler: handler.handler,
-              }),
-            );
-          }
+      switch (`${directory}.${file.type}`) {
+        case "commands.command":
+          this.loadCommandAggregate(file);
           break;
 
-        case "events":
-          for (const handler of handlers as Array<AggregateEventHandlerFile>) {
-            this.logger.debug("Found aggregate event handler", { handler: file.path });
+        case "commands.handler":
+          this.loadCommandHandlers(file);
+          break;
 
-            console.log(handler);
+        case "events.event":
+          this.loadEventAggregate(file);
+          break;
 
-            assertSchema(JOI_AGGREGATE_EVENT_HANDLER_FILE.required().validate(handler));
+        case "events.handler":
+          this.loadEventHandlers(file);
+          break;
 
-            this.aggregateEventHandlers.push(
-              new AggregateEventHandler({
-                eventName: snakeCase(file.name),
-                aggregate: {
-                  name: snakeCase(aggregateName),
-                  context: snakeCase(this.options.domain.context),
-                },
-                version: handler.version,
-                handler: handler.handler,
-              }),
-            );
-          }
+        case "events.saga":
+          this.loadSagaHandlers(file);
+          break;
+
+        case "events.view":
+          this.loadViewHandlers(file);
           break;
 
         default:
-          throw new Error(
-            "Expecting folder names: [ ./aggregates/{aggregateName}/{commands|events}/{commandName|eventName} ]",
-          );
+          break;
       }
     }
   }
 
-  private async scanSagas(): Promise<void> {
-    const scanner = new StructureScanner(
-      this.options.sagas.directory,
-      this.options.sagas.extensions,
-    );
+  // private handler loaders
 
-    const files = scanner.scan();
+  private loadCommandHandlers(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
 
-    for (const file of files) {
-      this.logger.debug("Scanning saga", { file });
+    if (directory !== "commands") {
+      throw new Error("Invalid command handler location");
+    }
 
-      if (file.parents.length !== 2) {
-        throw new Error(
-          "Expecting folder structure: [ ./sagas/{sagaName}/{aggregateName}/{eventName} ]",
-        );
-      }
+    const handlers = this.getFileHandlers<AggregateCommandHandler<unknown, unknown>>(file.path);
 
-      const sagaName = file.parents[1];
-      const aggregateName = file.parents[0];
+    for (const handler of handlers) {
+      this.logger.debug("Found aggregate command handler", { handler: file.path });
 
-      if (!this.isValid("saga", sagaName, this.options.sagas)) break;
+      assertSchema(JOI_AGGREGATE_COMMAND_HANDLER_FILE.required().validate(handler));
 
-      const handlers = this.getFileHandlers<SagaEventHandlerFile>(file.path);
-
-      for (const handler of handlers) {
-        this.logger.debug("Found saga event handler", { handler: file.path });
-
-        assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
-
-        this.sagaEventHandlers.push(
-          new SagaEventHandler({
-            eventName: snakeCase(file.name),
-            aggregate: {
-              name: snakeCase(aggregateName),
-              context: isArray(handler.aggregate?.context)
-                ? handler.aggregate.context.map((context) => snakeCase(context))
-                : snakeCase(handler.aggregate?.context || this.options.domain.context),
-            },
-            saga: {
-              name: snakeCase(sagaName),
-              context: snakeCase(this.options.domain.context),
-            },
-            conditions: handler.conditions,
-            version: handler.version,
-            getSagaId: handler.getSagaId ? handler.getSagaId : defaultSagaIdFunction,
-            handler: handler.handler,
-          }),
-        );
-      }
+      this.aggregateCommandHandlers.push(
+        new AggregateCommandHandlerImplementation({
+          commandName: snakeCase(file.name),
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: snakeCase(this.options.context),
+          },
+          conditions: handler.conditions,
+          schema: handler.schema ? handler.schema : defaultAggregateCommandHandlerSchema,
+          version: handler.version,
+          handler: handler.handler,
+        }),
+      );
     }
   }
 
-  private async scanViews(): Promise<void> {
-    const scanner = new StructureScanner(
-      this.options.views.directory,
-      this.options.views.extensions,
-    );
+  private loadEventHandlers(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
 
-    const files = scanner.scan();
+    if (directory !== "events") {
+      throw new Error("Invalid event handler location");
+    }
 
-    for (const file of files) {
-      this.logger.debug("Scanning view", { file });
+    const handlers = this.getFileHandlers<AggregateEventHandler<unknown>>(file.path);
 
-      if (file.parents.length !== 2) {
-        throw new Error(
-          "Expecting folder structure: [ ./views/{viewName}/{aggregateName}/{eventName} ]",
-        );
-      }
+    for (const handler of handlers) {
+      this.logger.debug("Found aggregate event handler", { handler: file.path });
 
-      const viewName = file.parents[1];
-      const aggregateName = file.parents[0];
+      assertSchema(JOI_AGGREGATE_EVENT_HANDLER_FILE.required().validate(handler));
 
-      if (!this.isValid("view", viewName, this.options.views)) break;
-
-      const handlers = this.getFileHandlers<ViewEventHandlerFile>(file.path);
-
-      for (const handler of handlers) {
-        this.logger.debug("Found view event handler", { handler: file.path });
-
-        assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
-
-        this.viewEventHandlers.push(
-          new ViewEventHandler({
-            adapters: handler.adapters,
-            eventName: snakeCase(file.name),
-            aggregate: {
-              name: snakeCase(aggregateName),
-              context: isArray(handler.aggregate?.context)
-                ? handler.aggregate.context.map((context) => snakeCase(context))
-                : snakeCase(handler.aggregate?.context || this.options.domain.context),
-            },
-            view: {
-              name: snakeCase(viewName),
-              context: snakeCase(this.options.domain.context),
-            },
-            conditions: handler.conditions,
-            version: handler.version,
-            getViewId: handler.getViewId ? handler.getViewId : defaultViewIdFunction,
-            handler: handler.handler,
-          }),
-        );
-      }
+      this.aggregateEventHandlers.push(
+        new AggregateEventHandlerImplementation({
+          eventName: snakeCase(file.name),
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: snakeCase(this.options.context),
+          },
+          version: handler.version,
+          handler: handler.handler,
+        }),
+      );
     }
   }
 
-  // private handlers
+  private loadSagaHandlers(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
+
+    if (directory !== "events") {
+      throw new Error("Invalid event handler location");
+    }
+
+    const handlers = this.getFileHandlers<SagaEventHandler<unknown>>(file.path);
+
+    for (const handler of handlers) {
+      this.logger.debug("Found saga event handler", { handler: file.path });
+
+      assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
+
+      this.sagaEventHandlers.push(
+        new SagaEventHandlerImplementation({
+          eventName: snakeCase(file.name),
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(this.context(handler.aggregate?.context)),
+          },
+          saga: {
+            name: snakeCase(handler.name),
+            context: snakeCase(this.options.context),
+          },
+          conditions: handler.conditions,
+          version: handler.version,
+          getSagaId: handler.getSagaId ? handler.getSagaId : defaultSagaIdFunction,
+          handler: handler.handler,
+        }),
+      );
+    }
+  }
+
+  private loadViewHandlers(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
+
+    if (directory !== "events") {
+      throw new Error("Invalid event handler location");
+    }
+
+    const handlers = this.getFileHandlers<ViewEventHandler<unknown>>(file.path);
+
+    for (const handler of handlers) {
+      this.logger.debug("Found view event handler", { handler: file.path });
+
+      assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
+
+      this.viewEventHandlers.push(
+        new ViewEventHandlerImplementation({
+          eventName: snakeCase(file.name),
+          adapters: handler.adapters,
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(this.context(handler.aggregate?.context)),
+          },
+          view: {
+            name: snakeCase(handler.name),
+            context: snakeCase(this.options.context),
+          },
+          conditions: handler.conditions,
+          version: handler.version,
+          getViewId: handler.getViewId ? handler.getViewId : defaultViewIdFunction,
+          handler: handler.handler,
+        }),
+      );
+    }
+  }
+
+  private loadCommandAggregate(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
+
+    if (directory !== "commands") {
+      throw new Error("Invalid command location");
+    }
+
+    const name = snakeCase(file.name);
+
+    this.registerCommandAggregate(name, aggregate);
+  }
+
+  private loadEventAggregate(file: ScanFileData): void {
+    const [directory, aggregate] = file.parents;
+
+    if (directory !== "events") {
+      throw new Error("Invalid event location");
+    }
+
+    const name = snakeCase(file.name);
+
+    this.registerEventAggregate(name, aggregate);
+  }
+
+  // private
 
   private async setupReplayDomain(): Promise<void> {
     this.replayDomain.on(ReplayEventName.START, this.onReplayStart.bind(this));
@@ -668,7 +760,7 @@ export class EventSource implements IEventSource {
   }
 
   private getFileHandlers<Handler>(path: string): Array<Handler> {
-    const required = this.options.require(path);
+    const required = this.require(path);
     const handlers = required.default || required.main;
 
     if (!handlers) {
@@ -682,15 +774,15 @@ export class EventSource implements IEventSource {
     return [handlers as Handler];
   }
 
-  private isValid(type: string, name: string, structure: AppStructure): boolean {
-    for (const regExp of structure.include) {
+  private isValid(type: string, name: string): boolean {
+    for (const regExp of this.options.scanner.include) {
       if (!regExp.test(name)) {
         this.logger.warn(`${type} [ ${name} ] is not included in domain`);
         return false;
       }
     }
 
-    for (const regExp of structure.exclude) {
+    for (const regExp of this.options.scanner.exclude) {
       if (regExp.test(name)) {
         this.logger.warn(`${type} [ ${name} ] is excluded in domain`);
         return false;
@@ -700,8 +792,12 @@ export class EventSource implements IEventSource {
     return true;
   }
 
+  private context(context?: string): string {
+    return context || this.options.context;
+  }
+
   private viewEntityName(name: string, context?: string): string {
-    return `${context || this.options.domain.context}_${name}`;
+    return `view_${this.context(context)}_${name}`;
   }
 
   // private event listeners

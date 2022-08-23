@@ -4,9 +4,10 @@ import { ILogger } from "@lindorm-io/winston";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
-import { cloneDeep, merge, set } from "lodash";
+import { cloneDeep, merge, set, snakeCase } from "lodash";
 import {
   AggregateIdentifier,
+  ClassConstructor,
   ISaga,
   SagaData,
   SagaDispatchOptions,
@@ -15,7 +16,7 @@ import {
 } from "../types";
 import { randomString } from "@lindorm-io/core";
 
-export class Saga<S extends State = State> implements ISaga {
+export class Saga<TState extends State = State> implements ISaga {
   public readonly id: string;
   public readonly name: string;
   public readonly context: string;
@@ -24,12 +25,12 @@ export class Saga<S extends State = State> implements ISaga {
   private readonly _messagesToDispatch: Array<Command | TimeoutMessage>;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
-  private readonly _state: S;
+  private readonly _state: TState;
   private _destroyed: boolean;
 
   private readonly logger: ILogger;
 
-  public constructor(options: SagaOptions<S>, logger: ILogger) {
+  public constructor(options: SagaOptions<TState>, logger: ILogger) {
     this.logger = logger.createChildLogger(["Saga"]);
 
     assertSnakeCase(options.context);
@@ -44,7 +45,7 @@ export class Saga<S extends State = State> implements ISaga {
     this._messagesToDispatch = options.messagesToDispatch || [];
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
-    this._state = options.state || ({} as unknown as S);
+    this._state = options.state || ({} as unknown as TState);
   }
 
   // public properties
@@ -121,18 +122,16 @@ export class Saga<S extends State = State> implements ISaga {
 
   public dispatch(
     causation: DomainEvent,
-    name: string,
-    data: Record<string, any>,
+    command: ClassConstructor,
     options: SagaDispatchOptions = {},
   ): void {
-    this.logger.debug("Dispatch", { causation, name, data, options });
+    this.logger.debug("Dispatch", { causation, command, options });
 
     assertSchema(
       Joi.object()
         .keys({
           causation: JOI_MESSAGE.required(),
-          name: Joi.string().required(),
-          data: Joi.object().required(),
+          command: Joi.object().required(),
           options: Joi.object<SagaDispatchOptions>()
             .keys({
               aggregate: Joi.object<AggregateIdentifier>()
@@ -148,12 +147,14 @@ export class Saga<S extends State = State> implements ISaga {
             .optional(),
         })
         .required()
-        .validate({ causation, name, data, options }),
+        .validate({ causation, command, options }),
     );
 
     if (this._destroyed) {
       throw new SagaDestroyedError();
     }
+
+    const { ...data } = command;
 
     this._messagesToDispatch.push(
       new Command(
@@ -165,7 +166,7 @@ export class Saga<S extends State = State> implements ISaga {
             originator: causation.originator,
           },
           {
-            name,
+            name: snakeCase(command.constructor.name),
             data,
             ...options,
           },
@@ -174,7 +175,7 @@ export class Saga<S extends State = State> implements ISaga {
     );
   }
 
-  public getState(): S {
+  public getState(): TState {
     return cloneDeep(this._state);
   }
 

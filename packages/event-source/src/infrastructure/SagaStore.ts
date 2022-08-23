@@ -45,11 +45,14 @@ export class SagaStore implements IDomainSagaStore {
 
       default:
         throw new Error("Invalid SagaStore type");
-        break;
     }
   }
 
   // public
+
+  public async initialise(): Promise<void> {
+    await this.store.initialise();
+  }
 
   public async save(saga: ISaga, causation: IMessage): Promise<Saga> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });

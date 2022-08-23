@@ -1,12 +1,21 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { EventEntity, EventSource, SagaCausationEntity, SagaEntity } from "../src";
+import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
-import { StoredGreeting, StoredGreetingCausation } from "./entities";
+import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
+import { StoredGreeting } from "./entities";
+import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
+import {
+  EventEntity,
+  EventSource,
+  SagaCausationEntity,
+  SagaEntity,
+  ViewCausationEntity,
+} from "../src";
 
 const logger = new Logger();
 logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
@@ -40,31 +49,25 @@ const main = async (): Promise<void> => {
       username: "root",
       password: "example",
       database: "default_db",
-      entities: [
-        EventEntity,
-        SagaEntity,
-        SagaCausationEntity,
-        StoredGreeting,
-        StoredGreetingCausation,
-      ],
+      entities: [EventEntity, SagaEntity, SagaCausationEntity, StoredGreeting, ViewCausationEntity],
       synchronize: true,
     },
     logger,
   );
 
-  const app = new EventSource(
+  const app = new EventSource<CreateGreeting | UpdateGreeting | RespondGreeting>(
     {
-      amqp,
-      mongo,
-      postgres,
-      domain: {
-        directory: join(__dirname),
+      connections: {
+        amqp,
+        mongo,
+        postgres,
       },
-      aggregates: {
-        type: "postgres",
-      },
-      sagas: {
-        type: "postgres",
+      directory: join(__dirname, "aggregates"),
+      adapters: {
+        eventStore: "postgres",
+        messageBus: "amqp",
+        sagaStore: "postgres",
+        viewStore: "postgres",
       },
     },
     logger,
@@ -77,13 +80,8 @@ const main = async (): Promise<void> => {
   });
 
   const aggregateId = randomUUID();
-  const aggregateName = "greeting";
 
-  await app.publish({
-    aggregate: { id: aggregateId, name: aggregateName },
-    name: "create",
-    data: { initial: "Hi" },
-  });
+  await app.publish(new CreateGreeting("Hi"), { id: aggregateId });
 
   await sleep(5000);
 
@@ -99,21 +97,17 @@ const main = async (): Promise<void> => {
     name: "response",
   });
 
-  inspect.saga = await app.admin.inspect.aggregate({
+  inspect.saga = await app.admin.inspect.saga({
     id: aggregateId,
-    name: "log_greetings",
+    name: "test_saga",
   });
 
   logger.info("inspect", { inspect });
 
   const repositories: any = {};
 
-  repositories.savedGreetings = await app.repositories
-    .mongo("saved_greetings")
-    .findById(aggregateId);
-
-  repositories.storedGreetings = await app.repositories
-    .postgres("stored_greetings")
+  repositories.postgres = await app.repositories
+    .postgres("postgres_greetings")
     .findById(aggregateId);
 
   logger.info("repositories", { repositories });

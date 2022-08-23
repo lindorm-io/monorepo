@@ -1,13 +1,17 @@
-import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
 import { AggregateDomain } from "./AggregateDomain";
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { Command } from "../message";
 import { EventStore, MessageBus } from "../infrastructure";
+import { EventStoreType, MessageBusType } from "../enum";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
+import {
+  AggregateCommandHandlerImplementation,
+  AggregateEventHandlerImplementation,
+} from "../handler";
 import {
   TEST_COMMAND_CREATE,
   TEST_COMMAND_DESTROY,
@@ -28,15 +32,14 @@ import {
   TEST_AGGREGATE_EVENT_HANDLER_DESTROY_NEXT,
   TEST_AGGREGATE_EVENT_HANDLER_MERGE_STATE,
 } from "../fixtures/aggregate-event-handler.fixture";
-import { EventStoreType, MessageBusType } from "../enum";
 
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
 
   let amqp: AmqpConnection;
-  let commandHandlers: Array<AggregateCommandHandler>;
+  let commandHandlers: Array<AggregateCommandHandlerImplementation>;
   let domain: AggregateDomain;
-  let eventHandlers: Array<AggregateEventHandler>;
+  let eventHandlers: Array<AggregateEventHandlerImplementation>;
   let messageBus: MessageBus;
   let mongo: MongoConnection;
   let store: EventStore;
@@ -150,7 +153,9 @@ describe("AggregateDomain", () => {
         state: {
           created: true,
           merge: {
-            commandData: true,
+            dataFromCommand: {
+              commandData: true,
+            },
           },
         },
       }),

@@ -1,11 +1,11 @@
 import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { ISaga, SagaIdentifier } from "../entity";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { ISaga, SagaIdentifier } from "../entity";
 import { Saga } from "../../entity";
 import { SagaStoreAttributes } from "./saga-store-attributes";
 
-export type SagaStoreAdapterType = "custom" | "mongo" | "postgres";
+export type SagaStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
 
 export interface SagaStoreOptions {
   custom?: ISagaStore;
@@ -41,6 +41,7 @@ export interface SagaClearProcessedCausationIdsData {
 }
 
 export interface IDomainSagaStore {
+  initialise(): Promise<void>;
   causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(saga: ISaga): Promise<Saga>;
   clearProcessedCausationIds(saga: ISaga): Promise<Saga>;
@@ -50,6 +51,7 @@ export interface IDomainSagaStore {
 }
 
 export interface ISagaStore {
+  initialise(): Promise<void>;
   causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(
     filter: SagaUpdateFilter,

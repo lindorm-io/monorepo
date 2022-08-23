@@ -20,5 +20,7 @@ export interface IAggregateDomain {
   removeAllCommandHandlers(): Promise<void>;
   removeAllEventHandlers(): Promise<void>;
 
-  inspect<S extends State = State>(aggregateIdentifier: AggregateIdentifier): Promise<Aggregate<S>>;
+  inspect<TState extends State = State>(
+    aggregateIdentifier: AggregateIdentifier,
+  ): Promise<Aggregate<TState>>;
 }

@@ -1,7 +1,6 @@
-import { SagaEventHandler } from "../handler";
+import { SagaEventHandlerImplementation } from "../handler";
 import { SagaEventHandlerOptions } from "../types";
 import { TEST_AGGREGATE_IDENTIFIER } from "./aggregate.fixture";
-import { TEST_COMMAND } from "./command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "./saga.fixture";
 import {
   TEST_DOMAIN_EVENT,
@@ -31,9 +30,11 @@ export const TEST_SAGA_EVENT_HANDLER_OPTIONS: SagaEventHandlerOptions = {
   handler: jest.fn().mockImplementation(async () => {}),
 };
 
-export const TEST_SAGA_EVENT_HANDLER = new SagaEventHandler(TEST_SAGA_EVENT_HANDLER_OPTIONS);
+export const TEST_SAGA_EVENT_HANDLER = new SagaEventHandlerImplementation(
+  TEST_SAGA_EVENT_HANDLER_OPTIONS,
+);
 
-export const TEST_SAGA_EVENT_HANDLER_CREATE = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_CREATE = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_CREATE.name,
   conditions: { created: false },
@@ -42,7 +43,7 @@ export const TEST_SAGA_EVENT_HANDLER_CREATE = new SagaEventHandler({
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_DESTROY = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_DESTROY = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_DESTROY.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -50,31 +51,34 @@ export const TEST_SAGA_EVENT_HANDLER_DESTROY = new SagaEventHandler({
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_DISPATCH = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_DISPATCH = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_DISPATCH.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.dispatch(TEST_COMMAND.name, TEST_COMMAND.data);
+    class CommandDefault {
+      constructor(public readonly commandData: any) {}
+    }
+    ctx.dispatch(new CommandDefault(true));
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_MERGE_STATE = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_MERGE_STATE = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_MERGE_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.mergeState({ merge: ctx.event.data });
+    ctx.mergeState({ merge: ctx.event });
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_SET_STATE = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_SET_STATE = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("path", { value: ctx.event.data });
+    ctx.setState("path", { value: ctx.event });
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_TIMEOUT = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_TIMEOUT = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_TIMEOUT.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -82,7 +86,7 @@ export const TEST_SAGA_EVENT_HANDLER_TIMEOUT = new SagaEventHandler({
   }),
 });
 
-export const TEST_SAGA_EVENT_HANDLER_THROWS = new SagaEventHandler({
+export const TEST_SAGA_EVENT_HANDLER_THROWS = new SagaEventHandlerImplementation({
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_THROWS.name,
   handler: jest.fn().mockImplementation(async () => {

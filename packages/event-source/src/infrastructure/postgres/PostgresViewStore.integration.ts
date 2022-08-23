@@ -21,7 +21,10 @@ import {
 
 describe("PostgresViewStore", () => {
   const logger = createMockLogger();
-  const ViewEntity = createTypeormViewEntity(TEST_VIEW_IDENTIFIER);
+  const ViewEntity = createTypeormViewEntity(
+    TEST_VIEW_IDENTIFIER.name,
+    TEST_VIEW_IDENTIFIER.context,
+  );
   const adapterOptions: ViewEventHandlerAdapters = { postgres: { ViewEntity } };
 
   let aggregateIdentifier: AggregateIdentifier;

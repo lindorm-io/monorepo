@@ -3,4 +3,5 @@ export interface ScanFileData {
   path: string;
   relative: string;
   parents: Array<string>;
+  type: string;
 }

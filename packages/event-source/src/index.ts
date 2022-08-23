@@ -10,8 +10,8 @@ export {
   ViewCausationEntity,
 } from "./infrastructure";
 export {
-  AggregateCommandHandlerFile,
-  AggregateEventHandlerFile,
+  AggregateCommandHandler,
+  AggregateEventHandler,
   AppAdmin,
   AppInspectOptions,
   AppOptions,
@@ -22,6 +22,6 @@ export {
   IEventStore,
   ISagaStore,
   IViewStore,
-  SagaEventHandlerFile,
-  ViewEventHandlerFile,
+  SagaEventHandler,
+  ViewEventHandler,
 } from "./types";

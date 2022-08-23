@@ -4,25 +4,25 @@ import { State } from "../generic";
 
 export type ViewIdentifier = StandardIdentifier;
 
-export interface ViewData<S extends State = State> extends ViewIdentifier {
+export interface ViewData<TState extends State = State> extends ViewIdentifier {
   destroyed: boolean;
   hash: string;
   meta: Record<string, any>;
   processedCausationIds: Array<string>;
   revision: number;
-  state: S;
+  state: TState;
 }
 
-export interface ViewOptions<S extends State = State> extends ViewIdentifier {
+export interface ViewOptions<TState extends State = State> extends ViewIdentifier {
   destroyed?: boolean;
   hash?: string;
   meta?: Record<string, any>;
   processedCausationIds?: Array<string>;
   revision?: number;
-  state?: S;
+  state?: TState;
 }
 
-export interface IView<S extends State = State> extends ViewData<S> {
+export interface IView<TState extends State = State> extends ViewData<TState> {
   addListItem(causation: DomainEvent, path: string, value: any): void;
   destroy(): void;
   removeListItemWhereEqual(causation: DomainEvent, path: string, value: any): void;
