@@ -29,5 +29,5 @@
     //    "strictNullChecks": true,
     //    "strictPropertyInitialization": true,
   },
-  "exclude": ["**/*.fixture.ts", "**/*.integration.ts", "**/*.test.ts"]
+  "exclude": ["**/*.e2e.ts", "**/*.fixture.ts", "**/*.integration.ts", "**/*.test.ts"]
 }

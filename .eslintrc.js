@@ -26,6 +26,7 @@ module.exports = {
   ignorePatterns: [
     "*.config.js",
     "*.d.ts",
+    "*.e2e.*",
     "*.fixture.*",
     "*.integration.*",
     "*.js",
