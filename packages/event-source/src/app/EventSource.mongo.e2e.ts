@@ -6,7 +6,6 @@ import { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "..
 import { MongoConnection } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
-import { sleep } from "@lindorm-io/core";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -198,15 +197,26 @@ describe("EventSource (Mongo)", () => {
 
   test("should publish", async () => {
     const id = randomUUID();
+    let viewChangeCount = 0;
 
-    app.on("view", onEventSpyAll);
+    app.on("view", () => {
+      onEventSpyAll();
+      viewChangeCount += 1;
+    });
     app.on("view.es_mongo", onEventSpyContext);
     app.on("view.es_mongo.test_view", onEventSpyName);
     app.on(`view.es_mongo.test_view.${id}`, onEventSpyId);
 
     await app.publish(new CreateGreeting(true), { aggregate: { id } });
 
-    await sleep(8000);
+    await new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (viewChangeCount >= 2) {
+          clearInterval(interval);
+          resolve(undefined);
+        }
+      }, 250);
+    });
 
     await expect(
       app.admin.inspect.aggregate({ id, name: "test_aggregate" }),

@@ -7,7 +7,6 @@ import { RespondGreeting } from "./aggregates/response/commands/respond-greeting
 import { StoredGreeting } from "./entities";
 import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
 import { join } from "path";
-import { sleep } from "@lindorm-io/core";
 import {
   EventEntity,
   EventSource,
@@ -74,15 +73,25 @@ const main = async (): Promise<void> => {
 
   await app.init();
 
+  let viewChangeCount = 0;
+
   app.on("view", (data) => {
     logger.verbose("on:view", { data });
+    viewChangeCount += 1;
   });
 
   const {
     aggregate: { id: aggregateId },
   } = await app.publish(new CreateGreeting("Hi"));
 
-  await sleep(5000);
+  await new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (viewChangeCount >= 3) {
+        clearInterval(interval);
+        resolve(undefined);
+      }
+    }, 250);
+  });
 
   const inspect: any = {};
 
