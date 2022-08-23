@@ -10,7 +10,7 @@ import { cloneDeep, find, get, isEqual, isMatch, remove, set, some } from "lodas
 import { isAfter, parseJSON } from "date-fns";
 import { randomString } from "@lindorm-io/core";
 
-export class View<S extends State = State> implements IView<S> {
+export class View<TState extends State = State> implements IView<TState> {
   public readonly id: string;
   public readonly name: string;
   public readonly context: string;
@@ -19,12 +19,12 @@ export class View<S extends State = State> implements IView<S> {
   private readonly _meta: Record<string, any>;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
-  private readonly _state: S;
+  private readonly _state: TState;
   private _destroyed: boolean;
 
   private readonly logger: ILogger;
 
-  public constructor(options: ViewOptions<S>, logger: ILogger) {
+  public constructor(options: ViewOptions<TState>, logger: ILogger) {
     this.logger = logger.createChildLogger(["View"]);
 
     assertSnakeCase(options.context);
@@ -39,7 +39,7 @@ export class View<S extends State = State> implements IView<S> {
     this._meta = options.meta || {};
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
-    this._state = options.state || ({} as unknown as S);
+    this._state = options.state || ({} as unknown as TState);
   }
 
   // public properties
@@ -79,16 +79,16 @@ export class View<S extends State = State> implements IView<S> {
     throw new IllegalEntityChangeError();
   }
 
-  public get state(): S {
+  public get state(): TState {
     return this._state;
   }
-  public set state(_: S) {
+  public set state(_: TState) {
     throw new IllegalEntityChangeError();
   }
 
   // public
 
-  public toJSON(): ViewData<S> {
+  public toJSON(): ViewData<TState> {
     return {
       id: this.id,
       name: this.name,
@@ -162,7 +162,7 @@ export class View<S extends State = State> implements IView<S> {
     this._destroyed = true;
   }
 
-  public getState(): S {
+  public getState(): TState {
     return cloneDeep(this._state);
   }
 

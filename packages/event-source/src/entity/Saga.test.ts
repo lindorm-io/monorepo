@@ -52,27 +52,30 @@ describe("Saga", () => {
   });
 
   test("should dispatch command", () => {
+    class DispatchedCommand {
+      public constructor(public readonly dispatchedData: any) {}
+    }
+
     const event = new DomainEvent(TEST_DOMAIN_EVENT);
 
-    expect(() =>
-      saga.dispatch(event, "dispatchedCommand", {
-        dispatchedData: true,
-      }),
-    ).not.toThrow();
+    expect(() => saga.dispatch(event, new DispatchedCommand(true))).not.toThrow();
 
     expect(saga.messagesToDispatch).toStrictEqual([
       expect.objectContaining({
         id: expect.any(String),
-        name: "dispatchedCommand",
+        name: "dispatched_command",
         aggregate: event.aggregate,
         causationId: expect.any(String),
         correlationId: event.correlationId,
         data: { dispatchedData: true },
         delay: 0,
         mandatory: true,
-        topic: "default.aggregate_name.dispatchedCommand",
+        origin: "saga",
+        originator: null,
         timestamp: expect.any(Date),
+        topic: "default.aggregate_name.dispatched_command",
         type: "command",
+        version: 1,
       }),
     ]);
   });
@@ -128,6 +131,10 @@ describe("Saga", () => {
   });
 
   test("should throw on dispatch when destroyed", () => {
+    class DispatchedCommand {
+      public constructor(public readonly data: any) {}
+    }
+
     saga = new Saga(
       {
         ...TEST_SAGA_OPTIONS,
@@ -136,9 +143,9 @@ describe("Saga", () => {
       logger,
     );
 
-    expect(() => saga.dispatch(new DomainEvent(TEST_DOMAIN_EVENT), "destroyed", {})).toThrow(
-      SagaDestroyedError,
-    );
+    expect(() =>
+      saga.dispatch(new DomainEvent(TEST_DOMAIN_EVENT), new DispatchedCommand("destroyed")),
+    ).toThrow(SagaDestroyedError);
   });
 
   test("should throw on merge state when destroyed", () => {

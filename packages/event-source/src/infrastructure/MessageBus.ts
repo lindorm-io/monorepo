@@ -20,7 +20,7 @@ export class MessageBus implements IMessageBus {
         break;
 
       default:
-        break;
+        throw new Error("Invalid MessageBus type");
     }
   }
 

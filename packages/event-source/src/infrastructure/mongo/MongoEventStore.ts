@@ -13,6 +13,10 @@ export class MongoEventStore extends MongoBase implements IEventStore {
 
   // public
 
+  public async initialise(): Promise<void> {
+    await this.createIndices(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
+  }
+
   public async find(filter: EventStoreFindFilter): Promise<Array<EventData>> {
     this.logger.debug("Finding event documents", { filter });
 
@@ -98,7 +102,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   // private
 
   private async eventCollection(): Promise<Collection<EventStoreAttributes>> {
-    return await this.collection<EventStoreAttributes>(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
+    return this.connection.database.collection<EventStoreAttributes>(EVENT_COLLECTION);
   }
 
   private static toEventData(documents: Array<EventStoreAttributes>): Array<EventData> {

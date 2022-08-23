@@ -16,14 +16,14 @@
     "build": "tsc -b",
     "clean": "rimraf dist",
     "example": "compd --file docker-compose.yml ts-node example/app",
-    "test": "compd --file docker-compose.yml yarn test:all",
-    "test:all": "yarn test:unit && yarn test:integration && yarn test:e2e",
-    "test:e2e": "jest --forceExit --config jest.config.e2e.js --",
-    "test:e2e:compd": "compd --file docker-compose.yml jest --runInBand --forceExit --config jest.config.e2e.js --",
+    "test": "yarn test:unit && compd --file docker-compose.yml yarn test:compd",
+    "test:compd": "yarn test:integration && yarn test:e2e",
+    "test:e2e": "jest --runInBand --forceExit --config jest.config.e2e.js --",
+    "test:e2e:compd": "compd --file docker-compose.yml yarn test:e2e",
     "test:e2e:update": "jest --forceExit --config jest.config.e2e.js -u --",
     "test:e2e:watch": "jest --forceExit --config jest.config.e2e.js -watch --",
-    "test:integration": "jest --forceExit --config jest.config.integration.js --",
-    "test:integration:compd": "compd --file docker-compose.yml jest --runInBand --forceExit --config jest.config.integration.js --",
+    "test:integration": "jest --runInBand --forceExit --config jest.config.integration.js --",
+    "test:integration:compd": "compd --file docker-compose.yml yarn test:integration",
     "test:integration:update": "jest --forceExit --config jest.config.integration.js -u --",
     "test:integration:watch": "jest --forceExit --config jest.config.integration.js --watch --",
     "test:unit": "jest --forceExit --config jest.config.js --",
@@ -53,7 +53,6 @@
     "date-fns": "^2.29.1",
     "mock-amqplib": "^1.8.0",
     "mongo-mock": "^4.1.0",
-    "pg": "^8.7.3",
-    "sqlite3": "^5.0.11"
+    "pg": "^8.7.3"
   }
 }

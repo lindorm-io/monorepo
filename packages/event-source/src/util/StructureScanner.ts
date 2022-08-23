@@ -27,11 +27,13 @@ export class StructureScanner {
       const isTest = includes(file, ".spec.") || includes(file, ".test.");
 
       if (stats.isFile() && this.isApprovedExtension(file) && !isTest) {
+        const [name, type] = basename(file, extname(file)).split(".");
         array.push({
-          name: basename(file, extname(file)),
+          name,
+          parents: relativePath.split(sep).slice(0, -1).reverse(),
           path: filePath,
           relative: relativePath,
-          parents: relativePath.split(sep).slice(0, -1).reverse(),
+          type,
         });
       } else if (stats.isDirectory()) {
         array.push(this.scanDirectory(filePath));

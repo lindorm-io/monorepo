@@ -78,10 +78,12 @@ describe("Aggregate", () => {
   });
 
   test("should apply", async () => {
+    class DomainEventSetState {
+      public constructor(public readonly applyEventData: boolean) {}
+    }
+
     await expect(
-      aggregate.apply(new Command(TEST_COMMAND_SET_STATE), TEST_DOMAIN_EVENT_SET_STATE.name, {
-        applyEventData: true,
-      }),
+      aggregate.apply(new Command(TEST_COMMAND_SET_STATE), new DomainEventSetState(true)),
     ).resolves.toBeUndefined();
 
     expect(aggregate.destroyed).toBe(false);

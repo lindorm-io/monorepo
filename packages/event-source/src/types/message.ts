@@ -10,13 +10,13 @@ export type MessageBaseType =
   | "timeout_message"
   | "unknown";
 
-export interface MessageOptions<D extends Data = Data> {
+export interface MessageOptions<TData extends Data = Data> {
   id?: string;
   name: string;
   aggregate: AggregateIdentifier;
   causationId?: string;
   correlationId?: string;
-  data?: D;
+  data?: TData;
   delay?: number;
   mandatory?: boolean;
   origin?: string;
@@ -25,7 +25,7 @@ export interface MessageOptions<D extends Data = Data> {
   version?: number;
 }
 
-export interface MessageBaseOptions<D extends Data = Data> extends MessageOptions<D> {
+export interface MessageBaseOptions<TData extends Data = Data> extends MessageOptions<TData> {
   type: MessageBaseType;
 }
 

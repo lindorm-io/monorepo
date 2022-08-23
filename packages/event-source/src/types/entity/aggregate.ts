@@ -1,4 +1,5 @@
-import { AggregateEventHandler } from "../../handler";
+import { AggregateEventHandlerImplementation } from "../../handler";
+import { ClassConstructor } from "../generic";
 import { Command, DomainEvent } from "../../message";
 import { StandardIdentifier } from "../standard-identifier";
 
@@ -12,11 +13,11 @@ export interface AggregateData extends AggregateIdentifier {
 }
 
 export interface AggregateOptions extends AggregateIdentifier {
-  eventHandlers: Array<AggregateEventHandler>;
+  eventHandlers: Array<AggregateEventHandlerImplementation>;
 }
 
 export interface IAggregate extends AggregateData {
-  apply(causation: Command, name: string, data?: Record<string, any>): Promise<void>;
+  apply(causation: Command, event: ClassConstructor): Promise<void>;
   load(event: DomainEvent): void;
   toJSON(): AggregateData;
 }

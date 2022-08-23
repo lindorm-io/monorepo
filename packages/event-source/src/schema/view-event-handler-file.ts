@@ -4,11 +4,12 @@ import {
   MongoViewEventHandlerAdapterOptions,
   PostgresViewEventHandlerAdapterOptions,
   ViewEventHandlerAdapters,
-  ViewEventHandlerFile,
+  ViewEventHandler,
   ViewEventHandlerFileAggregate,
 } from "../types";
 
-export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandlerFile>().keys({
+export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>().keys({
+  name: Joi.string().required(),
   aggregate: Joi.object<ViewEventHandlerFileAggregate>()
     .keys({
       context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
@@ -22,9 +23,9 @@ export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandlerFile>().ke
     .optional(),
   adapters: Joi.object<ViewEventHandlerAdapters>()
     .keys({
+      custom: Joi.object().optional(),
       mongo: Joi.object<MongoViewEventHandlerAdapterOptions>().optional(),
       postgres: Joi.object<PostgresViewEventHandlerAdapterOptions>().optional(),
-      type: Joi.string().allow("custom", "mongo", "postgres"),
     })
     .optional(),
   version: Joi.number().optional(),

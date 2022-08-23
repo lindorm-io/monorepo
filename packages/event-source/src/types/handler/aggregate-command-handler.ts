@@ -1,34 +1,48 @@
 import Joi from "joi";
-import { Command } from "../../message";
-import { Data, State } from "../generic";
+import { ClassConstructor, State } from "../generic";
 import { HandlerConditions, HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 
-export interface AggregateCommandHandlerContext<S extends State = State, D extends Data = Data> {
-  command: Command<D>;
+export interface AggregateCommandHandlerContext<
+  TCommand extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> {
+  command: TCommand;
   logger: ILogger;
-  apply(name: string, data?: Record<string, any>): Promise<void>;
-  getState(): S;
+  apply(event: TEvent): Promise<void>;
+  getState(): TState;
 }
 
-export interface AggregateCommandHandlerFile<S extends State = State, D extends Data = Data> {
+export interface AggregateCommandHandler<
+  TCommand extends ClassConstructor,
+  TEvent extends ClassConstructor,
+  TState extends State = State,
+> {
   conditions?: HandlerConditions;
   schema?: Joi.Schema;
   version?: number;
-  handler(ctx: AggregateCommandHandlerContext<S, D>): Promise<void>;
+  handler(ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>): Promise<void>;
 }
 
-export interface AggregateCommandHandlerOptions<S extends State = State>
-  extends AggregateCommandHandlerFile<S> {
+export interface AggregateCommandHandlerOptions<
+  TCommand extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> extends AggregateCommandHandler<TCommand, TEvent, TState> {
   aggregate: HandlerIdentifier;
   commandName: string;
 }
 
-export interface IAggregateCommandHandler<S extends State = State, D extends Data = Data> {
+export interface IAggregateCommandHandler<
+  TCommand extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> {
   aggregate: HandlerIdentifier;
   commandName: string;
   conditions: HandlerConditions;
   schema: Joi.Schema;
   version: number;
-  handler(ctx: AggregateCommandHandlerContext<S, D>): Promise<void>;
+  handler(ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>): Promise<void>;
 }

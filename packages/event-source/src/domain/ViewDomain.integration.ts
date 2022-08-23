@@ -6,7 +6,7 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { ViewDomain } from "./ViewDomain";
-import { ViewEventHandler } from "../handler";
+import { ViewEventHandlerImplementation } from "../handler";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
@@ -29,7 +29,7 @@ describe("ViewDomain", () => {
 
   let amqp: AmqpConnection;
   let domain: ViewDomain;
-  let eventHandlers: Array<ViewEventHandler>;
+  let eventHandlers: Array<ViewEventHandlerImplementation>;
   let messageBus: MessageBus;
   let mongo: MongoConnection;
   let store: ViewStore;

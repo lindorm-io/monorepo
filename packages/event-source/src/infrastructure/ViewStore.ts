@@ -15,6 +15,7 @@ import {
   ViewEventHandlerAdapters,
   ViewIdentifier,
   ViewStoreAttributes,
+  ViewStoreInitialiseData,
   ViewStoreOptions,
   ViewUpdateData,
   ViewUpdateFilter,
@@ -45,11 +46,14 @@ export class ViewStore implements IDomainViewStore {
 
       default:
         throw new Error("Invalid ViewStore type");
-        break;
     }
   }
 
   // public
+
+  public async initialise(data: Array<ViewStoreInitialiseData>): Promise<void> {
+    await this.store.initialise(data);
+  }
 
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     return await this.store.causationExists(identifier, causation);
@@ -57,7 +61,7 @@ export class ViewStore implements IDomainViewStore {
 
   public async clearProcessedCausationIds(
     view: IView,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<View> {
     const filter: ViewUpdateFilter = {
       id: view.id,
@@ -73,18 +77,15 @@ export class ViewStore implements IDomainViewStore {
       revision: view.revision + 1,
     };
 
-    await this.store.clearProcessedCausationIds(filter, data, adapterOptions);
+    await this.store.clearProcessedCausationIds(filter, data, adapters);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }
 
-  public async load(
-    identifier: ViewIdentifier,
-    adapterOptions: ViewEventHandlerAdapters,
-  ): Promise<View> {
+  public async load(identifier: ViewIdentifier, adapters: ViewEventHandlerAdapters): Promise<View> {
     this.logger.debug("Loading view", { identifier });
 
-    const existing = await this.store.find(identifier, adapterOptions);
+    const existing = await this.store.find(identifier, adapters);
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
@@ -112,7 +113,7 @@ export class ViewStore implements IDomainViewStore {
   public async save(
     view: IView,
     causation: IMessage,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<View> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
@@ -122,7 +123,7 @@ export class ViewStore implements IDomainViewStore {
       context: view.context,
     };
 
-    const existing = await this.store.find(identifier, adapterOptions);
+    const existing = await this.store.find(identifier, adapters);
 
     if (existing) {
       const included = existing.processed_causation_ids.includes(causation.id);
@@ -150,7 +151,7 @@ export class ViewStore implements IDomainViewStore {
         revision: view.revision + 1,
       };
 
-      await this.store.insert(ViewStore.toAttributes(data), adapterOptions);
+      await this.store.insert(ViewStore.toAttributes(data), adapters);
 
       return new View(data, this.logger);
     }
@@ -172,7 +173,7 @@ export class ViewStore implements IDomainViewStore {
       state: view.state,
     };
 
-    await this.store.update(filter, data, adapterOptions);
+    await this.store.update(filter, data, adapters);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }

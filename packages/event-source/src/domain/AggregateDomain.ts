@@ -1,11 +1,14 @@
 import { Aggregate } from "../entity";
-import { AggregateCommandHandler, AggregateEventHandler } from "../handler";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { assertSnakeCase } from "../util";
-import { filter, find, findLast, remove, some } from "lodash";
+import { cloneDeep, filter, find, findLast, remove, some } from "lodash";
+import {
+  AggregateCommandHandlerImplementation,
+  AggregateEventHandlerImplementation,
+} from "../handler";
 import {
   AggregateCommandHandlerContext,
   AggregateDomainOptions,
@@ -43,14 +46,16 @@ export class AggregateDomain implements IAggregateDomain {
     this.eventHandlers = [];
   }
 
-  public async registerCommandHandler(commandHandler: AggregateCommandHandler): Promise<void> {
+  public async registerCommandHandler(
+    commandHandler: AggregateCommandHandlerImplementation,
+  ): Promise<void> {
     this.logger.debug("Registering command handler", {
       aggregate: commandHandler.aggregate,
       commandName: commandHandler.commandName,
       version: commandHandler.version,
     });
 
-    if (!(commandHandler instanceof AggregateCommandHandler)) {
+    if (!(commandHandler instanceof AggregateCommandHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "AggregateDomainCommandHandler",
@@ -101,14 +106,16 @@ export class AggregateDomain implements IAggregateDomain {
     });
   }
 
-  public async registerEventHandler(eventHandler: AggregateEventHandler): Promise<void> {
+  public async registerEventHandler(
+    eventHandler: AggregateEventHandlerImplementation,
+  ): Promise<void> {
     this.logger.debug("Registering event handler", {
       aggregate: eventHandler.aggregate,
       eventName: eventHandler.eventName,
       version: eventHandler.version,
     });
 
-    if (!(eventHandler instanceof AggregateEventHandler)) {
+    if (!(eventHandler instanceof AggregateEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "AggregateEventHandler",
@@ -152,14 +159,16 @@ export class AggregateDomain implements IAggregateDomain {
     });
   }
 
-  public async removeCommandHandler(commandHandler: AggregateCommandHandler): Promise<void> {
+  public async removeCommandHandler(
+    commandHandler: AggregateCommandHandlerImplementation,
+  ): Promise<void> {
     this.logger.debug("Removing command handler", {
       aggregate: commandHandler.aggregate,
       commandName: commandHandler.commandName,
       version: commandHandler.version,
     });
 
-    if (!(commandHandler instanceof AggregateCommandHandler)) {
+    if (!(commandHandler instanceof AggregateCommandHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "AggregateDomainCommandHandler",
@@ -189,14 +198,16 @@ export class AggregateDomain implements IAggregateDomain {
     });
   }
 
-  public async removeEventHandler(eventHandler: AggregateEventHandler): Promise<void> {
+  public async removeEventHandler(
+    eventHandler: AggregateEventHandlerImplementation,
+  ): Promise<void> {
     this.logger.debug("Removing event handler", {
       aggregate: eventHandler.aggregate,
       eventName: eventHandler.eventName,
       version: eventHandler.version,
     });
 
-    if (!(eventHandler instanceof AggregateEventHandler)) {
+    if (!(eventHandler instanceof AggregateEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
           expect: "AggregateEventHandler",
@@ -232,10 +243,10 @@ export class AggregateDomain implements IAggregateDomain {
     }
   }
 
-  public async inspect<S extends State = State>(
+  public async inspect<TState extends State = State>(
     identifier: AggregateIdentifier,
-  ): Promise<Aggregate<S>> {
-    return (await this.store.load(identifier, this.eventHandlers)) as Aggregate<S>;
+  ): Promise<Aggregate<TState>> {
+    return (await this.store.load(identifier, this.eventHandlers)) as Aggregate<TState>;
   }
 
   // private
@@ -254,7 +265,7 @@ export class AggregateDomain implements IAggregateDomain {
       },
     });
 
-    if (!(commandHandler instanceof AggregateCommandHandler)) {
+    if (!(commandHandler instanceof AggregateCommandHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
     }
 
@@ -305,7 +316,7 @@ export class AggregateDomain implements IAggregateDomain {
         }
 
         const context: AggregateCommandHandlerContext = {
-          command,
+          command: cloneDeep(command.data),
           logger: this.logger.createChildLogger(["AggregateCommandHandler"]),
 
           apply: aggregate.apply.bind(aggregate, command),
@@ -363,11 +374,11 @@ export class AggregateDomain implements IAggregateDomain {
 
   // private static
 
-  private static getQueue(commandHandler: AggregateCommandHandler): string {
+  private static getQueue(commandHandler: AggregateCommandHandlerImplementation): string {
     return `queue.aggregate.${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 
-  private static getTopic(commandHandler: AggregateCommandHandler): string {
+  private static getTopic(commandHandler: AggregateCommandHandlerImplementation): string {
     return `${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 }

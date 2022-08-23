@@ -1,5 +1,5 @@
 import {
-  Data,
+  ClassConstructor,
   GetViewIdFunction,
   HandlerConditions,
   HandlerIdentifier,
@@ -11,8 +11,10 @@ import {
   ViewEventHandlerOptions,
 } from "../types";
 
-export class ViewEventHandler<S extends State = State, D extends Data = Data>
-  implements IViewEventHandler<S, D>
+export class ViewEventHandlerImplementation<
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> implements IViewEventHandler<TEvent, TState>
 {
   public readonly adapters: ViewEventHandlerAdapters;
   public readonly aggregate: HandlerIdentifierMultipleContexts;
@@ -20,10 +22,10 @@ export class ViewEventHandler<S extends State = State, D extends Data = Data>
   public readonly eventName: string;
   public readonly version: number;
   public readonly view: HandlerIdentifier;
-  public readonly getViewId: GetViewIdFunction;
-  public readonly handler: (ctx: ViewEventHandlerContext<S, D>) => Promise<void>;
+  public readonly getViewId: GetViewIdFunction<TEvent>;
+  public readonly handler: (ctx: ViewEventHandlerContext<TEvent, TState>) => Promise<void>;
 
-  public constructor(options: ViewEventHandlerOptions<S>) {
+  public constructor(options: ViewEventHandlerOptions<TEvent, TState>) {
     this.adapters = options.adapters;
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.conditions = options.conditions || {};

@@ -1,6 +1,6 @@
 import { TEST_AGGREGATE_IDENTIFIER } from "./aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "./view.fixture";
-import { ViewEventHandler } from "../handler";
+import { ViewEventHandlerImplementation } from "../handler";
 import { ViewEventHandlerOptions } from "../types";
 import {
   TEST_DOMAIN_EVENT,
@@ -14,7 +14,7 @@ import {
 } from "./domain-event.fixture";
 
 export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
-  adapters: { type: "mongo" },
+  adapters: {},
   aggregate: {
     name: TEST_AGGREGATE_IDENTIFIER.name,
     context: TEST_AGGREGATE_IDENTIFIER.context,
@@ -30,9 +30,11 @@ export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
   handler: jest.fn().mockImplementation(async () => {}),
 };
 
-export const TEST_VIEW_EVENT_HANDLER = new ViewEventHandler(TEST_VIEW_EVENT_HANDLER_OPTIONS);
+export const TEST_VIEW_EVENT_HANDLER = new ViewEventHandlerImplementation(
+  TEST_VIEW_EVENT_HANDLER_OPTIONS,
+);
 
-export const TEST_VIEW_EVENT_HANDLER_CREATE = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_CREATE = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_CREATE.name,
   conditions: { created: false },
@@ -41,7 +43,7 @@ export const TEST_VIEW_EVENT_HANDLER_CREATE = new ViewEventHandler({
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_ADD_FIELD = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_ADD_FIELD = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_ADD_FIELD.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -50,7 +52,7 @@ export const TEST_VIEW_EVENT_HANDLER_ADD_FIELD = new ViewEventHandler({
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_DESTROY = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_DESTROY = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_DESTROY.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -58,7 +60,7 @@ export const TEST_VIEW_EVENT_HANDLER_DESTROY = new ViewEventHandler({
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -66,7 +68,7 @@ export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new ViewEventHan
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
@@ -74,15 +76,15 @@ export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH = new ViewEventHan
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_SET_STATE = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_SET_STATE = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("path", { value: ctx.event.data });
+    ctx.setState("path", { value: ctx.event });
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_THROWS = new ViewEventHandler({
+export const TEST_VIEW_EVENT_HANDLER_THROWS = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_THROWS.name,
   handler: jest.fn().mockImplementation(async () => {

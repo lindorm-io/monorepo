@@ -43,12 +43,12 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
-      const ViewEntity = this.viewEntity(adapterOptions);
+      const ViewEntity = this.viewEntity(adapters);
 
       const result = await this.connection.getRepository(ViewEntity).update(
         {
@@ -73,12 +73,12 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async find(
     identifier: StandardIdentifier,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<ViewStoreAttributes> {
     this.logger.debug("Finding view", { identifier });
 
     try {
-      const ViewEntity = this.viewEntity(adapterOptions);
+      const ViewEntity = this.viewEntity(adapters);
 
       const result = await this.connection.getRepository(ViewEntity).findOneBy({
         id: identifier.id,
@@ -104,12 +104,12 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async insert(
     attributes: ViewStoreAttributes,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
     try {
-      const ViewEntity = this.viewEntity(adapterOptions);
+      const ViewEntity = this.viewEntity(adapters);
 
       const result = await this.connection.getRepository(ViewEntity).insert({
         id: attributes.id,
@@ -165,12 +165,12 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
     try {
-      const ViewEntity = this.viewEntity(adapterOptions);
+      const ViewEntity = this.viewEntity(adapters);
 
       const result = await this.connection.getRepository(ViewEntity).update(
         {
@@ -198,10 +198,10 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   // private
 
-  private viewEntity(adapterOptions: ViewEventHandlerAdapters): typeof ViewEntity {
-    if (!adapterOptions.postgres?.ViewEntity) {
+  private viewEntity(adapters: ViewEventHandlerAdapters): typeof ViewEntity {
+    if (!adapters.postgres?.ViewEntity) {
       throw new Error("ViewEntity not in adapter options");
     }
-    return adapterOptions.postgres.ViewEntity;
+    return adapters.postgres.ViewEntity;
   }
 }

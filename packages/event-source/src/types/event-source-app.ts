@@ -1,80 +1,64 @@
 import { Aggregate, Saga } from "../entity";
-import { Data, State } from "./generic";
+import { ClassConstructor, Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IViewStore, ViewStoreAdapterType } from "./view-store";
 import { MessageBusQueueType } from "./message-bus";
-import { ReplayOptions } from "./domain";
 import { MongoViewRepository, PostgresViewRepository } from "../infrastructure";
+import { ReplayOptions } from "./domain";
 import {
-  AggregateCommandHandler,
-  AggregateEventHandler,
-  SagaEventHandler,
-  ViewEventHandler,
+  AggregateCommandHandlerImplementation,
+  AggregateEventHandlerImplementation,
+  SagaEventHandlerImplementation,
+  ViewEventHandlerImplementation,
 } from "../handler";
+import { AggregateIdentifier } from "./entity";
 
-export interface AppDomain {
-  directory?: string;
-  context?: string;
+export interface AdapterOptions {
+  eventStore?: EventStoreAdapterType;
+  sagaStore?: SagaStoreAdapterType;
+  viewStore?: ViewStoreAdapterType;
+  messageBus?: MessageBusQueueType;
 }
 
-export interface AppStructure {
-  directory?: string;
-  include?: Array<RegExp>;
-  exclude?: Array<RegExp>;
-  extensions?: Array<string>;
-}
-
-export interface AggregateStructure extends AppStructure {
-  type?: EventStoreAdapterType;
-}
-
-export interface SagaStructure extends AppStructure {
-  type?: SagaStoreAdapterType;
-}
-
-export interface ViewStructure extends AppStructure {
-  type?: ViewStoreAdapterType;
-}
-
-export interface MessageBusStructure {
-  type?: MessageBusQueueType;
-}
-
-export interface PrivateAppOptions {
-  aggregates?: AggregateStructure;
-  messageBus?: MessageBusStructure;
-  dangerouslyRegisterHandlersManually?: boolean;
-  domain?: AppDomain;
-  require?: NodeJS.Require;
-  sagas?: SagaStructure;
-  views?: ViewStructure;
-}
-
-export interface AppOptions extends PrivateAppOptions {
+export interface ConnectionOptions {
   amqp?: IAmqpConnection;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
+}
+
+export interface ScannerOptions {
+  extensions?: Array<string>;
+  include?: Array<RegExp>;
+  exclude?: Array<RegExp>;
+}
+
+export interface PrivateAppOptions {
+  adapters?: AdapterOptions;
+  context?: string;
+  directory?: string;
+  scanner?: ScannerOptions;
+  dangerouslyRegisterHandlersManually?: boolean;
+  dangerouslyRegisterCommands?: Array<ClassConstructor>;
+  dangerouslyRegisterEvents?: Array<ClassConstructor>;
+}
+
+export interface AppOptions extends PrivateAppOptions {
+  connections?: ConnectionOptions;
   custom?: {
     messageBus?: IMessageBus;
     eventStore?: IEventStore;
     sagaStore?: ISagaStore;
     viewStore?: IViewStore;
+    require?: NodeJS.Require;
   };
 }
 
 export interface AppPublishOptions {
-  aggregate: {
-    id: string;
-    name: string;
-    context?: string;
-  };
-  name: string;
-  data: Record<string, any>;
   correlationId?: string;
   delay?: number;
   mandatory?: boolean;
@@ -82,7 +66,10 @@ export interface AppPublishOptions {
   originator?: string | null;
 }
 
-export type AppPublishResult = "OK" | "QUEUED";
+export type AppPublishResult = {
+  result: "OK" | "QUEUED";
+  aggregate: AggregateIdentifier;
+};
 
 export interface AppInspectOptions {
   id: string;
@@ -104,14 +91,24 @@ export interface AppRepositories {
 }
 
 export interface AppSetup {
-  registerAggregateCommandHandlers(handlers: Array<AggregateCommandHandler>): Promise<void>;
-  registerAggregateEventHandlers(handlers: Array<AggregateEventHandler>): Promise<void>;
-  registerSagaEventHandlers(handlers: Array<SagaEventHandler>): Promise<void>;
-  registerViewEventHandlers(handlers: Array<ViewEventHandler>): Promise<void>;
+  registerAggregateCommandHandlers(
+    handlers: Array<AggregateCommandHandlerImplementation>,
+  ): Promise<void>;
+  registerAggregateEventHandlers(
+    handlers: Array<AggregateEventHandlerImplementation>,
+  ): Promise<void>;
+  registerSagaEventHandlers(handlers: Array<SagaEventHandlerImplementation>): Promise<void>;
+  registerViewEventHandlers(handlers: Array<ViewEventHandlerImplementation>): Promise<void>;
+  registerCommandAggregate(name: string, aggregate: string): void;
+  registerEventAggregate(name: string, aggregate: string): void;
 }
 
-export interface IEventSource {
-  publish(options: AppPublishOptions): Promise<AppPublishResult>;
+export interface IEventSource<TCommand extends ClassConstructor = ClassConstructor> {
+  publish(
+    command: TCommand,
+    aggregate: Partial<AggregateIdentifier>,
+    options: AppPublishOptions,
+  ): Promise<AppPublishResult>;
   on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
   init(): Promise<void>;
   initialise(): Promise<void>;

@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { AggregateEventHandlerFile } from "../types";
+import { AggregateEventHandler } from "../types";
 
-export const JOI_AGGREGATE_EVENT_HANDLER_FILE = Joi.object<AggregateEventHandlerFile>().keys({
+export const JOI_AGGREGATE_EVENT_HANDLER_FILE = Joi.object<AggregateEventHandler<unknown>>().keys({
   version: Joi.number().optional(),
   handler: Joi.function().required(),
 });

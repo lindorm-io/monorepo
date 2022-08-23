@@ -1,25 +1,30 @@
 import Joi from "joi";
 import {
-  IAggregateCommandHandler,
   AggregateCommandHandlerContext,
   AggregateCommandHandlerOptions,
+  ClassConstructor,
   HandlerConditions,
   HandlerIdentifier,
+  IAggregateCommandHandler,
   State,
-  Data,
 } from "../types";
 
-export class AggregateCommandHandler<S extends State = State, D extends Data = Data>
-  implements IAggregateCommandHandler<S, D>
+export class AggregateCommandHandlerImplementation<
+  TCommand extends ClassConstructor = ClassConstructor,
+  TEvent extends ClassConstructor = ClassConstructor,
+  TState extends State = State,
+> implements IAggregateCommandHandler<TCommand, TEvent, TState>
 {
   public readonly aggregate: HandlerIdentifier;
   public readonly commandName: string;
   public readonly conditions: HandlerConditions;
   public readonly schema: Joi.Schema;
   public readonly version: number;
-  public readonly handler: (ctx: AggregateCommandHandlerContext<S, D>) => Promise<void>;
+  public readonly handler: (
+    ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>,
+  ) => Promise<void>;
 
-  public constructor(options: AggregateCommandHandlerOptions<S>) {
+  public constructor(options: AggregateCommandHandlerOptions<TCommand, TEvent, TState>) {
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.commandName = options.commandName;
     this.conditions = options.conditions || {};

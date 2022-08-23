@@ -2,17 +2,24 @@ import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IView, ViewIdentifier } from "../entity";
+import { MongoIndex } from "../mongo-base";
 import { View } from "../../entity";
-import { ViewEventHandlerAdapters } from "../handler";
+import { HandlerIdentifier, ViewEventHandlerAdapters } from "../handler";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
-export type ViewStoreAdapterType = "custom" | "mongo" | "postgres";
+export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
 
 export interface ViewStoreOptions {
   custom?: IViewStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   type: ViewStoreAdapterType;
+}
+
+export interface ViewStoreInitialiseData {
+  view: HandlerIdentifier;
+  collection?: string;
+  indices?: Array<MongoIndex>;
 }
 
 export interface ViewUpdateFilter extends ViewIdentifier {
@@ -36,25 +43,27 @@ export interface ViewClearProcessedCausationIdsData {
 }
 
 export interface IDomainViewStore {
+  initialise(data: Array<ViewStoreInitialiseData>): Promise<void>;
   causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
-  clearProcessedCausationIds(saga: IView, adapterOptions: ViewEventHandlerAdapters): Promise<View>;
-  load(identifier: ViewIdentifier, adapterOptions: ViewEventHandlerAdapters): Promise<View>;
+  clearProcessedCausationIds(saga: IView, adapters: ViewEventHandlerAdapters): Promise<View>;
+  load(identifier: ViewIdentifier, adapters: ViewEventHandlerAdapters): Promise<View>;
   processCausationIds(view: IView): Promise<void>;
-  save(view: IView, causation: IMessage, adapterOptions: ViewEventHandlerAdapters): Promise<View>;
+  save(view: IView, causation: IMessage, adapters: ViewEventHandlerAdapters): Promise<View>;
 }
 
 export interface IViewStore {
+  initialise(data: Array<ViewStoreInitialiseData>): Promise<void>;
   causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
   clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void>;
   find(
     identifier: ViewIdentifier,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<ViewStoreAttributes | undefined>;
-  insert(attributes: ViewStoreAttributes, adapterOptions: ViewEventHandlerAdapters): Promise<void>;
+  insert(attributes: ViewStoreAttributes, adapters: ViewEventHandlerAdapters): Promise<void>;
   insertProcessedCausationIds(
     identifier: ViewIdentifier,
     causationIds: Array<string>,
@@ -62,6 +71,6 @@ export interface IViewStore {
   update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapterOptions: ViewEventHandlerAdapters,
+    adapters: ViewEventHandlerAdapters,
   ): Promise<void>;
 }
