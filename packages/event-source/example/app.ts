@@ -10,9 +10,13 @@ import { join } from "path";
 import {
   EventEntity,
   EventSource,
+  EventStoreType,
+  MessageBusType,
   SagaCausationEntity,
   SagaEntity,
+  SagaStoreType,
   ViewCausationEntity,
+  ViewStoreType,
 } from "../src";
 
 const logger = new Logger();
@@ -62,10 +66,10 @@ const main = async (): Promise<void> => {
       },
       directory: join(__dirname, "aggregates"),
       adapters: {
-        eventStore: "postgres",
-        messageBus: "amqp",
-        sagaStore: "postgres",
-        viewStore: "postgres",
+        eventStore: EventStoreType.POSTGRES,
+        messageBus: MessageBusType.AMQP,
+        sagaStore: SagaStoreType.POSTGRES,
+        viewStore: ViewStoreType.POSTGRES,
       },
     },
     logger,
