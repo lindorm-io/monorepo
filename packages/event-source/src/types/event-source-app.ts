@@ -1,4 +1,5 @@
 import { Aggregate, Saga } from "../entity";
+import { AggregateIdentifier } from "./entity";
 import { ClassDTO, Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
@@ -16,7 +17,7 @@ import {
   SagaEventHandlerImplementation,
   ViewEventHandlerImplementation,
 } from "../handler";
-import { AggregateIdentifier } from "./entity";
+import { MemoryViewRepository } from "../infrastructure/memory/MemoryViewRepository";
 
 export interface AdapterOptions {
   eventStore?: EventStoreAdapterType;
@@ -88,6 +89,7 @@ export interface AppAdmin {
 }
 
 export interface AppRepositories {
+  memory<S>(name: string, context?: string): MemoryViewRepository<S>;
   mongo<S>(name: string, context?: string): MongoViewRepository<S>;
   postgres<S>(name: string, context?: string): PostgresViewRepository<S>;
 }

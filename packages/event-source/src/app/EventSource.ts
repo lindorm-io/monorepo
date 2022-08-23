@@ -8,6 +8,7 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { LindormError } from "@lindorm-io/errors";
 import { ReplayEventName } from "../enum";
 import { flatten, isArray, merge, snakeCase, uniq } from "lodash";
+import { randomUUID } from "crypto";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -16,10 +17,11 @@ import {
 } from "../handler";
 import {
   EventStore,
+  MemoryViewRepository,
   MessageBus,
   MongoViewRepository,
-  SagaStore,
   PostgresViewRepository,
+  SagaStore,
   ViewEntity,
   ViewStore,
 } from "../infrastructure";
@@ -70,7 +72,6 @@ import {
   defaultViewIdFunction,
   StructureScanner,
 } from "../util";
-import { randomUUID } from "crypto";
 
 export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEventSource<TCommand> {
   private readonly amqp: IAmqpConnection;
@@ -259,6 +260,8 @@ export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEvent
 
   public get repositories(): AppRepositories {
     return {
+      memory: <S>(name: string, context?: string) =>
+        new MemoryViewRepository<S>({ name, context: this.context(context) }),
       mongo: <S>(name: string, context?: string) =>
         new MongoViewRepository<S>(
           {
