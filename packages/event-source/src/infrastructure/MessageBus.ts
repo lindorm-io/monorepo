@@ -3,6 +3,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { MessageBusOptions } from "../types/message-bus";
 import { MessageBusType } from "../enum";
+import { MemoryMessageBus } from "./memory";
 
 export class MessageBus implements IMessageBus {
   private readonly bus: IMessageBus;
@@ -17,6 +18,10 @@ export class MessageBus implements IMessageBus {
       case MessageBusType.CUSTOM:
         if (!options.custom) throw new Error("IMessageBus not provided");
         this.bus = options.custom;
+        break;
+
+      case MessageBusType.MEMORY:
+        this.bus = new MemoryMessageBus();
         break;
 
       default:
