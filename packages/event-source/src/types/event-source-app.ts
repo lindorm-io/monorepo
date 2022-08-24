@@ -118,5 +118,6 @@ export interface IEventSource<TCommand extends DtoClass = DtoClass> {
   setup: AppSetup;
 
   isInitialised: boolean;
+  isInitialising: boolean;
   isReplaying: boolean;
 }

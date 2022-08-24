@@ -1,37 +1,32 @@
+import { IN_MEMORY_EVENT_STORE } from "./in-memory";
 import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
 import { filter, find, orderBy, take } from "lodash";
 import { isAfter } from "date-fns";
 
 export class MemoryEventStore implements IEventStore {
-  public readonly events: Array<EventStoreAttributes>;
-
-  public constructor() {
-    this.events = [];
-  }
-
   public async initialise(): Promise<void> {
     /* ignored */
   }
 
   public async find(findFilter: EventStoreFindFilter): Promise<Array<EventData>> {
-    const filtered = filter<EventStoreAttributes>(this.events, findFilter);
+    const filtered = filter<EventStoreAttributes>(IN_MEMORY_EVENT_STORE, findFilter);
     const ordered = orderBy<EventStoreAttributes>(filtered, ["expected_events"], ["asc"]);
 
     return MemoryEventStore.toEventData(ordered);
   }
 
   public async insert(attributes: EventStoreAttributes): Promise<void> {
-    const found = find(this.events, { causation_id: attributes.causation_id });
+    const found = find(IN_MEMORY_EVENT_STORE, { causation_id: attributes.causation_id });
 
     if (found) {
       throw new Error("Causation already exists");
     }
 
-    this.events.push(attributes);
+    IN_MEMORY_EVENT_STORE.push(attributes);
   }
 
   public async listEvents(from: Date, limit: number): Promise<Array<EventData>> {
-    const ordered = orderBy<EventStoreAttributes>(this.events, ["timestamp"], ["asc"]);
+    const ordered = orderBy<EventStoreAttributes>(IN_MEMORY_EVENT_STORE, ["timestamp"], ["asc"]);
     const filtered = filter<EventStoreAttributes>(ordered, (item) => isAfter(item.timestamp, from));
     const limited = take<EventStoreAttributes>(filtered, limit);
 

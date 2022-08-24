@@ -1,4 +1,5 @@
 import { find, findIndex } from "lodash";
+import { IN_MEMORY_SAGA_CAUSATION_STORE, IN_MEMORY_SAGA_STORE } from "./in-memory";
 import {
   IMessage,
   ISagaStore,
@@ -6,26 +7,17 @@ import {
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
 
 export class MemorySagaStore implements ISagaStore {
-  public readonly causations: Array<SagaStoreCausationAttributes>;
-  public readonly sagas: Array<SagaStoreAttributes>;
-
-  public constructor() {
-    this.causations = [];
-    this.sagas = [];
-  }
-
   public async initialise(): Promise<void> {
     /* ignored */
   }
 
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
-    return !!find(this.causations, {
+    return !!find(IN_MEMORY_SAGA_CAUSATION_STORE, {
       saga_id: identifier.id,
       saga_name: identifier.name,
       saga_context: identifier.context,
@@ -37,28 +29,28 @@ export class MemorySagaStore implements ISagaStore {
     updateFilter: SagaUpdateFilter,
     data: SagaClearMessagesToDispatchData,
   ): Promise<void> {
-    const found = find<SagaStoreAttributes>(this.sagas, updateFilter);
-    const index = findIndex(this.sagas, updateFilter);
+    const found = find<SagaStoreAttributes>(IN_MEMORY_SAGA_STORE, updateFilter);
+    const index = findIndex(IN_MEMORY_SAGA_STORE, updateFilter);
 
-    this.sagas[index] = { ...found, ...data };
+    IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }
 
   public async clearProcessedCausationIds(
     updateFilter: SagaUpdateFilter,
     data: SagaClearProcessedCausationIdsData,
   ): Promise<void> {
-    const found = find<SagaStoreAttributes>(this.sagas, updateFilter);
-    const index = findIndex(this.sagas, updateFilter);
+    const found = find<SagaStoreAttributes>(IN_MEMORY_SAGA_STORE, updateFilter);
+    const index = findIndex(IN_MEMORY_SAGA_STORE, updateFilter);
 
-    this.sagas[index] = { ...found, ...data };
+    IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }
 
   public async find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
-    return find<SagaStoreAttributes>(this.sagas, identifier);
+    return find<SagaStoreAttributes>(IN_MEMORY_SAGA_STORE, identifier);
   }
 
   public async insert(attributes: SagaStoreAttributes): Promise<void> {
-    const found = find(this.sagas, {
+    const found = find(IN_MEMORY_SAGA_STORE, {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
@@ -68,7 +60,7 @@ export class MemorySagaStore implements ISagaStore {
       throw new Error("Causation already exists");
     }
 
-    this.sagas.push(attributes);
+    IN_MEMORY_SAGA_STORE.push(attributes);
   }
 
   public async insertProcessedCausationIds(
@@ -76,7 +68,7 @@ export class MemorySagaStore implements ISagaStore {
     causationIds: Array<string>,
   ): Promise<void> {
     for (const causationId of causationIds) {
-      this.causations.push({
+      IN_MEMORY_SAGA_CAUSATION_STORE.push({
         saga_id: identifier.id,
         saga_name: identifier.name,
         saga_context: identifier.context,
@@ -87,9 +79,9 @@ export class MemorySagaStore implements ISagaStore {
   }
 
   public async update(updateFilter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
-    const found = find<SagaStoreAttributes>(this.sagas, updateFilter);
-    const index = findIndex(this.sagas, updateFilter);
+    const found = find<SagaStoreAttributes>(IN_MEMORY_SAGA_STORE, updateFilter);
+    const index = findIndex(IN_MEMORY_SAGA_STORE, updateFilter);
 
-    this.sagas[index] = { ...found, ...data };
+    IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }
 }

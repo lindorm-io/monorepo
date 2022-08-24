@@ -1,5 +1,6 @@
 import { Command, DomainEvent } from "../../message";
 import { MemorySagaStore } from "./MemorySagaStore";
+import { IN_MEMORY_SAGA_CAUSATION_STORE, IN_MEMORY_SAGA_STORE } from "./in-memory";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
@@ -56,7 +57,7 @@ describe("MemorySagaStore", () => {
       timestamp: new Date(),
     };
 
-    store.causations.push(document);
+    IN_MEMORY_SAGA_CAUSATION_STORE.push(document);
 
     await expect(store.causationExists(sagaIdentifier, event)).resolves.toBe(true);
 
@@ -72,7 +73,7 @@ describe("MemorySagaStore", () => {
   });
 
   test("should clear messages", async () => {
-    store.sagas.push({ ...attributes });
+    IN_MEMORY_SAGA_STORE.push({ ...attributes });
 
     const filter: SagaUpdateFilter = {
       id: attributes.id,
@@ -90,7 +91,7 @@ describe("MemorySagaStore", () => {
 
     await expect(store.clearMessagesToDispatch(filter, update)).resolves.toBeUndefined();
 
-    expect(find(store.sagas, sagaIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_SAGA_STORE, sagaIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         messages_to_dispatch: [],
@@ -100,7 +101,7 @@ describe("MemorySagaStore", () => {
   });
 
   test("should clear processed causation ids", async () => {
-    store.sagas.push({ ...attributes });
+    IN_MEMORY_SAGA_STORE.push({ ...attributes });
 
     const filter: SagaUpdateFilter = {
       id: attributes.id,
@@ -118,7 +119,7 @@ describe("MemorySagaStore", () => {
 
     await expect(store.clearProcessedCausationIds(filter, update)).resolves.toBeUndefined();
 
-    expect(find(store.sagas, sagaIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_SAGA_STORE, sagaIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         processed_causation_ids: [],
@@ -128,7 +129,7 @@ describe("MemorySagaStore", () => {
   });
 
   test("should find saga", async () => {
-    store.sagas.push({ ...attributes });
+    IN_MEMORY_SAGA_STORE.push({ ...attributes });
 
     await expect(store.find(sagaIdentifier)).resolves.toStrictEqual(
       expect.objectContaining({
@@ -141,7 +142,7 @@ describe("MemorySagaStore", () => {
   test("should insert saga", async () => {
     await expect(store.insert(attributes)).resolves.toBeUndefined();
 
-    expect(find(store.sagas, sagaIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_SAGA_STORE, sagaIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { state: "state" },
@@ -159,7 +160,7 @@ describe("MemorySagaStore", () => {
     ).resolves.toBeUndefined();
 
     expect(
-      filter(store.causations, {
+      filter(IN_MEMORY_SAGA_CAUSATION_STORE, {
         saga_id: sagaIdentifier.id,
         saga_name: sagaIdentifier.name,
         saga_context: sagaIdentifier.context,
@@ -172,7 +173,7 @@ describe("MemorySagaStore", () => {
   });
 
   test("should update saga", async () => {
-    store.sagas.push({ ...attributes });
+    IN_MEMORY_SAGA_STORE.push({ ...attributes });
 
     const filter: SagaUpdateFilter = {
       id: attributes.id,
@@ -193,7 +194,7 @@ describe("MemorySagaStore", () => {
 
     await expect(store.update(filter, update)).resolves.toBeUndefined();
 
-    expect(find(store.sagas, sagaIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_SAGA_STORE, sagaIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         revision: 2,

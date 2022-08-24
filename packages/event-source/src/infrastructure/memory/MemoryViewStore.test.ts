@@ -3,6 +3,7 @@ import { MemoryViewStore } from "./MemoryViewStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
+import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 import { filter, find } from "lodash";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
@@ -15,7 +16,6 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
-import { viewStoreSingleton } from "./singleton/view-store-singleton";
 
 describe("MemoryViewStore", () => {
   let aggregateIdentifier: AggregateIdentifier;
@@ -42,7 +42,7 @@ describe("MemoryViewStore", () => {
       timestamp: new Date(),
     };
 
-    store.causations.push(document);
+    IN_MEMORY_VIEW_CAUSATION_STORE.push(document);
 
     await expect(store.causationExists(viewIdentifier, event)).resolves.toBe(true);
 
@@ -72,7 +72,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    viewStoreSingleton.push(attributes);
+    IN_MEMORY_VIEW_STORE.push(attributes);
 
     const filter: ViewUpdateFilter = {
       id: attributes.id,
@@ -90,7 +90,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
 
-    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         processed_causation_ids: [],
@@ -114,7 +114,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    viewStoreSingleton.push(attributes);
+    IN_MEMORY_VIEW_STORE.push(attributes);
 
     await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
       expect.objectContaining({
@@ -141,7 +141,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.insert(attributes, {})).resolves.toBeUndefined();
 
-    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { inserted: true },
@@ -159,7 +159,7 @@ describe("MemoryViewStore", () => {
     ).resolves.toBeUndefined();
 
     expect(
-      filter(store.causations, {
+      filter(IN_MEMORY_VIEW_CAUSATION_STORE, {
         view_id: viewIdentifier.id,
         view_name: viewIdentifier.name,
         view_context: viewIdentifier.context,
@@ -186,7 +186,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    viewStoreSingleton.push(attributes);
+    IN_MEMORY_VIEW_STORE.push(attributes);
 
     const filter: ViewUpdateFilter = {
       id: attributes.id,
@@ -207,7 +207,7 @@ describe("MemoryViewStore", () => {
 
     await expect(store.update(filter, update, {})).resolves.toBeUndefined();
 
-    expect(find(viewStoreSingleton, viewIdentifier)).toStrictEqual(
+    expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
         revision: 2,

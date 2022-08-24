@@ -106,9 +106,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     { collection?: string; indices?: Array<MongoIndex>; view: HandlerIdentifier }
   >;
 
-  private initialised: boolean;
-  private initialising: boolean;
-  private replaying: boolean;
+  private status: "initialising" | "initialised" | "replaying" | "unknown";
 
   private promise: () => Promise<void>;
 
@@ -117,9 +115,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
 
     this.logger = logger.createChildLogger(["EventSource"]);
     this.require = custom.require || require;
-
-    this.initialising = false;
-    this.initialised = false;
 
     this.options = merge<Partial<PrivateAppOptions>, PrivateAppOptions>(
       {
@@ -141,6 +136,8 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       appOptions,
     );
 
+    this.status = "unknown";
+
     this.amqp = connections.amqp;
     this.mongo = connections.mongo;
     this.postgres = connections.postgres;
@@ -154,7 +151,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.sagaStore = new SagaStore(
       {
         custom: custom.sagaStore,
@@ -164,7 +160,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.viewStore = new ViewStore(
       {
         custom: custom.viewStore,
@@ -174,7 +169,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.messageBus = new MessageBus(
       {
         amqp: this.amqp,
@@ -183,7 +177,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.aggregateDomain = new AggregateDomain(
       {
         messageBus: this.messageBus,
@@ -191,7 +184,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.sagaDomain = new SagaDomain(
       {
         messageBus: this.messageBus,
@@ -199,14 +191,12 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       },
       this.logger,
     );
-
     this.replayDomain = new ReplayDomain({
       messageBus: this.messageBus,
       logger: this.logger,
       eventStore: this.eventStore,
       context: this.options.context,
     });
-
     this.viewDomain = new ViewDomain(
       {
         messageBus: this.messageBus,
@@ -226,20 +216,27 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     this.viewEntities = {};
     this.viewIndices = {};
 
-    this.promise = this.handleInitialise;
+    this.promise = this.handleInitialisation;
   }
 
   // public properties
 
   public get isInitialised(): boolean {
-    return this.initialised;
+    return this.status === "initialised";
   }
   public set isInitialised(_: boolean) {
     /* ignored */
   }
 
+  public get isInitialising(): boolean {
+    return this.status === "initialising";
+  }
+  public set isInitialising(_: boolean) {
+    /* ignored */
+  }
+
   public get isReplaying(): boolean {
-    return this.replaying;
+    return this.status === "replaying";
   }
   public set isReplaying(_: boolean) {
     /* ignored */
@@ -360,7 +357,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     await this.messageBus.publish(generated);
 
     return {
-      result: this.replaying ? "QUEUED" : "OK",
+      result: this.isReplaying ? "QUEUED" : "OK",
       aggregate: resolvedAggregate,
     };
   }
@@ -501,19 +498,14 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
 
   // private initialisation handler
 
-  private async handleInitialise(): Promise<void> {
-    this.initialising = true;
+  private async handleInitialisation(): Promise<void> {
+    this.status = "initialising";
 
-    if (this.options.dangerouslyRegisterHandlersManually) {
-      await this.setupReplayDomain();
+    if (!this.options.dangerouslyRegisterHandlersManually) {
+      if (!StructureScanner.hasFiles(this.options.directory)) {
+        throw new Error(`No files found at directory [ ${this.options.directory} ]`);
+      }
 
-      this.initialised = true;
-      this.initialising = false;
-
-      this.promise = (): Promise<void> => Promise.resolve();
-    }
-
-    if (StructureScanner.hasFiles(this.options.directory)) {
       await this.scanFiles();
 
       await this.registerAggregateCommandHandlers(this.aggregateCommandHandlers);
@@ -522,15 +514,13 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       await this.registerViewEventHandlers(this.viewEventHandlers);
     }
 
+    await this.setupReplayDomain();
+
     await this.eventStore.initialise();
     await this.sagaStore.initialise();
     await this.viewStore.initialise(Object.values(this.viewIndices).map((item) => item));
 
-    await this.setupReplayDomain();
-
-    this.initialised = true;
-    this.initialising = false;
-
+    this.status = "initialised";
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
@@ -752,14 +742,13 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
   }
 
   private assertRegister(): boolean {
-    if (this.initialising) return;
-    if (this.replaying) return;
+    if (this.isInitialising || this.isReplaying) return;
     if (this.options.dangerouslyRegisterHandlersManually) return;
 
     throw new Error("Set option [ dangerouslyRegisterHandlersManually ] to [ true ]");
   }
 
-  private getFileHandlers<Handler>(path: string): Array<Handler> {
+  private getFileHandlers<THandler>(path: string): Array<THandler> {
     const required = this.require(path);
     const handlers = required.default || required.main;
 
@@ -768,10 +757,10 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     }
 
     if (isArray(handlers)) {
-      return handlers as Array<Handler>;
+      return handlers as Array<THandler>;
     }
 
-    return [handlers as Handler];
+    return [handlers as THandler];
   }
 
   private isValid(type: string, name: string): boolean {
@@ -803,7 +792,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
   // private event listeners
 
   private onReplayStart(): void {
-    this.replaying = true;
+    this.status = "replaying";
 
     this.aggregateDomain
       .removeAllCommandHandlers()
@@ -819,7 +808,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     this.registerAggregateCommandHandlers(this.aggregateCommandHandlers)
       .then(() => {
         this.logger.verbose("Registered handlers");
-        this.replaying = false;
+        this.status = "initialised";
       })
       .catch((err) => {
         this.logger.error("Failed to register handlers", err);

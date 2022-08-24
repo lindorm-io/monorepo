@@ -1,5 +1,5 @@
 import { find, findIndex } from "lodash";
-import { viewStoreSingleton } from "./singleton/view-store-singleton";
+import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 import {
   IMessage,
   IViewStore,
@@ -7,24 +7,17 @@ import {
   ViewEventHandlerAdapters,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewStoreCausationAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
 
 export class MemoryViewStore implements IViewStore {
-  public readonly causations: Array<ViewStoreCausationAttributes>;
-
-  public constructor() {
-    this.causations = [];
-  }
-
   public async initialise(): Promise<void> {
     /* ignored */
   }
 
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
-    return !!find(this.causations, {
+    return !!find(IN_MEMORY_VIEW_CAUSATION_STORE, {
       view_id: identifier.id,
       view_name: identifier.name,
       view_context: identifier.context,
@@ -37,24 +30,24 @@ export class MemoryViewStore implements IViewStore {
     data: ViewClearProcessedCausationIdsData,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(viewStoreSingleton, updateFilter);
-    const index = findIndex(viewStoreSingleton, updateFilter);
+    const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
+    const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
 
-    viewStoreSingleton[index] = { ...found, ...data };
+    IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }
 
   public async find(
     identifier: ViewIdentifier,
     adapters: ViewEventHandlerAdapters,
   ): Promise<ViewStoreAttributes | undefined> {
-    return find<ViewStoreAttributes>(viewStoreSingleton, identifier);
+    return find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, identifier);
   }
 
   public async insert(
     attributes: ViewStoreAttributes,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find(viewStoreSingleton, {
+    const found = find(IN_MEMORY_VIEW_STORE, {
       id: attributes.id,
       name: attributes.name,
       context: attributes.context,
@@ -64,7 +57,7 @@ export class MemoryViewStore implements IViewStore {
       throw new Error("Causation already exists");
     }
 
-    viewStoreSingleton.push(attributes);
+    IN_MEMORY_VIEW_STORE.push(attributes);
   }
 
   public async insertProcessedCausationIds(
@@ -72,7 +65,7 @@ export class MemoryViewStore implements IViewStore {
     causationIds: Array<string>,
   ): Promise<void> {
     for (const causationId of causationIds) {
-      this.causations.push({
+      IN_MEMORY_VIEW_CAUSATION_STORE.push({
         view_id: identifier.id,
         view_name: identifier.name,
         view_context: identifier.context,
@@ -87,9 +80,9 @@ export class MemoryViewStore implements IViewStore {
     data: ViewUpdateData,
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(viewStoreSingleton, updateFilter);
-    const index = findIndex(viewStoreSingleton, updateFilter);
+    const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
+    const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
 
-    viewStoreSingleton[index] = { ...found, ...data };
+    IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }
 }

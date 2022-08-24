@@ -6,7 +6,7 @@ import {
   ViewRepositoryData,
   ViewStoreAttributes,
 } from "../../types";
-import { viewStoreSingleton } from "./singleton/view-store-singleton";
+import { IN_MEMORY_VIEW_STORE } from "./in-memory";
 
 export class MemoryViewRepository<TState extends State = State>
   implements IMemoryRepository<TState>
@@ -20,7 +20,11 @@ export class MemoryViewRepository<TState extends State = State>
   public async find(
     findFilter: Partial<ViewStoreAttributes> = {},
   ): Promise<Array<ViewRepositoryData<TState>>> {
-    const filtered = filter(viewStoreSingleton, { ...this.view, ...findFilter, destroyed: false });
+    const filtered = filter(IN_MEMORY_VIEW_STORE, {
+      ...this.view,
+      ...findFilter,
+      destroyed: false,
+    });
 
     return filtered.map((item) => ({
       id: item.id,
@@ -40,7 +44,7 @@ export class MemoryViewRepository<TState extends State = State>
   public async findOne(
     findFilter: Partial<ViewStoreAttributes> = {},
   ): Promise<ViewRepositoryData<TState>> {
-    const found = find(viewStoreSingleton, { ...this.view, ...findFilter, destroyed: false });
+    const found = find(IN_MEMORY_VIEW_STORE, { ...this.view, ...findFilter, destroyed: false });
 
     return {
       id: found.id,

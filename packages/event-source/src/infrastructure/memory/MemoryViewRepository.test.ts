@@ -2,7 +2,7 @@ import { MemoryViewRepository } from "./MemoryViewRepository";
 import { ViewIdentifier } from "../../types";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
-import { viewStoreSingleton } from "./singleton/view-store-singleton";
+import { IN_MEMORY_VIEW_STORE } from "./in-memory";
 
 describe("MemoryViewRepository", () => {
   let identifier: ViewIdentifier;
@@ -21,7 +21,7 @@ describe("MemoryViewRepository", () => {
     view2 = randomUUID();
     view3 = randomUUID();
 
-    viewStoreSingleton.push({
+    IN_MEMORY_VIEW_STORE.push({
       ...identifier,
       id: view1,
       destroyed: false,
@@ -34,7 +34,7 @@ describe("MemoryViewRepository", () => {
       updated_at: new Date(),
     });
 
-    viewStoreSingleton.push({
+    IN_MEMORY_VIEW_STORE.push({
       ...identifier,
       id: view2,
       destroyed: false,
@@ -47,7 +47,7 @@ describe("MemoryViewRepository", () => {
       updated_at: new Date(),
     });
 
-    viewStoreSingleton.push({
+    IN_MEMORY_VIEW_STORE.push({
       ...identifier,
       id: view3,
       destroyed: false,
@@ -60,7 +60,7 @@ describe("MemoryViewRepository", () => {
       updated_at: new Date(),
     });
 
-    viewStoreSingleton.push({
+    IN_MEMORY_VIEW_STORE.push({
       ...identifier,
       id: randomUUID(),
       destroyed: true,

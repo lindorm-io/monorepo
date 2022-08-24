@@ -1,4 +1,5 @@
 import { AggregateIdentifier } from "../../types";
+import { IN_MEMORY_EVENT_STORE } from "./in-memory";
 import { MemoryEventStore } from "./MemoryEventStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { find } from "lodash";
@@ -20,7 +21,7 @@ describe("MemoryEventStore", () => {
   test("should find events", async () => {
     const causationId = randomUUID();
 
-    store.events.push({
+    IN_MEMORY_EVENT_STORE.push({
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -92,7 +93,7 @@ describe("MemoryEventStore", () => {
       }),
     ).resolves.toBeUndefined();
 
-    expect(find(store.events, { ...identifier })).toStrictEqual(
+    expect(find(IN_MEMORY_EVENT_STORE, { ...identifier })).toStrictEqual(
       expect.objectContaining({ causation_id: causationId }),
     );
   });
@@ -100,7 +101,7 @@ describe("MemoryEventStore", () => {
   test("should list events", async () => {
     const causationId = randomUUID();
 
-    store.events.push({
+    IN_MEMORY_EVENT_STORE.push({
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
