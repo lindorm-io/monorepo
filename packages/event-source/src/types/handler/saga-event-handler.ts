@@ -1,17 +1,17 @@
-import { ClassDTO, State } from "../generic";
+import { DtoClass, State } from "../generic";
 import { DomainEvent, TimeoutMessage } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 import { SagaDispatchOptions } from "../entity";
 
-export type GetSagaIdFunction<TEvent extends ClassDTO = ClassDTO> = (
+export type GetSagaIdFunction<TEvent extends DtoClass = DtoClass> = (
   event: DomainEvent<TEvent> | TimeoutMessage<TEvent>,
 ) => string;
 
 export interface SagaEventHandlerContext<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
-  TDispatch extends ClassDTO = ClassDTO,
+  TDispatch extends DtoClass = DtoClass,
 > {
   event: TEvent;
   logger: ILogger;
@@ -28,9 +28,9 @@ export interface SagaEventHandlerFileAggregate {
 }
 
 export interface SagaEventHandler<
-  TEvent extends ClassDTO,
+  TEvent extends DtoClass,
   TState extends State = State,
-  TDispatch extends ClassDTO = ClassDTO,
+  TDispatch extends DtoClass = DtoClass,
 > {
   name: string;
   aggregate?: SagaEventHandlerFileAggregate;
@@ -41,9 +41,9 @@ export interface SagaEventHandler<
 }
 
 export interface SagaEventHandlerOptions<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
-  TDispatch extends ClassDTO = ClassDTO,
+  TDispatch extends DtoClass = DtoClass,
 > {
   aggregate: HandlerIdentifierMultipleContexts;
   conditions?: HandlerConditions;
@@ -55,9 +55,9 @@ export interface SagaEventHandlerOptions<
 }
 
 export interface ISagaEventHandler<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
-  TDispatch extends ClassDTO = ClassDTO,
+  TDispatch extends DtoClass = DtoClass,
 > {
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;

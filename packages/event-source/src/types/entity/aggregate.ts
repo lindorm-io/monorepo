@@ -1,5 +1,5 @@
 import { AggregateEventHandlerImplementation } from "../../handler";
-import { ClassDTO } from "../generic";
+import { DtoClass } from "../generic";
 import { Command, DomainEvent } from "../../message";
 import { StandardIdentifier } from "../standard-identifier";
 
@@ -17,7 +17,7 @@ export interface AggregateOptions extends AggregateIdentifier {
 }
 
 export interface IAggregate extends AggregateData {
-  apply(causation: Command, event: ClassDTO): Promise<void>;
+  apply(causation: Command, event: DtoClass): Promise<void>;
   load(event: DomainEvent): void;
   toJSON(): AggregateData;
 }

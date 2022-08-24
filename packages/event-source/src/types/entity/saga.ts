@@ -1,5 +1,5 @@
 import { AggregateIdentifier } from "./aggregate";
-import { ClassDTO, State } from "../generic";
+import { DtoClass, State } from "../generic";
 import { Command, DomainEvent } from "../../message";
 import { StandardIdentifier } from "../standard-identifier";
 
@@ -32,7 +32,7 @@ export interface SagaDispatchOptions {
 
 export interface ISaga extends SagaData {
   destroy(): void;
-  dispatch(causation: DomainEvent, command: ClassDTO, options?: SagaDispatchOptions): void;
+  dispatch(causation: DomainEvent, command: DtoClass, options?: SagaDispatchOptions): void;
   mergeState(data: Record<string, any>): void;
   setState(path: string, value: any): void;
   timeout(causation: DomainEvent, name: string, data: Record<string, any>, delay: number): void;

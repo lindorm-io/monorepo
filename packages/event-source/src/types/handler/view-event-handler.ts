@@ -1,4 +1,4 @@
-import { ClassDTO, State } from "../generic";
+import { DtoClass, State } from "../generic";
 import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
@@ -7,12 +7,12 @@ import {
   PostgresViewEventHandlerAdapterOptions,
 } from "../view-store";
 
-export type GetViewIdFunction<TEvent extends ClassDTO = ClassDTO> = (
+export type GetViewIdFunction<TEvent extends DtoClass = DtoClass> = (
   event: DomainEvent<TEvent>,
 ) => string;
 
 export interface ViewEventHandlerContext<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   event: TEvent;
@@ -35,7 +35,7 @@ export interface ViewEventHandlerAdapters {
   postgres?: PostgresViewEventHandlerAdapterOptions;
 }
 
-export interface ViewEventHandler<TEvent extends ClassDTO, TState extends State = State> {
+export interface ViewEventHandler<TEvent extends DtoClass, TState extends State = State> {
   name: string;
   adapters?: ViewEventHandlerAdapters;
   aggregate?: ViewEventHandlerFileAggregate;
@@ -46,7 +46,7 @@ export interface ViewEventHandler<TEvent extends ClassDTO, TState extends State 
 }
 
 export interface ViewEventHandlerOptions<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   adapters: ViewEventHandlerAdapters;
@@ -60,7 +60,7 @@ export interface ViewEventHandlerOptions<
 }
 
 export interface IViewEventHandler<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   adapters: ViewEventHandlerAdapters;

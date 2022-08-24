@@ -1,6 +1,6 @@
 import { Aggregate, Saga } from "../entity";
 import { AggregateIdentifier } from "./entity";
-import { ClassDTO, Data, State } from "./generic";
+import { DtoClass, Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
@@ -44,8 +44,8 @@ export interface PrivateAppOptions {
   directory?: string;
   scanner?: ScannerOptions;
   dangerouslyRegisterHandlersManually?: boolean;
-  dangerouslyRegisterCommands?: Array<ClassDTO>;
-  dangerouslyRegisterEvents?: Array<ClassDTO>;
+  dangerouslyRegisterCommands?: Array<DtoClass>;
+  dangerouslyRegisterEvents?: Array<DtoClass>;
 }
 
 export interface AppOptions extends PrivateAppOptions {
@@ -107,7 +107,7 @@ export interface AppSetup {
   registerEventAggregate(name: string, aggregate: string): void;
 }
 
-export interface IEventSource<TCommand extends ClassDTO = ClassDTO> {
+export interface IEventSource<TCommand extends DtoClass = DtoClass> {
   publish(command: TCommand, options: AppPublishOptions): Promise<AppPublishResult>;
   on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
   init(): Promise<void>;

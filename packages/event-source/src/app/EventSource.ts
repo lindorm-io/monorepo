@@ -42,7 +42,7 @@ import {
   AppPublishResult,
   AppRepositories,
   AppSetup,
-  ClassDTO,
+  DtoClass,
   Data,
   EventEmitterListener,
   HandlerIdentifier,
@@ -73,7 +73,7 @@ import {
   StructureScanner,
 } from "../util";
 
-export class EventSource<TCommand extends ClassDTO = ClassDTO> implements IEventSource<TCommand> {
+export class EventSource<TCommand extends DtoClass = DtoClass> implements IEventSource<TCommand> {
   private readonly amqp: IAmqpConnection;
   private readonly messageBus: IMessageBus;
   private readonly mongo: IMongoConnection;

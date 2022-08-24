@@ -9,7 +9,7 @@ import {
   AggregateData,
   AggregateEventHandlerContext,
   AggregateOptions,
-  ClassDTO,
+  DtoClass,
   IAggregate,
   IAggregateEventHandler,
   State,
@@ -87,7 +87,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
 
   // public
 
-  public async apply(causation: Command, event: ClassDTO, version?: number): Promise<void> {
+  public async apply(causation: Command, event: DtoClass, version?: number): Promise<void> {
     this.logger.debug("Apply Command", { causation, event });
 
     await assertSchemaAsync(

@@ -1,5 +1,5 @@
 import {
-  ClassDTO,
+  DtoClass,
   GetViewIdFunction,
   HandlerConditions,
   HandlerIdentifier,
@@ -12,7 +12,7 @@ import {
 } from "../types";
 
 export class ViewEventHandlerImplementation<
-  TEvent extends ClassDTO = ClassDTO,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > implements IViewEventHandler<TEvent, TState>
 {

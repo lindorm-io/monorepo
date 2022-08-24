@@ -1,11 +1,11 @@
 import Joi from "joi";
-import { ClassDTO, State } from "../generic";
+import { DtoClass, State } from "../generic";
 import { HandlerConditions, HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 
 export interface AggregateCommandHandlerContext<
-  TCommand extends ClassDTO = ClassDTO,
-  TEvent extends ClassDTO = ClassDTO,
+  TCommand extends DtoClass = DtoClass,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   command: TCommand;
@@ -15,8 +15,8 @@ export interface AggregateCommandHandlerContext<
 }
 
 export interface AggregateCommandHandler<
-  TCommand extends ClassDTO,
-  TEvent extends ClassDTO,
+  TCommand extends DtoClass,
+  TEvent extends DtoClass,
   TState extends State = State,
 > {
   conditions?: HandlerConditions;
@@ -26,8 +26,8 @@ export interface AggregateCommandHandler<
 }
 
 export interface AggregateCommandHandlerOptions<
-  TCommand extends ClassDTO = ClassDTO,
-  TEvent extends ClassDTO = ClassDTO,
+  TCommand extends DtoClass = DtoClass,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > extends AggregateCommandHandler<TCommand, TEvent, TState> {
   aggregate: HandlerIdentifier;
@@ -35,8 +35,8 @@ export interface AggregateCommandHandlerOptions<
 }
 
 export interface IAggregateCommandHandler<
-  TCommand extends ClassDTO = ClassDTO,
-  TEvent extends ClassDTO = ClassDTO,
+  TCommand extends DtoClass = DtoClass,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   aggregate: HandlerIdentifier;
