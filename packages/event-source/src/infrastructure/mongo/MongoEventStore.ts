@@ -7,18 +7,20 @@ import { MongoBase } from "./MongoBase";
 import { MongoDuplicateKeyError } from "../../error";
 
 export class MongoEventStore extends MongoBase implements IEventStore {
+  private promise: () => Promise<void>;
+
   public constructor(connection: IMongoConnection, logger: ILogger) {
     super(connection, logger);
+
+    this.promise = this.initialise;
   }
 
   // public
 
-  public async initialise(): Promise<void> {
-    await this.createIndices(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
-  }
-
   public async find(filter: EventStoreFindFilter): Promise<Array<EventData>> {
     this.logger.debug("Finding event documents", { filter });
+
+    await this.promise();
 
     try {
       const collection = await this.eventCollection();
@@ -43,6 +45,8 @@ export class MongoEventStore extends MongoBase implements IEventStore {
 
   public async insert(data: EventStoreAttributes): Promise<void> {
     this.logger.debug("Inserting event document", { data });
+
+    await this.promise();
 
     try {
       const collection = await this.eventCollection();
@@ -76,6 +80,8 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   public async listEvents(from: Date, limit: number): Promise<Array<EventData>> {
     this.logger.debug("Listing event documents", { from, limit });
 
+    await this.promise();
+
     try {
       const collection = await this.eventCollection();
 
@@ -100,6 +106,12 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   }
 
   // private
+
+  private async initialise(): Promise<void> {
+    await this.createIndices(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
+
+    this.promise = (): Promise<void> => Promise.resolve();
+  }
 
   private async eventCollection(): Promise<Collection<EventStoreAttributes>> {
     return this.connection.database.collection<EventStoreAttributes>(EVENT_COLLECTION);

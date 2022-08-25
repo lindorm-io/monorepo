@@ -4,10 +4,6 @@ import { filter, find, orderBy, take } from "lodash";
 import { isAfter } from "date-fns";
 
 export class MemoryEventStore implements IEventStore {
-  public async initialise(): Promise<void> {
-    /* ignored */
-  }
-
   public async find(findFilter: EventStoreFindFilter): Promise<Array<EventData>> {
     const filtered = filter<EventStoreAttributes>(IN_MEMORY_EVENT_STORE, findFilter);
     const ordered = orderBy<EventStoreAttributes>(filtered, ["expected_events"], ["asc"]);

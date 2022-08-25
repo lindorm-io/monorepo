@@ -12,10 +12,6 @@ import {
 } from "../../types";
 
 export class MemorySagaStore implements ISagaStore {
-  public async initialise(): Promise<void> {
-    /* ignored */
-  }
-
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
     return !!find(IN_MEMORY_SAGA_CAUSATION_STORE, {
       saga_id: identifier.id,

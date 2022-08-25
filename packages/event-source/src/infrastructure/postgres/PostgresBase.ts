@@ -9,10 +9,4 @@ export abstract class PostgresBase {
     this.connection = connection;
     this.logger = logger.createChildLogger(["PostgresBase", this.constructor.name]);
   }
-
-  // public
-
-  public async initialise(): Promise<void> {
-    await this.connection.connect();
-  }
 }

@@ -16,7 +16,6 @@ import {
   ViewEventHandlerAdapters,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewStoreInitialiseData,
   ViewStoreOptions,
   ViewUpdateData,
   ViewUpdateFilter,
@@ -55,10 +54,6 @@ export class ViewStore implements IDomainViewStore {
   }
 
   // public
-
-  public async initialise(data: Array<ViewStoreInitialiseData>): Promise<void> {
-    await this.store.initialise(data);
-  }
 
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     return await this.store.causationExists(identifier, causation);

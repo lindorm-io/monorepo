@@ -12,29 +12,30 @@ import {
 import {
   IMessage,
   ISagaStore,
-  SagaStoreAttributes,
-  SagaStoreCausationAttributes,
   SagaClearMessagesToDispatchData,
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
+  SagaStoreAttributes,
+  SagaStoreCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
 
 export class MongoSagaStore extends MongoBase implements ISagaStore {
+  private promise: () => Promise<void>;
+
   public constructor(connection: IMongoConnection, logger: ILogger) {
     super(connection, logger);
+
+    this.promise = this.initialise;
   }
 
   // public
 
-  public async initialise(): Promise<void> {
-    await this.createIndices(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
-    await this.createIndices(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
-  }
-
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
     this.logger.debug("Verifying if causation exists", { identifier, causation });
+
+    await this.promise();
 
     try {
       const collection = await this.causationCollection();
@@ -59,6 +60,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
     data: SagaClearMessagesToDispatchData,
   ): Promise<void> {
     this.logger.debug("Clearing messages", { filter, data });
+
+    await this.promise();
 
     try {
       const collection = await this.sagaCollection();
@@ -99,6 +102,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
+    await this.promise();
+
     try {
       const collection = await this.sagaCollection();
 
@@ -135,6 +140,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   public async find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
     this.logger.debug("Finding saga", { identifier });
 
+    await this.promise();
+
     try {
       const collection = await this.sagaCollection();
 
@@ -163,6 +170,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   public async insert(attributes: SagaStoreAttributes): Promise<void> {
     this.logger.debug("Inserting saga", { attributes });
 
+    await this.promise();
+
     try {
       const collection = await this.sagaCollection();
 
@@ -181,6 +190,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
     causationIds: Array<string>,
   ): Promise<void> {
     this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+
+    await this.promise();
 
     try {
       const collection = await this.causationCollection();
@@ -205,6 +216,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
 
   public async update(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
     this.logger.debug("Updating saga", { filter, data });
+
+    await this.promise();
 
     try {
       const collection = await this.sagaCollection();
@@ -243,6 +256,13 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   }
 
   // private
+
+  private async initialise(): Promise<void> {
+    await this.createIndices(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
+    await this.createIndices(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
+
+    this.promise = (): Promise<void> => Promise.resolve();
+  }
 
   private async sagaCollection(): Promise<Collection<SagaStoreAttributes>> {
     return this.connection.database.collection(SAGA_COLLECTION);

@@ -12,10 +12,6 @@ import {
 } from "../../types";
 
 export class MemoryViewStore implements IViewStore {
-  public async initialise(): Promise<void> {
-    /* ignored */
-  }
-
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     return !!find(IN_MEMORY_VIEW_CAUSATION_STORE, {
       view_id: identifier.id,

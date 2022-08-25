@@ -35,8 +35,6 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
     filter: Filter<ViewStoreAttributes> = {},
     options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<Array<ViewRepositoryData<S>>> {
-    await this.connection.connect();
-
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );
@@ -77,8 +75,6 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
   }
 
   public async findById(id: string): Promise<ViewRepositoryData<S>> {
-    await this.connection.connect();
-
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );
@@ -116,8 +112,6 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
     filter: Filter<ViewStoreAttributes>,
     options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<ViewRepositoryData<S>> {
-    await this.connection.connect();
-
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );

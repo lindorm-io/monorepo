@@ -3,7 +3,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
-import { snakeCase } from "lodash";
+import { find, flatten, snakeCase } from "lodash";
 import {
   VIEW_CAUSATION_COLLECTION,
   VIEW_CAUSATION_COLLECTION_INDICES,
@@ -18,31 +18,27 @@ import {
   ViewIdentifier,
   ViewStoreAttributes,
   ViewStoreCausationAttributes,
-  ViewStoreInitialiseData,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
 
 export class MongoViewStore extends MongoBase implements IViewStore {
+  private readonly initialisedViews: Array<HandlerIdentifier>;
+  private promise: () => Promise<void>;
+
   public constructor(connection: IMongoConnection, logger: ILogger) {
     super(connection, logger);
+
+    this.initialisedViews = [];
+    this.promise = this.initialiseCausation;
   }
 
   // public
 
-  public async initialise(data: Array<ViewStoreInitialiseData>): Promise<void> {
-    await this.createIndices(VIEW_CAUSATION_COLLECTION, VIEW_CAUSATION_COLLECTION_INDICES);
-
-    for (const item of data) {
-      await this.createIndices(MongoViewStore.getCollectionName(item.view, item.collection), [
-        ...VIEW_COLLECTION_INDICES,
-        ...(item.indices || []),
-      ]);
-    }
-  }
-
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     this.logger.debug("Verifying if causation exists", { identifier, causation });
+
+    await this.promise();
 
     try {
       const collection = await this.causationCollection();
@@ -68,6 +64,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
+
+    await this.initialise(filter, adapters);
 
     try {
       const collection = await this.viewCollection(filter, adapters);
@@ -106,6 +104,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { identifier });
 
+    await this.initialise(identifier, adapters);
+
     try {
       const collection = await this.viewCollection(identifier, adapters);
 
@@ -133,6 +133,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
+    await this.initialise(attributes, adapters);
+
     try {
       const collection = await this.viewCollection(
         {
@@ -157,6 +159,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     causationIds: Array<string>,
   ): Promise<void> {
     this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+
+    await this.promise();
 
     try {
       const collection = await this.causationCollection();
@@ -185,6 +189,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     adapters: ViewEventHandlerAdapters,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
+
+    await this.initialise(filter, adapters);
 
     try {
       const collection = await this.viewCollection(filter, adapters);
@@ -221,6 +227,29 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   // private
+
+  private async initialise(
+    view: HandlerIdentifier,
+    adapters: ViewEventHandlerAdapters,
+  ): Promise<void> {
+    await this.promise();
+
+    if (find(this.initialisedViews, view)) return;
+
+    const collection = MongoViewStore.getCollectionName(view, adapters.mongo?.collection);
+    const custom = adapters.mongo?.indices || [];
+    const indices = flatten([VIEW_COLLECTION_INDICES, custom]);
+
+    await this.createIndices(collection, indices);
+
+    this.initialisedViews.push(view);
+  }
+
+  private async initialiseCausation(): Promise<void> {
+    await this.createIndices(VIEW_CAUSATION_COLLECTION, VIEW_CAUSATION_COLLECTION_INDICES);
+
+    this.promise = (): Promise<void> => Promise.resolve();
+  }
 
   private async viewCollection(
     view: HandlerIdentifier,

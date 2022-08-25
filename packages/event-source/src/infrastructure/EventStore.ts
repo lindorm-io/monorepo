@@ -51,10 +51,6 @@ export class EventStore implements IDomainEventStore {
 
   // public
 
-  public async initialise(): Promise<void> {
-    await this.store.initialise();
-  }
-
   public async save(aggregate: IAggregate, causation: Command): Promise<Array<DomainEvent>> {
     this.logger.debug("Saving aggregate", { aggregate: aggregate.toJSON(), causation });
 

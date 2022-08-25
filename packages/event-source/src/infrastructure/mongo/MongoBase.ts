@@ -14,8 +14,6 @@ export abstract class MongoBase {
   // protected
 
   protected async createIndices(name: string, indices: Array<MongoIndex>): Promise<void> {
-    await this.connection.connect();
-
     const collection = this.connection.database.collection(name);
 
     for (const { indexSpecification, createIndexesOptions } of indices) {

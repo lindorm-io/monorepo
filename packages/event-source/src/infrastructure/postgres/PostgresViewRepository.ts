@@ -26,8 +26,6 @@ export class PostgresViewRepository<S = State>
   }
 
   public async find(filter: FindManyOptions<ViewEntity>): Promise<Array<ViewRepositoryData<S>>> {
-    await this.connection.connect();
-
     this.logger.debug("Finding views", { filter });
 
     const { select: _, ...options } = filter;
@@ -71,8 +69,6 @@ export class PostgresViewRepository<S = State>
   }
 
   public async findById(id: string): Promise<ViewRepositoryData<S>> {
-    await this.connection.connect();
-
     this.logger.debug("Finding view", { id });
 
     try {
@@ -83,8 +79,6 @@ export class PostgresViewRepository<S = State>
   }
 
   public async findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<S>> {
-    await this.connection.connect();
-
     this.logger.debug("Finding view", { filter });
 
     const { select: _, ...options } = filter;

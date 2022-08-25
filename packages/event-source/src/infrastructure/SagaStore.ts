@@ -55,10 +55,6 @@ export class SagaStore implements IDomainSagaStore {
 
   // public
 
-  public async initialise(): Promise<void> {
-    await this.store.initialise();
-  }
-
   public async save(saga: ISaga, causation: IMessage): Promise<Saga> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });
 
