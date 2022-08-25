@@ -8,6 +8,7 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IViewStore, ViewStoreAdapterType } from "./view-store";
+import { MemoryViewRepository } from "../infrastructure";
 import { MessageBusQueueType } from "./message-bus";
 import { MongoViewRepository, PostgresViewRepository } from "../infrastructure";
 import { ReplayOptions } from "./domain";
@@ -17,7 +18,6 @@ import {
   SagaEventHandlerImplementation,
   ViewEventHandlerImplementation,
 } from "../handler";
-import { MemoryViewRepository } from "../infrastructure/memory/MemoryViewRepository";
 
 export interface AdapterOptions {
   eventStore?: EventStoreAdapterType;
@@ -26,10 +26,18 @@ export interface AdapterOptions {
   messageBus?: MessageBusQueueType;
 }
 
-export interface ConnectionOptions {
+export interface AppConnectionOptions {
   amqp?: IAmqpConnection;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
+}
+
+export interface AppCustomOptions {
+  messageBus?: IMessageBus;
+  eventStore?: IEventStore;
+  sagaStore?: ISagaStore;
+  viewStore?: IViewStore;
+  require?: NodeJS.Require;
 }
 
 export interface ScannerOptions {
@@ -49,14 +57,8 @@ export interface PrivateAppOptions {
 }
 
 export interface AppOptions extends PrivateAppOptions {
-  connections?: ConnectionOptions;
-  custom?: {
-    messageBus?: IMessageBus;
-    eventStore?: IEventStore;
-    sagaStore?: ISagaStore;
-    viewStore?: IViewStore;
-    require?: NodeJS.Require;
-  };
+  connections?: AppConnectionOptions;
+  custom?: AppCustomOptions;
 }
 
 export interface AppPublishOptions {
