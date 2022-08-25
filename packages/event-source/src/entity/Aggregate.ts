@@ -1,10 +1,10 @@
 import Joi from "joi";
 import { AggregateEventHandlerImplementation } from "../handler";
 import { Command, DomainEvent } from "../message";
-import { JOI_MESSAGE } from "../schema";
 import { ILogger } from "@lindorm-io/winston";
+import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema, assertSchemaAsync } from "../util";
-import { cloneDeep, find, merge, set, snakeCase } from "lodash";
+import { cloneDeep, find, merge, snakeCase } from "lodash";
 import {
   AggregateData,
   AggregateEventHandlerContext,
@@ -117,10 +117,6 @@ export class Aggregate<TState extends State = State> implements IAggregate {
     );
   }
 
-  public getState(): TState {
-    return cloneDeep(this._state);
-  }
-
   public async load(event: DomainEvent): Promise<void> {
     this.logger.debug("Load DomainEvent", { event });
 
@@ -173,12 +169,11 @@ export class Aggregate<TState extends State = State> implements IAggregate {
       const context: AggregateEventHandlerContext = {
         event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["AggregateEventHandler"]),
+        state: cloneDeep(this.state),
 
         destroy: this.destroy.bind(this),
         destroyNext: this.destroyNext.bind(this),
-        getState: this.getState.bind(this),
         mergeState: this.mergeState.bind(this),
-        setState: this.setState.bind(this),
       };
 
       await eventHandler.handler(context);
@@ -230,25 +225,5 @@ export class Aggregate<TState extends State = State> implements IAggregate {
     }
 
     merge(this._state, data);
-  }
-
-  private setState(path: string, value: any): void {
-    this.logger.debug("Set state", { path, value });
-
-    assertSchema(
-      Joi.object()
-        .keys({
-          path: Joi.string().required(),
-          value: Joi.any().required(),
-        })
-        .required()
-        .validate({ path, value }),
-    );
-
-    if (this._destroyed) {
-      throw new AggregateDestroyedError();
-    }
-
-    set(this._state, path, value);
   }
 }

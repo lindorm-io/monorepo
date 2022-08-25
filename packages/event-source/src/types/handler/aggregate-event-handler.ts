@@ -8,11 +8,10 @@ export interface AggregateEventHandlerContext<
 > {
   event: TEvent;
   logger: ILogger;
+  state: TState;
   destroy(): void;
   destroyNext(): void;
-  getState(): TState;
   mergeState(data: Partial<TState>): void;
-  setState(path: string, value: any): void;
 }
 
 export interface AggregateEventHandler<TEvent extends DtoClass, TState extends State = State> {

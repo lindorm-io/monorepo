@@ -291,12 +291,11 @@ export class SagaDomain implements ISagaDomain {
       const context: SagaEventHandlerContext = {
         event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["SagaEventHandler"]),
+        state: cloneDeep(saga.state),
 
         destroy: saga.destroy.bind(saga),
         dispatch: saga.dispatch.bind(saga, event),
-        getState: saga.getState.bind(saga),
         mergeState: saga.mergeState.bind(saga),
-        setState: saga.setState.bind(saga),
         timeout: saga.timeout.bind(saga, event),
       };
 

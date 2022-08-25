@@ -89,7 +89,7 @@ describe("Saga", () => {
       logger,
     );
 
-    expect(saga.getState()).toStrictEqual({ test: true });
+    expect(saga.state).toStrictEqual({ test: true });
   });
 
   test("should merge state", () => {
@@ -97,16 +97,6 @@ describe("Saga", () => {
 
     expect(saga.state).toStrictEqual({
       merge: "mergeState",
-    });
-  });
-
-  test("should set state", () => {
-    expect(() => saga.setState("path", { value: "setState" })).not.toThrow();
-
-    expect(saga.state).toStrictEqual({
-      path: {
-        value: "setState",
-      },
     });
   });
 
@@ -169,7 +159,7 @@ describe("Saga", () => {
       logger,
     );
 
-    expect(() => saga.setState("path", { value: "setState" })).toThrow(SagaDestroyedError);
+    expect(() => saga.mergeState({ value: "setState" })).toThrow(SagaDestroyedError);
   });
 
   test("should throw on dispatch timeout event when destroyed", () => {

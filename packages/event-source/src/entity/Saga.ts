@@ -4,7 +4,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
-import { cloneDeep, merge, set, snakeCase } from "lodash";
+import { cloneDeep, merge, snakeCase } from "lodash";
 import {
   AggregateIdentifier,
   DtoClass,
@@ -175,10 +175,6 @@ export class Saga<TState extends State = State> implements ISaga {
     );
   }
 
-  public getState(): TState {
-    return cloneDeep(this._state);
-  }
-
   public mergeState(data: Record<string, any>): void {
     this.logger.debug("Merge state", { data });
 
@@ -196,26 +192,6 @@ export class Saga<TState extends State = State> implements ISaga {
     }
 
     merge(this._state, data);
-  }
-
-  public setState(path: string, value: any): void {
-    this.logger.debug("Set state", { path, value });
-
-    assertSchema(
-      Joi.object()
-        .keys({
-          path: Joi.string().required(),
-          value: Joi.any().required(),
-        })
-        .required()
-        .validate({ path, value }),
-    );
-
-    if (this._destroyed) {
-      throw new SagaDestroyedError();
-    }
-
-    set(this._state, path, value);
   }
 
   public timeout(

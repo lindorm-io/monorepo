@@ -39,7 +39,7 @@ export const TEST_SAGA_EVENT_HANDLER_CREATE = new SagaEventHandlerImplementation
   eventName: TEST_DOMAIN_EVENT_CREATE.name,
   conditions: { created: false },
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("created", true);
+    ctx.mergeState({ created: true });
   }),
 });
 
@@ -74,7 +74,7 @@ export const TEST_SAGA_EVENT_HANDLER_SET_STATE = new SagaEventHandlerImplementat
   ...TEST_SAGA_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("path", { value: ctx.event });
+    ctx.mergeState({ set: "state" });
   }),
 });
 

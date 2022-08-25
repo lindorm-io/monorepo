@@ -121,7 +121,7 @@ describe("SagaDomain", () => {
         state: {
           created: true,
           merge: { domainEventData: true },
-          path: { value: { domainEventData: true } },
+          set: "state",
         },
       }),
     );

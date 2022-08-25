@@ -34,7 +34,6 @@ export interface ISaga extends SagaData {
   destroy(): void;
   dispatch(causation: DomainEvent, command: DtoClass, options?: SagaDispatchOptions): void;
   mergeState(data: Record<string, any>): void;
-  setState(path: string, value: any): void;
   timeout(causation: DomainEvent, name: string, data: Record<string, any>, delay: number): void;
   toJSON(): SagaData;
 }

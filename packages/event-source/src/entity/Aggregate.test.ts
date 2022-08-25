@@ -89,11 +89,7 @@ describe("Aggregate", () => {
     expect(aggregate.destroyed).toBe(false);
     expect(aggregate.events).toStrictEqual([expect.any(DomainEvent)]);
     expect(aggregate.numberOfLoadedEvents).toBe(0);
-    expect(aggregate.state).toStrictEqual({
-      path: {
-        value: { applyEventData: true },
-      },
-    });
+    expect(aggregate.state).toStrictEqual({ set: "state" });
   });
 
   test("should load one event", async () => {
@@ -109,7 +105,7 @@ describe("Aggregate", () => {
         domainEventData: true,
       },
     });
-    expect(aggregate.getState()).toStrictEqual({
+    expect(aggregate.state).toStrictEqual({
       merge: {
         domainEventData: true,
       },
@@ -134,11 +130,7 @@ describe("Aggregate", () => {
       merge: {
         domainEventData: true,
       },
-      path: {
-        value: {
-          domainEventData: true,
-        },
-      },
+      set: "state",
     });
   });
 

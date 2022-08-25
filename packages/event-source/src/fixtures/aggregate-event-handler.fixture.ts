@@ -29,7 +29,7 @@ export const TEST_AGGREGATE_EVENT_HANDLER_CREATE = new AggregateEventHandlerImpl
   ...TEST_AGGREGATE_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_CREATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("created", true);
+    ctx.mergeState({ created: true });
   }),
 });
 
@@ -61,7 +61,7 @@ export const TEST_AGGREGATE_EVENT_HANDLER_SET_STATE = new AggregateEventHandlerI
   ...TEST_AGGREGATE_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("path", { value: ctx.event });
+    ctx.mergeState({ set: "state" });
   }),
 });
 

@@ -302,10 +302,10 @@ export class ViewDomain implements IViewDomain {
     const context: ViewEventHandlerContext = {
       event: cloneDeep(event.data),
       logger: this.logger.createChildLogger(["ViewEventHandler"]),
+      state: cloneDeep(view.state),
 
       addListItem: view.addListItem.bind(view, event),
       destroy: view.destroy.bind(view),
-      getState: view.getState.bind(view),
       removeListItemWhereEqual: view.removeListItemWhereEqual.bind(view, event),
       removeListItemWhereMatch: view.removeListItemWhereMatch.bind(view, event),
       setState: view.setState.bind(view, event),

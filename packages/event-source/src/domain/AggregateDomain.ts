@@ -318,9 +318,9 @@ export class AggregateDomain implements IAggregateDomain {
         const context: AggregateCommandHandlerContext = {
           command: cloneDeep(command.data),
           logger: this.logger.createChildLogger(["AggregateCommandHandler"]),
+          state: cloneDeep(aggregate.state),
 
           apply: aggregate.apply.bind(aggregate, command),
-          getState: aggregate.getState.bind(aggregate),
         };
 
         await commandHandler.handler(context);

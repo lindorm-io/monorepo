@@ -10,8 +10,8 @@ export interface AggregateCommandHandlerContext<
 > {
   command: TCommand;
   logger: ILogger;
+  state: TState;
   apply(event: TEvent): Promise<void>;
-  getState(): TState;
 }
 
 export interface AggregateCommandHandler<

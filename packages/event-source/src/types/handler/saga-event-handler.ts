@@ -15,11 +15,10 @@ export interface SagaEventHandlerContext<
 > {
   event: TEvent;
   logger: ILogger;
+  state: TState;
   destroy(): void;
   dispatch(command: TDispatch, options?: SagaDispatchOptions): void;
-  getState(): TState;
   mergeState(data: Partial<TState>): void;
-  setState(path: string, value: any): void;
   timeout(name: string, data: Record<string, any>, delay: number): void;
 }
 

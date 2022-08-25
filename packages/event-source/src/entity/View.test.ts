@@ -113,7 +113,7 @@ describe("View", () => {
       logger,
     );
 
-    expect(view.getState()).toStrictEqual({ test: true });
+    expect(view.state).toStrictEqual({ test: true });
   });
 
   test("should destroy", () => {

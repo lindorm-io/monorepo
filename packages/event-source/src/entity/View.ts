@@ -162,10 +162,6 @@ export class View<TState extends State = State> implements IView<TState> {
     this._destroyed = true;
   }
 
-  public getState(): TState {
-    return cloneDeep(this._state);
-  }
-
   public removeListItemWhereEqual(causation: DomainEvent, path: string, value: any): void {
     this.logger.debug("Remove list item where equal", { causation, path, value });
 

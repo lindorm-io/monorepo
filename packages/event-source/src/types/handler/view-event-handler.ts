@@ -17,9 +17,9 @@ export interface ViewEventHandlerContext<
 > {
   event: TEvent;
   logger: ILogger;
+  state: TState;
   addListItem(path: string, value: any): void;
   destroy(): void;
-  getState(): TState;
   removeListItemWhereEqual(path: string, value: any): void;
   removeListItemWhereMatch(path: string, value: Record<string, any>): void;
   setState(path: string, value: any): void;
