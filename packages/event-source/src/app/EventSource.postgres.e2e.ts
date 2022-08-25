@@ -16,6 +16,7 @@ import {
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
+  QueryHandlerImplementation,
   SagaEventHandlerImplementation,
   ViewEventHandlerImplementation,
 } from "../handler";
@@ -32,6 +33,10 @@ export class UpdateGreeting {
 }
 export class GreetingUpdated {
   public constructor(public readonly updated: boolean) {}
+}
+
+export class QueryGreeting {
+  public constructor(public readonly id: string) {}
 }
 
 describe("EventSource (Postgres)", () => {
@@ -96,7 +101,7 @@ describe("EventSource (Postgres)", () => {
 
     await Promise.all([amqp.connect(), postgres.connect()]);
 
-    await app.setup.registerAggregateCommandHandlers([
+    await app.setup.registerAggregateCommandHandler(
       new AggregateCommandHandlerImplementation<CreateGreeting, GreetingCreated>({
         commandName: "create_greeting",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -110,6 +115,8 @@ describe("EventSource (Postgres)", () => {
           await ctx.apply(new GreetingCreated(ctx.command.create));
         },
       }),
+    );
+    await app.setup.registerAggregateCommandHandler(
       new AggregateCommandHandlerImplementation<UpdateGreeting, GreetingUpdated>({
         commandName: "update_greeting",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -123,9 +130,9 @@ describe("EventSource (Postgres)", () => {
           await ctx.apply(new GreetingUpdated(ctx.command.update));
         },
       }),
-    ]);
+    );
 
-    await app.setup.registerAggregateEventHandlers([
+    await app.setup.registerAggregateEventHandler(
       new AggregateEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -133,6 +140,8 @@ describe("EventSource (Postgres)", () => {
           ctx.mergeState(ctx.event);
         },
       }),
+    );
+    await app.setup.registerAggregateEventHandler(
       new AggregateEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -140,9 +149,17 @@ describe("EventSource (Postgres)", () => {
           ctx.mergeState(ctx.event);
         },
       }),
-    ]);
+    );
 
-    await app.setup.registerSagaEventHandlers([
+    await app.setup.registerQueryHandler(
+      new QueryHandlerImplementation<QueryGreeting, unknown>({
+        queryName: "query_greeting",
+        view: { name: "test_view", context: "es_postgres" },
+        handler: (ctx) => ctx.repositories.postgres.findById(ctx.query.id),
+      }),
+    );
+
+    await app.setup.registerSagaEventHandler(
       new SagaEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -156,6 +173,8 @@ describe("EventSource (Postgres)", () => {
           ctx.dispatch(new UpdateGreeting(true), { delay: 500 });
         },
       }),
+    );
+    await app.setup.registerSagaEventHandler(
       new SagaEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
         aggregate: { name: "test_aggregate", context: "es_postgres" },
@@ -167,9 +186,9 @@ describe("EventSource (Postgres)", () => {
           ctx.logger.info("GreetingUpdatedEvent", { event: ctx.event });
         },
       }),
-    ]);
+    );
 
-    await app.setup.registerViewEventHandlers([
+    await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
         adapters: { postgres: { ViewEntity } },
@@ -181,6 +200,8 @@ describe("EventSource (Postgres)", () => {
           ctx.setState("created", ctx.event.created);
         },
       }),
+    );
+    await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
         adapters: { postgres: { ViewEntity } },
@@ -192,13 +213,12 @@ describe("EventSource (Postgres)", () => {
           ctx.setState("updated", ctx.event.updated);
         },
       }),
-    ]);
+    );
 
     app.setup.registerCommandAggregate("create_greeting", "test_aggregate");
     app.setup.registerCommandAggregate("update_greeting", "test_aggregate");
 
-    app.setup.registerEventAggregate("greeting_created", "test_aggregate");
-    app.setup.registerEventAggregate("greeting_updated", "test_aggregate");
+    app.setup.registerViewEntity({ name: "test_view", context: "es_postgres" }, ViewEntity);
   }, 30000);
 
   afterAll(async () => {
@@ -261,7 +281,7 @@ describe("EventSource (Postgres)", () => {
       }),
     );
 
-    await expect(app.repositories.postgres("test_view").findById(id)).resolves.toStrictEqual({
+    await expect(app.query(new QueryGreeting(id))).resolves.toStrictEqual({
       id,
       name: "test_view",
       context: "es_postgres",
