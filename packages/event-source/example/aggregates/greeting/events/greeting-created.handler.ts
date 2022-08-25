@@ -8,16 +8,20 @@ import { AggregateEventHandler } from "../../../../src";
 const v1: AggregateEventHandler<GreetingCreated> = {
   version: 1,
   handler: async (ctx) => {
-    ctx.setState("created", true);
-    ctx.mergeState({ v1: { initial: ctx.event.initial } });
+    ctx.mergeState({
+      created: true,
+      v1: { initial: ctx.event.initial },
+    });
   },
 };
 
 const v2: AggregateEventHandler<GreetingCreated> = {
   version: 2,
   handler: async (ctx) => {
-    ctx.setState("created", true);
-    ctx.mergeState({ v2: { initial: ctx.event.initial } });
+    ctx.mergeState({
+      created: true,
+      v2: { initial: ctx.event.initial },
+    });
   },
 };
 

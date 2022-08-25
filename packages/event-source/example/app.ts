@@ -1,7 +1,7 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
+import { GetViewById } from "./queries/get-view-by-id.query";
 import { Logger, LogLevel } from "@lindorm-io/winston";
-import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
 import { StoredGreeting } from "./entities";
@@ -33,17 +33,6 @@ const main = async (): Promise<void> => {
     logger,
   );
 
-  const mongo = new MongoConnection(
-    {
-      host: "localhost",
-      port: 27011,
-      auth: { username: "root", password: "example" },
-      database: "default_db",
-      authSource: "admin",
-    },
-    logger,
-  );
-
   const postgres = new PostgresConnection(
     {
       host: "localhost",
@@ -59,12 +48,9 @@ const main = async (): Promise<void> => {
 
   const app = new EventSource<CreateGreeting | UpdateGreeting | RespondGreeting>(
     {
-      connections: {
-        amqp,
-        mongo,
-        postgres,
-      },
-      directory: join(__dirname, "aggregates"),
+      connections: { amqp, postgres },
+      aggregates: join(__dirname, "aggregates"),
+      queries: join(__dirname, "queries"),
       adapters: {
         eventStore: EventStoreType.POSTGRES,
         messageBus: MessageBusType.AMQP,
@@ -116,13 +102,11 @@ const main = async (): Promise<void> => {
 
   logger.info("inspect", { inspect });
 
-  const repositories: any = {};
+  const queries: any = {};
 
-  repositories.postgres = await app.repositories
-    .postgres("postgres_greetings")
-    .findById(aggregateId);
+  queries.getViewById = await app.query(new GetViewById(aggregateId));
 
-  logger.info("repositories", { repositories });
+  logger.info("queries", { queries });
 };
 
 main()

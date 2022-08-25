@@ -8,16 +8,20 @@ import { GreetingUpdated } from "./greeting-updated.event";
 const v1: AggregateEventHandler<GreetingUpdated> = {
   version: 1,
   handler: async (ctx) => {
-    ctx.setState("updated", true);
-    ctx.mergeState({ v1: { greeting: ctx.event.greeting } });
+    ctx.mergeState({
+      updated: true,
+      v1: { greeting: ctx.event.greeting },
+    });
   },
 };
 
 const v2: AggregateEventHandler<GreetingUpdated> = {
   version: 2,
   handler: async (ctx) => {
-    ctx.setState("updated", true);
-    ctx.mergeState({ v2: { greeting: ctx.event.greeting } });
+    ctx.mergeState({
+      updated: true,
+      v2: { greeting: ctx.event.greeting },
+    });
   },
 };
 
