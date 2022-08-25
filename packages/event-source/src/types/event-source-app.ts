@@ -65,10 +65,8 @@ export interface AppPublishOptions {
   aggregate?: Partial<AggregateIdentifier>;
   correlationId?: string;
   delay?: number;
-  mandatory?: boolean;
   origin?: string;
   originId?: string | null;
-  version?: number;
 }
 
 export type AppPublishResult = {

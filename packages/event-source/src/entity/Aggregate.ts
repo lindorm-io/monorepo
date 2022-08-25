@@ -3,8 +3,8 @@ import { AggregateEventHandlerImplementation } from "../handler";
 import { Command, DomainEvent } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { JOI_MESSAGE } from "../schema";
-import { assertSnakeCase, assertSchema, assertSchemaAsync } from "../util";
-import { cloneDeep, find, merge, snakeCase } from "lodash";
+import { assertSnakeCase, assertSchema, assertSchemaAsync, extractDtoData } from "../util";
+import { cloneDeep, find, merge } from "lodash";
 import {
   AggregateData,
   AggregateEventHandlerContext,
@@ -87,7 +87,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
 
   // public
 
-  public async apply(causation: Command, event: DtoClass, version?: number): Promise<void> {
+  public async apply(causation: Command, event: DtoClass): Promise<void> {
     this.logger.debug("Apply Command", { causation, event });
 
     await assertSchemaAsync(
@@ -100,14 +100,14 @@ export class Aggregate<TState extends State = State> implements IAggregate {
         .validateAsync({ causation, event }),
     );
 
-    const { ...data } = event;
+    const { name, version, data } = extractDtoData(event);
 
     await this.handleEvent(
       new DomainEvent(
         {
           aggregate: { id: this.id, name: this.name, context: this.context },
           data,
-          name: snakeCase(event.constructor.name),
+          name,
           origin: causation.origin,
           originId: causation.originId,
           version,

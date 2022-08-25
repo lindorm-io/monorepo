@@ -5,8 +5,8 @@ import { IMessageBus } from "@lindorm-io/amqp";
 import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
 import { ReplayEventName } from "../enum";
-import { StructureScanner } from "../util";
-import { merge, snakeCase } from "lodash";
+import { extractDtoData, StructureScanner } from "../util";
+import { merge } from "lodash";
 import { randomUUID } from "crypto";
 import {
   EventSourceConnections,
@@ -185,8 +185,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
   ): Promise<AppPublishResult> {
     await this.promise();
 
-    const name = snakeCase(command.constructor.name);
-    const { ...data } = command;
+    const { name, version, data } = extractDtoData(command);
 
     const commandAggregates = this.handlers.commandAggregates[name];
 
@@ -208,7 +207,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
     const [aggregateName] = commandAggregates;
 
     const resolvedAggregate = {
-      id: options.aggregate?.id || randomUUID(),
+      id: data.aggregateId || options.aggregate?.id || randomUUID(),
       name: options.aggregate?.name || aggregateName,
       context: this.handlers.context(options.aggregate?.context),
     };
@@ -221,7 +220,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       delay: options.delay,
       origin: options.origin || "event_source",
       originId: options.originId,
-      version: options.version,
+      version,
     });
 
     await JOI_MESSAGE.validateAsync(generated);
