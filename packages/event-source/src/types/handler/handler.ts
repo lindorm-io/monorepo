@@ -3,6 +3,11 @@ export interface HandlerIdentifier {
   context: string;
 }
 
+export interface HandlerIdentifierOptionalContext {
+  name: string;
+  context?: string;
+}
+
 export interface HandlerConditions {
   created?: boolean;
   permanent?: boolean;

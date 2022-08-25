@@ -1,8 +1,8 @@
+import { Data } from "../generic";
 import { EventEmitterListener } from "../event-emitter";
+import { IDomainViewStore } from "../view-store";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { IViewEventHandler } from "../handler";
-import { IDomainViewStore } from "../view-store";
-import { State } from "../generic";
 
 export interface ViewDomainOptions {
   messageBus: IMessageBus;
@@ -10,9 +10,6 @@ export interface ViewDomainOptions {
 }
 
 export interface IViewDomain {
-  on<S = State>(eventName: string, listener: EventEmitterListener<S>): void;
-
+  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void;
   registerEventHandler(eventHandler: IViewEventHandler): Promise<void>;
-  removeEventHandler(eventHandler: IViewEventHandler): Promise<void>;
-  removeAllEventHandlers(): Promise<void>;
 }

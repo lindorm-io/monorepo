@@ -1,11 +1,11 @@
+import { Data } from "../generic";
+import { EventEmitterListener } from "../event-emitter";
 import { IDomainEventStore } from "../event-store";
-import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 
 export interface ReplayDomainOptions {
   context: string;
   eventStore: IDomainEventStore;
-  logger: ILogger;
   messageBus: IMessageBus;
 }
 
@@ -22,7 +22,7 @@ export interface ReplayOptions {
 }
 
 export interface IReplayDomain {
-  on(eventName: string, listener: () => void): void;
+  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void;
   replay(options: ReplayOptions): Promise<void>;
   subscribe(): Promise<void>;
 }

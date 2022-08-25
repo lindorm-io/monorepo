@@ -2,9 +2,8 @@ import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IView, ViewIdentifier } from "../entity";
-import { MongoIndex } from "../mongo-base";
 import { View } from "../../entity";
-import { HandlerIdentifier, ViewEventHandlerAdapters } from "../handler";
+import { ViewEventHandlerAdapters } from "../handler";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
 export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
@@ -14,12 +13,6 @@ export interface ViewStoreOptions {
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   type: ViewStoreAdapterType;
-}
-
-export interface ViewStoreInitialiseData {
-  view: HandlerIdentifier;
-  collection?: string;
-  indices?: Array<MongoIndex>;
 }
 
 export interface ViewUpdateFilter extends ViewIdentifier {
@@ -43,7 +36,6 @@ export interface ViewClearProcessedCausationIdsData {
 }
 
 export interface IDomainViewStore {
-  initialise(data: Array<ViewStoreInitialiseData>): Promise<void>;
   causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
   clearProcessedCausationIds(saga: IView, adapters: ViewEventHandlerAdapters): Promise<View>;
   load(identifier: ViewIdentifier, adapters: ViewEventHandlerAdapters): Promise<View>;
@@ -52,7 +44,6 @@ export interface IDomainViewStore {
 }
 
 export interface IViewStore {
-  initialise(data: Array<ViewStoreInitialiseData>): Promise<void>;
   causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
   clearProcessedCausationIds(
     filter: ViewUpdateFilter,

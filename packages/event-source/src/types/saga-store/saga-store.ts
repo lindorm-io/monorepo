@@ -41,7 +41,6 @@ export interface SagaClearProcessedCausationIdsData {
 }
 
 export interface IDomainSagaStore {
-  initialise(): Promise<void>;
   causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(saga: ISaga): Promise<Saga>;
   clearProcessedCausationIds(saga: ISaga): Promise<Saga>;
@@ -51,7 +50,6 @@ export interface IDomainSagaStore {
 }
 
 export interface ISagaStore {
-  initialise(): Promise<void>;
   causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(
     filter: SagaUpdateFilter,

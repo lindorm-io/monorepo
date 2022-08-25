@@ -11,15 +11,11 @@ export interface AggregateDomainOptions {
 }
 
 export interface IAggregateDomain {
+  // on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void;
   registerCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
   registerEventHandler(handler: IAggregateEventHandler): Promise<void>;
-
-  removeCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
-  removeEventHandler(handler: IAggregateEventHandler): Promise<void>;
-
-  removeAllCommandHandlers(): Promise<void>;
-  removeAllEventHandlers(): Promise<void>;
-
+  resubscribeCommandHandlers(): Promise<void>;
+  unsubscribeCommandHandlers(): Promise<void>;
   inspect<TState extends State = State>(
     aggregateIdentifier: AggregateIdentifier,
   ): Promise<Aggregate<TState>>;

@@ -7,4 +7,4 @@ export interface EventEmitterData<TState extends State = State> extends Standard
   state: TState;
 }
 
-export type EventEmitterListener<D = Data> = (data: D) => void;
+export type EventEmitterListener<TData = Data> = (data: TData) => void;

@@ -36,7 +36,6 @@ export interface EventStoreFindFilter {
 }
 
 export interface IDomainEventStore {
-  initialise(): Promise<void>;
   listEvents(from: Date, limit: number): Promise<Array<DomainEvent>>;
   load(
     aggregateIdentifier: AggregateIdentifier,
@@ -46,7 +45,6 @@ export interface IDomainEventStore {
 }
 
 export interface IEventStore {
-  initialise(): Promise<void>;
   find(filter: EventStoreFindFilter): Promise<Array<EventData>>;
   insert(attributes: EventStoreAttributes): Promise<void>;
   listEvents(from: Date, limit: number): Promise<Array<EventData>>;

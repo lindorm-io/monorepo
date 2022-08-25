@@ -11,9 +11,7 @@ export interface SagaDomainOptions {
 }
 
 export interface ISagaDomain {
+  // on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void;
   registerEventHandler(eventHandler: ISagaEventHandler): Promise<void>;
-  removeEventHandler(eventHandler: ISagaEventHandler): Promise<void>;
-  removeAllEventHandlers(): Promise<void>;
-
   inspect<TState extends State = State>(identifier: SagaIdentifier): Promise<Saga<TState>>;
 }
