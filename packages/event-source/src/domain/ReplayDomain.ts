@@ -23,8 +23,8 @@ export class ReplayDomain implements IReplayDomain {
   private readonly logger: ILogger;
   private readonly context: string;
 
-  public constructor(options: ReplayDomainOptions) {
-    this.logger = options.logger.createChildLogger(["ReplayDomain"]);
+  public constructor(options: ReplayDomainOptions, logger: ILogger) {
+    this.logger = logger.createChildLogger(["ReplayDomain"]);
 
     this.messageBus = options.messageBus;
     this.eventStore = options.eventStore;

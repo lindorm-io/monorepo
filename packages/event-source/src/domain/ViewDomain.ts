@@ -7,7 +7,7 @@ import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { View } from "../entity";
 import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, remove, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -139,61 +139,6 @@ export class ViewDomain implements IViewDomain {
         },
         view: eventHandler.view,
       });
-    }
-  }
-
-  public async removeEventHandler(eventHandler: ViewEventHandlerImplementation): Promise<void> {
-    this.logger.debug("Removing event handler", {
-      name: eventHandler.eventName,
-      aggregate: eventHandler.aggregate,
-      view: eventHandler.view,
-    });
-
-    if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "ViewEventHandler",
-          actual: typeof eventHandler,
-        },
-      });
-    }
-
-    const contexts = isArray(eventHandler.aggregate.context)
-      ? eventHandler.aggregate.context
-      : [eventHandler.aggregate.context];
-
-    for (const context of contexts) {
-      remove(this.eventHandlers, {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: eventHandler.aggregate.context,
-        },
-        view: {
-          name: eventHandler.view.name,
-          context: eventHandler.view.context,
-        },
-      });
-
-      await this.messageBus.unsubscribe({
-        queue: ViewDomain.getQueue(context, eventHandler),
-        topic: ViewDomain.getTopic(context, eventHandler),
-      });
-
-      this.logger.verbose("Event handler removed", {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: context,
-        },
-        view: eventHandler.view,
-      });
-    }
-  }
-
-  public async removeAllEventHandlers(): Promise<void> {
-    for (const handler of this.eventHandlers) {
-      await this.removeEventHandler(handler);
     }
   }
 

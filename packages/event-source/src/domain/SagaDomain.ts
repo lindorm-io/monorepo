@@ -8,7 +8,7 @@ import { Saga } from "../entity";
 import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, remove, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -119,61 +119,6 @@ export class SagaDomain implements ISagaDomain {
         },
         saga: eventHandler.saga,
       });
-    }
-  }
-
-  public async removeEventHandler(eventHandler: SagaEventHandlerImplementation): Promise<void> {
-    this.logger.debug("Removing event handler", {
-      name: eventHandler.eventName,
-      aggregate: eventHandler.aggregate,
-      saga: eventHandler.saga,
-    });
-
-    if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "SagaEventHandler",
-          actual: typeof eventHandler,
-        },
-      });
-    }
-
-    const contexts = isArray(eventHandler.aggregate.context)
-      ? eventHandler.aggregate.context
-      : [eventHandler.aggregate.context];
-
-    for (const context of contexts) {
-      remove(this.eventHandlers, {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: eventHandler.aggregate.context,
-        },
-        saga: {
-          name: eventHandler.saga.name,
-          context: eventHandler.saga.context,
-        },
-      });
-
-      await this.messageBus.unsubscribe({
-        queue: SagaDomain.getQueue(context, eventHandler),
-        topic: SagaDomain.getTopic(context, eventHandler),
-      });
-
-      this.logger.verbose("Event handler removed", {
-        eventName: eventHandler.eventName,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: context,
-        },
-        saga: eventHandler.saga,
-      });
-    }
-  }
-
-  public async removeAllEventHandlers(): Promise<void> {
-    for (const handler of this.eventHandlers) {
-      await this.removeEventHandler(handler);
     }
   }
 

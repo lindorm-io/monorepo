@@ -4,7 +4,7 @@ import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, filter, find, findLast, remove, some } from "lodash";
+import { cloneDeep, filter, find, findLast, some } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -159,87 +159,38 @@ export class AggregateDomain implements IAggregateDomain {
     });
   }
 
-  public async removeCommandHandler(
-    commandHandler: AggregateCommandHandlerImplementation,
-  ): Promise<void> {
-    this.logger.debug("Removing command handler", {
-      aggregate: commandHandler.aggregate,
-      commandName: commandHandler.commandName,
-      version: commandHandler.version,
-    });
+  public async unsubscribeCommandHandlers(): Promise<void> {
+    this.logger.debug("Unsubscribing command handlers");
 
-    if (!(commandHandler instanceof AggregateCommandHandlerImplementation)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "AggregateDomainCommandHandler",
-          actual: typeof commandHandler,
-        },
-      });
-    }
-
-    remove(this.commandHandlers, {
-      aggregate: {
-        name: commandHandler.aggregate.name,
-        context: commandHandler.aggregate.context,
-      },
-      commandName: commandHandler.commandName,
-      version: commandHandler.version,
-    });
-
-    await this.messageBus.unsubscribe({
-      queue: AggregateDomain.getQueue(commandHandler),
-      topic: AggregateDomain.getTopic(commandHandler),
-    });
-
-    this.logger.verbose("Command handler removed", {
-      aggregate: commandHandler.aggregate,
-      commandName: commandHandler.commandName,
-      version: commandHandler.version,
-    });
-  }
-
-  public async removeEventHandler(
-    eventHandler: AggregateEventHandlerImplementation,
-  ): Promise<void> {
-    this.logger.debug("Removing event handler", {
-      aggregate: eventHandler.aggregate,
-      eventName: eventHandler.eventName,
-      version: eventHandler.version,
-    });
-
-    if (!(eventHandler instanceof AggregateEventHandlerImplementation)) {
-      throw new LindormError("Invalid handler type", {
-        data: {
-          expect: "AggregateEventHandler",
-          actual: typeof eventHandler,
-        },
-      });
-    }
-
-    remove(this.eventHandlers, {
-      aggregate: {
-        name: eventHandler.aggregate.name,
-        context: eventHandler.aggregate.context,
-      },
-      eventName: eventHandler.eventName,
-    });
-
-    this.logger.verbose("Event handler removed", {
-      aggregate: eventHandler.aggregate,
-      eventName: eventHandler.eventName,
-      version: eventHandler.version,
-    });
-  }
-
-  public async removeAllCommandHandlers(): Promise<void> {
     for (const handler of this.commandHandlers) {
-      await this.removeCommandHandler(handler);
+      await this.messageBus.unsubscribe({
+        queue: AggregateDomain.getQueue(handler),
+        topic: AggregateDomain.getTopic(handler),
+      });
+
+      this.logger.verbose("Command handler unsubscribed", {
+        aggregate: handler.aggregate,
+        commandName: handler.commandName,
+        version: handler.version,
+      });
     }
   }
 
-  public async removeAllEventHandlers(): Promise<void> {
-    for (const handler of this.eventHandlers) {
-      await this.removeEventHandler(handler);
+  public async resubscribeCommandHandlers(): Promise<void> {
+    this.logger.debug("Resubscribing command handlers");
+
+    for (const handler of this.commandHandlers) {
+      await this.messageBus.subscribe({
+        callback: (command: Command) => this.handleCommand(command),
+        queue: AggregateDomain.getQueue(handler),
+        topic: AggregateDomain.getTopic(handler),
+      });
+
+      this.logger.verbose("Command handler resubscribed", {
+        aggregate: handler.aggregate,
+        commandName: handler.commandName,
+        version: handler.version,
+      });
     }
   }
 
@@ -315,7 +266,7 @@ export class AggregateDomain implements IAggregateDomain {
           validator(aggregate);
         }
 
-        const context: AggregateCommandHandlerContext = {
+        const ctx: AggregateCommandHandlerContext = {
           command: cloneDeep(command.data),
           logger: this.logger.createChildLogger(["AggregateCommandHandler"]),
           state: cloneDeep(aggregate.state),
@@ -323,7 +274,7 @@ export class AggregateDomain implements IAggregateDomain {
           apply: aggregate.apply.bind(aggregate, command),
         };
 
-        await commandHandler.handler(context);
+        await commandHandler.handler(ctx);
       }
 
       const events = await this.store.save(aggregate, command);
