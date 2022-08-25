@@ -163,7 +163,7 @@ export class Saga<TState extends State = State> implements ISaga {
             aggregate: causation.aggregate,
             correlationId: causation.correlationId,
             origin: "saga",
-            originator: causation.originator,
+            originId: causation.originId,
           },
           {
             name: snakeCase(command.constructor.name),
@@ -254,7 +254,7 @@ export class Saga<TState extends State = State> implements ISaga {
           data,
           delay,
           origin: "saga",
-          originator: causation.originator,
+          originId: causation.originId,
         },
         causation,
       ),

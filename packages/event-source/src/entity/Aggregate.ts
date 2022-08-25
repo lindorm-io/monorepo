@@ -109,7 +109,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
           data,
           name: snakeCase(event.constructor.name),
           origin: causation.origin,
-          originator: causation.originator,
+          originId: causation.originId,
           version,
         },
         causation,

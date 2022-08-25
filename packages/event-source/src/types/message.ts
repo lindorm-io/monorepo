@@ -20,7 +20,7 @@ export interface MessageOptions<TData extends Data = Data> {
   delay?: number;
   mandatory?: boolean;
   origin?: string;
-  originator?: string | null;
+  originId?: string | null;
   timestamp?: Date;
   version?: number;
 }
@@ -34,7 +34,7 @@ export interface IMessage extends IAmqpMessage {
   causationId: string;
   correlationId: string;
   origin: string;
-  originator: string | null;
+  originId: string | null;
   version: number;
   type: MessageBaseType;
 }

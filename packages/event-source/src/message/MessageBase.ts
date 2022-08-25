@@ -12,7 +12,7 @@ export abstract class MessageBase<TData extends Data = Data> implements IMessage
   public readonly mandatory: boolean;
   public readonly name: string;
   public readonly origin: string;
-  public readonly originator: string | null;
+  public readonly originId: string | null;
   public readonly timestamp: Date;
   public readonly type: MessageBaseType;
   public readonly version: number;
@@ -27,7 +27,7 @@ export abstract class MessageBase<TData extends Data = Data> implements IMessage
     this.mandatory = options.mandatory || false;
     this.name = options.name;
     this.origin = options.origin || "unknown";
-    this.originator = options.originator || null;
+    this.originId = options.originId || null;
     this.timestamp = options.timestamp ? new Date(options.timestamp) : new Date();
     this.type = options.type || MessageType.UNKNOWN;
     this.version = options.version || 1;

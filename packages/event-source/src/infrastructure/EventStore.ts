@@ -101,7 +101,7 @@ export class EventStore implements IDomainEventStore {
       })),
       expected_events: expectedEvents.length,
       origin: causation.origin,
-      originator: causation.originator,
+      originId: causation.originId,
       previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
       timestamp: new Date(),
     });
@@ -151,7 +151,7 @@ export class EventStore implements IDomainEventStore {
       correlationId: data.correlation_id,
       data: data.data,
       origin: data.origin,
-      originator: data.originator,
+      originId: data.originId,
       timestamp: data.timestamp,
       version: data.version,
     });

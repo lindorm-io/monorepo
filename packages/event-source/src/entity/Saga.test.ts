@@ -71,7 +71,7 @@ describe("Saga", () => {
         delay: 0,
         mandatory: true,
         origin: "saga",
-        originator: null,
+        originId: null,
         timestamp: expect.any(Date),
         topic: "default.aggregate_name.dispatched_command",
         type: "command",

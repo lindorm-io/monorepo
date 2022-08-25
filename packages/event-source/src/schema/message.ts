@@ -18,7 +18,7 @@ export const JOI_MESSAGE = Joi.object<IMessage>().keys({
   mandatory: Joi.boolean().required(),
   name: Joi.string().required(),
   origin: Joi.string().required(),
-  originator: Joi.string().allow(null).required(),
+  originId: Joi.string().allow(null).required(),
   topic: Joi.string().required(),
   timestamp: Joi.date().required(),
   type: Joi.string()

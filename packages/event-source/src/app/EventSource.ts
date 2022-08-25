@@ -220,7 +220,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass> implements IEvent
       correlationId: options.correlationId,
       delay: options.delay,
       origin: options.origin || "event_source",
-      originator: options.originator,
+      originId: options.originId,
       version: options.version,
     });
 

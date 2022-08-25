@@ -67,7 +67,7 @@ export interface AppPublishOptions {
   delay?: number;
   mandatory?: boolean;
   origin?: string;
-  originator?: string | null;
+  originId?: string | null;
   version?: number;
 }
 

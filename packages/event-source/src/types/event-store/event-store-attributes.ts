@@ -15,7 +15,7 @@ export interface EventStoreAttributes {
   events: Array<EventAttributes>;
   expected_events: number;
   origin: string;
-  originator: string | null;
+  originId: string | null;
   previous_event_id: string | null;
   timestamp: Date;
 }

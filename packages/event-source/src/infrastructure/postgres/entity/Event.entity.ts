@@ -40,7 +40,7 @@ export class EventEntity implements EventStoreAttributes {
   public readonly origin: string;
 
   @Column({ nullable: true })
-  public readonly originator: string | null;
+  public readonly originId: string | null;
 
   @Column("uuid", { nullable: true })
   public readonly previous_event_id: string | null;

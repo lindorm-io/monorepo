@@ -23,7 +23,7 @@ export interface EventData {
   correlation_id: string;
   data: Record<string, any>;
   origin: string;
-  originator: string | null;
+  originId: string | null;
   timestamp: Date;
   version: number;
 }

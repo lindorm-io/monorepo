@@ -56,7 +56,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
         events: data.events,
         expected_events: data.expected_events,
         origin: data.origin,
-        originator: data.originator,
+        originId: data.originId,
         previous_event_id: data.previous_event_id,
         timestamp: data.timestamp,
       });
@@ -122,7 +122,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
           correlation_id: item.correlation_id,
           data: event.data,
           origin: item.origin,
-          originator: item.originator,
+          originId: item.originId,
           timestamp: event.timestamp,
           version: event.version,
         });
