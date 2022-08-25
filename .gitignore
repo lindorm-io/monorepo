@@ -7,8 +7,9 @@ dist
 node_modules
 tmp
 
+*.log
 .DS_Store
 .env
 .npmrc
+TODO.txt
 Thumbs.db
-*.log
