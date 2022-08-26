@@ -1,8 +1,6 @@
-import { AmqpConnection } from "@lindorm-io/amqp";
 import { DomainEvent } from "../message";
 import { MessageBus, ViewStore } from "../infrastructure";
 import { MessageBusType, ViewStoreType } from "../enum";
-import { MongoConnection } from "@lindorm-io/mongo";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { ViewDomain } from "./ViewDomain";
@@ -12,93 +10,80 @@ import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
 import {
   TEST_VIEW_EVENT_HANDLER,
-  TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
   TEST_VIEW_EVENT_HANDLER_CREATE,
   TEST_VIEW_EVENT_HANDLER_DESTROY,
+  TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
   TEST_VIEW_EVENT_HANDLER_SET_STATE,
 } from "../fixtures/view-event-handler.fixture";
 import {
-  TEST_DOMAIN_EVENT_ADD_FIELD,
   TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_DESTROY,
+  TEST_DOMAIN_EVENT_MERGE_STATE,
   TEST_DOMAIN_EVENT_SET_STATE,
 } from "../fixtures/domain-event.fixture";
 
 describe("ViewDomain", () => {
   const logger = createMockLogger();
 
-  let amqp: AmqpConnection;
   let domain: ViewDomain;
   let eventHandlers: Array<ViewEventHandlerImplementation>;
   let messageBus: MessageBus;
-  let mongo: MongoConnection;
   let store: ViewStore;
 
   beforeAll(async () => {
-    amqp = new AmqpConnection(
-      {
-        hostname: "localhost",
-        port: 5671,
-        connectInterval: 500,
-        connectTimeout: 30000,
-      },
-      logger,
-    );
-
-    mongo = new MongoConnection(
-      {
-        host: "localhost",
-        port: 27011,
-        auth: { username: "root", password: "example" },
-        authSource: "admin",
-        database: "ViewDomain",
-      },
-      logger,
-    );
-
-    messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
-    store = new ViewStore({ mongo, type: ViewStoreType.MONGO }, logger);
+    messageBus = new MessageBus({ type: MessageBusType.MEMORY }, logger);
+    store = new ViewStore({ type: ViewStoreType.MEMORY }, logger);
     domain = new ViewDomain({ messageBus, store }, logger);
 
     eventHandlers = [
       TEST_VIEW_EVENT_HANDLER,
       TEST_VIEW_EVENT_HANDLER_CREATE,
-      TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
       TEST_VIEW_EVENT_HANDLER_DESTROY,
+      TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
       TEST_VIEW_EVENT_HANDLER_SET_STATE,
     ];
 
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
     }
-
-    await Promise.all([amqp.connect(), mongo.connect()]);
-  }, 30000);
-
-  afterAll(async () => {
-    await Promise.all([amqp.disconnect(), mongo.disconnect()]);
   });
 
   test("should handle multiple published events", async () => {
     const aggregate = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
     const view = { ...TEST_VIEW_IDENTIFIER, id: aggregate.id };
 
-    const eventCreate = new DomainEvent({ ...TEST_DOMAIN_EVENT_CREATE, aggregate });
-    const eventAddField = new DomainEvent({ ...TEST_DOMAIN_EVENT_ADD_FIELD, aggregate });
-    const eventSetState = new DomainEvent({ ...TEST_DOMAIN_EVENT_SET_STATE, aggregate });
-    const eventDestroy = new DomainEvent({ ...TEST_DOMAIN_EVENT_DESTROY, aggregate });
+    const eventCreate = new DomainEvent({
+      ...TEST_DOMAIN_EVENT_CREATE,
+      aggregate,
+      timestamp: new Date("2022-01-01T08:00:00.000Z"),
+    });
+    const eventAddField = new DomainEvent({
+      ...TEST_DOMAIN_EVENT_MERGE_STATE,
+      aggregate,
+      timestamp: new Date("2022-01-02T08:00:00.000Z"),
+    });
+    const eventSetState = new DomainEvent({
+      ...TEST_DOMAIN_EVENT_SET_STATE,
+      aggregate,
+      timestamp: new Date("2022-01-03T08:00:00.000Z"),
+    });
+    const eventDestroy = new DomainEvent({
+      ...TEST_DOMAIN_EVENT_DESTROY,
+      aggregate,
+      timestamp: new Date("2022-01-04T08:00:00.000Z"),
+    });
 
     await expect(messageBus.publish(eventCreate)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(eventAddField)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(eventSetState)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(store.load(view, {})).resolves.toStrictEqual(
       expect.objectContaining({
@@ -107,34 +92,7 @@ describe("ViewDomain", () => {
         context: "default",
         destroyed: true,
         hash: expect.any(String),
-        meta: {
-          created: {
-            removed: false,
-            timestamp: expect.any(Date),
-            value: true,
-          },
-          field: {
-            record: [
-              {
-                removed: false,
-                timestamp: expect.any(Date),
-                value: { record: true },
-              },
-            ],
-            string: [
-              {
-                removed: false,
-                timestamp: expect.any(Date),
-                value: "value",
-              },
-            ],
-          },
-          path: {
-            removed: false,
-            timestamp: expect.any(Date),
-            value: { value: { domainEventData: true } },
-          },
-        },
+        modified: expect.any(Date),
         processedCausationIds: [
           eventCreate.id,
           eventAddField.id,
@@ -144,12 +102,11 @@ describe("ViewDomain", () => {
         revision: 4,
         state: {
           created: true,
-          field: {
-            record: [{ record: true }],
-            string: ["value"],
+          merge: {
+            domainEventData: true,
           },
-          path: {
-            value: { domainEventData: true },
+          set: {
+            domainEventData: true,
           },
         },
       }),

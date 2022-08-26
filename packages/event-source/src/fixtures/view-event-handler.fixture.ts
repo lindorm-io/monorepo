@@ -4,11 +4,9 @@ import { ViewEventHandlerImplementation } from "../handler";
 import { ViewEventHandlerOptions } from "../types";
 import {
   TEST_DOMAIN_EVENT,
-  TEST_DOMAIN_EVENT_ADD_FIELD,
   TEST_DOMAIN_EVENT_CREATE,
   TEST_DOMAIN_EVENT_DESTROY,
-  TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL,
-  TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH,
+  TEST_DOMAIN_EVENT_MERGE_STATE,
   TEST_DOMAIN_EVENT_SET_STATE,
   TEST_DOMAIN_EVENT_THROWS,
 } from "./domain-event.fixture";
@@ -39,16 +37,7 @@ export const TEST_VIEW_EVENT_HANDLER_CREATE = new ViewEventHandlerImplementation
   eventName: TEST_DOMAIN_EVENT_CREATE.name,
   conditions: { created: false },
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("created", true);
-  }),
-});
-
-export const TEST_VIEW_EVENT_HANDLER_ADD_FIELD = new ViewEventHandlerImplementation({
-  ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
-  eventName: TEST_DOMAIN_EVENT_ADD_FIELD.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.addListItem("field.string", "value");
-    ctx.addListItem("field.record", { record: true });
+    ctx.setState({ created: true });
   }),
 });
 
@@ -60,19 +49,11 @@ export const TEST_VIEW_EVENT_HANDLER_DESTROY = new ViewEventHandlerImplementatio
   }),
 });
 
-export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL = new ViewEventHandlerImplementation({
+export const TEST_VIEW_EVENT_HANDLER_MERGE_STATE = new ViewEventHandlerImplementation({
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
-  eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_EQUAL.name,
+  eventName: TEST_DOMAIN_EVENT_MERGE_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.removeListItemWhereEqual("path.string", "value");
-  }),
-});
-
-export const TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH = new ViewEventHandlerImplementation({
-  ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
-  eventName: TEST_DOMAIN_EVENT_REMOVE_FIELD_WHERE_MATCH.name,
-  handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.removeListItemWhereMatch("path.record", { record: true });
+    ctx.mergeState({ merge: ctx.event });
   }),
 });
 
@@ -80,7 +61,7 @@ export const TEST_VIEW_EVENT_HANDLER_SET_STATE = new ViewEventHandlerImplementat
   ...TEST_VIEW_EVENT_HANDLER_OPTIONS,
   eventName: TEST_DOMAIN_EVENT_SET_STATE.name,
   handler: jest.fn().mockImplementation(async (ctx) => {
-    ctx.setState("path", { value: ctx.event });
+    ctx.setState({ ...ctx.state, set: ctx.event });
   }),
 });
 

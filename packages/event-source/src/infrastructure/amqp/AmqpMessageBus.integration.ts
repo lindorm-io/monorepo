@@ -23,7 +23,6 @@ describe("AmqpMessageBus", () => {
       },
       logger,
     );
-
     await connection.connect();
 
     messageBus = new AmqpMessageBus(connection, logger);
@@ -41,7 +40,8 @@ describe("AmqpMessageBus", () => {
     };
 
     await messageBus.subscribe([commandSub, domainEventSub]);
-    await sleep(2000);
+
+    await sleep(1000);
   }, 60000);
 
   afterAll(async () => {
@@ -61,7 +61,8 @@ describe("AmqpMessageBus", () => {
     });
 
     await expect(messageBus.publish([command])).resolves.toBeUndefined();
-    await sleep(2000);
+
+    await sleep(1000);
 
     expect(commandSub.callback).toHaveBeenCalledTimes(1);
     expect(commandSub.callback).toHaveBeenCalledWith(command);
@@ -94,7 +95,8 @@ describe("AmqpMessageBus", () => {
     );
 
     await expect(messageBus.publish([domainEvent])).resolves.toBeUndefined();
-    await sleep(2000);
+
+    await sleep(500);
 
     expect(domainEventSub.callback).toHaveBeenCalledTimes(1);
     expect(domainEventSub.callback).toHaveBeenCalledWith(domainEvent);

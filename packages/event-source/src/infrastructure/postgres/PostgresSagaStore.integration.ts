@@ -40,10 +40,9 @@ describe("PostgresSagaStore", () => {
       },
       logger,
     );
+    await connection.connect();
 
     store = new PostgresSagaStore(connection, logger);
-
-    await connection.connect();
   }, 10000);
 
   beforeEach(() => {

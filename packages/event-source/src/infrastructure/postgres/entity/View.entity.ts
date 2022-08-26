@@ -17,8 +17,8 @@ export abstract class ViewEntity implements ViewStoreAttributes {
   @Column()
   public hash: string;
 
-  @Column("jsonb")
-  public meta: Record<string, any>;
+  @Column("timestamp", { nullable: true })
+  public modified: Date;
 
   @Column("jsonb")
   public processed_causation_ids: Array<string>;

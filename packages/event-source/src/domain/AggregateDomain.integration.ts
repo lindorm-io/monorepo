@@ -1,9 +1,7 @@
 import { AggregateDomain } from "./AggregateDomain";
-import { AmqpConnection } from "@lindorm-io/amqp";
 import { Command } from "../message";
 import { EventStore, MessageBus } from "../infrastructure";
 import { EventStoreType, MessageBusType } from "../enum";
-import { MongoConnection } from "@lindorm-io/mongo";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
@@ -36,38 +34,15 @@ import {
 describe("AggregateDomain", () => {
   const logger = createMockLogger();
 
-  let amqp: AmqpConnection;
   let commandHandlers: Array<AggregateCommandHandlerImplementation>;
   let domain: AggregateDomain;
   let eventHandlers: Array<AggregateEventHandlerImplementation>;
   let messageBus: MessageBus;
-  let mongo: MongoConnection;
   let store: EventStore;
 
   beforeAll(async () => {
-    amqp = new AmqpConnection(
-      {
-        hostname: "localhost",
-        port: 5671,
-        connectInterval: 500,
-        connectTimeout: 30000,
-      },
-      logger,
-    );
-
-    mongo = new MongoConnection(
-      {
-        host: "localhost",
-        port: 27011,
-        auth: { username: "root", password: "example" },
-        authSource: "admin",
-        database: "AggregateDomain",
-      },
-      logger,
-    );
-
-    messageBus = new MessageBus({ amqp, type: MessageBusType.AMQP }, logger);
-    store = new EventStore({ mongo, type: EventStoreType.MONGO }, logger);
+    messageBus = new MessageBus({ type: MessageBusType.MEMORY }, logger);
+    store = new EventStore({ type: EventStoreType.MEMORY }, logger);
     domain = new AggregateDomain({ messageBus, store }, logger);
 
     commandHandlers = [
@@ -93,12 +68,6 @@ describe("AggregateDomain", () => {
     for (const handler of eventHandlers) {
       await domain.registerEventHandler(handler);
     }
-
-    await Promise.all([amqp.connect(), mongo.connect()]);
-  }, 30000);
-
-  afterAll(async () => {
-    await Promise.all([amqp.disconnect(), mongo.disconnect()]);
   });
 
   test("should handle multiple published commands", async () => {
@@ -110,16 +79,16 @@ describe("AggregateDomain", () => {
     const commandDestroy = new Command({ ...TEST_COMMAND_DESTROY, aggregate });
 
     await expect(messageBus.publish(commandCreate)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(commandMergeState)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(commandDestroyNext)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(messageBus.publish(commandDestroy)).resolves.toBeUndefined();
-    await sleep(2000);
+    await sleep(50);
 
     await expect(store.load(aggregate, eventHandlers)).resolves.toStrictEqual(
       expect.objectContaining({

@@ -27,10 +27,9 @@ describe("PostgresEventStore", () => {
       },
       logger,
     );
+    await connection.connect();
 
     store = new PostgresEventStore(connection, logger);
-
-    await connection.connect();
   }, 10000);
 
   beforeEach(() => {

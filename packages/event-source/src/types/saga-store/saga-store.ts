@@ -1,8 +1,8 @@
 import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { ISaga, SagaIdentifier } from "../entity";
-import { Saga } from "../../entity";
+import { ISaga, SagaIdentifier } from "../model";
+import { Saga } from "../../model";
 import { SagaStoreAttributes } from "./saga-store-attributes";
 
 export type SagaStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";

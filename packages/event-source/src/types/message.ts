@@ -1,4 +1,4 @@
-import { AggregateIdentifier } from "./entity";
+import { AggregateIdentifier } from "./model";
 import { Data } from "./generic";
 import { IMessage as IAmqpMessage } from "@lindorm-io/amqp";
 

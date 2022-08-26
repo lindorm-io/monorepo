@@ -1,7 +1,7 @@
-import { ConcurrencyError } from "./ConcurrencyError";
+import { DomainError } from "./DomainError";
 
-export class ViewNotUpdatedError extends ConcurrencyError {
+export class ViewNotUpdatedError extends DomainError {
   public constructor(description: string) {
-    super("Cache was not updated", { description });
+    super("View was not updated", { description, permanent: true });
   }
 }

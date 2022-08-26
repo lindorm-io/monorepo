@@ -14,13 +14,17 @@ import {
 const projection: Partial<Record<keyof ViewStoreAttributes, number>> & { _id: 0 } = {
   _id: 0,
   id: 1,
+  modified: 1,
   revision: 1,
   state: 1,
   created_at: 1,
   updated_at: 1,
 };
 
-export class MongoViewRepository<S = State> extends MongoBase implements IMongoRepository<S> {
+export class MongoViewRepository<TState = State>
+  extends MongoBase
+  implements IMongoRepository<TState>
+{
   private readonly collectionName: string;
   private readonly viewIdentifier: HandlerIdentifier;
 
@@ -34,7 +38,7 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
   public async find(
     filter: Filter<ViewStoreAttributes> = {},
     options: FindOptions<ViewStoreAttributes> = {},
-  ): Promise<Array<ViewRepositoryData<S>>> {
+  ): Promise<Array<ViewRepositoryData<TState>>> {
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );
@@ -53,14 +57,15 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
 
       this.logger.debug("Found views", { result });
 
-      const array: Array<ViewRepositoryData<S>> = [];
+      const array: Array<ViewRepositoryData<TState>> = [];
       for (const item of result) {
         array.push({
           id: item.id,
           name: this.viewIdentifier.name,
           context: this.viewIdentifier.context,
+          modified: item.modified,
           revision: item.revision,
-          state: item.state as S,
+          state: item.state as TState,
           created_at: item.created_at,
           updated_at: item.updated_at,
         });
@@ -74,7 +79,7 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
     }
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<S>> {
+  public async findById(id: string): Promise<ViewRepositoryData<TState>> {
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );
@@ -96,8 +101,9 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
         id: result.id,
         name: this.viewIdentifier.name,
         context: this.viewIdentifier.context,
+        modified: result.modified,
         revision: result.revision,
-        state: result.state as S,
+        state: result.state as TState,
         created_at: result.created_at,
         updated_at: result.updated_at,
       };
@@ -111,7 +117,7 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
   public async findOne(
     filter: Filter<ViewStoreAttributes>,
     options: FindOptions<ViewStoreAttributes> = {},
-  ): Promise<ViewRepositoryData<S>> {
+  ): Promise<ViewRepositoryData<TState>> {
     const collection = this.connection.database.collection<ViewStoreAttributes>(
       this.collectionName,
     );
@@ -139,8 +145,9 @@ export class MongoViewRepository<S = State> extends MongoBase implements IMongoR
         id: result.id,
         name: this.viewIdentifier.name,
         context: this.viewIdentifier.context,
+        modified: result.modified,
         revision: result.revision,
-        state: result.state as S,
+        state: result.state as TState,
         created_at: result.created_at,
         updated_at: result.updated_at,
       };

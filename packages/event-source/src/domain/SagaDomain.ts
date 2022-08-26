@@ -1,14 +1,21 @@
+import EventEmitter from "events";
 import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
-import { HandlerIdentifier, ISagaEventHandler, SagaEventHandlerContext } from "../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
-import { Saga } from "../entity";
+import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
 import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
+import {
+  EventEmitterSagaData,
+  EventEmitterListener,
+  HandlerIdentifier,
+  ISagaEventHandler,
+  SagaEventHandlerContext,
+} from "../types";
 import {
   ConcurrencyError,
   DomainError,
@@ -19,18 +26,27 @@ import {
 } from "../error";
 
 export class SagaDomain implements ISagaDomain {
+  private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<ISagaEventHandler>;
   private readonly logger: ILogger;
   private messageBus: IMessageBus;
   private store: IDomainSagaStore;
 
   public constructor(options: SagaDomainOptions, logger: ILogger) {
+    this.eventEmitter = new EventEmitter();
     this.logger = logger.createChildLogger(["SagaDomain"]);
 
     this.messageBus = options.messageBus;
     this.store = options.store;
 
     this.eventHandlers = [];
+  }
+
+  public on<TState extends State = State>(
+    eventName: string,
+    listener: EventEmitterListener<TState>,
+  ): void {
+    this.eventEmitter.on(eventName, listener);
   }
 
   public async registerEventHandler(eventHandler: SagaEventHandlerImplementation): Promise<void> {
@@ -241,12 +257,15 @@ export class SagaDomain implements ISagaDomain {
         destroy: saga.destroy.bind(saga),
         dispatch: saga.dispatch.bind(saga, event),
         mergeState: saga.mergeState.bind(saga),
+        setState: saga.setState.bind(saga),
         timeout: saga.timeout.bind(saga, event),
       };
 
       await eventHandler.handler(context);
 
       const saved = await this.store.save(saga, event);
+
+      this.emit(saved);
 
       this.logger.debug("Saved saga at new revision", {
         id: saved.id,
@@ -315,6 +334,21 @@ export class SagaDomain implements ISagaDomain {
 
     await this.store.processCausationIds(saga);
     return await this.store.clearProcessedCausationIds(saga);
+  }
+
+  private emit<TState>(saga: Saga<TState>): void {
+    const data: EventEmitterSagaData<TState> = {
+      id: saga.id,
+      name: saga.name,
+      context: saga.context,
+      destroyed: saga.destroyed,
+      state: saga.state,
+    };
+
+    this.eventEmitter.emit("saga", data);
+    this.eventEmitter.emit(`saga.${saga.context}`, data);
+    this.eventEmitter.emit(`saga.${saga.context}.${saga.name}`, data);
+    this.eventEmitter.emit(`saga.${saga.context}.${saga.name}.${saga.id}`, data);
   }
 
   // private static

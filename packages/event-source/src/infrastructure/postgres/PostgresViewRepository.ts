@@ -11,9 +11,9 @@ import {
   ViewRepositoryData,
 } from "../../types";
 
-export class PostgresViewRepository<S = State>
+export class PostgresViewRepository<TState = State>
   extends PostgresBase
-  implements IPostgresRepository<S>
+  implements IPostgresRepository<TState>
 {
   private readonly ViewEntity: typeof ViewEntity;
   private readonly viewIdentifier: HandlerIdentifier;
@@ -25,7 +25,9 @@ export class PostgresViewRepository<S = State>
     this.viewIdentifier = options.view;
   }
 
-  public async find(filter: FindManyOptions<ViewEntity>): Promise<Array<ViewRepositoryData<S>>> {
+  public async find(
+    filter: FindManyOptions<ViewEntity>,
+  ): Promise<Array<ViewRepositoryData<TState>>> {
     this.logger.debug("Finding views", { filter });
 
     const { select: _, ...options } = filter;
@@ -34,6 +36,7 @@ export class PostgresViewRepository<S = State>
       const entities = await this.connection.getRepository(this.ViewEntity).find({
         select: {
           id: true,
+          modified: true,
           revision: true,
           created_at: true,
           updated_at: true,
@@ -49,14 +52,15 @@ export class PostgresViewRepository<S = State>
 
       this.logger.debug("Found views", { entities });
 
-      const array: Array<ViewRepositoryData<S>> = [];
+      const array: Array<ViewRepositoryData<TState>> = [];
       for (const item of entities) {
         array.push({
           id: item.id,
           name: this.viewIdentifier.name,
           context: this.viewIdentifier.context,
+          modified: item.modified,
           revision: item.revision,
-          state: item.state as S,
+          state: item.state as TState,
           created_at: item.created_at,
           updated_at: item.updated_at,
         });
@@ -68,7 +72,7 @@ export class PostgresViewRepository<S = State>
     }
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<S>> {
+  public async findById(id: string): Promise<ViewRepositoryData<TState>> {
     this.logger.debug("Finding view", { id });
 
     try {
@@ -78,7 +82,7 @@ export class PostgresViewRepository<S = State>
     }
   }
 
-  public async findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<S>> {
+  public async findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<TState>> {
     this.logger.debug("Finding view", { filter });
 
     const { select: _, ...options } = filter;
@@ -87,6 +91,7 @@ export class PostgresViewRepository<S = State>
       const entity = await this.connection.getRepository(this.ViewEntity).findOne({
         select: {
           id: true,
+          modified: true,
           revision: true,
           created_at: true,
           updated_at: true,
@@ -112,8 +117,9 @@ export class PostgresViewRepository<S = State>
         id: entity.id,
         name: this.viewIdentifier.name,
         context: this.viewIdentifier.context,
+        modified: entity.modified,
         revision: entity.revision,
-        state: entity.state as S,
+        state: entity.state as TState,
         created_at: entity.created_at,
         updated_at: entity.updated_at,
       };

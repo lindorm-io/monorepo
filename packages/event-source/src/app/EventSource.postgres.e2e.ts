@@ -197,7 +197,7 @@ describe("EventSource (Postgres)", () => {
         conditions: { created: false },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("created", ctx.event.created);
+          ctx.setState({ created: ctx.event.created });
         },
       }),
     );
@@ -210,7 +210,7 @@ describe("EventSource (Postgres)", () => {
         conditions: { created: true },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("updated", ctx.event.updated);
+          ctx.mergeState({ updated: ctx.event.updated });
         },
       }),
     );
@@ -285,6 +285,7 @@ describe("EventSource (Postgres)", () => {
       id,
       name: "test_view",
       context: "es_postgres",
+      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,

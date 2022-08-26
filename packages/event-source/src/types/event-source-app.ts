@@ -1,5 +1,5 @@
-import { Aggregate, Saga } from "../entity";
-import { AggregateIdentifier } from "./entity";
+import { Aggregate, Saga } from "../model";
+import { AggregateIdentifier } from "./model";
 import { DtoClass, Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
@@ -67,6 +67,7 @@ export interface EventSourcePublishOptions {
   delay?: number;
   origin?: string;
   originId?: string | null;
+  awaitResult?: boolean;
 }
 
 export type EventSourcePublishResult = {
@@ -82,8 +83,8 @@ export interface EventSourceInspectOptions {
 
 export interface EventSourceAdmin {
   inspect: {
-    aggregate<S = State>(aggregate: EventSourceInspectOptions): Promise<Aggregate<S>>;
-    saga<S = State>(saga: EventSourceInspectOptions): Promise<Saga<S>>;
+    aggregate<TState = State>(aggregate: EventSourceInspectOptions): Promise<Aggregate<TState>>;
+    saga<TState = State>(saga: EventSourceInspectOptions): Promise<Saga<TState>>;
   };
   replay(options: ReplayOptions): Promise<void>;
 }
@@ -102,7 +103,7 @@ export interface IEventSource<
   TCommand extends DtoClass = DtoClass,
   TQuery extends DtoClass = DtoClass,
 > {
-  on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void;
+  on<TData = Data>(eventName: string, listener: EventEmitterListener<TData>): void;
   init(): Promise<void>;
   initialise(): Promise<void>;
 

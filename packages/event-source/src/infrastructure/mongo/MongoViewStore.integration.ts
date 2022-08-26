@@ -37,10 +37,9 @@ describe("MongoViewStore", () => {
       },
       logger,
     );
+    await connection.connect();
 
     store = new MongoViewStore(connection, logger);
-
-    await connection.connect();
   }, 10000);
 
   beforeEach(() => {
@@ -88,7 +87,7 @@ describe("MongoViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: ["processed"],
       revision: 1,
       state: {},
@@ -138,9 +137,9 @@ describe("MongoViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 1,
-      meta: {},
       state: { found: true },
       created_at: new Date(),
       updated_at: new Date(),
@@ -166,7 +165,7 @@ describe("MongoViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 1,
       state: { inserted: true },
@@ -221,7 +220,7 @@ describe("MongoViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 1,
       state: { found: true },
@@ -245,7 +244,7 @@ describe("MongoViewStore", () => {
     const update: ViewUpdateData = {
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 2,
       state: { updated: true },

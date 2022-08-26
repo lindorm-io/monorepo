@@ -33,6 +33,7 @@ describe("PostgresViewRepository", () => {
       },
       logger,
     );
+    await connection.connect();
 
     identifier = {
       id: randomUUID(),
@@ -41,8 +42,6 @@ describe("PostgresViewRepository", () => {
     };
 
     repository = new PostgresViewRepository({ connection, view: identifier, ViewEntity }, logger);
-
-    await connection.connect();
 
     const repo = connection.getRepository(ViewEntity);
 
@@ -57,7 +56,7 @@ describe("PostgresViewRepository", () => {
       context: identifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 1,
       state: { one: 1, common: "common" },
@@ -71,7 +70,7 @@ describe("PostgresViewRepository", () => {
       context: identifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 2,
       state: { two: 2, common: "common" },
@@ -85,7 +84,7 @@ describe("PostgresViewRepository", () => {
       context: identifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 3,
       state: { three: 3, common: "uncommon" },
@@ -99,7 +98,7 @@ describe("PostgresViewRepository", () => {
       context: identifier.context,
       destroyed: true,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 4,
       state: { four: 4, common: "common" },
@@ -118,6 +117,7 @@ describe("PostgresViewRepository", () => {
         id: view1,
         name: identifier.name,
         context: identifier.context,
+        modified: expect.any(Date),
         revision: 1,
         state: { one: 1, common: "common" },
         created_at: expect.any(Date),
@@ -127,6 +127,7 @@ describe("PostgresViewRepository", () => {
         id: view2,
         name: identifier.name,
         context: identifier.context,
+        modified: expect.any(Date),
         revision: 2,
         state: { two: 2, common: "common" },
         created_at: expect.any(Date),
@@ -136,6 +137,7 @@ describe("PostgresViewRepository", () => {
         id: view3,
         name: identifier.name,
         context: identifier.context,
+        modified: expect.any(Date),
         revision: 3,
         state: { three: 3, common: "uncommon" },
         created_at: expect.any(Date),
@@ -149,6 +151,7 @@ describe("PostgresViewRepository", () => {
       id: view3,
       name: identifier.name,
       context: identifier.context,
+      modified: expect.any(Date),
       revision: 3,
       state: { three: 3, common: "uncommon" },
       created_at: expect.any(Date),
@@ -161,6 +164,7 @@ describe("PostgresViewRepository", () => {
       id: view1,
       name: identifier.name,
       context: identifier.context,
+      modified: expect.any(Date),
       revision: 1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),

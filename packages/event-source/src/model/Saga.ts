@@ -1,10 +1,11 @@
 import Joi from "joi";
 import { Command, DomainEvent, TimeoutMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
-import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
+import { AggregateDestroyedError, IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, snakeCase } from "lodash";
+import { randomString } from "@lindorm-io/core";
 import {
   AggregateIdentifier,
   DtoClass,
@@ -14,7 +15,6 @@ import {
   SagaOptions,
   State,
 } from "../types";
-import { randomString } from "@lindorm-io/core";
 
 export class Saga<TState extends State = State> implements ISaga {
   public readonly id: string;
@@ -25,8 +25,8 @@ export class Saga<TState extends State = State> implements ISaga {
   private readonly _messagesToDispatch: Array<Command | TimeoutMessage>;
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
-  private readonly _state: TState;
   private _destroyed: boolean;
+  private _state: TState;
 
   private readonly logger: ILogger;
 
@@ -85,7 +85,7 @@ export class Saga<TState extends State = State> implements ISaga {
     throw new IllegalEntityChangeError();
   }
 
-  public get state(): Record<string, any> {
+  public get state(): TState {
     return this._state;
   }
   public set state(_) {
@@ -175,23 +175,28 @@ export class Saga<TState extends State = State> implements ISaga {
     );
   }
 
-  public mergeState(data: Record<string, any>): void {
+  public mergeState(data: Partial<TState>): void {
     this.logger.debug("Merge state", { data });
 
-    assertSchema(
-      Joi.object()
-        .keys({
-          data: Joi.object().required(),
-        })
-        .required()
-        .validate({ data }),
-    );
+    assertSchema(Joi.object().required().validate(data));
 
     if (this._destroyed) {
       throw new SagaDestroyedError();
     }
 
     merge(this._state, data);
+  }
+
+  public setState(state: TState): void {
+    this.logger.debug("Set state", { state });
+
+    assertSchema(Joi.object().required().validate(state));
+
+    if (this._destroyed) {
+      throw new AggregateDestroyedError();
+    }
+
+    this._state = state;
   }
 
   public timeout(

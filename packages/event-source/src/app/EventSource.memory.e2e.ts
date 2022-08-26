@@ -149,7 +149,7 @@ describe("EventSource (Memory)", () => {
         conditions: { created: false },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("created", ctx.event.created);
+          ctx.setState({ created: ctx.event.created });
         },
       }),
     );
@@ -162,7 +162,7 @@ describe("EventSource (Memory)", () => {
         conditions: { created: true },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("updated", ctx.event.updated);
+          ctx.mergeState({ updated: ctx.event.updated });
         },
       }),
     );
@@ -231,6 +231,7 @@ describe("EventSource (Memory)", () => {
       id,
       name: "test_view",
       context: "es_memory",
+      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,

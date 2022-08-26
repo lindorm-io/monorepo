@@ -1,9 +1,10 @@
-export interface ViewRepositoryData<S> {
+export interface ViewRepositoryData<TState> {
   id: string;
   name: string;
   context: string;
+  modified: Date | null;
   revision: number;
-  state: S;
+  state: TState;
   created_at: Date;
   updated_at: Date;
 }

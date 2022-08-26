@@ -117,7 +117,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         context: attributes.context,
         destroyed: attributes.destroyed,
         hash: attributes.hash,
-        meta: attributes.meta,
+        modified: attributes.modified,
         processed_causation_ids: attributes.processed_causation_ids,
         revision: attributes.revision,
         state: attributes.state,
@@ -181,7 +181,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         {
           destroyed: data.destroyed,
           hash: data.hash,
-          meta: data.meta,
+          modified: data.modified,
           processed_causation_ids: data.processed_causation_ids,
           revision: data.revision,
           state: data.state,

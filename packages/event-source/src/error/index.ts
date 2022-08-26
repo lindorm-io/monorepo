@@ -17,5 +17,4 @@ export * from "./SagaNotCreatedError";
 export * from "./ViewAlreadyCreatedError";
 export * from "./ViewDestroyedError";
 export * from "./ViewNotCreatedError";
-export * from "./ViewNotSavedError";
 export * from "./ViewNotUpdatedError";

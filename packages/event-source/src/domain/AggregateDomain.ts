@@ -1,4 +1,4 @@
-import { Aggregate } from "../entity";
+import { Aggregate } from "../model";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { ILogger } from "@lindorm-io/winston";
@@ -278,6 +278,7 @@ export class AggregateDomain implements IAggregateDomain {
       }
 
       const events = await this.store.save(aggregate, command);
+
       await this.messageBus.publish(events);
 
       this.logger.verbose("Handled command", { command });

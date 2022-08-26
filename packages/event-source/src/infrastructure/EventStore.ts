@@ -1,4 +1,4 @@
-import { Aggregate } from "../entity";
+import { Aggregate } from "../model";
 import { AggregateEventHandlerImplementation } from "../handler";
 import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";

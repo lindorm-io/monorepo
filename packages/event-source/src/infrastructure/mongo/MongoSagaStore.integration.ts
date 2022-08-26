@@ -41,7 +41,6 @@ describe("MongoSagaStore", () => {
       },
       logger,
     );
-
     await connection.connect();
 
     collection = connection.database.collection("saga_store");

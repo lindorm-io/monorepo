@@ -28,12 +28,11 @@ describe("MongoViewRepository", () => {
       },
       logger,
     );
+    await connection.connect();
 
     identifier = { context: "view_repository", name: "view_name", id: randomUUID() };
 
     repository = new MongoViewRepository({ connection, view: identifier }, logger);
-
-    await connection.connect();
 
     const collection = connection.database.collection<ViewStoreAttributes>(
       MongoViewStore.getCollectionName({ context: "view_repository", name: "view_name" }),
@@ -51,7 +50,7 @@ describe("MongoViewRepository", () => {
         destroyed: false,
         processed_causation_ids: [],
         hash: randomString(16),
-        meta: {},
+        modified: new Date(),
         revision: 1,
         state: { one: 1, common: "common" },
         created_at: new Date(),
@@ -64,7 +63,7 @@ describe("MongoViewRepository", () => {
         destroyed: false,
         processed_causation_ids: [],
         hash: randomString(16),
-        meta: {},
+        modified: new Date(),
         revision: 2,
         state: { two: 2, common: "common" },
         created_at: new Date(),
@@ -77,7 +76,7 @@ describe("MongoViewRepository", () => {
         destroyed: false,
         processed_causation_ids: [],
         hash: randomString(16),
-        meta: {},
+        modified: new Date(),
         revision: 3,
         state: { three: 3, common: "uncommon" },
         created_at: new Date(),
@@ -90,7 +89,7 @@ describe("MongoViewRepository", () => {
         destroyed: true,
         processed_causation_ids: [],
         hash: randomString(16),
-        meta: {},
+        modified: new Date(),
         revision: 4,
         state: { four: 4, common: "common" },
         created_at: new Date(),
@@ -109,6 +108,7 @@ describe("MongoViewRepository", () => {
         id: view1,
         name: identifier.name,
         context: identifier.context,
+        modified: expect.any(Date),
         revision: 1,
         state: { one: 1, common: "common" },
         created_at: expect.any(Date),
@@ -118,6 +118,7 @@ describe("MongoViewRepository", () => {
         id: view2,
         name: identifier.name,
         context: identifier.context,
+        modified: expect.any(Date),
         revision: 2,
         state: { two: 2, common: "common" },
         created_at: expect.any(Date),
@@ -131,6 +132,7 @@ describe("MongoViewRepository", () => {
       id: view3,
       name: identifier.name,
       context: identifier.context,
+      modified: expect.any(Date),
       revision: 3,
       state: { three: 3, common: "uncommon" },
       created_at: expect.any(Date),
@@ -143,6 +145,7 @@ describe("MongoViewRepository", () => {
       id: view1,
       name: identifier.name,
       context: identifier.context,
+      modified: expect.any(Date),
       revision: 1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),

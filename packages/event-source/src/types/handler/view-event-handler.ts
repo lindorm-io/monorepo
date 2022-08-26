@@ -18,11 +18,9 @@ export interface ViewEventHandlerContext<
   event: TEvent;
   logger: ILogger;
   state: TState;
-  addListItem(path: string, value: any): void;
   destroy(): void;
-  removeListItemWhereEqual(path: string, value: any): void;
-  removeListItemWhereMatch(path: string, value: Record<string, any>): void;
-  setState(path: string, value: any): void;
+  mergeState(data: Partial<TState>): void;
+  setState(state: TState): void;
 }
 
 export interface ViewEventHandlerFileAggregate {

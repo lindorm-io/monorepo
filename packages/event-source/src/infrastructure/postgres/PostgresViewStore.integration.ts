@@ -45,10 +45,9 @@ describe("PostgresViewStore", () => {
       },
       logger,
     );
+    await connection.connect();
 
     store = new PostgresViewStore(connection, logger);
-
-    await connection.connect();
   }, 30000);
 
   beforeEach(() => {
@@ -94,7 +93,6 @@ describe("PostgresViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
       processed_causation_ids: ["processed"],
       revision: 1,
       state: {},
@@ -138,7 +136,6 @@ describe("PostgresViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
       processed_causation_ids: [],
       revision: 1,
       state: { found: true },
@@ -163,7 +160,7 @@ describe("PostgresViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 1,
       state: { inserted: true },
@@ -214,7 +211,6 @@ describe("PostgresViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      meta: {},
       processed_causation_ids: [],
       revision: 1,
       state: { found: true },
@@ -235,7 +231,7 @@ describe("PostgresViewStore", () => {
     const update: ViewUpdateData = {
       destroyed: false,
       hash: randomString(16),
-      meta: {},
+      modified: new Date(),
       processed_causation_ids: [],
       revision: 2,
       state: { updated: true },

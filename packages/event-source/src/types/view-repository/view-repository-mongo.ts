@@ -10,14 +10,14 @@ export interface MongoViewRepositoryOptions {
   view: HandlerIdentifier;
 }
 
-export interface IMongoRepository<S = State> {
+export interface IMongoRepository<TState = State> {
   find(
     filter?: Filter<ViewStoreAttributes>,
     options?: FindOptions<ViewStoreAttributes>,
-  ): Promise<Array<ViewRepositoryData<S>>>;
-  findById(id: string): Promise<ViewRepositoryData<S>>;
+  ): Promise<Array<ViewRepositoryData<TState>>>;
+  findById(id: string): Promise<ViewRepositoryData<TState>>;
   findOne(
     find: Filter<ViewStoreAttributes>,
     options?: FindOptions<ViewStoreAttributes>,
-  ): Promise<ViewRepositoryData<S>>;
+  ): Promise<ViewRepositoryData<TState>>;
 }

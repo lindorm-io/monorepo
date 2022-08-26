@@ -44,7 +44,7 @@ export class ReplayDomain implements IReplayDomain {
 
   // public
 
-  public on<D = Data>(eventName: string, listener: EventEmitterListener<D>): void {
+  public on<TData = Data>(eventName: string, listener: EventEmitterListener<TData>): void {
     this.eventEmitter.on(eventName, listener);
   }
 

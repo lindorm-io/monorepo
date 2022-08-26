@@ -1,8 +1,8 @@
 import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { IView, ViewIdentifier } from "../entity";
-import { View } from "../../entity";
+import { IView, ViewIdentifier } from "../model";
+import { View } from "../../model";
 import { ViewEventHandlerAdapters } from "../handler";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
@@ -23,7 +23,7 @@ export interface ViewUpdateFilter extends ViewIdentifier {
 export interface ViewUpdateData {
   destroyed: boolean;
   hash: string;
-  meta: Record<string, any>;
+  modified: Date;
   processed_causation_ids: Array<string>;
   revision: number;
   state: Record<string, any>;

@@ -1,5 +1,5 @@
 export * from "./domain";
-export * from "./entity";
+export * from "./model";
 export * from "./event-store";
 export * from "./handler";
 export * from "./saga-store";

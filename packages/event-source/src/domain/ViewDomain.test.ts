@@ -5,7 +5,7 @@ import { MessageBus } from "../infrastructure";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandlerImplementation } from "../handler";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -20,11 +20,9 @@ import {
 } from "../error";
 import {
   TEST_VIEW_EVENT_HANDLER,
-  TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
   TEST_VIEW_EVENT_HANDLER_CREATE,
   TEST_VIEW_EVENT_HANDLER_DESTROY,
-  TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL,
-  TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH,
+  TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
   TEST_VIEW_EVENT_HANDLER_SET_STATE,
   TEST_VIEW_EVENT_HANDLER_THROWS,
 } from "../fixtures/view-event-handler.fixture";
@@ -39,11 +37,9 @@ describe("ViewDomain", () => {
   const logger = createMockLogger();
   const eventHandlers = [
     TEST_VIEW_EVENT_HANDLER,
-    TEST_VIEW_EVENT_HANDLER_ADD_FIELD,
     TEST_VIEW_EVENT_HANDLER_CREATE,
     TEST_VIEW_EVENT_HANDLER_DESTROY,
-    TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_EQUAL,
-    TEST_VIEW_EVENT_HANDLER_REMOVE_FIELD_WHERE_MATCH,
+    TEST_VIEW_EVENT_HANDLER_MERGE_STATE,
     TEST_VIEW_EVENT_HANDLER_SET_STATE,
     TEST_VIEW_EVENT_HANDLER_THROWS,
   ];
@@ -191,7 +187,6 @@ describe("ViewDomain", () => {
         context: "default",
         processedCausationIds: [],
         destroyed: false,
-        meta: { created: { removed: false, timestamp: expect.any(Date), value: true } },
         revision: 0,
         state: { created: true },
       }),

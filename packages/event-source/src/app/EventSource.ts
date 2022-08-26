@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../entity";
+import { Aggregate, Saga } from "../model";
 import { AggregateDomain, QueryDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
 import { EventSourceScanner } from "./EventSourceScanner";
@@ -295,9 +295,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       this.replayDomain.on(evt, listener);
     }
 
-    // if (evt.startsWith("saga")) {
-    //   this.sagaDomain.on(evt, listener);
-    // }
+    if (evt.startsWith("saga")) {
+      this.sagaDomain.on(evt, listener);
+    }
 
     if (evt.startsWith("view")) {
       this.viewDomain.on(evt, listener);

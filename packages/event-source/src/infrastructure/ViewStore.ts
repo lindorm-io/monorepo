@@ -2,7 +2,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { MemoryViewStore } from "./memory";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewStoreType } from "../enum";
 import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/core";
@@ -167,7 +167,7 @@ export class ViewStore implements IDomainViewStore {
     const data: ViewUpdateData = {
       destroyed: view.destroyed,
       hash: randomString(16),
-      meta: view.meta,
+      modified: view.modified,
       processed_causation_ids: flatten([view.processedCausationIds, causation.id]),
       revision: view.revision + 1,
       state: view.state,
@@ -187,7 +187,7 @@ export class ViewStore implements IDomainViewStore {
       context: data.context,
       destroyed: data.destroyed,
       hash: data.hash,
-      meta: data.meta,
+      modified: data.modified,
       processed_causation_ids: data.processedCausationIds,
       revision: data.revision,
       state: data.state,
@@ -203,7 +203,7 @@ export class ViewStore implements IDomainViewStore {
       context: attributes.context,
       destroyed: attributes.destroyed,
       hash: attributes.hash,
-      meta: attributes.meta,
+      modified: attributes.modified,
       processedCausationIds: attributes.processed_causation_ids,
       revision: attributes.revision,
       state: attributes.state,

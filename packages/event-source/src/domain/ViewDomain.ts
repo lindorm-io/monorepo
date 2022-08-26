@@ -4,7 +4,7 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
-import { View } from "../entity";
+import { View } from "../model";
 import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
 import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
@@ -18,7 +18,7 @@ import {
 } from "../error";
 import {
   EventEmitterListener,
-  EventEmitterData,
+  EventEmitterViewData,
   HandlerIdentifier,
   IViewDomain,
   State,
@@ -37,12 +37,12 @@ export class ViewDomain implements IViewDomain {
   private store: IDomainViewStore;
 
   public constructor(options: ViewDomainOptions, logger: ILogger) {
+    this.eventEmitter = new EventEmitter();
     this.logger = logger.createChildLogger(["ViewDomain"]);
 
     this.messageBus = options.messageBus;
     this.store = options.store;
 
-    this.eventEmitter = new EventEmitter();
     this.eventHandlers = [];
   }
 
@@ -249,10 +249,8 @@ export class ViewDomain implements IViewDomain {
       logger: this.logger.createChildLogger(["ViewEventHandler"]),
       state: cloneDeep(view.state),
 
-      addListItem: view.addListItem.bind(view, event),
-      destroy: view.destroy.bind(view),
-      removeListItemWhereEqual: view.removeListItemWhereEqual.bind(view, event),
-      removeListItemWhereMatch: view.removeListItemWhereMatch.bind(view, event),
+      destroy: view.destroy.bind(view, event),
+      mergeState: view.mergeState.bind(view, event),
       setState: view.setState.bind(view, event),
     };
 
@@ -316,8 +314,8 @@ export class ViewDomain implements IViewDomain {
     }
   }
 
-  private emit<S>(view: View<S>): void {
-    const data: EventEmitterData<S> = {
+  private emit<TState>(view: View<TState>): void {
+    const data: EventEmitterViewData<TState> = {
       id: view.id,
       name: view.name,
       context: view.context,

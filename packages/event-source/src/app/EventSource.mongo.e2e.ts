@@ -187,7 +187,7 @@ describe("EventSource (Mongo)", () => {
         conditions: { created: false },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("created", ctx.event.created);
+          ctx.setState({ created: ctx.event.created });
         },
       }),
     );
@@ -200,7 +200,7 @@ describe("EventSource (Mongo)", () => {
         conditions: { created: true },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
-          ctx.setState("updated", ctx.event.updated);
+          ctx.mergeState({ updated: ctx.event.updated });
         },
       }),
     );
@@ -273,6 +273,7 @@ describe("EventSource (Mongo)", () => {
       id,
       name: "test_view",
       context: "es_mongo",
+      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,

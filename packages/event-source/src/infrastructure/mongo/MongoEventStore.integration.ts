@@ -26,7 +26,6 @@ describe("MongoEventStore", () => {
       },
       logger,
     );
-
     await connection.connect();
 
     collection = connection.database.collection("event_store");

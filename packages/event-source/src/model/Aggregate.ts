@@ -29,11 +29,11 @@ export class Aggregate<TState extends State = State> implements IAggregate {
 
   private readonly _eventHandlers: Array<IAggregateEventHandler>;
   private readonly _events: Array<DomainEvent>;
-  private readonly _state: TState;
 
   private _destroyed: boolean;
   private _destroying: boolean;
   private _numberOfLoadedEvents: number;
+  private _state: TState;
 
   private readonly logger: ILogger;
 
@@ -174,6 +174,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
         destroy: this.destroy.bind(this),
         destroyNext: this.destroyNext.bind(this),
         mergeState: this.mergeState.bind(this),
+        setState: this.setState.bind(this),
       };
 
       await eventHandler.handler(context);
@@ -215,7 +216,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
     this._destroying = true;
   }
 
-  private mergeState(data: Record<string, any>): void {
+  private mergeState(data: Partial<TState>): void {
     this.logger.debug("Merge state", { data });
 
     assertSchema(Joi.object().required().validate(data));
@@ -225,5 +226,17 @@ export class Aggregate<TState extends State = State> implements IAggregate {
     }
 
     merge(this._state, data);
+  }
+
+  private setState(state: TState): void {
+    this.logger.debug("Set state", { state });
+
+    assertSchema(Joi.object().required().validate(state));
+
+    if (this._destroyed) {
+      throw new AggregateDestroyedError();
+    }
+
+    this._state = state;
   }
 }

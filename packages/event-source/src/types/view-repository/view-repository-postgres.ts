@@ -12,8 +12,8 @@ export interface PostgresViewRepositoryOptions {
   view: HandlerIdentifier;
 }
 
-export interface IPostgresRepository<S = State> {
-  find(filter: FindManyOptions<ViewEntity>): Promise<Array<ViewRepositoryData<S>>>;
-  findById(id: string): Promise<ViewRepositoryData<S>>;
-  findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<S>>;
+export interface IPostgresRepository<TState = State> {
+  find(filter: FindManyOptions<ViewEntity>): Promise<Array<ViewRepositoryData<TState>>>;
+  findById(id: string): Promise<ViewRepositoryData<TState>>;
+  findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<TState>>;
 }

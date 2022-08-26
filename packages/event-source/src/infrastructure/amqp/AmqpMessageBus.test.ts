@@ -44,7 +44,8 @@ describe("MessageBus", () => {
     };
 
     await messageBus.subscribe([commandSub, domainEventSub]);
-    await sleep(2000);
+
+    await sleep(100);
   }, 60000);
 
   afterAll(async () => {
@@ -64,7 +65,8 @@ describe("MessageBus", () => {
     });
 
     await expect(messageBus.publish([command])).resolves.toBeUndefined();
-    await sleep(2000);
+
+    await sleep(100);
 
     expect(commandSub.callback).toHaveBeenCalledTimes(1);
     expect(commandSub.callback).toHaveBeenCalledWith(command);
@@ -97,7 +99,8 @@ describe("MessageBus", () => {
     );
 
     await expect(messageBus.publish([domainEvent])).resolves.toBeUndefined();
-    await sleep(2000);
+
+    await sleep(100);
 
     expect(domainEventSub.callback).toHaveBeenCalledTimes(1);
     expect(domainEventSub.callback).toHaveBeenCalledWith(domainEvent);

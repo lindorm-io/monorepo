@@ -12,6 +12,7 @@ export interface AggregateEventHandlerContext<
   destroy(): void;
   destroyNext(): void;
   mergeState(data: Partial<TState>): void;
+  setState(state: TState): void;
 }
 
 export interface AggregateEventHandler<TEvent extends DtoClass, TState extends State = State> {

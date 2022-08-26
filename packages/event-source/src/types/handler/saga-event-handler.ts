@@ -2,7 +2,7 @@ import { DtoClass, State } from "../generic";
 import { DomainEvent, TimeoutMessage } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
-import { SagaDispatchOptions } from "../entity";
+import { SagaDispatchOptions } from "../model";
 
 export type GetSagaIdFunction<TEvent extends DtoClass = DtoClass> = (
   event: DomainEvent<TEvent> | TimeoutMessage<TEvent>,
@@ -19,6 +19,7 @@ export interface SagaEventHandlerContext<
   destroy(): void;
   dispatch(command: TDispatch, options?: SagaDispatchOptions): void;
   mergeState(data: Partial<TState>): void;
+  setState(state: TState): void;
   timeout(name: string, data: Record<string, any>, delay: number): void;
 }
 
