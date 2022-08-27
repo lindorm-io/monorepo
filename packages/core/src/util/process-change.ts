@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm-io/errors";
-import { cloneDeep, find, isArray, isEqual } from "lodash";
+import { cloneDeep, find, isArray, isDate, isEqual } from "lodash";
 import { isBefore } from "date-fns";
 import { isObjectStrict } from "./is-object-strict";
 
@@ -35,12 +35,15 @@ export const processArrayChange = (
     if (isObjectStrict(currentItem)) {
       const currentMeta = find(metadata, { value: { key: currentItem.key } });
       const inputItem = find(inputArray, { key: currentItem.key });
+      const compareTime = isDate(currentMeta.timestamp)
+        ? currentMeta.timestamp
+        : new Date(currentMeta.timestamp);
 
       /**
        * when timestamp is before, that means another change is already there, and we will
        * honor the last successful change.
        */
-      if (isBefore(timestamp, currentMeta.timestamp)) {
+      if (isBefore(timestamp, compareTime)) {
         meta.push(currentMeta);
         state.push(currentItem);
 
@@ -130,12 +133,13 @@ export const processObjectChange = <TState = Record<string, any>>(
 
   for (const key in currentObject) {
     const metaTime = metadata[key] ? metadata[key].timestamp : metadata.timestamp;
+    const compareTime = isDate(metaTime) ? metaTime : new Date(metaTime);
 
     /**
      * when timestamp is before, that means another change is already there, and we will
      * honor the last successful change.
      */
-    if (isBefore(timestamp, metaTime)) {
+    if (isBefore(timestamp, compareTime)) {
       meta[key] = metadata[key];
       state[key] = currentObject[key];
 
