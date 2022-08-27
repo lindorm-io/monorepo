@@ -1,8 +1,10 @@
-import { Data } from "../generic";
+import { Data, State } from "../generic";
 import { EventEmitterListener } from "../event-emitter";
 import { IDomainViewStore } from "../view-store";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { IViewEventHandler } from "../handler";
+import { IViewEventHandler, ViewEventHandlerAdapters } from "../handler";
+import { View } from "../../model";
+import { ViewIdentifier } from "../model";
 
 export interface ViewDomainOptions {
   messageBus: IMessageBus;
@@ -12,4 +14,8 @@ export interface ViewDomainOptions {
 export interface IViewDomain {
   on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void;
   registerEventHandler(eventHandler: IViewEventHandler): Promise<void>;
+  inspect<TState extends State = State>(
+    identifier: ViewIdentifier,
+    adapters: ViewEventHandlerAdapters,
+  ): Promise<View<TState>>;
 }

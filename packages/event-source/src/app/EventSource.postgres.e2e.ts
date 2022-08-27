@@ -281,6 +281,34 @@ describe("EventSource (Postgres)", () => {
       }),
     );
 
+    await expect(app.admin.inspect.view({ id, name: "test_view" })).resolves.toStrictEqual(
+      expect.objectContaining({
+        id,
+        name: "test_view",
+        context: "es_postgres",
+        destroyed: false,
+        hash: expect.any(String),
+        meta: {
+          created: {
+            destroyed: false,
+            timestamp: expect.any(String),
+            value: true,
+          },
+          updated: {
+            destroyed: false,
+            timestamp: expect.any(String),
+            value: true,
+          },
+        },
+        processedCausationIds: [expect.any(String), expect.any(String)],
+        revision: 2,
+        state: {
+          created: true,
+          updated: true,
+        },
+      }),
+    );
+
     await expect(app.query(new QueryGreeting(id))).resolves.toStrictEqual({
       id,
       name: "test_view",

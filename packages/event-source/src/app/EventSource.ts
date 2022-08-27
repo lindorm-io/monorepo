@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../model";
+import { Aggregate, Saga, View } from "../model";
 import { AggregateDomain, QueryDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
 import { EventSourceScanner } from "./EventSourceScanner";
@@ -15,14 +15,15 @@ import { join } from "path";
 import { merge } from "lodash";
 import { randomUUID } from "crypto";
 import {
-  EventSourceAdmin,
-  EventSourceInspectOptions,
-  EventSourcePublishOptions,
-  EventSourcePublishResult,
   Data,
   DtoClass,
   EventEmitterListener,
+  EventSourceAdmin,
+  EventSourceInspectOptions,
   EventSourceOptions,
+  EventSourcePrivateOptions,
+  EventSourcePublishOptions,
+  EventSourcePublishResult,
   EventSourceSetup,
   IAggregateDomain,
   IDomainEventStore,
@@ -33,8 +34,8 @@ import {
   IReplayDomain,
   ISagaDomain,
   IViewDomain,
-  EventSourcePrivateOptions,
   State,
+  ViewEventHandlerAdapters,
 } from "../types";
 
 export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends DtoClass = DtoClass>
@@ -210,6 +211,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       inspect: {
         aggregate: this.inspectAggregate.bind(this),
         saga: this.inspectSaga.bind(this),
+        view: this.inspectView.bind(this),
       },
       replay: async () => undefined, // this.replay.bind(this),
     };
@@ -336,6 +338,23 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       name: saga.name,
       context: this.scanner.context(saga.context),
     });
+  }
+
+  private async inspectView<TState extends State = State>(
+    view: EventSourceInspectOptions,
+  ): Promise<View<TState>> {
+    await this.promise();
+
+    const identifier = {
+      id: view.id,
+      name: view.name,
+      context: this.scanner.context(view.context),
+    };
+
+    const ViewEntity = this.queryDomain.getViewEntity(identifier);
+    const adapters: ViewEventHandlerAdapters = ViewEntity ? { postgres: { ViewEntity } } : {};
+
+    return this.viewDomain.inspect<TState>(identifier, adapters);
   }
 
   // private initialisation handler

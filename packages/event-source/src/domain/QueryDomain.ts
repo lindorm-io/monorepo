@@ -129,6 +129,14 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
     }
   }
 
+  public getViewEntity(view: HandlerIdentifier): typeof ViewEntity | undefined {
+    try {
+      return this.viewEntity(view);
+    } catch (err) {
+      return;
+    }
+  }
+
   // private
 
   private viewEntity(view: HandlerIdentifier): typeof ViewEntity {

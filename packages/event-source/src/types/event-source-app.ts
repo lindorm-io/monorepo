@@ -1,4 +1,4 @@
-import { Aggregate, Saga } from "../model";
+import { Aggregate, Saga, View } from "../model";
 import { AggregateIdentifier } from "./model";
 import { DtoClass, Data, State } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
@@ -10,6 +10,7 @@ import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IViewStore, ViewStoreAdapterType } from "./view-store";
 import { MessageBusQueueType } from "./message-bus";
 import { ReplayOptions } from "./domain";
+import { ViewEntity } from "../infrastructure";
 import {
   HandlerIdentifier,
   IAggregateCommandHandler,
@@ -18,7 +19,6 @@ import {
   ISagaEventHandler,
   IViewEventHandler,
 } from "./handler";
-import { ViewEntity } from "../infrastructure";
 
 export interface EventSourceAdapterOptions {
   eventStore?: EventStoreAdapterType;
@@ -85,6 +85,7 @@ export interface EventSourceAdmin {
   inspect: {
     aggregate<TState = State>(aggregate: EventSourceInspectOptions): Promise<Aggregate<TState>>;
     saga<TState = State>(saga: EventSourceInspectOptions): Promise<Saga<TState>>;
+    view<TState = State>(view: EventSourceInspectOptions): Promise<View<TState>>;
   };
   replay(options: ReplayOptions): Promise<void>;
 }

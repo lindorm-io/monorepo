@@ -20,13 +20,14 @@ import {
   EventEmitterListener,
   EventEmitterViewData,
   HandlerIdentifier,
+  IDomainViewStore,
+  IMessage,
   IViewDomain,
   State,
   ViewDomainOptions,
+  ViewEventHandlerAdapters,
   ViewEventHandlerContext,
-  IMessage,
   ViewIdentifier,
-  IDomainViewStore,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
@@ -140,6 +141,13 @@ export class ViewDomain implements IViewDomain {
         view: eventHandler.view,
       });
     }
+  }
+
+  public async inspect<TState extends State = State>(
+    identifier: ViewIdentifier,
+    adapters: ViewEventHandlerAdapters,
+  ): Promise<View<TState>> {
+    return (await this.store.load(identifier, adapters)) as View<TState>;
   }
 
   // private

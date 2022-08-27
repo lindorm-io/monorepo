@@ -14,4 +14,5 @@ export interface IQueryDomain<TQuery extends DtoClass = DtoClass, TState extends
   registerQueryHandler(queryHandler: QueryHandlerImplementation<TQuery, unknown, TState>): void;
   registerViewEntity(view: HandlerIdentifier, viewEntity: typeof ViewEntity): void;
   query<TResult>(query: TQuery): Promise<TResult>;
+  getViewEntity(view: HandlerIdentifier): typeof ViewEntity | undefined;
 }
