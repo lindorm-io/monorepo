@@ -205,6 +205,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
           $set: {
             destroyed: data.destroyed,
             hash: data.hash,
+            meta: data.meta,
             processed_causation_ids: data.processed_causation_ids,
             revision: data.revision,
             state: data.state,

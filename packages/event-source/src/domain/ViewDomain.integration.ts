@@ -92,7 +92,27 @@ describe("ViewDomain", () => {
         context: "default",
         destroyed: true,
         hash: expect.any(String),
-        modified: expect.any(Date),
+        meta: {
+          created: {
+            destroyed: false,
+            timestamp: new Date("2022-01-01T08:00:00.000Z"),
+            value: true,
+          },
+          merge: {
+            domainEventData: {
+              destroyed: false,
+              timestamp: new Date("2022-01-02T08:00:00.000Z"),
+              value: true,
+            },
+          },
+          set: {
+            domainEventData: {
+              destroyed: false,
+              timestamp: new Date("2022-01-03T08:00:00.000Z"),
+              value: true,
+            },
+          },
+        },
         processedCausationIds: [
           eventCreate.id,
           eventAddField.id,

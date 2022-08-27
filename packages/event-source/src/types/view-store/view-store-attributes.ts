@@ -4,7 +4,7 @@ export interface ViewStoreAttributes {
   context: string;
   destroyed: boolean;
   hash: string;
-  modified: Date;
+  meta: Record<string, any>;
   processed_causation_ids: Array<string>;
   revision: number;
   state: Record<string, any>;

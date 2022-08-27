@@ -7,7 +7,7 @@ export type ViewIdentifier = StandardIdentifier;
 export interface ViewData<TState extends State = State> extends ViewIdentifier {
   destroyed: boolean;
   hash: string;
-  modified: Date;
+  meta: Record<string, any>;
   processedCausationIds: Array<string>;
   revision: number;
   state: TState;
@@ -16,7 +16,7 @@ export interface ViewData<TState extends State = State> extends ViewIdentifier {
 export interface ViewOptions<TState extends State = State> extends ViewIdentifier {
   destroyed?: boolean;
   hash?: string;
-  modified?: Date;
+  meta?: Record<string, any>;
   processedCausationIds?: Array<string>;
   revision?: number;
   state?: TState;

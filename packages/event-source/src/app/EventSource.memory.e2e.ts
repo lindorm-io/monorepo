@@ -231,7 +231,6 @@ describe("EventSource (Memory)", () => {
       id,
       name: "test_view",
       context: "es_memory",
-      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,

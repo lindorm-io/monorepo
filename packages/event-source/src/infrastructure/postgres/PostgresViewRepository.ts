@@ -36,7 +36,6 @@ export class PostgresViewRepository<TState = State>
       const entities = await this.connection.getRepository(this.ViewEntity).find({
         select: {
           id: true,
-          modified: true,
           revision: true,
           created_at: true,
           updated_at: true,
@@ -58,7 +57,6 @@ export class PostgresViewRepository<TState = State>
           id: item.id,
           name: this.viewIdentifier.name,
           context: this.viewIdentifier.context,
-          modified: item.modified,
           revision: item.revision,
           state: item.state as TState,
           created_at: item.created_at,
@@ -91,7 +89,6 @@ export class PostgresViewRepository<TState = State>
       const entity = await this.connection.getRepository(this.ViewEntity).findOne({
         select: {
           id: true,
-          modified: true,
           revision: true,
           created_at: true,
           updated_at: true,
@@ -117,7 +114,6 @@ export class PostgresViewRepository<TState = State>
         id: entity.id,
         name: this.viewIdentifier.name,
         context: this.viewIdentifier.context,
-        modified: entity.modified,
         revision: entity.revision,
         state: entity.state as TState,
         created_at: entity.created_at,

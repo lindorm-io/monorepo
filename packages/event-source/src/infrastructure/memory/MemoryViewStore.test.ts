@@ -64,7 +64,7 @@ describe("MemoryViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
-      modified: new Date(),
+      meta: {},
       processed_causation_ids: ["processed"],
       revision: 1,
       state: {},
@@ -106,7 +106,7 @@ describe("MemoryViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
-      modified: new Date(),
+      meta: { meta: true },
       processed_causation_ids: [],
       revision: 1,
       state: { found: true },
@@ -119,6 +119,7 @@ describe("MemoryViewStore", () => {
     await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
+        meta: { meta: true },
         state: { found: true },
       }),
     );
@@ -131,7 +132,7 @@ describe("MemoryViewStore", () => {
       context: viewIdentifier.context,
       destroyed: false,
       hash: randomString(16),
-      modified: new Date(),
+      meta: { meta: true },
       processed_causation_ids: [],
       revision: 1,
       state: { inserted: true },
@@ -144,6 +145,7 @@ describe("MemoryViewStore", () => {
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
+        meta: { meta: true },
         state: { inserted: true },
       }),
     );
@@ -178,7 +180,7 @@ describe("MemoryViewStore", () => {
       context: "default",
       destroyed: false,
       hash: randomString(16),
-      modified: new Date(),
+      meta: {},
       processed_causation_ids: [],
       revision: 1,
       state: { found: true },
@@ -199,7 +201,7 @@ describe("MemoryViewStore", () => {
     const update: ViewUpdateData = {
       destroyed: false,
       hash: randomString(16),
-      modified: new Date(),
+      meta: { meta: true },
       processed_causation_ids: [],
       revision: 2,
       state: { updated: true },
@@ -210,6 +212,7 @@ describe("MemoryViewStore", () => {
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
+        meta: { meta: true },
         revision: 2,
         state: { updated: true },
       }),

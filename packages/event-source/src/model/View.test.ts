@@ -1,9 +1,9 @@
+import { DomainEvent } from "../message";
+import { TEST_DOMAIN_EVENT } from "../fixtures/domain-event.fixture";
 import { TEST_VIEW_OPTIONS } from "../fixtures/view.fixture";
 import { View } from "./View";
 import { ViewDestroyedError } from "../error";
 import { createMockLogger } from "@lindorm-io/winston";
-import { DomainEvent } from "../message";
-import { TEST_DOMAIN_EVENT } from "../fixtures/domain-event.fixture";
 
 describe("View", () => {
   const logger = createMockLogger();
@@ -39,7 +39,7 @@ describe("View", () => {
       context: "default",
       destroyed: false,
       hash: expect.any(String),
-      modified: null,
+      meta: {},
       processedCausationIds: [],
       revision: 0,
       state: {},
@@ -56,6 +56,7 @@ describe("View", () => {
     );
 
     expect(view.state).toStrictEqual({ test: true });
+    expect(view.meta).toStrictEqual({});
   });
 
   test("should destroy", () => {
@@ -67,8 +68,13 @@ describe("View", () => {
   test("should merge state", () => {
     expect(() => view.mergeState(domainEvent, { merge: "mergeState" })).not.toThrow();
 
-    expect(view.state).toStrictEqual({
-      merge: "mergeState",
+    expect(view.state).toStrictEqual({ merge: "mergeState" });
+    expect(view.meta).toStrictEqual({
+      merge: {
+        destroyed: false,
+        timestamp: expect.any(Date),
+        value: "mergeState",
+      },
     });
   });
 
@@ -76,6 +82,13 @@ describe("View", () => {
     expect(() => view.setState(domainEvent, { setState: true })).not.toThrow();
 
     expect(view.state).toStrictEqual({ setState: true });
+    expect(view.meta).toStrictEqual({
+      setState: {
+        destroyed: false,
+        timestamp: expect.any(Date),
+        value: true,
+      },
+    });
   });
 
   test("should throw on destroy when destroyed", () => {

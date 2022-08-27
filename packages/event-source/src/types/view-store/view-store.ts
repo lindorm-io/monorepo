@@ -23,7 +23,7 @@ export interface ViewUpdateFilter extends ViewIdentifier {
 export interface ViewUpdateData {
   destroyed: boolean;
   hash: string;
-  modified: Date;
+  meta: Record<string, any>;
   processed_causation_ids: Array<string>;
   revision: number;
   state: Record<string, any>;

@@ -285,7 +285,6 @@ describe("EventSource (Postgres)", () => {
       id,
       name: "test_view",
       context: "es_postgres",
-      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,

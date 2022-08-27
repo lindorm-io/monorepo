@@ -1,12 +1,11 @@
 import Joi from "joi";
+import { DomainEvent } from "../message";
 import { ILogger } from "@lindorm-io/winston";
 import { IView, ViewOptions, ViewData, State } from "../types";
-import { IllegalEntityChangeError, ViewDestroyedError, ViewNotUpdatedError } from "../error";
+import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge } from "lodash";
-import { randomString } from "@lindorm-io/core";
-import { DomainEvent } from "../message";
-import { isAfter } from "date-fns";
+import { processObjectChange, randomString } from "@lindorm-io/core";
 
 export class View<TState extends State = State> implements IView<TState> {
   public readonly id: string;
@@ -17,7 +16,7 @@ export class View<TState extends State = State> implements IView<TState> {
   private readonly _processedCausationIds: Array<string>;
   private readonly _revision: number;
   private _destroyed: boolean;
-  private _modified: Date | null;
+  private _meta: Record<string, any>;
   private _state: TState;
 
   private readonly logger: ILogger;
@@ -34,7 +33,7 @@ export class View<TState extends State = State> implements IView<TState> {
 
     this._destroyed = options.destroyed || false;
     this._hash = options.hash || randomString(16);
-    this._modified = options.modified || null;
+    this._meta = options.meta || {};
     this._processedCausationIds = options.processedCausationIds || [];
     this._revision = options.revision || 0;
     this._state = options.state || ({} as unknown as TState);
@@ -56,10 +55,10 @@ export class View<TState extends State = State> implements IView<TState> {
     throw new IllegalEntityChangeError();
   }
 
-  public get modified(): Date {
-    return this._modified;
+  public get meta(): Record<string, any> {
+    return this._meta;
   }
-  public set modified(_: Date) {
+  public set meta(_: Record<string, any>) {
     throw new IllegalEntityChangeError();
   }
 
@@ -93,7 +92,7 @@ export class View<TState extends State = State> implements IView<TState> {
       context: this.context,
       destroyed: this.destroyed,
       hash: this.hash,
-      modified: this._modified,
+      meta: this._meta,
       processedCausationIds: cloneDeep(this.processedCausationIds),
       revision: this.revision,
       state: cloneDeep(this.state),
@@ -103,26 +102,17 @@ export class View<TState extends State = State> implements IView<TState> {
   // public context
 
   public destroy(causation: DomainEvent): void {
-    this.logger.debug("Destroy");
-
-    if (this.modified && isAfter(this.modified, causation.timestamp)) {
-      throw new ViewNotUpdatedError("View has already been modified");
-    }
+    this.logger.debug("Destroy", { causation });
 
     if (this._destroyed) {
       throw new ViewDestroyedError();
     }
 
     this._destroyed = true;
-    this._modified = causation.timestamp;
   }
 
   public mergeState(causation: DomainEvent, data: Partial<TState>): void {
     this.logger.debug("Merge state", { data });
-
-    if (this.modified && isAfter(this.modified, causation.timestamp)) {
-      throw new ViewNotUpdatedError("View has already been modified");
-    }
 
     assertSchema(Joi.object().required().validate(data));
 
@@ -130,24 +120,34 @@ export class View<TState extends State = State> implements IView<TState> {
       throw new ViewDestroyedError();
     }
 
-    merge(this._state, data);
-    this._modified = causation.timestamp;
+    const { state, meta } = processObjectChange<TState>(
+      this._state,
+      merge(data, cloneDeep(this._state)),
+      this._meta,
+      causation.timestamp,
+    );
+
+    this._state = state;
+    this._meta = meta;
   }
 
-  public setState(causation: DomainEvent, state: TState): void {
-    this.logger.debug("Set state", { state });
+  public setState(causation: DomainEvent, data: TState): void {
+    this.logger.debug("Set state", { data });
 
-    if (this.modified && isAfter(this.modified, causation.timestamp)) {
-      throw new ViewNotUpdatedError("View has already been modified");
-    }
-
-    assertSchema(Joi.object().required().validate(state));
+    assertSchema(Joi.object().required().validate(data));
 
     if (this._destroyed) {
       throw new ViewDestroyedError();
     }
 
+    const { state, meta } = processObjectChange<TState>(
+      this._state,
+      data,
+      this._meta,
+      causation.timestamp,
+    );
+
     this._state = state;
-    this._modified = causation.timestamp;
+    this._meta = meta;
   }
 }

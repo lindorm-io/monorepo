@@ -273,7 +273,6 @@ describe("EventSource (Mongo)", () => {
       id,
       name: "test_view",
       context: "es_mongo",
-      modified: expect.any(Date),
       revision: 2,
       state: {
         created: true,
