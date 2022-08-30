@@ -35,7 +35,6 @@ import {
   ISagaDomain,
   IViewDomain,
   State,
-  ViewEventHandlerAdapters,
 } from "../types";
 
 export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends DtoClass = DtoClass>
@@ -231,7 +230,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       registerCommandAggregate: this.scanner.registerCommandAggregate.bind(this.scanner),
       registerQueryHandler: this.queryDomain.registerQueryHandler.bind(this.queryDomain),
       registerSagaEventHandler: this.sagaDomain.registerEventHandler.bind(this.sagaDomain),
-      registerViewEntity: this.queryDomain.registerViewEntity.bind(this.queryDomain),
       registerViewEventHandler: this.viewDomain.registerEventHandler.bind(this.viewDomain),
     };
   }
@@ -248,22 +246,21 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     await this.promise();
 
     const { name, version, data } = extractDtoData(command);
-    const aggregateName = this.scanner.getCommandAggregate(name);
+    const { correlationId, delay, metadata } = options;
 
-    const resolvedAggregate = {
+    const aggregate = {
       id: data.aggregateId || options.aggregate?.id || randomUUID(),
-      name: options.aggregate?.name || aggregateName,
+      name: options.aggregate?.name || this.scanner.getCommandAggregate(name),
       context: this.scanner.context(options.aggregate?.context),
     };
 
     const generated = new Command({
-      aggregate: resolvedAggregate,
-      name,
+      aggregate,
+      correlationId,
       data,
-      correlationId: options.correlationId,
-      delay: options.delay,
-      origin: options.origin || "event_source",
-      originId: options.originId,
+      delay,
+      metadata,
+      name,
       version,
     });
 
@@ -281,8 +278,8 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     await this.messageBus.publish(generated);
 
     return {
+      aggregate,
       result: this.isReplaying ? "QUEUED" : "OK",
-      aggregate: resolvedAggregate,
     };
   }
 
@@ -351,10 +348,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       context: this.scanner.context(view.context),
     };
 
-    const ViewEntity = this.queryDomain.getViewEntity(identifier);
-    const adapters: ViewEventHandlerAdapters = ViewEntity ? { postgres: { ViewEntity } } : {};
-
-    return this.viewDomain.inspect<TState>(identifier, adapters);
+    return this.viewDomain.inspect<TState>(identifier);
   }
 
   // private initialisation handler
@@ -388,7 +382,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       }
       for (const handler of this.scanner.viewEventHandlers) {
         await this.viewDomain.registerEventHandler(handler);
-        this.queryDomain.registerViewEntity(handler.view, handler.adapters?.postgres?.ViewEntity);
       }
     }
 

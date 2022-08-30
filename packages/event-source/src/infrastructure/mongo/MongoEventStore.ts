@@ -1,5 +1,5 @@
 import { Collection } from "mongodb";
-import { EVENT_COLLECTION, EVENT_COLLECTION_INDICES } from "../../constant/event-store";
+import { EVENT_STORE, EVENT_STORE_INDICES } from "../../constant/event-store";
 import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
@@ -59,8 +59,6 @@ export class MongoEventStore extends MongoBase implements IEventStore {
         correlation_id: data.correlation_id,
         events: data.events,
         expected_events: data.expected_events,
-        origin: data.origin,
-        originId: data.originId,
         previous_event_id: data.previous_event_id,
         timestamp: data.timestamp,
       });
@@ -108,13 +106,13 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   // private
 
   private async initialise(): Promise<void> {
-    await this.createIndices(EVENT_COLLECTION, EVENT_COLLECTION_INDICES);
+    await this.createIndices(EVENT_STORE, EVENT_STORE_INDICES);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
   private async eventCollection(): Promise<Collection<EventStoreAttributes>> {
-    return this.connection.database.collection<EventStoreAttributes>(EVENT_COLLECTION);
+    return this.connection.database.collection<EventStoreAttributes>(EVENT_STORE);
   }
 
   private static toEventData(documents: Array<EventStoreAttributes>): Array<EventData> {
@@ -133,8 +131,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
           causation_id: item.causation_id,
           correlation_id: item.correlation_id,
           data: event.data,
-          origin: item.origin,
-          originId: item.originId,
+          meta: event.meta,
           timestamp: event.timestamp,
           version: event.version,
         });

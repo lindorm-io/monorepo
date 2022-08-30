@@ -286,7 +286,6 @@ export class SagaDomain implements ISagaDomain {
               aggregate: { id: saga.id, name: saga.name, context: saga.context },
               data: { error: err, message: event },
               mandatory: false,
-              origin: "saga_domain",
             },
             event,
           ),

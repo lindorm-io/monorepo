@@ -1,5 +1,5 @@
-import { ViewEntity } from "../../infrastructure";
+import { MongoIndex } from "../mongo-base";
 
 export interface PostgresViewEventHandlerAdapterOptions {
-  ViewEntity: typeof ViewEntity;
+  indices?: Array<MongoIndex>;
 }

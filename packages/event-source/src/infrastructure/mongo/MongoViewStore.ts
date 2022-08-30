@@ -3,7 +3,8 @@ import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
-import { find, flatten, snakeCase } from "lodash";
+import { find, flatten } from "lodash";
+import { getViewStoreName } from "../../util";
 import {
   VIEW_CAUSATION_COLLECTION,
   VIEW_CAUSATION_COLLECTION_INDICES,
@@ -236,7 +237,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
     if (find(this.initialisedViews, view)) return;
 
-    const collection = MongoViewStore.getCollectionName(view, adapters.mongo?.collection);
+    const collection = getViewStoreName(view);
     const custom = adapters.mongo?.indices || [];
     const indices = flatten([VIEW_COLLECTION_INDICES, custom]);
 
@@ -255,7 +256,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
     view: HandlerIdentifier,
     adapters: ViewEventHandlerAdapters,
   ): Promise<Collection<ViewStoreAttributes>> {
-    const name = MongoViewStore.getCollectionName(view, adapters.mongo?.collection);
+    const name = getViewStoreName(view);
     await this.createIndices(name, VIEW_COLLECTION_INDICES);
 
     return this.connection.database.collection(name);
@@ -263,11 +264,5 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   private async causationCollection(): Promise<Collection<ViewStoreCausationAttributes>> {
     return this.connection.database.collection(VIEW_CAUSATION_COLLECTION);
-  }
-
-  // private static
-
-  public static getCollectionName(view: HandlerIdentifier, collection?: string): string {
-    return collection || `view_${snakeCase(view.context)}_${snakeCase(view.name)}`;
   }
 }

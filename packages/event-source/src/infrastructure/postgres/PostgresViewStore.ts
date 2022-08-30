@@ -1,21 +1,37 @@
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
-import { ViewCausationEntity, ViewEntity } from "./entity";
+import { getViewStoreName } from "../../util";
+import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import {
+  CREATE_INDEX_VIEW_CAUSATION_IDENTIFIER,
+  CREATE_TABLE_VIEW_CAUSATION,
+} from "./sql/view-causation";
+import {
+  createViewStoreRevisionIndex,
+  createViewStoreTable,
+  getViewStoreRevisionIndexName,
+} from "./sql/view-store";
+import {
+  HandlerIdentifier,
   IMessage,
   IViewStore,
   StandardIdentifier,
   ViewClearProcessedCausationIdsData,
   ViewEventHandlerAdapters,
   ViewStoreAttributes,
+  ViewStoreCausationAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
 
 export class PostgresViewStore extends PostgresBase implements IViewStore {
+  private readonly initialisedViews: Array<string>;
+
   public constructor(connection: IPostgresConnection, logger: ILogger) {
     super(connection, logger);
+
+    this.initialisedViews = [];
   }
 
   public async causationExists(
@@ -25,14 +41,24 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Verifying if causation exists", { identifier, causation });
 
     try {
-      const result = await this.connection.getRepository(ViewCausationEntity).findOneBy({
-        view_id: identifier.id,
-        view_name: identifier.name,
-        view_context: identifier.context,
-        causation_id: causation.id,
-      });
+      await this.promise();
 
-      return !!result;
+      const text = `
+        SELECT timestamp
+        FROM
+          view_causation
+        WHERE
+          view_id = $1 AND
+          view_name = $2 AND
+          view_context = $3 AND
+          causation_id = $4
+      `;
+
+      const values = [identifier.id, identifier.name, identifier.context, causation.id];
+
+      const result = await this.connection.query<ViewStoreCausationAttributes>(text, values);
+
+      return !!result.rowCount;
     } catch (err) {
       this.logger.error("Failed to verify if causation exists", err);
 
@@ -48,20 +74,37 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
-      const ViewEntity = this.viewEntity(adapters);
+      await this.promise();
+      await this.initialiseView(filter);
 
-      const result = await this.connection.getRepository(ViewEntity).update(
-        {
-          id: filter.id,
-          hash: filter.hash,
-          revision: filter.revision,
-        },
-        {
-          hash: data.hash,
-          processed_causation_ids: data.processed_causation_ids,
-          revision: data.revision,
-        },
-      );
+      const text = `
+        UPDATE
+          ${getViewStoreName(filter)}
+        SET
+          processed_causation_ids = $1,
+          hash = $2,
+          revision = $3
+        WHERE 
+          id = $4 AND 
+          name = $5 AND 
+          context = $6 AND 
+          hash = $7 AND 
+          revision = $8
+      `;
+
+      const values = [
+        JSON.stringify(data.processed_causation_ids),
+        data.hash,
+        data.revision,
+
+        filter.id,
+        filter.name,
+        filter.context,
+        filter.hash,
+        filter.revision,
+      ];
+
+      const result = await this.connection.query(text, values);
 
       this.logger.debug("Cleared processed causation ids", { result });
     } catch (err) {
@@ -78,15 +121,24 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Finding view", { identifier });
 
     try {
-      const ViewEntity = this.viewEntity(adapters);
+      await this.promise();
+      await this.initialiseView(identifier);
 
-      const result = await this.connection.getRepository(ViewEntity).findOneBy({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
-      });
+      const text = `
+        SELECT *
+        FROM
+          ${getViewStoreName(identifier)}
+        WHERE
+          id = $1 AND
+          name = $2 AND
+          context = $3
+      `;
 
-      if (!result) {
+      const values = [identifier.id, identifier.name, identifier.context];
+
+      const result = await this.connection.query<ViewStoreAttributes>(text, values);
+
+      if (!result.rows.length) {
         this.logger.debug("View not found");
 
         return;
@@ -94,7 +146,21 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       this.logger.debug("Found view", { result });
 
-      return result;
+      const [data] = result.rows;
+
+      return {
+        id: data.id,
+        name: data.name,
+        context: data.context,
+        destroyed: data.destroyed,
+        hash: data.hash,
+        meta: parseBlob(data.meta),
+        processed_causation_ids: data.processed_causation_ids,
+        revision: data.revision,
+        state: parseBlob(data.state),
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (err) {
       this.logger.error("Failed to find view", err);
 
@@ -109,21 +175,37 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Inserting view", { attributes });
 
     try {
-      const ViewEntity = this.viewEntity(adapters);
+      await this.promise();
+      await this.initialiseView(attributes);
 
-      const result = await this.connection.getRepository(ViewEntity).insert({
-        id: attributes.id,
-        name: attributes.name,
-        context: attributes.context,
-        destroyed: attributes.destroyed,
-        hash: attributes.hash,
-        meta: attributes.meta,
-        processed_causation_ids: attributes.processed_causation_ids,
-        revision: attributes.revision,
-        state: attributes.state,
-        created_at: attributes.created_at,
-        updated_at: attributes.updated_at,
-      });
+      const text = `
+        INSERT INTO ${getViewStoreName(attributes)} (
+          id,
+          name,
+          context,
+          destroyed,
+          hash,
+          meta,
+          processed_causation_ids,
+          revision,
+          state
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `;
+
+      const values = [
+        attributes.id,
+        attributes.name,
+        attributes.context,
+        attributes.destroyed,
+        attributes.hash,
+        stringifyBlob(attributes.meta),
+        JSON.stringify(attributes.processed_causation_ids),
+        attributes.revision,
+        stringifyBlob(attributes.state),
+      ];
+
+      const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted view", { result });
     } catch (err) {
@@ -140,19 +222,32 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
 
     try {
-      const result = await this.connection.client
-        .createQueryBuilder()
-        .insert()
-        .into(ViewCausationEntity)
-        .values(
-          causationIds.map((causationId) => ({
-            view_id: identifier.id,
-            view_name: identifier.name,
-            view_context: identifier.context,
-            causation_id: causationId,
-          })),
-        )
-        .execute();
+      await this.promise();
+
+      let num = 1;
+      let text = `
+        INSERT INTO view_causation (
+          view_id,
+          view_name,
+          view_context,
+          causation_id
+        ) VALUES
+      `;
+      const values = [];
+
+      for (const causationId of causationIds) {
+        text += `($${num}, $${num + 1}, $${num + 2}, $${num + 3}),`;
+        num += 4;
+
+        values.push(identifier.id);
+        values.push(identifier.name);
+        values.push(identifier.context);
+        values.push(causationId);
+      }
+
+      text = text.trim().slice(0, -1);
+
+      const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted processed causation ids", { result });
     } catch (err) {
@@ -170,23 +265,45 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     this.logger.debug("Updating view", { filter, data });
 
     try {
-      const ViewEntity = this.viewEntity(adapters);
+      await this.promise();
+      await this.initialiseView(filter);
 
-      const result = await this.connection.getRepository(ViewEntity).update(
-        {
-          id: filter.id,
-          hash: filter.hash,
-          revision: filter.revision,
-        },
-        {
-          destroyed: data.destroyed,
-          hash: data.hash,
-          meta: data.meta,
-          processed_causation_ids: data.processed_causation_ids,
-          revision: data.revision,
-          state: data.state,
-        },
-      );
+      const text = `
+        UPDATE
+          ${getViewStoreName(filter)}
+        SET
+          destroyed = $1,
+          hash = $2,
+          meta = $3,
+          processed_causation_ids = $4,
+          revision = $5,
+          state = $6,
+          updated_at = $7
+        WHERE
+          id = $8 AND 
+          name = $9 AND 
+          context = $10 AND 
+          hash = $11 AND 
+          revision = $12
+      `;
+
+      const values = [
+        data.destroyed,
+        data.hash,
+        stringifyBlob(data.meta),
+        JSON.stringify(data.processed_causation_ids),
+        data.revision,
+        stringifyBlob(data.state),
+        new Date(),
+
+        filter.id,
+        filter.name,
+        filter.context,
+        filter.hash,
+        filter.revision,
+      ];
+
+      const result = await this.connection.query(text, values);
 
       this.logger.debug("Updated view", { result });
     } catch (err) {
@@ -196,12 +313,47 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
     }
   }
 
+  // protected
+
+  protected async initialise(): Promise<void> {
+    // view_causation
+
+    const causationExists = await this.tableExists("view_causation");
+    if (!causationExists) {
+      await this.connection.query(CREATE_TABLE_VIEW_CAUSATION);
+    }
+
+    const causationIndicesExist = await this.indicesExist("view_causation", [
+      "view_causation_pkey",
+      "idx_view_causation_identifier",
+    ]);
+    if (!causationIndicesExist) {
+      await this.connection.query(CREATE_INDEX_VIEW_CAUSATION_IDENTIFIER);
+    }
+
+    this.promise = (): Promise<void> => Promise.resolve();
+  }
+
   // private
 
-  private viewEntity(adapters: ViewEventHandlerAdapters): typeof ViewEntity {
-    if (!adapters.postgres?.ViewEntity) {
-      throw new Error("ViewEntity not in adapter options");
+  private async initialiseView(view: HandlerIdentifier): Promise<void> {
+    const storeName = getViewStoreName(view);
+
+    if (this.initialisedViews.includes(storeName)) return;
+
+    const storeExists = await this.tableExists(storeName);
+    if (!storeExists) {
+      await this.connection.query(createViewStoreTable(view));
     }
-    return adapters.postgres.ViewEntity;
+
+    const storeIndicesExist = await this.indicesExist(storeName, [
+      `${storeName}_pkey`,
+      getViewStoreRevisionIndexName(view),
+    ]);
+    if (!storeIndicesExist) {
+      await this.connection.query(createViewStoreRevisionIndex(view));
+    }
+
+    this.initialisedViews.push(storeName);
   }
 }

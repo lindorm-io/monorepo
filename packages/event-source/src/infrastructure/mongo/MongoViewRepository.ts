@@ -1,11 +1,11 @@
-import { Filter, FindOptions } from "mongodb";
+import { Collection, Filter, FindOptions } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
+import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
-import { MongoViewStore } from "./MongoViewStore";
+import { getViewStoreName } from "../../util";
 import {
   HandlerIdentifier,
   IMongoRepository,
-  MongoViewRepositoryOptions,
   State,
   ViewRepositoryData,
   ViewStoreAttributes,
@@ -24,28 +24,26 @@ export class MongoViewRepository<TState = State>
   extends MongoBase
   implements IMongoRepository<TState>
 {
-  private readonly collectionName: string;
-  private readonly viewIdentifier: HandlerIdentifier;
+  private readonly collection: Collection<ViewStoreAttributes>;
+  private readonly view: HandlerIdentifier;
 
-  public constructor(options: MongoViewRepositoryOptions, logger: ILogger) {
-    super(options.connection, logger);
+  public constructor(connection: IMongoConnection, view: HandlerIdentifier, logger: ILogger) {
+    super(connection, logger);
 
-    this.collectionName = MongoViewStore.getCollectionName(options.view);
-    this.viewIdentifier = options.view;
+    this.collection = this.connection?.database?.collection<ViewStoreAttributes>(
+      getViewStoreName(view),
+    );
+    this.view = view;
   }
 
   public async find(
     filter: Filter<ViewStoreAttributes> = {},
     options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<Array<ViewRepositoryData<TState>>> {
-    const collection = this.connection.database.collection<ViewStoreAttributes>(
-      this.collectionName,
-    );
-
     this.logger.debug("Finding views", { filter, options });
 
     try {
-      const cursor = collection.find<ViewStoreAttributes>(
+      const cursor = this.collection.find(
         {
           destroyed: false,
           ...filter,
@@ -60,8 +58,8 @@ export class MongoViewRepository<TState = State>
       for (const item of result) {
         array.push({
           id: item.id,
-          name: this.viewIdentifier.name,
-          context: this.viewIdentifier.context,
+          name: this.view.name,
+          context: this.view.context,
           revision: item.revision,
           state: item.state as TState,
           created_at: item.created_at,
@@ -78,14 +76,10 @@ export class MongoViewRepository<TState = State>
   }
 
   public async findById(id: string): Promise<ViewRepositoryData<TState>> {
-    const collection = this.connection.database.collection<ViewStoreAttributes>(
-      this.collectionName,
-    );
-
     this.logger.debug("Finding view", { id });
 
     try {
-      const result = await collection.findOne({ id, destroyed: false }, { projection });
+      const result = await this.collection.findOne({ id, destroyed: false }, { projection });
 
       if (!result) {
         this.logger.debug("View not found");
@@ -97,8 +91,8 @@ export class MongoViewRepository<TState = State>
 
       return {
         id: result.id,
-        name: this.viewIdentifier.name,
-        context: this.viewIdentifier.context,
+        name: this.view.name,
+        context: this.view.context,
         revision: result.revision,
         state: result.state as TState,
         created_at: result.created_at,
@@ -115,17 +109,13 @@ export class MongoViewRepository<TState = State>
     filter: Filter<ViewStoreAttributes>,
     options: FindOptions<ViewStoreAttributes> = {},
   ): Promise<ViewRepositoryData<TState>> {
-    const collection = this.connection.database.collection<ViewStoreAttributes>(
-      this.collectionName,
-    );
-
     this.logger.debug("Finding view", {
       filter,
       options,
     });
 
     try {
-      const result = await collection.findOne(
+      const result = await this.collection.findOne(
         { ...filter, destroyed: false },
         { ...options, projection },
       );
@@ -140,8 +130,8 @@ export class MongoViewRepository<TState = State>
 
       return {
         id: result.id,
-        name: this.viewIdentifier.name,
-        context: this.viewIdentifier.context,
+        name: this.view.name,
+        context: this.view.context,
         revision: result.revision,
         state: result.state as TState,
         created_at: result.created_at,

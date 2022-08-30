@@ -68,7 +68,6 @@ export class ReplayDomain implements IReplayDomain {
         aggregate: this.aggregate,
         data,
         mandatory: true,
-        origin: "replay",
       }),
     );
   }
@@ -107,7 +106,6 @@ export class ReplayDomain implements IReplayDomain {
           aggregate: event.aggregate,
           data: event.data,
           delay: event.data.start.delay,
-          origin: "replay",
         },
         event,
       ),
@@ -127,7 +125,6 @@ export class ReplayDomain implements IReplayDomain {
           aggregate: event.aggregate,
           data: event.data,
           delay: event.data.publishEvents.delay,
-          origin: "replay",
         }),
       );
     }
@@ -154,7 +151,6 @@ export class ReplayDomain implements IReplayDomain {
           },
         },
         delay: event.data.publishEvents.delay,
-        origin: "replay",
       }),
     );
   }

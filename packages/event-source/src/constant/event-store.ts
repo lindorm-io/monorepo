@@ -1,7 +1,7 @@
 import { MongoIndex } from "../types";
 
-export const EVENT_COLLECTION = "event_store";
-export const EVENT_COLLECTION_INDICES: Array<MongoIndex> = [
+export const EVENT_STORE = "event_store";
+export const EVENT_STORE_INDICES: Array<MongoIndex> = [
   {
     indexSpecification: {
       id: 1,
@@ -10,7 +10,7 @@ export const EVENT_COLLECTION_INDICES: Array<MongoIndex> = [
       causation_id: 1,
     },
     createIndexesOptions: {
-      name: "unique_causation",
+      name: "idx_unique_causation",
       unique: true,
     },
   },
@@ -22,7 +22,7 @@ export const EVENT_COLLECTION_INDICES: Array<MongoIndex> = [
       expected_events: 1,
     },
     createIndexesOptions: {
-      name: "unique_expected_events",
+      name: "idx_unique_expected_events",
       unique: true,
     },
   },
@@ -34,7 +34,7 @@ export const EVENT_COLLECTION_INDICES: Array<MongoIndex> = [
       previous_event_id: 1,
     },
     createIndexesOptions: {
-      name: "unique_previous_event_id",
+      name: "idx_unique_previous_event_id",
       unique: true,
     },
   },

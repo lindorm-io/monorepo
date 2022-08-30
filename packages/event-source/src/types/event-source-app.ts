@@ -10,9 +10,7 @@ import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 import { IViewStore, ViewStoreAdapterType } from "./view-store";
 import { MessageBusQueueType } from "./message-bus";
 import { ReplayOptions } from "./domain";
-import { ViewEntity } from "../infrastructure";
 import {
-  HandlerIdentifier,
   IAggregateCommandHandler,
   IAggregateEventHandler,
   IQueryHandler,
@@ -65,9 +63,7 @@ export interface EventSourcePublishOptions {
   aggregate?: Partial<AggregateIdentifier>;
   correlationId?: string;
   delay?: number;
-  origin?: string;
-  originId?: string | null;
-  awaitResult?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export type EventSourcePublishResult = {
@@ -96,7 +92,6 @@ export interface EventSourceSetup {
   registerCommandAggregate(name: string, aggregate: string): void;
   registerQueryHandler(handlers: IQueryHandler): Promise<void>;
   registerSagaEventHandler(handlers: ISagaEventHandler): Promise<void>;
-  registerViewEntity(view: HandlerIdentifier, viewEntity: typeof ViewEntity): void;
   registerViewEventHandler(handlers: IViewEventHandler): Promise<void>;
 }
 

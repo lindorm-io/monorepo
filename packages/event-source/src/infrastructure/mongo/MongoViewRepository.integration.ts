@@ -2,9 +2,9 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoViewRepository } from "./MongoViewRepository";
 import { ViewStoreAttributes, ViewIdentifier } from "../../types";
 import { createMockLogger } from "@lindorm-io/winston";
-import { randomUUID } from "crypto";
-import { MongoViewStore } from "./MongoViewStore";
+import { getViewStoreName } from "../../util";
 import { randomString } from "@lindorm-io/core";
+import { randomUUID } from "crypto";
 
 describe("MongoViewRepository", () => {
   const logger = createMockLogger();
@@ -32,10 +32,10 @@ describe("MongoViewRepository", () => {
 
     identifier = { context: "view_repository", name: "view_name", id: randomUUID() };
 
-    repository = new MongoViewRepository({ connection, view: identifier }, logger);
+    repository = new MongoViewRepository(connection, identifier, logger);
 
     const collection = connection.database.collection<ViewStoreAttributes>(
-      MongoViewStore.getCollectionName({ context: "view_repository", name: "view_name" }),
+      getViewStoreName(identifier),
     );
 
     view1 = randomUUID();

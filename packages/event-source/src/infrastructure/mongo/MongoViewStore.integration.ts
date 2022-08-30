@@ -17,6 +17,7 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { getViewStoreName } from "../../util";
 
 describe("MongoViewStore", () => {
   const logger = createMockLogger();
@@ -97,7 +98,7 @@ describe("MongoViewStore", () => {
 
     await connection.client
       .db("MongoViewStore")
-      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .collection(getViewStoreName(viewIdentifier))
       .insertOne(attributes);
 
     const filter: ViewUpdateFilter = {
@@ -119,7 +120,7 @@ describe("MongoViewStore", () => {
     await expect(
       connection.client
         .db("MongoViewStore")
-        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .collection(getViewStoreName(viewIdentifier))
         .findOne({ id: viewIdentifier.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
@@ -147,7 +148,7 @@ describe("MongoViewStore", () => {
 
     await connection.client
       .db("MongoViewStore")
-      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .collection(getViewStoreName(viewIdentifier))
       .insertOne(attributes);
 
     await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
@@ -178,7 +179,7 @@ describe("MongoViewStore", () => {
     await expect(
       connection.client
         .db("MongoViewStore")
-        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .collection(getViewStoreName(viewIdentifier))
         .findOne({ id: viewIdentifier.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
@@ -230,7 +231,7 @@ describe("MongoViewStore", () => {
 
     await connection.client
       .db("MongoViewStore")
-      .collection(MongoViewStore.getCollectionName(viewIdentifier))
+      .collection(getViewStoreName(viewIdentifier))
       .insertOne(attributes);
 
     const filter: ViewUpdateFilter = {
@@ -255,7 +256,7 @@ describe("MongoViewStore", () => {
     await expect(
       connection.client
         .db("MongoViewStore")
-        .collection(MongoViewStore.getCollectionName(viewIdentifier))
+        .collection(getViewStoreName(viewIdentifier))
         .findOne({ id: viewIdentifier.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({

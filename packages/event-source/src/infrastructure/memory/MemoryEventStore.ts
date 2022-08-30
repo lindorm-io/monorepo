@@ -47,8 +47,7 @@ export class MemoryEventStore implements IEventStore {
           causation_id: item.causation_id,
           correlation_id: item.correlation_id,
           data: event.data,
-          origin: item.origin,
-          originId: item.originId,
+          meta: event.meta,
           timestamp: event.timestamp,
           version: event.version,
         });

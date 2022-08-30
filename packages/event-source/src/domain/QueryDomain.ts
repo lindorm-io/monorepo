@@ -8,7 +8,6 @@ import { assertSnakeCase } from "../util";
 import { cloneDeep, find, snakeCase, some } from "lodash";
 import {
   DtoClass,
-  HandlerIdentifier,
   IQueryDomain,
   IQueryHandler,
   QueryDomainOptions,
@@ -19,7 +18,6 @@ import {
   MemoryViewRepository,
   MongoViewRepository,
   PostgresViewRepository,
-  ViewEntity,
 } from "../infrastructure";
 
 export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends State = State>
@@ -29,7 +27,6 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
   private readonly mongo: IMongoConnection;
   private readonly postgres: IPostgresConnection;
   private readonly queryHandlers: Array<IQueryHandler>;
-  private readonly viewEntities: Record<string, typeof ViewEntity>;
 
   public constructor(options: QueryDomainOptions, logger: ILogger) {
     this.logger = logger.createChildLogger(["QueryDomain"]);
@@ -38,7 +35,6 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
     this.postgres = options.postgres;
 
     this.queryHandlers = [];
-    this.viewEntities = {};
   }
 
   public registerQueryHandler(queryHandler: QueryHandlerImplementation): void {
@@ -80,15 +76,6 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
     });
   }
 
-  public registerViewEntity(view: HandlerIdentifier, viewEntity: typeof ViewEntity): void {
-    if (!viewEntity) return;
-
-    assertSnakeCase(view.context);
-    assertSnakeCase(view.name);
-
-    this.viewEntities[QueryDomain.viewEntityName(view)] = viewEntity;
-  }
-
   public async query<TResult>(query: TQuery): Promise<TResult> {
     this.logger.debug("Handling query", { query });
 
@@ -106,16 +93,10 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
         logger: this.logger.createChildLogger(["QueryHandler"]),
         repositories: {
           memory: new MemoryViewRepository<TState>(queryHandler.view),
-          mongo: new MongoViewRepository<TState>(
-            { connection: this.mongo, view: queryHandler.view },
-            this.logger,
-          ),
+          mongo: new MongoViewRepository<TState>(this.mongo, queryHandler.view, this.logger),
           postgres: new PostgresViewRepository<TState>(
-            {
-              connection: this.postgres,
-              ViewEntity: this.viewEntity(queryHandler.view),
-              view: queryHandler.view,
-            },
+            this.postgres,
+            queryHandler.view,
             this.logger,
           ),
         },
@@ -127,23 +108,5 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
 
       throw err;
     }
-  }
-
-  public getViewEntity(view: HandlerIdentifier): typeof ViewEntity | undefined {
-    try {
-      return this.viewEntity(view);
-    } catch (err) {
-      return;
-    }
-  }
-
-  // private
-
-  private viewEntity(view: HandlerIdentifier): typeof ViewEntity {
-    return this.viewEntities[QueryDomain.viewEntityName(view)];
-  }
-
-  private static viewEntityName(view: HandlerIdentifier): string {
-    return `${view.context}_${view.name}`;
   }
 }

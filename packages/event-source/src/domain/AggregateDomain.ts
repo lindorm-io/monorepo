@@ -310,7 +310,6 @@ export class AggregateDomain implements IAggregateDomain {
             aggregate: command.aggregate,
             data: { error, message: command },
             mandatory: true,
-            origin: "aggregate_domain",
           },
           command,
         ),

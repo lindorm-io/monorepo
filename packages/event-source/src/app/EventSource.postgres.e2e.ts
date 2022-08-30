@@ -5,14 +5,7 @@ import { EventSource } from "./EventSource";
 import { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "../enum";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createTypeormViewEntity } from "../util";
 import { randomUUID } from "crypto";
-import {
-  EventEntity,
-  SagaCausationEntity,
-  SagaEntity,
-  ViewCausationEntity,
-} from "../infrastructure";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -41,7 +34,6 @@ export class QueryGreeting {
 
 describe("EventSource (Postgres)", () => {
   const logger = createMockLogger();
-  const ViewEntity = createTypeormViewEntity("test_view", "es_postgres");
 
   let amqp: AmqpConnection;
   let app: EventSource;
@@ -67,11 +59,9 @@ describe("EventSource (Postgres)", () => {
       {
         host: "localhost",
         port: 5432,
-        username: "root",
+        user: "root",
         password: "example",
         database: "default_db",
-        entities: [EventEntity, SagaEntity, SagaCausationEntity, ViewEntity, ViewCausationEntity],
-        synchronize: true,
       },
       logger,
     );
@@ -191,7 +181,7 @@ describe("EventSource (Postgres)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
-        adapters: { postgres: { ViewEntity } },
+        adapters: {},
         aggregate: { name: "test_aggregate", context: "es_postgres" },
         view: { name: "test_view", context: "es_postgres" },
         conditions: { created: false },
@@ -204,7 +194,7 @@ describe("EventSource (Postgres)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
-        adapters: { postgres: { ViewEntity } },
+        adapters: {},
         aggregate: { name: "test_aggregate", context: "es_postgres" },
         view: { name: "test_view", context: "es_postgres" },
         conditions: { created: true },
@@ -217,8 +207,6 @@ describe("EventSource (Postgres)", () => {
 
     app.setup.registerCommandAggregate("create_greeting", "test_aggregate");
     app.setup.registerCommandAggregate("update_greeting", "test_aggregate");
-
-    app.setup.registerViewEntity({ name: "test_view", context: "es_postgres" }, ViewEntity);
   }, 30000);
 
   afterAll(async () => {
@@ -291,12 +279,12 @@ describe("EventSource (Postgres)", () => {
         meta: {
           created: {
             destroyed: false,
-            timestamp: expect.any(String),
+            timestamp: expect.any(Date),
             value: true,
           },
           updated: {
             destroyed: false,
-            timestamp: expect.any(String),
+            timestamp: expect.any(Date),
             value: true,
           },
         },

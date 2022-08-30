@@ -1,70 +1,35 @@
-import { FindManyOptions } from "typeorm/find-options/FindManyOptions";
-import { FindOneOptions } from "typeorm";
-import { ILogger } from "@lindorm-io/winston";
-import { PostgresBase } from "./PostgresBase";
-import { ViewEntity } from "./entity";
 import {
   HandlerIdentifier,
   IPostgresRepository,
   State,
-  PostgresViewRepositoryOptions,
   ViewRepositoryData,
+  ViewStoreAttributes,
 } from "../../types";
+import { ILogger } from "@lindorm-io/winston";
+import { IPostgresConnection } from "@lindorm-io/postgres";
+import { PostgresBase } from "./PostgresBase";
+import { getViewStoreName } from "../../util";
+import { parseBlob } from "@lindorm-io/string-blob";
 
 export class PostgresViewRepository<TState = State>
   extends PostgresBase
   implements IPostgresRepository<TState>
 {
-  private readonly ViewEntity: typeof ViewEntity;
-  private readonly viewIdentifier: HandlerIdentifier;
+  private readonly view: HandlerIdentifier;
 
-  public constructor(options: PostgresViewRepositoryOptions, logger: ILogger) {
-    super(options.connection, logger);
+  public constructor(connection: IPostgresConnection, view: HandlerIdentifier, logger: ILogger) {
+    super(connection, logger);
 
-    this.ViewEntity = options.ViewEntity;
-    this.viewIdentifier = options.view;
+    this.view = view;
   }
 
-  public async find(
-    filter: FindManyOptions<ViewEntity>,
-  ): Promise<Array<ViewRepositoryData<TState>>> {
+  public async find(filter: any): Promise<Array<ViewRepositoryData<TState>>> {
     this.logger.debug("Finding views", { filter });
 
-    const { select: _, ...options } = filter;
+    throw new Error("Implementation missing");
 
     try {
-      const entities = await this.connection.getRepository(this.ViewEntity).find({
-        select: {
-          id: true,
-          revision: true,
-          created_at: true,
-          updated_at: true,
-          // @ts-ignore
-          state: true,
-        },
-        where: {
-          destroyed: false,
-          ...(options.where || {}),
-        },
-        ...options,
-      });
-
-      this.logger.debug("Found views", { entities });
-
-      const array: Array<ViewRepositoryData<TState>> = [];
-      for (const item of entities) {
-        array.push({
-          id: item.id,
-          name: this.viewIdentifier.name,
-          context: this.viewIdentifier.context,
-          revision: item.revision,
-          state: item.state as TState,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-        });
-      }
-
-      return array;
+      /* TODO: Implement */
     } catch (err) {
       this.logger.error("Failed to find views", err);
     }
@@ -74,53 +39,61 @@ export class PostgresViewRepository<TState = State>
     this.logger.debug("Finding view", { id });
 
     try {
-      return this.findOne({ where: { id, destroyed: false } });
+      const text = `
+        SELECT *
+        FROM
+          ${getViewStoreName(this.view)}
+        WHERE
+          id = $1 AND
+          name = $2 AND
+          context = $3 AND
+          destroyed != $4
+        LIMIT 1
+      `;
+
+      const values = [id, this.view.name, this.view.context, true];
+
+      const result = await this.connection.query<ViewStoreAttributes>(text, values);
+
+      if (!result.rows.length) {
+        this.logger.debug("View not found");
+
+        return;
+      }
+
+      this.logger.debug("Found view", { result });
+
+      const [data] = result.rows;
+
+      return {
+        id: data.id,
+        name: data.name,
+        context: data.context,
+        revision: data.revision,
+        state: parseBlob(data.state),
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (err) {
       this.logger.error("Failed to find view", err);
     }
   }
 
-  public async findOne(filter: FindOneOptions<ViewEntity>): Promise<ViewRepositoryData<TState>> {
+  public async findOne(filter: any): Promise<ViewRepositoryData<TState>> {
     this.logger.debug("Finding view", { filter });
 
-    const { select: _, ...options } = filter;
+    throw new Error("Implementation missing");
 
     try {
-      const entity = await this.connection.getRepository(this.ViewEntity).findOne({
-        select: {
-          id: true,
-          revision: true,
-          created_at: true,
-          updated_at: true,
-          // @ts-ignore
-          state: true,
-        },
-        where: {
-          destroyed: false,
-          ...(options.where || {}),
-        },
-        ...options,
-      });
-
-      if (!entity) {
-        this.logger.debug("View not found");
-
-        return null;
-      }
-
-      this.logger.debug("Found view", { entity });
-
-      return {
-        id: entity.id,
-        name: this.viewIdentifier.name,
-        context: this.viewIdentifier.context,
-        revision: entity.revision,
-        state: entity.state as TState,
-        created_at: entity.created_at,
-        updated_at: entity.updated_at,
-      };
+      /* TODO: Implement */
     } catch (err) {
       this.logger.error("Failed to find view", err);
     }
+  }
+
+  // protected
+
+  protected async initialise(): Promise<void> {
+    /* ignored */
   }
 }

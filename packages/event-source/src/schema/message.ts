@@ -16,11 +16,10 @@ export const JOI_MESSAGE = Joi.object<IMessage>().keys({
   data: Joi.object().required(),
   delay: Joi.number().required(),
   mandatory: Joi.boolean().required(),
+  metadata: Joi.object().required(),
   name: Joi.string().required(),
-  origin: Joi.string().required(),
-  originId: Joi.string().allow(null).required(),
-  topic: Joi.string().required(),
   timestamp: Joi.date().required(),
+  topic: Joi.string().required(),
   type: Joi.string()
     .allow(
       MessageType.COMMAND,

@@ -2,6 +2,7 @@ export interface EventAttributes {
   id: string;
   name: string;
   data: Record<string, any>;
+  meta: Record<string, any>;
   timestamp: Date;
   version: number;
 }
@@ -14,8 +15,6 @@ export interface EventStoreAttributes {
   correlation_id: string;
   events: Array<EventAttributes>;
   expected_events: number;
-  origin: string;
-  originId: string | null;
   previous_event_id: string | null;
   timestamp: Date;
 }

@@ -17,13 +17,12 @@ export interface EventStoreOptions {
 
 export interface EventData {
   id: string;
-  name: string;
   aggregate: AggregateIdentifier;
   causation_id: string;
   correlation_id: string;
   data: Record<string, any>;
-  origin: string;
-  originId: string | null;
+  meta: Record<string, any>;
+  name: string;
   timestamp: Date;
   version: number;
 }

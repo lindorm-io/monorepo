@@ -1,5 +1,5 @@
 import { AggregateIdentifier } from "./model";
-import { Data } from "./generic";
+import { Data, Metadata } from "./generic";
 import { IMessage as IAmqpMessage } from "@lindorm-io/amqp";
 
 export type MessageBaseType =
@@ -10,7 +10,7 @@ export type MessageBaseType =
   | "timeout_message"
   | "unknown";
 
-export interface MessageOptions<TData extends Data = Data> {
+export interface MessageOptions<TData extends Data = Data, TMetadata extends Metadata = Metadata> {
   id?: string;
   name: string;
   aggregate: AggregateIdentifier;
@@ -19,13 +19,15 @@ export interface MessageOptions<TData extends Data = Data> {
   data?: TData;
   delay?: number;
   mandatory?: boolean;
-  origin?: string;
-  originId?: string | null;
+  metadata?: TMetadata;
   timestamp?: Date;
   version?: number;
 }
 
-export interface MessageBaseOptions<TData extends Data = Data> extends MessageOptions<TData> {
+export interface MessageBaseOptions<
+  TData extends Data = Data,
+  TMetadata extends Metadata = Metadata,
+> extends MessageOptions<TData, TMetadata> {
   type: MessageBaseType;
 }
 
@@ -33,8 +35,7 @@ export interface IMessage extends IAmqpMessage {
   aggregate: AggregateIdentifier;
   causationId: string;
   correlationId: string;
-  origin: string;
-  originId: string | null;
-  version: number;
+  metadata: Record<string, any>;
   type: MessageBaseType;
+  version: number;
 }

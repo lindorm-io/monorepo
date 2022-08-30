@@ -70,8 +70,9 @@ describe("Saga", () => {
         data: { dispatchedData: true },
         delay: 0,
         mandatory: true,
-        origin: "saga",
-        originId: null,
+        metadata: {
+          origin: "test",
+        },
         timestamp: expect.any(Date),
         topic: "default.aggregate_name.dispatched_command",
         type: "command",

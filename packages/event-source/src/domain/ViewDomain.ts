@@ -25,7 +25,6 @@ import {
   IViewDomain,
   State,
   ViewDomainOptions,
-  ViewEventHandlerAdapters,
   ViewEventHandlerContext,
   ViewIdentifier,
 } from "../types";
@@ -145,9 +144,8 @@ export class ViewDomain implements IViewDomain {
 
   public async inspect<TState extends State = State>(
     identifier: ViewIdentifier,
-    adapters: ViewEventHandlerAdapters,
   ): Promise<View<TState>> {
-    return (await this.store.load(identifier, adapters)) as View<TState>;
+    return (await this.store.load(identifier, {})) as View<TState>;
   }
 
   // private
@@ -308,7 +306,6 @@ export class ViewDomain implements IViewDomain {
             aggregate: { id: view.id, name: view.name, context: view.context },
             data: { error, message: event },
             mandatory: false,
-            origin: "view_domain",
           },
           event,
         ),
