@@ -1,20 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from "typeorm";
 import { PostgresConnection } from "./PostgresConnection";
 import { createMockLogger } from "@lindorm-io/winston";
-
-@Entity({ orderBy: { firstName: "ASC" } })
-class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Index({ unique: true })
-  @Column()
-  firstName: string;
-
-  @Column()
-  @Index()
-  lastName: string;
-}
 
 describe("PostgresConnection", () => {
   const logger = createMockLogger();
@@ -26,99 +11,169 @@ describe("PostgresConnection", () => {
       {
         host: "localhost",
         port: 5432,
-        username: "root",
+        user: "root",
         password: "example",
         database: "default",
-        entities: [User],
-        synchronize: true,
       },
       logger,
     );
 
     await connection.connect();
-  }, 30000);
+  });
 
   afterAll(async () => {
     await connection.disconnect();
   });
 
-  test("should be connected", async () => {
-    await expect(connection.isConnected).toBe(true);
-  }, 10000);
+  test("should create a table", async () => {
+    const create = `
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY,
+        username VARCHAR ( 128 ) NOT NULL,
+        number INT NOT NULL,
+        data JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+      );
+    `;
 
-  test("should create User", async () => {
-    const repository = connection.getRepository(User);
+    const select = `
+      SELECT * FROM information_schema.tables;
+    `;
 
-    const user = repository.create({
-      firstName: "Obi-Wan",
-      lastName: "Kenobi",
-    });
+    await expect(connection.query(create)).resolves.toBeTruthy();
 
-    await expect(repository.save(user)).resolves.toStrictEqual(
+    await expect(connection.query(select)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: expect.any(Number),
-        firstName: "Obi-Wan",
-        lastName: "Kenobi",
+        rows: expect.arrayContaining([
+          {
+            table_catalog: "default",
+            table_schema: "public",
+            table_name: "users",
+            table_type: "BASE TABLE",
+            self_referencing_column_name: null,
+            reference_generation: null,
+            user_defined_type_catalog: null,
+            user_defined_type_schema: null,
+            user_defined_type_name: null,
+            is_insertable_into: "YES",
+            is_typed: "NO",
+            commit_action: null,
+          },
+        ]),
       }),
     );
+  });
 
-    await expect(repository.findBy({ lastName: "Kenobi" })).resolves.toStrictEqual([
+  test("should create a unique index", async () => {
+    const create = `
+      CREATE UNIQUE INDEX idx_username_number
+        ON users (username, number);
+    `;
+
+    const select = `
+      SELECT
+        indexname,
+        indexdef
+      FROM
+        pg_indexes
+      WHERE
+        tablename = 'users';
+    `;
+
+    await expect(connection.query(create)).resolves.toBeTruthy();
+    await expect(connection.query(select)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: expect.any(Number),
-        firstName: "Obi-Wan",
-        lastName: "Kenobi",
+        rows: [
+          {
+            indexdef: "CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)",
+            indexname: "users_pkey",
+          },
+          {
+            indexdef:
+              "CREATE UNIQUE INDEX idx_username_number ON public.users USING btree (username, number)",
+            indexname: "idx_username_number",
+          },
+        ],
       }),
-    ]);
-  }, 10000);
+    );
+  });
 
-  test("should create Users in a transaction", async () => {
-    await expect(
-      connection.transaction(async (manager) => {
-        const repository = manager.getRepository(User);
+  test("should insert a row", async () => {
+    const insert = `
+      INSERT INTO users (id, username, number, data)
+        VALUES ($1, $2, $3, $4) RETURNING *;
+    `;
 
-        await repository.save({
-          firstName: "Anakin",
-          lastName: "Skywalker",
-        });
-        await repository.save({
-          firstName: "Leia",
-          lastName: "Skywalker",
-        });
-      }),
-    ).resolves.not.toThrow();
+    const values = [
+      "8666cda3-114d-4c16-8c99-ef868e5f477b",
+      "username",
+      1234,
+      { hello_there: "general kenobi" },
+    ];
 
-    await expect(
-      connection.getRepository(User).findBy({ lastName: "Skywalker" }),
-    ).resolves.toStrictEqual([
+    await expect(connection.query(insert, values)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: expect.any(Number),
-        firstName: "Anakin",
-        lastName: "Skywalker",
+        rowCount: 1,
+        rows: [
+          {
+            id: "8666cda3-114d-4c16-8c99-ef868e5f477b",
+            username: "username",
+            number: 1234,
+            data: {
+              hello_there: "general kenobi",
+            },
+            created_at: expect.any(Date),
+          },
+        ],
       }),
+    );
+  });
+
+  test("should select a row", async () => {
+    const select = `
+      SELECT * FROM users
+        WHERE id = $1;
+    `;
+
+    const values = ["8666cda3-114d-4c16-8c99-ef868e5f477b"];
+
+    await expect(connection.query(select, values)).resolves.toStrictEqual(
       expect.objectContaining({
-        id: expect.any(Number),
-        firstName: "Leia",
-        lastName: "Skywalker",
+        rowCount: 1,
+        rows: [
+          {
+            id: "8666cda3-114d-4c16-8c99-ef868e5f477b",
+            username: "username",
+            number: 1234,
+            data: {
+              hello_there: "general kenobi",
+            },
+            created_at: expect.any(Date),
+          },
+        ],
       }),
-    ]);
-  }, 10000);
+    );
+  });
 
-  test("should rollback transaction", async () => {
-    await expect(
-      connection.transaction(async (manager) => {
-        const repository = manager.getRepository(User);
+  test("should throw on primary key", async () => {
+    const insert = `
+      INSERT INTO users (id, username, number, data)
+        VALUES ($1, $2, $3, $4) RETURNING *;
+    `;
 
-        await repository.save({
-          firstName: "Luke",
-          lastName: "Skywalker",
-        });
+    const values = ["8666cda3-114d-4c16-8c99-ef868e5f477b", "username", 5678, { throws: "error" }];
 
-        throw new Error("throw");
-      }),
-    ).rejects.toThrow();
+    await expect(connection.query(insert, values)).rejects.toThrow();
+  });
 
-    await expect(
-      connection.getRepository(User).findBy({ firstName: "Luke" }),
-    ).resolves.toStrictEqual([]);
-  }, 10000);
+  test("should throw on unique index", async () => {
+    const insert = `
+      INSERT INTO users (id, username, number, data)
+        VALUES ($1, $2, $3, $4) RETURNING *;
+    `;
+
+    const values = ["59ac0e31-ea96-4508-97a8-d3281c9a8883", "username", 1234, { throws: "error" }];
+
+    await expect(connection.query(insert, values)).rejects.toThrow();
+  });
 });

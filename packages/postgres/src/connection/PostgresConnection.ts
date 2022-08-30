@@ -1,18 +1,13 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
-import { DataSource } from "typeorm";
-import { EntityManager } from "typeorm/entity-manager/EntityManager";
-import { EntityTarget } from "typeorm/common/EntityTarget";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection, PostgresConnectionOptions } from "../types";
-import { ObjectLiteral } from "typeorm/common/ObjectLiteral";
-import { PostgresConnectionOptions as DataSourceOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
-import { Repository } from "typeorm/repository/Repository";
+import { Pool, PoolConfig, QueryConfig, QueryResult, QueryResultRow } from "pg";
 
 export class PostgresConnection
-  extends ConnectionBase<DataSource, DataSourceOptions>
+  extends ConnectionBase<Pool, PoolConfig>
   implements IPostgresConnection
 {
-  private readonly custom: typeof DataSource;
+  private readonly custom: typeof Pool;
 
   public constructor(options: PostgresConnectionOptions, logger: ILogger) {
     const {
@@ -29,14 +24,11 @@ export class PostgresConnection
         connectInterval,
         connectTimeout,
         connectOptions: {
-          extra: {
-            connectionLimit: 5,
-            ...(connectOptions.extra || {}),
-          },
           host,
           port,
+          min: 1,
+          max: 5,
           ...connectOptions,
-          type: "postgres",
         },
         type: "postgres",
       },
@@ -46,34 +38,40 @@ export class PostgresConnection
     this.custom = custom;
   }
 
-  // public
-
-  public getRepository<Entity extends ObjectLiteral>(
-    target: EntityTarget<Entity>,
-  ): Repository<Entity> {
-    return this.client.getRepository(target);
-  }
-
-  public transaction<T = void>(
-    runInTransaction: (entityManager: EntityManager) => Promise<T>,
-  ): Promise<T> {
-    return this.client.transaction(runInTransaction);
-  }
-
   // abstract implementation
 
-  protected async createClientConnection(): Promise<DataSource> {
+  protected async createClientConnection(): Promise<Pool> {
     if (this.custom) {
       return new this.custom(this.connectOptions);
     }
-    return new DataSource(this.connectOptions);
+    return new Pool(this.connectOptions);
   }
 
   protected async connectCallback(): Promise<void> {
-    await this.client.initialize();
+    /* ignored */
   }
 
   protected async disconnectCallback(): Promise<void> {
-    await this.client.close();
+    await this.client.end();
+  }
+
+  // public
+
+  public async query<
+    TResult extends QueryResultRow = QueryResultRow,
+    TValues extends Array<any> = Array<any>,
+  >(
+    queryTextOrConfig: QueryConfig<TValues> | string,
+    values?: TValues,
+  ): Promise<QueryResult<TResult>> {
+    const client = await this.client.connect();
+
+    this.logger.debug("Query", { query: queryTextOrConfig, values });
+
+    try {
+      return await client.query(queryTextOrConfig, values);
+    } finally {
+      client.release();
+    }
   }
 }

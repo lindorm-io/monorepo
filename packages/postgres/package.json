@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist",
-    "test": "yarn test:unit && yarn test:integration",
+    "test": "yarn test:integration",
     "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js --",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u --",
     "test:integration:watch": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
@@ -27,13 +27,13 @@
     "@lindorm-io/core-connection": "^0.1.0",
     "@lindorm-io/errors": "^0.1.13",
     "lodash": "^4.17.21",
-    "pg": "^8.7.3",
-    "typeorm": "^0.3.7"
+    "pg": "^8.7.3"
   },
   "devDependencies": {
     "@lindorm-io/winston": "^0.4.7",
     "@types/lodash": "^4.14.182",
     "@types/pg": "^8.6.5",
-    "compd": "^4.1.1"
+    "compd": "^4.1.1",
+    "pgmock2": "^2.1.5"
   }
 }
