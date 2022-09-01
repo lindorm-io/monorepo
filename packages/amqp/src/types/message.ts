@@ -1,7 +1,7 @@
-export interface IMessage {
+export interface IMessage<TData = any> {
   id: string;
   name: string;
-  data: Record<string, any>;
+  data: TData;
   delay: number;
   mandatory: boolean;
   timestamp: Date;
