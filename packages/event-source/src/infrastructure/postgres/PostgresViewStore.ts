@@ -1,29 +1,24 @@
+import { CREATE_TABLE_VIEW_CAUSATION } from "./sql/view-causation";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
+import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
+import { createViewStoreTable } from "./sql/view-store";
 import { getViewStoreName } from "../../util";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
-import {
-  CREATE_INDEX_VIEW_CAUSATION_IDENTIFIER,
-  CREATE_TABLE_VIEW_CAUSATION,
-} from "./sql/view-causation";
-import {
-  createViewStoreRevisionIndex,
-  createViewStoreTable,
-  getViewStoreRevisionIndexName,
-} from "./sql/view-store";
 import {
   HandlerIdentifier,
   IMessage,
   IViewStore,
   StandardIdentifier,
+  ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerAdapters,
+  ViewEventHandlerStoreOptions,
   ViewStoreAttributes,
-  ViewStoreCausationAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { flatten } from "lodash";
 
 export class PostgresViewStore extends PostgresBase implements IViewStore {
   private readonly initialisedViews: Array<string>;
@@ -48,15 +43,15 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         FROM
           view_causation
         WHERE
-          view_id = $1 AND
-          view_name = $2 AND
-          view_context = $3 AND
+          id = $1 AND
+          name = $2 AND
+          context = $3 AND
           causation_id = $4
       `;
 
       const values = [identifier.id, identifier.name, identifier.context, causation.id];
 
-      const result = await this.connection.query<ViewStoreCausationAttributes>(text, values);
+      const result = await this.connection.query<ViewCausationAttributes>(text, values);
 
       return !!result.rowCount;
     } catch (err) {
@@ -69,13 +64,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
       await this.promise();
-      await this.initialiseView(filter);
+      await this.initialiseView(filter, options);
 
       const text = `
         UPDATE
@@ -116,13 +111,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async find(
     identifier: StandardIdentifier,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<ViewStoreAttributes> {
     this.logger.debug("Finding view", { identifier });
 
     try {
       await this.promise();
-      await this.initialiseView(identifier);
+      await this.initialiseView(identifier, options);
 
       const text = `
         SELECT *
@@ -170,13 +165,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async insert(
     attributes: ViewStoreAttributes,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
     try {
       await this.promise();
-      await this.initialiseView(attributes);
+      await this.initialiseView(attributes, options);
 
       const text = `
         INSERT INTO ${getViewStoreName(attributes)} (
@@ -227,9 +222,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       let num = 1;
       let text = `
         INSERT INTO view_causation (
-          view_id,
-          view_name,
-          view_context,
+          id,
+          name,
+          context,
           causation_id
         ) VALUES
       `;
@@ -260,13 +255,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
     try {
       await this.promise();
-      await this.initialiseView(filter);
+      await this.initialiseView(filter, options);
 
       const text = `
         UPDATE
@@ -323,21 +318,24 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       await this.connection.query(CREATE_TABLE_VIEW_CAUSATION);
     }
 
-    const causationIndicesExist = await this.indicesExist("view_causation", [
-      "view_causation_pkey",
-      "idx_view_causation_identifier",
-    ]);
-    if (!causationIndicesExist) {
-      await this.connection.query(CREATE_INDEX_VIEW_CAUSATION_IDENTIFIER);
-    }
+    const missingCausationIndexes = await this.getMissingIndexes<ViewCausationAttributes>(
+      VIEW_CAUSATION,
+      VIEW_CAUSATION_INDEXES,
+    );
+    await this.createIndexes(VIEW_CAUSATION, missingCausationIndexes);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
   // private
 
-  private async initialiseView(view: HandlerIdentifier): Promise<void> {
+  private async initialiseView(
+    view: HandlerIdentifier,
+    options: ViewEventHandlerStoreOptions,
+  ): Promise<void> {
     const storeName = getViewStoreName(view);
+    const custom = options.indexes || [];
+    const indexes = flatten([getViewStoreIndexes(view), custom]);
 
     if (this.initialisedViews.includes(storeName)) return;
 
@@ -346,13 +344,8 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       await this.connection.query(createViewStoreTable(view));
     }
 
-    const storeIndicesExist = await this.indicesExist(storeName, [
-      `${storeName}_pkey`,
-      getViewStoreRevisionIndexName(view),
-    ]);
-    if (!storeIndicesExist) {
-      await this.connection.query(createViewStoreRevisionIndex(view));
-    }
+    const missingIndexes = await this.getMissingIndexes<ViewStoreAttributes>(storeName, indexes);
+    await this.createIndexes(storeName, missingIndexes);
 
     this.initialisedViews.push(storeName);
   }

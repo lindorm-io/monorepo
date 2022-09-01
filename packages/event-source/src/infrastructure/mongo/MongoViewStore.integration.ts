@@ -4,14 +4,14 @@ import { MongoViewStore } from "./MongoViewStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
-import { VIEW_CAUSATION_COLLECTION } from "../../constant";
+import { VIEW_CAUSATION } from "../../constant";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,
   ViewStoreAttributes,
-  ViewStoreCausationAttributes,
+  ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
   ViewIdentifier,
   ViewUpdateData,
@@ -55,18 +55,15 @@ describe("MongoViewStore", () => {
   test("should resolve existing causation", async () => {
     const event = new DomainEvent(TEST_COMMAND);
 
-    const document: ViewStoreCausationAttributes = {
-      view_id: viewIdentifier.id,
-      view_name: viewIdentifier.name,
-      view_context: viewIdentifier.context,
+    const document: ViewCausationAttributes = {
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
       causation_id: event.id,
       timestamp: new Date(),
     };
 
-    await connection.client
-      .db("MongoViewStore")
-      .collection(VIEW_CAUSATION_COLLECTION)
-      .insertOne(document);
+    await connection.client.db("MongoViewStore").collection(VIEW_CAUSATION).insertOne(document);
 
     await expect(store.causationExists(viewIdentifier, event)).resolves.toBe(true);
 
@@ -84,7 +81,7 @@ describe("MongoViewStore", () => {
   test("should clear processed causation ids", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),
@@ -134,7 +131,7 @@ describe("MongoViewStore", () => {
   test("should find view", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),
@@ -198,26 +195,25 @@ describe("MongoViewStore", () => {
       store.insertProcessedCausationIds(viewIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
-    const cursor = connection.client
-      .db("MongoViewStore")
-      .collection(VIEW_CAUSATION_COLLECTION)
-      .find({
-        view_id: viewIdentifier.id,
-        view_name: viewIdentifier.name,
-        view_context: viewIdentifier.context,
-      });
+    const cursor = connection.client.db("MongoViewStore").collection(VIEW_CAUSATION).find({
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
+    });
 
-    await expect(cursor.toArray()).resolves.toStrictEqual([
-      expect.objectContaining({ causation_id: one }),
-      expect.objectContaining({ causation_id: two }),
-      expect.objectContaining({ causation_id: three }),
-    ]);
+    await expect(cursor.toArray()).resolves.toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ causation_id: one }),
+        expect.objectContaining({ causation_id: two }),
+        expect.objectContaining({ causation_id: three }),
+      ]),
+    );
   });
 
   test("should update view", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),

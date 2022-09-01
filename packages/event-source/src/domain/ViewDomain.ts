@@ -113,7 +113,7 @@ export class ViewDomain implements IViewDomain {
       this.eventHandlers.push(
         new ViewEventHandlerImplementation({
           eventName: eventHandler.eventName,
-          adapters: eventHandler.adapters,
+          options: eventHandler.options,
           aggregate: {
             name: eventHandler.aggregate.name,
             context: context,
@@ -203,7 +203,7 @@ export class ViewDomain implements IViewDomain {
       context: viewIdentifier.context,
     };
 
-    let view = await this.store.load(identifier, eventHandler.adapters);
+    let view = await this.store.load(identifier, eventHandler.options);
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
@@ -262,7 +262,7 @@ export class ViewDomain implements IViewDomain {
 
     await eventHandler.handler(context);
 
-    const saved = await this.store.save(view, event, eventHandler.adapters);
+    const saved = await this.store.save(view, event, eventHandler.options);
 
     this.emit(saved);
 
@@ -292,7 +292,7 @@ export class ViewDomain implements IViewDomain {
     });
 
     await this.store.processCausationIds(view);
-    return await this.store.clearProcessedCausationIds(view, eventHandler.adapters);
+    return await this.store.clearProcessedCausationIds(view, eventHandler.options);
   }
 
   private async rejectEvent(event: DomainEvent, view: View, error: DomainError): Promise<void> {

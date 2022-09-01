@@ -4,7 +4,7 @@ import {
   IMessage,
   IViewStore,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerAdapters,
+  ViewEventHandlerStoreOptions,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewUpdateData,
@@ -14,9 +14,9 @@ import {
 export class MemoryViewStore implements IViewStore {
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
     return !!find(IN_MEMORY_VIEW_CAUSATION_STORE, {
-      view_id: identifier.id,
-      view_name: identifier.name,
-      view_context: identifier.context,
+      id: identifier.id,
+      name: identifier.name,
+      context: identifier.context,
       causation_id: causation.id,
     });
   }
@@ -24,7 +24,7 @@ export class MemoryViewStore implements IViewStore {
   public async clearProcessedCausationIds(
     updateFilter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
     const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
@@ -34,14 +34,14 @@ export class MemoryViewStore implements IViewStore {
 
   public async find(
     identifier: ViewIdentifier,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<ViewStoreAttributes | undefined> {
     return find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, identifier);
   }
 
   public async insert(
     attributes: ViewStoreAttributes,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     const found = find(IN_MEMORY_VIEW_STORE, {
       id: attributes.id,
@@ -62,9 +62,9 @@ export class MemoryViewStore implements IViewStore {
   ): Promise<void> {
     for (const causationId of causationIds) {
       IN_MEMORY_VIEW_CAUSATION_STORE.push({
-        view_id: identifier.id,
-        view_name: identifier.name,
-        view_context: identifier.context,
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
         causation_id: causationId,
         timestamp: new Date(),
       });
@@ -74,7 +74,7 @@ export class MemoryViewStore implements IViewStore {
   public async update(
     updateFilter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void> {
     const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
     const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);

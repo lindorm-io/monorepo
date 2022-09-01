@@ -14,7 +14,7 @@ import {
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
+  SagaCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
@@ -53,22 +53,22 @@ const insertSaga = async (
 
 const insertCausation = async (
   connection: PostgresConnection,
-  attributes: SagaStoreCausationAttributes,
+  attributes: SagaCausationAttributes,
 ): Promise<void> => {
   const text = `
     INSERT INTO saga_causation (
-      saga_id,
-      saga_name,
-      saga_context,
+      id,
+      name,
+      context,
       causation_id,
       timestamp
     ) 
     VALUES ($1,$2,$3,$4,$5)
   `;
   const values = [
-    attributes.saga_id,
-    attributes.saga_name,
-    attributes.saga_context,
+    attributes.id,
+    attributes.name,
+    attributes.context,
     attributes.causation_id,
     attributes.timestamp,
   ];
@@ -96,18 +96,18 @@ const findSaga = async (
 const findCausations = async (
   connection: PostgresConnection,
   identifier: SagaIdentifier,
-): Promise<Array<SagaStoreCausationAttributes>> => {
+): Promise<Array<SagaCausationAttributes>> => {
   const text = `
     SELECT *
     FROM
       saga_causation
     WHERE
-      saga_id = $1 AND
-      saga_name = $2 AND
-      saga_context = $3
+      id = $1 AND
+      name = $2 AND
+      context = $3
   `;
   const values = [identifier.id, identifier.name, identifier.context];
-  const result = await connection.query<SagaStoreCausationAttributes>(text, values);
+  const result = await connection.query<SagaCausationAttributes>(text, values);
   return result.rows.length ? result.rows : [];
 };
 
@@ -163,9 +163,9 @@ describe("PostgresSagaStore", () => {
     const event = new DomainEvent(TEST_COMMAND);
 
     await insertCausation(connection, {
-      saga_id: attributes.id,
-      saga_name: attributes.name,
-      saga_context: attributes.context,
+      id: attributes.id,
+      name: attributes.name,
+      context: attributes.context,
       causation_id: event.causationId,
       timestamp: event.timestamp,
     });

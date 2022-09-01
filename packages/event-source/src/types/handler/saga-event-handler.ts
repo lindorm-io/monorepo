@@ -4,10 +4,6 @@ import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts
 import { ILogger } from "@lindorm-io/winston";
 import { SagaDispatchOptions } from "../model";
 
-export type GetSagaIdFunction<TEvent extends DtoClass = DtoClass> = (
-  event: DomainEvent<TEvent> | TimeoutMessage<TEvent>,
-) => string;
-
 export interface SagaEventHandlerContext<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,

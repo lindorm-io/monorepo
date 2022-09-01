@@ -1,6 +1,6 @@
+import { DomainEvent, TimeoutMessage } from "../message";
 import {
   DtoClass,
-  GetSagaIdFunction,
   HandlerConditions,
   HandlerIdentifier,
   HandlerIdentifierMultipleContexts,
@@ -21,7 +21,7 @@ export class SagaEventHandlerImplementation<
   public readonly eventName: string;
   public readonly saga: HandlerIdentifier;
   public readonly version: number;
-  public readonly getSagaId: GetSagaIdFunction<TEvent>;
+  public readonly getSagaId: (event: DomainEvent<TEvent> | TimeoutMessage<TEvent>) => string;
   public readonly handler: (
     ctx: SagaEventHandlerContext<TEvent, TState, TDispatch>,
   ) => Promise<void>;
@@ -32,7 +32,7 @@ export class SagaEventHandlerImplementation<
     this.eventName = options.eventName;
     this.saga = { name: options.saga.name, context: options.saga.context };
     this.version = options.version || 1;
-    this.getSagaId = options.getSagaId;
+    this.getSagaId = options.getSagaId ? options.getSagaId : (event): string => event.aggregate.id;
     this.handler = options.handler;
   }
 }

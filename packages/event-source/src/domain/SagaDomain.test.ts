@@ -124,7 +124,7 @@ describe("SagaDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.saga.default.aggregate_name.domain_event_default.default.saga_name",
+      queue: "queue.saga.default.aggregate_name.domain_event_default.default.name",
       topic: "default.aggregate_name.domain_event_default",
     });
   });
@@ -149,13 +149,13 @@ describe("SagaDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
-      queue: "queue.saga.one.aggregate_name.domain_event_default.default.saga_name",
+      queue: "queue.saga.one.aggregate_name.domain_event_default.default.name",
       topic: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
-      queue: "queue.saga.two.aggregate_name.domain_event_default.default.saga_name",
+      queue: "queue.saga.two.aggregate_name.domain_event_default.default.name",
       topic: "two.aggregate_name.domain_event_default",
     });
   });
@@ -188,14 +188,14 @@ describe("SagaDomain", () => {
 
     expect(store.load).toHaveBeenCalledWith({
       id: event.aggregate.id,
-      name: "saga_name",
+      name: "name",
       context: "default",
     });
 
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "saga_name",
+        name: "name",
         context: "default",
         processedCausationIds: [],
         destroyed: false,
@@ -228,7 +228,7 @@ describe("SagaDomain", () => {
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "saga_name",
+        name: "name",
         context: "default",
         processedCausationIds: [causationId],
         destroyed: false,

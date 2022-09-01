@@ -1,5 +1,5 @@
 import { Collection } from "mongodb";
-import { EVENT_STORE, EVENT_STORE_INDICES } from "../../constant/event-store";
+import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
 import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
@@ -106,7 +106,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   // private
 
   private async initialise(): Promise<void> {
-    await this.createIndices(EVENT_STORE, EVENT_STORE_INDICES);
+    await this.createIndexes(EVENT_STORE, EVENT_STORE_INDEXES);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }

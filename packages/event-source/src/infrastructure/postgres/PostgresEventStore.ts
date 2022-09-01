@@ -1,14 +1,10 @@
+import { CREATE_TABLE_EVENT_STORE } from "./sql/event-store";
+import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
 import { IEventStore, EventStoreFindFilter, EventStoreAttributes, EventData } from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
-import {
-  CREATE_INDEX_EVENT_STORE_IDENTIFIER,
-  CREATE_INDEX_EVENT_STORE_UNIQUE_EXPECTED_EVENTS,
-  CREATE_INDEX_EVENT_STORE_UNIQUE_PREVIOUS_EVENT,
-  CREATE_TABLE_EVENT_STORE,
-} from "./sql/event-store";
 
 export class PostgresEventStore extends PostgresBase implements IEventStore {
   public constructor(connection: IPostgresConnection, logger: ILogger) {
@@ -125,22 +121,16 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
   // protected
 
   protected async initialise(): Promise<void> {
-    const storeExists = await this.tableExists("event_store");
+    const storeExists = await this.tableExists(EVENT_STORE);
     if (!storeExists) {
       await this.connection.query(CREATE_TABLE_EVENT_STORE);
     }
 
-    const storeIndicesExist = await this.indicesExist("event_store", [
-      "event_store_pkey",
-      "idx_event_store_identifier",
-      "idx_event_store_unique_expected_events",
-      "idx_event_store_unique_previous_event",
-    ]);
-    if (!storeIndicesExist) {
-      await this.connection.query(CREATE_INDEX_EVENT_STORE_IDENTIFIER);
-      await this.connection.query(CREATE_INDEX_EVENT_STORE_UNIQUE_EXPECTED_EVENTS);
-      await this.connection.query(CREATE_INDEX_EVENT_STORE_UNIQUE_PREVIOUS_EVENT);
-    }
+    const missingIndexes = await this.getMissingIndexes<EventStoreAttributes>(
+      EVENT_STORE,
+      EVENT_STORE_INDEXES,
+    );
+    await this.createIndexes(EVENT_STORE, missingIndexes);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }

@@ -2,7 +2,7 @@ import { Collection } from "mongodb";
 import { Command, DomainEvent } from "../../message";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoSagaStore } from "./MongoSagaStore";
-import { SAGA_CAUSATION_COLLECTION, SAGA_COLLECTION } from "../../constant";
+import { SAGA_CAUSATION, SAGA_STORE } from "../../constant";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
@@ -12,7 +12,7 @@ import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
+  SagaCausationAttributes,
   SagaClearMessagesToDispatchData,
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
@@ -73,18 +73,15 @@ describe("MongoSagaStore", () => {
   test("should resolve existing causation", async () => {
     const event = new DomainEvent(TEST_COMMAND);
 
-    const document: SagaStoreCausationAttributes = {
-      saga_id: sagaIdentifier.id,
-      saga_name: sagaIdentifier.name,
-      saga_context: sagaIdentifier.context,
+    const document: SagaCausationAttributes = {
+      id: sagaIdentifier.id,
+      name: sagaIdentifier.name,
+      context: sagaIdentifier.context,
       causation_id: event.id,
       timestamp: new Date(),
     };
 
-    await connection.client
-      .db("MongoSagaStore")
-      .collection(SAGA_CAUSATION_COLLECTION)
-      .insertOne(document);
+    await connection.client.db("MongoSagaStore").collection(SAGA_CAUSATION).insertOne(document);
 
     await expect(store.causationExists(sagaIdentifier, event)).resolves.toBe(true);
 
@@ -147,7 +144,7 @@ describe("MongoSagaStore", () => {
     await expect(store.clearProcessedCausationIds(filter, update)).resolves.toBeUndefined();
 
     await expect(
-      connection.client.db("MongoSagaStore").collection(SAGA_COLLECTION).findOne(sagaIdentifier),
+      connection.client.db("MongoSagaStore").collection(SAGA_STORE).findOne(sagaIdentifier),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         hash: update.hash,
@@ -188,20 +185,19 @@ describe("MongoSagaStore", () => {
       store.insertProcessedCausationIds(sagaIdentifier, [one, two, three]),
     ).resolves.toBeUndefined();
 
-    const cursor = connection.client
-      .db("MongoSagaStore")
-      .collection(SAGA_CAUSATION_COLLECTION)
-      .find({
-        saga_id: sagaIdentifier.id,
-        saga_name: sagaIdentifier.name,
-        saga_context: sagaIdentifier.context,
-      });
+    const cursor = connection.client.db("MongoSagaStore").collection(SAGA_CAUSATION).find({
+      id: sagaIdentifier.id,
+      name: sagaIdentifier.name,
+      context: sagaIdentifier.context,
+    });
 
-    await expect(cursor.toArray()).resolves.toStrictEqual([
-      expect.objectContaining({ causation_id: one }),
-      expect.objectContaining({ causation_id: two }),
-      expect.objectContaining({ causation_id: three }),
-    ]);
+    await expect(cursor.toArray()).resolves.toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ causation_id: one }),
+        expect.objectContaining({ causation_id: two }),
+        expect.objectContaining({ causation_id: three }),
+      ]),
+    );
   });
 
   test("should update saga", async () => {
@@ -227,7 +223,7 @@ describe("MongoSagaStore", () => {
     await expect(store.update(filter, update)).resolves.toBeUndefined();
 
     await expect(
-      connection.client.db("MongoSagaStore").collection(SAGA_COLLECTION).findOne(sagaIdentifier),
+      connection.client.db("MongoSagaStore").collection(SAGA_STORE).findOne(sagaIdentifier),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         hash: update.hash,

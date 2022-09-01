@@ -15,3 +15,4 @@ export * from "./mongo-base";
 export * from "./replay-message";
 export * from "./scan";
 export * from "./standard-identifier";
+export * from "./store-index";

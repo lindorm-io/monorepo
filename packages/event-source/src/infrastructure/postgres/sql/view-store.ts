@@ -26,15 +26,3 @@ export const createViewStoreTable = (view: HandlerIdentifier): QueryConfig => {
   `;
   return { text };
 };
-
-export const getViewStoreRevisionIndexName = (view: HandlerIdentifier): string => {
-  return `idx_unique_${getViewStoreName(view)}_revision`;
-};
-
-export const createViewStoreRevisionIndex = (view: HandlerIdentifier): QueryConfig => {
-  const text = `
-    CREATE UNIQUE INDEX ${getViewStoreRevisionIndexName(view)}
-      ON ${getViewStoreName(view)} (id, name, context, hash, revision);
-  `;
-  return { text };
-};

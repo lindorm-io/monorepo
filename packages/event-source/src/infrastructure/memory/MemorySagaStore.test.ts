@@ -10,7 +10,7 @@ import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
+  SagaCausationAttributes,
   SagaClearMessagesToDispatchData,
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
@@ -49,10 +49,10 @@ describe("MemorySagaStore", () => {
   test("should resolve existing causation", async () => {
     const event = new DomainEvent(TEST_COMMAND);
 
-    const document: SagaStoreCausationAttributes = {
-      saga_id: sagaIdentifier.id,
-      saga_name: sagaIdentifier.name,
-      saga_context: sagaIdentifier.context,
+    const document: SagaCausationAttributes = {
+      id: sagaIdentifier.id,
+      name: sagaIdentifier.name,
+      context: sagaIdentifier.context,
       causation_id: event.id,
       timestamp: new Date(),
     };
@@ -161,9 +161,9 @@ describe("MemorySagaStore", () => {
 
     expect(
       filter(IN_MEMORY_SAGA_CAUSATION_STORE, {
-        saga_id: sagaIdentifier.id,
-        saga_name: sagaIdentifier.name,
-        saga_context: sagaIdentifier.context,
+        id: sagaIdentifier.id,
+        name: sagaIdentifier.name,
+        context: sagaIdentifier.context,
       }),
     ).toStrictEqual([
       expect.objectContaining({ causation_id: one }),

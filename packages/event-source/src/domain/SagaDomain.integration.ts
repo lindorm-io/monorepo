@@ -76,7 +76,7 @@ describe("SagaDomain", () => {
     await expect(store.load(saga)).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "saga_name",
+        name: "name",
         context: "default",
         processedCausationIds: [
           eventCreate.id,

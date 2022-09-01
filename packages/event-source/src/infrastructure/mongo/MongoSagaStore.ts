@@ -4,10 +4,10 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
 import {
-  SAGA_CAUSATION_COLLECTION,
-  SAGA_CAUSATION_COLLECTION_INDICES,
-  SAGA_COLLECTION,
-  SAGA_COLLECTION_INDICES,
+  SAGA_CAUSATION,
+  SAGA_CAUSATION_INDEXES,
+  SAGA_STORE,
+  SAGA_STORE_INDEXES,
 } from "../../constant";
 import {
   IMessage,
@@ -16,7 +16,7 @@ import {
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
+  SagaCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
@@ -41,9 +41,9 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const collection = await this.causationCollection();
 
       const result = await collection.findOne({
-        saga_id: identifier.id,
-        saga_name: identifier.name,
-        saga_context: identifier.context,
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
         causation_id: causation.id,
       });
 
@@ -196,10 +196,10 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
     try {
       const collection = await this.causationCollection();
 
-      const documents: Array<SagaStoreCausationAttributes> = causationIds.map((causationId) => ({
-        saga_id: identifier.id,
-        saga_name: identifier.name,
-        saga_context: identifier.context,
+      const documents: Array<SagaCausationAttributes> = causationIds.map((causationId) => ({
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
         causation_id: causationId,
         timestamp: new Date(),
       }));
@@ -258,17 +258,17 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   // private
 
   private async initialise(): Promise<void> {
-    await this.createIndices(SAGA_COLLECTION, SAGA_COLLECTION_INDICES);
-    await this.createIndices(SAGA_CAUSATION_COLLECTION, SAGA_CAUSATION_COLLECTION_INDICES);
+    await this.createIndexes(SAGA_STORE, SAGA_STORE_INDEXES);
+    await this.createIndexes(SAGA_CAUSATION, SAGA_CAUSATION_INDEXES);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
   private async sagaCollection(): Promise<Collection<SagaStoreAttributes>> {
-    return this.connection.database.collection(SAGA_COLLECTION);
+    return this.connection.database.collection(SAGA_STORE);
   }
 
-  private async causationCollection(): Promise<Collection<SagaStoreCausationAttributes>> {
-    return this.connection.database.collection(SAGA_CAUSATION_COLLECTION);
+  private async causationCollection(): Promise<Collection<SagaCausationAttributes>> {
+    return this.connection.database.collection(SAGA_CAUSATION);
   }
 }

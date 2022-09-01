@@ -57,7 +57,9 @@ describe("AmqpMessageBus", () => {
         name: "aggregate",
         context: "context",
       },
-      origin: "test",
+      metadata: {
+        origin: "test",
+      },
     });
 
     await expect(messageBus.publish([command])).resolves.toBeUndefined();
@@ -77,7 +79,9 @@ describe("AmqpMessageBus", () => {
         name: "aggregate",
         context: "context",
       },
-      origin: "test",
+      metadata: {
+        origin: "test",
+      },
     });
 
     const domainEvent = new DomainEvent(
@@ -89,7 +93,9 @@ describe("AmqpMessageBus", () => {
           name: "aggregate",
           context: "context",
         },
-        origin: "test",
+        metadata: {
+          origin: "test",
+        },
       },
       command,
     );

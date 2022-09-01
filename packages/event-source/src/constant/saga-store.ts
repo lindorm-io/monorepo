@@ -1,56 +1,34 @@
-import { MongoIndex } from "../types";
+import { SagaStoreAttributes, SagaCausationAttributes, StoreIndexes } from "../types";
 
-export const SAGA_COLLECTION = "saga_store";
-export const SAGA_COLLECTION_INDICES: Array<MongoIndex> = [
+export const SAGA_STORE = "saga_store";
+export const SAGA_STORE_INDEXES: StoreIndexes<SagaStoreAttributes> = [
   {
-    indexSpecification: {
-      id: 1,
-      name: 1,
-      context: 1,
-    },
-    createIndexesOptions: {
-      name: "unique_path",
-      unique: true,
-    },
+    fields: ["id", "name", "context"],
+    name: "saga_store_pkey",
+    unique: true,
   },
   {
-    indexSpecification: {
-      id: 1,
-      name: 1,
-      context: 1,
-      hash: 1,
-      revision: 1,
-    },
-    createIndexesOptions: {
-      name: "unique_revision",
-      unique: true,
-    },
+    fields: ["id", "name", "context", "destroyed"],
+    name: "saga_store_id_name_context_destroyed_idx",
+    unique: false,
+  },
+  {
+    fields: ["id", "name", "context", "hash", "revision"],
+    name: "saga_store_id_name_context_hash_revision_idx",
+    unique: false,
   },
 ];
 
-export const SAGA_CAUSATION_COLLECTION = "saga_causation_store";
-export const SAGA_CAUSATION_COLLECTION_INDICES: Array<MongoIndex> = [
+export const SAGA_CAUSATION = "saga_causation";
+export const SAGA_CAUSATION_INDEXES: StoreIndexes<SagaCausationAttributes> = [
   {
-    indexSpecification: {
-      saga_id: 1,
-      saga_name: 1,
-      saga_context: 1,
-    },
-    createIndexesOptions: {
-      name: "path",
-      unique: false,
-    },
+    fields: ["id", "name", "context", "causation_id"],
+    name: "saga_causation_pkey",
+    unique: true,
   },
   {
-    indexSpecification: {
-      saga_id: 1,
-      saga_name: 1,
-      saga_context: 1,
-      causation_id: 1,
-    },
-    createIndexesOptions: {
-      name: "unique_causation",
-      unique: true,
-    },
+    fields: ["id", "name", "context"],
+    name: "saga_causation_id_name_context_idx",
+    unique: false,
   },
 ];

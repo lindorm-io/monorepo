@@ -30,7 +30,7 @@ describe("MongoViewRepository", () => {
     );
     await connection.connect();
 
-    identifier = { context: "view_repository", name: "view_name", id: randomUUID() };
+    identifier = { context: "view_repository", name: "name", id: randomUUID() };
 
     repository = new MongoViewRepository(connection, identifier, logger);
 
@@ -45,7 +45,7 @@ describe("MongoViewRepository", () => {
     await collection.insertMany([
       {
         id: view1,
-        name: "view_name",
+        name: "name",
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
@@ -58,7 +58,7 @@ describe("MongoViewRepository", () => {
       },
       {
         id: view2,
-        name: "view_name",
+        name: "name",
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
@@ -71,7 +71,7 @@ describe("MongoViewRepository", () => {
       },
       {
         id: view3,
-        name: "view_name",
+        name: "name",
         context: "view_repository",
         destroyed: false,
         processed_causation_ids: [],
@@ -84,7 +84,7 @@ describe("MongoViewRepository", () => {
       },
       {
         id: randomUUID(),
-        name: "view_name",
+        name: "name",
         context: "view_repository",
         destroyed: true,
         processed_causation_ids: [],

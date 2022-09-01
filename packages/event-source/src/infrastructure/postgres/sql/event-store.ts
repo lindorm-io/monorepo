@@ -1,5 +1,7 @@
+import { EVENT_STORE } from "../../../constant";
+
 export const CREATE_TABLE_EVENT_STORE = `
-  CREATE TABLE IF NOT EXISTS event_store (
+  CREATE TABLE IF NOT EXISTS ${EVENT_STORE} (
     id UUID NOT NULL,
     name VARCHAR ( 64 ) NOT NULL,
     context VARCHAR ( 32 ) NOT NULL,
@@ -15,21 +17,18 @@ export const CREATE_TABLE_EVENT_STORE = `
       name,
       context,
       causation_id
+    ),
+    UNIQUE (
+      id,
+      name,
+      context,
+      expected_events
+    ),
+    UNIQUE (
+      id,
+      name,
+      context,
+      previous_event_id
     )
   )
-`;
-
-export const CREATE_INDEX_EVENT_STORE_IDENTIFIER = `
-  CREATE INDEX idx_event_store_identifier
-    ON event_store (id, name, context);
-`;
-
-export const CREATE_INDEX_EVENT_STORE_UNIQUE_EXPECTED_EVENTS = `
-  CREATE UNIQUE INDEX idx_event_store_unique_expected_events
-    ON event_store (id, name, context, expected_events);
-`;
-
-export const CREATE_INDEX_EVENT_STORE_UNIQUE_PREVIOUS_EVENT = `
-  CREATE UNIQUE INDEX idx_event_store_unique_previous_event
-    ON event_store (id, name, context, previous_event_id);
 `;

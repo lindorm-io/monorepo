@@ -14,7 +14,7 @@ import {
   ViewClearProcessedCausationIdsData,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewStoreCausationAttributes,
+  ViewCausationAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
@@ -53,22 +53,22 @@ const insertView = async (
 
 const insertCausation = async (
   connection: PostgresConnection,
-  attributes: ViewStoreCausationAttributes,
+  attributes: ViewCausationAttributes,
 ): Promise<void> => {
   const text = `
     INSERT INTO view_causation (
-      view_id,
-      view_name,
-      view_context,
+      id,
+      name,
+      context,
       causation_id,
       timestamp
     ) 
     VALUES ($1,$2,$3,$4,$5)
   `;
   const values = [
-    attributes.view_id,
-    attributes.view_name,
-    attributes.view_context,
+    attributes.id,
+    attributes.name,
+    attributes.context,
     attributes.causation_id,
     attributes.timestamp,
   ];
@@ -96,18 +96,18 @@ const findView = async (
 const findCausations = async (
   connection: PostgresConnection,
   identifier: ViewIdentifier,
-): Promise<Array<ViewStoreCausationAttributes>> => {
+): Promise<Array<ViewCausationAttributes>> => {
   const text = `
     SELECT *
     FROM
       view_causation
     WHERE
-      view_id = $1 AND
-      view_name = $2 AND
-      view_context = $3
+      id = $1 AND
+      name = $2 AND
+      context = $3
   `;
   const values = [identifier.id, identifier.name, identifier.context];
-  const result = await connection.query<ViewStoreCausationAttributes>(text, values);
+  const result = await connection.query<ViewCausationAttributes>(text, values);
   return result.rows.length ? result.rows : [];
 };
 
@@ -139,7 +139,7 @@ describe("PostgresViewStore", () => {
     await store.initialise();
 
     // @ts-ignore
-    await store.initialiseView(TEST_VIEW_IDENTIFIER);
+    await store.initialiseView(TEST_VIEW_IDENTIFIER, {});
   }, 10000);
 
   beforeEach(() => {
@@ -166,9 +166,9 @@ describe("PostgresViewStore", () => {
     const event = new DomainEvent(TEST_COMMAND);
 
     await insertCausation(connection, {
-      view_id: viewIdentifier.id,
-      view_name: viewIdentifier.name,
-      view_context: viewIdentifier.context,
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
       causation_id: event.id,
       timestamp: event.timestamp,
     });

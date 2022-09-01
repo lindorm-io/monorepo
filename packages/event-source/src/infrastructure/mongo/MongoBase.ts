@@ -1,6 +1,7 @@
+import { CreateIndexesOptions, IndexSpecification } from "mongodb";
 import { ILogger } from "@lindorm-io/winston";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoIndex } from "../../types";
+import { Attributes, MongoIndex, StoreIndexes } from "../../types";
 
 export abstract class MongoBase {
   protected readonly connection: IMongoConnection;
@@ -13,10 +14,30 @@ export abstract class MongoBase {
 
   // protected
 
-  protected async createIndices(name: string, indices: Array<MongoIndex>): Promise<void> {
+  protected async createIndexes<TFields extends Attributes = Attributes>(
+    name: string,
+    indexes: StoreIndexes<TFields>,
+  ): Promise<void> {
     const collection = this.connection.database.collection(name);
 
-    for (const { indexSpecification, createIndexesOptions } of indices) {
+    const mongo: Array<MongoIndex> = [];
+
+    for (const item of indexes) {
+      const indexSpecification: IndexSpecification = {};
+
+      const createIndexesOptions: CreateIndexesOptions = {
+        name: item.name,
+        unique: item.unique || false,
+      };
+
+      for (const field of item.fields) {
+        indexSpecification[field as string] = 1;
+      }
+
+      mongo.push({ indexSpecification, createIndexesOptions });
+    }
+
+    for (const { indexSpecification, createIndexesOptions } of mongo) {
       await collection.createIndex(indexSpecification, createIndexesOptions);
     }
   }

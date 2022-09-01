@@ -13,7 +13,7 @@ import {
   IViewStore,
   ViewClearProcessedCausationIdsData,
   ViewData,
-  ViewEventHandlerAdapters,
+  ViewEventHandlerStoreOptions,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewStoreOptions,
@@ -61,7 +61,7 @@ export class ViewStore implements IDomainViewStore {
 
   public async clearProcessedCausationIds(
     view: IView,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<View> {
     const filter: ViewUpdateFilter = {
       id: view.id,
@@ -77,15 +77,18 @@ export class ViewStore implements IDomainViewStore {
       revision: view.revision + 1,
     };
 
-    await this.store.clearProcessedCausationIds(filter, data, adapters);
+    await this.store.clearProcessedCausationIds(filter, data, options);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }
 
-  public async load(identifier: ViewIdentifier, adapters: ViewEventHandlerAdapters): Promise<View> {
+  public async load(
+    identifier: ViewIdentifier,
+    options: ViewEventHandlerStoreOptions,
+  ): Promise<View> {
     this.logger.debug("Loading view", { identifier });
 
-    const existing = await this.store.find(identifier, adapters);
+    const existing = await this.store.find(identifier, options);
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
@@ -113,7 +116,7 @@ export class ViewStore implements IDomainViewStore {
   public async save(
     view: IView,
     causation: IMessage,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<View> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
@@ -123,7 +126,7 @@ export class ViewStore implements IDomainViewStore {
       context: view.context,
     };
 
-    const existing = await this.store.find(identifier, adapters);
+    const existing = await this.store.find(identifier, options);
 
     if (existing) {
       const included = existing.processed_causation_ids.includes(causation.id);
@@ -151,7 +154,7 @@ export class ViewStore implements IDomainViewStore {
         revision: view.revision + 1,
       };
 
-      await this.store.insert(ViewStore.toAttributes(data), adapters);
+      await this.store.insert(ViewStore.toAttributes(data), options);
 
       return new View(data, this.logger);
     }
@@ -173,7 +176,7 @@ export class ViewStore implements IDomainViewStore {
       state: view.state,
     };
 
-    await this.store.update(filter, data, adapters);
+    await this.store.update(filter, data, options);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }

@@ -13,7 +13,7 @@ describe("MemoryViewRepository", () => {
   let view3: string;
 
   beforeAll(async () => {
-    identifier = { context: "view_repository", name: "view_name", id: randomUUID() };
+    identifier = { context: "view_repository", name: "name", id: randomUUID() };
 
     repository = new MemoryViewRepository({ name: identifier.name, context: identifier.context });
 

@@ -10,7 +10,7 @@ import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,
   ViewStoreAttributes,
-  ViewStoreCausationAttributes,
+  ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
   ViewIdentifier,
   ViewUpdateData,
@@ -34,10 +34,10 @@ describe("MemoryViewStore", () => {
   test("should resolve existing causation", async () => {
     const event = new DomainEvent(TEST_COMMAND);
 
-    const document: ViewStoreCausationAttributes = {
-      view_id: viewIdentifier.id,
-      view_name: viewIdentifier.name,
-      view_context: viewIdentifier.context,
+    const document: ViewCausationAttributes = {
+      id: viewIdentifier.id,
+      name: viewIdentifier.name,
+      context: viewIdentifier.context,
       causation_id: event.id,
       timestamp: new Date(),
     };
@@ -60,7 +60,7 @@ describe("MemoryViewStore", () => {
   test("should clear processed causation ids", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),
@@ -102,7 +102,7 @@ describe("MemoryViewStore", () => {
   test("should find view", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),
@@ -162,9 +162,9 @@ describe("MemoryViewStore", () => {
 
     expect(
       filter(IN_MEMORY_VIEW_CAUSATION_STORE, {
-        view_id: viewIdentifier.id,
-        view_name: viewIdentifier.name,
-        view_context: viewIdentifier.context,
+        id: viewIdentifier.id,
+        name: viewIdentifier.name,
+        context: viewIdentifier.context,
       }),
     ).toStrictEqual([
       expect.objectContaining({ causation_id: one }),
@@ -176,7 +176,7 @@ describe("MemoryViewStore", () => {
   test("should update view", async () => {
     const attributes: ViewStoreAttributes = {
       id: viewIdentifier.id,
-      name: "view_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: randomString(16),

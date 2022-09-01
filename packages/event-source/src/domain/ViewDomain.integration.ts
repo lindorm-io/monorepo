@@ -88,7 +88,7 @@ describe("ViewDomain", () => {
     await expect(store.load(view, {})).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
-        name: "view_name",
+        name: "name",
         context: "default",
         destroyed: true,
         hash: expect.any(String),

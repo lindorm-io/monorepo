@@ -1,23 +1,26 @@
-import { CREATE_INDEX_SAGA_STORE_UNIQUE_REVISION, CREATE_TABLE_SAGA_STORE } from "./sql/saga-store";
+import { CREATE_TABLE_SAGA_CAUSATION } from "./sql/saga-causation";
+import { CREATE_TABLE_SAGA_STORE } from "./sql/saga-store";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
-import {
-  CREATE_INDEX_SAGA_CAUSATION_IDENTIFIER,
-  CREATE_TABLE_SAGA_CAUSATION,
-} from "./sql/saga-causation";
 import {
   IMessage,
   ISagaStore,
   SagaClearMessagesToDispatchData,
   SagaClearProcessedCausationIdsData,
   SagaStoreAttributes,
-  SagaStoreCausationAttributes,
+  SagaCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
   StandardIdentifier,
 } from "../../types";
+import {
+  SAGA_CAUSATION,
+  SAGA_CAUSATION_INDEXES,
+  SAGA_STORE,
+  SAGA_STORE_INDEXES,
+} from "../../constant";
 
 export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   public constructor(connection: IPostgresConnection, logger: ILogger) {
@@ -38,15 +41,15 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         FROM
           saga_causation
         WHERE
-          saga_id = $1 AND
-          saga_name = $2 AND
-          saga_context = $3 AND
+          id = $1 AND
+          name = $2 AND
+          context = $3 AND
           causation_id = $4
       `;
 
       const values = [identifier.id, identifier.name, identifier.context, causation.id];
 
-      const result = await this.connection.query<SagaStoreCausationAttributes>(text, values);
+      const result = await this.connection.query<SagaCausationAttributes>(text, values);
 
       return !!result.rowCount;
     } catch (err) {
@@ -255,9 +258,9 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       let num = 1;
       let text = `
         INSERT INTO saga_causation (
-          saga_id,
-          saga_name,
-          saga_context,
+          id,
+          name,
+          context,
           causation_id
         ) VALUES
       `;
@@ -341,18 +344,16 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   protected async initialise(): Promise<void> {
     // saga_store
 
-    const storeExists = await this.tableExists("saga_store");
+    const storeExists = await this.tableExists(SAGA_STORE);
     if (!storeExists) {
       await this.connection.query(CREATE_TABLE_SAGA_STORE);
     }
 
-    const storeIndicesExist = await this.indicesExist("saga_store", [
-      "saga_store_pkey",
-      "idx_saga_store_unique_revision",
-    ]);
-    if (!storeIndicesExist) {
-      await this.connection.query(CREATE_INDEX_SAGA_STORE_UNIQUE_REVISION);
-    }
+    const missingStoreIndexes = await this.getMissingIndexes<SagaStoreAttributes>(
+      SAGA_STORE,
+      SAGA_STORE_INDEXES,
+    );
+    await this.createIndexes(SAGA_STORE, missingStoreIndexes);
 
     // saga_causation
 
@@ -361,13 +362,11 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       await this.connection.query(CREATE_TABLE_SAGA_CAUSATION);
     }
 
-    const causationIndicesExist = await this.indicesExist("saga_causation", [
-      "saga_causation_pkey",
-      "idx_saga_causation_identifier",
-    ]);
-    if (!causationIndicesExist) {
-      await this.connection.query(CREATE_INDEX_SAGA_CAUSATION_IDENTIFIER);
-    }
+    const missingCausationIndexes = await this.getMissingIndexes<SagaCausationAttributes>(
+      SAGA_CAUSATION,
+      SAGA_CAUSATION_INDEXES,
+    );
+    await this.createIndexes(SAGA_CAUSATION, missingCausationIndexes);
 
     this.promise = (): Promise<void> => Promise.resolve();
   }

@@ -143,10 +143,10 @@ describe("EventSource (Memory)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
-        adapters: {},
         aggregate: { name: "test_aggregate", context: "es_memory" },
         view: { name: "test_view", context: "es_memory" },
         conditions: { created: false },
+        options: {},
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -156,10 +156,10 @@ describe("EventSource (Memory)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
-        adapters: {},
         aggregate: { name: "test_aggregate", context: "es_memory" },
         view: { name: "test_view", context: "es_memory" },
         conditions: { created: true },
+        options: {},
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });

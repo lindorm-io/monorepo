@@ -107,7 +107,7 @@ describe("ViewDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenCalledWith({
       callback: expect.any(Function),
-      queue: "queue.view.default.aggregate_name.domain_event_default.default.view_name",
+      queue: "queue.view.default.aggregate_name.domain_event_default.default.name",
       topic: "default.aggregate_name.domain_event_default",
     });
   });
@@ -132,13 +132,13 @@ describe("ViewDomain", () => {
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(1, {
       callback: expect.any(Function),
-      queue: "queue.view.one.aggregate_name.domain_event_default.default.view_name",
+      queue: "queue.view.one.aggregate_name.domain_event_default.default.name",
       topic: "one.aggregate_name.domain_event_default",
     });
 
     expect(messageBus.subscribe).toHaveBeenNthCalledWith(2, {
       callback: expect.any(Function),
-      queue: "queue.view.two.aggregate_name.domain_event_default.default.view_name",
+      queue: "queue.view.two.aggregate_name.domain_event_default.default.name",
       topic: "two.aggregate_name.domain_event_default",
     });
   });
@@ -175,7 +175,7 @@ describe("ViewDomain", () => {
       {
         id: event.aggregate.id,
         context: "default",
-        name: "view_name",
+        name: "name",
       },
       {},
     );
@@ -183,7 +183,7 @@ describe("ViewDomain", () => {
     expect(store.save).toHaveBeenCalledWith(
       expect.objectContaining({
         id: event.aggregate.id,
-        name: "view_name",
+        name: "name",
         context: "default",
         processedCausationIds: [],
         destroyed: false,

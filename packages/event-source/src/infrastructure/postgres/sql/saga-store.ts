@@ -1,5 +1,7 @@
+import { SAGA_STORE } from "../../../constant";
+
 export const CREATE_TABLE_SAGA_STORE = `
-  CREATE TABLE IF NOT EXISTS saga_store (
+  CREATE TABLE IF NOT EXISTS ${SAGA_STORE} (
     id UUID NOT NULL,
     name VARCHAR ( 64 ) NOT NULL,
     context VARCHAR ( 32 ) NOT NULL,
@@ -18,9 +20,4 @@ export const CREATE_TABLE_SAGA_STORE = `
       context
     )
   )
-`;
-
-export const CREATE_INDEX_SAGA_STORE_UNIQUE_REVISION = `
-  CREATE UNIQUE INDEX idx_saga_store_unique_revision
-    ON saga_store (id, name, context, hash, revision);
 `;

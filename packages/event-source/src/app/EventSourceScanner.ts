@@ -1,4 +1,6 @@
 import { ILogger } from "@lindorm-io/winston";
+import { LindormError } from "@lindorm-io/errors";
+import { assertSchema, defaultAggregateCommandHandlerSchema, StructureScanner } from "../util";
 import { flatten, isArray, snakeCase, uniq } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
@@ -29,14 +31,6 @@ import {
   ScanFileData,
   ViewEventHandler,
 } from "../types";
-import {
-  assertSchema,
-  defaultAggregateCommandHandlerSchema,
-  defaultSagaIdFunction,
-  defaultViewIdFunction,
-  StructureScanner,
-} from "../util";
-import { LindormError } from "@lindorm-io/errors";
 
 export class EventSourceScanner {
   private readonly logger: ILogger;
@@ -287,7 +281,7 @@ export class EventSourceScanner {
           },
           conditions: handler.conditions,
           version: handler.version,
-          getSagaId: handler.getSagaId ? handler.getSagaId : defaultSagaIdFunction,
+          getSagaId: handler.getSagaId,
           handler: handler.handler,
         }),
       );
@@ -311,7 +305,6 @@ export class EventSourceScanner {
       this.viewEventHandlers.push(
         new ViewEventHandlerImplementation({
           eventName: snakeCase(file.name),
-          adapters: handler.adapters,
           aggregate: {
             name: snakeCase(aggregate),
             context: isArray(handler.aggregate?.context)
@@ -323,8 +316,9 @@ export class EventSourceScanner {
             context: snakeCase(this.options.context),
           },
           conditions: handler.conditions,
+          options: handler.options,
           version: handler.version,
-          getViewId: handler.getViewId ? handler.getViewId : defaultViewIdFunction,
+          getViewId: handler.getViewId,
           handler: handler.handler,
         }),
       );

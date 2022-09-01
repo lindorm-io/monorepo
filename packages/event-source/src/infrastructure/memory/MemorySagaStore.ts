@@ -14,9 +14,9 @@ import {
 export class MemorySagaStore implements ISagaStore {
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
     return !!find(IN_MEMORY_SAGA_CAUSATION_STORE, {
-      saga_id: identifier.id,
-      saga_name: identifier.name,
-      saga_context: identifier.context,
+      id: identifier.id,
+      name: identifier.name,
+      context: identifier.context,
       causation_id: causation.id,
     });
   }
@@ -65,9 +65,9 @@ export class MemorySagaStore implements ISagaStore {
   ): Promise<void> {
     for (const causationId of causationIds) {
       IN_MEMORY_SAGA_CAUSATION_STORE.push({
-        saga_id: identifier.id,
-        saga_name: identifier.name,
-        saga_context: identifier.context,
+        id: identifier.id,
+        name: identifier.name,
+        context: identifier.context,
         causation_id: causationId,
         timestamp: new Date(),
       });

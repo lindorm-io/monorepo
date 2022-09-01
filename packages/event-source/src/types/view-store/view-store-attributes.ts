@@ -12,10 +12,10 @@ export interface ViewStoreAttributes {
   updated_at: Date;
 }
 
-export interface ViewStoreCausationAttributes {
-  view_id: string;
-  view_name: string;
-  view_context: string;
+export interface ViewCausationAttributes {
+  id: string;
+  name: string;
+  context: string;
   causation_id: string;
   timestamp: Date;
 }

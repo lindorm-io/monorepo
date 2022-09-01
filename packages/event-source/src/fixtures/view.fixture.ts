@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 
 export const TEST_VIEW_IDENTIFIER: ViewIdentifier = {
   id: randomUUID(),
-  name: "view_name",
+  name: "name",
   context: "default",
 };
 

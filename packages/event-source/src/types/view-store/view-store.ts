@@ -3,7 +3,7 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IView, ViewIdentifier } from "../model";
 import { View } from "../../model";
-import { ViewEventHandlerAdapters } from "../handler";
+import { ViewEventHandlerStoreOptions } from "../handler";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
 export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
@@ -37,10 +37,10 @@ export interface ViewClearProcessedCausationIdsData {
 
 export interface IDomainViewStore {
   causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
-  clearProcessedCausationIds(saga: IView, adapters: ViewEventHandlerAdapters): Promise<View>;
-  load(identifier: ViewIdentifier, adapters: ViewEventHandlerAdapters): Promise<View>;
+  clearProcessedCausationIds(saga: IView, options: ViewEventHandlerStoreOptions): Promise<View>;
+  load(identifier: ViewIdentifier, options: ViewEventHandlerStoreOptions): Promise<View>;
   processCausationIds(view: IView): Promise<void>;
-  save(view: IView, causation: IMessage, adapters: ViewEventHandlerAdapters): Promise<View>;
+  save(view: IView, causation: IMessage, options: ViewEventHandlerStoreOptions): Promise<View>;
 }
 
 export interface IViewStore {
@@ -48,13 +48,13 @@ export interface IViewStore {
   clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void>;
   find(
     identifier: ViewIdentifier,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<ViewStoreAttributes | undefined>;
-  insert(attributes: ViewStoreAttributes, adapters: ViewEventHandlerAdapters): Promise<void>;
+  insert(attributes: ViewStoreAttributes, options: ViewEventHandlerStoreOptions): Promise<void>;
   insertProcessedCausationIds(
     identifier: ViewIdentifier,
     causationIds: Array<string>,
@@ -62,6 +62,6 @@ export interface IViewStore {
   update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    adapters: ViewEventHandlerAdapters,
+    options: ViewEventHandlerStoreOptions,
   ): Promise<void>;
 }

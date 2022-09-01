@@ -1,15 +1,9 @@
-import { DtoClass, State } from "../generic";
+import { Attributes, DtoClass, State } from "../generic";
 import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
-import {
-  MongoViewEventHandlerAdapterOptions,
-  PostgresViewEventHandlerAdapterOptions,
-} from "../view-store";
-
-export type GetViewIdFunction<TEvent extends DtoClass = DtoClass> = (
-  event: DomainEvent<TEvent>,
-) => string;
+import { IViewStore, ViewStoreAdapterType } from "../view-store";
+import { StoreIndexes } from "../store-index";
 
 export interface ViewEventHandlerContext<
   TEvent extends DtoClass = DtoClass,
@@ -27,17 +21,17 @@ export interface ViewEventHandlerFileAggregate {
   context?: Array<string> | string;
 }
 
-export interface ViewEventHandlerAdapters {
-  custom?: Record<string, any>;
-  mongo?: MongoViewEventHandlerAdapterOptions;
-  postgres?: PostgresViewEventHandlerAdapterOptions;
+export interface ViewEventHandlerStoreOptions<TFields extends Attributes = Attributes> {
+  custom?: IViewStore;
+  indexes?: StoreIndexes<TFields>;
+  type?: ViewStoreAdapterType;
 }
 
 export interface ViewEventHandler<TEvent extends DtoClass, TState extends State = State> {
-  name: string;
-  adapters?: ViewEventHandlerAdapters;
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
+  name: string;
+  options?: ViewEventHandlerStoreOptions;
   version?: number;
   getViewId?(event: DomainEvent<TEvent>): string;
   handler(ctx: ViewEventHandlerContext<TEvent, TState>): Promise<void>;
@@ -47,10 +41,10 @@ export interface ViewEventHandlerOptions<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
-  adapters: ViewEventHandlerAdapters;
   aggregate: HandlerIdentifierMultipleContexts;
   conditions?: HandlerConditions;
   eventName: string;
+  options: ViewEventHandlerStoreOptions;
   version?: number;
   view: HandlerIdentifier;
   getViewId?(event: DomainEvent<TEvent>): string;
@@ -61,10 +55,10 @@ export interface IViewEventHandler<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
-  adapters: ViewEventHandlerAdapters;
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;
   eventName: string;
+  options: ViewEventHandlerStoreOptions;
   version: number;
   view: HandlerIdentifier;
   getViewId(event: DomainEvent<TEvent>): string;

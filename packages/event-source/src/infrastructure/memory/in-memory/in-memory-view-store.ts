@@ -1,5 +1,5 @@
-import { ViewStoreAttributes, ViewStoreCausationAttributes } from "../../../types";
+import { ViewStoreAttributes, ViewCausationAttributes } from "../../../types";
 
 export const IN_MEMORY_VIEW_STORE: Array<ViewStoreAttributes> = [];
 
-export const IN_MEMORY_VIEW_CAUSATION_STORE: Array<ViewStoreCausationAttributes> = [];
+export const IN_MEMORY_VIEW_CAUSATION_STORE: Array<ViewCausationAttributes> = [];

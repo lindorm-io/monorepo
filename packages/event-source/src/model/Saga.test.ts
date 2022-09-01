@@ -34,7 +34,7 @@ describe("Saga", () => {
   test("should return json object", async () => {
     expect(saga.toJSON()).toStrictEqual({
       id: expect.any(String),
-      name: "saga_name",
+      name: "name",
       context: "default",
       destroyed: false,
       hash: expect.any(String),

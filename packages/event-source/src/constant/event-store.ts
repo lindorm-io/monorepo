@@ -1,41 +1,25 @@
-import { MongoIndex } from "../types";
+import { EventStoreAttributes, StoreIndexes } from "../types";
 
 export const EVENT_STORE = "event_store";
-export const EVENT_STORE_INDICES: Array<MongoIndex> = [
+export const EVENT_STORE_INDEXES: StoreIndexes<EventStoreAttributes> = [
   {
-    indexSpecification: {
-      id: 1,
-      name: 1,
-      context: 1,
-      causation_id: 1,
-    },
-    createIndexesOptions: {
-      name: "idx_unique_causation",
-      unique: true,
-    },
+    fields: ["id", "name", "context", "causation_id"],
+    name: "event_store_pkey",
+    unique: true,
   },
   {
-    indexSpecification: {
-      id: 1,
-      name: 1,
-      context: 1,
-      expected_events: 1,
-    },
-    createIndexesOptions: {
-      name: "idx_unique_expected_events",
-      unique: true,
-    },
+    fields: ["id", "name", "context"],
+    name: "event_store_id_name_context_idx",
+    unique: false,
   },
   {
-    indexSpecification: {
-      id: 1,
-      name: 1,
-      context: 1,
-      previous_event_id: 1,
-    },
-    createIndexesOptions: {
-      name: "idx_unique_previous_event_id",
-      unique: true,
-    },
+    fields: ["id", "name", "context", "expected_events"],
+    name: "event_store_id_name_context_expected_events_key",
+    unique: true,
+  },
+  {
+    fields: ["id", "name", "context", "previous_event_id"],
+    name: "event_store_id_name_context_previous_event_id_key",
+    unique: true,
   },
 ];

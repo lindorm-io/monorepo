@@ -74,7 +74,7 @@ describe("PostgresViewRepository", () => {
     await store.initialise();
 
     // @ts-ignore
-    await store.initialiseView(TEST_VIEW_IDENTIFIER);
+    await store.initialiseView(TEST_VIEW_IDENTIFIER, {});
 
     identifier = { ...TEST_VIEW_IDENTIFIER, id: randomUUID() };
     repository = new PostgresViewRepository(connection, identifier, logger);

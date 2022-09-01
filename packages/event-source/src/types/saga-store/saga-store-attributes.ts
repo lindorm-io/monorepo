@@ -14,10 +14,10 @@ export interface SagaStoreAttributes {
   updated_at: Date;
 }
 
-export interface SagaStoreCausationAttributes {
-  saga_id: string;
-  saga_name: string;
-  saga_context: string;
+export interface SagaCausationAttributes {
+  id: string;
+  name: string;
+  context: string;
   causation_id: string;
   timestamp: Date;
 }

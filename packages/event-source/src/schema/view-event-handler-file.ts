@@ -1,11 +1,10 @@
 import Joi from "joi";
 import {
   HandlerConditions,
-  MongoViewEventHandlerAdapterOptions,
-  PostgresViewEventHandlerAdapterOptions,
-  ViewEventHandlerAdapters,
+  ViewEventHandlerStoreOptions,
   ViewEventHandler,
   ViewEventHandlerFileAggregate,
+  StoreIndex,
 } from "../types";
 
 export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>().keys({
@@ -21,11 +20,19 @@ export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>
       permanent: Joi.boolean().optional(),
     })
     .optional(),
-  adapters: Joi.object<ViewEventHandlerAdapters>()
+  options: Joi.object<ViewEventHandlerStoreOptions>()
     .keys({
       custom: Joi.object().optional(),
-      mongo: Joi.object<MongoViewEventHandlerAdapterOptions>().optional(),
-      postgres: Joi.object<PostgresViewEventHandlerAdapterOptions>().optional(),
+      indexes: Joi.array()
+        .items(
+          Joi.object<StoreIndex>().keys({
+            fields: Joi.array().items(Joi.string()).required(),
+            name: Joi.string().required(),
+            unique: Joi.boolean().required(),
+          }),
+        )
+        .optional(),
+      type: Joi.string().allow("custom", "memory", "mongo", "postgres").optional(),
     })
     .optional(),
   version: Joi.number().optional(),
