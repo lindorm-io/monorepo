@@ -247,7 +247,7 @@ describe("AggregateDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "CommandSchemaValidationError",
+        name: "command_schema_validation_error",
         data: {
           error: expect.any(CommandSchemaValidationError),
           message: command,
@@ -271,7 +271,7 @@ describe("AggregateDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "AggregateDestroyedError",
+        name: "aggregate_destroyed_error",
         data: {
           error: expect.any(AggregateDestroyedError),
           message: command,
@@ -289,7 +289,7 @@ describe("AggregateDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "AggregateNotCreatedError",
+        name: "aggregate_not_created_error",
         data: {
           error: expect.any(AggregateNotCreatedError),
           message: command,
@@ -313,7 +313,7 @@ describe("AggregateDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "AggregateAlreadyCreatedError",
+        name: "aggregate_already_created_error",
         data: {
           error: expect.any(AggregateAlreadyCreatedError),
           message: command,

@@ -22,7 +22,6 @@ export interface AggregateCommandHandler<
   command: Constructor<TCommand>;
   conditions?: HandlerConditions;
   schema?: Joi.Schema;
-  version?: number;
   handler(ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>): Promise<void>;
 }
 

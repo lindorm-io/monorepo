@@ -36,7 +36,6 @@ export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>
       type: Joi.string().allow("custom", "memory", "mongo", "postgres").optional(),
     })
     .optional(),
-  version: Joi.number().optional(),
-  getViewId: Joi.function().required(),
+  getViewId: Joi.function().optional(),
   handler: Joi.function().required(),
 });

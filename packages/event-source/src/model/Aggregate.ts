@@ -165,7 +165,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
         throw new HandlerNotRegisteredError();
       }
 
-      const context: AggregateEventHandlerContext = {
+      const ctx: AggregateEventHandlerContext = {
         event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["AggregateEventHandler"]),
         state: cloneDeep(this.state),
@@ -176,7 +176,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
         setState: this.setState.bind(this),
       };
 
-      await eventHandler.handler(context);
+      await eventHandler.handler(ctx);
 
       if (destroying && !this._destroyed) {
         throw new AggregateNotDestroyedError();

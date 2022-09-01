@@ -27,7 +27,6 @@ export interface SagaDispatchOptions {
   aggregate?: Partial<AggregateIdentifier>;
   delay?: number;
   mandatory?: boolean;
-  version?: number;
 }
 
 export interface ISaga extends SagaData {

@@ -311,10 +311,15 @@ describe("SagaDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "SagaDestroyedError",
+        name: "saga_destroyed_error",
         data: {
           error: expect.any(SagaDestroyedError),
           message: event,
+          saga: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);
@@ -373,10 +378,15 @@ describe("SagaDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "SagaNotCreatedError",
+        name: "saga_not_created_error",
         data: {
           error: expect.any(SagaNotCreatedError),
           message: event,
+          saga: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);
@@ -435,10 +445,15 @@ describe("SagaDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "SagaAlreadyCreatedError",
+        name: "saga_already_created_error",
         data: {
           error: expect.any(SagaAlreadyCreatedError),
           message: event,
+          saga: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);

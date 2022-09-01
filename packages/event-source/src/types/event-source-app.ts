@@ -13,6 +13,7 @@ import { ReplayOptions } from "./domain";
 import {
   IAggregateCommandHandler,
   IAggregateEventHandler,
+  IErrorHandler,
   IQueryHandler,
   ISagaEventHandler,
   IViewEventHandler,
@@ -87,12 +88,14 @@ export interface EventSourceAdmin {
 }
 
 export interface EventSourceSetup {
-  registerAggregateCommandHandler(handlers: IAggregateCommandHandler): Promise<void>;
-  registerAggregateEventHandler(handlers: IAggregateEventHandler): Promise<void>;
+  registerAggregateCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
+  registerAggregateEventHandler(handler: IAggregateEventHandler): Promise<void>;
+  registerErrorHandler(handler: IErrorHandler): Promise<void>;
+  registerQueryHandler(handler: IQueryHandler): Promise<void>;
+  registerSagaEventHandler(handler: ISagaEventHandler): Promise<void>;
+  registerViewEventHandler(handler: IViewEventHandler): Promise<void>;
+
   registerCommandAggregate(name: string, aggregate: string): void;
-  registerQueryHandler(handlers: IQueryHandler): Promise<void>;
-  registerSagaEventHandler(handlers: ISagaEventHandler): Promise<void>;
-  registerViewEventHandler(handlers: IViewEventHandler): Promise<void>;
 }
 
 export interface IEventSource<

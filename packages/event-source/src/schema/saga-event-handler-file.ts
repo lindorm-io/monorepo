@@ -15,7 +15,6 @@ export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandler<unknown>>
       permanent: Joi.boolean().optional(),
     })
     .optional(),
-  version: Joi.number().optional(),
-  getSagaId: Joi.function().required(),
+  getSagaId: Joi.function().optional(),
   handler: Joi.function().required(),
 });

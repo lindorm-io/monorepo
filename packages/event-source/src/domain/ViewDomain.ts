@@ -7,7 +7,7 @@ import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { View } from "../model";
 import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, snakeCase, some } from "lodash";
 import {
   ConcurrencyError,
   DomainError,
@@ -250,7 +250,7 @@ export class ViewDomain implements IViewDomain {
       validator(view);
     }
 
-    const context: ViewEventHandlerContext = {
+    const ctx: ViewEventHandlerContext = {
       event: cloneDeep(event.data),
       logger: this.logger.createChildLogger(["ViewEventHandler"]),
       state: cloneDeep(view.state),
@@ -260,7 +260,7 @@ export class ViewDomain implements IViewDomain {
       setState: view.setState.bind(view, event),
     };
 
-    await eventHandler.handler(context);
+    await eventHandler.handler(ctx);
 
     const saved = await this.store.save(view, event, eventHandler.options);
 
@@ -302,9 +302,14 @@ export class ViewDomain implements IViewDomain {
       await this.messageBus.publish([
         new ErrorMessage(
           {
-            name: error.name,
-            aggregate: { id: view.id, name: view.name, context: view.context },
-            data: { error, message: event },
+            name: snakeCase(error.name),
+            aggregate: event.aggregate,
+            data: {
+              error,
+              message: event,
+              view: { id: view.id, name: view.name, context: view.context },
+            },
+            metadata: event.metadata,
             mandatory: false,
           },
           event,

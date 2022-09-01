@@ -32,7 +32,6 @@ export interface SagaEventHandler<
   saga: string;
   aggregate?: SagaEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  version?: number;
   getSagaId?(event: DomainEvent<TEvent> | TimeoutMessage<TEvent>): string;
   handler(ctx: SagaEventHandlerContext<TEvent, TState, TDispatch>): Promise<void>;
 }

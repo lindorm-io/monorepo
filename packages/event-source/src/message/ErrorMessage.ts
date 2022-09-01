@@ -1,12 +1,16 @@
-import { Data, IMessage, MessageOptions } from "../types";
+import { IMessage, MessageOptions, SagaIdentifier, ViewIdentifier } from "../types";
 import { MessageBase } from "./MessageBase";
 import { MessageType } from "../enum";
 
-export class ErrorMessage<TData extends Data = Data>
-  extends MessageBase<TData>
-  implements IMessage
-{
-  public constructor(options: MessageOptions<TData>, causation?: IMessage) {
+export type ErrorMessageData = {
+  error: Error;
+  message: IMessage;
+  saga?: SagaIdentifier;
+  view?: ViewIdentifier;
+};
+
+export class ErrorMessage extends MessageBase<ErrorMessageData> implements IMessage {
+  public constructor(options: MessageOptions<ErrorMessageData>, causation?: IMessage) {
     super({ ...options, type: MessageType.ERROR_MESSAGE }, causation);
   }
 }

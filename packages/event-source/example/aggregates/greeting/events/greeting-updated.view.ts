@@ -13,5 +13,4 @@ const main: ViewEventHandler<GreetingUpdated> = {
     });
   },
 };
-
 export default main;

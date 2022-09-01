@@ -1,4 +1,4 @@
-export interface ReplayMessageData {
+export type ReplayMessageData = {
   error?: Error;
   publishEvents: {
     amount: number;
@@ -11,4 +11,4 @@ export interface ReplayMessageData {
     delay: number;
     timestamp: Date;
   };
-}
+};

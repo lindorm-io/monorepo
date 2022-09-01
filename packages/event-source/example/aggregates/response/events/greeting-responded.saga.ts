@@ -9,6 +9,11 @@ const main: SagaEventHandler<GreetingResponded> = {
   handler: async (ctx) => {
     ctx.mergeState({ responded: ctx.event.response });
     ctx.logger.info("GreetingRespondedEvent", { event: ctx.event });
+    //
+    // Enable these to test the error handler
+    //
+    // ctx.destroy();
+    // ctx.setState({});
   },
 };
 export default main;

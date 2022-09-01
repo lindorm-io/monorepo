@@ -1,5 +1,4 @@
 import { Aggregate, Saga, View } from "../model";
-import { AggregateDomain, QueryDomain, ReplayDomain, SagaDomain, ViewDomain } from "../domain";
 import { Command } from "../message";
 import { EventSourceScanner } from "./EventSourceScanner";
 import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
@@ -14,6 +13,14 @@ import { extractDtoData, StructureScanner } from "../util";
 import { join } from "path";
 import { merge } from "lodash";
 import { randomUUID } from "crypto";
+import {
+  AggregateDomain,
+  ErrorDomain,
+  QueryDomain,
+  ReplayDomain,
+  SagaDomain,
+  ViewDomain,
+} from "../domain";
 import {
   Data,
   DtoClass,
@@ -30,6 +37,7 @@ import {
   IDomainSagaStore,
   IDomainViewStore,
   IEventSource,
+  IErrorDomain,
   IQueryDomain,
   IReplayDomain,
   ISagaDomain,
@@ -50,6 +58,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
   // domains
   private readonly aggregateDomain: IAggregateDomain;
+  private readonly errorDomain: IErrorDomain;
   private readonly queryDomain: IQueryDomain;
   private readonly replayDomain: IReplayDomain;
   private readonly sagaDomain: ISagaDomain;
@@ -149,6 +158,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       this.logger,
     );
+    this.errorDomain = new ErrorDomain(this.messageBus, this.logger);
     this.queryDomain = new QueryDomain(
       {
         mongo: this.mongo,
@@ -227,10 +237,12 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       registerAggregateEventHandler: this.aggregateDomain.registerEventHandler.bind(
         this.aggregateDomain,
       ),
-      registerCommandAggregate: this.scanner.registerCommandAggregate.bind(this.scanner),
+      registerErrorHandler: this.errorDomain.registerErrorHandler.bind(this.errorDomain),
       registerQueryHandler: this.queryDomain.registerQueryHandler.bind(this.queryDomain),
       registerSagaEventHandler: this.sagaDomain.registerEventHandler.bind(this.sagaDomain),
       registerViewEventHandler: this.viewDomain.registerEventHandler.bind(this.viewDomain),
+
+      registerCommandAggregate: this.scanner.registerCommandAggregate.bind(this.scanner),
     };
   }
   public set setup(_: EventSourceSetup) {
@@ -373,6 +385,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       }
       for (const handler of this.scanner.aggregateEventHandlers) {
         await this.aggregateDomain.registerEventHandler(handler);
+      }
+      for (const handler of this.scanner.errorHandlers) {
+        await this.errorDomain.registerErrorHandler(handler);
       }
       for (const handler of this.scanner.queryHandlers) {
         await this.queryDomain.registerQueryHandler(handler);

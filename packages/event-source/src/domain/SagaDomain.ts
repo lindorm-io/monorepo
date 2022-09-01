@@ -8,7 +8,7 @@ import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, some } from "lodash";
+import { cloneDeep, find, isArray, isUndefined, snakeCase, some } from "lodash";
 import {
   EventEmitterSagaData,
   EventEmitterListener,
@@ -29,7 +29,7 @@ export class SagaDomain implements ISagaDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<ISagaEventHandler>;
   private readonly logger: ILogger;
-  private messageBus: IMessageBus;
+  private readonly messageBus: IMessageBus;
   private store: IDomainSagaStore;
 
   public constructor(options: SagaDomainOptions, logger: ILogger) {
@@ -75,7 +75,7 @@ export class SagaDomain implements ISagaDomain {
         version: eventHandler.version,
         aggregate: {
           name: eventHandler.aggregate.name,
-          context: eventHandler.aggregate.context,
+          context,
         },
         saga: {
           name: eventHandler.saga.name,
@@ -131,7 +131,7 @@ export class SagaDomain implements ISagaDomain {
         eventName: eventHandler.eventName,
         aggregate: {
           name: eventHandler.aggregate.name,
-          context: context,
+          context,
         },
         saga: eventHandler.saga,
       });
@@ -249,7 +249,7 @@ export class SagaDomain implements ISagaDomain {
         validator(saga);
       }
 
-      const context: SagaEventHandlerContext = {
+      const ctx: SagaEventHandlerContext = {
         event: cloneDeep(event.data),
         logger: this.logger.createChildLogger(["SagaEventHandler"]),
         state: cloneDeep(saga.state),
@@ -261,7 +261,7 @@ export class SagaDomain implements ISagaDomain {
         timeout: saga.timeout.bind(saga, event),
       };
 
-      await eventHandler.handler(context);
+      await eventHandler.handler(ctx);
 
       const saved = await this.store.save(saga, event);
 
@@ -282,9 +282,14 @@ export class SagaDomain implements ISagaDomain {
         untouchedSaga.messagesToDispatch.push(
           new ErrorMessage(
             {
-              name: err.name,
-              aggregate: { id: saga.id, name: saga.name, context: saga.context },
-              data: { error: err, message: event },
+              name: snakeCase(err.name),
+              aggregate: event.aggregate,
+              data: {
+                error: err,
+                message: event,
+                saga: { id: saga.id, name: saga.name, context: saga.context },
+              },
+              metadata: event.metadata,
               mandatory: false,
             },
             event,
@@ -352,11 +357,11 @@ export class SagaDomain implements ISagaDomain {
 
   // private static
 
-  private static getQueue(context: string, eventHandler: SagaEventHandlerImplementation): string {
+  private static getQueue(context: string, eventHandler: ISagaEventHandler): string {
     return `queue.saga.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.saga.context}.${eventHandler.saga.name}`;
   }
 
-  private static getTopic(context: string, eventHandler: SagaEventHandlerImplementation): string {
+  private static getTopic(context: string, eventHandler: ISagaEventHandler): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

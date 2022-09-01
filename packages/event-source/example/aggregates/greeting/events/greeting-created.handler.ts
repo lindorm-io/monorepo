@@ -1,13 +1,12 @@
-import { GreetingCreated } from "./greeting-created.event";
 import { AggregateEventHandler } from "../../../../src";
+import { GreetingCreated } from "./greeting-created.event";
 
 /**
- * Exporting versioned handlers as [ main ]
+ * Exporting handlers as [ main ]
  */
 
-const v1: AggregateEventHandler<GreetingCreated> = {
+export const main: AggregateEventHandler<GreetingCreated> = {
   event: GreetingCreated,
-  version: 1,
   handler: async (ctx) => {
     ctx.mergeState({
       created: true,
@@ -15,16 +14,3 @@ const v1: AggregateEventHandler<GreetingCreated> = {
     });
   },
 };
-
-const v2: AggregateEventHandler<GreetingCreated> = {
-  event: GreetingCreated,
-  version: 2,
-  handler: async (ctx) => {
-    ctx.mergeState({
-      created: true,
-      v2: { initial: ctx.event.initial },
-    });
-  },
-};
-
-export const main = [v1, v2];

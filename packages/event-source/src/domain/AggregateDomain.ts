@@ -4,7 +4,7 @@ import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { ILogger } from "@lindorm-io/winston";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, filter, find, findLast, some } from "lodash";
+import { cloneDeep, filter, find, findLast, snakeCase, some } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -306,9 +306,13 @@ export class AggregateDomain implements IAggregateDomain {
       await this.messageBus.publish([
         new ErrorMessage(
           {
-            name: error.name,
+            name: snakeCase(error.name),
             aggregate: command.aggregate,
-            data: { error, message: command },
+            data: {
+              error,
+              message: command,
+            },
+            metadata: command.metadata,
             mandatory: true,
           },
           command,

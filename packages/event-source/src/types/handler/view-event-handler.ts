@@ -33,7 +33,6 @@ export interface ViewEventHandler<TEvent extends DtoClass, TState extends State 
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   options?: ViewEventHandlerStoreOptions;
-  version?: number;
   getViewId?(event: DomainEvent<TEvent>): string;
   handler(ctx: ViewEventHandlerContext<TEvent, TState>): Promise<void>;
 }

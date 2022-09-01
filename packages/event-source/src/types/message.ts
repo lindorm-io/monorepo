@@ -31,7 +31,7 @@ export interface MessageBaseOptions<
   type: MessageBaseType;
 }
 
-export interface IMessage extends IAmqpMessage {
+export interface IMessage<TData = any> extends IAmqpMessage<TData> {
   aggregate: AggregateIdentifier;
   causationId: string;
   correlationId: string;

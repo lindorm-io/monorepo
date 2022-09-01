@@ -1,7 +1,7 @@
 import Joi from "joi";
+import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { Command, DomainEvent, TimeoutMessage } from "../message";
 import { ILogger } from "@lindorm-io/winston";
-import { AggregateDestroyedError, IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, snakeCase } from "lodash";
@@ -167,7 +167,6 @@ export class Saga<TState extends State = State> implements ISaga {
           {
             name: snakeCase(command.constructor.name),
             data,
-            metadata: causation.metadata,
             ...options,
           },
         ),
@@ -193,7 +192,7 @@ export class Saga<TState extends State = State> implements ISaga {
     assertSchema(Joi.object().required().validate(state));
 
     if (this._destroyed) {
-      throw new AggregateDestroyedError();
+      throw new SagaDestroyedError();
     }
 
     this._state = state;

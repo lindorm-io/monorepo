@@ -17,7 +17,6 @@ export interface AggregateEventHandlerContext<
 
 export interface AggregateEventHandler<TEvent extends DtoClass, TState extends State = State> {
   event: Constructor<TEvent>;
-  version?: number;
   handler(ctx: AggregateEventHandlerContext<TEvent, TState>): Promise<void>;
 }
 

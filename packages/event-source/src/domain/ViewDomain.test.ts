@@ -247,10 +247,15 @@ describe("ViewDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "ViewDestroyedError",
+        name: "view_destroyed_error",
         data: {
           error: expect.any(ViewDestroyedError),
           message: event,
+          view: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);
@@ -309,10 +314,15 @@ describe("ViewDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "ViewNotCreatedError",
+        name: "view_not_created_error",
         data: {
           error: expect.any(ViewNotCreatedError),
           message: event,
+          view: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);
@@ -371,10 +381,15 @@ describe("ViewDomain", () => {
 
     expect(messageBus.publish).toHaveBeenCalledWith([
       expect.objectContaining({
-        name: "ViewAlreadyCreatedError",
+        name: "view_already_created_error",
         data: {
           error: expect.any(ViewAlreadyCreatedError),
           message: event,
+          view: {
+            id: expect.any(String),
+            name: "name",
+            context: "default",
+          },
         },
       }),
     ]);
