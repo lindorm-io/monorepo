@@ -2,7 +2,8 @@ import { SagaEventHandler } from "../../../../src";
 import { GreetingResponded } from "./greeting-responded.event";
 
 const main: SagaEventHandler<GreetingResponded> = {
-  name: "test_saga",
+  event: GreetingResponded,
+  saga: "test_saga",
   conditions: { created: true },
   getSagaId: (event) => event.aggregate.id,
   handler: async (ctx) => {

@@ -1,5 +1,5 @@
-import { DtoClass, State } from "../generic";
-import { HandlerIdentifier, HandlerIdentifierOptionalContext } from "./handler";
+import { Constructor, DtoClass, State } from "../generic";
+import { HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 import {
   MemoryViewRepository,
@@ -23,7 +23,9 @@ export interface QueryHandlerContext<
 }
 
 export interface QueryHandler<TQuery extends DtoClass, TResult, TState extends State = State> {
-  view: HandlerIdentifierOptionalContext;
+  query: Constructor<TQuery>;
+  view: string;
+  context?: string;
   handler(ctx: QueryHandlerContext<TQuery, TState>): Promise<TResult>;
 }
 

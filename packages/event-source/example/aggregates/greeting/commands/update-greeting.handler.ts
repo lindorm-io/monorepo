@@ -8,6 +8,7 @@ import { UpdateGreeting } from "./update-greeting.command";
  */
 
 const main: AggregateCommandHandler<UpdateGreeting, GreetingUpdated> = {
+  command: UpdateGreeting,
   conditions: { created: true },
   schema: Joi.object()
     .keys({

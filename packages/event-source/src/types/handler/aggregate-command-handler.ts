@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { DtoClass, State } from "../generic";
+import { Constructor, DtoClass, State } from "../generic";
 import { HandlerConditions, HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 
@@ -19,6 +19,7 @@ export interface AggregateCommandHandler<
   TEvent extends DtoClass,
   TState extends State = State,
 > {
+  command: Constructor<TCommand>;
   conditions?: HandlerConditions;
   schema?: Joi.Schema;
   version?: number;
@@ -29,9 +30,13 @@ export interface AggregateCommandHandlerOptions<
   TCommand extends DtoClass = DtoClass,
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
-> extends AggregateCommandHandler<TCommand, TEvent, TState> {
+> {
   aggregate: HandlerIdentifier;
   commandName: string;
+  conditions?: HandlerConditions;
+  schema?: Joi.Schema;
+  version?: number;
+  handler(ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>): Promise<void>;
 }
 
 export interface IAggregateCommandHandler<

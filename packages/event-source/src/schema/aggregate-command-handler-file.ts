@@ -4,6 +4,7 @@ import { AggregateCommandHandler, HandlerConditions } from "../types";
 export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<
   AggregateCommandHandler<unknown, unknown>
 >().keys({
+  command: Joi.function().required(),
   conditions: Joi.object<HandlerConditions>()
     .keys({
       created: Joi.boolean().optional(),

@@ -1,6 +1,11 @@
 import { ILogger } from "@lindorm-io/winston";
 import { LindormError } from "@lindorm-io/errors";
-import { assertSchema, defaultAggregateCommandHandlerSchema, StructureScanner } from "../util";
+import {
+  assertSchema,
+  defaultAggregateCommandHandlerSchema,
+  extractNameData,
+  StructureScanner,
+} from "../util";
 import { flatten, isArray, snakeCase, uniq } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
@@ -187,9 +192,11 @@ export class EventSourceScanner {
 
       assertSchema(JOI_AGGREGATE_COMMAND_HANDLER_FILE.required().validate(handler));
 
+      const { name: commandName } = extractNameData(handler.command.name);
+
       this.aggregateCommandHandlers.push(
         new AggregateCommandHandlerImplementation({
-          commandName: snakeCase(file.name),
+          commandName,
           aggregate: {
             name: snakeCase(aggregate),
             context: snakeCase(this.options.context),
@@ -217,9 +224,11 @@ export class EventSourceScanner {
 
       assertSchema(JOI_AGGREGATE_EVENT_HANDLER_FILE.required().validate(handler));
 
+      const { name: eventName } = extractNameData(handler.event.name);
+
       this.aggregateEventHandlers.push(
         new AggregateEventHandlerImplementation({
-          eventName: snakeCase(file.name),
+          eventName,
           aggregate: {
             name: snakeCase(aggregate),
             context: snakeCase(this.options.context),
@@ -239,12 +248,14 @@ export class EventSourceScanner {
 
       assertSchema(JOI_QUERY_HANDLER_FILE.required().validate(handler));
 
+      const { name: queryName } = extractNameData(handler.query.name);
+
       this.queryHandlers.push(
         new QueryHandlerImplementation({
-          queryName: snakeCase(file.name),
+          queryName,
           view: {
-            name: handler.view.name,
-            context: this.context(handler.view.context),
+            name: handler.view,
+            context: this.context(handler.context),
           },
           handler: handler.handler,
         }),
@@ -266,9 +277,11 @@ export class EventSourceScanner {
 
       assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
 
+      const { name: eventName } = extractNameData(handler.event.name);
+
       this.sagaEventHandlers.push(
         new SagaEventHandlerImplementation({
-          eventName: snakeCase(file.name),
+          eventName,
           aggregate: {
             name: snakeCase(aggregate),
             context: isArray(handler.aggregate?.context)
@@ -276,7 +289,7 @@ export class EventSourceScanner {
               : snakeCase(this.context(handler.aggregate?.context)),
           },
           saga: {
-            name: snakeCase(handler.name),
+            name: snakeCase(handler.saga),
             context: snakeCase(this.options.context),
           },
           conditions: handler.conditions,
@@ -302,9 +315,11 @@ export class EventSourceScanner {
 
       assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
 
+      const { name: eventName } = extractNameData(handler.event.name);
+
       this.viewEventHandlers.push(
         new ViewEventHandlerImplementation({
-          eventName: snakeCase(file.name),
+          eventName,
           aggregate: {
             name: snakeCase(aggregate),
             context: isArray(handler.aggregate?.context)
@@ -312,7 +327,7 @@ export class EventSourceScanner {
               : snakeCase(this.context(handler.aggregate?.context)),
           },
           view: {
-            name: snakeCase(handler.name),
+            name: snakeCase(handler.view),
             context: snakeCase(this.options.context),
           },
           conditions: handler.conditions,
@@ -328,15 +343,24 @@ export class EventSourceScanner {
   // private scanners
 
   private loadCommandAggregate(file: ScanFileData): void {
+    const content = this.require(file.path);
+    const commands = Object.keys(content);
+
+    if (commands.length !== 1) {
+      throw new Error(`Invalid amount of commands in file [ ${file.path} ]`);
+    }
+
+    const [command] = commands;
+    const { name } = extractNameData(command);
     const [directory, aggregate] = file.parents;
 
     if (directory !== "commands") {
       throw new Error("Invalid command location");
     }
 
-    this.registerCommandAggregate(file.name, aggregate);
+    this.registerCommandAggregate(name, aggregate);
 
-    this.logger.debug("Found command aggregate", { name: file.name });
+    this.logger.debug("Found command aggregate", { name });
   }
 
   // private helpers

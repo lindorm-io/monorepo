@@ -1,4 +1,4 @@
-import { Attributes, DtoClass, State } from "../generic";
+import { Attributes, Constructor, DtoClass, State } from "../generic";
 import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
@@ -28,9 +28,10 @@ export interface ViewEventHandlerStoreOptions<TFields extends Attributes = Attri
 }
 
 export interface ViewEventHandler<TEvent extends DtoClass, TState extends State = State> {
+  event: Constructor<TEvent>;
+  view: string;
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  name: string;
   options?: ViewEventHandlerStoreOptions;
   version?: number;
   getViewId?(event: DomainEvent<TEvent>): string;

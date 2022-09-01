@@ -1,4 +1,4 @@
-import { DtoClass, State } from "../generic";
+import { Constructor, DtoClass, State } from "../generic";
 import { DomainEvent, TimeoutMessage } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
@@ -28,7 +28,8 @@ export interface SagaEventHandler<
   TState extends State = State,
   TDispatch extends DtoClass = DtoClass,
 > {
-  name: string;
+  event: Constructor<TEvent>;
+  saga: string;
   aggregate?: SagaEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   version?: number;

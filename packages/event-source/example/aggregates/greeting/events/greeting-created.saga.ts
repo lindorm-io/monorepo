@@ -3,7 +3,8 @@ import { GreetingCreated } from "./greeting-created.event";
 import { UpdateGreeting } from "../commands/update-greeting.command";
 
 const main: SagaEventHandler<GreetingCreated> = {
-  name: "test_saga",
+  event: GreetingCreated,
+  saga: "test_saga",
   conditions: { created: false },
   getSagaId: (event) => event.aggregate.id,
   handler: async (ctx) => {

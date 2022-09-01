@@ -8,7 +8,8 @@ import {
 } from "../types";
 
 export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>().keys({
-  name: Joi.string().required(),
+  event: Joi.function().required(),
+  view: Joi.string().required(),
   aggregate: Joi.object<ViewEventHandlerFileAggregate>()
     .keys({
       context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),

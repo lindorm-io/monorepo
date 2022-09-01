@@ -1,4 +1,4 @@
-import { DtoClass, State } from "../generic";
+import { Constructor, DtoClass, State } from "../generic";
 import { HandlerIdentifier } from "./handler";
 import { ILogger } from "@lindorm-io/winston";
 
@@ -16,6 +16,7 @@ export interface AggregateEventHandlerContext<
 }
 
 export interface AggregateEventHandler<TEvent extends DtoClass, TState extends State = State> {
+  event: Constructor<TEvent>;
   version?: number;
   handler(ctx: AggregateEventHandlerContext<TEvent, TState>): Promise<void>;
 }
@@ -23,9 +24,11 @@ export interface AggregateEventHandler<TEvent extends DtoClass, TState extends S
 export interface AggregateEventHandlerOptions<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
-> extends AggregateEventHandler<TEvent, TState> {
+> {
   aggregate: HandlerIdentifier;
   eventName: string;
+  version?: number;
+  handler(ctx: AggregateEventHandlerContext<TEvent, TState>): Promise<void>;
 }
 
 export interface IAggregateEventHandler<

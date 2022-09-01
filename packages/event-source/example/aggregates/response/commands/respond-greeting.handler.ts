@@ -4,6 +4,7 @@ import { RespondGreeting } from "./respond-greeting.command";
 import { GreetingResponded } from "../events/greeting-responded.event";
 
 const main: AggregateCommandHandler<RespondGreeting, GreetingResponded> = {
+  command: RespondGreeting,
   conditions: { created: false },
   schema: Joi.object()
     .keys({

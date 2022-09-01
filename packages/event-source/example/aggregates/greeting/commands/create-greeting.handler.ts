@@ -8,6 +8,7 @@ import { GreetingCreated } from "../events/greeting-created.event";
  */
 
 export const main: AggregateCommandHandler<CreateGreeting, GreetingCreated> = {
+  command: CreateGreeting,
   conditions: { created: false },
   schema: Joi.object()
     .keys({

@@ -2,7 +2,8 @@ import { GreetingUpdated } from "./greeting-updated.event";
 import { ViewEventHandler } from "../../../../src";
 
 const main: ViewEventHandler<GreetingUpdated> = {
-  name: "postgres_greetings",
+  event: GreetingUpdated,
+  view: "postgres_greetings",
   conditions: { created: true },
   getViewId: (event) => event.aggregate.id,
   handler: async (ctx) => {
