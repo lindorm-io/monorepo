@@ -1,15 +1,17 @@
-import {
-  HandlerIdentifier,
-  IPostgresRepository,
-  State,
-  ViewRepositoryData,
-  ViewStoreAttributes,
-} from "../../types";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { getViewStoreName } from "../../util";
 import { parseBlob } from "@lindorm-io/string-blob";
+import {
+  HandlerIdentifier,
+  IPostgresRepository,
+  PostgresFindFilter,
+  PostgresFindOneFilter,
+  State,
+  ViewRepositoryData,
+  ViewStoreAttributes,
+} from "../../types";
 
 export class PostgresViewRepository<TState = State>
   extends PostgresBase
@@ -23,13 +25,60 @@ export class PostgresViewRepository<TState = State>
     this.view = view;
   }
 
-  public async find(filter: any): Promise<Array<ViewRepositoryData<TState>>> {
+  public async find(filter: PostgresFindFilter = {}): Promise<Array<ViewRepositoryData<TState>>> {
     this.logger.debug("Finding views", { filter });
 
-    throw new Error("Implementation missing");
+    let text = `
+      SELECT 
+        id,
+        state,
+        created_at,
+        updated_at
+      FROM
+        ${getViewStoreName(this.view)}
+      WHERE
+        destroyed = FALSE
+      `;
+
+    const values = [];
+
+    if (filter.where?.text) {
+      const replaced = filter.where.text
+        .replace(/state ->/gm, "state -> 'json' ->")
+        .replace(/state -> 'json' -> 'json' ->/gm, "state -> 'json' ->");
+
+      text += ` AND ${replaced}`;
+    }
+    if (filter.where?.values) {
+      for (const value of filter.where.values) {
+        values.push(value);
+      }
+    }
+    if (filter.limit) {
+      text += ` LIMIT ${filter.limit}`;
+    }
+    if (filter.offset) {
+      text += ` OFFSET ${filter.limit}`;
+    }
+    if (filter.orderBy) {
+      text += ` ORDER BY `;
+      for (const [key, value] of Object.entries(filter.orderBy)) {
+        text += `${key} ${value},`;
+      }
+      text = text.trim().slice(0, -1);
+    }
+
+    this.logger.debug("Querying", { text, values });
 
     try {
-      /* TODO: Implement */
+      const { rows } = await this.connection.query<ViewStoreAttributes>(text, values);
+
+      return rows.map((item) => ({
+        id: item.id,
+        state: parseBlob(item.state),
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      }));
     } catch (err) {
       this.logger.error("Failed to find views", err);
     }
@@ -39,53 +88,48 @@ export class PostgresViewRepository<TState = State>
     this.logger.debug("Finding view", { id });
 
     try {
-      const text = `
-        SELECT *
-        FROM
-          ${getViewStoreName(this.view)}
-        WHERE
-          id = $1 AND
-          name = $2 AND
-          context = $3 AND
-          destroyed != $4
-        LIMIT 1
-      `;
+      const filter: PostgresFindOneFilter = {
+        where: {
+          text: `
+            id = $1 AND
+            name = $2 AND
+            context = $3
+          `,
+          values: [id, this.view.name, this.view.context],
+        },
+      };
 
-      const values = [id, this.view.name, this.view.context, true];
+      const result = await this.find({
+        ...filter,
+        limit: 1,
+      });
 
-      const result = await this.connection.query<ViewStoreAttributes>(text, values);
-
-      if (!result.rows.length) {
+      if (!result.length) {
         this.logger.debug("View not found");
-
         return;
       }
 
-      this.logger.debug("Found view", { result });
-
-      const [data] = result.rows;
-
-      return {
-        id: data.id,
-        name: data.name,
-        context: data.context,
-        revision: data.revision,
-        state: parseBlob(data.state),
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      };
+      return result[0];
     } catch (err) {
       this.logger.error("Failed to find view", err);
     }
   }
 
-  public async findOne(filter: any): Promise<ViewRepositoryData<TState>> {
+  public async findOne(filter: PostgresFindOneFilter): Promise<ViewRepositoryData<TState>> {
     this.logger.debug("Finding view", { filter });
 
-    throw new Error("Implementation missing");
-
     try {
-      /* TODO: Implement */
+      const result = await this.find({
+        ...filter,
+        limit: 1,
+      });
+
+      if (!result.length) {
+        this.logger.debug("View not found");
+        return;
+      }
+
+      return result[0];
     } catch (err) {
       this.logger.error("Failed to find view", err);
     }

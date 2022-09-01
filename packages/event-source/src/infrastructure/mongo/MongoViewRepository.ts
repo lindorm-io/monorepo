@@ -25,7 +25,6 @@ export class MongoViewRepository<TState = State>
   implements IMongoRepository<TState>
 {
   private readonly collection: Collection<ViewStoreAttributes>;
-  private readonly view: HandlerIdentifier;
 
   public constructor(connection: IMongoConnection, view: HandlerIdentifier, logger: ILogger) {
     super(connection, logger);
@@ -33,7 +32,6 @@ export class MongoViewRepository<TState = State>
     this.collection = this.connection?.database?.collection<ViewStoreAttributes>(
       getViewStoreName(view),
     );
-    this.view = view;
   }
 
   public async find(
@@ -58,9 +56,6 @@ export class MongoViewRepository<TState = State>
       for (const item of result) {
         array.push({
           id: item.id,
-          name: this.view.name,
-          context: this.view.context,
-          revision: item.revision,
           state: item.state as TState,
           created_at: item.created_at,
           updated_at: item.updated_at,
@@ -91,9 +86,6 @@ export class MongoViewRepository<TState = State>
 
       return {
         id: result.id,
-        name: this.view.name,
-        context: this.view.context,
-        revision: result.revision,
         state: result.state as TState,
         created_at: result.created_at,
         updated_at: result.updated_at,
@@ -130,9 +122,6 @@ export class MongoViewRepository<TState = State>
 
       return {
         id: result.id,
-        name: this.view.name,
-        context: this.view.context,
-        revision: result.revision,
         state: result.state as TState,
         created_at: result.created_at,
         updated_at: result.updated_at,

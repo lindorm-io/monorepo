@@ -299,9 +299,6 @@ describe("EventSource (Postgres)", () => {
 
     await expect(app.query(new QueryGreeting(id))).resolves.toStrictEqual({
       id,
-      name: "test_view",
-      context: "es_postgres",
-      revision: 2,
       state: {
         created: true,
         updated: true,

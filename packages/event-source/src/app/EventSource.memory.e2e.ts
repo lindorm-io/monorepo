@@ -257,9 +257,6 @@ describe("EventSource (Memory)", () => {
 
     await expect(app.query(new QueryGreeting(id))).resolves.toStrictEqual({
       id,
-      name: "test_view",
-      context: "es_memory",
-      revision: 2,
       state: {
         created: true,
         updated: true,

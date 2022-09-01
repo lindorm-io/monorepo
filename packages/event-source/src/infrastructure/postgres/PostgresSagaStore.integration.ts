@@ -317,7 +317,10 @@ describe("PostgresSagaStore", () => {
       expect.objectContaining({
         hash: update.hash,
         revision: 2,
-        state: { updated: true },
+        state: {
+          json: { updated: "true" },
+          meta: { updated: "B" },
+        },
       }),
     ]);
   });

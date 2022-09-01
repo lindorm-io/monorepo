@@ -1,3 +1,4 @@
+import { IN_MEMORY_VIEW_STORE } from "./in-memory";
 import { filter, find } from "lodash";
 import {
   HandlerIdentifier,
@@ -6,7 +7,6 @@ import {
   ViewRepositoryData,
   ViewStoreAttributes,
 } from "../../types";
-import { IN_MEMORY_VIEW_STORE } from "./in-memory";
 
 export class MemoryViewRepository<TState extends State = State>
   implements IMemoryRepository<TState>
@@ -28,9 +28,6 @@ export class MemoryViewRepository<TState extends State = State>
 
     return filtered.map((item) => ({
       id: item.id,
-      name: item.name,
-      context: item.context,
-      revision: item.revision,
       state: item.state as TState,
       created_at: item.created_at,
       updated_at: item.updated_at,
@@ -48,9 +45,6 @@ export class MemoryViewRepository<TState extends State = State>
 
     return {
       id: found.id,
-      name: found.name,
-      context: found.context,
-      revision: found.revision,
       state: found.state as TState,
       created_at: found.created_at,
       updated_at: found.updated_at,

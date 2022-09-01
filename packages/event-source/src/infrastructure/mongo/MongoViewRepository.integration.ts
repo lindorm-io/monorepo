@@ -106,18 +106,12 @@ describe("MongoViewRepository", () => {
     await expect(repository.find({ "state.common": "common" })).resolves.toStrictEqual([
       {
         id: view1,
-        name: identifier.name,
-        context: identifier.context,
-        revision: 1,
         state: { one: 1, common: "common" },
         created_at: expect.any(Date),
         updated_at: expect.any(Date),
       },
       {
         id: view2,
-        name: identifier.name,
-        context: identifier.context,
-        revision: 2,
         state: { two: 2, common: "common" },
         created_at: expect.any(Date),
         updated_at: expect.any(Date),
@@ -128,9 +122,6 @@ describe("MongoViewRepository", () => {
   test("should find by id", async () => {
     await expect(repository.findById(view3)).resolves.toStrictEqual({
       id: view3,
-      name: identifier.name,
-      context: identifier.context,
-      revision: 3,
       state: { three: 3, common: "uncommon" },
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
@@ -140,9 +131,6 @@ describe("MongoViewRepository", () => {
   test("should find one", async () => {
     await expect(repository.findOne({ id: view1 })).resolves.toStrictEqual({
       id: view1,
-      name: identifier.name,
-      context: identifier.context,
-      revision: 1,
       state: { one: 1, common: "common" },
       created_at: expect.any(Date),
       updated_at: expect.any(Date),
