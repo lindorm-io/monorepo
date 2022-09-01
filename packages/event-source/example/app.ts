@@ -1,23 +1,12 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
+import { EventSource } from "../src";
 import { GetViewById } from "./queries/get-view-by-id.query";
 import { Logger, LogLevel } from "@lindorm-io/winston";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
-import { StoredGreeting } from "./entities";
 import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
 import { join } from "path";
-import {
-  EventEntity,
-  EventSource,
-  EventStoreType,
-  MessageBusType,
-  SagaCausationEntity,
-  SagaEntity,
-  SagaStoreType,
-  ViewCausationEntity,
-  ViewStoreType,
-} from "../src";
 
 const logger = new Logger();
 logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
@@ -37,11 +26,9 @@ const main = async (): Promise<void> => {
     {
       host: "localhost",
       port: 5432,
-      username: "root",
+      user: "root",
       password: "example",
       database: "default_db",
-      entities: [EventEntity, SagaEntity, SagaCausationEntity, StoredGreeting, ViewCausationEntity],
-      synchronize: true,
     },
     logger,
   );
@@ -52,10 +39,10 @@ const main = async (): Promise<void> => {
       aggregates: join(__dirname, "aggregates"),
       queries: join(__dirname, "queries"),
       adapters: {
-        eventStore: EventStoreType.POSTGRES,
-        messageBus: MessageBusType.AMQP,
-        sagaStore: SagaStoreType.POSTGRES,
-        viewStore: ViewStoreType.POSTGRES,
+        eventStore: "postgres",
+        messageBus: "amqp",
+        sagaStore: "postgres",
+        viewStore: "postgres",
       },
     },
     logger,

@@ -26,7 +26,7 @@ export class ViewEventHandlerImplementation<
   public readonly handler: (ctx: ViewEventHandlerContext<TEvent, TState>) => Promise<void>;
 
   public constructor(options: ViewEventHandlerOptions<TEvent, TState>) {
-    this.options = options.options;
+    this.options = options.options || {};
     this.aggregate = { name: options.aggregate.name, context: options.aggregate.context };
     this.conditions = options.conditions || {};
     this.eventName = options.eventName;

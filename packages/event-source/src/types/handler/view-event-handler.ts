@@ -44,7 +44,7 @@ export interface ViewEventHandlerOptions<
   aggregate: HandlerIdentifierMultipleContexts;
   conditions?: HandlerConditions;
   eventName: string;
-  options: ViewEventHandlerStoreOptions;
+  options?: ViewEventHandlerStoreOptions;
   version?: number;
   view: HandlerIdentifier;
   getViewId?(event: DomainEvent<TEvent>): string;
