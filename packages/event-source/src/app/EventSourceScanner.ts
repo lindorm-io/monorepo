@@ -1,6 +1,6 @@
 import { ILogger } from "@lindorm-io/winston";
 import { LindormError } from "@lindorm-io/errors";
-import { flatten, isArray, isObject, snakeCase, uniq } from "lodash";
+import { flatten, isArray, snakeCase, uniq } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -195,7 +195,13 @@ export class EventSourceScanner {
       throw new Error("Invalid command handler location");
     }
 
-    const handler = this.getFileHandler<AggregateCommandHandler<unknown, unknown>>(file.path);
+    const handlers = this.getFileHandlers<AggregateCommandHandler<unknown, unknown>>(file.path);
+
+    if (handlers.length !== 1) {
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+    }
+
+    const [handler] = handlers;
 
     this.logger.debug("Found aggregate command handler", { handler: file.name });
 
@@ -225,7 +231,13 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handler = this.getFileHandler<AggregateEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<AggregateEventHandler<unknown>>(file.path);
+
+    if (handlers.length !== 1) {
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+    }
+
+    const [handler] = handlers;
 
     this.logger.debug("Found aggregate event handler", { handler: file.name });
 
@@ -253,7 +265,13 @@ export class EventSourceScanner {
       throw new Error("Invalid error handler location");
     }
 
-    const handler = this.getFileHandler<ErrorHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<ErrorHandler<unknown>>(file.path);
+
+    if (handlers.length !== 1) {
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+    }
+
+    const [handler] = handlers;
 
     this.logger.debug("Found error handler", { handler: file.name });
 
@@ -274,7 +292,13 @@ export class EventSourceScanner {
   }
 
   private loadQueryHandlers(file: ScanFileData): void {
-    const handler = this.getFileHandler<QueryHandler<unknown, unknown>>(file.path);
+    const handlers = this.getFileHandlers<QueryHandler<unknown, unknown>>(file.path);
+
+    if (handlers.length !== 1) {
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+    }
+
+    const [handler] = handlers;
 
     this.logger.debug("Found query handler", { handler: file.name });
 
@@ -301,33 +325,35 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handler = this.getFileHandler<SagaEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<SagaEventHandler<unknown>>(file.path);
 
-    this.logger.debug("Found saga event handler", { handler: file.name });
+    for (const handler of handlers) {
+      this.logger.debug("Found saga event handler", { handler: file.name });
 
-    assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
+      assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
 
-    const { name: eventName, version } = extractNameData(handler.event.name);
+      const { name: eventName, version } = extractNameData(handler.event.name);
 
-    this.sagaEventHandlers.push(
-      new SagaEventHandlerImplementation({
-        eventName,
-        aggregate: {
-          name: snakeCase(aggregate),
-          context: isArray(handler.aggregate?.context)
-            ? handler.aggregate.context.map((context) => snakeCase(context))
-            : snakeCase(this.context(handler.aggregate?.context)),
-        },
-        saga: {
-          name: snakeCase(handler.saga),
-          context: snakeCase(this.options.context),
-        },
-        conditions: handler.conditions,
-        version,
-        getSagaId: handler.getSagaId,
-        handler: handler.handler,
-      }),
-    );
+      this.sagaEventHandlers.push(
+        new SagaEventHandlerImplementation({
+          eventName,
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(this.context(handler.aggregate?.context)),
+          },
+          saga: {
+            name: snakeCase(handler.saga),
+            context: snakeCase(this.options.context),
+          },
+          conditions: handler.conditions,
+          version,
+          getSagaId: handler.getSagaId,
+          handler: handler.handler,
+        }),
+      );
+    }
   }
 
   private loadViewHandlers(file: ScanFileData): void {
@@ -337,34 +363,36 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handler = this.getFileHandler<ViewEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<ViewEventHandler<unknown>>(file.path);
 
-    this.logger.debug("Found view event handler", { handler: file.name });
+    for (const handler of handlers) {
+      this.logger.debug("Found view event handler", { handler: file.name });
 
-    assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
+      assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
 
-    const { name: eventName, version } = extractNameData(handler.event.name);
+      const { name: eventName, version } = extractNameData(handler.event.name);
 
-    this.viewEventHandlers.push(
-      new ViewEventHandlerImplementation({
-        eventName,
-        aggregate: {
-          name: snakeCase(aggregate),
-          context: isArray(handler.aggregate?.context)
-            ? handler.aggregate.context.map((context) => snakeCase(context))
-            : snakeCase(this.context(handler.aggregate?.context)),
-        },
-        view: {
-          name: snakeCase(handler.view),
-          context: snakeCase(this.options.context),
-        },
-        conditions: handler.conditions,
-        options: handler.options,
-        version,
-        getViewId: handler.getViewId,
-        handler: handler.handler,
-      }),
-    );
+      this.viewEventHandlers.push(
+        new ViewEventHandlerImplementation({
+          eventName,
+          aggregate: {
+            name: snakeCase(aggregate),
+            context: isArray(handler.aggregate?.context)
+              ? handler.aggregate.context.map((context) => snakeCase(context))
+              : snakeCase(this.context(handler.aggregate?.context)),
+          },
+          view: {
+            name: snakeCase(handler.view),
+            context: snakeCase(this.options.context),
+          },
+          conditions: handler.conditions,
+          options: handler.options,
+          version,
+          getViewId: handler.getViewId,
+          handler: handler.handler,
+        }),
+      );
+    }
   }
 
   // private scanners
@@ -392,19 +420,19 @@ export class EventSourceScanner {
 
   // private helpers
 
-  private getFileHandler<THandler>(path: string): THandler {
+  private getFileHandlers<THandler>(path: string): Array<THandler> {
     const required = this.require(path);
-    const handler = required.default || required.main;
+    const handlers = required.default || required.main;
 
-    if (!handler) {
+    if (!handlers) {
       throw new Error(`Expected methods [ default | main ] from [ ${path} ]`);
     }
 
-    if (!isObject(handler)) {
-      throw new Error("Handler needs to be object based");
+    if (isArray(handlers)) {
+      return handlers as Array<THandler>;
     }
 
-    return handler as unknown as THandler;
+    return [handlers as THandler];
   }
 
   private isValid(type: string, name: string): boolean {
