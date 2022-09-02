@@ -9,6 +9,7 @@ import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
+import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import {
   HandlerNotRegisteredError,
@@ -33,7 +34,6 @@ import {
   TEST_DOMAIN_EVENT_MERGE_STATE,
   TEST_DOMAIN_EVENT_THROWS,
 } from "../fixtures/domain-event.fixture";
-import { randomString } from "@lindorm-io/core";
 
 describe("SagaDomain", () => {
   const logger = createMockLogger();

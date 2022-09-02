@@ -16,7 +16,7 @@ export interface ErrorHandlerContext<TError = Error, TDispatch extends DtoClass 
   saga?: SagaIdentifier;
   view?: ViewIdentifier;
   logger: ILogger;
-  dispatch(command: TDispatch, options?: ErrorDispatchOptions): void;
+  dispatch(command: TDispatch, options?: ErrorDispatchOptions): Promise<void>;
 }
 
 export interface ErrorHandlerFileAggregate {

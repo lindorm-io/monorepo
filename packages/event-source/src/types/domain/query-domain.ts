@@ -4,8 +4,8 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { QueryHandlerImplementation } from "../../handler";
 
 export interface QueryDomainOptions {
-  mongo: IMongoConnection;
-  postgres: IPostgresConnection;
+  mongo?: IMongoConnection;
+  postgres?: IPostgresConnection;
 }
 
 export interface IQueryDomain<TQuery extends DtoClass = DtoClass, TState extends State = State> {
