@@ -39,7 +39,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const text = `
         SELECT timestamp
         FROM
-          saga_causation
+          ${SAGA_CAUSATION}
         WHERE
           id = $1 AND
           name = $2 AND
@@ -70,7 +70,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       const text = `
         UPDATE
-          saga_store
+          ${SAGA_STORE}
         SET
           messages_to_dispatch = $1,
           hash = $2,
@@ -118,7 +118,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       const text = `
         UPDATE
-          saga_store
+          ${SAGA_STORE}
         SET
           processed_causation_ids = $1,
           hash = $2,
@@ -162,7 +162,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const text = `
         SELECT *
         FROM
-          saga_store
+          ${SAGA_STORE}
         WHERE
           id = $1 AND
           name = $2 AND
@@ -210,7 +210,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       await this.promise();
 
       const text = `
-        INSERT INTO saga_store (
+        INSERT INTO ${SAGA_STORE} (
           id,
           name,
           context,
@@ -257,7 +257,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       let num = 1;
       let text = `
-        INSERT INTO saga_causation (
+        INSERT INTO ${SAGA_CAUSATION} (
           id,
           name,
           context,
@@ -296,7 +296,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
 
       const text = `
         UPDATE
-          saga_store
+          ${SAGA_STORE}
         SET
           destroyed = $1,
           messages_to_dispatch = $2,

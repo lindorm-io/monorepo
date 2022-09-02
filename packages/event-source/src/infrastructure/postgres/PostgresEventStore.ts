@@ -22,7 +22,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       let text = `
         SELECT *
         FROM
-          event_store
+          ${EVENT_STORE}
         WHERE
           id = $1 AND
           name = $2 AND
@@ -56,7 +56,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       await this.promise();
 
       const text = `
-        INSERT INTO event_store (
+        INSERT INTO ${EVENT_STORE} (
           id,
           name,
           context,
@@ -99,7 +99,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       await this.promise();
 
       const text = `
-        SELECT * FROM event_store
+        SELECT * FROM ${EVENT_STORE}
         WHERE timestamp >= $1
           ORDER BY timestamp ASC
           LIMIT $2`;

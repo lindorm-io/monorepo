@@ -2,8 +2,9 @@ import { CREATE_TABLE_VIEW_CAUSATION } from "./sql/view-causation";
 import { ILogger } from "@lindorm-io/winston";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
-import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
 import { createViewStoreTable } from "./sql/view-store";
+import { flatten } from "lodash";
+import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
 import { getViewStoreName } from "../../util";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import {
@@ -18,7 +19,6 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
-import { flatten } from "lodash";
 
 export class PostgresViewStore extends PostgresBase implements IViewStore {
   private readonly initialisedViews: Array<string>;
@@ -41,7 +41,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const text = `
         SELECT timestamp
         FROM
-          view_causation
+          ${VIEW_CAUSATION}
         WHERE
           id = $1 AND
           name = $2 AND
@@ -221,7 +221,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       let num = 1;
       let text = `
-        INSERT INTO view_causation (
+        INSERT INTO ${VIEW_CAUSATION} (
           id,
           name,
           context,
