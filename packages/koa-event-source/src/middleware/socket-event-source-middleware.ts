@@ -12,9 +12,17 @@ export const socketEventSourceMiddleware =
       }
 
       socket.ctx.eventSource = {
-        publish: app.publish,
+        command: (command, options) =>
+          app.command(command, {
+            metadata: {
+              trace: socket.ctx.token?.bearerToken?.subject ? "identity" : "koa",
+              subject: socket.ctx.token?.bearerToken?.subject,
+              ...(options.metadata || {}),
+            },
+            ...options,
+          }),
+        query: (query) => app.query(query),
         admin: app.admin,
-        repositories: app.repositories,
       };
 
       socket.ctx.logger.debug("Event Source added to context");

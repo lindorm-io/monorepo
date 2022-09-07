@@ -5,22 +5,25 @@ import { ServerError } from "@lindorm-io/errors";
 export const eventSourceMiddleware =
   (app: IEventSource): DefaultLindormEventDomainKoaMiddleware =>
   async (ctx, next): Promise<void> => {
-    const metric = ctx.getMetric("mongo");
+    const metric = ctx.getMetric("eventSource");
 
     if (!app.isInitialised) {
       throw new ServerError("EventSource has not been initialised");
     }
 
     ctx.eventSource = {
-      publish: (options) =>
-        app.publish({
+      command: (command, options) =>
+        app.command(command, {
           correlationId: ctx.metadata.identifiers.correlationId,
-          origin: ctx.token?.bearerToken?.subject ? "identity" : "koa",
-          originator: ctx.token?.bearerToken?.subject || undefined,
+          metadata: {
+            trace: ctx.token?.bearerToken?.subject ? "identity" : "koa",
+            ...(ctx.token?.bearerToken?.subject ? { subject: ctx.token.bearerToken.subject } : {}),
+            ...(options?.metadata || {}),
+          },
           ...options,
         }),
+      query: (query) => app.query(query),
       admin: app.admin,
-      repositories: app.repositories,
     };
 
     ctx.logger.debug("Event Source added to context");
