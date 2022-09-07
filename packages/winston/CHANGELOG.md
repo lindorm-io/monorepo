@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.7...@lindorm-io/winston@0.4.8) (2022-09-07)
+
+
+### Bug Fixes
+
+* improve winston mock ([70696da](https://github.com/lindorm-io/monorepo/commit/70696da64f57a65c75bf4f29e4d090736acf172f))
+* improve winston mock logger ([4bbe246](https://github.com/lindorm-io/monorepo/commit/4bbe246d3f20109bb50da1cfe12a011729cdd039))
+
+
+
+
+
 ## [0.4.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.6...@lindorm-io/winston@0.4.7) (2022-07-19)
 
 

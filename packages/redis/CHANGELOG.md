@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.10.0...@lindorm-io/redis@0.10.1) (2022-09-07)
+
+
+### Bug Fixes
+
+* add custom connection to redis ([de4cb65](https://github.com/lindorm-io/monorepo/commit/de4cb6500874310be360a4d76a39391c553ab9ad))
+* amend error in connection options ([bc4a3ae](https://github.com/lindorm-io/monorepo/commit/bc4a3aed89ac7a776ebd775856a08cd7bf43ff34))
+* amend errors in mocks ([d87b4d2](https://github.com/lindorm-io/monorepo/commit/d87b4d25c5c8cb4f4d687b625329caf73d4c72f1))
+* improve use of lodash function ([f9a0d27](https://github.com/lindorm-io/monorepo/commit/f9a0d27e8d5711d095f9e16ef6b0818dd4acd920))
+* minor improvements to redis connection ([665e43e](https://github.com/lindorm-io/monorepo/commit/665e43e5bedaa0c2d39932a77515a512f23969b2))
+* shift args to interfaces ([2609b20](https://github.com/lindorm-io/monorepo/commit/2609b208f8d84cb694fd1b562ea9d0d858764ad5))
+* update core connection constructor args ([81933d7](https://github.com/lindorm-io/monorepo/commit/81933d7e417a15e394f530d6131b9404752a1ab1))
+
+
+
+
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.9.2...@lindorm-io/redis@0.10.0) (2022-07-19)
 
 

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/string-blob@0.0.12...@lindorm-io/string-blob@0.0.13) (2022-09-07)
+
+
+### Bug Fixes
+
+* add typing to parse-blob function ([a4f1592](https://github.com/lindorm-io/monorepo/commit/a4f159207d4d08b487ad92cbb06a37764e2e2349))
+* add typing to stringify blob function ([43b714e](https://github.com/lindorm-io/monorepo/commit/43b714ee230285d600b46f3f85cd0cab0c28fa52))
+* handle arrays in string-blob ([353a3b0](https://github.com/lindorm-io/monorepo/commit/353a3b0e6767cd76284ad1de6b263057f8efd332))
+
+
+
+
+
 ## [0.0.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/string-blob@0.0.11...@lindorm-io/string-blob@0.0.12) (2022-06-26)
 
 **Note:** Version bump only for package @lindorm-io/string-blob

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.0.2...@lindorm-io/koa-amqp@0.0.3) (2022-09-07)
+
+
+### Bug Fixes
+
+* use interfaces for connections ([dab8f67](https://github.com/lindorm-io/monorepo/commit/dab8f67983fea3adb0f82677291eb8a07e04ed37))
+
+
+
+
+
 ## 0.0.2 (2022-07-19)
 
 

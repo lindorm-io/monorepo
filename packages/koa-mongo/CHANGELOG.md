@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.10...@lindorm-io/koa-mongo@0.8.11) (2022-09-07)
+
+
+### Bug Fixes
+
+* improve koa mongo middleware ([2b38181](https://github.com/lindorm-io/monorepo/commit/2b38181d21a7c48ecdebc78a48b773402ec97e3d))
+* use interfaces for connections ([dab8f67](https://github.com/lindorm-io/monorepo/commit/dab8f67983fea3adb0f82677291eb8a07e04ed37))
+
+
+
+
+
 ## [0.8.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.9...@lindorm-io/koa-mongo@0.8.10) (2022-07-19)
 
 

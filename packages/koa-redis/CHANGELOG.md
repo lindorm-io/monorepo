@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.10...@lindorm-io/koa-redis@0.6.11) (2022-09-07)
+
+
+### Bug Fixes
+
+* improve koa redis middleware ([a0c7ce7](https://github.com/lindorm-io/monorepo/commit/a0c7ce7e6956b8329a773fca5445b5018f7b4103))
+* use interfaces for connections ([dab8f67](https://github.com/lindorm-io/monorepo/commit/dab8f67983fea3adb0f82677291eb8a07e04ed37))
+
+
+
+
+
 ## [0.6.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.9...@lindorm-io/koa-redis@0.6.10) (2022-07-19)
 
 

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.3...@lindorm-io/core@0.7.0) (2022-09-07)
+
+
+### Bug Fixes
+
+* ensure dates are dates ([8b21bb1](https://github.com/lindorm-io/monorepo/commit/8b21bb1c3b727401522e2b40336df3ae05abba33))
+
+
+### Features
+
+* create utility to process changes to a state object with metadata ([692118d](https://github.com/lindorm-io/monorepo/commit/692118d4f547fa27e21f02affd62cce5fd96d316))
+
+
+
+
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.2...@lindorm-io/core@0.6.3) (2022-06-26)
 
 

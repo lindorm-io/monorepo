@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.10.0...@lindorm-io/mongo@0.11.0) (2022-09-07)
+
+
+### Bug Fixes
+
+* add custom connection to mongo ([64d9038](https://github.com/lindorm-io/monorepo/commit/64d9038507e0ece99c55bb60e8fc57914fb89ab9))
+* amend error in connection options ([bc4a3ae](https://github.com/lindorm-io/monorepo/commit/bc4a3aed89ac7a776ebd775856a08cd7bf43ff34))
+* amend errors in mocks ([d87b4d2](https://github.com/lindorm-io/monorepo/commit/d87b4d25c5c8cb4f4d687b625329caf73d4c72f1))
+* minor improvements to mongo connection ([ec38f98](https://github.com/lindorm-io/monorepo/commit/ec38f983f5e89c2eb90ce482f2d22c74311d8534))
+* remove buggy transaction behaviour ([c906e85](https://github.com/lindorm-io/monorepo/commit/c906e85a94d4a144f1a77d1d2f5c4e66a232bac6))
+* shift args to interfaces ([2609b20](https://github.com/lindorm-io/monorepo/commit/2609b208f8d84cb694fd1b562ea9d0d858764ad5))
+* update core connection constructor args ([81933d7](https://github.com/lindorm-io/monorepo/commit/81933d7e417a15e394f530d6131b9404752a1ab1))
+
+
+### Features
+
+* add transaction wrapper to mongo ([9b66630](https://github.com/lindorm-io/monorepo/commit/9b666305841be9d9fc00f6c1451b8bc66553d5e9))
+* update mongo connection options ([82c8025](https://github.com/lindorm-io/monorepo/commit/82c80255b7933562f94925fc190e5c3ca5fbe039))
+
+
+
+
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.9.6...@lindorm-io/mongo@0.10.0) (2022-07-19)
 
 

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.22...@lindorm-io/koa-bearer-auth@0.3.23) (2022-09-07)
+
+**Note:** Version bump only for package @lindorm-io/koa-bearer-auth
+
+
+
+
+
 ## [0.3.22](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.21...@lindorm-io/koa-bearer-auth@0.3.22) (2022-07-19)
 
 **Note:** Version bump only for package @lindorm-io/koa-bearer-auth
