@@ -10,6 +10,9 @@ export let TEST_PROTECTED_RECORD_REPOSITORY: ProtectedRecordRepository;
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   TEST_ENCRYPTED_RECORD_REPOSITORY = new EncryptedRecordRepository({
     connection: mongoConnection,
     logger,

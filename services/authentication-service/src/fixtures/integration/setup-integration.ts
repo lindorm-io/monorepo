@@ -25,6 +25,9 @@ export let TEST_STRATEGY_SESSION_CACHE: StrategySessionCache;
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   TEST_ACCOUNT_REPOSITORY = new AccountRepository({ connection: mongoConnection, logger });
   TEST_AUTHENTICATION_SESSION_CACHE = new AuthenticationSessionCache({
     connection: redisConnection,

@@ -18,6 +18,9 @@ export let TEST_DEVICE_REPOSITORY: DeviceLinkRepository;
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   TEST_CHALLENGE_SESSION_CACHE = new ChallengeSessionCache({ connection: redisConnection, logger });
   TEST_ENROLMENT_SESSION_CACHE = new EnrolmentSessionCache({ connection: redisConnection, logger });
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE = new RdcSessionCache({

@@ -20,6 +20,9 @@ export let TEST_IDENTITY_REPOSITORY: IdentityRepository;
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   TEST_CONNECT_SESSION_CACHE = new ConnectSessionCache({ connection: redisConnection, logger });
 
   TEST_ADDRESS_REPOSITORY = new AddressRepository({ connection: mongoConnection, logger });

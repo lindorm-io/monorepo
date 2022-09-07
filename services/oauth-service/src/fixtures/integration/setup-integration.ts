@@ -29,6 +29,9 @@ export let TEST_ARGON: CryptoArgon;
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   TEST_AUTHORIZATION_SESSION_CACHE = new AuthorizationSessionCache({
     connection: redisConnection,
     logger,

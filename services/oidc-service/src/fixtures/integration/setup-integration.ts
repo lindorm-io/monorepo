@@ -7,6 +7,10 @@ import { redisConnection } from "../../instance";
 export let TEST_OIDC_SESSION_CACHE: OidcSessionCache;
 
 export const setupIntegration = async (): Promise<void> => {
+  const logger = createMockLogger();
+
+  await redisConnection.connect();
+
   TEST_OIDC_SESSION_CACHE = new OidcSessionCache({
     connection: redisConnection,
     logger: createMockLogger(),
@@ -14,7 +18,7 @@ export const setupIntegration = async (): Promise<void> => {
 
   const keyPairCache = new KeyPairCache({
     connection: redisConnection,
-    logger: createMockLogger(),
+    logger,
   });
   await keyPairCache.create(createTestKeyPair());
 };
