@@ -12,11 +12,13 @@ describe("assertRateLimit", () => {
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new RedisConnection({
-      host: "localhost",
-      port: 6377,
+    connection = new RedisConnection(
+      {
+        host: "localhost",
+        port: 6377,
+      },
       logger,
-    });
+    );
 
     await connection.connect();
   });

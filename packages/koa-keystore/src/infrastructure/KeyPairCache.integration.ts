@@ -22,11 +22,13 @@ describe("KeyPairCache", () => {
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new RedisConnection({
-      host: "localhost",
-      port: 6378,
+    connection = new RedisConnection(
+      {
+        host: "localhost",
+        port: 6378,
+      },
       logger,
-    });
+    );
 
     await connection.connect();
 

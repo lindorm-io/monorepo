@@ -16,11 +16,13 @@ describe("/.well-known", () => {
   beforeAll(async () => {
     const logger = createMockLogger();
 
-    const redisConnection = new RedisConnection({
-      host: "localhost",
-      port: 6376,
+    const redisConnection = new RedisConnection(
+      {
+        host: "localhost",
+        port: 6376,
+      },
       logger,
-    });
+    );
 
     server = createNodeServer({
       host: "http://localhost",
