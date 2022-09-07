@@ -1,7 +1,6 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { ILogger } from "@lindorm-io/winston";
-import { IMongoConnection, MongoConnectionOptions, WithTransactionCallback } from "../types";
-import { uniqBy } from "lodash";
+import { IMongoConnection, MongoConnectionOptions } from "../types";
 import {
   Collection,
   CollectionOptions,
@@ -23,6 +22,7 @@ export class MongoConnection
 
   public constructor(options: MongoConnectionOptions, logger: ILogger) {
     const {
+      authSource = "admin",
       connectInterval,
       connectTimeout,
       database,
@@ -30,7 +30,6 @@ export class MongoConnection
       host = "localhost",
       port = 27017,
       custom,
-      replicas = [],
       ...connectOptions
     } = options;
 
@@ -49,16 +48,13 @@ export class MongoConnection
       logger,
     );
 
-    const hosts = uniqBy([{ host, port }, ...replicas], (item) => item.host && item.port);
+    let url = `mongodb://${host}:${port}`;
 
-    let url = "mongodb://" + hosts.map((item) => `${item.host}:${item.port},`);
-    url = url.slice(0, -1);
     if (database) {
-      url = `${url}/${database}`;
+      url = `${url}/${database}?authSource=${authSource}`;
     }
 
     this.url = url;
-
     this.custom = custom;
     this.dbName = database;
     this.dbOptions = databaseOptions;
@@ -77,41 +73,6 @@ export class MongoConnection
 
   public collection(collection: string, options?: CollectionOptions): Collection {
     return this.db.collection(collection, options);
-  }
-
-  public async withTransaction<Result = any, Options = any>(
-    callback: WithTransactionCallback<Result, Options>,
-    options?: Options,
-  ): Promise<Result> {
-    const session = await this.client.startSession();
-
-    try {
-      session.startTransaction();
-
-      this.logger.verbose("Transaction started");
-
-      const result = await callback({
-        database: this.db,
-        logger: this.logger,
-        options: options || ({} as Options),
-        session,
-
-        collection: this.collection.bind(this),
-      });
-
-      await session.commitTransaction();
-
-      this.logger.verbose("Transaction committed", { result });
-
-      return result;
-    } catch (err) {
-      await session.abortTransaction();
-      this.logger.error("Transaction failed", err);
-
-      throw err;
-    } finally {
-      await session.endSession();
-    }
   }
 
   // abstract implementation

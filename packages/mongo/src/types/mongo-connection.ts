@@ -1,7 +1,5 @@
 import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
-import { ILogger } from "@lindorm-io/winston";
 import {
-  ClientSession,
   Collection,
   CollectionOptions,
   Db,
@@ -16,6 +14,7 @@ export interface HostData {
 }
 
 export interface ExtendedMongoClientOptions extends MongoClientOptions {
+  authSource?: string;
   custom?: typeof MongoClient;
   database?: string;
   databaseOptions?: DbOptions;
@@ -27,25 +26,8 @@ export interface ExtendedMongoClientOptions extends MongoClientOptions {
 export type MongoConnectionOptions = ConnectionBaseOptions<MongoClientOptions> &
   ExtendedMongoClientOptions;
 
-export interface WithTransactionContext<Options = any> {
-  database: Db;
-  logger: ILogger;
-  options: Options;
-  session: ClientSession;
-
-  collection(collection: string, options: CollectionOptions): Collection;
-}
-
-export type WithTransactionCallback<Result = any, Options = any> = (
-  context: WithTransactionContext<Options>,
-) => Promise<Result>;
-
 export interface IMongoConnection extends IConnectionBase<MongoClient> {
   collection(collection: string, options?: CollectionOptions): Collection;
-  withTransaction<Result = any, Options = any>(
-    callback: WithTransactionCallback<Result, Options>,
-    options?: Options,
-  ): Promise<Result>;
 
   database: Db;
 }

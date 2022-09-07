@@ -1,8 +1,7 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
+import { Db, MongoClient } from "mongodb";
 import { IMongoConnection } from "../types";
-import { ClientSession, Db, MongoClient } from "mongodb";
 import { MongoConnection } from "../connection";
-import { createMockLogger } from "@lindorm-io/winston";
 
 interface Options {
   [key: string]: jest.Mock;
@@ -60,14 +59,6 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
     db: jest.fn().mockImplementation(() => db),
   } as unknown as MongoClient;
 
-  const session = {
-    endSession: jest.fn(),
-    incrementTransactionNumber: jest.fn(),
-    inTransaction: true,
-    commitTransaction: jest.fn(),
-    abortTransaction: jest.fn(),
-  } as unknown as ClientSession;
-
   const connection: IMongoConnection = {
     connect: jest.fn(),
     disconnect: jest.fn(),
@@ -82,11 +73,6 @@ export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
     on: jest.fn(),
 
     collection: jest.fn().mockImplementation(() => collection),
-    withTransaction: jest
-      .fn()
-      .mockImplementation(async (callback) =>
-        callback({ client, session, logger: createMockLogger() }),
-      ),
   };
 
   return connection as MongoConnection;
