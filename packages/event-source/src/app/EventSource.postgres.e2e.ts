@@ -58,7 +58,7 @@ describe("EventSource (Postgres)", () => {
     postgres = new PostgresConnection(
       {
         host: "localhost",
-        port: 5432,
+        port: 5431,
         user: "root",
         password: "example",
         database: "default_db",
@@ -225,7 +225,7 @@ describe("EventSource (Postgres)", () => {
     app.on("view.es_postgres.test_view", onEventSpyName);
     app.on(`view.es_postgres.test_view.${id}`, onEventSpyId);
 
-    await app.publish(new CreateGreeting(true), { aggregate: { id } });
+    await app.command(new CreateGreeting(true), { aggregate: { id } });
 
     await new Promise((resolve) => {
       const interval = setInterval(() => {

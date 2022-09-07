@@ -20,7 +20,7 @@ services:
     labels:
       - postgres
     ports:
-      - "5432:5432"
+      - "5431:5432"
     environment:
       POSTGRES_DB: default_db
       POSTGRES_USER: root

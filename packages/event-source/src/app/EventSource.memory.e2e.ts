@@ -183,7 +183,7 @@ describe("EventSource (Memory)", () => {
     app.on("view.es_memory.test_view", onEventSpyName);
     app.on(`view.es_memory.test_view.${id}`, onEventSpyId);
 
-    await app.publish(new CreateGreeting(true), { aggregate: { id } });
+    await app.command(new CreateGreeting(true), { aggregate: { id } });
 
     await new Promise((resolve) => {
       const interval = setInterval(() => {

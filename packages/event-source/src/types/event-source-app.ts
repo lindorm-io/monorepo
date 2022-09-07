@@ -60,14 +60,16 @@ export interface EventSourceOptions extends EventSourcePrivateOptions {
   custom?: EventSourceCustomOptions;
 }
 
-export interface EventSourcePublishOptions {
+export interface EventSourceCommandOptions<
+  TMetadata extends Record<string, any> = Record<string, any>,
+> {
   aggregate?: Partial<AggregateIdentifier>;
   correlationId?: string;
   delay?: number;
-  metadata?: Record<string, any>;
+  metadata?: TMetadata;
 }
 
-export type EventSourcePublishResult = {
+export type EventSourceCommandResult = {
   result: "OK" | "QUEUED";
   aggregate: AggregateIdentifier;
 };
@@ -106,7 +108,10 @@ export interface IEventSource<
   init(): Promise<void>;
   initialise(): Promise<void>;
 
-  publish(command: TCommand, options: EventSourcePublishOptions): Promise<EventSourcePublishResult>;
+  command<TMetadata>(
+    command: TCommand,
+    options: EventSourceCommandOptions<TMetadata>,
+  ): Promise<EventSourceCommandResult>;
   query<TResult>(query: TQuery): Promise<TResult>;
 
   admin: EventSourceAdmin;

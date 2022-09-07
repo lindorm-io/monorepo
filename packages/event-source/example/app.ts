@@ -25,7 +25,7 @@ const main = async (): Promise<void> => {
   const postgres = new PostgresConnection(
     {
       host: "localhost",
-      port: 5432,
+      port: 5431,
       user: "root",
       password: "example",
       database: "default_db",
@@ -59,7 +59,7 @@ const main = async (): Promise<void> => {
 
   const {
     aggregate: { id: aggregateId },
-  } = await app.publish(new CreateGreeting("Hi"));
+  } = await app.command(new CreateGreeting("Hi"));
 
   await new Promise((resolve) => {
     const interval = setInterval(() => {

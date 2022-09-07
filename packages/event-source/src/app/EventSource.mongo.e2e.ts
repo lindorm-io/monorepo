@@ -225,7 +225,7 @@ describe("EventSource (Mongo)", () => {
     app.on("view.es_mongo.test_view", onEventSpyName);
     app.on(`view.es_mongo.test_view.${id}`, onEventSpyId);
 
-    await app.publish(new CreateGreeting(true), { aggregate: { id } });
+    await app.command(new CreateGreeting(true), { aggregate: { id } });
 
     await new Promise((resolve) => {
       const interval = setInterval(() => {

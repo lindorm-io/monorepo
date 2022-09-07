@@ -29,8 +29,8 @@ import {
   EventSourceInspectOptions,
   EventSourceOptions,
   EventSourcePrivateOptions,
-  EventSourcePublishOptions,
-  EventSourcePublishResult,
+  EventSourceCommandOptions,
+  EventSourceCommandResult,
   EventSourceSetup,
   IAggregateDomain,
   IDomainEventStore,
@@ -251,10 +251,10 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
   // public app
 
-  public async publish(
+  public async command<TMetadata>(
     command: TCommand,
-    options: EventSourcePublishOptions = {},
-  ): Promise<EventSourcePublishResult> {
+    options: EventSourceCommandOptions<TMetadata> = {},
+  ): Promise<EventSourceCommandResult> {
     await this.promise();
 
     const { name, version, data } = extractDtoData(command);
