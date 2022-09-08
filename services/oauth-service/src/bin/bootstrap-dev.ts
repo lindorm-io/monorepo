@@ -5,21 +5,21 @@ import { argon, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./util/logger";
 
 const ids = {
-  authentication: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
-  communication: "aec0a293-4371-450a-bcfa-0f60f1f51a65",
-  device: "8da48653-ba29-416e-b882-393b60dce178",
-  identity: "9993fa84-bedf-4a93-a421-1f63719cd9d3",
-  oidc: "3e0ab7aa-f445-4031-ad27-d87ff23d2ce2",
-  vault: "c233687a-c610-412c-985b-5f6e95fbf47d",
+  authenticationService: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
+  communicationService: "aec0a293-4371-450a-bcfa-0f60f1f51a65",
+  deviceService: "8da48653-ba29-416e-b882-393b60dce178",
+  identityService: "9993fa84-bedf-4a93-a421-1f63719cd9d3",
+  oidcService: "3e0ab7aa-f445-4031-ad27-d87ff23d2ce2",
+  vaultService: "c233687a-c610-412c-985b-5f6e95fbf47d",
 };
 
 const secrets = {
-  authentication: "kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E",
-  communication: "8uXj4edcXTOvT7BbB9ecspvfXrujPmIViFr7jw2k5sZVlleDI58WUg6V6HbjG2Md",
-  device: "siKP6qVeEoBxTOPV4Q4Ijiy6laUhgKXaZfrSYWJKBm3IfiO04fie7KIeFJdIbFUJ",
-  identity: "SXYF5eM47qn2fpqLkaeoy6c1R0AHKPssz0TfCpM3evxJzNasfrgaeFeMByJLmhpq",
-  oidc: "5NTac6bAnSNAWnMh0pCjABmlv1ca6LUml88gaQrQrBU3aNS6W6LpJp9r3ViclTe8",
-  vault: "aOpwpLy8XQhxExub2h68K0Puddy5CM9FO1v1XSZVIhvoSRvGlv0Fih6ofUCrwNmx",
+  authenticationService: "kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E",
+  communicationService: "8uXj4edcXTOvT7BbB9ecspvfXrujPmIViFr7jw2k5sZVlleDI58WUg6V6HbjG2Md",
+  deviceService: "siKP6qVeEoBxTOPV4Q4Ijiy6laUhgKXaZfrSYWJKBm3IfiO04fie7KIeFJdIbFUJ",
+  identityService: "SXYF5eM47qn2fpqLkaeoy6c1R0AHKPssz0TfCpM3evxJzNasfrgaeFeMByJLmhpq",
+  oidcService: "5NTac6bAnSNAWnMh0pCjABmlv1ca6LUml88gaQrQrBU3aNS6W6LpJp9r3ViclTe8",
+  vaultService: "aOpwpLy8XQhxExub2h68K0Puddy5CM9FO1v1XSZVIhvoSRvGlv0Fih6ofUCrwNmx",
 };
 
 const repositories = {
@@ -32,6 +32,9 @@ const caches = {
 };
 
 const main = async (): Promise<void> => {
+  await mongoConnection.connect();
+  await redisConnection.connect();
+
   const tenant = await repositories.tenant.create(
     new Tenant({
       id: "12507e8d-aa23-4132-8fd4-5aca0ae792cc",
@@ -45,7 +48,7 @@ const main = async (): Promise<void> => {
 
   const authentication = await repositories.client.create(
     new Client({
-      id: ids.authentication,
+      id: ids.authenticationService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -57,7 +60,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.authentication),
+      secret: await argon.encrypt(secrets.authenticationService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -66,7 +69,7 @@ const main = async (): Promise<void> => {
 
   const communication = await repositories.client.create(
     new Client({
-      id: ids.communication,
+      id: ids.communicationService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -78,7 +81,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.communication),
+      secret: await argon.encrypt(secrets.communicationService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -87,7 +90,7 @@ const main = async (): Promise<void> => {
 
   const device = await repositories.client.create(
     new Client({
-      id: ids.device,
+      id: ids.deviceService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -99,7 +102,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.device),
+      secret: await argon.encrypt(secrets.deviceService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -108,7 +111,7 @@ const main = async (): Promise<void> => {
 
   const identity = await repositories.client.create(
     new Client({
-      id: ids.identity,
+      id: ids.identityService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -120,7 +123,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.identity),
+      secret: await argon.encrypt(secrets.identityService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -129,7 +132,7 @@ const main = async (): Promise<void> => {
 
   const oidc = await repositories.client.create(
     new Client({
-      id: ids.oidc,
+      id: ids.oidcService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -141,7 +144,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.oidc),
+      secret: await argon.encrypt(secrets.oidcService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -150,7 +153,7 @@ const main = async (): Promise<void> => {
 
   const vault = await repositories.client.create(
     new Client({
-      id: ids.vault,
+      id: ids.vaultService,
       active: true,
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
@@ -162,7 +165,7 @@ const main = async (): Promise<void> => {
       permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
-      secret: await argon.encrypt(secrets.vault),
+      secret: await argon.encrypt(secrets.vaultService),
       tenant: tenant.id,
       type: ClientType.CONFIDENTIAL,
     }),
@@ -170,13 +173,36 @@ const main = async (): Promise<void> => {
   await caches.client.create(vault);
 
   logger.info("Generated Entities", {
-    authentication: { id: ids.authentication, secret: secrets.authentication },
-    communication: { id: ids.communication, secret: secrets.communication },
-    device: { id: ids.device, secret: secrets.device },
-    identity: { id: ids.identity, secret: secrets.identity },
-    oidc: { id: ids.oidc, secret: secrets.oidc },
-    vault: { id: ids.vault, secret: secrets.vault },
-    tenant: { id: tenant.id, owner: tenant.owner },
+    services: {
+      authentication: {
+        id: ids.authenticationService,
+        secret: secrets.authenticationService,
+      },
+      communication: {
+        id: ids.communicationService,
+        secret: secrets.communicationService,
+      },
+      device: {
+        id: ids.deviceService,
+        secret: secrets.deviceService,
+      },
+      identity: {
+        id: ids.identityService,
+        secret: secrets.identityService,
+      },
+      oidc: {
+        id: ids.oidcService,
+        secret: secrets.oidcService,
+      },
+      vault: {
+        id: ids.vaultService,
+        secret: secrets.vaultService,
+      },
+    },
+    tenant: {
+      id: tenant.id,
+      owner: tenant.owner,
+    },
   });
 };
 
