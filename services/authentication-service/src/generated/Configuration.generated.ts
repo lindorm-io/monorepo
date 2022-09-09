@@ -38,11 +38,12 @@ interface Logger {
 }
 
 interface Mongo {
-  db_name:   string;
-  host:      string;
-  password:  string;
-  port:      number;
-  username:  string;
+  db_name:    string;
+  host:       string;
+  namespace:  string;
+  password:   string;
+  port:       number;
+  username:   string;
 }
 
 interface Oauth {

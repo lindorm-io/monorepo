@@ -1,10 +1,21 @@
-version: "3.7"
+version: "3.8"
 
 services:
-  odic_service_redis:
+  mongo:
+    image: mongo
+    container_name: mongo
+    labels:
+      - mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+
+  redis:
     image: redis
-    container_name: odic_service_redis
+    container_name: redis
     labels:
       - redis
     ports:
-      - "3602:6379"
+      - "6379:6379"

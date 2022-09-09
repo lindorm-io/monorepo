@@ -8,16 +8,6 @@ logger:
   readable: true
   timestamp: true
 
-mongo:
-  host: localhost
-  port: 3401
-  username: root
-  password: example
-
-redis:
-  host: localhost
-  port: 3402
-
 oauth:
   client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
   client_secret: SXYF5eM47qn2fpqLkaeoy6c1R0AHKPssz0TfCpM3evxJzNasfrgaeFeMByJLmhpq

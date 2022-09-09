@@ -45,10 +45,11 @@ interface OidcProvider {
 }
 
 interface Redis {
-  host:      string;
-  password:  string;
-  port:      number;
-  username:  string;
+  host:       string;
+  namespace:  string;
+  password:   string;
+  port:       number;
+  username:   string;
 }
 
 interface Server {

@@ -13,9 +13,9 @@ logger:
 mongo:
   host: localhost
   port: 27017
-  db_name: device
-  username: username
-  password: password
+  db_name: device_db
+  username: root
+  password: example
 
 oauth:
   client_id: id
@@ -24,6 +24,7 @@ oauth:
 redis:
   host: localhost
   port: 6379
+  namespace: device_service
 
 server:
   domain: https://lindorm.io

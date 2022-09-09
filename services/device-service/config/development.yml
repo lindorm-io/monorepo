@@ -4,19 +4,9 @@ logger:
   readable: true
   timestamp: true
 
-mongo:
-  host: localhost
-  port: 3301
-  username: root
-  password: example
-
 oauth:
   client_id: 8da48653-ba29-416e-b882-393b60dce178
   client_secret: siKP6qVeEoBxTOPV4Q4Ijiy6laUhgKXaZfrSYWJKBm3IfiO04fie7KIeFJdIbFUJ
-
-redis:
-  host: localhost
-  port: 3302
 
 server:
   domain: https://development.lindorm.io

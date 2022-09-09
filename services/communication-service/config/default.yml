@@ -11,6 +11,7 @@ oauth:
 redis:
   host: localhost
   port: 6379
+  namespace: communication_service
 
 server:
   domain: https://lindorm.io

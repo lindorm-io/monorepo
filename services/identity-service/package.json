@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist node_modules",
+    "dev": "nodemon",
+    "dev:bootstrap": "echo 'bootstrap'",
     "docker:build": "docker build -t lindorm-io/identity-service:latest .",
     "generate:config": "yarn generate-typing -f Configuration -o $PWD -r config -w src/generated",
     "start": "node dist/server",

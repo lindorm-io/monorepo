@@ -22,9 +22,9 @@ logger:
 mongo:
   host: localhost
   port: 27017
-  db_name: authentication
-  username: username
-  password: password
+  db_name: authentication_db
+  username: root
+  password: example
 
 oauth:
   client_id: id
@@ -33,6 +33,7 @@ oauth:
 redis:
   host: localhost
   port: 6379
+  namespace: authentication_service
 
 server:
   domain: https://lindorm.io

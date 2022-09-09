@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist node_modules",
+    "dev": "nodemon",
+    "dev:bootstrap": "echo 'bootstrap'",
     "dev:generate:confirmation-token": "ts-node src/bin/generate-confirmation-token",
     "dev:generate:device": "ts-node src/bin/generate-device",
     "docker:build": "docker build -t lindorm-io/device-service:latest .",
