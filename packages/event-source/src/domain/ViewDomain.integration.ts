@@ -1,6 +1,6 @@
 import { DomainEvent } from "../message";
 import { MessageBus, ViewStore } from "../infrastructure";
-import { MessageBusType, ViewStoreType } from "../enum";
+import { MessageBusType } from "../enum";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { ViewDomain } from "./ViewDomain";
@@ -32,7 +32,7 @@ describe("ViewDomain", () => {
 
   beforeAll(async () => {
     messageBus = new MessageBus({ type: MessageBusType.MEMORY }, logger);
-    store = new ViewStore({ type: ViewStoreType.MEMORY }, logger);
+    store = new ViewStore({}, logger);
     domain = new ViewDomain({ messageBus, store }, logger);
 
     eventHandlers = [
@@ -85,7 +85,7 @@ describe("ViewDomain", () => {
     await expect(messageBus.publish(eventDestroy)).resolves.toBeUndefined();
     await sleep(50);
 
-    await expect(store.load(view, {})).resolves.toStrictEqual(
+    await expect(store.load(view, { type: "memory" })).resolves.toStrictEqual(
       expect.objectContaining({
         id: aggregate.id,
         name: "name",

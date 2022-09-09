@@ -1,8 +1,10 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
 import { EventSource } from "../src";
-import { GetViewById } from "./queries/get-view-by-id.query";
+import { GetViewFromMongo } from "./queries/get-view-from-mongo.query";
+import { GetViewFromPostgres } from "./queries/get-view-from-postgres.query";
 import { Logger, LogLevel } from "@lindorm-io/winston";
+import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
 import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
@@ -22,6 +24,17 @@ const main = async (): Promise<void> => {
     logger,
   );
 
+  const mongo = new MongoConnection(
+    {
+      host: "localhost",
+      port: 27011,
+      auth: { username: "root", password: "example" },
+      authSource: "admin",
+      database: "mongo_db",
+    },
+    logger,
+  );
+
   const postgres = new PostgresConnection(
     {
       host: "localhost",
@@ -35,14 +48,13 @@ const main = async (): Promise<void> => {
 
   const app = new EventSource<CreateGreeting | UpdateGreeting | RespondGreeting>(
     {
-      connections: { amqp, postgres },
+      connections: { amqp, mongo, postgres },
       aggregates: join(__dirname, "aggregates"),
       queries: join(__dirname, "queries"),
       adapters: {
         eventStore: "postgres",
         messageBus: "amqp",
         sagaStore: "postgres",
-        viewStore: "postgres",
       },
     },
     logger,
@@ -63,7 +75,7 @@ const main = async (): Promise<void> => {
 
   await new Promise((resolve) => {
     const interval = setInterval(() => {
-      if (viewChangeCount >= 3) {
+      if (viewChangeCount >= 6) {
         clearInterval(interval);
         resolve(undefined);
       }
@@ -91,7 +103,8 @@ const main = async (): Promise<void> => {
 
   const queries: any = {};
 
-  queries.getViewById = await app.query(new GetViewById(aggregateId));
+  queries.getViewFromMongo = await app.query(new GetViewFromMongo(aggregateId));
+  queries.getViewFromPostgres = await app.query(new GetViewFromPostgres(aggregateId));
 
   logger.info("queries", { queries });
 };

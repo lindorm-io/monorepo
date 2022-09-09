@@ -88,7 +88,9 @@ describe("MemoryViewStore", () => {
       revision: 2,
     };
 
-    await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
+    await expect(
+      store.clearProcessedCausationIds(filter, update, { type: "memory" }),
+    ).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
@@ -116,7 +118,7 @@ describe("MemoryViewStore", () => {
 
     IN_MEMORY_VIEW_STORE.push(attributes);
 
-    await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
+    await expect(store.find(viewIdentifier, { type: "memory" })).resolves.toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         meta: { meta: true },
@@ -140,7 +142,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    await expect(store.insert(attributes, {})).resolves.toBeUndefined();
+    await expect(store.insert(attributes, { type: "memory" })).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
@@ -207,7 +209,7 @@ describe("MemoryViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update, {})).resolves.toBeUndefined();
+    await expect(store.update(filter, update, { type: "memory" })).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({

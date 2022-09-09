@@ -8,6 +8,7 @@ import { VIEW_CAUSATION } from "../../constant";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
+import { getViewStoreName } from "../../util";
 import {
   AggregateIdentifier,
   ViewStoreAttributes,
@@ -17,7 +18,6 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
-import { getViewStoreName } from "../../util";
 
 describe("MongoViewStore", () => {
   const logger = createMockLogger();
@@ -112,7 +112,9 @@ describe("MongoViewStore", () => {
       revision: 2,
     };
 
-    await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
+    await expect(
+      store.clearProcessedCausationIds(filter, update, { type: "mongo" }),
+    ).resolves.toBeUndefined();
 
     await expect(
       connection.client
@@ -148,7 +150,7 @@ describe("MongoViewStore", () => {
       .collection(getViewStoreName(viewIdentifier))
       .insertOne(attributes);
 
-    await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
+    await expect(store.find(viewIdentifier, { type: "mongo" })).resolves.toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { found: true },
@@ -171,7 +173,7 @@ describe("MongoViewStore", () => {
       updated_at: new Date(),
     };
 
-    await expect(store.insert(attributes, {})).resolves.toBeUndefined();
+    await expect(store.insert(attributes, { type: "mongo" })).resolves.toBeUndefined();
 
     await expect(
       connection.client
@@ -247,7 +249,7 @@ describe("MongoViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update, {})).resolves.toBeUndefined();
+    await expect(store.update(filter, update, { type: "mongo" })).resolves.toBeUndefined();
 
     await expect(
       connection.client

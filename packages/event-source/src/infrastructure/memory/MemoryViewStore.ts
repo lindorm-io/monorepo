@@ -4,7 +4,7 @@ import {
   IMessage,
   IViewStore,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerStoreOptions,
+  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewUpdateData,
@@ -24,7 +24,7 @@ export class MemoryViewStore implements IViewStore {
   public async clearProcessedCausationIds(
     updateFilter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
     const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
@@ -34,14 +34,14 @@ export class MemoryViewStore implements IViewStore {
 
   public async find(
     identifier: ViewIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
     return find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, identifier);
   }
 
   public async insert(
     attributes: ViewStoreAttributes,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     const found = find(IN_MEMORY_VIEW_STORE, {
       id: attributes.id,
@@ -74,7 +74,7 @@ export class MemoryViewStore implements IViewStore {
   public async update(
     updateFilter: ViewUpdateFilter,
     data: ViewUpdateData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
     const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);

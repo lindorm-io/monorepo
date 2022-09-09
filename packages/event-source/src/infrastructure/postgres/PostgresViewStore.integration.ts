@@ -203,7 +203,9 @@ describe("PostgresViewStore", () => {
       revision: 2,
     };
 
-    await expect(store.clearProcessedCausationIds(filter, update, {})).resolves.toBeUndefined();
+    await expect(
+      store.clearProcessedCausationIds(filter, update, { type: "postgres" }),
+    ).resolves.toBeUndefined();
 
     await expect(findView(connection, attributes)).resolves.toStrictEqual([
       expect.objectContaining({
@@ -217,7 +219,7 @@ describe("PostgresViewStore", () => {
   test("should find view", async () => {
     await insertView(connection, attributes);
 
-    await expect(store.find(viewIdentifier, {})).resolves.toStrictEqual(
+    await expect(store.find(viewIdentifier, { type: "postgres" })).resolves.toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         state: { data: "state" },
@@ -226,7 +228,7 @@ describe("PostgresViewStore", () => {
   });
 
   test("should insert view", async () => {
-    await expect(store.insert(attributes, {})).resolves.toBeUndefined();
+    await expect(store.insert(attributes, { type: "postgres" })).resolves.toBeUndefined();
 
     await expect(findView(connection, attributes)).resolves.toStrictEqual([
       expect.objectContaining({
@@ -281,7 +283,7 @@ describe("PostgresViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update, {})).resolves.toBeUndefined();
+    await expect(store.update(filter, update, { type: "postgres" })).resolves.toBeUndefined();
 
     await expect(findView(connection, attributes)).resolves.toStrictEqual([
       expect.objectContaining({

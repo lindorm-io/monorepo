@@ -11,7 +11,7 @@ import {
   IMessage,
   IViewStore,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerStoreOptions,
+  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewCausationAttributes,
@@ -58,14 +58,14 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   public async clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
-    await this.initialise(filter, options);
+    await this.initialise(filter, adapter);
 
     try {
-      const collection = await this.viewCollection(filter, options);
+      const collection = await this.viewCollection(filter, adapter);
 
       const result = await collection.updateOne(
         {
@@ -97,14 +97,14 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   public async find(
     identifier: ViewIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { identifier });
 
-    await this.initialise(identifier, options);
+    await this.initialise(identifier, adapter);
 
     try {
-      const collection = await this.viewCollection(identifier, options);
+      const collection = await this.viewCollection(identifier, adapter);
 
       const result = await collection.findOne({ id: identifier.id });
 
@@ -126,11 +126,11 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   public async insert(
     attributes: ViewStoreAttributes,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
-    await this.initialise(attributes, options);
+    await this.initialise(attributes, adapter);
 
     try {
       const collection = await this.viewCollection(
@@ -138,7 +138,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
           name: attributes.name,
           context: attributes.context,
         },
-        options,
+        adapter,
       );
 
       const result = await collection.insertOne(attributes);
@@ -183,14 +183,14 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   public async update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
-    await this.initialise(filter, options);
+    await this.initialise(filter, adapter);
 
     try {
-      const collection = await this.viewCollection(filter, options);
+      const collection = await this.viewCollection(filter, adapter);
 
       const result = await collection.updateOne(
         {
@@ -227,14 +227,14 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   private async initialise(
     view: HandlerIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     await this.promise();
 
     if (find(this.initialisedViews, view)) return;
 
     const storeName = getViewStoreName(view);
-    const custom = options.indexes || [];
+    const custom = adapter.indexes || [];
     const indexes = flatten([getViewStoreIndexes(view), custom]);
 
     await this.createIndexes(storeName, indexes);
@@ -250,10 +250,13 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   private async viewCollection(
     view: HandlerIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<Collection<ViewStoreAttributes>> {
     const storeName = getViewStoreName(view);
-    await this.createIndexes(storeName, getViewStoreIndexes(view));
+    const custom = adapter.indexes || [];
+    const indexes = flatten([getViewStoreIndexes(view), custom]);
+
+    await this.createIndexes(storeName, indexes);
 
     return this.connection.database.collection(storeName);
   }

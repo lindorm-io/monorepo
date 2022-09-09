@@ -26,6 +26,7 @@ import {
   State,
   ViewDomainOptions,
   ViewEventHandlerContext,
+  ViewEventHandlerAdapter,
   ViewIdentifier,
 } from "../types";
 
@@ -113,7 +114,7 @@ export class ViewDomain implements IViewDomain {
       this.eventHandlers.push(
         new ViewEventHandlerImplementation({
           eventName: eventHandler.eventName,
-          options: eventHandler.options,
+          adapter: eventHandler.adapter,
           aggregate: {
             name: eventHandler.aggregate.name,
             context: context,
@@ -144,8 +145,9 @@ export class ViewDomain implements IViewDomain {
 
   public async inspect<TState extends State = State>(
     identifier: ViewIdentifier,
+    options: ViewEventHandlerAdapter,
   ): Promise<View<TState>> {
-    return (await this.store.load(identifier, {})) as View<TState>;
+    return (await this.store.load(identifier, options)) as View<TState>;
   }
 
   // private
@@ -203,11 +205,11 @@ export class ViewDomain implements IViewDomain {
       context: viewIdentifier.context,
     };
 
-    let view = await this.store.load(identifier, eventHandler.options);
+    let view = await this.store.load(identifier, eventHandler.adapter);
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
-    const exists = await this.store.causationExists(identifier, event);
+    const exists = await this.store.causationExists(identifier, event, eventHandler.adapter);
 
     this.logger.debug("Causation exists", { exists });
 
@@ -262,7 +264,7 @@ export class ViewDomain implements IViewDomain {
 
     await eventHandler.handler(ctx);
 
-    const saved = await this.store.save(view, event, eventHandler.options);
+    const saved = await this.store.save(view, event, eventHandler.adapter);
 
     this.emit(saved);
 
@@ -291,8 +293,8 @@ export class ViewDomain implements IViewDomain {
       processedCausationIds: view.processedCausationIds,
     });
 
-    await this.store.processCausationIds(view);
-    return await this.store.clearProcessedCausationIds(view, eventHandler.options);
+    await this.store.processCausationIds(view, eventHandler.adapter);
+    return await this.store.clearProcessedCausationIds(view, eventHandler.adapter);
   }
 
   private async rejectEvent(event: DomainEvent, view: View, error: DomainError): Promise<void> {

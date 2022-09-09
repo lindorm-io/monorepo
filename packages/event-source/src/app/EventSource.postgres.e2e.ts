@@ -2,7 +2,7 @@ import Joi from "joi";
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { DomainEvent } from "../message";
 import { EventSource } from "./EventSource";
-import { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "../enum";
+import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
@@ -72,7 +72,6 @@ describe("EventSource (Postgres)", () => {
           eventStore: EventStoreType.POSTGRES,
           messageBus: MessageBusType.AMQP,
           sagaStore: SagaStoreType.POSTGRES,
-          viewStore: ViewStoreType.POSTGRES,
         },
         connections: {
           amqp,
@@ -181,10 +180,10 @@ describe("EventSource (Postgres)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
+        adapter: { type: "postgres" },
         aggregate: { name: "test_aggregate", context: "es_postgres" },
-        view: { name: "test_view", context: "es_postgres" },
         conditions: { created: false },
-        options: {},
+        view: { name: "test_view", context: "es_postgres" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -194,10 +193,10 @@ describe("EventSource (Postgres)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
+        adapter: { type: "postgres" },
         aggregate: { name: "test_aggregate", context: "es_postgres" },
-        view: { name: "test_view", context: "es_postgres" },
         conditions: { created: true },
-        options: {},
+        view: { name: "test_view", context: "es_postgres" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -207,6 +206,7 @@ describe("EventSource (Postgres)", () => {
 
     app.setup.registerCommandAggregate("create_greeting", "test_aggregate");
     app.setup.registerCommandAggregate("update_greeting", "test_aggregate");
+    app.setup.registerViewAdapter({ name: "test_view", context: "es_postgres", type: "postgres" });
   }, 30000);
 
   afterAll(async () => {

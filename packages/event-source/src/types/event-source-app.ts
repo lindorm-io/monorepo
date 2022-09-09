@@ -7,22 +7,22 @@ import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
-import { IViewStore, ViewStoreAdapterType } from "./view-store";
 import { MessageBusQueueType } from "./message-bus";
 import { ReplayOptions } from "./domain";
 import {
+  HandlerIdentifier,
   IAggregateCommandHandler,
   IAggregateEventHandler,
   IErrorHandler,
   IQueryHandler,
   ISagaEventHandler,
   IViewEventHandler,
+  ViewEventHandlerAdapter,
 } from "./handler";
 
 export interface EventSourceAdapterOptions {
   eventStore?: EventStoreAdapterType;
   sagaStore?: SagaStoreAdapterType;
-  viewStore?: ViewStoreAdapterType;
   messageBus?: MessageBusQueueType;
 }
 
@@ -36,7 +36,6 @@ export interface EventSourceCustomOptions {
   messageBus?: IMessageBus;
   eventStore?: IEventStore;
   sagaStore?: ISagaStore;
-  viewStore?: IViewStore;
   require?: NodeJS.Require;
 }
 
@@ -98,6 +97,7 @@ export interface EventSourceSetup {
   registerViewEventHandler(handler: IViewEventHandler): Promise<void>;
 
   registerCommandAggregate(name: string, aggregate: string): void;
+  registerViewAdapter(adapter: HandlerIdentifier & ViewEventHandlerAdapter): void;
 }
 
 export interface IEventSource<

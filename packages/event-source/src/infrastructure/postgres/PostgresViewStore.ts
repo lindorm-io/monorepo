@@ -14,7 +14,7 @@ import {
   StandardIdentifier,
   ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerStoreOptions,
+  ViewEventHandlerAdapter,
   ViewStoreAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
@@ -64,13 +64,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Clearing processed causation ids", { filter, data });
 
     try {
       await this.promise();
-      await this.initialiseView(filter, options);
+      await this.initialiseView(filter, adapter);
 
       const text = `
         UPDATE
@@ -111,13 +111,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async find(
     identifier: StandardIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes> {
     this.logger.debug("Finding view", { identifier });
 
     try {
       await this.promise();
-      await this.initialiseView(identifier, options);
+      await this.initialiseView(identifier, adapter);
 
       const text = `
         SELECT *
@@ -165,13 +165,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   public async insert(
     attributes: ViewStoreAttributes,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Inserting view", { attributes });
 
     try {
       await this.promise();
-      await this.initialiseView(attributes, options);
+      await this.initialiseView(attributes, adapter);
 
       const text = `
         INSERT INTO ${getViewStoreName(attributes)} (
@@ -255,13 +255,13 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     this.logger.debug("Updating view", { filter, data });
 
     try {
       await this.promise();
-      await this.initialiseView(filter, options);
+      await this.initialiseView(filter, adapter);
 
       const text = `
         UPDATE
@@ -331,10 +331,10 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
   private async initialiseView(
     view: HandlerIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     const storeName = getViewStoreName(view);
-    const custom = options.indexes || [];
+    const custom = adapter.indexes || [];
     const indexes = flatten([getViewStoreIndexes(view), custom]);
 
     if (this.initialisedViews.includes(storeName)) return;

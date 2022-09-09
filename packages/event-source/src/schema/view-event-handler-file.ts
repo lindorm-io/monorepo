@@ -1,7 +1,7 @@
 import Joi from "joi";
 import {
   HandlerConditions,
-  ViewEventHandlerStoreOptions,
+  ViewEventHandlerAdapter,
   ViewEventHandler,
   ViewEventHandlerFileAggregate,
   StoreIndex,
@@ -10,18 +10,7 @@ import {
 export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>().keys({
   event: Joi.function().required(),
   view: Joi.string().required(),
-  aggregate: Joi.object<ViewEventHandlerFileAggregate>()
-    .keys({
-      context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
-    })
-    .optional(),
-  conditions: Joi.object<HandlerConditions>()
-    .keys({
-      created: Joi.boolean().optional(),
-      permanent: Joi.boolean().optional(),
-    })
-    .optional(),
-  options: Joi.object<ViewEventHandlerStoreOptions>()
+  adapter: Joi.object<ViewEventHandlerAdapter>()
     .keys({
       custom: Joi.object().optional(),
       indexes: Joi.array()
@@ -33,7 +22,18 @@ export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>
           }),
         )
         .optional(),
-      type: Joi.string().allow("custom", "memory", "mongo", "postgres").optional(),
+      type: Joi.string().allow("custom", "memory", "mongo", "postgres").required(),
+    })
+    .required(),
+  aggregate: Joi.object<ViewEventHandlerFileAggregate>()
+    .keys({
+      context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
+    })
+    .optional(),
+  conditions: Joi.object<HandlerConditions>()
+    .keys({
+      created: Joi.boolean().optional(),
+      permanent: Joi.boolean().optional(),
     })
     .optional(),
   getViewId: Joi.function().optional(),

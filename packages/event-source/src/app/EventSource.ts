@@ -10,8 +10,8 @@ import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
 import { ReplayEventName } from "../enum";
 import { extractDtoData, StructureScanner } from "../util";
+import { find, merge } from "lodash";
 import { join } from "path";
-import { merge } from "lodash";
 import { randomUUID } from "crypto";
 import {
   AggregateDomain,
@@ -26,23 +26,25 @@ import {
   DtoClass,
   EventEmitterListener,
   EventSourceAdmin,
+  EventSourceCommandOptions,
+  EventSourceCommandResult,
   EventSourceInspectOptions,
   EventSourceOptions,
   EventSourcePrivateOptions,
-  EventSourceCommandOptions,
-  EventSourceCommandResult,
   EventSourceSetup,
+  HandlerIdentifier,
   IAggregateDomain,
   IDomainEventStore,
   IDomainSagaStore,
   IDomainViewStore,
-  IEventSource,
   IErrorDomain,
+  IEventSource,
   IQueryDomain,
   IReplayDomain,
   ISagaDomain,
   IViewDomain,
   State,
+  ViewEventHandlerAdapter,
 } from "../types";
 
 export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends DtoClass = DtoClass>
@@ -73,6 +75,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   private readonly scanner: EventSourceScanner;
   private readonly options: EventSourcePrivateOptions;
   private readonly logger: ILogger;
+  private readonly adapters: Array<HandlerIdentifier & ViewEventHandlerAdapter>;
   private status: "initialising" | "initialised" | "replaying" | "created";
 
   // promise
@@ -88,7 +91,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         adapters: {
           eventStore: "memory",
           sagaStore: "memory",
-          viewStore: "memory",
           messageBus: "memory",
         },
         context: "default",
@@ -103,6 +105,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       appOptions,
     );
+    this.adapters = [];
     this.scanner = new EventSourceScanner(this.options, custom, this.logger);
     this.status = "created";
 
@@ -142,10 +145,8 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     );
     this.viewStore = new ViewStore(
       {
-        custom: custom.viewStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.adapters.viewStore,
       },
       this.logger,
     );
@@ -243,6 +244,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       registerViewEventHandler: this.viewDomain.registerEventHandler.bind(this.viewDomain),
 
       registerCommandAggregate: this.scanner.registerCommandAggregate.bind(this.scanner),
+      registerViewAdapter: this.registerViewAdapter.bind(this),
     };
   }
   public set setup(_: EventSourceSetup) {
@@ -360,7 +362,12 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       context: this.scanner.context(view.context),
     };
 
-    return this.viewDomain.inspect<TState>(identifier);
+    const adapter = find(this.adapters, {
+      name: identifier.name,
+      context: identifier.context,
+    });
+
+    return this.viewDomain.inspect<TState>(identifier, adapter);
   }
 
   // private initialisation handler
@@ -397,6 +404,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       }
       for (const handler of this.scanner.viewEventHandlers) {
         await this.viewDomain.registerEventHandler(handler);
+        this.registerViewAdapter({ ...handler.view, ...handler.adapter });
       }
     }
 
@@ -407,6 +415,10 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   }
 
   // private
+
+  private registerViewAdapter(adapter: HandlerIdentifier & ViewEventHandlerAdapter): void {
+    this.adapters.push(adapter);
+  }
 
   private async setupReplayDomain(): Promise<void> {
     this.replayDomain.on(ReplayEventName.START, this.onReplayStart.bind(this));

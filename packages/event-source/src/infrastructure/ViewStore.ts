@@ -13,7 +13,7 @@ import {
   IViewStore,
   ViewClearProcessedCausationIdsData,
   ViewData,
-  ViewEventHandlerStoreOptions,
+  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewStoreOptions,
@@ -22,46 +22,38 @@ import {
 } from "../types";
 
 export class ViewStore implements IDomainViewStore {
-  private readonly store: IViewStore;
   private readonly logger: ILogger;
+  private readonly memory: IViewStore;
+  private readonly mongo: IViewStore;
+  private readonly postgres: IViewStore;
 
   public constructor(options: ViewStoreOptions, logger: ILogger) {
     this.logger = logger.createChildLogger(["ViewStore"]);
 
-    switch (options.type) {
-      case ViewStoreType.CUSTOM:
-        if (!options.custom) throw new Error("Connection not provided");
-        this.store = options.custom;
-        break;
+    this.memory = new MemoryViewStore();
 
-      case ViewStoreType.MEMORY:
-        this.store = new MemoryViewStore();
-        break;
+    if (options.mongo) {
+      this.mongo = new MongoViewStore(options.mongo, logger);
+    }
 
-      case ViewStoreType.MONGO:
-        if (!options.mongo) throw new Error("Connection not provided");
-        this.store = new MongoViewStore(options.mongo, logger);
-        break;
-
-      case ViewStoreType.POSTGRES:
-        if (!options.postgres) throw new Error("Connection not provided");
-        this.store = new PostgresViewStore(options.postgres, logger);
-        break;
-
-      default:
-        throw new Error("Invalid ViewStore type");
+    if (options.postgres) {
+      this.postgres = new PostgresViewStore(options.postgres, logger);
     }
   }
 
   // public
 
-  public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
-    return await this.store.causationExists(identifier, causation);
+  public async causationExists(
+    identifier: ViewIdentifier,
+    causation: IMessage,
+    adapter: ViewEventHandlerAdapter,
+  ): Promise<boolean> {
+    return await this.store(adapter).causationExists(identifier, causation);
   }
 
   public async clearProcessedCausationIds(
     view: IView,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<View> {
     const filter: ViewUpdateFilter = {
       id: view.id,
@@ -77,18 +69,15 @@ export class ViewStore implements IDomainViewStore {
       revision: view.revision + 1,
     };
 
-    await this.store.clearProcessedCausationIds(filter, data, options);
+    await this.store(adapter).clearProcessedCausationIds(filter, data, adapter);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }
 
-  public async load(
-    identifier: ViewIdentifier,
-    options: ViewEventHandlerStoreOptions,
-  ): Promise<View> {
+  public async load(identifier: ViewIdentifier, adapter: ViewEventHandlerAdapter): Promise<View> {
     this.logger.debug("Loading view", { identifier });
 
-    const existing = await this.store.find(identifier, options);
+    const existing = await this.store(adapter).find(identifier, adapter);
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
@@ -103,20 +92,20 @@ export class ViewStore implements IDomainViewStore {
     return view;
   }
 
-  public async processCausationIds(view: IView): Promise<void> {
+  public async processCausationIds(view: IView, adapter: ViewEventHandlerAdapter): Promise<void> {
     const identifier: ViewIdentifier = {
       id: view.id,
       name: view.name,
       context: view.context,
     };
 
-    await this.store.insertProcessedCausationIds(identifier, view.processedCausationIds);
+    await this.store(adapter).insertProcessedCausationIds(identifier, view.processedCausationIds);
   }
 
   public async save(
     view: IView,
     causation: IMessage,
-    options: ViewEventHandlerStoreOptions,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<View> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
@@ -126,7 +115,7 @@ export class ViewStore implements IDomainViewStore {
       context: view.context,
     };
 
-    const existing = await this.store.find(identifier, options);
+    const existing = await this.store(adapter).find(identifier, adapter);
 
     if (existing) {
       const included = existing.processed_causation_ids.includes(causation.id);
@@ -137,7 +126,7 @@ export class ViewStore implements IDomainViewStore {
         return new View(ViewStore.toData(existing), this.logger);
       }
 
-      const causationExists = await this.store.causationExists(view, causation);
+      const causationExists = await this.store(adapter).causationExists(view, causation);
 
       if (causationExists) {
         this.logger.debug("Found existing view matching causation", { existing });
@@ -154,7 +143,7 @@ export class ViewStore implements IDomainViewStore {
         revision: view.revision + 1,
       };
 
-      await this.store.insert(ViewStore.toAttributes(data), options);
+      await this.store(adapter).insert(ViewStore.toAttributes(data), adapter);
 
       return new View(data, this.logger);
     }
@@ -176,12 +165,33 @@ export class ViewStore implements IDomainViewStore {
       state: view.state,
     };
 
-    await this.store.update(filter, data, options);
+    await this.store(adapter).update(filter, data, adapter);
 
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }
 
   // private
+
+  private store(adapter: ViewEventHandlerAdapter): IViewStore {
+    switch (adapter.type) {
+      case ViewStoreType.CUSTOM:
+        return adapter.custom;
+
+      case ViewStoreType.MEMORY:
+        return this.memory;
+
+      case ViewStoreType.MONGO:
+        return this.mongo;
+
+      case ViewStoreType.POSTGRES:
+        return this.postgres;
+
+      default:
+        throw new Error("Invalid store type");
+    }
+  }
+
+  // private static
 
   private static toAttributes(data: ViewData): ViewStoreAttributes {
     return {

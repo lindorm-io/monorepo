@@ -2,7 +2,7 @@ import Joi from "joi";
 import { AmqpConnection } from "@lindorm-io/amqp";
 import { DomainEvent } from "../message";
 import { EventSource } from "./EventSource";
-import { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "../enum";
+import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
@@ -72,7 +72,6 @@ describe("EventSource (Mongo)", () => {
           eventStore: EventStoreType.MONGO,
           messageBus: MessageBusType.AMQP,
           sagaStore: SagaStoreType.MONGO,
-          viewStore: ViewStoreType.MONGO,
         },
         connections: {
           amqp,
@@ -181,10 +180,10 @@ describe("EventSource (Mongo)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
+        adapter: { type: "mongo" },
         aggregate: { name: "test_aggregate", context: "es_mongo" },
-        view: { name: "test_view", context: "es_mongo" },
         conditions: { created: false },
-        options: {},
+        view: { name: "test_view", context: "es_mongo" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -194,10 +193,10 @@ describe("EventSource (Mongo)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
+        adapter: { type: "mongo" },
         aggregate: { name: "test_aggregate", context: "es_mongo" },
-        view: { name: "test_view", context: "es_mongo" },
         conditions: { created: true },
-        options: {},
+        view: { name: "test_view", context: "es_mongo" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -207,6 +206,7 @@ describe("EventSource (Mongo)", () => {
 
     app.setup.registerCommandAggregate("create_greeting", "test_aggregate");
     app.setup.registerCommandAggregate("update_greeting", "test_aggregate");
+    app.setup.registerViewAdapter({ name: "test_view", context: "es_mongo", type: "mongo" });
   }, 30000);
 
   afterAll(async () => {

@@ -3,16 +3,14 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { IView, ViewIdentifier } from "../model";
 import { View } from "../../model";
-import { ViewEventHandlerStoreOptions } from "../handler";
+import { ViewEventHandlerAdapter } from "../handler";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
 export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
 
 export interface ViewStoreOptions {
-  custom?: IViewStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-  type: ViewStoreAdapterType;
 }
 
 export interface ViewUpdateFilter extends ViewIdentifier {
@@ -36,11 +34,15 @@ export interface ViewClearProcessedCausationIdsData {
 }
 
 export interface IDomainViewStore {
-  causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean>;
-  clearProcessedCausationIds(saga: IView, options: ViewEventHandlerStoreOptions): Promise<View>;
-  load(identifier: ViewIdentifier, options: ViewEventHandlerStoreOptions): Promise<View>;
-  processCausationIds(view: IView): Promise<void>;
-  save(view: IView, causation: IMessage, options: ViewEventHandlerStoreOptions): Promise<View>;
+  causationExists(
+    identifier: ViewIdentifier,
+    causation: IMessage,
+    adapter: ViewEventHandlerAdapter,
+  ): Promise<boolean>;
+  clearProcessedCausationIds(saga: IView, adapter: ViewEventHandlerAdapter): Promise<View>;
+  load(identifier: ViewIdentifier, adapter: ViewEventHandlerAdapter): Promise<View>;
+  processCausationIds(view: IView, adapter: ViewEventHandlerAdapter): Promise<void>;
+  save(view: IView, causation: IMessage, adapter: ViewEventHandlerAdapter): Promise<View>;
 }
 
 export interface IViewStore {
@@ -48,13 +50,13 @@ export interface IViewStore {
   clearProcessedCausationIds(
     filter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    options: ViewEventHandlerStoreOptions,
+    options: ViewEventHandlerAdapter,
   ): Promise<void>;
   find(
     identifier: ViewIdentifier,
-    options: ViewEventHandlerStoreOptions,
+    options: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined>;
-  insert(attributes: ViewStoreAttributes, options: ViewEventHandlerStoreOptions): Promise<void>;
+  insert(attributes: ViewStoreAttributes, options: ViewEventHandlerAdapter): Promise<void>;
   insertProcessedCausationIds(
     identifier: ViewIdentifier,
     causationIds: Array<string>,
@@ -62,6 +64,6 @@ export interface IViewStore {
   update(
     filter: ViewUpdateFilter,
     data: ViewUpdateData,
-    options: ViewEventHandlerStoreOptions,
+    options: ViewEventHandlerAdapter,
   ): Promise<void>;
 }

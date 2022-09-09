@@ -177,7 +177,7 @@ describe("ViewDomain", () => {
         context: "default",
         name: "name",
       },
-      {},
+      { type: "memory" },
     );
 
     expect(store.save).toHaveBeenCalledWith(
@@ -191,7 +191,7 @@ describe("ViewDomain", () => {
         state: { created: true },
       }),
       event,
-      {},
+      { type: "memory" },
     );
   });
 

@@ -143,10 +143,10 @@ describe("EventSource (Memory)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingCreated>({
         eventName: "greeting_created",
+        adapter: { type: "memory" },
         aggregate: { name: "test_aggregate", context: "es_memory" },
-        view: { name: "test_view", context: "es_memory" },
         conditions: { created: false },
-        options: {},
+        view: { name: "test_view", context: "es_memory" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.setState({ created: ctx.event.created });
@@ -156,10 +156,10 @@ describe("EventSource (Memory)", () => {
     await app.setup.registerViewEventHandler(
       new ViewEventHandlerImplementation<GreetingUpdated>({
         eventName: "greeting_updated",
+        adapter: { type: "memory" },
         aggregate: { name: "test_aggregate", context: "es_memory" },
-        view: { name: "test_view", context: "es_memory" },
         conditions: { created: true },
-        options: {},
+        view: { name: "test_view", context: "es_memory" },
         getViewId: (event) => event.aggregate.id,
         handler: async (ctx) => {
           ctx.mergeState({ updated: ctx.event.updated });
@@ -169,6 +169,7 @@ describe("EventSource (Memory)", () => {
 
     app.setup.registerCommandAggregate("create_greeting", "test_aggregate");
     app.setup.registerCommandAggregate("update_greeting", "test_aggregate");
+    app.setup.registerViewAdapter({ name: "test_view", context: "es_memory", type: "memory" });
   }, 30000);
 
   test("should publish", async () => {

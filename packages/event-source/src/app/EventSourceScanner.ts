@@ -375,18 +375,18 @@ export class EventSourceScanner {
       this.viewEventHandlers.push(
         new ViewEventHandlerImplementation({
           eventName,
+          view: {
+            name: snakeCase(handler.view),
+            context: snakeCase(this.options.context),
+          },
+          adapter: handler.adapter,
           aggregate: {
             name: snakeCase(aggregate),
             context: isArray(handler.aggregate?.context)
               ? handler.aggregate.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
-          view: {
-            name: snakeCase(handler.view),
-            context: snakeCase(this.options.context),
-          },
           conditions: handler.conditions,
-          options: handler.options,
           version,
           getViewId: handler.getViewId,
           handler: handler.handler,

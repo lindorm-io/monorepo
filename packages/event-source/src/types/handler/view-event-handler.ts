@@ -21,18 +21,18 @@ export interface ViewEventHandlerFileAggregate {
   context?: Array<string> | string;
 }
 
-export interface ViewEventHandlerStoreOptions<TFields extends Attributes = Attributes> {
+export interface ViewEventHandlerAdapter<TFields extends Attributes = Attributes> {
   custom?: IViewStore;
   indexes?: StoreIndexes<TFields>;
-  type?: ViewStoreAdapterType;
+  type: ViewStoreAdapterType;
 }
 
 export interface ViewEventHandler<TEvent extends DtoClass, TState extends State = State> {
   event: Constructor<TEvent>;
   view: string;
+  adapter: ViewEventHandlerAdapter;
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;
-  options?: ViewEventHandlerStoreOptions;
   getViewId?(event: DomainEvent<TEvent>): string;
   handler(ctx: ViewEventHandlerContext<TEvent, TState>): Promise<void>;
 }
@@ -41,10 +41,10 @@ export interface ViewEventHandlerOptions<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
+  adapter: ViewEventHandlerAdapter;
   aggregate: HandlerIdentifierMultipleContexts;
   conditions?: HandlerConditions;
   eventName: string;
-  options?: ViewEventHandlerStoreOptions;
   version?: number;
   view: HandlerIdentifier;
   getViewId?(event: DomainEvent<TEvent>): string;
@@ -58,7 +58,7 @@ export interface IViewEventHandler<
   aggregate: HandlerIdentifierMultipleContexts;
   conditions: HandlerConditions;
   eventName: string;
-  options: ViewEventHandlerStoreOptions;
+  adapter: ViewEventHandlerAdapter;
   version: number;
   view: HandlerIdentifier;
   getViewId(event: DomainEvent<TEvent>): string;

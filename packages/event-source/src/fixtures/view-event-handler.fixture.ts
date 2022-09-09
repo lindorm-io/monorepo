@@ -12,7 +12,7 @@ import {
 } from "./domain-event.fixture";
 
 export const TEST_VIEW_EVENT_HANDLER_OPTIONS: ViewEventHandlerOptions = {
-  options: {},
+  adapter: { type: "memory" },
   aggregate: {
     name: TEST_AGGREGATE_IDENTIFIER.name,
     context: TEST_AGGREGATE_IDENTIFIER.context,
