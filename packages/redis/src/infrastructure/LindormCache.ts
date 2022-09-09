@@ -436,7 +436,7 @@ export abstract class LindormCache<
   }
 
   private getKey(key: string): string {
-    return `entity::${this.prefix}::${key}`;
+    return `${this.connection.namespace}/entity/${this.prefix}/${key}`;
   }
 
   private getExpiry(entity: Interface): number | undefined {

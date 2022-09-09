@@ -5,6 +5,7 @@ export type IRedisConnection = IConnectionBase<Redis>;
 
 export interface ExtendedRedisOptions extends RedisOptions {
   custom?: Redis;
+  namespace?: string;
 }
 
 export type RedisConnectionOptions = ConnectionBaseOptions<RedisOptions> & ExtendedRedisOptions;

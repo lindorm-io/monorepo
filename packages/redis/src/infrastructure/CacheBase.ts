@@ -8,6 +8,10 @@ export abstract class CacheBase {
 
   protected constructor(options: CacheOptions) {
     this.connection = options.connection;
-    this.logger = options.logger.createChildLogger(["CacheBase", this.constructor.name]);
+    this.logger = options.logger.createChildLogger([
+      "CacheBase",
+      this.connection.namespace,
+      this.constructor.name,
+    ]);
   }
 }

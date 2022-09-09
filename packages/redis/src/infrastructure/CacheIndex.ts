@@ -118,6 +118,6 @@ export class CacheIndex<Interface> implements ICacheBase {
   }
 
   private getKey(key: string): string {
-    return `index::${this.prefix}::${this.indexKey.toString()}::${key}`;
+    return `${this.connection.namespace}/index/${this.prefix}/${this.indexKey.toString()}/${key}`;
   }
 }

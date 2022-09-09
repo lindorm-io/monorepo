@@ -7,6 +7,8 @@ export class RedisConnection
   extends ConnectionBase<Redis, RedisOptions>
   implements IRedisConnection
 {
+  public readonly namespace: string;
+
   public constructor(options: RedisConnectionOptions, logger: ILogger) {
     const {
       connectInterval,
@@ -14,6 +16,7 @@ export class RedisConnection
       custom,
       host = "localhost",
       port = 6379,
+      namespace = "default",
       ...connectOptions
     } = options;
 
@@ -30,6 +33,8 @@ export class RedisConnection
       },
       logger,
     );
+
+    this.namespace = namespace;
 
     if (custom) {
       this.clientConnection = custom;

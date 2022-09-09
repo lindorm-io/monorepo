@@ -9,8 +9,8 @@ import { randomUUID } from "crypto";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
-const entityKey = (entity: any): string => `entity::test_entity::${entity.id}`;
-const entityExpiresKey = (entity: any): string => `entity::test_entity_expires::${entity.id}`;
+const entityKey = (entity: any): string => `ns/entity/test_entity/${entity.id}`;
+const entityExpiresKey = (entity: any): string => `ns/entity/test_entity_expires/${entity.id}`;
 
 describe("LindormCache", () => {
   let cache: TestCache;
@@ -25,6 +25,7 @@ describe("LindormCache", () => {
       {
         host: "localhost",
         port: 6379,
+        namespace: "ns",
         custom: new RedisMock({
           host: "localhost",
           port: 6379,
