@@ -42,8 +42,8 @@ export interface RequestConfig {
 }
 
 export interface RequestOptions extends AxiosRequest {
-  middleware?: Array<AxiosMiddleware>;
   attempt?: number;
+  middleware?: Array<AxiosMiddleware>;
   retry?: number;
   timeout?: number;
 }
