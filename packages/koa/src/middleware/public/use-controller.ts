@@ -6,9 +6,12 @@ export const useController =
     controller: Controller<Context>,
   ) =>
   async (ctx: Context): Promise<void> => {
+    const logger = ctx.logger.createChildLogger([controller.name]);
+    ctx.logger = logger;
+
     const metric = ctx.getMetric("controller");
 
-    ctx.logger.verbose("controller [ start ]", ctx.data);
+    logger.verbose("controller [ start ]", ctx.data);
 
     try {
       const { body, redirect, status } = (await controller(ctx)) || {};
@@ -33,11 +36,11 @@ export const useController =
 
       metric.end();
 
-      ctx.logger.verbose("controller [ success ]");
+      logger.verbose("controller [ success ]");
     } catch (err: any) {
       metric.end();
 
-      ctx.logger.verbose("controller [ failure ]", err);
+      logger.verbose("controller [ failure ]", err);
 
       throw err;
     }
