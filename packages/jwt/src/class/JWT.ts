@@ -145,51 +145,59 @@ export class JWT {
         subject,
       });
     } catch (err: any) {
+      this.logger.error("Failed to verify token", err);
+
       throw new TokenError("Invalid token", { error: err });
     }
 
-    if (adjustedAccessLevel) {
-      assertGreaterOrEqual(adjustedAccessLevel, claims.adjustedAccessLevel, "aal");
+    try {
+      if (adjustedAccessLevel) {
+        assertGreaterOrEqual(adjustedAccessLevel, claims.adjustedAccessLevel, "aal");
+      }
+
+      if (audiences) {
+        assertClaimDifference(audiences, claims.audiences, "aud");
+      }
+
+      if (authorizedParty) {
+        assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
+      }
+
+      if (levelOfAssurance) {
+        assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
+      }
+
+      if (permissions) {
+        assertClaimDifference(permissions, claims.permissions, "iam");
+      }
+
+      if (scopes) {
+        assertClaimDifference(scopes, claims.scopes, "scp");
+      }
+
+      if (types) {
+        assertClaimIncludes(types, claims.type, "token_type");
+      }
+
+      if (subjects) {
+        assertClaimIncludes(subjects, claims.subject, "sub");
+      }
+
+      if (subjectHint) {
+        assertClaimEquals(subjectHint, claims.subjectHint, "suh");
+      }
+
+      this.logger.debug("verify token success", { claims });
+
+      return {
+        token,
+        ...claims,
+      };
+    } catch (err: any) {
+      this.logger.error("Failed to validate token", err);
+
+      throw err;
     }
-
-    if (audiences) {
-      assertClaimDifference(audiences, claims.audiences, "aud");
-    }
-
-    if (authorizedParty) {
-      assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
-    }
-
-    if (levelOfAssurance) {
-      assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
-    }
-
-    if (permissions) {
-      assertClaimDifference(permissions, claims.permissions, "iam");
-    }
-
-    if (scopes) {
-      assertClaimDifference(scopes, claims.scopes, "scp");
-    }
-
-    if (types) {
-      assertClaimIncludes(types, claims.type, "token_type");
-    }
-
-    if (subjects) {
-      assertClaimIncludes(subjects, claims.subject, "sub");
-    }
-
-    if (subjectHint) {
-      assertClaimEquals(subjectHint, claims.subjectHint, "suh");
-    }
-
-    this.logger.debug("verify token success", { claims });
-
-    return {
-      token,
-      ...claims,
-    };
   }
 
   public static decode(token: string): Jwt | null {
