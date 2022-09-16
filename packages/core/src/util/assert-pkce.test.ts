@@ -9,7 +9,7 @@ describe("assertPKCE", () => {
 
   beforeEach(() => {
     pkceVerifier = getRandomString(32);
-    pkceChallenge = createHash("sha256").update(pkceVerifier, "utf8").digest("base64");
+    pkceChallenge = createHash("sha256").update(pkceVerifier, "utf8").digest("base64url");
   });
 
   test("should resolve for S256", async () => {

@@ -18,7 +18,7 @@ const assertPlainPKCE = (pkceChallenge: string, pkceMethod: string, pkceVerifier
 };
 
 const assertShaPKCE = (pkceChallenge: string, pkceMethod: string, pkceVerifier: string): void => {
-  const hash = createHash("sha256").update(pkceVerifier, "utf8").digest("base64");
+  const hash = createHash("sha256").update(pkceVerifier, "utf8").digest("base64url");
 
   if (stringComparison(pkceChallenge, hash)) return;
 
