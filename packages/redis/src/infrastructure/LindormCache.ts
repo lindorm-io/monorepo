@@ -387,6 +387,7 @@ export abstract class LindormCache<
     if (success) {
       for (const index of this.indices) {
         const indexKey = json[index.indexKey as keyof Interface] as unknown as string;
+        if (!indexKey) continue;
 
         await index.add(indexKey, json.id, expiresInSeconds);
       }
