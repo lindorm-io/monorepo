@@ -68,7 +68,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       initContextMiddleware,
       serverInfoMiddleware(options),
       utilContextMiddleware,
-      metadataMiddleware,
+      metadataMiddleware(this.environment),
       sessionLoggerMiddleware(this.logger),
       errorMiddleware,
       responseTimeMiddleware,

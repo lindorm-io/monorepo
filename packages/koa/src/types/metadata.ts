@@ -34,6 +34,7 @@ export interface LindormKoaMetadata {
   agent: Agent;
   client: Client;
   device: Device;
+  environment: Environment;
   identifiers: Identifiers;
 }
 
