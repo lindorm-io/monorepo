@@ -8,6 +8,7 @@ export interface AxiosOptions {
   logger: ILogger;
   middleware?: Array<AxiosMiddleware>;
   name?: string;
+  withCredentials?: boolean;
 }
 
 export interface AxiosConfig {
@@ -46,4 +47,5 @@ export interface RequestOptions extends AxiosRequest {
   middleware?: Array<AxiosMiddleware>;
   retry?: number;
   timeout?: number;
+  withCredentials?: boolean;
 }

@@ -5,7 +5,7 @@ import { axiosCaseSwitchMiddleware, axiosRetryMiddleware } from "../middleware/d
 import { convertError, convertResponse, logAxiosError, logAxiosResponse } from "../util";
 import { createURL, sleep } from "@lindorm-io/core";
 import { getResponseTime } from "../util/get-response-time";
-import { startsWith } from "lodash";
+import { isUndefined, startsWith } from "lodash";
 import {
   AxiosMiddleware,
   AxiosOptions,
@@ -21,6 +21,7 @@ export class Axios {
   private readonly logger: ILogger;
   private readonly middleware: Array<AxiosMiddleware>;
   private readonly name: string | undefined;
+  private readonly withCredentials: boolean | undefined;
 
   public constructor(options: AxiosOptions) {
     this.port = options.port;
@@ -28,6 +29,7 @@ export class Axios {
     this.logger = options.logger.createChildLogger(["Axios", options.name]);
     this.middleware = options.middleware || [];
     this.name = options.name;
+    this.withCredentials = options.withCredentials;
   }
 
   public async get<Data = Record<string, any>>(
@@ -200,6 +202,10 @@ export class Axios {
     const timeout = options.timeout || 3000;
     const url = this.createURL(path, { params, query });
 
+    const withCredentials = !isUndefined(options.withCredentials)
+      ? options.withCredentials
+      : this.withCredentials;
+
     let response: Response;
 
     try {
@@ -208,6 +214,7 @@ export class Axios {
         headers,
         timeout,
         url,
+        ...(!isUndefined(withCredentials) ? { withCredentials } : {}),
         ...(auth ? { auth } : {}),
         ...(body ? { data: body } : {}),
       });
