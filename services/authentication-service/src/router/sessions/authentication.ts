@@ -1,17 +1,26 @@
-import { ServerKoaContext } from "../../types";
 import { authenticationSessionEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   getAuthenticationController,
   getAuthenticationSchema,
+  initialiseAuthenticationController,
+  initialiseAuthenticationSchema,
+  initialiseOidcController,
+  initialiseOidcSchema,
   initialiseStrategyController,
   initialiseStrategySchema,
   verifyAuthenticationController,
   verifyAuthenticationSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
+
+router.post(
+  "/",
+  useSchema(initialiseAuthenticationSchema),
+  useController(initialiseAuthenticationController),
+);
 
 router.get(
   "/:id",
@@ -19,6 +28,14 @@ router.get(
   useSchema(getAuthenticationSchema),
   authenticationSessionEntityMiddleware("data.id"),
   useController(getAuthenticationController),
+);
+
+router.post(
+  "/:id/oidc",
+  paramsMiddleware,
+  useSchema(initialiseOidcSchema),
+  authenticationSessionEntityMiddleware("data.id"),
+  useController(initialiseOidcController),
 );
 
 router.post(

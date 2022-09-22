@@ -1,19 +1,12 @@
 import MockDate from "mockdate";
 import request from "supertest";
+import { DisplayMode, PromptMode, ResponseMode, ResponseType, Scope } from "../../common";
 import { baseHash, createURL } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
 import { createTestClient } from "../../fixtures/entity";
 import { getTestData } from "../../fixtures/data";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
-import {
-  DisplayMode,
-  PromptMode,
-  ResponseMode,
-  ResponseType,
-  Scope,
-  SessionStatus,
-} from "../../common";
 import {
   getTestIdToken,
   setupIntegration,
@@ -29,7 +22,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/authorize", () => {
   beforeAll(setupIntegration);
 
-  test("GET /", async () => {
+  test("should resolve", async () => {
     const { codeChallenge, codeChallengeMethod, nonce, state } = getTestData();
 
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
@@ -48,9 +41,10 @@ describe("/oauth2/authorize", () => {
     const redirectData = baseHash(JSON.stringify({ string: "string", number: 123, boolean: true }));
 
     const url = createURL("/oauth2/authorize", {
-      host: "https://test.test",
+      host: "https://rm.rm",
       query: {
-        acrValues: ["loa_3", "session_otp", "email_otp", "phone_otp"],
+        acrValues: ["loa_3", "session", "email", "phone"],
+        amrValues: ["session", "email", "phone"],
         authToken: "auth.jwt.jwt",
         clientId: client.id,
         codeChallenge,
@@ -79,7 +73,7 @@ describe("/oauth2/authorize", () => {
     });
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
+      .get(url.toString().replace("https://rm.rm", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -87,45 +81,67 @@ describe("/oauth2/authorize", () => {
     expect(location.pathname).toBe("/oauth/login");
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
-    const session = await TEST_AUTHORIZATION_SESSION_CACHE.find({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.find({
       id: location.searchParams.get("session_id"),
     });
 
-    expect(session).toStrictEqual(
+    expect(authorizationSession).toStrictEqual(
       expect.objectContaining({
-        audiences: [configuration.oauth.client_id, client.id],
+        id: authorizationSession.id,
         authToken: "auth.jwt.jwt",
-        authenticationMethods: ["session_otp", "email_otp", "phone_otp"],
-        authenticationStatus: SessionStatus.PENDING,
-        browserSessionId: expect.any(String),
         clientId: client.id,
-        code: null,
-        codeChallenge: codeChallenge,
-        codeChallengeMethod: "S256",
-        consentStatus: SessionStatus.PENDING,
+        code: {
+          codeChallenge: codeChallenge,
+          codeChallengeMethod: "S256",
+        },
+        confirmedConsent: {
+          audiences: [],
+          scopes: [],
+        },
+        confirmedLogin: {
+          acrValues: [],
+          amrValues: [],
+          identityId: null,
+          latestAuthentication: null,
+          levelOfAssurance: 0,
+          remember: false,
+        },
+        country: null,
         displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
-        idTokenHint: expect.any(String),
-        identityId: identityId,
-        levelOfAssurance: 3,
+        idTokenHint: idToken,
+        identifiers: {
+          browserSessionId: null,
+          consentSessionId: null,
+          refreshSessionId: null,
+        },
         loginHint: ["+46705498721", "email@lindorm.io", "identity_username", "test@lindorm.io"],
         maxAge: 3600,
         nonce: nonce,
         originalUri: expect.any(String),
         promptModes: ["login", "consent"],
-        redirectData,
+        redirectData: "eyJzdHJpbmciOiJzdHJpbmciLCJudW1iZXIiOjEyMywiYm9vbGVhbiI6dHJ1ZX0=",
         redirectUri: "https://test.client.lindorm.io/redirect",
+        requestedConsent: {
+          audiences: expect.arrayContaining(["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id]),
+          scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
+        },
+        requestedLogin: {
+          authenticationMethods: ["email", "phone", "session"],
+          identityId: identityId,
+          levelHint: 3,
+          levelOfAssurance: 3,
+          methodHint: ["email", "phone"],
+        },
         responseMode: "fragment",
         responseTypes: ["code", "token"],
-        scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
-        state: state,
+        state: authorizationSession.state,
+        status: {
+          consent: "pending",
+          login: "pending",
+        },
         uiLocales: ["sv-SE", "en-GB"],
       }),
     );
-
-    expect(response.headers["set-cookie"]).toEqual([
-      `lindorm_io_oauth_browser_session=${session.browserSessionId}; path=/; domain=https://test.lindorm.io; samesite=none`,
-      `lindorm_io_oauth_authorization_session=${session.id}; path=/; expires=Fri, 01 Jan 2021 08:30:00 GMT; domain=https://test.lindorm.io; samesite=none`,
-    ]);
   });
 });

@@ -1,5 +1,5 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
-import { SendCodeRequestData } from "../../../common";
+import { ClientScope, SendCodeRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -39,6 +39,8 @@ export const initialisePhoneOtp = async (
 
   await communicationClient.post("/internal/send/otp", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [
+      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+    ],
   });
 };

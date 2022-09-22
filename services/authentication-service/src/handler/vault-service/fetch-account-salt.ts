@@ -1,6 +1,6 @@
 import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
-import { GetEncryptedRecordResponseBody } from "../../common";
+import { ClientScope, GetEncryptedRecordResponseBody } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 
 export const fetchAccountSalt = async (
@@ -17,7 +17,9 @@ export const fetchAccountSalt = async (
       params: {
         id: account.id,
       },
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_READ]),
+      ],
     },
   );
 

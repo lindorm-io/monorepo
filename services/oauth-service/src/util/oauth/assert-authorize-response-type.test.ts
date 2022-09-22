@@ -3,6 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ResponseType } from "../../common";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
+import { PKCEMethod } from "@lindorm-io/core";
 
 describe("assertAuthorizeResponseType", () => {
   let authorizationSession: AuthorizationSession;
@@ -33,10 +34,24 @@ describe("assertAuthorizeResponseType", () => {
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
   });
 
-  test("should throw on invalid request data", () => {
+  test("should throw on missing data (codeChallenge)", () => {
     authorizationSession = createTestAuthorizationSession({
-      codeChallenge: null,
-      codeChallengeMethod: null,
+      code: {
+        codeChallenge: null,
+        codeChallengeMethod: PKCEMethod.S256,
+      },
+      responseTypes: [ResponseType.CODE],
+    });
+
+    expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
+  });
+
+  test("should throw on missing data (codeChallengeMethod)", () => {
+    authorizationSession = createTestAuthorizationSession({
+      code: {
+        codeChallenge: "codeChallenge",
+        codeChallengeMethod: null,
+      },
       responseTypes: [ResponseType.CODE],
     });
 

@@ -1,10 +1,11 @@
-import { BrowserSession, Client } from "../../entity";
+import { BrowserSession, Client, ConsentSession } from "../../entity";
 import { Scope } from "../../common";
 import { generateTokenResponse } from "./generate-token-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
 import {
   createTestBrowserSession,
   createTestClient,
+  createTestConsentSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
 import {
@@ -24,17 +25,15 @@ const getIdentityUserinfo = _getIdentityUserinfo as jest.Mock;
 describe("generateTokenResponse", () => {
   let ctx: any;
   let browserSession: BrowserSession;
+  let consentSession: ConsentSession;
   let client: Client;
-  let scopes: Array<string>;
 
   beforeEach(() => {
     ctx = {};
 
     browserSession = createTestBrowserSession();
-
+    consentSession = createTestConsentSession();
     client = createTestClient();
-
-    scopes = [];
 
     createAccessToken.mockImplementation(() => ({
       token: "access.token.jwt",
@@ -58,20 +57,24 @@ describe("generateTokenResponse", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve body with access token", async () => {
-    await expect(generateTokenResponse(ctx, client, browserSession, scopes)).resolves.toStrictEqual(
-      {
-        accessToken: "access.token.jwt",
-        expiresIn: 999,
-        scope: [],
-        tokenType: "Bearer",
-      },
-    );
+    consentSession.scopes = [];
+
+    await expect(
+      generateTokenResponse(ctx, client, browserSession, consentSession),
+    ).resolves.toStrictEqual({
+      accessToken: "access.token.jwt",
+      expiresIn: 999,
+      scope: [],
+      tokenType: "Bearer",
+    });
   });
 
   test("should resolve body with id token", async () => {
-    scopes = [Scope.OPENID];
+    consentSession.scopes = [Scope.OPENID];
 
-    await expect(generateTokenResponse(ctx, client, browserSession, scopes)).resolves.toStrictEqual(
+    await expect(
+      generateTokenResponse(ctx, client, browserSession, consentSession),
+    ).resolves.toStrictEqual(
       expect.objectContaining({
         idToken: "id.token.jwt",
         scope: ["openid"],
@@ -80,10 +83,10 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    scopes = [Scope.OFFLINE_ACCESS];
+    consentSession.scopes = [Scope.OFFLINE_ACCESS];
 
     await expect(
-      generateTokenResponse(ctx, client, createTestRefreshSession(), scopes),
+      generateTokenResponse(ctx, client, createTestRefreshSession(), consentSession),
     ).resolves.toStrictEqual({
       accessToken: "access.token.jwt",
       expiresIn: 999,

@@ -22,7 +22,7 @@ describe("getValidDeviceLinks", () => {
   });
 
   test("should resolve", async () => {
-    await expect(getValidDeviceLinks(ctx, "1")).resolves.toMatchSnapshot();
+    await expect(getValidDeviceLinks(ctx, "1")).resolves.toStrictEqual(["1", "2", "3", "4"]);
   });
 
   test("should resolve empty array on missing identity", async () => {

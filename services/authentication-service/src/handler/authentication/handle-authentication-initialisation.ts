@@ -1,6 +1,6 @@
 import { Account, AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { resolveAllowedMethods } from "./resolve-allowed-methods";
+import { resolveAllowedStrategies } from "./resolve-allowed-strategies";
 
 export const handleAuthenticationInitialisation = async (
   ctx: ServerKoaContext,
@@ -19,7 +19,7 @@ export const handleAuthenticationInitialisation = async (
     account = await accountRepository.tryFind({ id: options.identityId });
   }
 
-  authenticationSession.allowedMethods = await resolveAllowedMethods(
+  authenticationSession.allowedStrategies = await resolveAllowedStrategies(
     ctx,
     authenticationSession,
     account,

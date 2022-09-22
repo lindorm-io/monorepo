@@ -66,7 +66,7 @@ export const sessioninfoController: ServerKoaController = async (
     });
   }
 
-  const clientsUniq = uniq(flatten(clientsArray));
+  const clientsUniq = uniq(flatten(clientsArray)).sort();
 
   for (const id of clientsUniq) {
     const client = await clientCache.find({ id });

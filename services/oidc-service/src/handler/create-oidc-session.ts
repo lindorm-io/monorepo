@@ -56,7 +56,7 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
         ? {
             codeChallenge: createHash("sha256")
               .update(oidcSession.codeVerifier, "utf8")
-              .digest("base64"),
+              .digest("base64url"),
             codeChallengeMethod: PKCEMethod.S256,
           }
         : {}),

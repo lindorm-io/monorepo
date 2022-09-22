@@ -1,5 +1,7 @@
 import { AuthenticationSession } from "../entity";
 import { SessionStatus } from "../common";
+import { getMethodsFromStrategies } from "./get-methods-from-strategies";
+import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 
 export const calculateAuthenticationStatus = (
   authenticationSession: AuthenticationSession,
@@ -8,14 +10,13 @@ export const calculateAuthenticationStatus = (
     return SessionStatus.PENDING;
   }
 
-  if (
-    authenticationSession.confirmedLevelOfAssurance >=
-    authenticationSession.requestedLevelOfAssurance
-  ) {
+  const { level } = calculateLevelOfAssurance(authenticationSession);
+
+  if (level >= authenticationSession.requestedLevel) {
     return SessionStatus.CONFIRMED;
   }
 
-  if (authenticationSession.confirmedMethods.length >= 2) {
+  if (getMethodsFromStrategies(authenticationSession.confirmedStrategies).length >= 2) {
     return SessionStatus.CONFIRMED;
   }
 

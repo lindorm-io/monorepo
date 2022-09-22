@@ -12,8 +12,8 @@ export const getTestIdToken = (
     issuer: configuration.server.issuer,
   }).sign({
     audiences: ["7c79844e-2006-4d7c-a49e-ece40225361c"],
-    authContextClass: ["loa_3", "email_otp", "phone_otp"],
-    authMethodsReference: ["email_otp", "phone_otp"],
+    authContextClass: ["loa_3"],
+    authMethodsReference: ["email", "phone"],
     claims: {},
     expiry: "10 seconds",
     levelOfAssurance: 3,

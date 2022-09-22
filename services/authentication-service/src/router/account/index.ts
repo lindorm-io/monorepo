@@ -1,6 +1,5 @@
 import { IdentityPermission, Scope } from "../../common";
 import { Router, useController } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
 import { accountEntityMiddleware, identityAuthMiddleware } from "../../middleware";
 import {
   generateBrowserLinkCodeController,
@@ -8,7 +7,7 @@ import {
   getAccountController,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(

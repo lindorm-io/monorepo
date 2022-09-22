@@ -1,7 +1,6 @@
 import Joi from "joi";
-import { AuthenticationMethod } from "../enum";
 import { JOI_AUTHENTICATION_METHOD } from "../constant";
-import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../common";
+import { AuthenticationMethod, JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../common";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
 import {
   EntityAttributes,

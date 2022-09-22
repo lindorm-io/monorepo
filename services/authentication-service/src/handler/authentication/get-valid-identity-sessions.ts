@@ -1,4 +1,4 @@
-import { GetIdentitySessionsResponseBody } from "../../common";
+import { ClientScope, GetIdentitySessionsResponseBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 
@@ -19,7 +19,7 @@ export const getValidIdentitySessions = async (
       "/internal/identities/:id/sessions",
       {
         params: { id: identityId },
-        middleware: [clientCredentialsMiddleware(oauthClient)],
+        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_IDENTITY_READ])],
       },
     );
 

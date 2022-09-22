@@ -10,7 +10,7 @@ oauth:
 
 redis:
   host: localhost
-  port: 3202
+  port: 6379
 
 server:
   domain: https://test.lindorm.io

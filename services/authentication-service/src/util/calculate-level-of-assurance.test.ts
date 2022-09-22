@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "../enum";
+import { AuthenticationStrategy } from "../enum";
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 
@@ -7,33 +7,55 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedMethods: [
-            AuthenticationMethod.EMAIL_OTP,
-            AuthenticationMethod.PHONE_OTP,
-            AuthenticationMethod.MFA_COOKIE,
+          confirmedStrategies: [
+            AuthenticationStrategy.EMAIL_OTP,
+            AuthenticationStrategy.PHONE_OTP,
+            AuthenticationStrategy.MFA_COOKIE,
           ],
         }),
       ),
-    ).toStrictEqual({ levelOfAssurance: 3, maximumLevelOfAssurance: 3 });
+    ).toStrictEqual({ level: 3, maximum: 3 });
   });
 
   test("should resolve with value for EMAIL_OTP", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedMethods: [AuthenticationMethod.EMAIL_OTP],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
         }),
       ),
-    ).toStrictEqual({ levelOfAssurance: 2, maximumLevelOfAssurance: 2 });
+    ).toStrictEqual({ level: 2, maximum: 2 });
   });
 
   test("should resolve with value for BANK_ID_SE", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedMethods: [AuthenticationMethod.BANK_ID_SE],
+          confirmedStrategies: [AuthenticationStrategy.BANK_ID_SE],
         }),
       ),
-    ).toStrictEqual({ levelOfAssurance: 4, maximumLevelOfAssurance: 4 });
+    ).toStrictEqual({ level: 4, maximum: 4 });
+  });
+
+  test("should resolve with value for OIDC", () => {
+    expect(
+      calculateLevelOfAssurance(
+        createTestAuthenticationSession({
+          confirmedStrategies: [],
+          confirmedOidcLevel: 4,
+        }),
+      ),
+    ).toStrictEqual({ level: 4, maximum: 4 });
+  });
+
+  test("should resolve with mixed values", () => {
+    expect(
+      calculateLevelOfAssurance(
+        createTestAuthenticationSession({
+          confirmedStrategies: [AuthenticationStrategy.MFA_COOKIE],
+          confirmedOidcLevel: 2,
+        }),
+      ),
+    ).toStrictEqual({ level: 3, maximum: 3 });
   });
 });

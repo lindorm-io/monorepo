@@ -1,13 +1,16 @@
 import { canGenerateMfaCookie } from "./can-generate-mfa-cookie";
 import { createTestAuthenticationSession } from "../fixtures/entity";
-import { AuthenticationMethod } from "../enum";
+import { AuthenticationStrategy } from "../enum";
 
 describe("canFlowGenerateMfaCookie", () => {
   test("should resolve true", () => {
     expect(
       canGenerateMfaCookie(
         createTestAuthenticationSession({
-          confirmedMethods: [AuthenticationMethod.EMAIL_OTP, AuthenticationMethod.SESSION_OTP],
+          confirmedStrategies: [
+            AuthenticationStrategy.EMAIL_OTP,
+            AuthenticationStrategy.SESSION_OTP,
+          ],
         }),
       ),
     ).toBe(true);
@@ -17,7 +20,7 @@ describe("canFlowGenerateMfaCookie", () => {
     expect(
       canGenerateMfaCookie(
         createTestAuthenticationSession({
-          confirmedMethods: [],
+          confirmedStrategies: [],
         }),
       ),
     ).toBe(false);
@@ -27,7 +30,7 @@ describe("canFlowGenerateMfaCookie", () => {
     expect(
       canGenerateMfaCookie(
         createTestAuthenticationSession({
-          confirmedMethods: [AuthenticationMethod.EMAIL_OTP],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
         }),
       ),
     ).toBe(false);

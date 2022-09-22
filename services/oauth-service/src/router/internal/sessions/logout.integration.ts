@@ -1,20 +1,10 @@
 import MockDate from "mockdate";
-import nock from "nock";
 import request from "supertest";
-import { ClientType } from "../../../common";
 import { configuration } from "../../../server/configuration";
-import { randomUUID } from "crypto";
+import { createTestClient, createTestLogoutSession } from "../../../fixtures/entity";
 import { server } from "../../../server/server";
 import {
-  createTestClient,
-  createTestConsentSession,
-  createTestBrowserSession,
-  createTestLogoutSession,
-} from "../../../fixtures/entity";
-import {
-  TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
-  TEST_CONSENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   getTestClientCredentials,
   setupIntegration,
@@ -28,40 +18,16 @@ jest.unmock("@lindorm-io/redis");
 describe("/internal/sessions/logout", () => {
   beforeAll(setupIntegration);
 
-  nock("https://test.client.lindorm.io").post("/logout/back-channel").times(999).reply(200);
-
-  test("GET /:id", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
-      createTestClient({
-        type: ClientType.CONFIDENTIAL,
-      }),
-    );
+  test("should resolve consent data", async () => {
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
-    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
-        audiences: [configuration.oauth.client_id, client.id],
-        clientId: client.id,
-        identityId: randomUUID(),
-        scopes: ["openid"],
-      }),
-    );
-
-    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        identityId: consentSession.identityId,
-      }),
-    );
-
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      createTestLogoutSession({
-        clientId: client.id,
-        sessionId: browserSession.id,
-      }),
+      createTestLogoutSession({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
@@ -86,43 +52,20 @@ describe("/internal/sessions/logout", () => {
     });
   });
 
-  test("PUT /:id/confirm", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
-      createTestClient({
-        type: ClientType.CONFIDENTIAL,
-      }),
-    );
+  test("should confirm and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
-    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
-        audiences: [configuration.oauth.client_id, client.id],
-        clientId: client.id,
-        identityId: randomUUID(),
-        scopes: ["openid"],
-      }),
-    );
-
-    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        clients: [client.id],
-        identityId: consentSession.identityId,
-      }),
-    );
-
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      createTestLogoutSession({
-        clientId: client.id,
-        sessionId: browserSession.id,
-      }),
+      createTestLogoutSession({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .put(`/internal/sessions/logout/${logoutSession.id}/confirm`)
+      .post(`/internal/sessions/logout/${logoutSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -134,48 +77,29 @@ describe("/internal/sessions/logout", () => {
     expect(url.searchParams.get("redirect_uri")).toStrictEqual(logoutSession.redirectUri);
   });
 
-  test("PUT /:id/reject", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
-      createTestClient({
-        type: ClientType.CONFIDENTIAL,
-      }),
-    );
+  test("should reject and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
     });
 
-    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
-        audiences: [configuration.oauth.client_id, client.id],
-        clientId: client.id,
-        identityId: randomUUID(),
-        scopes: ["openid"],
-      }),
-    );
-
-    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        identityId: consentSession.identityId,
-      }),
-    );
-
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      createTestLogoutSession({
-        clientId: client.id,
-        sessionId: browserSession.id,
-      }),
+      createTestLogoutSession({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .put(`/internal/sessions/logout/${logoutSession.id}/reject`)
+      .post(`/internal/sessions/logout/${logoutSession.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
-    expect(response.body).toStrictEqual({
-      redirect_to:
-        "https://test.client.lindorm.io/redirect?error=request_rejected&error_description=logout_rejected&state=YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
-    });
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://test.client.lindorm.io");
+    expect(url.pathname).toBe("/redirect");
+    expect(url.searchParams.get("error")).toBe("request_rejected");
+    expect(url.searchParams.get("error_description")).toBe("logout_rejected");
+    expect(url.searchParams.get("state")).toBe(logoutSession.state);
   });
 });

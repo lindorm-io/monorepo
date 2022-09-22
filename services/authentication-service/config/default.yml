@@ -6,12 +6,12 @@ defaults:
 frontend:
   host: http://localhost
   routes:
-    auth: /auth
-    code_callback: /code/callback
-    consent: /consent
+    code_callback: /api/code-callback
+    consent: /api/consent
     error: /error
-    login: /login
-    logout: /logout
+    login: /api/login
+    logout: /api/logout
+    oidc: /api/oidc
 
 logger:
   level: info

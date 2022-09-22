@@ -1,6 +1,8 @@
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
-import { baseHash, PKCEMethod } from "@lindorm-io/core";
+import { baseHash, PKCEMethod, randomString } from "@lindorm-io/core";
+import { randomUUID } from "crypto";
 import {
+  AuthenticationMethod,
   DisplayMode,
   PromptMode,
   ResponseMode,
@@ -13,26 +15,42 @@ export const createTestAuthorizationSession = (
   options: Partial<AuthorizationSessionOptions> = {},
 ): AuthorizationSession =>
   new AuthorizationSession({
-    audiences: ["1f7e85f9-d707-4319-8b7e-c3c6a2bf8312"],
+    code: {
+      codeChallenge: randomString(64),
+      codeChallengeMethod: PKCEMethod.S256,
+    },
+    requestedConsent: {
+      audiences: [randomUUID()],
+      scopes: [
+        Scope.ADDRESS,
+        Scope.EMAIL,
+        Scope.OFFLINE_ACCESS,
+        Scope.OPENID,
+        Scope.PHONE,
+        Scope.PROFILE,
+      ],
+    },
+    requestedLogin: {
+      authenticationMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      identityId: randomUUID(),
+      levelHint: 2,
+      levelOfAssurance: 3,
+      methodHint: [AuthenticationMethod.EMAIL],
+    },
+    status: {
+      login: SessionStatus.PENDING,
+      consent: SessionStatus.PENDING,
+    },
+
     authToken: "auth.jwt.jwt",
-    authenticationMethods: ["email_otp", "phone_otp"],
-    authenticationStatus: SessionStatus.PENDING,
-    browserSessionId: "c284c06a-29fe-4a3d-ace3-52aacc4f4588",
-    clientId: "1f7e85f9-d707-4319-8b7e-c3c6a2bf8312",
-    code: "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhYvDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
-    codeChallenge: "y6HJCdnyw1CdL9qHAKy9GXKh0328UTiO",
-    codeChallengeMethod: PKCEMethod.S256,
-    consentSessionId: "4ce0134a-06fc-463a-a1ed-80ea33034b70",
-    consentStatus: SessionStatus.PENDING,
+    clientId: randomUUID(),
     country: "se",
     displayMode: DisplayMode.POPUP,
     expires: new Date("2021-01-02T08:00:00.000Z"),
     idTokenHint: "id.jwt.jwt",
-    identityId: "3f6ee784-bf36-4570-b15e-883dad02ec56",
-    levelOfAssurance: 2,
     loginHint: ["test@lindorm.io"],
     maxAge: 999,
-    nonce: "xkBpdx5HF1T0fiJL",
+    nonce: randomString(16),
     originalUri: "https://localhost/oauth2/authorize?query=query",
     promptModes: [PromptMode.LOGIN, PromptMode.CONSENT],
     redirectData: baseHash(
@@ -41,15 +59,7 @@ export const createTestAuthorizationSession = (
     redirectUri: "https://test.client.lindorm.io/redirect",
     responseMode: ResponseMode.QUERY,
     responseTypes: [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN],
-    scopes: [
-      Scope.ADDRESS,
-      Scope.EMAIL,
-      Scope.OFFLINE_ACCESS,
-      Scope.OPENID,
-      Scope.PHONE,
-      Scope.PROFILE,
-    ],
-    state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+    state: randomString(16),
     uiLocales: ["sv-SE", "en-GB"],
     ...options,
   });

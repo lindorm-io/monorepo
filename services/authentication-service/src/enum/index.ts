@@ -1,1 +1,2 @@
-export * from "./AuthenticationMethod";
+export * from "./AuthenticationMode";
+export * from "./AuthenticationStrategy";

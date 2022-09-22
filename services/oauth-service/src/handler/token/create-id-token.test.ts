@@ -19,6 +19,7 @@ describe("createIdToken", () => {
   test("should create id token for browser session", async () => {
     await expect(
       createIdToken(ctx, createTestClient(), createTestBrowserSession(), {
+        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
         scopes: ["scope1", "scope2"],
@@ -35,6 +36,7 @@ describe("createIdToken", () => {
   test("should create id token for refresh session", async () => {
     await expect(
       createIdToken(ctx, createTestClient(), createTestRefreshSession(), {
+        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
         claims: { email: "test@lindorm.io" },
         nonce: "Aem5ldu1tdUgrd9C",
         scopes: ["scope1", "scope2"],

@@ -1,25 +1,22 @@
-import { ServerKoaContext } from "../../../types";
 import { ClientPermission } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   authorizationSessionEntityMiddleware,
-  browserSessionEntityMiddleware,
   clientAuthMiddleware,
   clientEntityMiddleware,
-  consentSessionEntityMiddleware,
 } from "../../../middleware";
 import {
   confirmConsentController,
   confirmConsentSchema,
-  getConsentInfoController,
-  getConsentInfoSchema,
+  getConsentDataController,
+  getConsentDataSchema,
   rejectConsentController,
   rejectConsentSchema,
-  skipConsentController,
-  skipConsentSchema,
+  redirectConsentController,
+  redirectConsentSchema,
 } from "../../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
@@ -31,37 +28,33 @@ router.use(
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getConsentInfoSchema),
+  useSchema(getConsentDataSchema),
   authorizationSessionEntityMiddleware("data.id"),
-  browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
   clientEntityMiddleware("entity.authorizationSession.clientId"),
-  useController(getConsentInfoController),
+  useController(getConsentDataController),
 );
 
-router.put(
+router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmConsentSchema),
   authorizationSessionEntityMiddleware("data.id"),
-  browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
-  consentSessionEntityMiddleware("entity.authorizationSession.consentSessionId"),
+  clientEntityMiddleware("entity.authorizationSession.clientId"),
   useController(confirmConsentController),
 );
 
-router.put(
+router.get(
+  "/:id/redirect",
+  paramsMiddleware,
+  useSchema(redirectConsentSchema),
+  authorizationSessionEntityMiddleware("data.id"),
+  useController(redirectConsentController),
+);
+
+router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectConsentSchema),
   authorizationSessionEntityMiddleware("data.id"),
   useController(rejectConsentController),
-);
-
-router.put(
-  "/:id/skip",
-  paramsMiddleware,
-  useSchema(skipConsentSchema),
-  authorizationSessionEntityMiddleware("data.id"),
-  browserSessionEntityMiddleware("entity.authorizationSession.browserSessionId"),
-  consentSessionEntityMiddleware("entity.authorizationSession.consentSessionId"),
-  useController(skipConsentController),
 );

@@ -1,4 +1,8 @@
-import { CreateEncryptedRecordRequestBody, GetEncryptedRecordResponseBody } from "../../common";
+import {
+  ClientScope,
+  CreateEncryptedRecordRequestBody,
+  GetEncryptedRecordResponseBody,
+} from "../../common";
 import { DeviceLink } from "../../entity";
 import { DeviceLinkSalt, ServerKoaContext } from "../../types";
 import { PostChangeCallback } from "@lindorm-io/mongo";
@@ -18,7 +22,9 @@ export const createDeviceLinkCallback =
 
     await vaultClient.post("/internal/vault", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+      ],
     });
   };
 
@@ -33,6 +39,8 @@ export const destroyDeviceLinkCallback =
       params: {
         id: deviceLink.id,
       },
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+      ],
     });
   };

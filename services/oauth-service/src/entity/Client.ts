@@ -28,6 +28,7 @@ import {
 export interface ClientAttributes extends EntityAttributes {
   active: boolean;
   allowed: ClientAllowed;
+  audiences: Array<string>;
   defaults: ClientDefaults;
   description: string | null;
   expiry: ClientExpiry;
@@ -48,6 +49,7 @@ export interface ClientAttributes extends EntityAttributes {
 export interface ClientOptions extends EntityOptions {
   active?: boolean;
   allowed?: Partial<ClientAllowed>;
+  audiences?: Array<string>;
   defaults?: Partial<ClientDefaults>;
   description?: string | null;
   expiry?: Partial<ClientExpiry>;
@@ -77,6 +79,7 @@ const schema = Joi.object<ClientAttributes>()
         scopes: Joi.array().items(Joi.string()).required(),
       })
       .required(),
+    audiences: Joi.array().items(Joi.string()).required(),
     defaults: Joi.object()
       .keys({
         audiences: Joi.array().items(JOI_GUID).required(),
@@ -111,6 +114,7 @@ const schema = Joi.object<ClientAttributes>()
 export class Client extends LindormEntity<ClientAttributes> {
   public active: boolean;
   public allowed: ClientAllowed;
+  public audiences: Array<string>;
   public defaults: ClientDefaults;
   public description: string | null;
   public expiry: ClientExpiry;
@@ -136,6 +140,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       responseTypes: options.allowed?.responseTypes || [],
       scopes: options.allowed?.scopes || [],
     };
+    this.audiences = options.audiences || [];
     this.defaults = {
       audiences: options.defaults?.audiences || [],
       displayMode: options.defaults?.displayMode || DisplayMode.PAGE,
@@ -172,6 +177,7 @@ export class Client extends LindormEntity<ClientAttributes> {
 
       active: this.active,
       allowed: this.allowed,
+      audiences: this.audiences,
       defaults: this.defaults,
       description: this.description,
       expiry: this.expiry,

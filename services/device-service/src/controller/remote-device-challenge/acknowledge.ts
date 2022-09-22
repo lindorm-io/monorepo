@@ -5,6 +5,7 @@ import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { difference } from "lodash";
 import {
+  ClientScope,
   EmitSocketEventRequestData,
   JOI_GUID,
   RdcSessionMode,
@@ -96,7 +97,9 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
 
     await communicationClient.post("/internal/socket/emit", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
+      ],
     });
   }
 

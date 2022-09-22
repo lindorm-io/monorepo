@@ -1,15 +1,11 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
-import { ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse, Environment } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { createURL, getExpiryDate, PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
 import { flatten, uniq } from "lodash";
-import {
-  setAuthorizationSessionCookie,
-  tryFindConsentSession,
-  tryFindRefreshSession,
-} from "../../handler";
+import { getExpiryDate, PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
+import { tryFindBrowserSession, tryFindConsentSession, tryFindRefreshSession } from "../../handler";
 import {
   DisplayMode,
   JOI_COUNTRY_CODE,
@@ -20,8 +16,10 @@ import {
   PromptMode,
   ResponseMode,
   ResponseType,
+  SessionStatus,
 } from "../../common";
 import {
+  AUTHORIZATION_SESSION_COOKIE_NAME,
   JOI_DISPLAY_MODE,
   JOI_PKCE_METHOD,
   JOI_PROMPT_REGEX,
@@ -30,16 +28,19 @@ import {
 } from "../../constant";
 import {
   assertAuthorizePrompt,
-  assertAuthorizeRedirectUri,
+  assertRedirectUri,
   assertAuthorizeResponseType,
   assertAuthorizeScope,
+  createAuthorizationVerifyUri,
+  createLoginPendingUri,
   filterAcrValues,
-  isAuthenticationRequired,
+  isLoginRequired,
   isConsentRequired,
 } from "../../util";
 
 interface RequestData {
   acrValues?: string;
+  amrValues?: string; // lindorm.io
   authToken?: string; // lindorm.io
   clientId: string;
   codeChallenge?: string;
@@ -50,9 +51,8 @@ interface RequestData {
   loginHint?: string;
   maxAge?: string;
   nonce?: string;
-  pkceVerifier?: string; // lindorm.io
   prompt?: string;
-  redirectData?: string;
+  redirectData?: string; // lindorm.io
   redirectUri: string;
   responseMode?: ResponseMode;
   responseType: string;
@@ -64,6 +64,7 @@ interface RequestData {
 export const oauthAuthorizeSchema = Joi.object<RequestData>()
   .keys({
     acrValues: Joi.string().optional(),
+    amrValues: Joi.string().optional(),
     authToken: JOI_JWT.optional(),
     clientId: JOI_GUID.required(),
     codeChallenge: Joi.string().optional(),
@@ -74,7 +75,6 @@ export const oauthAuthorizeSchema = Joi.object<RequestData>()
     loginHint: Joi.string().optional(),
     maxAge: Joi.string().pattern(/^\d+$/).optional(),
     nonce: JOI_NONCE.optional(),
-    pkceVerifier: Joi.string().optional(),
     prompt: JOI_PROMPT_REGEX.optional(),
     redirectData: Joi.string().base64().optional(),
     redirectUri: Joi.string().uri().required(),
@@ -93,6 +93,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     cache: { authorizationSessionCache },
     data: {
       acrValues,
+      amrValues,
       authToken,
       codeChallenge,
       codeChallengeMethod,
@@ -110,7 +111,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       state,
       uiLocales,
     },
-    entity: { browserSession, client },
+    entity: { client },
     token: { idToken },
   } = ctx;
 
@@ -118,36 +119,55 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const responseTypes = responseType.toLowerCase().split(" ") as Array<ResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
+  assertRedirectUri(redirectUri, client);
+
   const expires = getExpiryDate(configuration.defaults.expiry.authorization_session);
 
-  const { authenticationMethods, levelOfAssurance } = filterAcrValues(
+  const { levelOfAssurance, methods: authenticationMethods } = filterAcrValues({
     acrValues,
-    idToken?.authContextClass,
-    idToken?.authMethodsReference,
-  );
+    amrValues,
+  });
 
+  const { levelOfAssurance: levelHint, methods: methodHint } = filterAcrValues({
+    acrArray: idToken?.authContextClass,
+    amrArray: idToken?.authMethodsReference,
+  });
+
+  const browserSession = await tryFindBrowserSession(ctx);
   const consentSession = await tryFindConsentSession(ctx, browserSession, client);
   const refreshSession = await tryFindRefreshSession(ctx, idToken);
 
   const audiences = idToken
-    ? uniq(flatten([idToken.audiences, client.id, client.defaults.audiences]))
-    : uniq(flatten([client.id, client.defaults.audiences]));
+    ? uniq(flatten([idToken.audiences, client.id, client.defaults.audiences])).sort()
+    : uniq(flatten([client.id, client.defaults.audiences])).sort();
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
-    audiences,
+    code: {
+      codeChallenge,
+      codeChallengeMethod,
+    },
+    requestedConsent: {
+      audiences,
+      scopes,
+    },
+    requestedLogin: {
+      authenticationMethods,
+      identityId: idToken ? idToken.subject : null,
+      levelHint,
+      levelOfAssurance: levelOfAssurance || client.defaults.levelOfAssurance,
+      methodHint,
+    },
+    identifiers: {
+      browserSessionId: browserSession?.id,
+      consentSessionId: consentSession?.id,
+      refreshSessionId: refreshSession?.id,
+    },
     authToken,
-    authenticationMethods,
-    browserSessionId: browserSession.id,
     clientId: client.id,
-    codeChallenge,
-    codeChallengeMethod,
-    consentSessionId: consentSession?.id,
     country,
     displayMode: display || client.defaults.displayMode,
     expires,
     idTokenHint: idToken ? idToken.token : null,
-    identityId: idToken ? idToken.subject : null,
-    levelOfAssurance: levelOfAssurance || client.defaults.levelOfAssurance,
     loginHint: removeEmptyFromArray(
       uniq([
         loginHint,
@@ -157,45 +177,43 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       ]),
     ).sort(),
     maxAge: maxAge ? parseInt(maxAge, 10) : null,
-    nonce: nonce || idToken?.nonce || browserSession.nonce,
+    nonce: nonce || idToken?.nonce || browserSession?.nonce,
     originalUri: new URL(ctx.request.originalUrl, configuration.server.host).toString(),
     promptModes: prompts,
     redirectData,
     redirectUri,
-    refreshSessionId: refreshSession?.id,
     responseMode: responseMode || client.defaults.responseMode,
     responseTypes,
-    scopes,
     state,
     uiLocales: uiLocales ? uiLocales.split(" ") : null,
   });
 
-  const authenticationRequired = isAuthenticationRequired(authorizationSession, browserSession);
+  const loginRequired = isLoginRequired(authorizationSession, browserSession);
+  if (!loginRequired) {
+    authorizationSession.status.login = SessionStatus.SKIP;
+  }
 
   const consentRequired = isConsentRequired(authorizationSession, browserSession, consentSession);
+  if (!consentRequired) {
+    authorizationSession.status.consent = SessionStatus.SKIP;
+  }
 
-  assertAuthorizePrompt(authorizationSession, {
-    isConsentRequired: consentRequired,
-    isAuthenticationRequired: authenticationRequired,
-  });
-
-  assertAuthorizeRedirectUri(authorizationSession, client);
-
+  assertAuthorizePrompt(authorizationSession, { consentRequired, loginRequired });
   assertAuthorizeResponseType(authorizationSession, client);
-
   assertAuthorizeScope(authorizationSession, client);
 
   authorizationSession = await authorizationSessionCache.create(authorizationSession);
 
-  setAuthorizationSessionCookie(ctx, authorizationSession);
+  ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME, authorizationSession.id, {
+    expires: authorizationSession.expires,
+    httpOnly: true,
+    overwrite: true,
+    signed: ctx.metadata.environment !== Environment.TEST,
+  });
 
-  return {
-    redirect: createURL(configuration.redirect.login, {
-      host: configuration.services.authentication_service.host,
-      port: configuration.services.authentication_service.port,
-      query: {
-        sessionId: authorizationSession.id,
-      },
-    }),
-  };
+  if (!loginRequired) {
+    return { redirect: createAuthorizationVerifyUri(authorizationSession) };
+  }
+
+  return { redirect: createLoginPendingUri(authorizationSession) };
 };

@@ -6,7 +6,7 @@ export const assertAuthorizeScope = (
   authorizationSession: AuthorizationSession,
   client: Client,
 ): void => {
-  const diff = difference(authorizationSession.scopes, client.allowed.scopes);
+  const diff = difference(authorizationSession.requestedConsent.scopes, client.allowed.scopes);
 
   if (diff.length) {
     throw new ClientError("Invalid Scope", {
@@ -14,7 +14,7 @@ export const assertAuthorizeScope = (
       description: "invalid_scope",
       debug: {
         expect: client.allowed.scopes,
-        actual: authorizationSession.scopes,
+        actual: authorizationSession.requestedConsent.scopes,
         diff,
       },
     });

@@ -7,9 +7,14 @@ describe("generateMfaCookie", () => {
 
   beforeEach(() => {
     ctx = {
-      setCookie: jest.fn(),
+      cookies: {
+        set: jest.fn(),
+      },
       cache: {
         mfaCookieSessionCache: createMockCache(createTestMfaCookieSession),
+      },
+      metadata: {
+        environment: "development",
       },
     };
   });
@@ -20,6 +25,15 @@ describe("generateMfaCookie", () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.cache.mfaCookieSessionCache.create).toHaveBeenCalled();
-    expect(ctx.setCookie).toHaveBeenCalled();
+    expect(ctx.cookies.set).toHaveBeenCalledWith(
+      "lindorm_io_authentication_mfa",
+      expect.any(String),
+      {
+        expires: expect.any(Date),
+        httpOnly: true,
+        overwrite: true,
+        signed: true,
+      },
+    );
   });
 });

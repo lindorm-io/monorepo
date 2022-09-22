@@ -42,6 +42,8 @@ Object {
         "lindorm.io/oauth-service/client/client:write",
         "lindorm.io/oauth-service/client/consent:read",
         "lindorm.io/oauth-service/client/consent:write",
+        "lindorm.io/oauth-service/client/elevation:read",
+        "lindorm.io/oauth-service/client/elevation:write",
         "lindorm.io/oauth-service/client/identity:read",
         "lindorm.io/oauth-service/client/identity:write",
         "lindorm.io/oauth-service/client/logout:read",

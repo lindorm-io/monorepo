@@ -1,26 +1,25 @@
-import { AuthenticationMethod } from "../enum";
 import { AuthenticationSession } from "../entity";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { findMethodConfiguration } from "./find-method-configuration";
+import { findStrategyConfig } from "./find-strategy-config";
 
-interface Result {
-  levelOfAssurance: LevelOfAssurance;
-  maximumLevelOfAssurance: LevelOfAssurance;
-}
+type Result = {
+  level: LevelOfAssurance;
+  maximum: LevelOfAssurance;
+};
 
 export const calculateLevelOfAssurance = (authenticationSession: AuthenticationSession): Result => {
-  let value: LevelOfAssurance = 0;
-  let maxValue: LevelOfAssurance = 0;
+  let value: LevelOfAssurance = authenticationSession.confirmedOidcLevel;
+  let maxValue: LevelOfAssurance = authenticationSession.confirmedOidcLevel || 0;
 
-  for (const name of authenticationSession.confirmedMethods) {
-    const config = findMethodConfiguration(name as AuthenticationMethod);
+  for (const name of authenticationSession.confirmedStrategies) {
+    const config = findStrategyConfig(name);
 
     value = (value + config.value) as LevelOfAssurance;
     maxValue = config.valueMax > maxValue ? config.valueMax : maxValue;
   }
 
   return {
-    levelOfAssurance: value > maxValue ? maxValue : value,
-    maximumLevelOfAssurance: maxValue,
+    level: value > maxValue ? maxValue : value,
+    maximum: maxValue,
   };
 };

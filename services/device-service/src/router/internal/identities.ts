@@ -14,7 +14,7 @@ router.use(
 );
 
 router.get(
-  "/:id/deviceLinks",
+  "/:id/device-links",
   paramsMiddleware,
   useSchema(getIdentityDeviceLinksSchema),
   useController(getIdentityDeviceLinksController),

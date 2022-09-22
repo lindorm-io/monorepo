@@ -10,10 +10,10 @@ logger:
 
 oauth:
   client_id: f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f
-  client_secret: kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E
+  client_secret: m4Qq7lqmydszhLq4-dR6tzI11CWlfKnckPwUBm_qrlEgWV4ouOgqNVZBsF7xGGQ3
 
 server:
-  domain: https://development.lindorm.io
+  domain: http://localhost:3100
   environment: development
   issuer: https://authentication.development.lindorm.io
   host: http://localhost

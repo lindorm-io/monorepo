@@ -1,0 +1,204 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`calculateMethodsAndStrategies should calculate based on requested methods 1`] = `
+Array [
+  Object {
+    "hint": "email",
+    "initialiseKey": "email",
+    "method": "email",
+    "rank": 1,
+    "strategies": Array [
+      "email_otp",
+      "email_link",
+    ],
+  },
+  Object {
+    "hint": "email",
+    "initialiseKey": "username",
+    "method": "password",
+    "rank": 2,
+    "strategies": Array [
+      "password_browser_link",
+      "password",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "mfa_cookie",
+    "rank": 3,
+    "strategies": Array [
+      "mfa_cookie",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "bank_id_se",
+    "rank": 4,
+    "strategies": Array [
+      "bank_id_se",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "device_link",
+    "rank": 5,
+    "strategies": Array [
+      "rdc_push_notification",
+      "rdc_qr_code",
+      "device_challenge",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "totp",
+    "rank": 6,
+    "strategies": Array [
+      "time_based_otp",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "webauthn",
+    "rank": 7,
+    "strategies": Array [
+      "webauthn",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "session_link",
+    "rank": 8,
+    "strategies": Array [
+      "session_otp",
+      "session_accept_with_code",
+    ],
+  },
+  Object {
+    "hint": "phone",
+    "initialiseKey": "phone_number",
+    "method": "phone",
+    "rank": 9,
+    "strategies": Array [
+      "phone_otp",
+    ],
+  },
+]
+`;
+
+exports[`calculateMethodsAndStrategies should calculate first factor values 1`] = `
+Array [
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "bank_id_se",
+    "rank": 1,
+    "strategies": Array [
+      "bank_id_se",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "device_link",
+    "rank": 2,
+    "strategies": Array [
+      "rdc_qr_code",
+      "device_challenge",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "webauthn",
+    "rank": 3,
+    "strategies": Array [
+      "webauthn",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "session_link",
+    "rank": 4,
+    "strategies": Array [
+      "session_accept_with_code",
+    ],
+  },
+  Object {
+    "hint": "email",
+    "initialiseKey": "email",
+    "method": "email",
+    "rank": 5,
+    "strategies": Array [
+      "email_otp",
+      "email_link",
+    ],
+  },
+  Object {
+    "hint": "email",
+    "initialiseKey": "username",
+    "method": "password",
+    "rank": 6,
+    "strategies": Array [
+      "password_browser_link",
+      "password",
+    ],
+  },
+]
+`;
+
+exports[`calculateMethodsAndStrategies should calculate second factor values 1`] = `
+Array [
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "mfa_cookie",
+    "rank": 1,
+    "strategies": Array [
+      "mfa_cookie",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "device_link",
+    "rank": 2,
+    "strategies": Array [
+      "rdc_push_notification",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "totp",
+    "rank": 3,
+    "strategies": Array [
+      "time_based_otp",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "session_link",
+    "rank": 4,
+    "strategies": Array [
+      "session_otp",
+    ],
+  },
+  Object {
+    "hint": "phone",
+    "initialiseKey": "phone_number",
+    "method": "phone",
+    "rank": 5,
+    "strategies": Array [
+      "phone_otp",
+    ],
+  },
+]
+`;

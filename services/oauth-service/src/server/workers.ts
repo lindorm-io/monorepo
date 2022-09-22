@@ -3,7 +3,7 @@ import { configuration } from "./configuration";
 import {
   browserSessionCleanupWorker,
   clientCacheWorker,
-  keyPairAuthenticationJwksWorker,
+  // keyPairAuthenticationJwksWorker,
   keyPairCleanupWorker,
   keyPairMongoCacheWorker,
   keyPairRotationWorker,
@@ -15,7 +15,7 @@ export const workers: Array<IntervalWorker> = [];
 if (configuration.server.workers) {
   workers.push(browserSessionCleanupWorker);
   workers.push(clientCacheWorker);
-  workers.push(keyPairAuthenticationJwksWorker);
+  // workers.push(keyPairAuthenticationJwksWorker);
   workers.push(keyPairCleanupWorker);
   workers.push(keyPairMongoCacheWorker);
   workers.push(keyPairRotationWorker);

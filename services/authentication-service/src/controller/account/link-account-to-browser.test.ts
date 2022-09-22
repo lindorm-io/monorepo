@@ -53,12 +53,15 @@ describe("linkAccountToBrowserController", () => {
         client: {
           environment: "client-environment",
         },
+        environment: "development",
       },
       repository: {
         browserLinkRepository: createMockRepository(createTestBrowserLink),
       },
 
-      setCookie: jest.fn(),
+      cookies: {
+        set: jest.fn(),
+      },
     };
 
     fetchAccountSalt.mockResolvedValue({ aes: "aes-salt", sha: "sha-salt" });
@@ -67,10 +70,15 @@ describe("linkAccountToBrowserController", () => {
   test("should resolve", async () => {
     await expect(linkAccountToBrowserController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.setCookie).toHaveBeenCalledWith(
+    expect(ctx.cookies.set).toHaveBeenCalledWith(
       "lindorm_io_authentication_browser_link",
       "a26dad28-e854-447d-bce6-5c685cddfea8",
-      { expiry: new Date("2120-01-01T08:00:00.000Z") },
+      {
+        expires: new Date("2120-01-01T08:00:00.000Z"),
+        httpOnly: true,
+        overwrite: true,
+        signed: true,
+      },
     );
   });
 });

@@ -2,7 +2,7 @@ import { getStrategyInfoController } from "./get-strategy-info";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestStrategySession } from "../../fixtures/entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 
 describe("getStrategyInfoController", () => {
   let ctx: any;
@@ -22,7 +22,7 @@ describe("getStrategyInfoController", () => {
     await expect(getStrategyInfoController(ctx)).resolves.toStrictEqual({
       body: {
         expires: new Date("2022-01-01T08:00:00.000Z"),
-        method: AuthenticationMethod.EMAIL_OTP,
+        strategy: AuthenticationStrategy.EMAIL_OTP,
         status: "pending",
       },
     });

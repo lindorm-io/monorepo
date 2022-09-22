@@ -1,3 +1,4 @@
+export * from "./AuthenticationMethod";
 export * from "./ChallengeStrategy";
 export * from "./ClientPermission";
 export * from "./ClientScope";

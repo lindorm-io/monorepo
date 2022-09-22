@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { AuthenticationMethod } from "../enum";
-import { JOI_AUTHENTICATION_METHOD } from "../constant";
+import { AuthenticationStrategy } from "../enum";
+import { JOI_AUTHENTICATION_STRATEGY } from "../constant";
 import {
   JOI_EMAIL,
   JOI_GUID,
@@ -21,7 +21,7 @@ export interface StrategySessionAttributes extends EntityAttributes {
   code: string | null;
   email: string | null;
   expires: Date;
-  method: AuthenticationMethod;
+  strategy: AuthenticationStrategy;
   nin: string | null;
   nonce: string | null;
   otp: string | null;
@@ -43,7 +43,7 @@ const schema = Joi.object<StrategySessionAttributes>()
     code: Joi.string().allow(null).required(),
     email: JOI_EMAIL.allow(null).required(),
     expires: Joi.date().required(),
-    method: JOI_AUTHENTICATION_METHOD.required(),
+    strategy: JOI_AUTHENTICATION_STRATEGY.required(),
     nin: Joi.string().allow(null).required(),
     nonce: Joi.string().allow(null).required(),
     otp: Joi.string().allow(null).required(),
@@ -60,7 +60,7 @@ export class StrategySession
   public readonly authenticationSessionId: string;
   public readonly email: string | null;
   public readonly expires: Date;
-  public readonly method: AuthenticationMethod;
+  public readonly strategy: AuthenticationStrategy;
   public readonly nin: string | null;
   public readonly phoneNumber: string | null;
   public readonly username: string | null;
@@ -77,7 +77,7 @@ export class StrategySession
     this.code = options.code || null;
     this.email = options.email || null;
     this.expires = options.expires;
-    this.method = options.method;
+    this.strategy = options.strategy;
     this.nin = options.nin || null;
     this.nonce = options.nonce || null;
     this.otp = options.otp || null;
@@ -102,7 +102,7 @@ export class StrategySession
       code: this.code,
       email: this.email,
       expires: this.expires,
-      method: this.method,
+      strategy: this.strategy,
       nin: this.nin,
       nonce: this.nonce,
       otp: this.otp,

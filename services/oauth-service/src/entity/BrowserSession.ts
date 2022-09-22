@@ -2,6 +2,7 @@ import Joi from "joi";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/core";
 import {
+  AuthenticationMethod,
   JOI_COUNTRY_CODE,
   JOI_GUID,
   JOI_LEVEL_OF_ASSURANCE,
@@ -18,12 +19,12 @@ import {
 
 export interface BrowserSessionAttributes extends EntityAttributes {
   acrValues: Array<string>;
-  amrValues: Array<string>;
+  amrValues: Array<AuthenticationMethod>;
   clients: Array<string>;
   country: string | null;
   expires: Date;
-  identityId: string | null;
-  latestAuthentication: Date | null;
+  identityId: string;
+  latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
   nonce: string;
   remember: boolean;
@@ -32,17 +33,7 @@ export interface BrowserSessionAttributes extends EntityAttributes {
 
 export type BrowserSessionOptions = Optional<
   BrowserSessionAttributes,
-  | EntityKeys
-  | "acrValues"
-  | "amrValues"
-  | "clients"
-  | "country"
-  | "identityId"
-  | "latestAuthentication"
-  | "levelOfAssurance"
-  | "nonce"
-  | "remember"
-  | "uiLocales"
+  EntityKeys | "country" | "nonce" | "remember" | "uiLocales"
 >;
 
 const schema = Joi.object<BrowserSessionAttributes>()
@@ -54,8 +45,8 @@ const schema = Joi.object<BrowserSessionAttributes>()
     clients: Joi.array().items(JOI_GUID).required(),
     country: JOI_COUNTRY_CODE.allow(null).required(),
     expires: Joi.date().required(),
-    identityId: JOI_GUID.allow(null).required(),
-    latestAuthentication: Joi.date().allow(null).required(),
+    identityId: JOI_GUID.required(),
+    latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     nonce: JOI_NONCE.required(),
     remember: Joi.boolean().required(),
@@ -64,13 +55,15 @@ const schema = Joi.object<BrowserSessionAttributes>()
   .required();
 
 export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
+  public readonly consentSessionId: string;
+  public readonly identityId: string;
+
   public acrValues: Array<string>;
-  public amrValues: Array<string>;
+  public amrValues: Array<AuthenticationMethod>;
   public clients: Array<string>;
   public country: string | null;
   public expires: Date;
-  public identityId: string | null;
-  public latestAuthentication: Date | null;
+  public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
   public nonce: string;
   public remember: boolean;
@@ -79,14 +72,14 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
   public constructor(options: BrowserSessionOptions) {
     super(options);
 
-    this.acrValues = options.acrValues || [];
-    this.amrValues = options.amrValues || [];
-    this.clients = options.clients || [];
+    this.acrValues = options.acrValues;
+    this.amrValues = options.amrValues;
+    this.clients = options.clients;
     this.country = options.country || null;
     this.expires = options.expires;
-    this.identityId = options.identityId || null;
-    this.latestAuthentication = options.latestAuthentication || null;
-    this.levelOfAssurance = options.levelOfAssurance || 0;
+    this.identityId = options.identityId;
+    this.latestAuthentication = options.latestAuthentication;
+    this.levelOfAssurance = options.levelOfAssurance;
     this.nonce = options.nonce || randomString(16);
     this.remember = options.remember === true;
     this.uiLocales = options.uiLocales || [];

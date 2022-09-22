@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
+import { ControllerResponse, Environment } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { fetchAccountSalt } from "../../handler";
@@ -48,7 +48,10 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     }),
   );
 
-  ctx.setCookie(BROWSER_LINK_COOKIE_NAME, browserLink.id, {
-    expiry: getExpiryDate("99 years"),
+  ctx.cookies.set(BROWSER_LINK_COOKIE_NAME, browserLink.id, {
+    expires: getExpiryDate("99 years"),
+    httpOnly: true,
+    overwrite: true,
+    signed: ctx.metadata.environment !== Environment.TEST,
   });
 };

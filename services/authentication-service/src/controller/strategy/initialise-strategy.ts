@@ -1,12 +1,12 @@
 import Joi from "joi";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { ConfirmKey, ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_AUTHENTICATION_METHOD } from "../../constant";
-import { ServerKoaController } from "../../types";
+import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
 import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
-import { findMethodConfiguration } from "../../util";
+import { findStrategyConfig } from "../../util";
 import { getExpires } from "@lindorm-io/core";
 import {
   JOI_EMAIL,
@@ -28,25 +28,25 @@ import {
   initialiseWebauthn,
 } from "../../handler";
 
-interface RequestData {
+type RequestData = {
   id: string;
   email?: string;
   nin?: string;
   nonce?: string;
   phoneNumber?: string;
-  method: AuthenticationMethod;
+  strategy: AuthenticationStrategy;
   username?: string;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   id: string;
+  displayCode?: string;
+  confirmKey: ConfirmKey;
   expiresIn: number;
   pollingRequired: boolean;
-  strategySessionToken: string | null;
-
-  displayCode?: string;
   qrCode?: string;
-}
+  strategySessionToken: string | null;
+};
 
 export const initialiseStrategySchema = Joi.object<RequestData>()
   .keys({
@@ -55,7 +55,7 @@ export const initialiseStrategySchema = Joi.object<RequestData>()
     nin: JOI_NIN.optional(),
     nonce: Joi.string().optional(),
     phoneNumber: JOI_PHONE_NUMBER.optional(),
-    method: JOI_AUTHENTICATION_METHOD.required(),
+    strategy: JOI_AUTHENTICATION_STRATEGY.required(),
     username: Joi.string().optional(),
   })
   .required();
@@ -65,15 +65,15 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { strategySessionCache },
-    data: { email, nin, nonce, phoneNumber, method, username },
+    data: { email, nin, nonce, phoneNumber, strategy, username },
     entity: { authenticationSession },
     jwt,
   } = ctx;
 
-  const config = findMethodConfiguration(method);
+  const config = findStrategyConfig(strategy);
 
-  if (!authenticationSession.allowedMethods.includes(method)) {
-    throw new ClientError("Invalid method");
+  if (!authenticationSession.allowedStrategies.includes(strategy)) {
+    throw new ClientError("Invalid strategy");
   }
 
   const { expiresIn } = getExpires(authenticationSession.expires);
@@ -86,7 +86,7 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
       nin,
       nonce,
       phoneNumber,
-      method,
+      strategy,
       username,
     }),
   );
@@ -104,60 +104,60 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     qrCode?: string;
   } = {};
 
-  switch (method) {
-    case AuthenticationMethod.DEVICE_CHALLENGE:
-    case AuthenticationMethod.MFA_COOKIE:
-    case AuthenticationMethod.PASSWORD:
-    case AuthenticationMethod.PASSWORD_BROWSER_LINK:
-    case AuthenticationMethod.TIME_BASED_OTP:
+  switch (strategy) {
+    case AuthenticationStrategy.DEVICE_CHALLENGE:
+    case AuthenticationStrategy.MFA_COOKIE:
+    case AuthenticationStrategy.PASSWORD:
+    case AuthenticationStrategy.PASSWORD_BROWSER_LINK:
+    case AuthenticationStrategy.TIME_BASED_OTP:
       break;
 
-    case AuthenticationMethod.BANK_ID_SE:
+    case AuthenticationStrategy.BANK_ID_SE:
       await initialiseBankIdSe(ctx, authenticationSession, strategySession);
       break;
 
-    case AuthenticationMethod.EMAIL_LINK:
+    case AuthenticationStrategy.EMAIL_LINK:
       await initialiseEmailLink(ctx, strategySession, {
         strategySessionToken,
         email,
       });
       break;
 
-    case AuthenticationMethod.EMAIL_OTP:
+    case AuthenticationStrategy.EMAIL_OTP:
       await initialiseEmailOtp(ctx, strategySession, {
         email,
       });
       break;
 
-    case AuthenticationMethod.PHONE_OTP:
+    case AuthenticationStrategy.PHONE_OTP:
       await initialisePhoneOtp(ctx, authenticationSession, strategySession, {
         phoneNumber,
       });
       break;
 
-    case AuthenticationMethod.RDC_PUSH_NOTIFICATION:
+    case AuthenticationStrategy.RDC_PUSH_NOTIFICATION:
       await initialiseRdcPushNotification(ctx, authenticationSession, strategySession, {
         strategySessionToken,
       });
       break;
 
-    case AuthenticationMethod.RDC_QR_CODE:
+    case AuthenticationStrategy.RDC_QR_CODE:
       extra = await initialiseRdcQrCode(ctx, authenticationSession, strategySession, {
         strategySessionToken,
       });
       break;
 
-    case AuthenticationMethod.SESSION_ACCEPT_WITH_CODE:
+    case AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE:
       extra = await initialiseSessionAcceptWithCode(ctx, authenticationSession, strategySession, {
         strategySessionToken,
       });
       break;
 
-    case AuthenticationMethod.SESSION_OTP:
+    case AuthenticationStrategy.SESSION_OTP:
       await initialiseSessionOtp(ctx, authenticationSession, strategySession);
       break;
 
-    case AuthenticationMethod.WEBAUTHN:
+    case AuthenticationStrategy.WEBAUTHN:
       await initialiseWebauthn(ctx, authenticationSession, strategySession);
       break;
 
@@ -168,6 +168,7 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
   return {
     body: {
       id: strategySession.id,
+      confirmKey: config.confirmKey,
       strategySessionToken: config.tokenReturn ? strategySessionToken : null,
       expiresIn,
       pollingRequired: config.pollingRequired,

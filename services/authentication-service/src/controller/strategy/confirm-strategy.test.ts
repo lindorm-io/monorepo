@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { confirmStrategyController } from "./confirm-strategy";
@@ -10,7 +10,7 @@ import {
 } from "../../fixtures/entity";
 import {
   confirmPassword as _confirmPassword,
-  resolveAllowedMethods as _resolveAllowedMethods,
+  resolveAllowedStrategies as _resolveAllowedMethods,
 } from "../../handler";
 import {
   calculateAuthenticationStatus as _calculateAuthenticationStatus,
@@ -44,8 +44,10 @@ describe("confirmStrategyController", () => {
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
+          allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: null,
           confirmedIdentifiers: ["test@lindorm.io"],
+          requestedLevel: 1,
           status: SessionStatus.PENDING,
         }),
         strategySession: createTestStrategySession({
@@ -54,7 +56,7 @@ describe("confirmStrategyController", () => {
           phoneNumber: null,
           username: "username",
           status: SessionStatus.PENDING,
-          method: AuthenticationMethod.PASSWORD,
+          strategy: AuthenticationStrategy.PASSWORD,
         }),
       },
     };
@@ -69,7 +71,7 @@ describe("confirmStrategyController", () => {
         id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
       }),
     );
-    resolveAllowedMethods.mockResolvedValue([AuthenticationMethod.DEVICE_CHALLENGE]);
+    resolveAllowedMethods.mockResolvedValue([AuthenticationStrategy.DEVICE_CHALLENGE]);
   });
 
   test("should resolve", async () => {
@@ -77,10 +79,9 @@ describe("confirmStrategyController", () => {
 
     expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedMethods: ["device_challenge"],
+        allowedStrategies: ["device_challenge"],
         confirmedIdentifiers: ["test@lindorm.io", "username"],
-        confirmedLevelOfAssurance: 3,
-        confirmedMethods: ["password"],
+        confirmedStrategies: ["password"],
         identityId: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
         remember: true,
         status: "confirmed",

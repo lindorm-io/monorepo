@@ -1,10 +1,8 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { createTestLogoutSession } from "../../fixtures/entity";
 import { server } from "../../server/server";
-import { setupIntegration, TEST_LOGOUT_SESSION_CACHE } from "../../fixtures/integration";
+import { setupIntegration } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,33 +16,40 @@ describe("/sessions/logout", () => {
     .post("/oauth2/token")
     .times(999)
     .reply(200, {
-      accessToken: "accessToken",
-      expiresIn: 100,
+      access_token: "accessToken",
+      expires_in: 100,
       scope: ["scope"],
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put((uri) => uri.startsWith("/internal/sessions/logout/") && uri.endsWith("/confirm"))
+    .get("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff")
+    .times(999)
+    .reply(200, {
+      logout_status: "pending",
+      client: {
+        name: "name",
+        description: "description",
+        logo_uri: "https://client.logo.uri/",
+      },
+    });
+
+  nock("https://oauth.test.lindorm.io")
+    .post("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/confirm")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put((uri) => uri.startsWith("/internal/sessions/logout/") && uri.endsWith("/reject"))
+    .post("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/reject")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-reject.url/",
     });
 
-  test("GET /", async () => {
-    const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(createTestLogoutSession());
-
+  test("should resolve logout session data", async () => {
     const response = await request(server.callback())
-      .get("/sessions/logout")
-      .set("Cookie", [
-        `lindorm_io_authentication_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
+      .get("/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff")
       .expect(200);
 
     expect(response.body).toStrictEqual({
@@ -52,50 +57,28 @@ describe("/sessions/logout", () => {
         description: "description",
         logo_uri: "https://client.logo.uri/",
         name: "name",
-        type: "public",
       },
+      status: "pending",
     });
   });
 
-  test("PUT /confirm", async () => {
-    const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(createTestLogoutSession());
-
+  test("should confirm and redirect", async () => {
     const response = await request(server.callback())
-      .put("/sessions/logout/confirm")
-      .set("Cookie", [
-        `lindorm_io_authentication_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
-      .expect(302);
+      .post("/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/confirm")
+      .expect(200);
 
-    expect(response.headers.location).toBe("https://oauth-redirect-confirm.url/");
-
-    expect(response.headers["set-cookie"]).toEqual([
-      "lindorm_io_authentication_logout_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
-    ]);
-
-    await expect(TEST_LOGOUT_SESSION_CACHE.find({ id: logoutSession.id })).rejects.toThrow(
-      EntityNotFoundError,
-    );
+    expect(response.body).toStrictEqual({
+      redirect_to: "https://oauth-redirect-confirm.url/",
+    });
   });
 
-  test("PUT /reject", async () => {
-    const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(createTestLogoutSession());
-
+  test("should reject and redirect", async () => {
     const response = await request(server.callback())
-      .put("/sessions/logout/reject")
-      .set("Cookie", [
-        `lindorm_io_authentication_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
-      .expect(302);
+      .post("/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/reject")
+      .expect(200);
 
-    expect(response.headers.location).toBe("https://oauth-redirect-reject.url/");
-
-    expect(response.headers["set-cookie"]).toEqual([
-      "lindorm_io_authentication_logout_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
-    ]);
-
-    await expect(TEST_LOGOUT_SESSION_CACHE.find({ id: logoutSession.id })).rejects.toThrow(
-      EntityNotFoundError,
-    );
+    expect(response.body).toStrictEqual({
+      redirect_to: "https://oauth-redirect-reject.url/",
+    });
   });
 });

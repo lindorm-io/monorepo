@@ -1,23 +1,33 @@
-import { ServerKoaContext } from "../../types";
-import { Router, useController, useSchema } from "@lindorm-io/koa";
-import { consentSessionCookieMiddleware } from "../../middleware";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  confirmConsentController,
-  confirmConsentSchema,
-  getConsentInfoController,
-  rejectConsentController,
+  confirmConsentSessionController,
+  confirmConsentSessionSchema,
+  getConsentSessionDataController,
+  getConsentSessionDataSchema,
+  rejectConsentSessionController,
+  rejectConsentSessionSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
-router.get("/", consentSessionCookieMiddleware, useController(getConsentInfoController));
-
-router.put(
-  "/confirm",
-  useSchema(confirmConsentSchema),
-  consentSessionCookieMiddleware,
-  useController(confirmConsentController),
+router.get(
+  "/:id",
+  paramsMiddleware,
+  useSchema(getConsentSessionDataSchema),
+  useController(getConsentSessionDataController),
 );
 
-router.put("/reject", consentSessionCookieMiddleware, useController(rejectConsentController));
+router.post(
+  "/:id/confirm",
+  paramsMiddleware,
+  useSchema(confirmConsentSessionSchema),
+  useController(confirmConsentSessionController),
+);
+
+router.post(
+  "/:id/reject",
+  paramsMiddleware,
+  useSchema(rejectConsentSessionSchema),
+  useController(rejectConsentSessionController),
+);

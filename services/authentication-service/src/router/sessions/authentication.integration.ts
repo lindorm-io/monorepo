@@ -1,18 +1,19 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationMethod } from "../../common";
+import { AuthenticationStrategy } from "../../enum";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { SessionStatus } from "../../common";
 import { argon } from "../../instance";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
-import { randomString } from "@lindorm-io/core";
 import { getTestData } from "../../fixtures/data";
+import { randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
+  setupIntegration,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
-  setupIntegration,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -27,8 +28,8 @@ describe("/sessions/authentication", () => {
     .post("/oauth2/token")
     .times(999)
     .reply(200, {
-      accessToken: "accessToken",
-      expiresIn: 100,
+      access_token: "accessToken",
+      expires_in: 100,
       scope: ["scope"],
     });
 
@@ -37,7 +38,83 @@ describe("/sessions/authentication", () => {
     .times(999)
     .reply(200, {});
 
-  test("GET /:id", async () => {
+  nock("https://oauth.test.lindorm.io")
+    .get((uri) => uri.startsWith("/internal/sessions/login/"))
+    .reply(200, {
+      authorizationSession: {
+        country: "se",
+        expires_at: "2021-01-01T08:30:00.000Z",
+        login_hint: ["test@email.com", "+46701234567"],
+        nonce: "IpoPcFc9nWdB4hfZ",
+      },
+      requested: {
+        authentication_methods: [AuthenticationMethod.PASSWORD],
+        identity_id: null,
+        level_of_assurance: 3,
+      },
+    });
+
+  nock("https://oidc.test.lindorm.io").post("/internal/sessions").times(999).reply(200, {
+    redirect_to: "https://oidc-redirect.url",
+  });
+
+  nock("https://oidc.test.lindorm.io")
+    .get((uri) => uri.startsWith("/internal/sessions"))
+    .times(999)
+    .reply(200, {
+      identity_id: null,
+      level_of_assurance: 3,
+      provider: "apple",
+    });
+
+  nock("https://oidc.test.lindorm.io")
+    .get("/providers")
+    .times(999)
+    .reply(200, {
+      providers: ["apple", "google", "microsoft"],
+    });
+
+  test("should create a new authentication session", async () => {
+    const { codeChallenge, codeChallengeMethod, nonce } = getTestData();
+
+    const response = await request(server.callback())
+      .post("/sessions/authentication")
+      .send({
+        client_id: "64d26e49-c9b2-42a7-86c3-1c0fb045e658",
+        code_challenge: codeChallenge,
+        code_challenge_method: codeChallengeMethod,
+        country: "en",
+        identity_id: "4c875493-575a-4660-94d6-432787597ea2",
+        level_of_assurance: 3,
+        login_hint: ["test@lindorm.io", "+46701234567"],
+        methods: ["email", "phone", "device_link"],
+        nonce: nonce,
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      id: expect.any(String),
+    });
+  });
+
+  test("should create a new authentication session linked to oauth session", async () => {
+    const { codeChallenge, codeChallengeMethod } = getTestData();
+
+    const response = await request(server.callback())
+      .post("/sessions/authentication")
+      .send({
+        code_challenge: codeChallenge,
+        code_challenge_method: codeChallengeMethod,
+        oauth_session_id: "13ceef97-6824-4468-84bf-07e8a6101ad4",
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      id: expect.any(String),
+    });
+  });
+
+  test("should return authentication session data", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession(),
     );
@@ -47,21 +124,49 @@ describe("/sessions/authentication", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      allowed_methods: ["bank_id_se", "device_challenge", "email_link", "email_otp", "phone_otp"],
+      client_config: [
+        {
+          hint: "email",
+          initialise_key: "email",
+          method: "email",
+          rank: 1,
+          strategies: ["email_otp", "email_link"],
+        },
+        {
+          hint: "none",
+          initialise_key: "none",
+          method: "bank_id_se",
+          rank: 2,
+          strategies: ["bank_id_se"],
+        },
+        {
+          hint: "none",
+          initialise_key: "none",
+          method: "device_link",
+          rank: 3,
+          strategies: ["device_challenge"],
+        },
+        {
+          hint: "phone",
+          initialise_key: "phone_number",
+          method: "phone",
+          rank: 4,
+          strategies: ["phone_otp"],
+        },
+      ],
       email_hint: "test@lindorm.io",
       expires: "2022-01-01T08:00:00.000Z",
+      mode: "oauth",
+      oidc_providers: ["apple", "google", "microsoft"],
       phone_hint: "0701234567",
-      prioritized_method: "bank_id_se",
-      requested_methods: ["email_otp"],
       status: "pending",
     });
   });
 
-  test("GET /:id - resolves code", async () => {
+  test("should return authentication code", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        confirmedLevelOfAssurance: 3,
-        confirmedMethods: [AuthenticationMethod.DEVICE_CHALLENGE],
+        confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         status: SessionStatus.CONFIRMED,
       }),
     );
@@ -72,6 +177,7 @@ describe("/sessions/authentication", () => {
 
     expect(response.body).toStrictEqual({
       code: expect.any(String),
+      mode: "oauth",
     });
 
     const found = await TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id });
@@ -79,7 +185,24 @@ describe("/sessions/authentication", () => {
     await expect(argon.assert(response.body.code, found.code)).resolves.not.toThrow();
   });
 
-  test("POST /:id/strategy", async () => {
+  test("should resolve redirect to oidc", async () => {
+    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
+      createTestAuthenticationSession(),
+    );
+
+    const response = await request(server.callback())
+      .post(`/sessions/authentication/${authenticationSession.id}/oidc`)
+      .send({
+        provider: "apple",
+        remember: true,
+      })
+      .expect(302);
+
+    const location = new URL(response.headers.location);
+    expect(location.origin).toBe("https://oidc-redirect.url");
+  });
+
+  test("should create new strategy session", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession(),
     );
@@ -88,12 +211,13 @@ describe("/sessions/authentication", () => {
       .post(`/sessions/authentication/${authenticationSession.id}/strategy`)
       .send({
         email: "test@lindorm.io",
-        method: AuthenticationMethod.EMAIL_OTP,
+        strategy: AuthenticationStrategy.EMAIL_OTP,
       })
       .expect(200);
 
     expect(response.body).toStrictEqual({
       id: expect.any(String),
+      confirm_key: "otp",
       expires_in: 31536000,
       polling_required: false,
       strategy_session_token: expect.any(String),
@@ -102,7 +226,7 @@ describe("/sessions/authentication", () => {
     await expect(TEST_STRATEGY_SESSION_CACHE.find({ id: response.body.id })).resolves.not.toThrow();
   });
 
-  test("POST /:id/verify - with mfa and body", async () => {
+  test("should verify authentication code", async () => {
     const code = randomString(64);
     const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
 
@@ -111,9 +235,8 @@ describe("/sessions/authentication", () => {
         code: await argon.encrypt(code),
         codeChallenge,
         codeChallengeMethod,
-        confirmedLevelOfAssurance: 3,
-        confirmedMethods: [AuthenticationMethod.EMAIL_OTP, AuthenticationMethod.PHONE_OTP],
-        redirectUri: null,
+        confirmedIdentifiers: ["test@email.com", "+46701234567"],
+        confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
         status: SessionStatus.CODE,
       }),
     );
@@ -130,47 +253,6 @@ describe("/sessions/authentication", () => {
       authentication_confirmation_token: expect.any(String),
       expires_in: 60,
     });
-
-    expect(response.headers["set-cookie"]).toEqual([
-      expect.stringMatching(/lindorm_io_authentication_mfa=\S+.+/),
-    ]);
-
-    await expect(
-      TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
-    ).rejects.toThrow(EntityNotFoundError);
-  });
-
-  test("POST /:id/verify - with redirect", async () => {
-    const code = randomString(64);
-    const { codeChallenge, codeChallengeMethod, codeVerifier } = getTestData();
-
-    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
-      createTestAuthenticationSession({
-        code: await argon.encrypt(code),
-        codeChallenge,
-        codeChallengeMethod,
-        confirmedLevelOfAssurance: 3,
-        confirmedMethods: [AuthenticationMethod.EMAIL_OTP, AuthenticationMethod.PHONE_OTP],
-        redirectUri: "https://redirect.uri/path",
-        status: SessionStatus.CODE,
-      }),
-    );
-
-    const response = await request(server.callback())
-      .post(`/sessions/authentication/${authenticationSession.id}/verify`)
-      .send({
-        code: code,
-        code_verifier: codeVerifier,
-      })
-      .expect(302);
-
-    const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://redirect.uri");
-    expect(location.pathname).toBe("/path");
-    expect(location.searchParams.get("authentication_confirmation_token")).toStrictEqual(
-      expect.any(String),
-    );
-    expect(location.searchParams.get("expires_in")).toBe("60");
 
     await expect(
       TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),

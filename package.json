@@ -85,7 +85,14 @@
     ]
   },
   "prettier": {
+    "arrowParens": "always",
+    "bracketSpacing": true,
+    "jsxBracketSameLine": false,
     "printWidth": 100,
+    "semi": true,
+    "singleAttributePerLine": true,
+    "singleQuote": false,
+    "tabWidth": 2,
     "trailingComma": "all"
   },
   "volta": {

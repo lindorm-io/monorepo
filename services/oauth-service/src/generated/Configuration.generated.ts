@@ -97,6 +97,7 @@ interface Services {
 }
 
 interface Service {
+  client_id:    string;
   client_name:  string;
   host:         string;
   issuer:       string;

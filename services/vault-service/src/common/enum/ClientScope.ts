@@ -14,6 +14,8 @@ export enum ClientScope {
   OAUTH_CLIENT_WRITE = "lindorm.io/oauth-service/client/client:write",
   OAUTH_CONSENT_READ = "lindorm.io/oauth-service/client/consent:read",
   OAUTH_CONSENT_WRITE = "lindorm.io/oauth-service/client/consent:write",
+  OAUTH_ELEVATION_READ = "lindorm.io/oauth-service/client/elevation:read",
+  OAUTH_ELEVATION_WRITE = "lindorm.io/oauth-service/client/elevation:write",
   OAUTH_IDENTITY_READ = "lindorm.io/oauth-service/client/identity:read",
   OAUTH_IDENTITY_WRITE = "lindorm.io/oauth-service/client/identity:write",
   OAUTH_LOGOUT_READ = "lindorm.io/oauth-service/client/logout:read",

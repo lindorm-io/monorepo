@@ -45,7 +45,7 @@ oidc_providers:
 
 redis:
   host: localhost
-  port: 3602
+  port: 6379
 
 server:
   domain: https://test.lindorm.io

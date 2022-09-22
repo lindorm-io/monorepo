@@ -1,6 +1,6 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { InitialiseRdcSessionRequestData, RdcSessionMode } from "../../../common";
+import { ClientScope, InitialiseRdcSessionRequestData, RdcSessionMode } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRdcBody } from "../../../util";
@@ -40,6 +40,6 @@ export const initialiseRdcPushNotification = async (
 
   await deviceClient.post("/internal/rdc", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_RDC_WRITE])],
   });
 };

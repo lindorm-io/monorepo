@@ -43,7 +43,7 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
           challengeConfirmationToken: challengeConfirmationToken.token,
           ...rdcSession.confirmPayload,
         },
-        middleware: [clientCredentialsMiddleware(oauthClient)],
+        middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
       });
       break;
 

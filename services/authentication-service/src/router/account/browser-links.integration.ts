@@ -4,14 +4,14 @@ import request from "supertest";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
+import { Environment } from "@lindorm-io/koa";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import {
   TEST_ACCOUNT_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
   TEST_BROWSER_LINK_REPOSITORY,
 } from "../../fixtures/integration";
-import { Environment } from "@lindorm-io/koa";
-import { EntityNotFoundError } from "@lindorm-io/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -33,8 +33,8 @@ describe("/account/browser-link", () => {
     .post("/oauth2/token")
     .times(999)
     .reply(200, {
-      accessToken: "accessToken",
-      expiresIn: 100,
+      access_token: "accessToken",
+      expires_in: 100,
       scope: ["scope"],
     });
 
@@ -77,7 +77,7 @@ describe("/account/browser-link", () => {
     const browserLink = await TEST_BROWSER_LINK_REPOSITORY.find({ accountId: account.id });
 
     expect(response.headers["set-cookie"]).toEqual([
-      `lindorm_io_authentication_browser_link=${browserLink.id}; path=/; expires=Mon, 01 Jan 2120 08:00:00 GMT; domain=https://test.lindorm.io; samesite=none`,
+      `lindorm_io_authentication_browser_link=${browserLink.id}; path=/; expires=Mon, 01 Jan 2120 08:00:00 GMT; httponly`,
     ]);
   });
 

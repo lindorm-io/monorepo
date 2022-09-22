@@ -9,7 +9,7 @@ export class AuthenticationSessionCache extends LindormCache<
     super({
       ...options,
       entityName: "AuthenticationSession",
-      indexedAttributes: ["loginSessionId"],
+      indexedAttributes: [],
       ttlAttribute: "expires",
     });
   }

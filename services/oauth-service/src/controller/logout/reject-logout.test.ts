@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createTestAuthorizationSession, createTestLogoutSession } from "../../fixtures/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 import { rejectLogoutController } from "./reject-logout";
 import { createMockCache } from "@lindorm-io/redis";
 
@@ -17,7 +17,9 @@ describe("rejectLogoutController", () => {
         logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       entity: {
-        logoutSession: createTestAuthorizationSession(),
+        logoutSession: createTestLogoutSession({
+          state: "YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
+        }),
       },
       logger: createMockLogger(),
     };
@@ -27,7 +29,7 @@ describe("rejectLogoutController", () => {
     await expect(rejectLogoutController(ctx)).resolves.toStrictEqual({
       body: {
         redirectTo:
-          "https://test.client.lindorm.io/redirect?error=request_rejected&error_description=logout_rejected&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+          "https://test.client.lindorm.io/redirect?error=request_rejected&error_description=logout_rejected&state=YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
       },
     });
 

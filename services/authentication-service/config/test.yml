@@ -9,7 +9,7 @@ logger:
 
 mongo:
   host: localhost
-  port: 3101
+  port: 27017
   username: root
   password: example
 
@@ -19,7 +19,7 @@ oauth:
 
 redis:
   host: localhost
-  port: 3102
+  port: 6379
 
 server:
   domain: https://test.lindorm.io
@@ -37,7 +37,7 @@ services:
   device_service:
     host: https://device.test.lindorm.io
   identity_service:
-    host: <https://identity.test.lindorm.io
+    host: https://identity.test.lindorm.io
   oauth_service:
     host: https://oauth.test.lindorm.io
   oidc_service:

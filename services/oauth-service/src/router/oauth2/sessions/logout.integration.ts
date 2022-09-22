@@ -1,4 +1,5 @@
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
 import { LogoutSessionType } from "../../../enum";
 import { SessionStatus } from "../../../common";
@@ -10,14 +11,18 @@ import { server } from "../../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
+  createTestConsentSession,
   createTestLogoutSession,
+  createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
   getTestIdToken,
   setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
+  TEST_CONSENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
+  TEST_REFRESH_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -28,16 +33,16 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/sessions/logout", () => {
   beforeAll(setupIntegration);
 
-  test("GET / - BROWSER SESSION", async () => {
+  nock("https://test.client.lindorm.io").post("/logout/back-channel").times(999).reply(200);
+
+  test("should create logout session for browser", async () => {
     const { state } = getTestData();
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        identityId: randomUUID(),
-      }),
+      createTestBrowserSession({ identityId }),
     );
 
     const idToken = getTestIdToken({
@@ -81,16 +86,14 @@ describe("/oauth2/sessions/logout", () => {
     );
   });
 
-  test("GET / - REFRESH SESSION", async () => {
+  test("should create logout session for refresh", async () => {
     const { state } = getTestData();
     const identityId = randomUUID();
 
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const refreshSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        identityId: randomUUID(),
-      }),
+      createTestBrowserSession({ identityId }),
     );
 
     const idToken = getTestIdToken({
@@ -134,12 +137,29 @@ describe("/oauth2/sessions/logout", () => {
     );
   });
 
-  test("GET /verify", async () => {
+  test("should logout browser session", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
+
+    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
+      createTestConsentSession({
+        audiences: [configuration.oauth.client_id, client.id],
+        clientId: client.id,
+        identityId: randomUUID(),
+        scopes: ["openid"],
+      }),
+    );
+
+    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
+      createTestBrowserSession({
+        clients: [client.id],
+        identityId: consentSession.identityId,
+      }),
+    );
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
       createTestLogoutSession({
         clientId: client.id,
+        sessionId: browserSession.id,
         sessionType: LogoutSessionType.BROWSER,
         status: SessionStatus.CONFIRMED,
       }),
@@ -155,19 +175,63 @@ describe("/oauth2/sessions/logout", () => {
 
     const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
-      .set("Cookie", [
-        `lindorm_io_oauth_logout_session=${logoutSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://test.client.lindorm.io");
     expect(location.pathname).toBe("/redirect");
-    expect(location.searchParams.get("state")).toBe("YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow");
+    expect(location.searchParams.get("state")).toBe(logoutSession.state);
 
     expect(response.headers["set-cookie"]).toEqual([
       "lindorm_io_oauth_browser_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
-      "lindorm_io_oauth_logout_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
     ]);
+  });
+
+  test("should logout refresh session", async () => {
+    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+
+    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
+      createTestConsentSession({
+        audiences: [configuration.oauth.client_id, client.id],
+        clientId: client.id,
+        identityId: randomUUID(),
+        scopes: ["openid"],
+      }),
+    );
+
+    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
+      createTestRefreshSession({
+        clientId: client.id,
+        identityId: consentSession.identityId,
+      }),
+    );
+
+    const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
+      createTestLogoutSession({
+        clientId: client.id,
+        sessionId: refreshSession.id,
+        sessionType: LogoutSessionType.REFRESH,
+        status: SessionStatus.CONFIRMED,
+      }),
+    );
+
+    const url = createURL("/oauth2/sessions/logout/verify", {
+      host: "https://test.test",
+      query: {
+        redirectUri: "https://test.client.lindorm.io/redirect",
+        sessionId: logoutSession.id,
+      },
+    });
+
+    const response = await request(server.callback())
+      .get(url.toString().replace("https://test.test", ""))
+      .expect(302);
+
+    const location = new URL(response.headers.location);
+    expect(location.origin).toBe("https://test.client.lindorm.io");
+    expect(location.pathname).toBe("/redirect");
+    expect(location.searchParams.get("state")).toBe(logoutSession.state);
+
+    expect(response.headers["set-cookie"]).toBeUndefined();
   });
 });

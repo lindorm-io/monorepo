@@ -1,8 +1,15 @@
 import { Client, Tenant } from "../entity";
 import { ClientCache, ClientRepository, TenantRepository } from "../infrastructure";
-import { ClientPermission, ClientScope, ClientType, GrantType } from "../common";
 import { argon, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./util/logger";
+import {
+  ClientPermission,
+  ClientScope,
+  ClientType,
+  GrantType,
+  ResponseType,
+  Scope,
+} from "../common";
 
 const ids = {
   authenticationService: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
@@ -11,15 +18,17 @@ const ids = {
   identityService: "9993fa84-bedf-4a93-a421-1f63719cd9d3",
   oidcService: "3e0ab7aa-f445-4031-ad27-d87ff23d2ce2",
   vaultService: "c233687a-c610-412c-985b-5f6e95fbf47d",
+  authApplication: "1061f927-d799-487d-bc30-0061dff84447",
 };
 
 const secrets = {
-  authenticationService: "kHuCFwhRR3joU3sjMPiKC0P5XwB62AAoYHJ6H9T6jJcYcpm3Vnj9AyYDIJGttD1E",
-  communicationService: "8uXj4edcXTOvT7BbB9ecspvfXrujPmIViFr7jw2k5sZVlleDI58WUg6V6HbjG2Md",
-  deviceService: "siKP6qVeEoBxTOPV4Q4Ijiy6laUhgKXaZfrSYWJKBm3IfiO04fie7KIeFJdIbFUJ",
-  identityService: "SXYF5eM47qn2fpqLkaeoy6c1R0AHKPssz0TfCpM3evxJzNasfrgaeFeMByJLmhpq",
-  oidcService: "5NTac6bAnSNAWnMh0pCjABmlv1ca6LUml88gaQrQrBU3aNS6W6LpJp9r3ViclTe8",
-  vaultService: "aOpwpLy8XQhxExub2h68K0Puddy5CM9FO1v1XSZVIhvoSRvGlv0Fih6ofUCrwNmx",
+  authenticationService: "m4Qq7lqmydszhLq4-dR6tzI11CWlfKnckPwUBm_qrlEgWV4ouOgqNVZBsF7xGGQ3",
+  communicationService: "2pBUdV9qyAEh1efe_8sMZUFXw2HPDkct9209UWVLSloY-Rt9fzn_N2wjKbAy-MOX",
+  deviceService: "v5ifdZHwIXV12AlZ7FC8vc1AwgeEqgxNXf5EjmhPyycgKq6U0iIqtZRxIhC2wE1W",
+  identityService: "NnvjOhoTd7SQtuSzKgPU6LoB7mRUjR3i4I5vJVGxJXwuxE6RxP3X2Md5Yv9w6RSF",
+  oidcService: "rjasuBK8yLFR68_n6J_ySa0WA3gwAQN-NHEvVxAMzQDeuqP_lxHY4LN-JTmeXp7R",
+  vaultService: "oRGyqy9VzNFrZKLXs5VV5Gl8gLLXYI4QcLUfO6oEDz7VUMaCwY6srKnqUHha7jha",
+  authApplication: "t3WZCoXASEkk5PTh8hQ_ThOySjbYz7hhHauyz0ZtMelW5TDGt2UhbDctFoD-KAU8",
 };
 
 const repositories = {
@@ -50,6 +59,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.authenticationService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -71,6 +81,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.communicationService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -92,6 +103,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.deviceService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -113,6 +125,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.identityService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -134,6 +147,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.oidcService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -155,6 +169,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.vaultService,
       active: true,
+      audiences: Object.values(ids),
       allowed: {
         grantTypes: [GrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
@@ -172,7 +187,34 @@ const main = async (): Promise<void> => {
   );
   await caches.client.create(vault);
 
+  const auth = await repositories.client.create(
+    new Client({
+      id: ids.authApplication,
+      active: true,
+      allowed: {
+        grantTypes: [GrantType.AUTHORIZATION_CODE, GrantType.REFRESH_TOKEN],
+        responseTypes: [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN],
+        scopes: Object.values(Scope),
+      },
+      host: "http://localhost:4100",
+      name: "lindorm.io/auth-application",
+      permissions: [],
+      redirectUris: ["http://localhost:4100/api/callback"],
+      logoutUri: "http://localhost/logout",
+      secret: await argon.encrypt(secrets.authApplication),
+      tenant: tenant.id,
+      type: ClientType.CONFIDENTIAL,
+    }),
+  );
+  await caches.client.create(auth);
+
   logger.info("Generated Entities", {
+    applications: {
+      auth: {
+        id: ids.authApplication,
+        secret: secrets.authApplication,
+      },
+    },
     services: {
       authentication: {
         id: ids.authenticationService,

@@ -16,8 +16,8 @@ describe("assertAuthorizePrompt", () => {
   test("should succeed without verification", () => {
     expect(() =>
       assertAuthorizePrompt(authorizationSession, {
-        isConsentRequired: false,
-        isAuthenticationRequired: false,
+        consentRequired: false,
+        loginRequired: false,
       }),
     ).not.toThrow();
   });
@@ -25,8 +25,8 @@ describe("assertAuthorizePrompt", () => {
   test("should succeed with login verification", () => {
     expect(() =>
       assertAuthorizePrompt(authorizationSession, {
-        isConsentRequired: false,
-        isAuthenticationRequired: true,
+        consentRequired: false,
+        loginRequired: true,
       }),
     ).not.toThrow();
   });
@@ -34,8 +34,8 @@ describe("assertAuthorizePrompt", () => {
   test("should succeed with consent verification", () => {
     expect(() =>
       assertAuthorizePrompt(authorizationSession, {
-        isConsentRequired: true,
-        isAuthenticationRequired: false,
+        consentRequired: true,
+        loginRequired: false,
       }),
     ).not.toThrow();
   });
@@ -47,8 +47,8 @@ describe("assertAuthorizePrompt", () => {
 
     expect(() =>
       assertAuthorizePrompt(authorizationSession, {
-        isConsentRequired: false,
-        isAuthenticationRequired: true,
+        consentRequired: false,
+        loginRequired: true,
       }),
     ).toThrow(ClientError);
   });
@@ -60,8 +60,8 @@ describe("assertAuthorizePrompt", () => {
 
     expect(() =>
       assertAuthorizePrompt(authorizationSession, {
-        isConsentRequired: true,
-        isAuthenticationRequired: false,
+        consentRequired: true,
+        loginRequired: false,
       }),
     ).toThrow(ClientError);
   });

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { randomString } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import {
@@ -10,12 +10,12 @@ import {
   createTestStrategySession,
 } from "../../fixtures/entity";
 import {
-  TEST_ACCOUNT_REPOSITORY,
-  TEST_AUTHENTICATION_SESSION_CACHE,
-  TEST_STRATEGY_SESSION_CACHE,
   getTestChallengeConfirmationToken,
   getTestStrategySessionToken,
   setupIntegration,
+  TEST_ACCOUNT_REPOSITORY,
+  TEST_AUTHENTICATION_SESSION_CACHE,
+  TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -30,8 +30,8 @@ describe("/sessions/strategy", () => {
     .post("/oauth2/token")
     .times(999)
     .reply(200, {
-      accessToken: "accessToken",
-      expiresIn: 100,
+      access_token: "accessToken",
+      expires_in: 100,
       scope: ["scope"],
     });
 
@@ -57,7 +57,7 @@ describe("/sessions/strategy", () => {
       ],
     });
 
-  test("GET /:id", async () => {
+  test("should return strategy session data", async () => {
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(createTestStrategySession());
 
     const response = await request(server.callback())
@@ -66,28 +66,27 @@ describe("/sessions/strategy", () => {
 
     expect(response.body).toStrictEqual({
       expires: "2022-01-01T08:00:00.000Z",
-      method: "email_otp",
+      strategy: "email_otp",
       status: "pending",
     });
   });
 
-  test("PUT /:id/confirm", async () => {
+  test("should confirm strategy session", async () => {
     const account = await TEST_ACCOUNT_REPOSITORY.create(createTestAccount());
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
+        allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         identityId: null,
-        loginSessionId: null,
-        redirectUri: null,
         remember: false,
-        requestedLevelOfAssurance: 1,
+        requestedLevel: 4,
       }),
     );
 
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
       createTestStrategySession({
         authenticationSessionId: authenticationSession.id,
-        method: AuthenticationMethod.DEVICE_CHALLENGE,
+        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
         nonce: randomString(16),
       }),
     );
@@ -102,7 +101,7 @@ describe("/sessions/strategy", () => {
     });
 
     await request(server.callback())
-      .put(`/sessions/strategy/${strategySession.id}/confirm`)
+      .post(`/sessions/strategy/${strategySession.id}/confirm`)
       .send({
         challenge_confirmation_token: challengeConfirmationToken,
         remember: true,
@@ -114,11 +113,18 @@ describe("/sessions/strategy", () => {
       TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        confirmedLevelOfAssurance: 3,
-        confirmedMethods: ["device_challenge"],
+        allowedStrategies: [
+          "bank_id_se",
+          "email_link",
+          "email_otp",
+          "phone_otp",
+          "time_based_otp",
+          "webauthn",
+        ],
+        confirmedStrategies: ["device_challenge"],
         identityId: account.id,
         remember: true,
-        status: "confirmed",
+        status: "pending",
       }),
     );
 
@@ -131,11 +137,11 @@ describe("/sessions/strategy", () => {
     );
   });
 
-  test("PUT /:id/reject", async () => {
+  test("should reject strategy session", async () => {
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(createTestStrategySession());
 
     await request(server.callback())
-      .put(`/sessions/strategy/${strategySession.id}/reject`)
+      .post(`/sessions/strategy/${strategySession.id}/reject`)
       .expect(204);
 
     await expect(

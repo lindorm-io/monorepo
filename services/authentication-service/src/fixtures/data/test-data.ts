@@ -11,7 +11,7 @@ interface Result {
 export const getTestData = (): Result => {
   const codeVerifier = randomString(32);
   const codeChallengeMethod = PKCEMethod.S256;
-  const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64");
+  const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64url");
 
   const nonce = randomString(16);
 

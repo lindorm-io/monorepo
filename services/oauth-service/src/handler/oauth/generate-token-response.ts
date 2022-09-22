@@ -1,4 +1,4 @@
-import { Client, BrowserSession, RefreshSession } from "../../entity";
+import { Client, BrowserSession, RefreshSession, ConsentSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Scope } from "../../common";
 import { ServerKoaContext } from "../../types";
@@ -18,11 +18,12 @@ export const generateTokenResponse = async (
   ctx: ServerKoaContext,
   client: Client,
   session: BrowserSession | RefreshSession,
-  scopes: Array<string>,
+  consentSession: ConsentSession,
 ): Promise<Partial<ResponseBody>> => {
   const body: Partial<ResponseBody> = {};
 
   const { identityId, nonce } = session;
+  const { audiences, scopes } = consentSession;
 
   const { active, claims, permissions } = await getIdentityUserinfo(ctx, identityId, scopes);
 
@@ -35,6 +36,7 @@ export const generateTokenResponse = async (
   }
 
   const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session, {
+    audiences,
     permissions,
     scopes,
   });
@@ -45,6 +47,7 @@ export const generateTokenResponse = async (
 
   if (scopes.includes(Scope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, session, {
+      audiences,
       claims,
       scopes,
       nonce,

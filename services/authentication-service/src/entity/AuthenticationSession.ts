@@ -1,9 +1,19 @@
 import Joi from "joi";
-import { AuthenticationMethod } from "../enum";
-import { JOI_AUTHENTICATION_METHOD, JOI_PKCE_METHOD } from "../constant";
+import { AuthenticationMode, AuthenticationStrategy } from "../enum";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { PKCEMethod } from "@lindorm-io/core";
-import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS, SessionStatus } from "../common";
+import {
+  JOI_AUTHENTICATION_METHOD,
+  JOI_AUTHENTICATION_STRATEGY,
+  JOI_PKCE_METHOD,
+} from "../constant";
+import {
+  AuthenticationMethod,
+  JOI_GUID,
+  JOI_LEVEL_OF_ASSURANCE,
+  JOI_SESSION_STATUS,
+  SessionStatus,
+} from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -13,24 +23,27 @@ import {
 } from "@lindorm-io/entity";
 
 export interface AuthenticationSessionAttributes extends EntityAttributes {
-  allowedMethods: Array<AuthenticationMethod>;
+  allowedStrategies: Array<AuthenticationStrategy>;
   clientId: string;
   code: string | null;
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
   confirmedIdentifiers: Array<string>;
-  confirmedLevelOfAssurance: LevelOfAssurance;
-  confirmedMethods: Array<AuthenticationMethod>;
+  confirmedOidcLevel: LevelOfAssurance;
+  confirmedOidcProvider: string | null;
+  confirmedStrategies: Array<AuthenticationStrategy>;
   country: string | null;
   emailHint: string | null;
   expires: Date;
   identityId: string | null;
-  loginSessionId: string | null;
+  minimumLevel: LevelOfAssurance;
+  mode: AuthenticationMode;
   nonce: string | null;
   phoneHint: string | null;
-  redirectUri: string | null;
+  recommendedLevel: LevelOfAssurance;
+  recommendedMethods: Array<AuthenticationMethod>;
   remember: boolean;
-  requestedLevelOfAssurance: LevelOfAssurance;
+  requestedLevel: LevelOfAssurance;
   requestedMethods: Array<AuthenticationMethod>;
   status: SessionStatus;
 }
@@ -38,20 +51,22 @@ export interface AuthenticationSessionAttributes extends EntityAttributes {
 export type AuthenticationSessionOptions = Optional<
   AuthenticationSessionAttributes,
   | EntityKeys
-  | "allowedMethods"
+  | "allowedStrategies"
   | "code"
   | "confirmedIdentifiers"
-  | "confirmedLevelOfAssurance"
-  | "confirmedMethods"
+  | "confirmedOidcLevel"
+  | "confirmedOidcProvider"
+  | "confirmedStrategies"
   | "country"
   | "emailHint"
   | "identityId"
-  | "loginSessionId"
+  | "minimumLevel"
   | "nonce"
   | "phoneHint"
-  | "redirectUri"
+  | "recommendedLevel"
+  | "recommendedMethods"
   | "remember"
-  | "requestedLevelOfAssurance"
+  | "requestedLevel"
   | "requestedMethods"
   | "status"
 >;
@@ -60,24 +75,27 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    allowedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    allowedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     clientId: JOI_GUID.required(),
     code: Joi.string().allow(null).required(),
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
     confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
-    confirmedLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-    confirmedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    confirmedOidcLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    confirmedOidcProvider: Joi.string().allow(null).required(),
+    confirmedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     country: Joi.string().lowercase().length(2).allow(null).required(),
     emailHint: Joi.string().allow(null).required(),
     expires: Joi.date().required(),
     identityId: JOI_GUID.allow(null).required(),
-    loginSessionId: JOI_GUID.allow(null).required(),
+    minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    mode: Joi.string().valid(AuthenticationMode.OAUTH, AuthenticationMode.STANDARD).required(),
     nonce: Joi.string().allow(null).required(),
-    redirectUri: Joi.string().uri().allow(null).required(),
     phoneHint: Joi.string().allow(null).required(),
+    recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    recommendedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
     remember: Joi.boolean().required(),
-    requestedLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    requestedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     requestedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
     status: JOI_SESSION_STATUS.required(),
   })
@@ -93,18 +111,21 @@ export class AuthenticationSession
   public readonly country: string | null;
   public readonly emailHint: string | null;
   public readonly expires: Date;
-  public readonly loginSessionId: string | null;
+  public readonly minimumLevel: LevelOfAssurance;
+  public readonly mode: AuthenticationMode;
   public readonly nonce: string | null;
   public readonly phoneHint: string | null;
-  public readonly redirectUri: string | null;
-  public readonly requestedLevelOfAssurance: LevelOfAssurance;
+  public readonly recommendedLevel: LevelOfAssurance;
+  public readonly recommendedMethods: Array<AuthenticationMethod>;
+  public readonly requestedLevel: LevelOfAssurance;
   public readonly requestedMethods: Array<AuthenticationMethod>;
 
-  public allowedMethods: Array<AuthenticationMethod>;
+  public allowedStrategies: Array<AuthenticationStrategy>;
   public code: string | null;
   public confirmedIdentifiers: Array<string>;
-  public confirmedLevelOfAssurance: LevelOfAssurance;
-  public confirmedMethods: Array<AuthenticationMethod>;
+  public confirmedOidcLevel: LevelOfAssurance;
+  public confirmedOidcProvider: string | null;
+  public confirmedStrategies: Array<AuthenticationStrategy>;
   public identityId: string | null;
   public remember: boolean;
   public status: SessionStatus;
@@ -112,24 +133,27 @@ export class AuthenticationSession
   public constructor(options: AuthenticationSessionOptions) {
     super(options);
 
-    this.allowedMethods = options.allowedMethods || [];
+    this.allowedStrategies = options.allowedStrategies || [];
     this.clientId = options.clientId;
     this.code = options.code || null;
     this.codeChallenge = options.codeChallenge;
     this.codeChallengeMethod = options.codeChallengeMethod;
     this.confirmedIdentifiers = options.confirmedIdentifiers || [];
-    this.confirmedLevelOfAssurance = options.confirmedLevelOfAssurance || 0;
-    this.confirmedMethods = options.confirmedMethods || [];
+    this.confirmedOidcLevel = options.confirmedOidcLevel || 0;
+    this.confirmedOidcProvider = options.confirmedOidcProvider || null;
+    this.confirmedStrategies = options.confirmedStrategies || [];
     this.country = options.country || null;
     this.emailHint = options.emailHint || null;
     this.expires = options.expires;
     this.identityId = options.identityId || null;
-    this.loginSessionId = options.loginSessionId || null;
+    this.minimumLevel = options.minimumLevel || 1;
+    this.mode = options.mode;
     this.nonce = options.nonce || null;
     this.phoneHint = options.phoneHint || null;
-    this.redirectUri = options.redirectUri || null;
+    this.recommendedLevel = options.recommendedLevel || 1;
+    this.recommendedMethods = options.recommendedMethods || [];
     this.remember = options.remember === true;
-    this.requestedLevelOfAssurance = options.requestedLevelOfAssurance || 1;
+    this.requestedLevel = options.requestedLevel || 1;
     this.requestedMethods = options.requestedMethods || [];
     this.status = options.status || SessionStatus.PENDING;
   }
@@ -146,24 +170,27 @@ export class AuthenticationSession
     return {
       ...this.defaultJSON(),
 
-      allowedMethods: this.allowedMethods,
+      allowedStrategies: this.allowedStrategies,
       clientId: this.clientId,
       code: this.code,
       codeChallenge: this.codeChallenge,
       codeChallengeMethod: this.codeChallengeMethod,
       confirmedIdentifiers: this.confirmedIdentifiers,
-      confirmedLevelOfAssurance: this.confirmedLevelOfAssurance,
-      confirmedMethods: this.confirmedMethods,
+      confirmedOidcLevel: this.confirmedOidcLevel,
+      confirmedOidcProvider: this.confirmedOidcProvider,
+      confirmedStrategies: this.confirmedStrategies,
       country: this.country,
       emailHint: this.emailHint,
       expires: this.expires,
       identityId: this.identityId,
-      loginSessionId: this.loginSessionId,
+      minimumLevel: this.minimumLevel,
+      mode: this.mode,
       nonce: this.nonce,
       phoneHint: this.phoneHint,
-      redirectUri: this.redirectUri,
+      recommendedLevel: this.recommendedLevel,
+      recommendedMethods: this.recommendedMethods,
       remember: this.remember,
-      requestedLevelOfAssurance: this.requestedLevelOfAssurance,
+      requestedLevel: this.requestedLevel,
       requestedMethods: this.requestedMethods,
       status: this.status,
     };

@@ -1,13 +1,14 @@
 import { BrowserSession, BrowserSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
 import { randomString } from "@lindorm-io/core";
+import { AuthenticationMethod } from "../../common";
 
 export const createTestBrowserSession = (
   options: Partial<BrowserSessionOptions> = {},
 ): BrowserSession =>
   new BrowserSession({
     acrValues: ["loa_2"],
-    amrValues: ["email_otp", "phone_otp"],
+    amrValues: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     clients: [randomUUID(), randomUUID(), randomUUID()],
     country: "se",
     expires: new Date("2021-04-01T08:00:00.000Z"),

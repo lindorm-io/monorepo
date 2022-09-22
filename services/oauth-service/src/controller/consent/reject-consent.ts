@@ -1,9 +1,8 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
-import { createURL } from "@lindorm-io/core";
+import { assertSessionPending, createConsentRejectedUri } from "../../util";
 
 interface RequestData {
   id: string;
@@ -24,29 +23,13 @@ export const rejectConsentController: ServerKoaController<RequestData> = async (
     logger,
   } = ctx;
 
-  if (
-    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
-      authorizationSession.consentStatus,
-    )
-  ) {
-    throw new ClientError("Consent has already been set");
-  }
+  assertSessionPending(authorizationSession.status.consent);
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.consentStatus = SessionStatus.REJECTED;
+  authorizationSession.status.consent = SessionStatus.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 
-  return {
-    body: {
-      redirectTo: createURL(authorizationSession.redirectUri, {
-        query: {
-          error: "request_rejected",
-          error_description: "consent_rejected",
-          state: authorizationSession.state,
-        },
-      }).toString(),
-    },
-  };
+  return { body: { redirectTo: createConsentRejectedUri(authorizationSession) } };
 };

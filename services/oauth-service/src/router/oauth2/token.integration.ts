@@ -12,6 +12,7 @@ import {
   createTestConsentSession,
   createTestBrowserSession,
   createTestRefreshSession,
+  createTestAuthorizationCode,
 } from "../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
@@ -22,6 +23,7 @@ import {
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestRefreshToken,
   setupIntegration,
+  TEST_AUTHORIZATION_CODE_CACHE,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -33,12 +35,12 @@ describe("/oauth2/token", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
-    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
+    .get((uri) => uri.startsWith("/internal/userinfo/"))
     .query(true)
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
-  test("POST / - AUTHORIZATION_CODE", async () => {
+  test("should resolve for authorization code grant type", async () => {
     const { code, codeChallenge, codeChallengeMethod, codeVerifier, nonce, state } = getTestData();
 
     const client = await TEST_CLIENT_CACHE.create(
@@ -48,16 +50,14 @@ describe("/oauth2/token", () => {
     );
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-      }),
+      createTestBrowserSession({ clients: [client.id] }),
     );
 
     const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
       createTestConsentSession({
         audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
+        identityId: browserSession.identityId,
         scopes: client.allowed.scopes,
         sessions: [browserSession.id],
       }),
@@ -65,18 +65,26 @@ describe("/oauth2/token", () => {
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        audiences: [configuration.oauth.client_id, client.id],
         clientId: client.id,
-        code,
-        codeChallenge,
-        codeChallengeMethod,
-        browserSessionId: browserSession.id,
-        consentSessionId: consentSession.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        levelOfAssurance: browserSession.levelOfAssurance,
+        code: {
+          codeChallenge,
+          codeChallengeMethod,
+        },
+        identifiers: {
+          browserSessionId: browserSession.id,
+          consentSessionId: consentSession.id,
+          refreshSessionId: null,
+        },
         nonce,
-        scopes: consentSession.scopes,
         state,
+      }),
+    );
+
+    await TEST_AUTHORIZATION_CODE_CACHE.create(
+      createTestAuthorizationCode({
+        authorizationSessionId: authorizationSession.id,
+        code,
+        expires: new Date("2021-01-01T08:01:00.000Z"),
       }),
     );
 
@@ -102,7 +110,7 @@ describe("/oauth2/token", () => {
     });
   });
 
-  test("POST / - CLIENT_CREDENTIALS", async () => {
+  test("should resolve for client credentials grant type", async () => {
     const client = await TEST_CLIENT_CACHE.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
@@ -127,7 +135,7 @@ describe("/oauth2/token", () => {
     });
   });
 
-  test("POST / - REFRESH_TOKEN", async () => {
+  test("should resolve for refresh token grant type", async () => {
     const client = await TEST_CLIENT_CACHE.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),

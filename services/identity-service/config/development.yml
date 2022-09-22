@@ -10,7 +10,7 @@ logger:
 
 oauth:
   client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
-  client_secret: SXYF5eM47qn2fpqLkaeoy6c1R0AHKPssz0TfCpM3evxJzNasfrgaeFeMByJLmhpq
+  client_secret: NnvjOhoTd7SQtuSzKgPU6LoB7mRUjR3i4I5vJVGxJXwuxE6RxP3X2Md5Yv9w6RSF
 
 server:
   domain: https://development.lindorm.io

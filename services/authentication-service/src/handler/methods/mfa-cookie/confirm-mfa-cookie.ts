@@ -15,7 +15,7 @@ export const confirmMfaCookie = async (
 
   logger.debug("Verifying Cookie");
 
-  const cookieId = ctx.getCookie(MFA_COOKIE_NAME);
+  const cookieId = ctx.cookies.get(MFA_COOKIE_NAME, { signed: true });
   const mfaCookieSession = await mfaCookieSessionCache.find({ id: cookieId });
 
   if (authenticationSession.identityId !== mfaCookieSession.identityId) {

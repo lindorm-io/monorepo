@@ -3,7 +3,7 @@ import { GrantType, ResponseType, Scope } from "../../common";
 import { HttpStatus, Router } from "@lindorm-io/koa";
 import { configuration } from "../../server/configuration";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
@@ -54,7 +54,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     ],
     subjectTypesSupported: ["identity", "client"],
     tokenEndpoint: new URL("/oauth2/token", configuration.server.host).toString(),
-    tokenEndpointAuthMethodsSupported: [],
+    tokenEndpointAuthMethodsSupported: ["client_secret_basic", "client_secret_post"],
     tokenEndpointAuthSigningAlgValuesSupported: ["ES512", "RS512"],
     tokeninfoEndpoint: new URL("/tokeninfo", configuration.server.host).toString(),
     userinfoEndpoint: new URL("/userinfo", configuration.server.host).toString(),

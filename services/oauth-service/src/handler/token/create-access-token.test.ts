@@ -19,6 +19,7 @@ describe("createAccessToken", () => {
   test("should create access token for browser session", () => {
     expect(
       createAccessToken(ctx, createTestClient(), createTestBrowserSession(), {
+        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
         permissions: [],
         scopes: ["scope1", "scope2"],
       }),
@@ -34,6 +35,7 @@ describe("createAccessToken", () => {
   test("should create access token for refresh session", () => {
     expect(
       createAccessToken(ctx, createTestClient(), createTestRefreshSession(), {
+        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
         permissions: [],
         scopes: ["scope1", "scope2"],
       }),

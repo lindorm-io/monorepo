@@ -9,7 +9,10 @@ describe("assertAuthorizeScope", () => {
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      scopes: ["scope1", "scope2"],
+      requestedConsent: {
+        audiences: [],
+        scopes: ["scope1", "scope2"],
+      },
     });
 
     client = createTestClient();

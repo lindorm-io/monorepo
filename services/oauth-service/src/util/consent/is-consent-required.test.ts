@@ -15,7 +15,10 @@ describe("isConsentRequired", () => {
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
       clientId: "client1",
-      scopes: ["scope1", "scope2"],
+      requestedConsent: {
+        audiences: [],
+        scopes: ["scope1", "scope2"],
+      },
     });
 
     browserSession = createTestBrowserSession({
@@ -32,7 +35,10 @@ describe("isConsentRequired", () => {
 
   test("should not require consent when consent is confirmed", () => {
     authorizationSession = createTestAuthorizationSession({
-      consentStatus: SessionStatus.CONFIRMED,
+      status: {
+        login: SessionStatus.PENDING,
+        consent: SessionStatus.CONFIRMED,
+      },
     });
 
     expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(false);
@@ -63,7 +69,10 @@ describe("isConsentRequired", () => {
   test("should require consent when required by scope", () => {
     authorizationSession = createTestAuthorizationSession({
       clientId: "client1",
-      scopes: ["scope4"],
+      requestedConsent: {
+        audiences: [],
+        scopes: ["scope4"],
+      },
     });
 
     expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(true);

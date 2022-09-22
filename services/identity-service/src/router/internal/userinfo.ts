@@ -1,4 +1,4 @@
-import { ClientPermission } from "../../common";
+import { ClientPermission, ClientScope } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, identityEntityMiddleware } from "../../middleware";
 import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
@@ -12,15 +12,13 @@ import {
 const router = new Router<unknown, ServerKoaContext>();
 export default router;
 
-router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-  }),
-);
-
 router.get(
   "/:id",
   paramsMiddleware,
+  clientAuthMiddleware({
+    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
+    scopes: [ClientScope.IDENTITY_IDENTITY_READ],
+  }),
   useSchema(getUserinfoSchema),
   identityEntityMiddleware("data.id"),
   useController(getUserinfoController),
@@ -29,6 +27,10 @@ router.get(
 router.put(
   "/:id",
   paramsMiddleware,
+  clientAuthMiddleware({
+    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
+    scopes: [ClientScope.IDENTITY_IDENTITY_WRITE],
+  }),
   useSchema(addUserinfoSchema),
   identityEntityMiddleware("data.id"),
   useController(addUserinfoController),

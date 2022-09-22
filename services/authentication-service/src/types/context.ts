@@ -18,9 +18,6 @@ import {
   Account,
   AuthenticationSession,
   BrowserLink,
-  ConsentSession,
-  LoginSession,
-  LogoutSession,
   MfaCookieSession,
   StrategySession,
 } from "../entity";
@@ -28,9 +25,6 @@ import {
   AccountRepository,
   AuthenticationSessionCache,
   BrowserLinkRepository,
-  ConsentSessionCache,
-  LoginSessionCache,
-  LogoutSessionCache,
   MfaCookieSessionCache,
   StrategySessionCache,
 } from "../infrastructure";
@@ -46,9 +40,6 @@ interface ServerAxios extends LindormNodeServerAxios {
 
 interface ServerCache extends LindormNodeServerCache {
   authenticationSessionCache: AuthenticationSessionCache;
-  consentSessionCache: ConsentSessionCache;
-  loginSessionCache: LoginSessionCache;
-  logoutSessionCache: LogoutSessionCache;
   mfaCookieSessionCache: MfaCookieSessionCache;
   strategySessionCache: StrategySessionCache;
 }
@@ -57,9 +48,6 @@ interface ServerEntity {
   account: Account;
   authenticationSession: AuthenticationSession;
   browserLink: BrowserLink;
-  consentSession: ConsentSession;
-  loginSession: LoginSession;
-  logoutSession: LogoutSession;
   mfaCookieSession: MfaCookieSession;
   strategySession: StrategySession;
 }

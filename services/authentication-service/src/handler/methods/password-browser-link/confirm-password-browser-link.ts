@@ -49,7 +49,7 @@ export const confirmPasswordBrowserLink = async (
 
   logger.debug("Verifying Cookie");
 
-  const cookieId = ctx.getCookie(BROWSER_LINK_COOKIE_NAME);
+  const cookieId = ctx.cookies.get(BROWSER_LINK_COOKIE_NAME, { signed: true });
   const browserLink = await browserLinkRepository.find({ id: cookieId });
 
   if (identityId !== browserLink.accountId) {

@@ -78,5 +78,5 @@ export const handleRefreshTokenGrant = async (
 
   refreshSession = await refreshSessionRepository.update(refreshSession);
 
-  return generateTokenResponse(ctx, client, refreshSession, consentSession.scopes);
+  return generateTokenResponse(ctx, client, refreshSession, consentSession);
 };

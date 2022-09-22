@@ -2,8 +2,8 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { createAuthorizationVerifyRedirectUri } from "../../util";
-import { flatten, uniq } from "lodash";
+import { createAuthorizationVerifyUri } from "../../util";
+import { difference } from "lodash";
 import {
   ConfirmConsentRequestBody,
   JOI_GUID,
@@ -29,32 +29,65 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
   const {
     cache: { authorizationSessionCache },
     data: { audiences, scopes },
-    entity: { authorizationSession, browserSession, consentSession },
+    entity: { authorizationSession, client },
     logger,
-    repository: { consentSessionRepository },
   } = ctx;
 
   if (
     [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
-      authorizationSession.consentStatus,
+      authorizationSession.status.consent,
     )
   ) {
     throw new ClientError("Consent has already been set");
   }
 
-  logger.debug("Updating consent session");
+  const wrongAudiences = difference(authorizationSession.requestedConsent.audiences, audiences);
 
-  consentSession.audiences = uniq(flatten([consentSession.audiences, audiences])).sort();
-  consentSession.scopes = uniq(flatten([consentSession.scopes, scopes])).sort();
-  consentSession.sessions = uniq(flatten([consentSession.sessions, browserSession.id])).sort();
+  if (wrongAudiences.length) {
+    throw new ClientError("Invalid Audiences", {
+      description: "Unexpected audiences added",
+      data: {
+        expect: authorizationSession.requestedConsent.audiences,
+        actual: audiences,
+        wrong: wrongAudiences,
+      },
+    });
+  }
 
-  await consentSessionRepository.update(consentSession);
+  const missingScopes = difference(client.requiredScopes, scopes);
+
+  if (missingScopes.length) {
+    throw new ClientError("Invalid Scopes", {
+      description: "Required scopes missing",
+      data: {
+        expect: client.requiredScopes,
+        actual: scopes,
+        missing: missingScopes,
+      },
+    });
+  }
+
+  const wrongScopes = difference(authorizationSession.requestedConsent.scopes, scopes);
+
+  if (wrongScopes.length) {
+    throw new ClientError("Invalid Scopes", {
+      description: "Unexpected scopes added",
+      data: {
+        expect: authorizationSession.requestedConsent.scopes,
+        actual: scopes,
+        wrong: wrongScopes,
+      },
+    });
+  }
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.consentStatus = SessionStatus.CONFIRMED;
+  authorizationSession.confirmedConsent.audiences = audiences;
+  authorizationSession.confirmedConsent.scopes = scopes;
+
+  authorizationSession.status.consent = SessionStatus.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createAuthorizationVerifyRedirectUri(authorizationSession) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 };

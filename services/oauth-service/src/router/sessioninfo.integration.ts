@@ -78,15 +78,15 @@ describe("/sessioninfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      browser_sessions: [
+      browser_sessions: expect.arrayContaining([
         {
           clients: [client1.id],
           expires: "2021-04-01T08:00:00.000Z",
           level_of_assurance: 2,
           remember: true,
         },
-      ],
-      clients: [
+      ]),
+      clients: expect.arrayContaining([
         {
           description: "Client description",
           id: client1.id,
@@ -97,8 +97,8 @@ describe("/sessioninfo", () => {
           id: client2.id,
           name: "client2",
         },
-      ],
-      consent_sessions: [
+      ]),
+      consent_sessions: expect.arrayContaining([
         {
           client_id: client1.id,
           scopes: ["openid", "email", "profile"],
@@ -107,14 +107,14 @@ describe("/sessioninfo", () => {
           client_id: client2.id,
           scopes: ["openid", "email", "profile"],
         },
-      ],
-      refresh_sessions: [
+      ]),
+      refresh_sessions: expect.arrayContaining([
         {
           client_id: client2.id,
           expires: "2021-02-01T08:00:00.000Z",
           level_of_assurance: 2,
         },
-      ],
+      ]),
     });
   });
 });

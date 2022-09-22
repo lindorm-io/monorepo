@@ -11,22 +11,12 @@ import {
   AccountRepository,
   AuthenticationSessionCache,
   BrowserLinkRepository,
-  ConsentSessionCache,
-  LoginSessionCache,
-  LogoutSessionCache,
   MfaCookieSessionCache,
   StrategySessionCache,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [
-    AuthenticationSessionCache,
-    ConsentSessionCache,
-    LoginSessionCache,
-    LogoutSessionCache,
-    MfaCookieSessionCache,
-    StrategySessionCache,
-  ],
+  caches: [AuthenticationSessionCache, MfaCookieSessionCache, StrategySessionCache],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,

@@ -1,13 +1,13 @@
 import { AuthenticationSession } from "../entity";
-import { findMethodConfiguration } from "./find-method-configuration";
+import { findStrategyConfig } from "./find-strategy-config";
 
 export const canGenerateMfaCookie = (authenticationSession: AuthenticationSession): boolean => {
-  if (authenticationSession.confirmedMethods.length < 2) {
+  if (authenticationSession.confirmedStrategies.length < 2) {
     return false;
   }
 
-  for (const method of authenticationSession.confirmedMethods) {
-    if (findMethodConfiguration(method).mfaCookie) {
+  for (const strategy of authenticationSession.confirmedStrategies) {
+    if (findStrategyConfig(strategy).mfaCookie) {
       return true;
     }
   }

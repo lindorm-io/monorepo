@@ -1,23 +1,15 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ResponseMode, Scope, SessionStatus } from "../../../common";
+import { AuthenticationMethod, ResponseMode, Scope, SessionStatus } from "../../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
-import { configuration } from "../../../server/configuration";
+import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
 import { createURL } from "@lindorm-io/core";
 import { server } from "../../../server/server";
 import {
-  createTestAuthorizationSession,
-  createTestBrowserSession,
-  createTestClient,
-  createTestConsentSession,
-} from "../../../fixtures/entity";
-import {
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
-  TEST_CONSENT_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -34,39 +26,29 @@ describe("/oauth2/sessions/verify", () => {
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
-  test("GET /verify - QUERY", async () => {
+  test("should resolve redirect with query", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
-
-    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        acrValues: ["loa_3"],
-        amrValues: ["email_otp", "phone_otp"],
-        clients: [],
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        levelOfAssurance: 3,
-      }),
-    );
-
-    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
-        audiences: [configuration.oauth.client_id, client.id],
-        clientId: client.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
-        sessions: [browserSession.id],
-      }),
-    );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        browserSessionId: browserSession.id,
         clientId: client.id,
-        authenticationStatus: SessionStatus.CONFIRMED,
-        consentStatus: SessionStatus.CONFIRMED,
-        consentSessionId: consentSession.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        promptModes: [],
-        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+        confirmedConsent: {
+          audiences: [client.id],
+          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+        },
+        confirmedLogin: {
+          acrValues: ["loa_3"],
+          amrValues: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
+          latestAuthentication: new Date(),
+          levelOfAssurance: 3,
+          remember: true,
+        },
+        responseMode: ResponseMode.QUERY,
+        status: {
+          login: SessionStatus.CONFIRMED,
+          consent: SessionStatus.CONFIRMED,
+        },
       }),
     );
 
@@ -81,8 +63,7 @@ describe("/oauth2/sessions/verify", () => {
     const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
+        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; httponly`,
       ])
       .expect(302);
 
@@ -95,42 +76,38 @@ describe("/oauth2/sessions/verify", () => {
     expect(location.searchParams.get("id_token")).toStrictEqual(expect.any(String));
     expect(location.searchParams.get("state")).toBe(authorizationSession.state);
     expect(location.searchParams.get("token_type")).toBe("Bearer");
+
+    expect(response.headers["set-cookie"]).toStrictEqual(
+      expect.arrayContaining([
+        expect.stringContaining("lindorm_io_oauth_browser_session="),
+        expect.stringContaining("lindorm_io_oauth_authorization_session=;"),
+      ]),
+    );
   });
 
-  test("GET /verify - FORM_POST", async () => {
+  test("should resolve redirect with form post", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
-
-    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(
-      createTestBrowserSession({
-        acrValues: ["loa_3"],
-        amrValues: ["email_otp", "phone_otp"],
-        clients: [],
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        levelOfAssurance: 3,
-      }),
-    );
-
-    const consentSession = await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
-        audiences: [configuration.oauth.client_id, client.id],
-        clientId: client.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
-        sessions: [browserSession.id],
-      }),
-    );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        browserSessionId: browserSession.id,
         clientId: client.id,
-        authenticationStatus: SessionStatus.CONFIRMED,
-        consentStatus: SessionStatus.CONFIRMED,
-        consentSessionId: consentSession.id,
-        identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
-        promptModes: [],
+        confirmedConsent: {
+          audiences: [client.id],
+          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+        },
+        confirmedLogin: {
+          acrValues: ["loa_3"],
+          amrValues: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
+          latestAuthentication: new Date(),
+          levelOfAssurance: 3,
+          remember: true,
+        },
         responseMode: ResponseMode.FORM_POST,
-        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+        status: {
+          login: SessionStatus.CONFIRMED,
+          consent: SessionStatus.CONFIRMED,
+        },
       }),
     );
 
@@ -144,10 +121,7 @@ describe("/oauth2/sessions/verify", () => {
 
     const response = await request(server.callback())
       .get(url.toString().replace("https://test.test", ""))
-      .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-        `lindorm_io_oauth_browser_session=${browserSession.id}; path=/; domain=https://oauth.test.lindorm.io; samesite=none`,
-      ])
+      .set("Cookie", [`lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/;`])
       .expect(308);
 
     const location = new URL(response.headers.location);
@@ -160,8 +134,15 @@ describe("/oauth2/sessions/verify", () => {
       id_token: expect.any(String),
       redirect_data:
         "ZXlKemRISnBibWNpT2lKemRISnBibWNpTENKdWRXMWlaWElpT2pFeU15d2lZbTl2YkdWaGJpSTZkSEoxWlgwPQ==",
-      state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+      state: authorizationSession.state,
       token_type: "Bearer",
     });
+
+    expect(response.headers["set-cookie"]).toStrictEqual(
+      expect.arrayContaining([
+        expect.stringContaining("lindorm_io_oauth_browser_session="),
+        expect.stringContaining("lindorm_io_oauth_authorization_session=;"),
+      ]),
+    );
   });
 });

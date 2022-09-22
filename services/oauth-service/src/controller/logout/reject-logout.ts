@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
-import { createURL } from "@lindorm-io/core";
+import { createLogoutRejectedUri } from "../../util";
 
 interface RequestData {
   id: string;
@@ -34,15 +34,5 @@ export const rejectLogoutController: ServerKoaController<RequestData> = async (
 
   await logoutSessionCache.update(logoutSession);
 
-  return {
-    body: {
-      redirectTo: createURL(logoutSession.redirectUri, {
-        query: {
-          error: "request_rejected",
-          error_description: "logout_rejected",
-          state: logoutSession.state,
-        },
-      }).toString(),
-    },
-  };
+  return { body: { redirectTo: createLogoutRejectedUri(logoutSession) } };
 };

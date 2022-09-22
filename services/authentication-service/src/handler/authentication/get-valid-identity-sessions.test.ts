@@ -26,7 +26,7 @@ describe("getValidIdentitySessions", () => {
   });
 
   test("should resolve valid sessions", async () => {
-    await expect(getValidIdentitySessions(ctx, "1")).resolves.toMatchSnapshot();
+    await expect(getValidIdentitySessions(ctx, "1")).resolves.toStrictEqual(["2", "3", "4"]);
   });
 
   test("should resolve empty array on missing identity", async () => {

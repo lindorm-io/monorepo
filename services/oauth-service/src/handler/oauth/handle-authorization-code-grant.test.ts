@@ -1,25 +1,26 @@
 import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
-import { Scope } from "../../common";
 import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 import {
+  createTestAuthorizationCode,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestConsentSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { randomUUID } from "crypto";
+import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../../util");
 
 jest.mock("./generate-token-response", () => ({
-  generateTokenResponse: jest.fn().mockResolvedValue("body-response"),
+  generateTokenResponse: jest.fn().mockResolvedValue("generateTokenResponse"),
 }));
 
 const assertCodeChallenge = _assertCodeChallenge as jest.Mock;
@@ -31,14 +32,11 @@ describe("handleAuthorizationCodeGrant", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        authorizationSessionCache: createMockCache((options) =>
+        authorizationCodeCache: createMockCache(createTestAuthorizationCode),
+        authorizationSessionCache: createMockCache((opts) =>
           createTestAuthorizationSession({
-            browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
-            clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
-            consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
-            redirectUri: "https://test.client.lindorm.io/redirect",
-            scopes: [Scope.OPENID],
-            ...options,
+            clientId: "1fd075a0-eac1-4809-844b-23c4eb8946c2",
+            ...opts,
           }),
         ),
       },
@@ -49,15 +47,18 @@ describe("handleAuthorizationCodeGrant", () => {
       },
       entity: {
         client: createTestClient({
-          id: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
+          id: "1fd075a0-eac1-4809-844b-23c4eb8946c2",
         }),
       },
       repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
-        consentSessionRepository: createMockRepository((options) =>
+        browserSessionRepository: createMockRepository((opts) =>
+          createTestBrowserSession({
+            id: "38183591-069f-495b-83e8-db3b975ad5b7",
+          }),
+        ),
+        consentSessionRepository: createMockRepository((opts) =>
           createTestConsentSession({
-            sessions: ["36b51c4b-b13d-4a58-81fd-ce8c09a9b362"],
-            ...options,
+            sessions: ["38183591-069f-495b-83e8-db3b975ad5b7"],
           }),
         ),
         refreshSessionRepository: createMockRepository(createTestRefreshSession),
@@ -65,44 +66,41 @@ describe("handleAuthorizationCodeGrant", () => {
     };
   });
 
-  test("should resolve", async () => {
-    await expect(handleAuthorizationCodeGrant(ctx)).resolves.toBe("body-response");
+  test("should resolve refresh session", async () => {
+    await expect(handleAuthorizationCodeGrant(ctx)).resolves.toBe("generateTokenResponse");
 
+    expect(ctx.cache.authorizationCodeCache.find).toHaveBeenCalled();
     expect(ctx.cache.authorizationSessionCache.find).toHaveBeenCalled();
     expect(assertCodeChallenge).toHaveBeenCalled();
     expect(ctx.repository.browserSessionRepository.find).toHaveBeenCalled();
     expect(ctx.repository.consentSessionRepository.find).toHaveBeenCalled();
+    expect(ctx.cache.authorizationCodeCache.destroy).toHaveBeenCalled();
     expect(ctx.cache.authorizationSessionCache.destroy).toHaveBeenCalled();
-    expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalled();
     expect(generateTokenResponse).toHaveBeenCalled();
+
+    expect(ctx.repository.consentSessionRepository.update).toHaveBeenCalled();
+    expect(ctx.repository.browserSessionRepository.update).not.toHaveBeenCalled();
   });
 
-  test("should resolve with refresh session", async () => {
+  test("should resolve browser session", async () => {
     ctx.cache.authorizationSessionCache.find.mockResolvedValue(
       createTestAuthorizationSession({
-        browserSessionId: "36b51c4b-b13d-4a58-81fd-ce8c09a9b362",
-        clientId: "08bac8f5-af23-43a9-bb43-cda6cc2ec2c6",
-        consentSessionId: "6bf190fd-cecd-406d-ba6d-4dd658312ed6",
-        redirectUri: "https://test.client.lindorm.io/redirect",
-        scopes: [Scope.OFFLINE_ACCESS],
+        clientId: "1fd075a0-eac1-4809-844b-23c4eb8946c2",
+        requestedConsent: {
+          audiences: [randomUUID()],
+          scopes: ["openid", "email"],
+        },
       }),
     );
 
-    await expect(handleAuthorizationCodeGrant(ctx)).resolves.toBe("body-response");
+    await expect(handleAuthorizationCodeGrant(ctx)).resolves.toBe("generateTokenResponse");
 
-    expect(ctx.cache.authorizationSessionCache.find).toHaveBeenCalled();
-    expect(assertCodeChallenge).toHaveBeenCalled();
-    expect(ctx.repository.consentSessionRepository.find).toHaveBeenCalled();
-    expect(ctx.cache.authorizationSessionCache.destroy).toHaveBeenCalled();
-    expect(ctx.repository.refreshSessionRepository.create).toHaveBeenCalled();
-    expect(ctx.repository.consentSessionRepository.update).toHaveBeenCalled();
-    expect(generateTokenResponse).toHaveBeenCalled();
+    expect(ctx.repository.consentSessionRepository.update).not.toHaveBeenCalled();
+    expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalled();
   });
 
   test("should throw on invalid client id", async () => {
-    ctx.entity.client = createTestClient({
-      id: "70d3cd6b-0bd1-424c-8bf4-59f94d5876c5",
-    });
+    ctx.entity.client = createTestClient();
 
     await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
   });
@@ -113,9 +111,32 @@ describe("handleAuthorizationCodeGrant", () => {
     await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
   });
 
-  test("should throw on invalid authentication", async () => {
+  test("should throw on invalid browser session (acrValues)", async () => {
     ctx.repository.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
+        id: "38183591-069f-495b-83e8-db3b975ad5b7",
+        acrValues: [],
+      }),
+    );
+
+    await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid browser session (amrValues)", async () => {
+    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+      createTestBrowserSession({
+        id: "38183591-069f-495b-83e8-db3b975ad5b7",
+        amrValues: [],
+      }),
+    );
+
+    await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid browser session (identityId)", async () => {
+    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+      createTestBrowserSession({
+        id: "38183591-069f-495b-83e8-db3b975ad5b7",
         identityId: null,
       }),
     );
@@ -123,10 +144,43 @@ describe("handleAuthorizationCodeGrant", () => {
     await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
   });
 
-  test("should throw on invalid consent", async () => {
+  test("should throw on invalid browser session (levelOfAssurance)", async () => {
+    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+      createTestBrowserSession({
+        id: "38183591-069f-495b-83e8-db3b975ad5b7",
+        levelOfAssurance: 0,
+      }),
+    );
+
+    await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid consent session (audiences)", async () => {
     ctx.repository.consentSessionRepository.find.mockResolvedValue(
-      createTestAuthorizationSession({
+      createTestConsentSession({
         audiences: [],
+        sessions: ["38183591-069f-495b-83e8-db3b975ad5b7"],
+      }),
+    );
+
+    await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid consent session (scopes)", async () => {
+    ctx.repository.consentSessionRepository.find.mockResolvedValue(
+      createTestConsentSession({
+        scopes: [],
+        sessions: ["38183591-069f-495b-83e8-db3b975ad5b7"],
+      }),
+    );
+
+    await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid consent session (sessions)", async () => {
+    ctx.repository.consentSessionRepository.find.mockResolvedValue(
+      createTestConsentSession({
+        sessions: [],
       }),
     );
 

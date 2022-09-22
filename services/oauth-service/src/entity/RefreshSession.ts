@@ -1,5 +1,11 @@
 import Joi from "joi";
-import { JOI_GUID, JOI_LEVEL_OF_ASSURANCE, JOI_LOCALE, JOI_NONCE } from "../common";
+import {
+  AuthenticationMethod,
+  JOI_GUID,
+  JOI_LEVEL_OF_ASSURANCE,
+  JOI_LOCALE,
+  JOI_NONCE,
+} from "../common";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
@@ -13,7 +19,7 @@ import {
 
 export interface RefreshSessionAttributes extends EntityAttributes {
   acrValues: Array<string>;
-  amrValues: Array<string>;
+  amrValues: Array<AuthenticationMethod>;
   clientId: string;
   expires: Date;
   identityId: string;
@@ -61,7 +67,7 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
   public readonly uiLocales: Array<string>;
 
   public acrValues: Array<string>;
-  public amrValues: Array<string>;
+  public amrValues: Array<AuthenticationMethod>;
   public expires: Date;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;

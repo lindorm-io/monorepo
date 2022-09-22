@@ -3,6 +3,8 @@ import { ServerKoaContext } from "../../types";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { configuration } from "../../server/configuration";
 import { getExpiryDate } from "@lindorm-io/core";
+import { calculateLevelOfAssurance, getMethodsFromStrategies } from "../../util";
+import { Environment } from "@lindorm-io/koa";
 
 export const generateMfaCookie = async (
   ctx: ServerKoaContext,
@@ -13,17 +15,22 @@ export const generateMfaCookie = async (
   } = ctx;
 
   const expires = getExpiryDate(configuration.defaults.mfa_cookie_expiry);
+  const { level } = calculateLevelOfAssurance(authenticationSession);
+  const methods = getMethodsFromStrategies(authenticationSession.confirmedStrategies);
 
   const mfaCookieSession = await mfaCookieSessionCache.create(
     new MfaCookieSession({
       expires,
       identityId: authenticationSession.identityId,
-      levelOfAssurance: authenticationSession.confirmedLevelOfAssurance,
-      methods: authenticationSession.confirmedMethods,
+      levelOfAssurance: level,
+      methods,
     }),
   );
 
-  ctx.setCookie(MFA_COOKIE_NAME, mfaCookieSession.id, {
-    expiry: expires,
+  ctx.cookies.set(MFA_COOKIE_NAME, mfaCookieSession.id, {
+    expires,
+    httpOnly: true,
+    overwrite: true,
+    signed: ctx.metadata.environment !== Environment.TEST,
   });
 };

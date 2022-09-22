@@ -1,17 +1,33 @@
-import { ServerKoaContext } from "../../types";
-import { Router, useController } from "@lindorm-io/koa";
-import { logoutSessionCookieMiddleware } from "../../middleware";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  confirmLogoutController,
-  getLogoutInfoController,
-  rejectLogoutController,
+  confirmLogoutSessionController,
+  confirmLogoutSessionSchema,
+  getLogoutSessionDataController,
+  getLogoutSessionDataSchema,
+  rejectLogoutSessionController,
+  rejectLogoutSessionSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
-router.get("/", logoutSessionCookieMiddleware, useController(getLogoutInfoController));
+router.get(
+  "/:id",
+  paramsMiddleware,
+  useSchema(getLogoutSessionDataSchema),
+  useController(getLogoutSessionDataController),
+);
 
-router.put("/confirm", logoutSessionCookieMiddleware, useController(confirmLogoutController));
+router.post(
+  "/:id/confirm",
+  paramsMiddleware,
+  useSchema(confirmLogoutSessionSchema),
+  useController(confirmLogoutSessionController),
+);
 
-router.put("/reject", logoutSessionCookieMiddleware, useController(rejectLogoutController));
+router.post(
+  "/:id/reject",
+  paramsMiddleware,
+  useSchema(rejectLogoutSessionSchema),
+  useController(rejectLogoutSessionController),
+);

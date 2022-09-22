@@ -1,4 +1,4 @@
-import { AuthorizationSession, BrowserSession, Client } from "../../entity";
+import { AuthorizationSession, BrowserSession, Client, ConsentSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ResponseMode, ResponseType, Scope } from "../../common";
@@ -6,7 +6,8 @@ import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
 import { createURL } from "@lindorm-io/core";
 import { getIdentityUserinfo } from "../identity";
-import { setAuthorizationCode } from "./set-authorization-code";
+import { generateAuthorizationCode } from "./generate-authorization-code";
+import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 
 interface Data {
   accessToken: string;
@@ -22,12 +23,14 @@ export const generateCallbackResponse = async (
   ctx: ServerKoaContext,
   authSession: AuthorizationSession,
   browserSession: BrowserSession,
+  consentSession: ConsentSession,
   client: Client,
 ): ControllerResponse => {
   let authorizationSession = authSession;
 
+  const { nonce, redirectUri, responseMode, responseTypes, state } = authorizationSession;
   const { identityId } = browserSession;
-  const { nonce, redirectUri, responseMode, responseTypes, scopes, state } = authorizationSession;
+  const { audiences, scopes } = consentSession;
 
   const { active, claims, permissions } = await getIdentityUserinfo(ctx, identityId, scopes);
 
@@ -41,16 +44,14 @@ export const generateCallbackResponse = async (
 
   const data: Partial<Data> = {};
 
-  if (!authorizationSession.code) {
-    authorizationSession = await setAuthorizationCode(ctx, authorizationSession);
-  }
-
   if (responseTypes.includes(ResponseType.CODE)) {
-    data.code = authorizationSession.code;
+    const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
+    data.code = authorizationCode.code;
   }
 
   if (responseTypes.includes(ResponseType.TOKEN)) {
     const { token: accessToken, expiresIn } = createAccessToken(ctx, client, browserSession, {
+      audiences,
       permissions,
       scopes,
     });
@@ -62,9 +63,10 @@ export const generateCallbackResponse = async (
 
   if (responseTypes.includes(ResponseType.ID_TOKEN) && scopes.includes(Scope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, browserSession, {
+      audiences,
       claims,
-      scopes,
       nonce,
+      scopes,
     });
 
     data.idToken = idToken;
@@ -75,6 +77,8 @@ export const generateCallbackResponse = async (
   if (authorizationSession.redirectData) {
     data.redirectData = authorizationSession.redirectData;
   }
+
+  ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME);
 
   switch (responseMode) {
     case ResponseMode.FORM_POST:

@@ -4,16 +4,18 @@ import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
+import { logger } from "./logger";
 import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
-import { logger } from "./logger";
 import { workers } from "./workers";
 import {
+  AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
   ClientCache,
   ClientRepository,
   ConsentSessionRepository,
+  ElevationSessionCache,
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
@@ -22,8 +24,10 @@ import {
 
 export const server = createNodeServer<ServerKoaContext>({
   caches: [
+    AuthorizationCodeCache,
     AuthorizationSessionCache,
     ClientCache,
+    ElevationSessionCache,
     InvalidTokenCache,
     KeyPairCache,
     LogoutSessionCache,

@@ -14,14 +14,12 @@ export const isConsentRequired = (
     });
   }
 
-  if (!browserSession) {
-    throw new ServerError("Internal Server Error", {
-      description: "Browser Session is missing",
-    });
+  if (authorizationSession.status.consent === SessionStatus.CONFIRMED) {
+    return false;
   }
 
-  if (authorizationSession.consentStatus === SessionStatus.CONFIRMED) {
-    return false;
+  if (!browserSession) {
+    return true;
   }
 
   if (!consentSession) {
@@ -32,11 +30,13 @@ export const isConsentRequired = (
     return true;
   }
 
-  if (!consentSession.audiences.includes(authorizationSession.clientId)) {
+  if (
+    difference(authorizationSession.requestedConsent.audiences, consentSession.audiences).length
+  ) {
     return true;
   }
 
-  if (difference(authorizationSession.scopes, consentSession.scopes).length) {
+  if (difference(authorizationSession.requestedConsent.scopes, consentSession.scopes).length) {
     return true;
   }
 

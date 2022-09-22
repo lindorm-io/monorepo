@@ -12,6 +12,7 @@ import {
 
 interface RequestData {
   id: string;
+  audiences: Array<string>;
   defaults: ClientDefaults;
   description: string | null;
   expiry: ClientExpiry;
@@ -28,6 +29,7 @@ interface RequestData {
 export const updateClientSchema = Joi.object<RequestData>()
   .keys({
     id: JOI_GUID.required(),
+    audiences: Joi.array().items(Joi.string()).optional(),
     defaults: Joi.object()
       .keys({
         displayMode: JOI_DISPLAY_MODE.optional(),
@@ -60,6 +62,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   const {
     cache: { clientCache },
     data: {
+      audiences,
       defaults,
       description,
       expiry,
@@ -76,6 +79,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     repository: { clientRepository },
   } = ctx;
 
+  if (!isUndefined(audiences)) client.audiences = audiences;
   if (!isUndefined(defaults?.displayMode)) client.defaults.displayMode = defaults.displayMode;
   if (!isUndefined(defaults?.levelOfAssurance))
     client.defaults.levelOfAssurance = defaults.levelOfAssurance;

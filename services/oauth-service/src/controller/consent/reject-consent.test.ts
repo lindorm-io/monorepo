@@ -16,7 +16,9 @@ describe("rejectConsentController", () => {
         authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession: createTestAuthorizationSession(),
+        authorizationSession: createTestAuthorizationSession({
+          state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+        }),
       },
       logger: createMockLogger(),
     };
@@ -32,7 +34,9 @@ describe("rejectConsentController", () => {
 
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        consentStatus: SessionStatus.REJECTED,
+        status: expect.objectContaining({
+          consent: SessionStatus.REJECTED,
+        }),
       }),
     );
   });

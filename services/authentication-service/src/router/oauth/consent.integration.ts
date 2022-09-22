@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ClientType, SessionStatus } from "../../common";
-import { createURL, getExpires } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/core";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
 
@@ -12,53 +12,39 @@ jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
 describe("/oauth/consent", () => {
-  const { expires, expiresIn } = getExpires(new Date("2021-01-01T08:30:00.000Z"));
-
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
     .post("/oauth2/token")
     .times(999)
     .reply(200, {
-      accessToken: "accessToken",
-      expiresIn: 100,
+      access_token: "accessToken",
+      expires_in: 100,
       scope: ["scope"],
     });
 
   nock("https://oauth.test.lindorm.io")
-    .put((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/confirm"))
+    .get((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/verify"))
+    .times(999)
+    .reply(200, {
+      redirectTo: "https://oauth-redirect-verify.url/",
+    });
+
+  nock("https://oauth.test.lindorm.io")
+    .post((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
-  nock("https://oauth.test.lindorm.io")
-    .put((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/skip"))
-    .times(999)
-    .reply(200, {
-      redirectTo: "https://oauth-redirect-skip.url/",
-    });
-
-  test("GET /", async () => {
+  test("should redirect to front end", async () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        authorizationSession: {
-          displayMode: "page",
-          expiresAt: expires.toISOString(),
-          expiresIn: expiresIn,
-          uiLocales: "en-GB",
-        },
-        client: {
-          scopeDescriptions: [],
-          description: "description",
-          name: "name",
-          requiredScopes: ["openid"],
-          type: ClientType.PUBLIC,
-          logoUri: "https://logo.uri/",
-        },
-        consentRequired: true,
         consentStatus: SessionStatus.PENDING,
+        client: {
+          type: ClientType.PUBLIC,
+        },
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
           scopes: ["openid", "profile"],
@@ -75,41 +61,20 @@ describe("/oauth/consent", () => {
       .expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://frontend.url");
-    expect(location.pathname).toBe("/consent");
-    expect(location.searchParams.get("display_mode")).toBe("page");
-    expect(location.searchParams.get("ui_locales")).toBe("en-GB");
 
-    expect(response.headers["set-cookie"]).toEqual([
-      expect.stringContaining("lindorm_io_authentication_consent_session="),
-    ]);
-    expect(response.headers["set-cookie"]).toEqual([
-      expect.stringContaining(
-        "; path=/; expires=Fri, 01 Jan 2021 08:30:00 GMT; domain=https://test.lindorm.io; samesite=none",
-      ),
-    ]);
+    expect(location.origin).toBe("https://frontend.url");
+    expect(location.pathname).toBe("/api/consent");
+    expect(location.searchParams.get("session_id")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
-  test("GET / - SKIP", async () => {
+  test("should redirect to verify endpoint on unexpected status", async () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        authorizationSession: {
-          displayMode: "page",
-          expiresAt: expires.toISOString(),
-          expiresIn: expiresIn,
-          uiLocales: "en-GB",
-        },
+        consentStatus: SessionStatus.CONFIRMED,
         client: {
-          scopeDescriptions: [],
-          description: "description",
-          name: "name",
-          requiredScopes: ["openid"],
           type: ClientType.PUBLIC,
-          logoUri: "https://logo.uri/",
         },
-        consentRequired: false,
-        consentStatus: SessionStatus.PENDING,
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
           scopes: ["openid", "profile"],
@@ -117,40 +82,28 @@ describe("/oauth/consent", () => {
       });
 
     const url = createURL("/oauth/consent", {
-      host: "https://test.test",
+      host: "https://rm.rm",
       query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
     });
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
+      .get(url.toString().replace("https://rm.rm", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://oauth-redirect-skip.url");
+    expect(location.origin).toBe("https://oauth-redirect-verify.url");
 
     expect(response.headers["set-cookie"]).toBeUndefined();
   });
 
-  test("GET / - CONFIRM", async () => {
+  test("should confirm confidential clients and redirect", async () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        authorizationSession: {
-          displayMode: "page",
-          expiresAt: expires.toISOString(),
-          expiresIn: expiresIn,
-          uiLocales: "en-GB",
-        },
-        client: {
-          scopeDescriptions: [],
-          description: "description",
-          name: "name",
-          requiredScopes: ["openid"],
-          type: ClientType.CONFIDENTIAL,
-          logoUri: "https://logo.uri/",
-        },
-        consentRequired: true,
         consentStatus: SessionStatus.PENDING,
+        client: {
+          type: ClientType.CONFIDENTIAL,
+        },
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
           scopes: ["openid", "profile"],
@@ -168,7 +121,5 @@ describe("/oauth/consent", () => {
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://oauth-redirect-confirm.url");
-
-    expect(response.headers["set-cookie"]).toBeUndefined();
   });
 });

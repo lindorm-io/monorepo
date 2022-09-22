@@ -3,8 +3,8 @@ import { ClientError } from "@lindorm-io/errors";
 import { PromptMode } from "../../common";
 
 interface Options {
-  isConsentRequired: boolean;
-  isAuthenticationRequired: boolean;
+  consentRequired: boolean;
+  loginRequired: boolean;
 }
 
 export const assertAuthorizePrompt = (
@@ -12,16 +12,16 @@ export const assertAuthorizePrompt = (
   options: Options,
 ): void => {
   const { promptModes } = authorizationSession;
-  const { isConsentRequired, isAuthenticationRequired } = options;
+  const { consentRequired, loginRequired } = options;
 
-  if (isAuthenticationRequired && promptModes.includes(PromptMode.NONE)) {
+  if (consentRequired && promptModes.includes(PromptMode.NONE)) {
     throw new ClientError("Login Required", {
       code: "login_required",
       description: "interaction_required",
     });
   }
 
-  if (isConsentRequired && promptModes.includes(PromptMode.NONE)) {
+  if (loginRequired && promptModes.includes(PromptMode.NONE)) {
     throw new ClientError("Consent Required", {
       code: "consent_required",
       description: "interaction_required",

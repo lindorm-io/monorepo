@@ -1,6 +1,6 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { EmitSocketEventRequestData } from "../../../common";
+import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -44,6 +44,6 @@ export const initialiseSessionOtp = async (
 
   await communicationClient.post("/internal/socket/emit", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 };

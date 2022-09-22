@@ -1,4 +1,3 @@
-import { ServerKoaContext } from "../../../types";
 import { ClientPermission } from "../../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -9,13 +8,15 @@ import {
 import {
   confirmLogoutController,
   confirmLogoutSchema,
-  getLogoutInfoController,
-  getLogoutInfoSchema,
+  getLogoutDataController,
+  getLogoutDataSchema,
+  redirectLogoutController,
+  redirectLogoutSchema,
   rejectLogoutController,
   rejectLogoutSchema,
 } from "../../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
@@ -27,13 +28,13 @@ router.use(
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getLogoutInfoSchema),
+  useSchema(getLogoutDataSchema),
   logoutSessionEntityMiddleware("data.id"),
   clientEntityMiddleware("entity.logoutSession.clientId"),
-  useController(getLogoutInfoController),
+  useController(getLogoutDataController),
 );
 
-router.put(
+router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmLogoutSchema),
@@ -41,7 +42,15 @@ router.put(
   useController(confirmLogoutController),
 );
 
-router.put(
+router.get(
+  "/:id/redirect",
+  paramsMiddleware,
+  useSchema(redirectLogoutSchema),
+  logoutSessionEntityMiddleware("data.id"),
+  useController(redirectLogoutController),
+);
+
+router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectLogoutSchema),

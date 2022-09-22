@@ -16,7 +16,7 @@
     "start": "node dist/server",
     "start:dev": "compd --file docker-compose.yml nodemon",
     "test": "yarn test:unit && yarn test:integration",
-    "test:integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --",
+    "test:integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --forceExit --",
     "test:integration:update": "compd --file docker-compose.yml jest --config jest.config.integration.js -u --",
     "test:integration:watch": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
     "test:unit": "jest --config jest.config.js --",

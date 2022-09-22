@@ -1,4 +1,4 @@
-import { SendCodeRequestData } from "../../../common";
+import { ClientScope, SendCodeRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { StrategySession } from "../../../entity";
 import { argon } from "../../../instance";
@@ -47,6 +47,8 @@ export const initialiseEmailLink = async (
 
   await communicationClient.post("/internal/send/code", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [
+      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+    ],
   });
 };

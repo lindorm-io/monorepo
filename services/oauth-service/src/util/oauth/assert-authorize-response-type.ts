@@ -23,15 +23,15 @@ export const assertAuthorizeResponseType = (
 
   if (
     authorizationSession.responseTypes.includes(ResponseType.CODE) &&
-    (!authorizationSession.codeChallenge || !authorizationSession.codeChallengeMethod)
+    (!authorizationSession.code.codeChallenge || !authorizationSession.code.codeChallengeMethod)
   ) {
     throw new ClientError("Invalid request combination", {
       code: "invalid_request",
       description: "code_challenge and code_challenge_method required for response type: code",
       debug: {
         responseTypes: authorizationSession.responseTypes,
-        codeChallenge: authorizationSession.codeChallenge,
-        codeChallengeMethod: authorizationSession.codeChallengeMethod,
+        codeChallenge: authorizationSession.code.codeChallenge,
+        codeChallengeMethod: authorizationSession.code.codeChallengeMethod,
       },
     });
   }

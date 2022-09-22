@@ -1,10 +1,9 @@
-import { ServerKoaContext } from "../types";
 import { IdentityPermission, Scope } from "../common";
 import { Router, useController } from "@lindorm-io/koa";
 import { rtbfController } from "../controller";
 import { identityAuthMiddleware } from "../middleware";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(

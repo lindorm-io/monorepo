@@ -18,6 +18,6 @@ router.use(
   }),
 );
 
-router.get("/code", useSchema(sendCodeSchema), useController(sendCodeController));
+router.post("/code", useSchema(sendCodeSchema), useController(sendCodeController));
 
-router.get("/otp", useSchema(sendOtpSchema), useController(sendOtpController));
+router.post("/otp", useSchema(sendOtpSchema), useController(sendOtpController));

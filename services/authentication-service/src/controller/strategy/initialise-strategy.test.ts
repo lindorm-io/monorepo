@@ -1,9 +1,9 @@
 import MockDate from "mockdate";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
+import { findStrategyConfig as _findStrategyConfig } from "../../util";
 import { initialiseStrategyController } from "./initialise-strategy";
-import { findMethodConfiguration as _findMethodConfiguration } from "../../util";
 import {
   initialiseRdcQrCode as _initialiseRdcQrCode,
   initialiseSessionAcceptWithCode as _initialiseSessionAcceptWithCode,
@@ -14,7 +14,7 @@ MockDate.set("2022-01-01T07:00:00.000Z");
 jest.mock("../../handler");
 jest.mock("../../util");
 
-const findMethodConfiguration = _findMethodConfiguration as jest.Mock;
+const findStrategyConfig = _findStrategyConfig as jest.Mock;
 const initialiseRdcQrCode = _initialiseRdcQrCode as jest.Mock;
 const initialiseSessionAcceptWithCode = _initialiseSessionAcceptWithCode as jest.Mock;
 
@@ -31,12 +31,12 @@ describe("initialiseStrategyController", () => {
         nin: "nin",
         nonce: "nonce",
         phoneNumber: "phoneNumber",
-        method: AuthenticationMethod.DEVICE_CHALLENGE,
+        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
         username: "username",
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          allowedMethods: Object.values(AuthenticationMethod),
+          allowedStrategies: Object.values(AuthenticationStrategy),
         }),
       },
       jwt: {
@@ -44,8 +44,9 @@ describe("initialiseStrategyController", () => {
       },
     };
 
-    findMethodConfiguration.mockImplementation((name) => ({
+    findStrategyConfig.mockImplementation((name) => ({
       name,
+      confirmKey: "confirm_key",
       pollingRequired: true,
       tokenReturn: true,
     }));
@@ -57,6 +58,7 @@ describe("initialiseStrategyController", () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
+        confirmKey: "confirm_key",
         strategySessionToken: "jwt.jwt.jwt",
         expiresIn: 3600,
         pollingRequired: true,
@@ -67,11 +69,12 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve qr code", async () => {
-    ctx.data.method = AuthenticationMethod.RDC_QR_CODE;
+    ctx.data.strategy = AuthenticationStrategy.RDC_QR_CODE;
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
+        confirmKey: "confirm_key",
         strategySessionToken: "jwt.jwt.jwt",
         expiresIn: 3600,
         pollingRequired: true,
@@ -81,11 +84,12 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve display code", async () => {
-    ctx.data.method = AuthenticationMethod.SESSION_ACCEPT_WITH_CODE;
+    ctx.data.strategy = AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE;
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
+        confirmKey: "confirm_key",
         strategySessionToken: "jwt.jwt.jwt",
         expiresIn: 3600,
         pollingRequired: true,
@@ -95,8 +99,9 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve without token", async () => {
-    findMethodConfiguration.mockImplementation((name) => ({
+    findStrategyConfig.mockImplementation((name) => ({
       name,
+      confirmKey: "confirm_key",
       pollingRequired: true,
       tokenReturn: false,
     }));
@@ -104,6 +109,7 @@ describe("initialiseStrategyController", () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
+        confirmKey: "confirm_key",
         strategySessionToken: null,
         expiresIn: 3600,
         pollingRequired: true,
@@ -112,8 +118,9 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve without polling", async () => {
-    findMethodConfiguration.mockImplementation((name) => ({
+    findStrategyConfig.mockImplementation((name) => ({
       name,
+      confirmKey: "confirm_key",
       pollingRequired: false,
       tokenReturn: true,
     }));
@@ -121,6 +128,7 @@ describe("initialiseStrategyController", () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
+        confirmKey: "confirm_key",
         strategySessionToken: "jwt.jwt.jwt",
         expiresIn: 3600,
         pollingRequired: false,

@@ -1,3 +1,4 @@
+import { AuthorizationSession, Client, ElevationSession, LogoutSession, Tenant } from "../entity";
 import { Axios } from "@lindorm-io/axios";
 import { Controller } from "@lindorm-io/koa";
 import { JwtVerifyData } from "@lindorm-io/jwt";
@@ -12,21 +13,13 @@ import {
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 import {
-  AuthorizationSession,
-  BrowserSession,
-  Client,
-  ConsentSession,
-  InvalidToken,
-  LogoutSession,
-  RefreshSession,
-  Tenant,
-} from "../entity";
-import {
+  AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
   ClientCache,
   ClientRepository,
   ConsentSessionRepository,
+  ElevationSessionCache,
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
@@ -39,20 +32,19 @@ interface ServerAxios extends LindormNodeServerAxios {
 }
 
 interface ServerCache extends LindormNodeServerCache {
+  authorizationCodeCache: AuthorizationCodeCache;
   authorizationSessionCache: AuthorizationSessionCache;
   clientCache: ClientCache;
+  elevationSessionCache: ElevationSessionCache;
   invalidTokenCache: InvalidTokenCache;
   logoutSessionCache: LogoutSessionCache;
 }
 
 interface ServerEntity {
   authorizationSession: AuthorizationSession;
-  browserSession: BrowserSession;
   client: Client;
-  consentSession: ConsentSession;
-  invalidToken: InvalidToken;
+  elevationSession: ElevationSession;
   logoutSession: LogoutSession;
-  refreshSession: RefreshSession;
   tenant: Tenant;
 }
 

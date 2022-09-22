@@ -62,7 +62,7 @@ describe("/.well-known/openid-configuration", () => {
       ],
       subject_types_supported: ["identity", "client"],
       token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
-      token_endpoint_auth_methods_supported: [],
+      token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"],
       token_endpoint_auth_signing_alg_values_supported: ["ES512", "RS512"],
       tokeninfo_endpoint: "https://oauth.test.lindorm.io/tokeninfo",
       userinfo_endpoint: "https://oauth.test.lindorm.io/userinfo",

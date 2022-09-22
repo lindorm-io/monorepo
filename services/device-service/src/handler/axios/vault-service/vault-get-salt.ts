@@ -1,4 +1,4 @@
-import { GetEncryptedRecordResponseBody } from "../../../common";
+import { ClientScope, GetEncryptedRecordResponseBody } from "../../../common";
 import { DeviceLink } from "../../../entity";
 import { DeviceLinkSalt, ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
@@ -17,7 +17,9 @@ export const vaultGetSalt = async (
       params: {
         id: deviceLink.id,
       },
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_READ]),
+      ],
     },
   );
 

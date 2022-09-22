@@ -12,10 +12,14 @@ import {
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
+  AuthorizationCodeCache,
+  ElevationSessionCache,
 } from "../../infrastructure";
 
+export let TEST_AUTHORIZATION_CODE_CACHE: AuthorizationCodeCache;
 export let TEST_AUTHORIZATION_SESSION_CACHE: AuthorizationSessionCache;
 export let TEST_CLIENT_CACHE: ClientCache;
+export let TEST_ELEVATION_SESSION_CACHE: ElevationSessionCache;
 export let TEST_INVALID_TOKEN_CACHE: InvalidTokenCache;
 export let TEST_LOGOUT_SESSION_CACHE: LogoutSessionCache;
 
@@ -32,11 +36,16 @@ export const setupIntegration = async (): Promise<void> => {
   await mongoConnection.connect();
   await redisConnection.connect();
 
+  TEST_AUTHORIZATION_CODE_CACHE = new AuthorizationCodeCache({
+    connection: redisConnection,
+    logger,
+  });
   TEST_AUTHORIZATION_SESSION_CACHE = new AuthorizationSessionCache({
     connection: redisConnection,
     logger,
   });
   TEST_CLIENT_CACHE = new ClientCache({ connection: redisConnection, logger });
+  TEST_ELEVATION_SESSION_CACHE = new ElevationSessionCache({ connection: redisConnection, logger });
   TEST_INVALID_TOKEN_CACHE = new InvalidTokenCache({ connection: redisConnection, logger });
   TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
 

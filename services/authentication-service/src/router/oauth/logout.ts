@@ -1,14 +1,13 @@
 import { ERROR_REDIRECT_URI } from "../../constant";
-import { ServerKoaContext } from "../../types";
-import { initialiseLogoutController, initialiseLogoutSchema } from "../../controller";
+import { redirectLogoutSessionController, redirectLogoutSessionSchema } from "../../controller";
 import { redirectErrorMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(
   "/",
   redirectErrorMiddleware({ redirectUri: ERROR_REDIRECT_URI }),
-  useSchema(initialiseLogoutSchema),
-  useController(initialiseLogoutController),
+  useSchema(redirectLogoutSessionSchema),
+  useController(redirectLogoutSessionController),
 );

@@ -10,27 +10,41 @@ import {
   createTestRefreshSession,
 } from "../../fixtures/entity";
 import {
-  setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
+  tryFindBrowserSession as _tryFindBrowserSession,
   tryFindConsentSession as _tryFindConsentSession,
   tryFindRefreshSession as _tryFindRefreshSession,
 } from "../../handler";
 import {
+  assertAuthorizePrompt as _assertAuthorizePrompt,
+  assertRedirectUri as _assertAuthorizeRedirectUri,
+  assertAuthorizeResponseType as _assertAuthorizeResponseType,
+  assertAuthorizeScope as _assertAuthorizeScope,
+  createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
+  createLoginPendingUri as _createLoginPendingUri,
   filterAcrValues as _filterAcrValues,
-  isAuthenticationRequired as _isAuthenticationRequired,
+  isLoginRequired as _isLoginRequired,
   isConsentRequired as _isConsentRequired,
 } from "../../util";
+import { Environment } from "@lindorm-io/koa";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../../handler");
 jest.mock("../../util");
 
-const filterAcrValues = _filterAcrValues as jest.Mock;
-const isAuthenticationRequired = _isAuthenticationRequired as jest.Mock;
-const isConsentRequired = _isConsentRequired as jest.Mock;
-const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
+const tryFindBrowserSession = _tryFindBrowserSession as jest.Mock;
 const tryFindConsentSession = _tryFindConsentSession as jest.Mock;
 const tryFindRefreshSession = _tryFindRefreshSession as jest.Mock;
+
+const assertAuthorizePrompt = _assertAuthorizePrompt as jest.Mock;
+const assertAuthorizeRedirectUri = _assertAuthorizeRedirectUri as jest.Mock;
+const assertAuthorizeResponseType = _assertAuthorizeResponseType as jest.Mock;
+const assertAuthorizeScope = _assertAuthorizeScope as jest.Mock;
+const createAuthorizationVerifyUri = _createAuthorizationVerifyUri as jest.Mock;
+const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
+const filterAcrValues = _filterAcrValues as jest.Mock;
+const isLoginRequired = _isLoginRequired as jest.Mock;
+const isConsentRequired = _isConsentRequired as jest.Mock;
 
 describe("oauthAuthorizeController", () => {
   let ctx: any;
@@ -41,7 +55,7 @@ describe("oauthAuthorizeController", () => {
         authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       data: {
-        acrValues: "3 phone_otp session_otp email_otp",
+        acrValues: "3 phone session email",
         authToken: "auth.jwt.jwt",
         clientId: "clientId",
         codeChallenge: "codeChallenge",
@@ -61,12 +75,8 @@ describe("oauthAuthorizeController", () => {
         uiLocales: "en-GB en-US",
       },
       entity: {
-        browserSession: createTestBrowserSession({
-          id: "eaad7806-26c8-4c53-9db4-298ebea677c7",
-          nonce: "6LN9WV959LfBXLk1",
-        }),
         client: createTestClient({
-          id: "3bfc20bd-0f18-4717-b535-ffb4a071deba",
+          id: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
         }),
       },
       request: {
@@ -88,77 +98,127 @@ describe("oauthAuthorizeController", () => {
           token: "id.jwt.jwt",
         },
       },
+      metadata: {
+        environment: Environment.DEVELOPMENT,
+      },
+      cookies: {
+        set: jest.fn(),
+      },
     };
 
-    filterAcrValues.mockImplementation(() => ({
-      authenticationMethods: ["phone_otp", "session_otp", "email_otp"],
-      levelOfAssurance: 3,
-    }));
-    isConsentRequired.mockImplementation(() => true);
-    isAuthenticationRequired.mockImplementation(() => true);
+    tryFindBrowserSession.mockResolvedValue(
+      createTestBrowserSession({
+        id: "b60ca053-4fcb-4f86-a453-05f46cb56040",
+      }),
+    );
     tryFindConsentSession.mockResolvedValue(
-      createTestConsentSession({ id: "e7511e5c-e2d9-46c8-bffd-5c47dacc8b10" }),
+      createTestConsentSession({
+        id: "89a009bf-b221-49fd-b56d-c1664c9fb2a1",
+      }),
     );
     tryFindRefreshSession.mockResolvedValue(
-      createTestRefreshSession({ id: "a6b12333-1cb6-46e4-801d-96fc6d040aa6" }),
+      createTestRefreshSession({
+        id: "8326d16e-0eb7-4992-994a-2322bfb87019",
+      }),
     );
-  });
 
-  test("should resolve with redirect to login URL", async () => {
-    const response = (await oauthAuthorizeController(ctx)) as any;
-
-    expect(response.redirect).toStrictEqual(expect.any(URL));
-
-    const url = response.redirect as URL;
-
-    expect(url.origin).toBe("https://authentication.test.lindorm.io");
-    expect(url.pathname).toBe("/oauth/login");
-    expect(url.searchParams.get("session_id")).toStrictEqual(expect.any(String));
+    assertAuthorizePrompt.mockImplementation();
+    assertAuthorizeRedirectUri.mockImplementation();
+    assertAuthorizeResponseType.mockImplementation();
+    assertAuthorizeScope.mockImplementation();
+    createAuthorizationVerifyUri.mockImplementation(() => "createAuthorizationVerifyUri");
+    createLoginPendingUri.mockImplementation(() => "createLoginPendingUri");
+    filterAcrValues.mockImplementation(() => ({
+      levelOfAssurance: 3,
+      methods: ["phone", "session", "email"],
+    }));
+    isLoginRequired.mockImplementation(() => true);
+    isConsentRequired.mockImplementation(() => true);
   });
 
   test("should resolve for all values", async () => {
     await expect(oauthAuthorizeController(ctx)).resolves.toStrictEqual({
-      redirect: expect.any(URL),
+      redirect: "createLoginPendingUri",
     });
+
+    expect(ctx.cookies.set).toHaveBeenCalledWith(
+      "lindorm_io_oauth_authorization_session",
+      expect.any(String),
+      {
+        expires: new Date("2021-01-01T08:30:00.000Z"),
+        httpOnly: true,
+        overwrite: true,
+        signed: true,
+      },
+    );
 
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        audiences: ["3bfc20bd-0f18-4717-b535-ffb4a071deba", "090fd104-7be0-41d1-b877-1c0851318492"],
         authToken: "auth.jwt.jwt",
-        authenticationMethods: ["phone_otp", "session_otp", "email_otp"],
-        authenticationStatus: "pending",
-        browserSessionId: "eaad7806-26c8-4c53-9db4-298ebea677c7",
-        clientId: "3bfc20bd-0f18-4717-b535-ffb4a071deba",
-        code: null,
-        codeChallenge: "codeChallenge",
-        codeChallengeMethod: "codeChallengeMethod",
-        consentSessionId: "e7511e5c-e2d9-46c8-bffd-5c47dacc8b10",
-        consentStatus: "pending",
+        clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+        code: {
+          codeChallenge: "codeChallenge",
+          codeChallengeMethod: "codeChallengeMethod",
+        },
+        confirmedConsent: {
+          audiences: [],
+          scopes: [],
+        },
+        confirmedLogin: {
+          acrValues: [],
+          amrValues: [],
+          identityId: null,
+          latestAuthentication: null,
+          levelOfAssurance: 0,
+          remember: false,
+        },
         country: "se",
         displayMode: "popup",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: "id.jwt.jwt",
-        identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
-        levelOfAssurance: 3,
+        identifiers: {
+          browserSessionId: "b60ca053-4fcb-4f86-a453-05f46cb56040",
+          consentSessionId: "89a009bf-b221-49fd-b56d-c1664c9fb2a1",
+          refreshSessionId: "8326d16e-0eb7-4992-994a-2322bfb87019",
+        },
         loginHint: ["+46705498721", "identity_username", "test@lindorm.io"],
         maxAge: 500,
         nonce: "J2qVbRKmMg1UPCty",
         originalUri: "https://oauth.test.lindorm.io/oauth2/authorize?query=query",
         promptModes: ["login", "consent"],
+        redirectData: null,
         redirectUri: "https://test.lindorm.io/redirect",
+        requestedConsent: {
+          audiences: [
+            "090fd104-7be0-41d1-b877-1c0851318492",
+            "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+            "3bfc20bd-0f18-4717-b535-ffb4a071deba",
+          ],
+          scopes: ["openid", "offline_access"],
+        },
+        requestedLogin: {
+          authenticationMethods: ["phone", "session", "email"],
+          identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
+          levelHint: 3,
+          levelOfAssurance: 3,
+          methodHint: ["phone", "session", "email"],
+        },
         responseMode: "query",
         responseTypes: ["code", "id_token"],
-        scopes: ["openid", "offline_access"],
         state: "l7wj9qEP90kfbAGa",
+        status: {
+          consent: "pending",
+          login: "pending",
+        },
         uiLocales: ["en-GB", "en-US"],
       }),
     );
-
-    expect(setAuthorizationSessionCookie).toHaveBeenCalled();
   });
 
   test("should resolve for minimum values", async () => {
+    tryFindBrowserSession.mockResolvedValue(undefined);
     tryFindConsentSession.mockResolvedValue(undefined);
+    tryFindRefreshSession.mockResolvedValue(undefined);
 
     filterAcrValues.mockImplementation(() => ({
       authenticationMethods: [],
@@ -167,7 +227,6 @@ describe("oauthAuthorizeController", () => {
 
     ctx.data = {
       redirectUri: "https://test.lindorm.io/redirect",
-      responseMode: ResponseMode.QUERY,
       responseType: [ResponseType.CODE].join(" "),
       scope: "openid offline_access",
       state: "l7wj9qEP90kfbAGa",
@@ -179,35 +238,77 @@ describe("oauthAuthorizeController", () => {
 
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        audiences: ["3bfc20bd-0f18-4717-b535-ffb4a071deba"],
         authToken: null,
-        authenticationMethods: [],
-        authenticationStatus: "pending",
-        browserSessionId: "eaad7806-26c8-4c53-9db4-298ebea677c7",
-        clientId: "3bfc20bd-0f18-4717-b535-ffb4a071deba",
-        code: null,
-        codeChallenge: null,
-        codeChallengeMethod: null,
-        consentSessionId: null,
-        consentStatus: "pending",
+        clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+        code: {
+          codeChallenge: null,
+          codeChallengeMethod: null,
+        },
+        confirmedConsent: {
+          audiences: [],
+          scopes: [],
+        },
+        confirmedLogin: {
+          acrValues: [],
+          amrValues: [],
+          identityId: null,
+          latestAuthentication: null,
+          levelOfAssurance: 0,
+          remember: false,
+        },
         country: null,
         displayMode: "popup",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: null,
-        identityId: null,
-        levelOfAssurance: 3,
+        identifiers: {
+          browserSessionId: null,
+          consentSessionId: null,
+          refreshSessionId: null,
+        },
         loginHint: [],
         maxAge: null,
-        nonce: "6LN9WV959LfBXLk1",
+        nonce: null,
         originalUri: "https://oauth.test.lindorm.io/oauth2/authorize?query=query",
         promptModes: [],
+        redirectData: null,
         redirectUri: "https://test.lindorm.io/redirect",
-        refreshSessionId: "a6b12333-1cb6-46e4-801d-96fc6d040aa6",
+        requestedConsent: {
+          audiences: ["0930e3aa-a00c-4cd1-9d29-57b90e20cd95"],
+          scopes: ["openid", "offline_access"],
+        },
+        requestedLogin: {
+          authenticationMethods: [],
+          identityId: null,
+          levelHint: 0,
+          levelOfAssurance: 3,
+          methodHint: [],
+        },
         responseMode: "query",
         responseTypes: ["code"],
-        scopes: ["openid", "offline_access"],
         state: "l7wj9qEP90kfbAGa",
+        status: {
+          consent: "pending",
+          login: "pending",
+        },
         uiLocales: [],
+      }),
+    );
+  });
+
+  test("should resolve verify uri for skipped login", async () => {
+    isLoginRequired.mockImplementation(() => false);
+    isConsentRequired.mockImplementation(() => false);
+
+    await expect(oauthAuthorizeController(ctx)).resolves.toStrictEqual({
+      redirect: "createAuthorizationVerifyUri",
+    });
+
+    expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: {
+          consent: "skip",
+          login: "skip",
+        },
       }),
     );
   });

@@ -1,3 +1,4 @@
+import { AuthenticationMethod } from "../common";
 import { calculateUpdatedLoa as _calculateUpdatedLoa } from "./calculate-updated-loa";
 import { createTestBrowserSession } from "../fixtures/entity";
 import { getUnixTime } from "date-fns";
@@ -14,13 +15,13 @@ describe("updateSessionWithAuthToken", () => {
   beforeEach(() => {
     session = createTestBrowserSession({
       acrValues: ["loa_2"],
-      amrValues: ["email_otp"],
+      amrValues: [AuthenticationMethod.EMAIL],
       latestAuthentication: new Date("2000-01-01T01:00:00.000Z"),
       levelOfAssurance: 2,
     });
 
     token = {
-      authMethodsReference: ["email_otp", "device_challenge"],
+      authMethodsReference: [AuthenticationMethod.EMAIL, AuthenticationMethod.DEVICE_LINK],
       authTime: getUnixTime(new Date("2020-01-01T02:00:00.000Z")),
     };
 
@@ -31,7 +32,7 @@ describe("updateSessionWithAuthToken", () => {
     expect(updateSessionWithAuthToken(session, token)).toStrictEqual(
       expect.objectContaining({
         acrValues: ["loa_3"],
-        amrValues: ["device_challenge", "email_otp"],
+        amrValues: ["device_link", "email"],
         latestAuthentication: new Date("2020-01-01T02:00:00.000Z"),
         levelOfAssurance: 3,
       }),

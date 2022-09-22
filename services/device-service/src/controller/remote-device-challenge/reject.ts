@@ -36,7 +36,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
           rdcSessionStatus: rdcSession.status,
           ...rdcSession.rejectPayload,
         },
-        middleware: [clientCredentialsMiddleware(oauthClient)],
+        middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
       });
       break;
 

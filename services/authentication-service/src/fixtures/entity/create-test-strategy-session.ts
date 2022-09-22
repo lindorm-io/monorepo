@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { SessionStatus } from "../../common";
 import { StrategySession, StrategySessionOptions } from "../../entity";
 import { baseHash, randomNumber, randomString } from "@lindorm-io/core";
@@ -17,7 +17,7 @@ export const createTestStrategySession = (
     otp: baseHash(randomNumber(6).toString()),
     phoneNumber: `07${randomNumber(8)}`,
     status: SessionStatus.PENDING,
-    method: AuthenticationMethod.EMAIL_OTP,
+    strategy: AuthenticationStrategy.EMAIL_OTP,
     username: "username",
     ...options,
   });

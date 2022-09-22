@@ -1,17 +1,18 @@
 import MockDate from "mockdate";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationMethod } from "../../common";
 import { AuthenticationSession } from "../../entity";
+import { AuthenticationStrategy } from "../../enum";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
-import { resolveAllowedMethods as _resolveAllowedMethods } from "./resolve-allowed-methods";
+import { resolveAllowedStrategies as _resolveAllowedStrategies } from "./resolve-allowed-strategies";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("./resolve-allowed-methods");
+jest.mock("./resolve-allowed-strategies");
 
-const resolveAllowedMethods = _resolveAllowedMethods as jest.Mock;
+const resolveAllowedStrategies = _resolveAllowedStrategies as jest.Mock;
 
 describe("handleAuthenticationInitialisation", () => {
   let ctx: any;
@@ -35,11 +36,11 @@ describe("handleAuthenticationInitialisation", () => {
       nonce: "nonce",
       codeChallenge: "codeChallenge",
       codeChallengeMethod: "codeChallengeMethod",
-      requestedLevelOfAssurance: 4,
-      requestedMethods: [AuthenticationMethod.EMAIL_LINK],
+      requestedLevel: 4,
+      requestedMethods: [AuthenticationMethod.EMAIL],
     };
 
-    resolveAllowedMethods.mockResolvedValue([AuthenticationMethod.DEVICE_CHALLENGE]);
+    resolveAllowedStrategies.mockResolvedValue([AuthenticationStrategy.DEVICE_CHALLENGE]);
   });
 
   test("should resolve", async () => {

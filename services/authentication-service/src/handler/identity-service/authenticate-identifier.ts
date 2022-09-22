@@ -5,6 +5,7 @@ import { removeEmptyFromObject } from "@lindorm-io/core";
 import {
   AuthenticateIdentifierRequestData,
   AuthenticateIdentifierResponseBody,
+  ClientScope,
   IdentifierType,
 } from "../../common";
 
@@ -32,10 +33,12 @@ export const authenticateIdentifier = async (
   });
 
   const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
-    "/internal/identifiers/authenticate",
+    "/internal/authenticate",
     {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [
+        clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTIFIER_WRITE]),
+      ],
     },
   );
 

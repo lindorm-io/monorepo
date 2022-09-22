@@ -1,14 +1,14 @@
-import { ServerKoaContext } from "../../../types";
+import { ERROR_REDIRECT_URI } from "../../../constant";
 import {
   clientEntityMiddleware,
   idTokenMiddleware,
-  logoutSessionCookieMiddleware,
+  logoutSessionEntityMiddleware,
 } from "../../../middleware";
 import {
   oauthLogoutController,
   oauthLogoutSchema,
-  oauthVerifyLogoutController,
-  oauthVerifyLogoutSchema,
+  verifyLogoutController,
+  verifyLogoutSchema,
 } from "../../../controller";
 import {
   Router,
@@ -17,9 +17,8 @@ import {
   useSchema,
   useAssertion,
 } from "@lindorm-io/koa";
-import { ERROR_REDIRECT_URI } from "../../../constant";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(
@@ -38,7 +37,7 @@ router.get(
 router.get(
   "/verify",
   redirectErrorMiddleware({ path: "data.redirectUri", redirectUri: ERROR_REDIRECT_URI }),
-  useSchema(oauthVerifyLogoutSchema),
-  logoutSessionCookieMiddleware,
-  useController(oauthVerifyLogoutController),
+  useSchema(verifyLogoutSchema),
+  logoutSessionEntityMiddleware("data.sessionId"),
+  useController(verifyLogoutController),
 );

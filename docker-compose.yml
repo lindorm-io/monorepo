@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mongo:
     image: mongo
-    container_name: mongo
+    container_name: mongo_dev
     labels:
       - mongo
     ports:
@@ -11,11 +11,15 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
+    volumes:
+      - ./.data/mongo:/data/db
 
   redis:
     image: redis
-    container_name: redis
+    container_name: redis_dev
     labels:
       - redis
     ports:
       - "6379:6379"
+    volumes:
+      - ./.data/redis:/var/lib/redis

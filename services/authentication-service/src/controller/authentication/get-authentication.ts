@@ -1,30 +1,31 @@
 import Joi from "joi";
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationMode } from "../../enum";
+import { ClientConfig, ServerKoaController } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
-import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
-import { calculatePrioritizedMethod } from "../../util";
+import { generateClientConfig } from "../../util";
 import { randomString } from "@lindorm-io/core";
 
-interface RequestData {
+type RequestData = {
   id: string;
-}
+};
 
-interface CodeResponseBody {
+type CodeResponseBody = {
   code: string;
-}
+  mode: AuthenticationMode;
+};
 
-interface PendingResponseBody {
-  allowedMethods: Array<AuthenticationMethod>;
+type PendingResponseBody = {
+  clientConfig: Array<ClientConfig>;
   emailHint: string | null;
   expires: Date;
+  mode: AuthenticationMode;
+  oidcProviders: Array<string>;
   phoneHint: string | null;
-  prioritizedMethod: AuthenticationMethod;
-  requestedMethods: Array<AuthenticationMethod>;
   status: SessionStatus;
-}
+};
 
 type ResponseBody = CodeResponseBody | PendingResponseBody;
 
@@ -38,6 +39,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
+    axios: { oidcClient },
     cache: { authenticationSessionCache },
     entity: { authenticationSession },
   } = ctx;
@@ -58,17 +60,33 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
 
     await authenticationSessionCache.update(authenticationSession);
 
-    return { body: { code } };
+    return { body: { code, mode: authenticationSession.mode } };
+  }
+
+  const clientConfig = generateClientConfig(authenticationSession);
+
+  let oidcProviders = [];
+
+  if (
+    !authenticationSession.confirmedOidcProvider &&
+    !authenticationSession.confirmedOidcLevel &&
+    !authenticationSession.confirmedStrategies.length
+  ) {
+    const {
+      data: { providers },
+    } = await oidcClient.get("/providers");
+
+    oidcProviders = providers;
   }
 
   return {
     body: {
-      allowedMethods: authenticationSession.allowedMethods,
+      clientConfig,
       emailHint: authenticationSession.emailHint,
       expires: authenticationSession.expires,
+      mode: authenticationSession.mode,
+      oidcProviders,
       phoneHint: authenticationSession.phoneHint,
-      prioritizedMethod: calculatePrioritizedMethod(authenticationSession),
-      requestedMethods: authenticationSession.requestedMethods,
       status: authenticationSession.status,
     },
   };

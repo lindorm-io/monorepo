@@ -1,4 +1,4 @@
 export * from "./confirm-consent";
-export * from "./get-consent-info";
+export * from "./get-consent-data";
+export * from "./redirect-consent";
 export * from "./reject-consent";
-export * from "./skip-consent";

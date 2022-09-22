@@ -3,10 +3,14 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
-import { assertPKCE, createURL } from "@lindorm-io/core";
-import { calculateLevelOfAssurance, canGenerateMfaCookie } from "../../util";
+import { assertPKCE } from "@lindorm-io/core";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
+import {
+  calculateLevelOfAssurance,
+  canGenerateMfaCookie,
+  getMethodsFromStrategies,
+} from "../../util";
 import {
   AuthenticationConfirmationTokenClaims,
   JOI_GUID,
@@ -47,24 +51,31 @@ export const verifyAuthenticationController: ServerKoaController<
 
   await argon.assert(code, authenticationSession.code);
 
-  const { maximumLevelOfAssurance } = calculateLevelOfAssurance(authenticationSession);
+  const { level, maximum } = calculateLevelOfAssurance(authenticationSession);
+
+  const authMethodsReference: Array<string> = getMethodsFromStrategies(
+    authenticationSession.confirmedStrategies,
+  );
+  if (authenticationSession.confirmedOidcProvider) {
+    authMethodsReference.push("oidc");
+  }
 
   const { expiresIn, token: authenticationConfirmationToken } = jwt.sign<
     never,
     AuthenticationConfirmationTokenClaims
   >({
     audiences: [authenticationSession.clientId],
-    authContextClass: [`loa_${authenticationSession.confirmedLevelOfAssurance}`],
-    authMethodsReference: authenticationSession.confirmedMethods,
+    authContextClass: [`loa_${level}`],
+    authMethodsReference,
     authTime: getUnixTime(new Date()),
     claims: {
       country: authenticationSession.country,
       remember: authenticationSession.remember,
-      maximumLoa: maximumLevelOfAssurance,
+      maximumLoa: maximum,
       verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
     },
     expiry: "60 seconds",
-    levelOfAssurance: authenticationSession.confirmedLevelOfAssurance,
+    levelOfAssurance: level,
     nonce: authenticationSession.nonce,
     scopes: ["authentication"],
     sessionId: authenticationSession.id,
@@ -78,14 +89,6 @@ export const verifyAuthenticationController: ServerKoaController<
   }
 
   await authenticationSessionCache.destroy(authenticationSession);
-
-  if (authenticationSession.redirectUri) {
-    return {
-      redirect: createURL(authenticationSession.redirectUri, {
-        query: { authenticationConfirmationToken, expiresIn },
-      }),
-    };
-  }
 
   return { body: { authenticationConfirmationToken, expiresIn } };
 };

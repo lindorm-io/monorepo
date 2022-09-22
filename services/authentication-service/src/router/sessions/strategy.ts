@@ -1,4 +1,3 @@
-import { ServerKoaContext } from "../../types";
 import { paramsMiddleware, Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import {
   authenticationSessionEntityMiddleware,
@@ -14,7 +13,7 @@ import {
   rejectStrategySchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(
@@ -25,7 +24,7 @@ router.get(
   useController(getStrategyInfoController),
 );
 
-router.put(
+router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmStrategySchema),
@@ -42,7 +41,7 @@ router.put(
   useController(confirmStrategyController),
 );
 
-router.put(
+router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectStrategySchema),

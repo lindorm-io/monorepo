@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
-import { RefreshSession } from "../../entity";
+import { AuthorizationCode, RefreshSession } from "../../entity";
 import { Scope } from "../../common";
 import { assertCodeChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
@@ -13,19 +13,31 @@ export const handleAuthorizationCodeGrant = async (
   ctx: ServerKoaContext<OAuthTokenRequestData>,
 ): Promise<Partial<OAuthTokenResponseBody>> => {
   const {
-    cache: { authorizationSessionCache },
+    cache: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
     repository: { browserSessionRepository, consentSessionRepository, refreshSessionRepository },
   } = ctx;
 
+  let authorizationCode: AuthorizationCode;
+
+  try {
+    authorizationCode = await authorizationCodeCache.find({ code });
+  } catch (err) {
+    throw new ClientError("Invalid Request", {
+      code: "invalid_code",
+      description: "Invalid Code",
+      error: err,
+    });
+  }
+
   const authorizationSession = await authorizationSessionCache.find({
-    code,
+    id: authorizationCode.authorizationSessionId,
   });
 
   assertCodeChallenge(
-    authorizationSession.codeChallenge,
-    authorizationSession.codeChallengeMethod,
+    authorizationSession.code.codeChallenge,
+    authorizationSession.code.codeChallengeMethod,
     codeVerifier,
   );
 
@@ -44,7 +56,7 @@ export const handleAuthorizationCodeGrant = async (
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: authorizationSession.browserSessionId,
+    id: authorizationSession.identifiers.browserSessionId,
   });
 
   if (
@@ -66,7 +78,7 @@ export const handleAuthorizationCodeGrant = async (
   }
 
   const consentSession = await consentSessionRepository.find({
-    id: authorizationSession.consentSessionId,
+    id: authorizationSession.identifiers.consentSessionId,
   });
 
   if (
@@ -84,9 +96,10 @@ export const handleAuthorizationCodeGrant = async (
     });
   }
 
+  await authorizationCodeCache.destroy(authorizationCode);
   await authorizationSessionCache.destroy(authorizationSession);
 
-  if (authorizationSession.scopes.includes(Scope.OFFLINE_ACCESS)) {
+  if (authorizationSession.requestedConsent.scopes.includes(Scope.OFFLINE_ACCESS)) {
     const refreshSession = await refreshSessionRepository.create(
       new RefreshSession({
         acrValues: browserSession.acrValues,
@@ -98,21 +111,21 @@ export const handleAuthorizationCodeGrant = async (
         identityId: browserSession.identityId,
         levelOfAssurance: browserSession.levelOfAssurance,
         nonce: browserSession.nonce,
-        previousRefreshSessionId: authorizationSession.refreshSessionId,
+        previousRefreshSessionId: authorizationSession.identifiers.refreshSessionId,
         uiLocales: browserSession.uiLocales,
       }),
     );
 
-    consentSession.sessions = uniq(flatten([consentSession.sessions, refreshSession.id]));
+    consentSession.sessions = uniq(flatten([consentSession.sessions, refreshSession.id])).sort();
 
     await consentSessionRepository.update(consentSession);
 
-    return generateTokenResponse(ctx, client, refreshSession, consentSession.scopes);
+    return generateTokenResponse(ctx, client, refreshSession, consentSession);
   } else {
-    browserSession.clients = uniq(flatten([browserSession.clients, client.id]));
+    browserSession.clients = uniq(flatten([browserSession.clients, client.id])).sort();
 
     await browserSessionRepository.update(browserSession);
   }
 
-  return generateTokenResponse(ctx, client, browserSession, consentSession.scopes);
+  return generateTokenResponse(ctx, client, browserSession, consentSession);
 };

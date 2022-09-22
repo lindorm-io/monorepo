@@ -9,7 +9,7 @@ logger:
 
 mongo:
   host: localhost
-  port: 3501
+  port: 27017
   username: root
   password: example
 
@@ -18,7 +18,7 @@ oauth:
 
 redis:
   host: localhost
-  port: 3502
+  port: 6379
 
 server:
   domain: https://test.lindorm.io

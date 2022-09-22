@@ -1,11 +1,6 @@
-import { ServerKoaContext } from "../../types";
 import { ERROR_REDIRECT_URI } from "../../constant";
+import { clientEntityMiddleware, idTokenMiddleware } from "../../middleware";
 import { oauthAuthorizeController, oauthAuthorizeSchema } from "../../controller";
-import {
-  clientEntityMiddleware,
-  browserSessionCookieMiddleware,
-  idTokenMiddleware,
-} from "../../middleware";
 import {
   Router,
   redirectErrorMiddleware,
@@ -14,7 +9,7 @@ import {
   useAssertion,
 } from "@lindorm-io/koa";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(
@@ -27,6 +22,5 @@ router.get(
     fromPath: { actual: "entity.client.active" },
   }),
   idTokenMiddleware("data.idTokenHint", { optional: true }),
-  browserSessionCookieMiddleware,
   useController(oauthAuthorizeController),
 );

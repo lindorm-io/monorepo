@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "../../enum";
+import { AuthenticationStrategy } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
 import { assertPKCE as _assertPKCE } from "@lindorm-io/core";
@@ -41,12 +41,9 @@ describe("verifyAuthenticationController", () => {
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          confirmedLevelOfAssurance: 3,
-          confirmedMethods: [AuthenticationMethod.DEVICE_CHALLENGE],
+          confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: "9ebc4bb6-507c-4c9c-b77e-e5f8432431b7",
-          loginSessionId: null,
           nonce: "nonce",
-          redirectUri: null,
           status: SessionStatus.CODE,
         }),
       },
@@ -70,7 +67,7 @@ describe("verifyAuthenticationController", () => {
     generateMfaCookie.mockResolvedValue(undefined);
   });
 
-  test("should resolve with body", async () => {
+  test("should resolve", async () => {
     await expect(verifyAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         authenticationConfirmationToken: "jwt.jwt.jwt",
@@ -88,25 +85,6 @@ describe("verifyAuthenticationController", () => {
     await expect(verifyAuthenticationController(ctx)).resolves.toBeTruthy();
 
     expect(generateMfaCookie).toHaveBeenCalled();
-  });
-
-  test("should resolve with redirect", async () => {
-    ctx.entity.authenticationSession = createTestAuthenticationSession({
-      confirmedLevelOfAssurance: 3,
-      confirmedMethods: [AuthenticationMethod.DEVICE_CHALLENGE],
-      identityId: "9ebc4bb6-507c-4c9c-b77e-e5f8432431b7",
-      loginSessionId: null,
-      nonce: "nonce",
-      redirectUri: "https://redirect.uri/with/route?and=query",
-      status: SessionStatus.CODE,
-    });
-
-    const response = (await verifyAuthenticationController(ctx)) as any;
-
-    expect(response.redirect).toStrictEqual(expect.any(URL));
-    expect(response.redirect.toString()).toBe(
-      "https://redirect.uri/with/route?and=query&authentication_confirmation_token=jwt.jwt.jwt&expires_in=999",
-    );
   });
 
   test("should throw on invalid status", async () => {

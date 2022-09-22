@@ -7,8 +7,10 @@ import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";
 import { randomString } from "@lindorm-io/core";
+import { flatten, uniq } from "lodash";
 
 interface Options {
+  audiences: Array<string>;
   permissions: Array<string>;
   scopes: Array<string>;
 }
@@ -23,7 +25,7 @@ export const createAccessToken = (
 
   return jwt.sign({
     adjustedAccessLevel: getAdjustedAccessLevel(session),
-    audiences: [client.id],
+    audiences: uniq(flatten([client.id, options.audiences, configuration.oauth.client_id])).sort(),
     authTime: getUnixTime(session.latestAuthentication),
     expiry: client.expiry.accessToken || configuration.defaults.expiry.access_token,
     levelOfAssurance: session.levelOfAssurance,

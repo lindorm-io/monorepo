@@ -39,12 +39,9 @@ describe("/callback", () => {
       scope: ["scope"],
     });
 
-  nock("https://identity.test.lindorm.io")
-    .post("/internal/identifiers/authenticate")
-    .times(999)
-    .reply(200, {
-      identity_id: "30340f34-6520-46a5-bc77-ee1346145903",
-    });
+  nock("https://identity.test.lindorm.io").post("/internal/authenticate").times(999).reply(200, {
+    identity_id: "30340f34-6520-46a5-bc77-ee1346145903",
+  });
 
   nock("https://identity.test.lindorm.io")
     .put("/internal/userinfo/30340f34-6520-46a5-bc77-ee1346145903")

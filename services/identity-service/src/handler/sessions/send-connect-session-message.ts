@@ -1,5 +1,5 @@
 import { ConnectSession, Identifier } from "../../entity";
-import { SendCodeRequestData } from "../../common";
+import { ClientScope, SendCodeRequestData } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -42,6 +42,8 @@ export const sendConnectSessionMessage = async (
 
   await communicationClient.post("/internal/send/code", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [
+      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+    ],
   });
 };
