@@ -1,4 +1,4 @@
-export enum AuthenticationMethod {
+export enum AuthenticationStrategy {
   BANK_ID_SE = "bank_id_se",
   DEVICE_CHALLENGE = "device_challenge",
   EMAIL_LINK = "email_link",

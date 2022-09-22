@@ -1,0 +1,46 @@
+{
+  "name": "auth-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 4100",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.4",
+    "@emotion/styled": "^11.10.4",
+    "@lindorm-io/axios": "^0.4.5",
+    "@lindorm-io/core": "^0.7.0",
+    "@lindorm-io/winston": "^0.4.8",
+    "@mui/icons-material": "^5.10.3",
+    "@mui/lab": "^5.0.0-alpha.98",
+    "@mui/material": "^5.10.4",
+    "axios": "^0.27.2",
+    "cookies": "^0.8.0",
+    "mui-one-time-password-input": "^1.0.3",
+    "next": "^12.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.16",
+    "@types/react": "^18.0.18",
+    "@types/react-dom": "^18.0.6",
+    "eslint": "^8.22.0",
+    "eslint-config-next": "^12.3.0",
+    "typescript": "^4.8.3"
+  },
+  "prettier": {
+    "arrowParens": "always",
+    "bracketSpacing": true,
+    "jsxBracketSameLine": false,
+    "printWidth": 100,
+    "semi": true,
+    "singleAttributePerLine": true,
+    "singleQuote": false,
+    "tabWidth": 2,
+    "trailingComma": "all"
+  }
+}
