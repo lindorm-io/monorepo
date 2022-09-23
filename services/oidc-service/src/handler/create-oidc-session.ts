@@ -8,6 +8,7 @@ import { createHash } from "crypto";
 import { find } from "lodash";
 
 interface Options {
+  callbackId: string;
   callbackUri: string;
   expires: Date;
   identityId?: string;
@@ -20,7 +21,7 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
     cache: { oidcSessionCache },
   } = ctx;
 
-  const { callbackUri, expires, identityId, loginHint, provider } = options;
+  const { callbackId, callbackUri, expires, identityId, loginHint, provider } = options;
 
   const config = find(configuration.oidc_providers, { key: provider });
 
@@ -38,6 +39,7 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
 
   const oidcSession = await oidcSessionCache.create(
     new OidcSession({
+      callbackId,
       callbackUri,
       codeVerifier: randomString(32),
       expires,

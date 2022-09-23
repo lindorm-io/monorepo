@@ -2,15 +2,16 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { createOidcSession } from "../../handler";
+import { findOidcConfiguration } from "../../util";
 import {
   InitialiseOidcSessionRequestData,
   InitialiseOidcSessionResponseBody,
   JOI_GUID,
 } from "../../common";
-import { findOidcConfiguration } from "../../util";
 
 export const initialiseOidcSessionSchema = Joi.object<InitialiseOidcSessionRequestData>()
   .keys({
+    callbackId: JOI_GUID.required(),
     callbackUri: Joi.string().uri().required(),
     expiresAt: Joi.string().required(),
     identityId: JOI_GUID.optional(),
@@ -23,12 +24,13 @@ export const initialiseOidcSessionController: ServerKoaController<
   InitialiseOidcSessionRequestData
 > = async (ctx): ControllerResponse<InitialiseOidcSessionResponseBody> => {
   const {
-    data: { callbackUri, expiresAt, identityId, loginHint, provider },
+    data: { callbackId, callbackUri, expiresAt, identityId, loginHint, provider },
   } = ctx;
 
   findOidcConfiguration(provider);
 
   const url = await createOidcSession(ctx, {
+    callbackId,
     callbackUri,
     expires: new Date(expiresAt),
     identityId,

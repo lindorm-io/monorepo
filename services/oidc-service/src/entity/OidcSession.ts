@@ -9,6 +9,7 @@ import {
 } from "@lindorm-io/entity";
 
 export interface OidcSessionAttributes extends EntityAttributes {
+  callbackId: string;
   callbackUri: string;
   codeVerifier: string | null;
   expires: Date;
@@ -28,6 +29,7 @@ const schema = Joi.object<OidcSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    callbackId: JOI_GUID.required(),
     callbackUri: Joi.string().uri().required(),
     codeVerifier: Joi.string().required(),
     expires: Joi.date().required(),
@@ -43,6 +45,7 @@ export class OidcSession
   extends LindormEntity<OidcSessionAttributes>
   implements OidcSessionAttributes
 {
+  public callbackId: string;
   public callbackUri: string;
   public codeVerifier: string;
   public expires: Date;
@@ -55,6 +58,7 @@ export class OidcSession
   public constructor(options: OidcSessionOptions) {
     super(options);
 
+    this.callbackId = options.callbackId;
     this.callbackUri = options.callbackUri;
     this.codeVerifier = options.codeVerifier || null;
     this.expires = options.expires;
@@ -78,6 +82,7 @@ export class OidcSession
     return {
       ...this.defaultJSON(),
 
+      callbackId: this.callbackId,
       callbackUri: this.callbackUri,
       codeVerifier: this.codeVerifier,
       expires: this.expires,

@@ -23,7 +23,7 @@ export const getOidcSessionController: ServerKoaController<RequestData> = async 
     entity: { oidcSession },
   } = ctx;
 
-  const { identityId, provider, verified } = oidcSession;
+  const { callbackId, identityId, provider, verified } = oidcSession;
 
   if (!verified) {
     throw new ClientError("Session not verified");
@@ -33,6 +33,7 @@ export const getOidcSessionController: ServerKoaController<RequestData> = async 
 
   return {
     body: {
+      callbackId,
       identityId,
       levelOfAssurance: config.loa_value as LevelOfAssurance,
       provider,
