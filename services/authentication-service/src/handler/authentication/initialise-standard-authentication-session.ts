@@ -74,8 +74,8 @@ export const initialiseStandardAuthenticationSession = async (
     nonce,
     mode: AuthenticationMode.STANDARD,
     phoneHint,
-    requestedLevel: levelOfAssurance,
-    requestedMethods: methods.filter((key: AuthenticationMethod) =>
+    requiredLevel: levelOfAssurance,
+    requiredMethods: methods.filter((key: AuthenticationMethod) =>
       Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });

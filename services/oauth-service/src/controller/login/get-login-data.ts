@@ -62,11 +62,12 @@ export const getLoginDataController: ServerKoaController<RequestData> = async (
         type: client.type,
       },
       requested: {
-        authenticationMethods: authorizationSession.requestedLogin.authenticationMethods,
         identityId: authorizationSession.requestedLogin.identityId,
-        levelHint: authorizationSession.requestedLogin.levelHint,
-        levelOfAssurance: authorizationSession.requestedLogin.levelOfAssurance,
-        methodHint: authorizationSession.requestedLogin.methodHint,
+        minimumLevel: authorizationSession.requestedLogin.minimumLevel,
+        recommendedLevel: authorizationSession.requestedLogin.recommendedLevel,
+        recommendedMethods: authorizationSession.requestedLogin.recommendedMethods,
+        requiredLevel: authorizationSession.requestedLogin.requiredLevel,
+        requiredMethods: authorizationSession.requestedLogin.requiredMethods,
       },
     },
   };

@@ -37,11 +37,11 @@ export const getElevationDataController: ServerKoaController<RequestData> = asyn
         uiLocales: elevationSession.uiLocales,
       },
       requested: {
-        authenticationMethods: elevationSession.requestedAuthentication.authenticationMethods,
-        levelHint: elevationSession.requestedAuthentication.levelHint,
-        levelOfAssurance: elevationSession.requestedAuthentication.levelOfAssurance,
-        methodHint: elevationSession.requestedAuthentication.methodHint,
-        missingAccessLevel: elevationSession.requestedAuthentication.missingAccessLevel,
+        minimumLevel: elevationSession.requestedAuthentication.minimumLevel,
+        recommendedLevel: elevationSession.requestedAuthentication.recommendedLevel,
+        recommendedMethods: elevationSession.requestedAuthentication.recommendedMethods,
+        requiredLevel: elevationSession.requestedAuthentication.requiredLevel,
+        requiredMethods: elevationSession.requestedAuthentication.requiredMethods,
       },
     },
   };

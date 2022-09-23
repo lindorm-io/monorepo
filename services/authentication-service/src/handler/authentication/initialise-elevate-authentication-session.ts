@@ -34,11 +34,11 @@ export const initialiseElevateAuthenticationSession = async (
   const {
     elevationSession: { authenticationHint, country, expiresAt, identityId, nonce },
     requested: {
-      authenticationMethods,
-      levelHint,
-      levelOfAssurance,
-      methodHint,
-      missingAccessLevel,
+      minimumLevel,
+      recommendedLevel,
+      recommendedMethods,
+      requiredLevel,
+      requiredMethods,
     },
   } = await fetchOauthElevationData(ctx, elevationSessionId);
 
@@ -54,16 +54,16 @@ export const initialiseElevateAuthenticationSession = async (
     emailHint,
     expires: new Date(expiresAt),
     identityId,
-    minimumLevel: missingAccessLevel,
+    minimumLevel,
     mode: AuthenticationMode.OAUTH,
     nonce,
     phoneHint,
-    recommendedLevel: levelHint,
-    recommendedMethods: methodHint.filter((key: AuthenticationMethod) =>
+    recommendedLevel,
+    recommendedMethods: recommendedMethods.filter((key: AuthenticationMethod) =>
       Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
-    requestedLevel: levelOfAssurance,
-    requestedMethods: authenticationMethods.filter((key: AuthenticationMethod) =>
+    requiredLevel,
+    requiredMethods: requiredMethods.filter((key: AuthenticationMethod) =>
       Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });

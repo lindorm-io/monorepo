@@ -18,5 +18,7 @@ export type ClientConfig = {
   initialiseKey: InitialiseKey;
   method: AuthenticationMethod;
   rank: number;
+  recommended: boolean;
+  requested: boolean;
   strategies: Array<AuthenticationStrategy>;
 };

@@ -19,7 +19,9 @@ describe("calculateMethodsAndStrategies", () => {
             AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
             AuthenticationStrategy.WEBAUTHN,
           ],
-          requestedMethods: [],
+          recommendedMethods: [],
+          requiredLevel: 1,
+          requiredMethods: [],
         }),
       ),
     ).toMatchSnapshot();
@@ -36,7 +38,22 @@ describe("calculateMethodsAndStrategies", () => {
             AuthenticationStrategy.SESSION_OTP,
             AuthenticationStrategy.TIME_BASED_OTP,
           ],
-          requestedMethods: [],
+          recommendedMethods: [],
+          requiredLevel: 1,
+          requiredMethods: [],
+        }),
+      ),
+    ).toMatchSnapshot();
+  });
+
+  test("should calculate based on recommended methods", () => {
+    expect(
+      generateClientConfig(
+        createTestAuthenticationSession({
+          allowedStrategies: Object.values(AuthenticationStrategy),
+          recommendedMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          requiredLevel: 1,
+          requiredMethods: [],
         }),
       ),
     ).toMatchSnapshot();
@@ -47,7 +64,9 @@ describe("calculateMethodsAndStrategies", () => {
       generateClientConfig(
         createTestAuthenticationSession({
           allowedStrategies: Object.values(AuthenticationStrategy),
-          requestedMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          recommendedMethods: [],
+          requiredLevel: 1,
+          requiredMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
         }),
       ),
     ).toMatchSnapshot();

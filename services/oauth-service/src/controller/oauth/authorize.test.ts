@@ -197,11 +197,12 @@ describe("oauthAuthorizeController", () => {
           scopes: ["openid", "offline_access"],
         },
         requestedLogin: {
-          authenticationMethods: ["phone", "session", "email"],
           identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
-          levelHint: 3,
-          levelOfAssurance: 3,
-          methodHint: ["phone", "session", "email"],
+          minimumLevel: 3,
+          recommendedLevel: 3,
+          recommendedMethods: ["phone", "session", "email"],
+          requiredLevel: 3,
+          requiredMethods: ["phone", "session", "email"],
         },
         responseMode: "query",
         responseTypes: ["code", "id_token"],
@@ -221,7 +222,7 @@ describe("oauthAuthorizeController", () => {
     tryFindRefreshSession.mockResolvedValue(undefined);
 
     filterAcrValues.mockImplementation(() => ({
-      authenticationMethods: [],
+      requiredMethods: [],
       levelOfAssurance: 0,
     }));
 
@@ -277,11 +278,12 @@ describe("oauthAuthorizeController", () => {
           scopes: ["openid", "offline_access"],
         },
         requestedLogin: {
-          authenticationMethods: [],
           identityId: null,
-          levelHint: 0,
-          levelOfAssurance: 3,
-          methodHint: [],
+          minimumLevel: 3,
+          recommendedLevel: 1,
+          recommendedMethods: [],
+          requiredLevel: 1,
+          requiredMethods: [],
         },
         responseMode: "query",
         responseTypes: ["code"],

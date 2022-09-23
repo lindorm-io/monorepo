@@ -21,12 +21,12 @@ import { getExpiryDate, removeEmptyFromArray } from "@lindorm-io/core";
 import { uniq } from "lodash";
 
 type RequestData = {
+  acrValue?: LevelOfAssurance;
+  amrValues?: Array<AuthenticationMethod>;
   authenticationHint?: Array<string>;
-  authenticationMethods?: Array<AuthenticationMethod>;
   clientId: string;
   country?: string;
   idTokenHint?: string;
-  levelOfAssurance?: LevelOfAssurance;
   nonce?: string;
   redirectUri?: string;
   state?: string;
@@ -39,12 +39,12 @@ type ReturnBody = {
 
 export const elevateSchema = Joi.object<RequestData>()
   .keys({
+    acrValue: JOI_LEVEL_OF_ASSURANCE.optional(),
+    amrValues: Joi.array().items(Joi.string()).optional(),
     authenticationHint: Joi.array().items(Joi.string()).optional(),
-    authenticationMethods: Joi.array().items(Joi.string()).optional(),
     clientId: JOI_GUID.required(),
     country: JOI_COUNTRY_CODE.optional(),
     idTokenHint: JOI_JWT.optional(),
-    levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
     nonce: JOI_NONCE.optional(),
     redirectUri: Joi.string().uri().optional(),
     state: JOI_STATE.optional(),
@@ -59,10 +59,10 @@ export const elevateController: ServerKoaController<RequestData> = async (
   const {
     cache: { elevationSessionCache },
     data: {
+      acrValue,
+      amrValues,
       authenticationHint,
-      authenticationMethods,
       country,
-      levelOfAssurance,
       nonce,
       redirectUri,
       state,
@@ -92,12 +92,11 @@ export const elevateController: ServerKoaController<RequestData> = async (
           bearerToken.sessionHint === SessionHint.REFRESH ? bearerToken.sessionId : null,
       },
       requestedAuthentication: {
-        authenticationMethods,
-        levelHint: idToken?.levelOfAssurance,
-        levelOfAssurance,
-        methodHint: idToken?.authMethodsReference as Array<AuthenticationMethod>,
-        missingAccessLevel: (bearerToken.levelOfAssurance -
-          adjustedAccessLevel) as LevelOfAssurance,
+        minimumLevel: (bearerToken.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
+        recommendedLevel: idToken?.levelOfAssurance,
+        recommendedMethods: idToken?.authMethodsReference as Array<AuthenticationMethod>,
+        requiredLevel: acrValue,
+        requiredMethods: amrValues,
       },
 
       authenticationHint:

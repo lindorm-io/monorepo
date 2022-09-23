@@ -36,8 +36,8 @@ describe("handleAuthenticationInitialisation", () => {
       nonce: "nonce",
       codeChallenge: "codeChallenge",
       codeChallengeMethod: "codeChallengeMethod",
-      requestedLevel: 4,
-      requestedMethods: [AuthenticationMethod.EMAIL],
+      requiredLevel: 4,
+      requiredMethods: [AuthenticationMethod.EMAIL],
     };
 
     resolveAllowedStrategies.mockResolvedValue([AuthenticationStrategy.DEVICE_CHALLENGE]);

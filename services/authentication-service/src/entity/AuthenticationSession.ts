@@ -43,8 +43,8 @@ export interface AuthenticationSessionAttributes extends EntityAttributes {
   recommendedLevel: LevelOfAssurance;
   recommendedMethods: Array<AuthenticationMethod>;
   remember: boolean;
-  requestedLevel: LevelOfAssurance;
-  requestedMethods: Array<AuthenticationMethod>;
+  requiredLevel: LevelOfAssurance;
+  requiredMethods: Array<AuthenticationMethod>;
   status: SessionStatus;
 }
 
@@ -66,8 +66,8 @@ export type AuthenticationSessionOptions = Optional<
   | "recommendedLevel"
   | "recommendedMethods"
   | "remember"
-  | "requestedLevel"
-  | "requestedMethods"
+  | "requiredLevel"
+  | "requiredMethods"
   | "status"
 >;
 
@@ -95,8 +95,8 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     recommendedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
     remember: Joi.boolean().required(),
-    requestedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-    requestedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    requiredMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
     status: JOI_SESSION_STATUS.required(),
   })
   .required();
@@ -117,8 +117,8 @@ export class AuthenticationSession
   public readonly phoneHint: string | null;
   public readonly recommendedLevel: LevelOfAssurance;
   public readonly recommendedMethods: Array<AuthenticationMethod>;
-  public readonly requestedLevel: LevelOfAssurance;
-  public readonly requestedMethods: Array<AuthenticationMethod>;
+  public readonly requiredLevel: LevelOfAssurance;
+  public readonly requiredMethods: Array<AuthenticationMethod>;
 
   public allowedStrategies: Array<AuthenticationStrategy>;
   public code: string | null;
@@ -153,8 +153,8 @@ export class AuthenticationSession
     this.recommendedLevel = options.recommendedLevel || 1;
     this.recommendedMethods = options.recommendedMethods || [];
     this.remember = options.remember === true;
-    this.requestedLevel = options.requestedLevel || 1;
-    this.requestedMethods = options.requestedMethods || [];
+    this.requiredLevel = options.requiredLevel || 1;
+    this.requiredMethods = options.requiredMethods || [];
     this.status = options.status || SessionStatus.PENDING;
   }
 
@@ -190,8 +190,8 @@ export class AuthenticationSession
       recommendedLevel: this.recommendedLevel,
       recommendedMethods: this.recommendedMethods,
       remember: this.remember,
-      requestedLevel: this.requestedLevel,
-      requestedMethods: this.requestedMethods,
+      requiredLevel: this.requiredLevel,
+      requiredMethods: this.requiredMethods,
       status: this.status,
     };
   }

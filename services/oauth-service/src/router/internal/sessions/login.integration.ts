@@ -81,11 +81,12 @@ describe("/internal/sessions/login", () => {
       login_required: true,
       login_status: "pending",
       requested: {
-        authentication_methods: ["email", "phone"],
         identity_id: authorizationSession.requestedLogin.identityId,
-        level_hint: 2,
-        level_of_assurance: 3,
-        method_hint: ["email"],
+        minimum_level: 2,
+        recommended_level: 2,
+        recommended_methods: ["email"],
+        required_level: 3,
+        required_methods: ["email", "phone"],
       },
     });
   });

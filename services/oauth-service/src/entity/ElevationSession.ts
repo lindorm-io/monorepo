@@ -33,11 +33,11 @@ type ElevationSessionIdentifiers = {
 };
 
 type ElevationSessionRequestedAuthentication = {
-  authenticationMethods: Array<AuthenticationMethod>;
-  levelHint: LevelOfAssurance;
-  levelOfAssurance: LevelOfAssurance;
-  methodHint: Array<AuthenticationMethod>;
-  missingAccessLevel: LevelOfAssurance;
+  minimumLevel: LevelOfAssurance;
+  recommendedLevel: LevelOfAssurance;
+  recommendedMethods: Array<AuthenticationMethod>;
+  requiredLevel: LevelOfAssurance;
+  requiredMethods: Array<AuthenticationMethod>;
 };
 
 export interface ElevationSessionAttributes extends EntityAttributes {
@@ -94,11 +94,11 @@ const schema = Joi.object<ElevationSessionAttributes>()
       .required(),
     requestedAuthentication: Joi.object<ElevationSessionRequestedAuthentication>()
       .keys({
-        authenticationMethods: Joi.array().items(Joi.string().lowercase()).required(),
-        levelHint: JOI_LEVEL_OF_ASSURANCE.required(),
-        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-        methodHint: Joi.array().items(Joi.string().lowercase()).required(),
-        missingAccessLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
+        requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
 
@@ -148,11 +148,14 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
       refreshSessionId: options.identifiers?.refreshSessionId || null,
     };
     this.requestedAuthentication = {
-      authenticationMethods: options.requestedAuthentication.authenticationMethods || [],
-      levelHint: options.requestedAuthentication.levelHint || 0,
-      levelOfAssurance: options.requestedAuthentication.levelOfAssurance || 1,
-      methodHint: options.requestedAuthentication.methodHint || [],
-      missingAccessLevel: options.requestedAuthentication.missingAccessLevel || 0,
+      minimumLevel:
+        options.requestedAuthentication.minimumLevel > 0
+          ? options.requestedAuthentication.minimumLevel
+          : 1,
+      recommendedLevel: options.requestedAuthentication.recommendedLevel || 1,
+      recommendedMethods: options.requestedAuthentication.recommendedMethods || [],
+      requiredLevel: options.requestedAuthentication.requiredLevel || 1,
+      requiredMethods: options.requestedAuthentication.requiredMethods || [],
     };
 
     this.authenticationHint = options.authenticationHint || [];

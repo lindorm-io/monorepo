@@ -17,9 +17,9 @@ describe("elevateController", () => {
         elevationSessionCache: createMockCache(createTestElevationSession),
       },
       data: {
-        authenticationMethods: ["phone"],
+        acrValue: 4,
+        amrValues: ["phone"],
         country: "dk",
-        levelOfAssurance: 4,
         uiLocales: ["da-DK"],
       },
       entity: {
@@ -67,11 +67,11 @@ describe("elevateController", () => {
           refreshSessionId: null,
         },
         requestedAuthentication: {
-          authenticationMethods: ["phone"],
-          levelHint: 2,
-          levelOfAssurance: 4,
-          methodHint: ["email"],
-          missingAccessLevel: 0,
+          minimumLevel: 1,
+          recommendedLevel: 2,
+          recommendedMethods: ["email"],
+          requiredLevel: 4,
+          requiredMethods: ["phone"],
         },
 
         authenticationHint: expect.arrayContaining(["test@email.com", "+4520123456", "username"]),

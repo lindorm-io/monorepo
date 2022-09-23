@@ -48,11 +48,21 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
     });
   }
 
-  if (levelOfAssurance < elevationSession.requestedAuthentication.levelOfAssurance) {
+  if (levelOfAssurance < elevationSession.requestedAuthentication.minimumLevel) {
     throw new ClientError("Invalid level", {
-      description: "The provided LOA values are invalid",
+      description: "The provided LOA value is below minimum value",
       data: {
-        expect: elevationSession.requestedAuthentication.levelOfAssurance,
+        expect: elevationSession.requestedAuthentication.minimumLevel,
+        actual: levelOfAssurance,
+      },
+    });
+  }
+
+  if (levelOfAssurance < elevationSession.requestedAuthentication.requiredLevel) {
+    throw new ClientError("Invalid level", {
+      description: "The provided LOA value is below the defined required value",
+      data: {
+        expect: elevationSession.requestedAuthentication.requiredLevel,
         actual: levelOfAssurance,
       },
     });

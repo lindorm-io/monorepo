@@ -21,11 +21,12 @@ describe("isAuthenticationRequired", () => {
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
-        authenticationMethods: [AuthenticationMethod.EMAIL],
         identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-        levelOfAssurance: 1,
-        levelHint: 0,
-        methodHint: [],
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 1,
+        requiredMethods: [AuthenticationMethod.EMAIL],
       },
       promptModes: [PromptMode.NONE],
     });
@@ -75,10 +76,11 @@ describe("isAuthenticationRequired", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
         identityId: "f78288ca-8753-420a-9db6-2775c4baf982",
-        authenticationMethods: [],
-        levelOfAssurance: 1,
-        levelHint: 0,
-        methodHint: [],
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 1,
+        requiredMethods: [],
       },
       promptModes: [],
     });
@@ -97,11 +99,12 @@ describe("isAuthenticationRequired", () => {
   test("should require login when required by country", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
-        authenticationMethods: [],
         identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-        levelHint: 0,
-        levelOfAssurance: 1,
-        methodHint: [],
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 1,
+        requiredMethods: [],
       },
       country: "SE",
       promptModes: [],
@@ -124,11 +127,12 @@ describe("isAuthenticationRequired", () => {
 
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
-        authenticationMethods: [],
         identityId: null,
-        levelHint: 0,
-        levelOfAssurance: 4,
-        methodHint: [],
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 4,
+        requiredMethods: [],
       },
       idTokenHint: null,
       promptModes: [],
@@ -148,15 +152,16 @@ describe("isAuthenticationRequired", () => {
   test("should require login when required by authentication methods", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
-        authenticationMethods: [
+        identityId: null,
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 3,
+        requiredMethods: [
           AuthenticationMethod.EMAIL,
           AuthenticationMethod.PHONE,
           AuthenticationMethod.PASSWORD,
         ],
-        identityId: null,
-        levelHint: 0,
-        levelOfAssurance: 3,
-        methodHint: [],
       },
       idTokenHint: null,
       promptModes: [],
@@ -176,11 +181,12 @@ describe("isAuthenticationRequired", () => {
   test("should require login when required by prompt", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
-        authenticationMethods: [],
         identityId: null,
-        levelHint: 0,
-        levelOfAssurance: 1,
-        methodHint: [],
+        minimumLevel: 1,
+        recommendedLevel: 0,
+        recommendedMethods: [],
+        requiredLevel: 1,
+        requiredMethods: [],
       },
       idTokenHint: null,
       promptModes: [PromptMode.LOGIN],

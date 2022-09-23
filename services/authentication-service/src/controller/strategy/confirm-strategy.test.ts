@@ -47,7 +47,7 @@ describe("confirmStrategyController", () => {
           allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: null,
           confirmedIdentifiers: ["test@lindorm.io"],
-          requestedLevel: 1,
+          requiredLevel: 1,
           status: SessionStatus.PENDING,
         }),
         strategySession: createTestStrategySession({

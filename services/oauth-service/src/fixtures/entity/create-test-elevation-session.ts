@@ -12,11 +12,11 @@ export const createTestElevationSession = (
       refreshSessionId: randomUUID(),
     },
     requestedAuthentication: {
-      authenticationMethods: [AuthenticationMethod.EMAIL],
-      levelHint: 1,
-      levelOfAssurance: 2,
-      methodHint: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-      missingAccessLevel: 1,
+      minimumLevel: 1,
+      recommendedLevel: 1,
+      recommendedMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      requiredLevel: 2,
+      requiredMethods: [AuthenticationMethod.EMAIL],
     },
 
     authenticationHint: ["test@lindorm.io"],

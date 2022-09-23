@@ -1,8 +1,10 @@
-import { AUTHENTICATION_STRATEGY_CONFIG } from "../constant";
+import { AUTHENTICATION_STRATEGY_CONFIG, AuthenticationStrategyConfig } from "../constant";
 import { AuthenticationSession } from "../entity";
 import { ClientConfig } from "../types";
 import { ServerError } from "@lindorm-io/errors";
 import { filter, find, orderBy, uniq } from "lodash";
+
+type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; requested: boolean };
 
 export const generateClientConfig = (
   authenticationSession: AuthenticationSession,
@@ -17,11 +19,28 @@ export const generateClientConfig = (
     authenticationSession.allowedStrategies.includes(config.strategy),
   );
 
-  const adjustedConfig = allowedConfig.map((config) =>
-    authenticationSession.requestedMethods.includes(config.method)
-      ? { ...config, weight: config.weight * 100 }
-      : config,
-  );
+  const adjustedConfig: Array<AdjustedConfig> = [];
+
+  for (const config of allowedConfig) {
+    let recommended = false;
+    let requested = false;
+    let weight = config.weight;
+
+    if (authenticationSession.requiredLevel === config.value) {
+      recommended = true;
+      weight = weight * 5;
+    }
+    if (authenticationSession.recommendedMethods.includes(config.method)) {
+      recommended = true;
+      weight = weight * 25;
+    }
+    if (authenticationSession.requiredMethods.includes(config.method)) {
+      requested = true;
+      weight = weight * 100;
+    }
+
+    adjustedConfig.push({ ...config, weight, recommended, requested });
+  }
 
   const orderedConfig = orderBy(
     adjustedConfig,
@@ -42,8 +61,10 @@ export const generateClientConfig = (
       hint: config.hint,
       initialiseKey: config.initialiseKey,
       method,
-      strategies,
       rank,
+      recommended: config.recommended,
+      requested: config.requested,
+      strategies,
     });
 
     rank += 1;

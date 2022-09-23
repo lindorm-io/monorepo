@@ -31,11 +31,12 @@ export const createTestAuthorizationSession = (
       ],
     },
     requestedLogin: {
-      authenticationMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       identityId: randomUUID(),
-      levelHint: 2,
-      levelOfAssurance: 3,
-      methodHint: [AuthenticationMethod.EMAIL],
+      minimumLevel: 2,
+      recommendedLevel: 2,
+      recommendedMethods: [AuthenticationMethod.EMAIL],
+      requiredLevel: 3,
+      requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     },
     status: {
       login: SessionStatus.PENDING,

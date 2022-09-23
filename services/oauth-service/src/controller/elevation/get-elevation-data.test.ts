@@ -34,11 +34,11 @@ describe("getElevationDataController", () => {
           uiLocales: ["sv-SE", "en-GB"],
         },
         requested: {
-          authenticationMethods: ["email"],
-          levelHint: 1,
-          levelOfAssurance: 2,
-          methodHint: ["email", "phone"],
-          missingAccessLevel: 1,
+          minimumLevel: 1,
+          recommendedLevel: 1,
+          recommendedMethods: ["email", "phone"],
+          requiredLevel: 2,
+          requiredMethods: ["email"],
         },
       },
     });

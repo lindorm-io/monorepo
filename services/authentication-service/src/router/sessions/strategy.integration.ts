@@ -79,7 +79,7 @@ describe("/sessions/strategy", () => {
         allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         identityId: null,
         remember: false,
-        requestedLevel: 4,
+        requiredLevel: 4,
       }),
     );
 

@@ -78,11 +78,12 @@ describe("getLoginInfoController", () => {
         loginRequired: true,
         loginStatus: "pending",
         requested: {
-          authenticationMethods: ["email", "phone"],
           identityId: authorizationSession.requestedLogin.identityId,
-          levelHint: 2,
-          levelOfAssurance: 3,
-          methodHint: ["email"],
+          minimumLevel: 2,
+          recommendedLevel: 2,
+          recommendedMethods: ["email"],
+          requiredLevel: 3,
+          requiredMethods: ["email", "phone"],
         },
       },
     });

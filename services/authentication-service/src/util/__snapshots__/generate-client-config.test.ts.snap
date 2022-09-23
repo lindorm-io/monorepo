@@ -1,12 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`calculateMethodsAndStrategies should calculate based on requested methods 1`] = `
+exports[`calculateMethodsAndStrategies should calculate based on recommended methods 1`] = `
 Array [
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "mfa_cookie",
+    "rank": 1,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "mfa_cookie",
+    ],
+  },
   Object {
     "hint": "email",
     "initialiseKey": "email",
     "method": "email",
-    "rank": 1,
+    "rank": 2,
+    "recommended": true,
+    "requested": false,
     "strategies": Array [
       "email_otp",
       "email_link",
@@ -16,7 +29,9 @@ Array [
     "hint": "email",
     "initialiseKey": "username",
     "method": "password",
-    "rank": 2,
+    "rank": 3,
+    "recommended": true,
+    "requested": false,
     "strategies": Array [
       "password_browser_link",
       "password",
@@ -25,17 +40,10 @@ Array [
   Object {
     "hint": "none",
     "initialiseKey": "none",
-    "method": "mfa_cookie",
-    "rank": 3,
-    "strategies": Array [
-      "mfa_cookie",
-    ],
-  },
-  Object {
-    "hint": "none",
-    "initialiseKey": "none",
     "method": "bank_id_se",
     "rank": 4,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "bank_id_se",
     ],
@@ -45,6 +53,8 @@ Array [
     "initialiseKey": "none",
     "method": "device_link",
     "rank": 5,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "rdc_push_notification",
       "rdc_qr_code",
@@ -56,6 +66,8 @@ Array [
     "initialiseKey": "none",
     "method": "totp",
     "rank": 6,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "time_based_otp",
     ],
@@ -65,6 +77,8 @@ Array [
     "initialiseKey": "none",
     "method": "webauthn",
     "rank": 7,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "webauthn",
     ],
@@ -74,6 +88,8 @@ Array [
     "initialiseKey": "none",
     "method": "session_link",
     "rank": 8,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "session_otp",
       "session_accept_with_code",
@@ -84,6 +100,117 @@ Array [
     "initialiseKey": "phone_number",
     "method": "phone",
     "rank": 9,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "phone_otp",
+    ],
+  },
+]
+`;
+
+exports[`calculateMethodsAndStrategies should calculate based on requested methods 1`] = `
+Array [
+  Object {
+    "hint": "email",
+    "initialiseKey": "email",
+    "method": "email",
+    "rank": 1,
+    "recommended": false,
+    "requested": true,
+    "strategies": Array [
+      "email_otp",
+      "email_link",
+    ],
+  },
+  Object {
+    "hint": "email",
+    "initialiseKey": "username",
+    "method": "password",
+    "rank": 2,
+    "recommended": false,
+    "requested": true,
+    "strategies": Array [
+      "password_browser_link",
+      "password",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "mfa_cookie",
+    "rank": 3,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "mfa_cookie",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "bank_id_se",
+    "rank": 4,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "bank_id_se",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "device_link",
+    "rank": 5,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "rdc_push_notification",
+      "rdc_qr_code",
+      "device_challenge",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "totp",
+    "rank": 6,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "time_based_otp",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "webauthn",
+    "rank": 7,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "webauthn",
+    ],
+  },
+  Object {
+    "hint": "none",
+    "initialiseKey": "none",
+    "method": "session_link",
+    "rank": 8,
+    "recommended": false,
+    "requested": false,
+    "strategies": Array [
+      "session_otp",
+      "session_accept_with_code",
+    ],
+  },
+  Object {
+    "hint": "phone",
+    "initialiseKey": "phone_number",
+    "method": "phone",
+    "rank": 9,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "phone_otp",
     ],
@@ -98,6 +225,8 @@ Array [
     "initialiseKey": "none",
     "method": "bank_id_se",
     "rank": 1,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "bank_id_se",
     ],
@@ -107,6 +236,8 @@ Array [
     "initialiseKey": "none",
     "method": "device_link",
     "rank": 2,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "rdc_qr_code",
       "device_challenge",
@@ -117,6 +248,8 @@ Array [
     "initialiseKey": "none",
     "method": "webauthn",
     "rank": 3,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "webauthn",
     ],
@@ -126,6 +259,8 @@ Array [
     "initialiseKey": "none",
     "method": "session_link",
     "rank": 4,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "session_accept_with_code",
     ],
@@ -135,6 +270,8 @@ Array [
     "initialiseKey": "email",
     "method": "email",
     "rank": 5,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "email_otp",
       "email_link",
@@ -145,6 +282,8 @@ Array [
     "initialiseKey": "username",
     "method": "password",
     "rank": 6,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "password_browser_link",
       "password",
@@ -160,6 +299,8 @@ Array [
     "initialiseKey": "none",
     "method": "mfa_cookie",
     "rank": 1,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "mfa_cookie",
     ],
@@ -169,6 +310,8 @@ Array [
     "initialiseKey": "none",
     "method": "device_link",
     "rank": 2,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "rdc_push_notification",
     ],
@@ -178,6 +321,8 @@ Array [
     "initialiseKey": "none",
     "method": "totp",
     "rank": 3,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "time_based_otp",
     ],
@@ -187,6 +332,8 @@ Array [
     "initialiseKey": "none",
     "method": "session_link",
     "rank": 4,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "session_otp",
     ],
@@ -196,6 +343,8 @@ Array [
     "initialiseKey": "phone_number",
     "method": "phone",
     "rank": 5,
+    "recommended": false,
+    "requested": false,
     "strategies": Array [
       "phone_otp",
     ],

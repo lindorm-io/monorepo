@@ -33,7 +33,14 @@ export const initialiseOauthAuthenticationSession = async (
 
   const {
     authorizationSession: { country, expiresAt, loginHint, nonce },
-    requested: { authenticationMethods, identityId, levelOfAssurance },
+    requested: {
+      identityId,
+      minimumLevel,
+      recommendedLevel,
+      recommendedMethods,
+      requiredLevel,
+      requiredMethods,
+    },
   } = await fetchOauthLoginData(ctx, oauthSessionId);
 
   const emailHint = loginHint?.find((item) => REGEX_EMAIL.test(item));
@@ -48,11 +55,16 @@ export const initialiseOauthAuthenticationSession = async (
     emailHint,
     expires: new Date(expiresAt),
     identityId,
-    nonce,
+    minimumLevel,
     mode: AuthenticationMode.OAUTH,
+    nonce,
     phoneHint,
-    requestedLevel: levelOfAssurance,
-    requestedMethods: authenticationMethods.filter((key: AuthenticationMethod) =>
+    recommendedLevel,
+    recommendedMethods: recommendedMethods.filter((key: AuthenticationMethod) =>
+      Object.values(AuthenticationMethod).includes(key),
+    ) as Array<AuthenticationMethod>,
+    requiredLevel,
+    requiredMethods: requiredMethods.filter((key: AuthenticationMethod) =>
       Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });

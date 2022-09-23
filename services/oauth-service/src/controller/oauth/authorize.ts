@@ -123,12 +123,12 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   const expires = getExpiryDate(configuration.defaults.expiry.authorization_session);
 
-  const { levelOfAssurance, methods: authenticationMethods } = filterAcrValues({
+  const { levelOfAssurance: requiredLevel, methods: requiredMethods } = filterAcrValues({
     acrValues,
     amrValues,
   });
 
-  const { levelOfAssurance: levelHint, methods: methodHint } = filterAcrValues({
+  const { levelOfAssurance: recommendedLevel, methods: recommendedMethods } = filterAcrValues({
     acrArray: idToken?.authContextClass,
     amrArray: idToken?.authMethodsReference,
   });
@@ -151,11 +151,12 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       scopes,
     },
     requestedLogin: {
-      authenticationMethods,
       identityId: idToken ? idToken.subject : null,
-      levelHint,
-      levelOfAssurance: levelOfAssurance || client.defaults.levelOfAssurance,
-      methodHint,
+      minimumLevel: client.defaults.levelOfAssurance,
+      recommendedLevel,
+      recommendedMethods,
+      requiredLevel,
+      requiredMethods,
     },
     identifiers: {
       browserSessionId: browserSession?.id,

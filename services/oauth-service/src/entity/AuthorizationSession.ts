@@ -64,11 +64,12 @@ type AuthorizationSessionRequestedConsent = {
 };
 
 type AuthorizationSessionRequestedLogin = {
-  authenticationMethods: Array<AuthenticationMethod>;
   identityId: string | null;
-  levelHint: LevelOfAssurance;
-  levelOfAssurance: LevelOfAssurance;
-  methodHint: Array<AuthenticationMethod>;
+  minimumLevel: LevelOfAssurance;
+  recommendedLevel: LevelOfAssurance;
+  recommendedMethods: Array<AuthenticationMethod>;
+  requiredLevel: LevelOfAssurance;
+  requiredMethods: Array<AuthenticationMethod>;
 };
 
 type AuthorizationSessionStatus = {
@@ -168,11 +169,12 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
     requestedLogin: Joi.object<AuthorizationSessionRequestedLogin>()
       .keys({
-        authenticationMethods: Joi.array().items(Joi.string().lowercase()).required(),
         identityId: JOI_GUID.allow(null).required(),
-        levelHint: JOI_LEVEL_OF_ASSURANCE.required(),
-        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-        methodHint: Joi.array().items(Joi.string().lowercase()).required(),
+        minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
+        requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+        requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     status: Joi.object<AuthorizationSessionStatus>()
@@ -258,11 +260,12 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       scopes: options.requestedConsent?.scopes || [],
     };
     this.requestedLogin = {
-      authenticationMethods: options.requestedLogin?.authenticationMethods || [],
       identityId: options.requestedLogin?.identityId || null,
-      levelHint: options.requestedLogin?.levelHint || 0,
-      levelOfAssurance: options.requestedLogin?.levelOfAssurance || 1,
-      methodHint: options.requestedLogin?.methodHint || [],
+      minimumLevel: options.requestedLogin?.minimumLevel || 1,
+      recommendedLevel: options.requestedLogin?.recommendedLevel || 1,
+      recommendedMethods: options.requestedLogin?.recommendedMethods || [],
+      requiredLevel: options.requestedLogin?.requiredLevel || 1,
+      requiredMethods: options.requestedLogin?.requiredMethods || [],
     };
     this.status = {
       consent: options.status?.consent || SessionStatus.PENDING,

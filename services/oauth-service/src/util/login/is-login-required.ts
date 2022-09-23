@@ -49,15 +49,18 @@ export const isLoginRequired = (
     return true;
   }
 
-  if (
-    authorizationSession.requestedLogin.levelOfAssurance > getAdjustedAccessLevel(browserSession)
-  ) {
+  const adjustedLevel = getAdjustedAccessLevel(browserSession);
+
+  if (authorizationSession.requestedLogin.minimumLevel > adjustedLevel) {
+    return true;
+  }
+
+  if (authorizationSession.requestedLogin.requiredLevel > adjustedLevel) {
     return true;
   }
 
   if (
-    difference(authorizationSession.requestedLogin.authenticationMethods, browserSession.amrValues)
-      .length
+    difference(authorizationSession.requestedLogin.requiredMethods, browserSession.amrValues).length
   ) {
     return true;
   }
