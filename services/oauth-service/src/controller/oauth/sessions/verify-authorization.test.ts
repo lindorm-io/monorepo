@@ -1,12 +1,12 @@
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../../common";
-import { verifyAuthorizationController } from "./verify-authorization";
 import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
+import { verifyAuthorizationController } from "./verify-authorization";
 import {
   generateCallbackResponse as _generateCallbackResponse,
-  getUpdatedBrowserSession as _getUpdatedBrowserSession,
-  getUpdatedConsentSession as _getUpdatedConsentSession,
-  setBrowserSessionCookie as _setBrowserSessionCookie,
+  handleOauthConsentVerification as _handleOauthConsentVerification,
+  handleOauthLoginVerification as _handleOauthLoginVerification,
 } from "../../../handler";
 import {
   createConsentPendingUri as _createConsentPendingUri,
@@ -25,9 +25,9 @@ jest.mock("../../../handler");
 jest.mock("../../../util");
 
 const generateCallbackResponse = _generateCallbackResponse as jest.Mock;
-const getUpdatedBrowserSession = _getUpdatedBrowserSession as jest.Mock;
-const getUpdatedConsentSession = _getUpdatedConsentSession as jest.Mock;
-const setBrowserSessionCookie = _setBrowserSessionCookie as jest.Mock;
+const handleOauthLoginVerification = _handleOauthLoginVerification as jest.Mock;
+const handleOauthConsentVerification = _handleOauthConsentVerification as jest.Mock;
+
 const createConsentPendingUri = _createConsentPendingUri as jest.Mock;
 const createConsentRejectedUri = _createConsentRejectedUri as jest.Mock;
 const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
@@ -54,6 +54,11 @@ describe("oauthVerifyController", () => {
         }),
         client: createTestClient(),
       },
+      repository: {
+        browserSessionRepository: createMockRepository(createTestBrowserSession),
+        consentSessionRepository: createMockRepository(createTestConsentSession),
+      },
+
       metadata: {
         environment: "development",
       },
@@ -63,9 +68,25 @@ describe("oauthVerifyController", () => {
     };
 
     generateCallbackResponse.mockResolvedValue({ redirect: "generateCallbackResponse" });
-    getUpdatedBrowserSession.mockImplementation(() => createTestBrowserSession());
-    getUpdatedConsentSession.mockImplementation(() => createTestConsentSession());
-    setBrowserSessionCookie.mockImplementation();
+    handleOauthLoginVerification.mockImplementation((_, session) =>
+      createTestAuthorizationSession({
+        ...session,
+        status: {
+          ...session.status,
+          login: SessionStatus.VERIFIED,
+        },
+      }),
+    );
+    handleOauthConsentVerification.mockImplementation((_, session) =>
+      createTestAuthorizationSession({
+        ...session,
+        status: {
+          ...session.status,
+          consent: SessionStatus.VERIFIED,
+        },
+      }),
+    );
+
     createConsentPendingUri.mockImplementation(() => "createConsentPendingUri");
     createConsentRejectedUri.mockImplementation(() => "createConsentRejectedUri");
     createLoginPendingUri.mockImplementation(() => "createLoginPendingUri");
@@ -80,9 +101,8 @@ describe("oauthVerifyController", () => {
     });
 
     expect(generateCallbackResponse).toHaveBeenCalled();
-    expect(getUpdatedBrowserSession).toHaveBeenCalled();
-    expect(getUpdatedConsentSession).toHaveBeenCalled();
-    expect(setBrowserSessionCookie).toHaveBeenCalled();
+    expect(handleOauthLoginVerification).toHaveBeenCalled();
+    expect(handleOauthConsentVerification).toHaveBeenCalled();
   });
 
   test("should resolve pending login redirect", async () => {

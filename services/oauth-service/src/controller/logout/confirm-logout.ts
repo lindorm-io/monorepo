@@ -1,9 +1,8 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
-import { createLogoutVerifyUri } from "../../util";
+import { assertSessionPending, createLogoutVerifyUri } from "../../util";
 
 interface RequestData {
   id: string;
@@ -24,9 +23,7 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
     logger,
   } = ctx;
 
-  if ([SessionStatus.CONFIRMED, SessionStatus.REJECTED].includes(logoutSession.status)) {
-    throw new ClientError("Logout has already been set");
-  }
+  assertSessionPending(logoutSession.status);
 
   logger.debug("Updating logout session");
 

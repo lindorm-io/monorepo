@@ -14,7 +14,9 @@ export const isConsentRequired = (
     });
   }
 
-  if (authorizationSession.status.consent === SessionStatus.CONFIRMED) {
+  if (
+    [SessionStatus.CONFIRMED, SessionStatus.VERIFIED].includes(authorizationSession.status.consent)
+  ) {
     return false;
   }
 

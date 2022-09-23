@@ -6,9 +6,8 @@ import { JOI_GUID, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
 import {
   generateCallbackResponse,
-  getUpdatedBrowserSession,
-  getUpdatedConsentSession,
-  setBrowserSessionCookie,
+  handleOauthConsentVerification,
+  handleOauthLoginVerification,
 } from "../../../handler";
 import {
   createConsentPendingUri,
@@ -33,10 +32,12 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { authorizationSessionCache },
     data: { redirectUri },
-    entity: { authorizationSession, client },
+    entity: { client },
+    repository: { browserSessionRepository, consentSessionRepository },
   } = ctx;
+
+  let authorizationSession = ctx.entity.authorizationSession;
 
   const cookieId = ctx.cookies.get(AUTHORIZATION_SESSION_COOKIE_NAME, {
     signed: ctx.metadata.environment !== Environment.TEST,
@@ -58,7 +59,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
 
   switch (authorizationSession.status.login) {
     case SessionStatus.CONFIRMED:
-    case SessionStatus.SKIP:
+      authorizationSession = await handleOauthLoginVerification(ctx, authorizationSession);
       break;
 
     case SessionStatus.PENDING:
@@ -67,13 +68,19 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
     case SessionStatus.REJECTED:
       return { redirect: createLoginRejectedUri(authorizationSession) };
 
+    case SessionStatus.SKIP:
+      break;
+
+    case SessionStatus.VERIFIED:
+      break;
+
     default:
       throw new ClientError("Unexpected session status");
   }
 
   switch (authorizationSession.status.consent) {
     case SessionStatus.CONFIRMED:
-    case SessionStatus.SKIP:
+      authorizationSession = await handleOauthConsentVerification(ctx, authorizationSession);
       break;
 
     case SessionStatus.PENDING:
@@ -82,23 +89,26 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
     case SessionStatus.REJECTED:
       return { redirect: createConsentRejectedUri(authorizationSession) };
 
+    case SessionStatus.SKIP:
+      break;
+
+    case SessionStatus.VERIFIED:
+      break;
+
     default:
       throw new ClientError("Unexpected session status");
   }
 
-  const browserSession = await getUpdatedBrowserSession(ctx, authorizationSession);
-  const consentSession = await getUpdatedConsentSession(ctx, authorizationSession, browserSession);
+  const {
+    identifiers: { browserSessionId, consentSessionId },
+  } = authorizationSession;
 
-  setBrowserSessionCookie(ctx, browserSession);
-
-  authorizationSession.identifiers.browserSessionId = browserSession.id;
-  authorizationSession.identifiers.consentSessionId = consentSession.id;
-
-  const updatedSession = await authorizationSessionCache.update(authorizationSession);
+  const browserSession = await browserSessionRepository.find({ id: browserSessionId });
+  const consentSession = await consentSessionRepository.find({ id: consentSessionId });
 
   return await generateCallbackResponse(
     ctx,
-    updatedSession,
+    authorizationSession,
     browserSession,
     consentSession,
     client,

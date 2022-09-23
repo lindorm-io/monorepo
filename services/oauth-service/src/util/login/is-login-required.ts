@@ -15,7 +15,9 @@ export const isLoginRequired = (
     });
   }
 
-  if (authorizationSession.status.login === SessionStatus.CONFIRMED) {
+  if (
+    [SessionStatus.CONFIRMED, SessionStatus.VERIFIED].includes(authorizationSession.status.login)
+  ) {
     return false;
   }
 

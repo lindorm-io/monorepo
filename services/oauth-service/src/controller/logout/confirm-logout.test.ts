@@ -1,12 +1,11 @@
 import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
 import { LogoutSessionType } from "../../enum";
 import { SessionStatus } from "../../common";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
+import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestLogoutSession } from "../../fixtures/entity";
-import { createMockCache } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -44,11 +43,5 @@ describe("confirmLogoutController", () => {
         status: SessionStatus.CONFIRMED,
       }),
     );
-  });
-
-  test("should throw on invalid status", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.CONFIRMED;
-
-    await expect(confirmLogoutController(ctx)).rejects.toThrow(ClientError);
   });
 });

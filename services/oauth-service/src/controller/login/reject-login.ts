@@ -1,9 +1,8 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
-import { createLoginRejectedUri } from "../../util";
+import { assertSessionPending, createLoginRejectedUri } from "../../util";
 
 interface RequestData {
   id: string;
@@ -24,13 +23,7 @@ export const rejectLoginController: ServerKoaController<RequestData> = async (
     logger,
   } = ctx;
 
-  if (
-    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
-      authorizationSession.status.login,
-    )
-  ) {
-    throw new ClientError("Login has already been set");
-  }
+  assertSessionPending(authorizationSession.status.login);
 
   logger.debug("Updating authorization session");
 

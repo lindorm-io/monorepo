@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { createAuthorizationVerifyUri } from "../../util";
+import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 import { difference } from "lodash";
 import {
   ConfirmConsentRequestBody,
@@ -33,13 +33,7 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
     logger,
   } = ctx;
 
-  if (
-    [SessionStatus.CONFIRMED, SessionStatus.REJECTED, SessionStatus.SKIP].includes(
-      authorizationSession.status.consent,
-    )
-  ) {
-    throw new ClientError("Consent has already been set");
-  }
+  assertSessionPending(authorizationSession.status.consent);
 
   const wrongAudiences = difference(authorizationSession.requestedConsent.audiences, audiences);
 

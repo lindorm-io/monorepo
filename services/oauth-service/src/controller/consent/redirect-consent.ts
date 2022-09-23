@@ -29,6 +29,7 @@ export const redirectConsentController: ServerKoaController<RequestData> = async
   switch (authorizationSession.status.consent) {
     case SessionStatus.CONFIRMED:
     case SessionStatus.SKIP:
+    case SessionStatus.VERIFIED:
       return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 
     case SessionStatus.PENDING:
