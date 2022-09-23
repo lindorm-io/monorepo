@@ -31,10 +31,11 @@ export interface GetLoginDataResponseBody {
     type: ClientType;
   };
   requested: {
-    authenticationMethods: Array<AuthenticationMethod>;
     identityId: string | null;
-    levelHint: LevelOfAssurance;
-    levelOfAssurance: LevelOfAssurance;
-    methodHint: Array<AuthenticationMethod>;
+    minimumLevel: LevelOfAssurance;
+    recommendedLevel: LevelOfAssurance;
+    recommendedMethods: Array<AuthenticationMethod>;
+    requiredLevel: LevelOfAssurance;
+    requiredMethods: Array<AuthenticationMethod>;
   };
 }

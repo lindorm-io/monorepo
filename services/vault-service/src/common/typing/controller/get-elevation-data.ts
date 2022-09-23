@@ -14,10 +14,10 @@ export interface GetElevationDataResponseBody {
     uiLocales: Array<string>;
   };
   requested: {
-    authenticationMethods: Array<AuthenticationMethod>;
-    levelHint: LevelOfAssurance;
-    levelOfAssurance: LevelOfAssurance;
-    methodHint: Array<AuthenticationMethod>;
-    missingAccessLevel: LevelOfAssurance;
+    minimumLevel: LevelOfAssurance;
+    recommendedLevel: LevelOfAssurance;
+    recommendedMethods: Array<AuthenticationMethod>;
+    requiredLevel: LevelOfAssurance;
+    requiredMethods: Array<AuthenticationMethod>;
   };
 }
