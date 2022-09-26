@@ -27,7 +27,6 @@ export const generateClientConfig = (
     let weight = config.weight;
 
     if (authenticationSession.requiredLevel === config.value) {
-      recommended = true;
       weight = weight * 5;
     }
     if (authenticationSession.recommendedMethods.includes(config.method)) {
