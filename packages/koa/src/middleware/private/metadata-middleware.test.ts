@@ -1,4 +1,5 @@
 import { metadataMiddleware } from "./metadata-middleware";
+import { Environment } from "../../enum";
 
 jest.mock("crypto", () => ({
   randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
@@ -24,7 +25,7 @@ describe("metadataMiddleware", () => {
   });
 
   test("should use values from headers if they exist", async () => {
-    await expect(metadataMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual({
       agent: {
@@ -49,6 +50,7 @@ describe("metadataMiddleware", () => {
         systemVersion: "x-device-system-version",
         uniqueId: "x-device-unique-id",
       },
+      environment: "test",
       identifiers: {
         correlationId: "x-correlation-id",
         fingerprint: "x-fingerprint",
@@ -59,7 +61,7 @@ describe("metadataMiddleware", () => {
   test("should use agent data from header", async () => {
     ctx.get = jest.fn((): void => {});
 
-    await expect(metadataMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual(
       expect.objectContaining({
@@ -79,7 +81,7 @@ describe("metadataMiddleware", () => {
     ctx.get = jest.fn((): void => {});
     ctx.userAgent = {};
 
-    await expect(metadataMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual({
       agent: {
@@ -104,6 +106,7 @@ describe("metadataMiddleware", () => {
         systemVersion: null,
         uniqueId: null,
       },
+      environment: "test",
       identifiers: {
         correlationId: "a26dad28-e854-447d-bce6-5c685cddfea8",
         fingerprint: null,
