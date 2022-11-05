@@ -1,26 +1,24 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ClientScope, EmitSocketEventRequestData } from "../../../common";
-import { ServerKoaContext } from "../../../types";
+import { ServerKoaContext, StrategyInitialisation } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { randomString } from "@lindorm-io/core";
 import { getValidIdentitySessions } from "../../authentication";
+import { AuthenticationStrategyConfig } from "../../../constant";
 
 interface Options {
   strategySessionToken: string;
-}
-
-interface Result {
-  displayCode: string;
 }
 
 export const initialiseSessionAcceptWithCode = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
+  config: AuthenticationStrategyConfig,
   options: Options,
-): Promise<Result> => {
+): Promise<StrategyInitialisation> => {
   const {
     axios: { communicationClient, oauthClient },
     cache: { strategySessionCache },
@@ -34,7 +32,8 @@ export const initialiseSessionAcceptWithCode = async (
     });
   }
 
-  const code = `${randomString(4)}-${randomString(4)}`.toUpperCase();
+  const code = randomString(config.confirmLength).toUpperCase();
+
   strategySession.code = await argon.encrypt(code);
 
   await strategySessionCache.update(strategySession);
@@ -58,5 +57,8 @@ export const initialiseSessionAcceptWithCode = async (
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
   });
 
-  return { displayCode: code };
+  return {
+    displayCode: code,
+    qrCode: null,
+  };
 };

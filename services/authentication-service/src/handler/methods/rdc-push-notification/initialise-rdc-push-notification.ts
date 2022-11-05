@@ -5,6 +5,7 @@ import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRdcBody } from "../../../util";
 import { randomString } from "@lindorm-io/core";
+import { AuthenticationStrategyConfig } from "../../../constant";
 
 interface Options {
   strategySessionToken: string;
@@ -14,6 +15,7 @@ export const initialiseRdcPushNotification = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
+  config: AuthenticationStrategyConfig,
   options: Options,
 ): Promise<void> => {
   const {

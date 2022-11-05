@@ -1,6 +1,6 @@
 import { AuthenticationMethod } from "../common";
 import { AuthenticationStrategy } from "../enum";
-import { ConfirmKey, Hint, InitialiseKey } from "../types";
+import { InputKey, Hint, InitialiseKey, InputMode } from "../types";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
 
 export type AuthenticationStrategyConfig = {
@@ -8,9 +8,11 @@ export type AuthenticationStrategyConfig = {
   strategy: AuthenticationStrategy;
   amrValuesMax: number;
   amrValuesMin: number;
+  confirmKey: InputKey;
+  confirmLength: number | null;
+  confirmMode: InputMode;
   hint: Hint;
   initialiseKey: InitialiseKey;
-  confirmKey: ConfirmKey;
   mfaCookie: boolean;
   pollingRequired: boolean;
   tokenReturn: boolean;
@@ -28,6 +30,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "none",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: true,
     pollingRequired: true,
     tokenReturn: false,
@@ -43,6 +47,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "challenge_confirmation_token",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: false,
     pollingRequired: true,
     tokenReturn: true,
@@ -58,6 +64,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "email",
     initialiseKey: "email",
     confirmKey: "code",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: false,
     pollingRequired: true,
     tokenReturn: false,
@@ -73,6 +81,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "email",
     initialiseKey: "email",
     confirmKey: "otp",
+    confirmLength: 6,
+    confirmMode: "numeric",
     mfaCookie: true,
     pollingRequired: false,
     tokenReturn: true,
@@ -88,6 +98,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "none",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: false,
     pollingRequired: false,
     tokenReturn: true,
@@ -103,6 +115,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "email",
     initialiseKey: "username",
     confirmKey: "password",
+    confirmLength: null,
+    confirmMode: "text",
     mfaCookie: false,
     pollingRequired: false,
     tokenReturn: true,
@@ -118,6 +132,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "email",
     initialiseKey: "username",
     confirmKey: "password",
+    confirmLength: null,
+    confirmMode: "text",
     mfaCookie: false,
     pollingRequired: false,
     tokenReturn: true,
@@ -133,6 +149,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "phone",
     initialiseKey: "phone_number",
     confirmKey: "otp",
+    confirmLength: 6,
+    confirmMode: "numeric",
     mfaCookie: true,
     pollingRequired: false,
     tokenReturn: true,
@@ -148,6 +166,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "challenge_confirmation_token",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: true,
     pollingRequired: true,
     tokenReturn: false,
@@ -163,6 +183,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "challenge_confirmation_token",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: true,
     pollingRequired: true,
     tokenReturn: false,
@@ -178,6 +200,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "code",
+    confirmLength: 8,
+    confirmMode: "text",
     mfaCookie: false,
     pollingRequired: true,
     tokenReturn: false,
@@ -193,6 +217,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "otp",
+    confirmLength: 6,
+    confirmMode: "numeric",
     mfaCookie: true,
     pollingRequired: false,
     tokenReturn: true,
@@ -208,6 +234,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "totp",
+    confirmLength: 6,
+    confirmMode: "numeric",
     mfaCookie: true,
     pollingRequired: false,
     tokenReturn: true,
@@ -223,6 +251,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     hint: "none",
     initialiseKey: "none",
     confirmKey: "none",
+    confirmLength: null,
+    confirmMode: "none",
     mfaCookie: true,
     pollingRequired: false,
     tokenReturn: true,

@@ -1,6 +1,6 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientScope, InitialiseRdcSessionRequestData, RdcSessionMode } from "../../../common";
-import { ServerKoaContext } from "../../../types";
+import { ServerKoaContext, StrategyInitialisation } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRdcBody } from "../../../util";
 import { randomString } from "@lindorm-io/core";
@@ -9,16 +9,12 @@ interface Options {
   strategySessionToken: string;
 }
 
-interface Result {
-  qrCode: string;
-}
-
 export const initialiseRdcQrCode = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
   options: Options,
-): Promise<Result> => {
+): Promise<StrategyInitialisation> => {
   const {
     axios: { deviceClient, oauthClient },
     cache: { strategySessionCache },
@@ -40,5 +36,8 @@ export const initialiseRdcQrCode = async (
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_RDC_WRITE])],
   });
 
-  return { qrCode: "QR_CODE" };
+  return {
+    displayCode: null,
+    qrCode: "QR_CODE",
+  };
 };

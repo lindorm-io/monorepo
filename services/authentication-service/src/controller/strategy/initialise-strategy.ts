@@ -1,13 +1,18 @@
 import Joi from "joi";
 import { AuthenticationStrategy } from "../../enum";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ConfirmKey, ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
 import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { findStrategyConfig } from "../../util";
 import { getExpires } from "@lindorm-io/core";
+import {
+  DefaultStrategyConfig,
+  ServerKoaController,
+  StrategyConfig,
+  StrategyInitialisation,
+} from "../../types";
 import {
   JOI_EMAIL,
   JOI_GUID,
@@ -38,15 +43,7 @@ type RequestData = {
   username?: string;
 };
 
-type ResponseBody = {
-  id: string;
-  displayCode?: string;
-  confirmKey: ConfirmKey;
-  expiresIn: number;
-  pollingRequired: boolean;
-  qrCode?: string;
-  strategySessionToken: string | null;
-};
+type ResponseBody = StrategyConfig;
 
 export const initialiseStrategySchema = Joi.object<RequestData>()
   .keys({
@@ -99,10 +96,20 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     type: TokenType.STRATEGY_SESSION,
   });
 
-  let extra: {
-    displayCode?: string;
-    qrCode?: string;
-  } = {};
+  const strategyConfig: DefaultStrategyConfig = {
+    id: strategySession.id,
+    expiresIn,
+    inputKey: config.confirmKey,
+    inputLength: config.confirmLength,
+    inputMode: config.confirmMode,
+    pollingRequired: config.pollingRequired,
+    strategySessionToken: config.tokenReturn ? strategySessionToken : null,
+  };
+
+  let strategyInitialisation: StrategyInitialisation = {
+    displayCode: null,
+    qrCode: null,
+  };
 
   switch (strategy) {
     case AuthenticationStrategy.DEVICE_CHALLENGE:
@@ -124,37 +131,46 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
       break;
 
     case AuthenticationStrategy.EMAIL_OTP:
-      await initialiseEmailOtp(ctx, strategySession, {
+      await initialiseEmailOtp(ctx, strategySession, config, {
         email,
       });
       break;
 
     case AuthenticationStrategy.PHONE_OTP:
-      await initialisePhoneOtp(ctx, authenticationSession, strategySession, {
+      await initialisePhoneOtp(ctx, authenticationSession, strategySession, config, {
         phoneNumber,
       });
       break;
 
     case AuthenticationStrategy.RDC_PUSH_NOTIFICATION:
-      await initialiseRdcPushNotification(ctx, authenticationSession, strategySession, {
+      await initialiseRdcPushNotification(ctx, authenticationSession, strategySession, config, {
         strategySessionToken,
       });
       break;
 
     case AuthenticationStrategy.RDC_QR_CODE:
-      extra = await initialiseRdcQrCode(ctx, authenticationSession, strategySession, {
-        strategySessionToken,
-      });
+      strategyInitialisation = await initialiseRdcQrCode(
+        ctx,
+        authenticationSession,
+        strategySession,
+        {
+          strategySessionToken,
+        },
+      );
       break;
 
     case AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE:
-      extra = await initialiseSessionAcceptWithCode(ctx, authenticationSession, strategySession, {
-        strategySessionToken,
-      });
+      strategyInitialisation = await initialiseSessionAcceptWithCode(
+        ctx,
+        authenticationSession,
+        strategySession,
+        config,
+        { strategySessionToken },
+      );
       break;
 
     case AuthenticationStrategy.SESSION_OTP:
-      await initialiseSessionOtp(ctx, authenticationSession, strategySession);
+      await initialiseSessionOtp(ctx, authenticationSession, strategySession, config);
       break;
 
     case AuthenticationStrategy.WEBAUTHN:
@@ -166,13 +182,6 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
   }
 
   return {
-    body: {
-      id: strategySession.id,
-      confirmKey: config.confirmKey,
-      strategySessionToken: config.tokenReturn ? strategySessionToken : null,
-      expiresIn,
-      pollingRequired: config.pollingRequired,
-      ...extra,
-    },
+    body: { ...strategyConfig, ...strategyInitialisation },
   };
 };

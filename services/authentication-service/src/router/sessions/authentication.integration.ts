@@ -230,7 +230,7 @@ describe("/sessions/authentication", () => {
     expect(response.body).toStrictEqual({
       id: expect.any(String),
       confirm_key: "otp",
-      expires_in: 31536000,
+      expires_in: 31530060,
       polling_required: false,
       strategy_session_token: expect.any(String),
     });

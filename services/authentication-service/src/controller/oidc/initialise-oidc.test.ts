@@ -37,7 +37,7 @@ describe("initialiseOidcController", () => {
     expect(ctx.axios.oidcClient.post).toHaveBeenCalledWith("/internal/sessions", {
       body: {
         callbackId: "048b2a65-3aeb-4839-a0a9-c647879bc2e3",
-        callbackUri: "https://authentication.test.lindorm.io:3100/sessions/oidc/callback",
+        callbackUri: "https://authentication.test.lindorm.io:3001/sessions/oidc/callback",
         expiresAt: "2022-01-01T08:00:00.000Z",
         identityId: null,
         provider: "provider",

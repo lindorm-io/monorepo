@@ -1,9 +1,10 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
+import { AuthenticationStrategyConfig } from "../../../constant";
 import { ClientScope, SendCodeRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { getRandomNumberAsync } from "../../../util";
+import { randomNumberAsync } from "../../../util";
 
 interface Options {
   phoneNumber: string;
@@ -13,6 +14,7 @@ export const initialisePhoneOtp = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
+  config: AuthenticationStrategyConfig,
   options: Options,
 ): Promise<void> => {
   const {
@@ -22,7 +24,10 @@ export const initialisePhoneOtp = async (
 
   const { phoneNumber } = options;
 
-  const otp = (await getRandomNumberAsync(6)).toString().padStart(6, "0");
+  const otp = (await randomNumberAsync(config.confirmLength))
+    .toString()
+    .padStart(config.confirmLength, "0");
+
   strategySession.otp = await argon.encrypt(otp);
 
   await strategySessionCache.update(strategySession);
