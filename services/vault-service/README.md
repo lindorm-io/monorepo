@@ -1,3 +1,3 @@
 # @lindorm-io/vault-service
 
-Device Service
+Vault Service

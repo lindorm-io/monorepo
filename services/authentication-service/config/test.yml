@@ -28,7 +28,7 @@ server:
   host: https://authentication.test.lindorm.io
   keys:
     - secret
-  port: 3100
+  port: 3001
   workers: false
 
 services:

@@ -13,37 +13,37 @@ oauth:
   client_secret: m4Qq7lqmydszhLq4-dR6tzI11CWlfKnckPwUBm_qrlEgWV4ouOgqNVZBsF7xGGQ3
 
 server:
-  domain: http://localhost:3100
+  domain: http://localhost:3001
   environment: development
   issuer: https://authentication.development.lindorm.io
   host: http://localhost
   keys:
     - secret
-  port: 3100
+  port: 3001
   workers: true
 
 services:
   communication_service:
     issuer: https://communication.development.lindorm.io
     host: http://localhost
-    port: 3200
+    port: 3002
   device_service:
     issuer: https://device.development.lindorm.io
     host: http://localhost
-    port: 3300
+    port: 3003
   identity_service:
     issuer: https://identity.development.lindorm.io
     host: http://localhost
-    port: 3400
+    port: 3004
   oauth_service:
     issuer: https://oauth.development.lindorm.io
     host: http://localhost
-    port: 3500
+    port: 3005
   oidc_service:
     issuer: https://oidc.development.lindorm.io
     host: http://localhost
-    port: 3600
+    port: 3006
   vault_service:
     issuer: https://vault.development.lindorm.io
     host: http://localhost
-    port: 3700
+    port: 3007

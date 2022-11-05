@@ -18,7 +18,7 @@ server:
   host: http://localhost
   keys:
     - secret
-  port: 3500
+  port: 3005
   workers: true
 
 services:
@@ -26,9 +26,9 @@ services:
     client_id: f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f
     issuer: https://authentication.development.lindorm.io
     host: http://localhost
-    port: 3100
+    port: 3001
   identity_service:
     client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
     issuer: https://identity.development.lindorm.io
     host: http://localhost
-    port: 3400
+    port: 3004

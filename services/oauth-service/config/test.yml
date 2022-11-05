@@ -27,7 +27,7 @@ server:
   host: https://oauth.test.lindorm.io
   keys:
     - secret
-  port: 3500
+  port: 3005
   workers: false
 
 services:

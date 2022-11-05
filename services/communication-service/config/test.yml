@@ -17,7 +17,7 @@ server:
   environment: test
   issuer: https://communication.test.lindorm.io
   host: https://communication.test.lindorm.io
-  port: 3200
+  port: 3002
   workers: false
 
 services:

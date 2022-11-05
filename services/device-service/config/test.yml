@@ -23,7 +23,7 @@ server:
   environment: test
   issuer: https://device.test.lindorm.io
   host: https://device.test.lindorm.io
-  port: 3300
+  port: 3003
   workers: false
 
 services:

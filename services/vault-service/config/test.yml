@@ -23,7 +23,7 @@ server:
   environment: test
   issuer: https://vault.test.lindorm.io
   host: https://vault.test.lindorm.io
-  port: 3700
+  port: 3007
   workers: false
 
 services:

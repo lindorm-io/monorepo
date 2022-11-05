@@ -52,7 +52,7 @@ server:
   environment: test
   issuer: https://oidc.test.lindorm.io
   host: https://oidc.test.lindorm.io
-  port: 3600
+  port: 3006
   workers: false
 
 services:

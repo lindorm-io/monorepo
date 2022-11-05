@@ -13,15 +13,15 @@ server:
   environment: development
   issuer: https://communication.development.lindorm.io
   host: http://localhost
-  port: 3200
+  port: 3002
   workers: true
 
 services:
   device_service:
     issuer: https://device.development.lindorm.io
     host: http://localhost
-    port: 3300
+    port: 3003
   oauth_service:
     issuer: https://oauth.development.lindorm.io
     host: http://localhost
-    port: 3500
+    port: 3005

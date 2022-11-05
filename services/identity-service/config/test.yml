@@ -26,7 +26,7 @@ server:
   environment: test
   issuer: https://identity.test.lindorm.io
   host: https://identity.test.lindorm.io
-  port: 3400
+  port: 3004
   workers: false
 
 services:

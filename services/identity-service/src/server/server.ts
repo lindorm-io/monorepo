@@ -22,7 +22,7 @@ export const server = createNodeServer<ServerKoaContext>({
   host: configuration.server.host,
   issuer: configuration.server.issuer,
   keystore: {
-    exposePublic: true,
+    exposePublic: false,
     keyPairCache: true,
   },
   logger,
