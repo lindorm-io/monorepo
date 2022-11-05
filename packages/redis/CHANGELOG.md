@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.10.1...@lindorm-io/redis@0.11.0) (2022-11-05)
+
+
+### Bug Fixes
+
+* skip empty index keys ([5bf3ff3](https://github.com/lindorm-io/monorepo/commit/5bf3ff3dcedd037396d2256188a1195f3e894e4a))
+
+
+### Features
+
+* add namespace to redis connection for entity separation ([ce76937](https://github.com/lindorm-io/monorepo/commit/ce76937e3fa55856ee64042d15b2e970836e6002))
+
+
+
+
+
 ## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.10.0...@lindorm-io/redis@0.10.1) (2022-09-07)
 
 

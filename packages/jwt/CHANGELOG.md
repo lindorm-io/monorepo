@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.8...@lindorm-io/jwt@0.8.9) (2022-11-05)
+
+
+### Bug Fixes
+
+* add logger error to jwt ([aa683ac](https://github.com/lindorm-io/monorepo/commit/aa683accf053906ac5f0e0158f2442433c22e5fb))
+
+
+
+
+
 ## [0.8.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.7...@lindorm-io/jwt@0.8.8) (2022-09-07)
 
 **Note:** Version bump only for package @lindorm-io/jwt

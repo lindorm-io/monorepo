@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.4.5...@lindorm-io/axios@0.4.6) (2022-11-05)
+
+
+### Bug Fixes
+
+* add credentials option ([22e4b19](https://github.com/lindorm-io/monorepo/commit/22e4b196b0f98f2cdf17ce44d9fe17bd68c8ae7e))
+
+
+
+
+
 ## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.4.4...@lindorm-io/axios@0.4.5) (2022-09-07)
 
 **Note:** Version bump only for package @lindorm-io/axios

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.1.0...@lindorm-io/event-source@0.2.0) (2022-11-05)
+
+
+### Features
+
+* add ability to run multiple view store adapters ([006ad19](https://github.com/lindorm-io/monorepo/commit/006ad19ac24c7136e89d4bdd027e706b5adacf13))
+
+
+
+
+
 # 0.1.0 (2022-09-07)
 
 

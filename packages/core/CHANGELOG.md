@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.7.0...@lindorm-io/core@0.7.1) (2022-11-05)
+
+
+### Bug Fixes
+
+* use base64url for pkce ([5e6dd27](https://github.com/lindorm-io/monorepo/commit/5e6dd27507fd635e75f94b929214fcf8bff4d7b7))
+
+
+
+
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.6.3...@lindorm-io/core@0.7.0) (2022-09-07)
 
 

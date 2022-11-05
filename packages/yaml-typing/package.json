@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/yaml-typing",
   "description": "YAML types generator for lindorm.io",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
