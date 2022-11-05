@@ -1,4 +1,4 @@
-import React, { FunctionComponent, ReactElement, ReactNode } from "react";
+import React, { FunctionComponent, ReactNode } from "react";
 import { Box, Grid } from "@mui/material";
 
 type Props = {

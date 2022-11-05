@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const url = createURL("/oauth2/authorize", {
     host: "http://localhost",
-    port: 3500,
+    port: 3005,
     query: {
       acrValues: [2, "email"].join(" "),
       clientId: "1061f927-d799-487d-bc30-0061dff84447",

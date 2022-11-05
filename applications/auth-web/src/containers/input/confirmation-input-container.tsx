@@ -19,18 +19,14 @@ export const ConfirmationInputContainer: FunctionComponent<Props> = ({
   const [value, setValue] = useState("");
   const [remember, setRemember] = useState(false);
 
-  const onChange = useCallback(
-    (evt: ChangeEvt) => {
-      setValue(evt.target.value);
-    },
-    [setValue],
-  );
+  const onChange = useCallback((value: string) => setValue(value), [setValue]);
 
   const onChangeAutomaticConfirm = useCallback(
-    (evt: ChangeEvt) => {
-      setValue(evt.target.value);
-      if (evt.target.value.length === 6) {
-        onConfirm(evt.target.value, remember);
+    (value: string) => {
+      setValue(value);
+
+      if (value.length === 6) {
+        onConfirm(value, remember);
       }
     },
     [strategy, remember, setValue, onConfirm],

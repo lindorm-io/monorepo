@@ -67,7 +67,7 @@ const Page: NextPage = () => {
 
       axios
         .post<InitialiseStrategyResponse>(
-          `http://localhost:3100/sessions/authentication/${router.query.session_id}/strategy`,
+          `http://localhost:3001/sessions/authentication/${router.query.session_id}/strategy`,
           {
             ...(initialiseKey !== "none" ? { [initialiseKey]: value } : {}),
             strategy,
@@ -86,7 +86,7 @@ const Page: NextPage = () => {
       setConfirmLoading(true);
 
       axios
-        .post(`http://localhost:3100/sessions/strategy/${strategy!.id}/confirm`, {
+        .post(`http://localhost:3001/sessions/strategy/${strategy!.id}/confirm`, {
           ...(strategy!.confirm_key !== "none" ? { [strategy!.confirm_key]: value } : {}),
           strategy_session_token: strategy!.strategy_session_token,
           remember,

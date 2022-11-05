@@ -1,4 +1,3 @@
-import { ChangeEvt } from "../../types/evt";
 import { ConfirmKey } from "../../types/configuration";
 import { FunctionComponent } from "react";
 import { OtpInputField } from "../input/otp-input-field";
@@ -8,8 +7,8 @@ type Props = {
   confirmKey: ConfirmKey;
   disabled: boolean;
   value: string;
-  onChange(evt: ChangeEvt): void;
-  onChangeAutomaticConfirm(evt: ChangeEvt): void;
+  onChange(value: string): void;
+  onChangeAutomaticConfirm(value: string): void;
 };
 
 export const ConfirmationInputField: FunctionComponent<Props> = ({
@@ -30,7 +29,7 @@ export const ConfirmationInputField: FunctionComponent<Props> = ({
         <PasswordInputField
           disabled={disabled}
           value={value}
-          onChange={onChange}
+          onChange={(evt) => onChange(evt.target.value)}
         />
       );
 
@@ -38,7 +37,7 @@ export const ConfirmationInputField: FunctionComponent<Props> = ({
     case "totp":
       return (
         <OtpInputField
-          disabled={disabled}
+          TextFieldsProps={{ disabled }}
           value={value}
           onChange={onChangeAutomaticConfirm}
         />

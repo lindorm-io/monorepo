@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
+    "@fontsource/roboto": "^4.5.8",
     "@lindorm-io/axios": "^0.4.5",
     "@lindorm-io/core": "^0.7.0",
     "@lindorm-io/winston": "^0.4.8",
