@@ -1,5 +1,6 @@
-.idea
 .data
+.downloads
+.idea
 .jest-cache
 .jest-coverage
 .vscode
