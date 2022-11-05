@@ -4,11 +4,11 @@ services:
   postgres:
     image: postgres
     restart: always
-    container_name: postgres
+    container_name: postgres_10
     labels:
       - postgres
     ports:
-      - "5432:5432"
+      - "5010:5432"
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: example

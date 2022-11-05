@@ -48,7 +48,7 @@ describe("EventSource (Postgres)", () => {
     amqp = new AmqpConnection(
       {
         hostname: "localhost",
-        port: 5671,
+        port: 5002,
         connectInterval: 500,
         connectTimeout: 30000,
       },
@@ -58,7 +58,7 @@ describe("EventSource (Postgres)", () => {
     postgres = new PostgresConnection(
       {
         host: "localhost",
-        port: 5431,
+        port: 5003,
         user: "root",
         password: "example",
         database: "default_db",

@@ -18,7 +18,7 @@ describe("LindormRepository.ts", () => {
     connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27017,
+        port: 5008,
         database: "LindormRepository",
         auth: { username: "root", password: "example" },
       },
@@ -29,7 +29,7 @@ describe("LindormRepository.ts", () => {
 
     collection = await connection.collection("TestRepository");
     repository = new TestRepository({ connection, logger });
-  });
+  }, 30000);
 
   afterAll(async () => {
     await connection.disconnect();

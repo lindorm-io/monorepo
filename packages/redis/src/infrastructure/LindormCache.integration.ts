@@ -23,7 +23,7 @@ describe("LindormCache", () => {
     connection = new RedisConnection(
       {
         host: "localhost",
-        port: 6379,
+        port: 5011,
         namespace: "ns",
       },
       logger,
@@ -33,7 +33,7 @@ describe("LindormCache", () => {
 
     redis = connection.client;
     cache = new TestCache({ connection, logger });
-  });
+  }, 30000);
 
   afterAll(async () => {
     await connection.disconnect();

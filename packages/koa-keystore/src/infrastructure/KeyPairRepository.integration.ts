@@ -22,7 +22,7 @@ describe("KeyPairRepository", () => {
     connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27016,
+        port: 5006,
         database: "database",
         auth: { username: "root", password: "example" },
       },

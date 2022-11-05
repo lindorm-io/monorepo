@@ -21,7 +21,7 @@ describe("MongoViewRepository", () => {
     connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27011,
+        port: 5004,
         auth: { username: "root", password: "example" },
         authSource: "admin",
         database: "MongoViewRepository",

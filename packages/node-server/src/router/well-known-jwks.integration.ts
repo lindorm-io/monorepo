@@ -19,7 +19,7 @@ describe("/.well-known", () => {
     const redisConnection = new RedisConnection(
       {
         host: "localhost",
-        port: 6376,
+        port: 5009,
       },
       logger,
     );

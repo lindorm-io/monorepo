@@ -4,8 +4,8 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: koa_redis
+    container_name: redis_7
     labels:
       - redis
     ports:
-      - "6377:6379"
+      - "5007:6379"

@@ -4,11 +4,11 @@ services:
   mongo:
     image: mongo
     restart: always
-    container_name: mongo
+    container_name: mongo_8
     labels:
       - mongo
     ports:
-      - "27017:27017"
+      - "5008:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example

@@ -17,7 +17,7 @@ describe("AmqpMessageBus", () => {
     connection = new AmqpConnection(
       {
         hostname: "localhost",
-        port: 5671,
+        port: 5002,
         connectInterval: 500,
         connectTimeout: 50000,
       },

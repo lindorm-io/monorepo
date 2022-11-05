@@ -11,7 +11,7 @@ describe("mongoPing", () => {
     connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27017,
+        port: 5008,
         database: "MongoPing",
         auth: { username: "root", password: "example" },
       },
@@ -19,7 +19,7 @@ describe("mongoPing", () => {
     );
 
     await connection.connect();
-  });
+  }, 30000);
 
   afterAll(async () => {
     await connection.disconnect();

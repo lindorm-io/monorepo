@@ -25,7 +25,7 @@ describe("KeyPairCache", () => {
     connection = new RedisConnection(
       {
         host: "localhost",
-        port: 6378,
+        port: 5005,
       },
       logger,
     );

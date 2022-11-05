@@ -12,7 +12,7 @@ describe("mongoQuery", () => {
     connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27017,
+        port: 5008,
         auth: { username: "root", password: "example" },
         database: "MongoQuery",
       },
@@ -20,7 +20,7 @@ describe("mongoQuery", () => {
     );
 
     await connection.connect();
-  });
+  }, 30000);
 
   beforeEach(() => {
     callback = jest.fn();

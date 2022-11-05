@@ -10,7 +10,7 @@ describe("PostgresConnection", () => {
     connection = new PostgresConnection(
       {
         host: "localhost",
-        port: 5432,
+        port: 5010,
         user: "root",
         password: "example",
         database: "default",

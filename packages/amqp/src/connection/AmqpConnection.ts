@@ -25,7 +25,7 @@ export class AmqpConnection
       exchange,
       custom,
       hostname = "localhost",
-      port = 5672,
+      port = 5001,
       ...connectOptions
     } = options;
 

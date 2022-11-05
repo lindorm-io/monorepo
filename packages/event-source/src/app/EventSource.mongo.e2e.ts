@@ -48,7 +48,7 @@ describe("EventSource (Mongo)", () => {
     amqp = new AmqpConnection(
       {
         hostname: "localhost",
-        port: 5671,
+        port: 5002,
         connectInterval: 500,
         connectTimeout: 30000,
       },
@@ -58,7 +58,7 @@ describe("EventSource (Mongo)", () => {
     mongo = new MongoConnection(
       {
         host: "localhost",
-        port: 27011,
+        port: 5004,
         auth: { username: "root", password: "example" },
         authSource: "admin",
         database: "App",

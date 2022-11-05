@@ -15,7 +15,7 @@ describe("assertRateLimit", () => {
     connection = new RedisConnection(
       {
         host: "localhost",
-        port: 6377,
+        port: 5007,
       },
       logger,
     );

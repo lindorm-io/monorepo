@@ -6,7 +6,7 @@ describe("MongoConnection", () => {
     const connection = new MongoConnection(
       {
         host: "localhost",
-        port: 27017,
+        port: 5008,
         database: "LindormRepository",
         auth: { username: "root", password: "example" },
       },
@@ -14,5 +14,5 @@ describe("MongoConnection", () => {
     );
 
     await expect(connection.connect()).resolves.not.toThrow();
-  });
+  }, 30000);
 });

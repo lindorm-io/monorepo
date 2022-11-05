@@ -124,7 +124,7 @@ describe("PostgresSagaStore", () => {
     connection = new PostgresConnection(
       {
         host: "localhost",
-        port: 5431,
+        port: 5003,
         user: "root",
         password: "example",
         database: "default_db",
