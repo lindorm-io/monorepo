@@ -1,5 +1,5 @@
-import React, { FunctionComponent, ReactElement } from "react";
-import { AuthenticationStrategy } from "../../enum/AuthenticationStrategy";
+import React, { FunctionComponent } from "react";
+import { AuthenticationStrategy } from "../../enum";
 import { ClientConfig, InitialiseKey } from "../../types/configuration";
 import { PrimaryActionButton } from "../button/primary-action-button";
 import { SecondaryActionButton } from "../button/secondary-action-button";
@@ -18,6 +18,8 @@ export const PrioritizedInputButton: FunctionComponent<Props> = ({
   onClick,
 }) => {
   const [primary, ...secondary] = clientConfig.strategies;
+
+  console.log("***", { clientConfig, loading, value });
 
   return (
     <>

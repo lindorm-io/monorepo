@@ -1,13 +1,13 @@
+import { Box, Switch, Typography } from "@mui/material";
 import { ChangeEvt } from "../../types/evt";
 import { ConfirmationInputField } from "../../components/aggregates/confirmation-input-field";
 import { FunctionComponent, useCallback, useState } from "react";
-import { InitialiseStrategyResponse } from "../../types/initialise-strategy-response";
 import { PrimaryActionButton } from "../../components/button/primary-action-button";
-import { Box, Switch, Typography } from "@mui/material";
+import { StrategyConfig } from "../../types/configuration";
 
 type Props = {
   loading: boolean;
-  strategy: InitialiseStrategyResponse;
+  strategy: StrategyConfig;
   onConfirm(value: string, remember: boolean): void;
 };
 
@@ -46,11 +46,15 @@ export const ConfirmationInputContainer: FunctionComponent<Props> = ({
     return <Typography variant="h2">{strategy.qr_code}</Typography>;
   }
 
+  console.log("*** ConfirmationInputContainer", { strategy, loading, value });
+
   return (
     <>
       <ConfirmationInputField
-        confirmKey={strategy.confirm_key}
         disabled={loading}
+        inputKey={strategy.input_key}
+        inputLength={strategy.input_length}
+        inputMode={strategy.input_mode}
         value={value}
         onChange={onChange}
         onChangeAutomaticConfirm={onChangeAutomaticConfirm}

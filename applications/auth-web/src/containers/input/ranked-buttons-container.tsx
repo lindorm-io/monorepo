@@ -1,7 +1,7 @@
-import { FunctionComponent, ReactElement } from "react";
-import { RankedInputButton } from "../../components/aggregates/ranked-input-button";
-import { AuthenticationMethod } from "../../enum/AuthenticationMethod";
+import { AuthenticationMethod } from "../../enum";
 import { ClientConfig } from "../../types/configuration";
+import { FunctionComponent } from "react";
+import { RankedInputButton } from "../../components/aggregates/ranked-input-button";
 
 type Props = {
   clientConfig: Array<ClientConfig>;
@@ -22,6 +22,7 @@ export const RankedButtonsContainer: FunctionComponent<Props> = ({
     <>
       {ranked.map((config) => (
         <RankedInputButton
+          key={config.rank}
           clientConfig={config}
           disabled={disabled}
           onClick={onClick}

@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import type { NextPage } from "next";
-import { AuthenticationMethod } from "../../enum/AuthenticationMethod";
+import { AuthenticationMethod, AuthenticationStrategy } from "../../enum";
 import { AuthenticationPageHeader } from "../../components/pages/authentication-page-header";
 import { AuthenticationPageWrapper } from "../../components/pages/authentication-page-wrapper";
-import { AuthenticationStrategy } from "../../enum/AuthenticationStrategy";
-import { ClientConfig, InitialiseKey } from "../../types/configuration";
+import { ClientConfig, InitialiseKey, StrategyConfig } from "../../types/configuration";
 import { ConfirmationInputContainer } from "../../containers/input/confirmation-input-container";
-import { InitialiseStrategyResponse } from "../../types/initialise-strategy-response";
 import { Loader } from "../../components/loader/loader";
 import { PendingResponseBody } from "../../types/get-authentication-info";
 import { PrioritizedInputContainer } from "../../containers/input/prioritized-input-container";
@@ -23,7 +21,7 @@ const Page: NextPage = () => {
   const [initialiseLoading, setInitialiseLoading] = useState<AuthenticationStrategy | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<AuthenticationMethod>();
-  const [strategy, setStrategy] = useState<InitialiseStrategyResponse>();
+  const [strategy, setStrategy] = useState<StrategyConfig>();
 
   const getAuthentication = useCallback(() => {
     if (!router.isReady) return;
@@ -66,7 +64,7 @@ const Page: NextPage = () => {
       setInitialiseLoading(strategy);
 
       axios
-        .post<InitialiseStrategyResponse>(
+        .post<StrategyConfig>(
           `http://localhost:3001/sessions/authentication/${router.query.session_id}/strategy`,
           {
             ...(initialiseKey !== "none" ? { [initialiseKey]: value } : {}),
@@ -87,7 +85,7 @@ const Page: NextPage = () => {
 
       axios
         .post(`http://localhost:3001/sessions/strategy/${strategy!.id}/confirm`, {
-          ...(strategy!.confirm_key !== "none" ? { [strategy!.confirm_key]: value } : {}),
+          ...(strategy!.input_key !== "none" ? { [strategy!.input_key]: value } : {}),
           strategy_session_token: strategy!.strategy_session_token,
           remember,
         })
