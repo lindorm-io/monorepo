@@ -1,5 +1,4 @@
 import { IntervalWorker } from "./IntervalWorker";
-import { sleep } from "@lindorm-io/core";
 import { createMockLogger } from "@lindorm-io/winston";
 
 describe("IntervalWorker.ts", () => {
@@ -7,22 +6,28 @@ describe("IntervalWorker.ts", () => {
   let worker: IntervalWorker;
   let callback: any;
 
-  const logger = createMockLogger();
+  const waitUntil = (times: number) =>
+    new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (worker.triggerAmount >= times) {
+          clearInterval(interval);
+          resolve(undefined);
+        }
+      }, 100);
+    });
 
   beforeEach(() => {
     eventResult = {};
-    callback = jest.fn(
-      () =>
-        new Promise((resolve) => {
-          resolve("mock-success");
-        }),
-    );
+    callback = jest.fn(() => new Promise((resolve) => resolve("ok")));
 
-    worker = new IntervalWorker({
-      logger,
-      callback,
-      time: 5,
-    });
+    worker = new IntervalWorker(
+      {
+        callback,
+        retriesBeforeFail: 0,
+        time: 2,
+      },
+      createMockLogger(),
+    );
     worker.on(IntervalWorker.Event.START, () => {
       eventResult.start = true;
     });
@@ -31,17 +36,15 @@ describe("IntervalWorker.ts", () => {
     });
     worker.on(IntervalWorker.Event.SUCCESS, () => {
       eventResult.success = true;
-      worker.stop();
     });
     worker.on(IntervalWorker.Event.ERROR, () => {
       eventResult.error = true;
-      worker.stop();
     });
   });
 
   test("should run callback", async () => {
     worker.trigger();
-    await sleep(10);
+    await waitUntil(1);
     worker.stop();
 
     expect(callback).toHaveBeenCalled();
@@ -53,7 +56,7 @@ describe("IntervalWorker.ts", () => {
 
   test("should start and eventually run callback", async () => {
     worker.start();
-    await sleep(10);
+    await waitUntil(1);
     worker.stop();
 
     expect(callback).toHaveBeenCalled();

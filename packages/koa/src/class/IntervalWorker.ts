@@ -1,16 +1,18 @@
 import Timeout = NodeJS.Timeout;
 import { EventEmitter } from "events";
 import { ILogger } from "@lindorm-io/winston";
-import { sleep } from "@lindorm-io/core";
+import { RetryStrategy, calculateRetry, sleep } from "@lindorm-io/core";
 
 type Callback = () => Promise<void>;
 type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
 
 interface Options {
   callback: Callback;
-  logger: ILogger;
   onError?: OnError;
-  retry?: number;
+  retriesBeforeFail?: number;
+  retryMaximumMilliseconds?: number;
+  retryMilliseconds?: number;
+  retryStrategy?: RetryStrategy;
   time: number;
 }
 
@@ -26,28 +28,59 @@ export class IntervalWorker {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
   private readonly onError: OnError | undefined;
-  private readonly retry: number | undefined;
+  private readonly retriesBeforeFail: number;
+  private readonly retryMaximumMilliseconds: number;
+  private readonly retryMilliseconds: number;
+  private readonly retryStrategy: RetryStrategy;
   private readonly time: number;
+  private active: boolean;
   private interval: Timeout | undefined;
+  private triggered: number;
 
-  public constructor(options: Options) {
+  public constructor(options: Options, logger: ILogger) {
     this.callback = options.callback;
     this.onError = options.onError;
 
+    this.active = false;
     this.interval = undefined;
-    this.retry = options.retry;
+    this.retriesBeforeFail = options.retriesBeforeFail || 3;
+    this.retryMaximumMilliseconds = options.retryMaximumMilliseconds || 30000;
+    this.retryMilliseconds = options.retryMilliseconds || 500;
+    this.retryStrategy = options.retryStrategy;
     this.time = options.time;
+    this.triggered = 0;
 
     this.eventEmitter = new EventEmitter();
-    this.logger = options.logger.createChildLogger(["IntervalWorker"]);
+    this.logger = logger.createChildLogger(["IntervalWorker"]);
   }
+
+  // public properties
+
+  public get triggerAmount(): number {
+    return this.triggered;
+  }
+
+  public set triggerAmount(_: number) {
+    /* ignored */
+  }
+
+  // public event handlers
 
   public on(eventName: string, listener: (...args: any[]) => void): void {
     this.eventEmitter.on(eventName, listener);
   }
 
+  // public
+
   public trigger(attempt = 0): void {
     this.logger.debug("worker trigger");
+
+    if (this.active) {
+      this.logger.debug("worker already active");
+      return;
+    }
+
+    this.active = true;
 
     this.callback()
       .then((result: any) => {
@@ -58,20 +91,25 @@ export class IntervalWorker {
         this.logger.error("worker error", err);
         this.eventEmitter.emit(IntervalWorkerEvent.ERROR, err);
 
-        if (this.onError) {
-          this.onError(err, this).then();
-        }
-
-        if (attempt <= this.retry) {
-          const timeout = attempt * 250;
+        if (attempt <= this.retriesBeforeFail) {
+          const timeout = this.calculateTimeout(attempt);
           this.logger.debug("retrying", { attempt, timeout });
+
           sleep(timeout).then(() => this.trigger(attempt + 1));
         } else {
           this.logger.debug("will not attempt any further retries", {
             attempt,
-            maximum: this.retry,
+            retriesBeforeFail: this.retriesBeforeFail,
           });
+
+          if (this.onError) {
+            this.onError(err, this).then();
+          }
         }
+      })
+      .finally(() => {
+        this.triggered += 1;
+        this.active = false;
       });
   }
 
@@ -94,7 +132,15 @@ export class IntervalWorker {
     this.eventEmitter.emit(IntervalWorkerEvent.STOP);
   }
 
-  public static get Event(): Record<string, IntervalWorkerEvent> {
+  public static get Event(): typeof IntervalWorkerEvent {
     return IntervalWorkerEvent;
+  }
+
+  private calculateTimeout(attempt: number): number {
+    return calculateRetry(attempt, {
+      maximum: this.retryMaximumMilliseconds,
+      milliseconds: this.retryMilliseconds,
+      strategy: this.retryStrategy,
+    });
   }
 }
