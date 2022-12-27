@@ -1,4 +1,3 @@
-import Timeout = NodeJS.Timeout;
 import { EventEmitter } from "events";
 import { ILogger } from "@lindorm-io/winston";
 import { RetryStrategy, calculateRetry, sleep } from "@lindorm-io/core";
@@ -29,12 +28,12 @@ export class IntervalWorker {
   private readonly logger: ILogger;
   private readonly onError: OnError | undefined;
   private readonly retriesBeforeFail: number;
-  private readonly retryMaximumMilliseconds: number;
-  private readonly retryMilliseconds: number;
-  private readonly retryStrategy: RetryStrategy;
+  private readonly retryMaximumMilliseconds: number | undefined;
+  private readonly retryMilliseconds: number | undefined;
+  private readonly retryStrategy: RetryStrategy | undefined;
   private readonly time: number;
   private active: boolean;
-  private interval: Timeout | undefined;
+  private interval: NodeJS.Timeout | undefined;
   private triggered: number;
 
   public constructor(options: Options, logger: ILogger) {
@@ -44,8 +43,8 @@ export class IntervalWorker {
     this.active = false;
     this.interval = undefined;
     this.retriesBeforeFail = options.retriesBeforeFail || 3;
-    this.retryMaximumMilliseconds = options.retryMaximumMilliseconds || 30000;
-    this.retryMilliseconds = options.retryMilliseconds || 500;
+    this.retryMaximumMilliseconds = options.retryMaximumMilliseconds;
+    this.retryMilliseconds = options.retryMilliseconds;
     this.retryStrategy = options.retryStrategy;
     this.time = options.time;
     this.triggered = 0;
@@ -55,6 +54,14 @@ export class IntervalWorker {
   }
 
   // public properties
+
+  public get isActive(): boolean {
+    return this.active;
+  }
+
+  public set isActive(_: boolean) {
+    /* ignored */
+  }
 
   public get triggerAmount(): number {
     return this.triggered;
