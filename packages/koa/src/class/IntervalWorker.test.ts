@@ -44,6 +44,24 @@ describe("IntervalWorker.ts", () => {
 
   test("should run callback", async () => {
     worker.trigger();
+
+    expect(worker.isActive).toBe(true);
+
+    await waitUntil(1);
+    worker.stop();
+
+    expect(callback).toHaveBeenCalled();
+    expect(eventResult).toStrictEqual({
+      success: true,
+      stop: true,
+    });
+    expect(worker.isActive).toBe(false);
+  });
+
+  test("should run callback once", async () => {
+    worker.trigger();
+    worker.trigger();
+    worker.trigger();
     await waitUntil(1);
     worker.stop();
 
