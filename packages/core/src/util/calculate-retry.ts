@@ -1,15 +1,9 @@
-import { RetryStrategy } from "../enum";
+import { RetryOptions } from "../types";
 
-type Options = {
-  maximum: number;
-  milliseconds: number;
-  strategy: RetryStrategy;
-};
+export const calculateRetry = (attempt: number, options: Partial<RetryOptions> = {}): number => {
+  const { maximumMilliseconds = 30000, milliseconds = 500, strategy = "linear" } = options;
 
-export const calculateRetry = (attempt: number, options: Partial<Options> = {}): number => {
-  const { maximum = 30000, milliseconds = 500, strategy = RetryStrategy.LINEAR } = options;
-
-  if (strategy === RetryStrategy.LINEAR) {
+  if (strategy === "linear") {
     return milliseconds * attempt;
   }
 
@@ -19,5 +13,5 @@ export const calculateRetry = (attempt: number, options: Partial<Options> = {}):
     value = value * 2;
   }
 
-  return value > maximum ? maximum : value;
+  return value > maximumMilliseconds ? maximumMilliseconds : value;
 };
