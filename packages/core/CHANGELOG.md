@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.7.1...@lindorm-io/core@0.8.0) (2023-01-04)
+
+
+### Bug Fixes
+
+* move retry options to core ([6d9b4b6](https://github.com/lindorm-io/monorepo/commit/6d9b4b67b572271122f264fde8d871a6ed850c4c))
+
+
+### Features
+
+* add utility to calculate retry ([7e7173f](https://github.com/lindorm-io/monorepo/commit/7e7173f9c131b493583fa28e1a678398bd66bc78))
+
+
+
+
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.7.0...@lindorm-io/core@0.7.1) (2022-11-05)
 
 

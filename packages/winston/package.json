@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/winston",
   "description": "Simple winston logger for lindorm.io",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.7.1",
+    "@lindorm-io/core": "^0.8.0",
     "@lindorm-io/errors": "^0.1.13",
     "chalk": "^4.1.2",
     "fast-safe-stringify": "^2.1.1",

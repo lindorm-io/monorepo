@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.4...@lindorm-io/key-pair@0.6.5) (2023-01-04)
+
+**Note:** Version bump only for package @lindorm-io/key-pair
+
+
+
+
+
 ## [0.6.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.3...@lindorm-io/key-pair@0.6.4) (2022-11-05)
 
 **Note:** Version bump only for package @lindorm-io/key-pair

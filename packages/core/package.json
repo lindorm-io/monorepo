@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/core",
   "description": "Core utilities and files for lindorm.io",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

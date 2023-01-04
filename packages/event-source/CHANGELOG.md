@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.0...@lindorm-io/event-source@0.2.1) (2023-01-04)
+
+**Note:** Version bump only for package @lindorm-io/event-source
+
+
+
+
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.1.0...@lindorm-io/event-source@0.2.0) (2022-11-05)
 
 

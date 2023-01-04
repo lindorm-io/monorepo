@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.14.1...@lindorm-io/koa@0.15.0) (2023-01-04)
+
+
+### Bug Fixes
+
+* improve variables for interval worker ([94c87f0](https://github.com/lindorm-io/monorepo/commit/94c87f05516c4ddf4366965b40c72af4790aafff))
+* update interval worker retry options ([a3d4005](https://github.com/lindorm-io/monorepo/commit/a3d4005923d328bb070b40bc2feec3c6bbb86254))
+
+
+### Features
+
+* improve retry logic for interval worker ([dc6bc78](https://github.com/lindorm-io/monorepo/commit/dc6bc78d244bcd8775440e4857be0ee56c4644ba))
+
+
+
+
+
 ## [0.14.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.14.0...@lindorm-io/koa@0.14.1) (2022-11-05)
 
 
