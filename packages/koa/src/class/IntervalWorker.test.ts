@@ -23,7 +23,7 @@ describe("IntervalWorker.ts", () => {
     worker = new IntervalWorker(
       {
         callback,
-        retriesBeforeFail: 0,
+        retry: { maximumAttempts: 0 },
         time: 2,
       },
       createMockLogger(),
