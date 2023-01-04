@@ -1,7 +1,6 @@
 export * from "./assert-pkce";
 export * from "./base64";
 export * from "./calculate-retry";
-export * from "./case-switch";
 export * from "./get-expires";
 export * from "./get-expiry-date";
 export * from "./is-object-strict";
