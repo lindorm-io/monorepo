@@ -2,33 +2,35 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
 import { ILogger } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
-import { stringToSeconds } from "@lindorm-io/core";
+import { RetryOptions, stringToSeconds } from "@lindorm-io/core";
 
-interface Options {
+type Options = {
   mongoConnection: MongoConnection;
-  retry?: number;
+  retry?: Partial<RetryOptions>;
   logger: ILogger;
   workerInterval?: string;
-}
+};
 
 export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
-  const { mongoConnection, retry = 3, workerInterval = "1 days" } = options;
+  const { mongoConnection, retry, workerInterval = "1 days" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairMongoCacheWorker"]);
 
-  return new IntervalWorker({
-    callback: async (): Promise<void> => {
-      const repository = new KeyPairRepository({
-        connection: mongoConnection,
-        logger,
-      });
+  return new IntervalWorker(
+    {
+      callback: async (): Promise<void> => {
+        const repository = new KeyPairRepository({
+          connection: mongoConnection,
+          logger,
+        });
 
-      await repository.deleteMany({ expires: { $lt: new Date() } });
+        await repository.deleteMany({ expires: { $lt: new Date() } });
+      },
+      retry,
+      time,
     },
     logger,
-    retry,
-    time,
-  });
+  );
 };

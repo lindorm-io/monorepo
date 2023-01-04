@@ -3,7 +3,7 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { RedisConnection } from "@lindorm-io/redis";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { getExpiryDate, RetryOptions, stringToSeconds } from "@lindorm-io/core";
 import { getKeysFromJwks } from "../util";
 import {
   Axios,
@@ -11,33 +11,33 @@ import {
   AxiosClientCredentialsMiddlewareConfig,
 } from "@lindorm-io/axios";
 
-interface OAuthServiceOptions {
+type OAuthServiceOptions = {
   host: string;
   port?: number;
-}
+};
 
-interface VaultServiceOptions {
+type VaultServiceOptions = {
   host: string;
   path?: string;
   port?: number;
-}
+};
 
-interface Options {
+type Options = {
   clientCredentials: AxiosClientCredentialsMiddlewareConfig;
   oauthService: OAuthServiceOptions;
   redisConnection: RedisConnection;
-  retry?: number;
+  retry?: Partial<RetryOptions>;
   vaultService: VaultServiceOptions;
   logger: ILogger;
   workerInterval?: string;
-}
+};
 
 export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
   const {
     clientCredentials,
     oauthService,
     redisConnection,
-    retry = 3,
+    retry,
     vaultService,
     workerInterval = "5 minutes",
   } = options;
@@ -61,27 +61,29 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
 
   const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
 
-  return new IntervalWorker({
-    callback: async (): Promise<void> => {
-      const cache = new KeyPairCache({ connection: redisConnection, logger });
+  return new IntervalWorker(
+    {
+      callback: async (): Promise<void> => {
+        const cache = new KeyPairCache({ connection: redisConnection, logger });
 
-      const keys = await getKeysFromJwks({
-        logger,
-        host: vaultService.host,
-        middleware: [clientCredentialsMiddleware(oauthClient)],
-        path: vaultService.path || "/internal/jwks",
-        port: vaultService.port,
-      });
+        const keys = await getKeysFromJwks({
+          logger,
+          host: vaultService.host,
+          middleware: [clientCredentialsMiddleware(oauthClient)],
+          path: vaultService.path || "/internal/jwks",
+          port: vaultService.port,
+        });
 
-      for (const entity of keys) {
-        if (!entity.expires) {
-          entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+        for (const entity of keys) {
+          if (!entity.expires) {
+            entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+          }
+          await cache.create(entity);
         }
-        await cache.create(entity);
-      }
+      },
+      retry,
+      time,
     },
     logger,
-    retry,
-    time,
-  });
+  );
 };

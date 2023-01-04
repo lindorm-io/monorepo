@@ -3,30 +3,22 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { RedisConnection } from "@lindorm-io/redis";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { getExpiryDate, RetryOptions, stringToSeconds } from "@lindorm-io/core";
 import { getKeysFromJwks } from "../util";
 
-interface Options {
+type Options = {
   host: string;
   name?: string;
   path?: string;
   port?: number;
   redisConnection: RedisConnection;
-  retry?: number;
+  retry?: Partial<RetryOptions>;
   logger: ILogger;
   workerInterval?: string;
-}
+};
 
 export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
-  const {
-    host,
-    name,
-    path,
-    port,
-    redisConnection,
-    retry = 10,
-    workerInterval = "5 minutes",
-  } = options;
+  const { host, name, path, port, redisConnection, retry, workerInterval = "5 minutes" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
@@ -40,27 +32,29 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
     workerInterval,
   });
 
-  return new IntervalWorker({
-    callback: async (): Promise<void> => {
-      const cache = new KeyPairCache({ connection: redisConnection, logger });
+  return new IntervalWorker(
+    {
+      callback: async (): Promise<void> => {
+        const cache = new KeyPairCache({ connection: redisConnection, logger });
 
-      const keys = await getKeysFromJwks({
-        logger,
-        host,
-        name,
-        path,
-        port,
-      });
+        const keys = await getKeysFromJwks({
+          logger,
+          host,
+          name,
+          path,
+          port,
+        });
 
-      for (const entity of keys) {
-        if (!entity.expires) {
-          entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+        for (const entity of keys) {
+          if (!entity.expires) {
+            entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+          }
+          await cache.create(entity);
         }
-        await cache.create(entity);
-      }
+      },
+      retry,
+      time,
     },
     logger,
-    retry,
-    time,
-  });
+  );
 };
