@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { ILogger } from "@lindorm-io/winston";
-import { RetryStrategy, calculateRetry, sleep } from "@lindorm-io/core";
+import { RetryOptions, calculateRetry, sleep } from "@lindorm-io/core";
 
 type Callback = () => Promise<void>;
 type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
@@ -8,10 +8,7 @@ type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
 interface Options {
   callback: Callback;
   onError?: OnError;
-  retriesBeforeFail?: number;
-  retryMaximumMilliseconds?: number;
-  retryMilliseconds?: number;
-  retryStrategy?: RetryStrategy;
+  retry?: Partial<RetryOptions>;
   time: number;
 }
 
@@ -27,10 +24,7 @@ export class IntervalWorker {
   private readonly eventEmitter: EventEmitter;
   private readonly logger: ILogger;
   private readonly onError: OnError | undefined;
-  private readonly retriesBeforeFail: number;
-  private readonly retryMaximumMilliseconds: number | undefined;
-  private readonly retryMilliseconds: number | undefined;
-  private readonly retryStrategy: RetryStrategy | undefined;
+  private readonly retry: RetryOptions;
   private readonly time: number;
   private active: boolean;
   private interval: NodeJS.Timeout | undefined;
@@ -42,10 +36,12 @@ export class IntervalWorker {
 
     this.active = false;
     this.interval = undefined;
-    this.retriesBeforeFail = options.retriesBeforeFail || 3;
-    this.retryMaximumMilliseconds = options.retryMaximumMilliseconds;
-    this.retryMilliseconds = options.retryMilliseconds;
-    this.retryStrategy = options.retryStrategy;
+    this.retry = {
+      maximumAttempts: options.retry?.maximumAttempts || 3,
+      maximumMilliseconds: options.retry?.maximumMilliseconds || 30000,
+      milliseconds: options.retry?.milliseconds || 500,
+      strategy: options.retry?.strategy || "exponential",
+    };
     this.time = options.time;
     this.triggered = 0;
 
@@ -98,15 +94,15 @@ export class IntervalWorker {
         this.logger.error("worker error", err);
         this.eventEmitter.emit(IntervalWorkerEvent.ERROR, err);
 
-        if (attempt <= this.retriesBeforeFail) {
-          const timeout = this.calculateTimeout(attempt);
+        if (attempt <= this.retry.maximumAttempts) {
+          const timeout = calculateRetry(attempt, this.retry);
           this.logger.debug("retrying", { attempt, timeout });
 
           sleep(timeout).then(() => this.trigger(attempt + 1));
         } else {
           this.logger.debug("will not attempt any further retries", {
             attempt,
-            retriesBeforeFail: this.retriesBeforeFail,
+            maximumAttempts: this.retry.maximumAttempts,
           });
 
           if (this.onError) {
@@ -141,13 +137,5 @@ export class IntervalWorker {
 
   public static get Event(): typeof IntervalWorkerEvent {
     return IntervalWorkerEvent;
-  }
-
-  private calculateTimeout(attempt: number): number {
-    return calculateRetry(attempt, {
-      maximum: this.retryMaximumMilliseconds,
-      milliseconds: this.retryMilliseconds,
-      strategy: this.retryStrategy,
-    });
   }
 }
