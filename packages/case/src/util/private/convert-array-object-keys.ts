@@ -1,6 +1,6 @@
 import { convertObjectKeys } from "./convert-object-keys";
 import { isArray } from "lodash";
-import { isObjectStrict } from "../is-object-strict";
+import { isObjectStrict } from "./is-object-strict";
 
 type Callback = (arg: string) => string;
 

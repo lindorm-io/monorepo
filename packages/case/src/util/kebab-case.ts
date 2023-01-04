@@ -1,7 +1,6 @@
 import { CaseInput } from "../types";
-import { convertArrayValues, convertObjectKeys } from "./convert";
+import { convertArrayValues, convertObjectKeys, isObjectStrict } from "./private";
 import { isArray, isString, kebabCase as _kebabCase } from "lodash";
-import { isObjectStrict } from "./is-object-strict";
 
 const kebabArray = (input: Array<string>): Array<string> => convertArrayValues(input, _kebabCase);
 

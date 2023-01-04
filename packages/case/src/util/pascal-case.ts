@@ -1,7 +1,6 @@
 import { CaseInput } from "../types";
 import { camelCase, isArray, isString } from "lodash";
-import { convertArrayValues, convertObjectKeys } from "./convert";
-import { isObjectStrict } from "./is-object-strict";
+import { convertArrayValues, convertObjectKeys, isObjectStrict } from "./private";
 
 const _pascalCase = (string: string): string => {
   const [first, ...rest] = camelCase(string);

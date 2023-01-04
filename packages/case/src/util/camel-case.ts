@@ -1,7 +1,6 @@
 import { CaseInput } from "../types";
 import { camelCase as _camelCase, isArray, isString } from "lodash";
-import { convertArrayValues, convertObjectKeys } from "./convert";
-import { isObjectStrict } from "./is-object-strict";
+import { convertArrayValues, convertObjectKeys, isObjectStrict } from "./private";
 
 const camelArray = (input: Array<string>): Array<string> => convertArrayValues(input, _camelCase);
 

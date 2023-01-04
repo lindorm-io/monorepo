@@ -1,4 +1,4 @@
-import { isObjectStrict } from "../is-object-strict";
+import { isObjectStrict } from "./is-object-strict";
 import { convertArrayObjectKeys } from "./convert-array-object-keys";
 import { isArray } from "lodash";
 
