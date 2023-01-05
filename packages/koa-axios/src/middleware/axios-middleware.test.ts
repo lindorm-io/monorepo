@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { Axios } from "@lindorm-io/axios";
+import { Axios, Middleware } from "@lindorm-io/axios";
 import { MetadataHeader } from "@lindorm-io/koa";
 import { axiosMiddleware } from "./axios-middleware";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -15,10 +15,14 @@ describe("axiosMiddleware", () => {
   const logger = createMockLogger();
 
   beforeEach(() => {
+    const mw: Middleware = async (ctx, next) => {
+      await next();
+    };
+
     options = {
       host: "https://lindorm.io",
       port: 4000,
-      middleware: [{ request: jest.fn().mockResolvedValue({}) }],
+      middleware: [mw],
       clientName: "axiosClient",
     };
 
@@ -38,8 +42,9 @@ describe("axiosMiddleware", () => {
     await expect(axiosMiddleware(options)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient).toStrictEqual(expect.any(Axios));
-    expect(ctx.axios.axiosClient.host).toBe("https://lindorm.io");
+    expect(ctx.axios.axiosClient.host).toBe("lindorm.io");
     expect(ctx.axios.axiosClient.port).toBe(4000);
+    expect(ctx.axios.axiosClient.protocol).toBe("https");
     expect(ctx.axios.axiosClient.middleware.length).toBe(2);
     expect(ctx.metrics.axios).toBe(0);
   });
