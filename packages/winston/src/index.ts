@@ -1,4 +1,3 @@
 export * from "./class";
-export * from "./enum";
-export * from "./mocks";
 export * from "./types";
+export { LogLevel } from "@lindorm-io/core-logger";

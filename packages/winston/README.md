@@ -11,12 +11,12 @@ npm install --save @lindorm-io/winston
 ## Setup
 
 ```typescript
-import { Logger, LogLevel } from "@lindorm-io/winston";
+import { WinstonLogger, LogLevel } from "@lindorm-io/winston";
 
 const pkg = fs.readFileSync(path.join(__dirname, "..", "package.json"), { encoding: "utf8" });
 const { name, version } = JSON.parse(pkg);
 
-const winston = new Logger({
+const winston = new WinstonLogger({
   context: "logger-context",
   packageName: name,
   packageVersion: version,

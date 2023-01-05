@@ -1,9 +1,10 @@
-import { Logger, LogLevel } from "../src";
 import { LindormError } from "@lindorm-io/errors";
+import { LogLevel } from "@lindorm-io/core-logger";
+import { WinstonLogger } from "../src";
 
-const logger = new Logger();
+const logger = new WinstonLogger();
 
-logger.addConsole(LogLevel.INFO, { readable: true, colours: true, timestamp: true });
+logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
 
 const child1 = logger.createChildLogger(["logger"]);
 const child2 = child1.createChildLogger(["child1"]);
@@ -41,7 +42,7 @@ child1.info("this is a log from child 1");
 
 child2.info("this is a log from child 2");
 
-const logger2 = new Logger();
+const logger2 = new WinstonLogger();
 
 logger2.addConsole(LogLevel.INFO, { readable: true, colours: false });
 
@@ -59,7 +60,7 @@ logger.info("this will not be filtered", data);
 
 logger2.info("this will not be filtered", data);
 
-const logger3 = new Logger();
+const logger3 = new WinstonLogger();
 
 logger3.addConsole(LogLevel.INFO);
 
