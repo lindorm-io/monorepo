@@ -1,23 +1,24 @@
 import { Axios } from "../../class";
-import { AxiosMiddleware, AxiosRequest, OAuthTokenResponseData } from "../../types";
-import { difference, flatten, uniq } from "lodash";
-import { getUnixTime } from "date-fns";
 import { MetadataHeader } from "../../enum";
+import { Middleware, OAuthTokenResponseData } from "../../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
+import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
+import { difference, flatten, isArray, isString, uniq } from "lodash";
+import { getUnixTime } from "date-fns";
 
-export interface AxiosClientCredentialsMiddlewareConfig {
-  clientEnvironment: string;
-  clientId: string;
-  clientSecret: string;
-  clientVersion: string;
+export type AxiosClientCredentialsMiddlewareOptions = {
+  clientEnvironment?: string;
+  clientId?: string;
+  clientSecret?: string;
+  clientVersion?: string;
   grantType?: string;
   path?: string;
   timeoutAdjustment?: number;
   useBasicAuth?: boolean;
-}
+};
 
 export const axiosClientCredentialsMiddleware = (
-  config: AxiosClientCredentialsMiddlewareConfig,
+  options: AxiosClientCredentialsMiddlewareOptions,
 ) => {
   const {
     clientEnvironment,
@@ -28,14 +29,27 @@ export const axiosClientCredentialsMiddleware = (
     path = "/oauth2/token",
     timeoutAdjustment = 5,
     useBasicAuth = true,
-  } = config;
+  } = options;
+
+  const headers = {
+    ...(clientId ? { [MetadataHeader.CLIENT_ID]: clientId } : {}),
+    ...(clientEnvironment ? { [MetadataHeader.CLIENT_ENVIRONMENT]: clientEnvironment } : {}),
+    ...(clientVersion ? { [MetadataHeader.CLIENT_VERSION]: clientVersion } : {}),
+  };
+
+  const middleware = [
+    ...(useBasicAuth
+      ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
+      : []),
+    axiosTransformBodyCaseMiddleware("snake", "camel"),
+  ];
 
   let bearerScopes: Array<string> = [];
   let bearerTimeout = 0;
   let bearerToken: string | null = null;
 
-  return (oauthClient: Axios, scopes: Array<string> = [], force = false): AxiosMiddleware => ({
-    request: async (request): Promise<AxiosRequest> => {
+  return (oauthClient: Axios, scopes: Array<string> = [], force = false): Middleware =>
+    async (ctx, next) => {
       const now = getUnixTime(new Date());
 
       if (
@@ -52,33 +66,23 @@ export const axiosClientCredentialsMiddleware = (
             grantType,
             scope: uniq(flatten([bearerScopes, scopes])).join(" "),
           },
-          headers: {
-            [MetadataHeader.CLIENT_ID]: clientId,
-            [MetadataHeader.CLIENT_ENVIRONMENT]: clientEnvironment,
-            [MetadataHeader.CLIENT_VERSION]: clientVersion,
-          },
-          middleware: [
-            ...(useBasicAuth
-              ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
-              : []),
-          ],
+          headers,
+          middleware,
         });
 
-        bearerScopes = uniq(flatten([bearerScopes, scope]));
+        const array = isString(scope) ? scope.split(" ") : isArray(scope) ? scope : [];
+
+        bearerScopes = uniq(flatten([bearerScopes, array]));
         bearerTimeout = now + expiresIn - timeoutAdjustment;
         bearerToken = accessToken;
       }
 
-      return {
-        ...request,
-        headers: {
-          ...(request.headers || {}),
-          Authorization: `Bearer ${bearerToken}`,
-          [MetadataHeader.CLIENT_ID]: clientId,
-          [MetadataHeader.CLIENT_ENVIRONMENT]: clientEnvironment,
-          [MetadataHeader.CLIENT_VERSION]: clientVersion,
-        },
+      ctx.req.headers = {
+        ...ctx.req.headers,
+        Authorization: `Bearer ${bearerToken}`,
+        ...headers,
       };
-    },
-  });
+
+      await next();
+    };
 };

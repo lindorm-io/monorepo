@@ -1,9 +1,10 @@
 import { AxiosBasicCredentials } from "axios";
-import { AxiosMiddleware, RequestConfig } from "../../types";
+import { Middleware } from "../../types";
 
-export const axiosBasicAuthMiddleware = (credentials: AxiosBasicCredentials): AxiosMiddleware => ({
-  config: async (config): Promise<RequestConfig> => ({
-    ...config,
-    auth: credentials,
-  }),
-});
+export const axiosBasicAuthMiddleware =
+  (credentials: AxiosBasicCredentials): Middleware =>
+  async (ctx, next) => {
+    ctx.req.auth = credentials;
+
+    await next();
+  };

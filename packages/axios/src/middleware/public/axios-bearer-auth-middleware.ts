@@ -1,11 +1,14 @@
-import { AxiosMiddleware, AxiosRequest } from "../../types";
+import { Middleware } from "../../types";
 
-export const axiosBearerAuthMiddleware = (accessToken: string): AxiosMiddleware => ({
-  request: async (request): Promise<AxiosRequest> => ({
-    ...request,
-    headers: {
-      ...(request.headers || {}),
+export const axiosBearerAuthMiddleware =
+  (accessToken: string): Middleware =>
+  async (ctx, next) => {
+    ctx.req.auth = { username: undefined, password: undefined };
+
+    ctx.req.headers = {
+      ...ctx.req.headers,
       Authorization: `Bearer ${accessToken}`,
-    },
-  }),
-});
+    };
+
+    await next();
+  };

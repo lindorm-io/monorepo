@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`convertError should resolve a more limited AxiosRequestError 1`] = `[AxiosRequestError: Axios Request Handler encountered an error]`;

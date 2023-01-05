@@ -1,246 +1,157 @@
-import axios, { AxiosResponse as Response, Method } from "axios";
-import { IAxiosRequestError } from "../error";
+import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
+import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
 import { ILogger } from "@lindorm-io/winston";
-import { axiosCaseSwitchMiddleware, axiosRetryMiddleware } from "../middleware/default";
-import { convertError, convertResponse, logAxiosError, logAxiosResponse } from "../util";
-import { createURL, sleep } from "@lindorm-io/core";
-import { getResponseTime } from "../util/get-response-time";
-import { isUndefined, startsWith } from "lodash";
+import { axiosRequestLoggerMiddleware } from "../middleware/private";
 import {
-  AxiosMiddleware,
+  axiosRequestHandler,
+  composeContext,
+  composeMiddleware,
+  defaultRetryCallback,
+  destructUrl,
+} from "../util";
+import {
   AxiosOptions,
-  AxiosRequest,
-  AxiosResponse,
-  RequestConfig,
+  MethodOptions,
+  Middleware,
+  Protocol,
   RequestOptions,
+  RetryOptions,
 } from "../types";
 
 export class Axios {
+  private readonly auth: AxiosBasicCredentials;
   private readonly host: string | undefined;
-  private readonly port: number | undefined;
   private readonly logger: ILogger;
-  private readonly middleware: Array<AxiosMiddleware>;
-  private readonly name: string | undefined;
-  private readonly withCredentials: boolean | undefined;
+  private readonly middleware: Middleware[];
+  private readonly port: number | undefined;
+  private readonly protocol: Protocol | undefined;
+  private readonly retry: RetryOptions;
+  private readonly timeout: number;
+  private readonly withCredentials: boolean;
 
-  public constructor(options: AxiosOptions) {
-    this.port = options.port;
-    this.host = options.host;
-    this.logger = options.logger.createChildLogger(["Axios", options.name]);
+  constructor(options: AxiosOptions = {}, logger: ILogger) {
+    this.logger = logger.createChildLogger(options.name ? ["Axios", options.name] : ["Axios"]);
+
+    const { host, port, protocol } = destructUrl(options.host);
+
+    this.auth = options.auth || DEFAULT_AUTH_OPTIONS;
+    this.host = host;
     this.middleware = options.middleware || [];
-    this.name = options.name;
-    this.withCredentials = options.withCredentials;
+    this.port = options.port || port;
+    this.protocol = options.protocol || protocol || "https";
+    this.retry = options.retry || DEFAULT_RETRY_OPTIONS;
+    this.timeout = options.timeout || DEFAULT_TIMEOUT_OPTIONS;
+    this.withCredentials = options.withCredentials === true;
   }
 
-  public async get<Data = Record<string, any>>(
-    path: string,
-    options: RequestOptions = {},
+  public async delete<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
   ): Promise<AxiosResponse<Data>> {
-    if (options.body) {
-      throw new Error("Unable to used data for a GET request");
-    }
-
-    return this.createRequest<Data>({ method: "get", path }, options);
+    return this.composeRequest<Data>(pathOrUrl, "delete", options);
   }
 
-  public async post<Data = Record<string, any>>(
-    path: string,
-    options: RequestOptions = {},
+  public async get<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
   ): Promise<AxiosResponse<Data>> {
-    return this.createRequest<Data>({ method: "post", path }, options);
+    return this.composeRequest<Data>(pathOrUrl, "get", options);
   }
 
-  public async put<Data = Record<string, any>>(
-    path: string,
-    options: RequestOptions = {},
+  public async head<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
   ): Promise<AxiosResponse<Data>> {
-    return this.createRequest<Data>({ method: "put", path }, options);
+    return this.composeRequest<Data>(pathOrUrl, "head", options);
   }
 
-  public async patch<Data = Record<string, any>>(
-    path: string,
-    options: RequestOptions = {},
+  public async options<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
   ): Promise<AxiosResponse<Data>> {
-    return this.createRequest<Data>({ method: "patch", path }, options);
+    return this.composeRequest<Data>(pathOrUrl, "options", options);
   }
 
-  public async delete<Data = Record<string, any>>(
-    path: string,
-    options: RequestOptions = {},
+  public async patch<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
   ): Promise<AxiosResponse<Data>> {
-    return this.createRequest<Data>({ method: "delete", path }, options);
+    return this.composeRequest<Data>(pathOrUrl, "patch", options);
   }
 
-  public async request<Data = Record<string, any>>(
+  public async post<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
+  ): Promise<AxiosResponse<Data>> {
+    return this.composeRequest<Data>(pathOrUrl, "post", options);
+  }
+
+  public async put<Data = any>(
+    pathOrUrl: URL | string,
+    options?: RequestOptions,
+  ): Promise<AxiosResponse<Data>> {
+    return this.composeRequest<Data>(pathOrUrl, "put", options);
+  }
+
+  public async request<Data = any>(
+    options: MethodOptions & RequestOptions,
+  ): Promise<AxiosResponse<Data>> {
+    const { method, path, url, ...rest } = options;
+
+    return this.composeRequest<Data>(url || path, method, rest);
+  }
+
+  private async composeRequest<Data = any>(
+    pathOrUrl: URL | string,
     method: Method,
-    path: string,
     options: RequestOptions = {},
   ): Promise<AxiosResponse<Data>> {
-    return this.createRequest<Data>({ method, path }, options);
-  }
+    const {
+      auth,
+      body,
+      config,
+      headers = {},
+      params = {},
+      query = {},
+      retry,
+      retryCallback,
+      timeout,
+      withCredentials,
+      middleware = [],
+    } = options;
 
-  private createURL(path: string, options: RequestOptions): string {
-    const { params, query } = options;
+    const url = destructUrl(pathOrUrl);
 
-    if (startsWith(path, "http")) {
-      return createURL(path, { params, query }).toString();
-    }
-
-    if (this.host) {
-      return createURL(path, {
-        host: this.host,
-        port: this.port,
-        params,
-        query,
-      }).toString();
-    }
-
-    throw new Error(`Invalid Path: [ ${path} ]`);
-  }
-
-  private async configMiddleware(
-    config: RequestConfig,
-    options: RequestOptions,
-  ): Promise<RequestConfig> {
-    const middleware = [...this.middleware, ...(options.middleware || [])];
-
-    for (const mw of middleware) {
-      if (!mw.config) continue;
-      config = await mw.config(config);
-    }
-
-    return config;
-  }
-
-  private async errorMiddleware(
-    error: IAxiosRequestError,
-    options: RequestOptions,
-  ): Promise<IAxiosRequestError> {
-    const middleware = [...this.middleware, ...(options.middleware || [])];
-
-    for (const mw of middleware) {
-      if (!mw.error) continue;
-      error = await mw.error(error);
-    }
-
-    return error;
-  }
-
-  private async requestMiddleware(
-    request: AxiosRequest,
-    options: RequestOptions,
-  ): Promise<AxiosRequest> {
-    const middleware = [
-      ...this.middleware,
-      ...(options.middleware || []),
-      axiosCaseSwitchMiddleware,
-    ];
-
-    for (const mw of middleware) {
-      if (!mw.request) continue;
-      request = await mw.request(request);
-    }
-
-    return request;
-  }
-
-  private async responseMiddleware<Data>(
-    response: AxiosResponse<Data>,
-    options: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    const middleware = [
-      axiosCaseSwitchMiddleware,
-      ...this.middleware,
-      ...(options.middleware || []),
-    ];
-
-    for (const mw of middleware) {
-      if (!mw.response) continue;
-      response = (await mw.response(response)) as AxiosResponse<Data>;
-    }
-
-    return response;
-  }
-
-  private async retryMiddleware(
-    error: IAxiosRequestError,
-    options: RequestOptions,
-  ): Promise<boolean> {
-    const middleware = [axiosRetryMiddleware, ...this.middleware, ...(options.middleware || [])];
-
-    let result = false;
-
-    for (const mw of middleware) {
-      if (!mw.retry) continue;
-      result = await mw.retry(error, options);
-    }
-
-    return result;
-  }
-
-  private async createRequest<Data>(
-    config: RequestConfig,
-    options: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    const start = Date.now();
-
-    options.attempt = options.attempt || 1;
-    options.retry = options.retry || 0;
-
-    const { auth, method, path } = await this.configMiddleware(config, options);
-
-    const { body, headers, params, query } = await this.requestMiddleware(
+    const context = composeContext(
       {
-        body: options.body,
-        headers: options.headers || {},
-        params: options.params,
-        query: options.query,
+        auth: auth || this.auth,
+        body: body,
+        config: config,
+        headers: headers || {},
+        host: url.host || this.host,
+        method,
+        params,
+        path: url.pathname,
+        port: url.port || this.port,
+        protocol: url.protocol || this.protocol,
+        query: { ...url.query, ...query },
+        retry: retry || this.retry,
+        retryCallback: retryCallback || defaultRetryCallback,
+        timeout: timeout || this.timeout,
+        withCredentials: withCredentials || this.withCredentials,
       },
-      options,
+      this.logger,
     );
 
-    const timeout = options.timeout || 3000;
-    const url = this.createURL(path, { params, query });
+    const composed = composeMiddleware([
+      ...this.middleware,
+      ...middleware,
+      axiosRequestLoggerMiddleware,
+      axiosRequestHandler,
+    ]);
 
-    const withCredentials = !isUndefined(options.withCredentials)
-      ? options.withCredentials
-      : this.withCredentials;
+    await composed(context);
 
-    let response: Response;
-
-    try {
-      response = await axios.request({
-        method,
-        headers,
-        timeout,
-        url,
-        ...(!isUndefined(withCredentials) ? { withCredentials } : {}),
-        ...(auth ? { auth } : {}),
-        ...(body ? { data: body } : {}),
-      });
-
-      logAxiosResponse({
-        logger: this.logger,
-        name: this.name,
-        time: getResponseTime(response?.headers, start),
-        response,
-      });
-    } catch (err: any) {
-      logAxiosError({
-        logger: this.logger,
-        name: this.name,
-        time: getResponseTime(err?.response?.headers, start),
-        error: err,
-      });
-
-      if (await this.retryMiddleware(err, options)) {
-        await sleep(options.attempt * 100);
-        return this.createRequest(config, { ...options, attempt: options.attempt + 1 });
-      }
-
-      throw await this.errorMiddleware(convertError(err), options);
-    }
-
-    return await this.responseMiddleware<Data>(convertResponse<Data>(response), options);
+    return context.res;
   }
 }
