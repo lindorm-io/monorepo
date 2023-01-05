@@ -1,6 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
 import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { repositoryKeysMiddleware } from "./repository-keys-middleware";
 

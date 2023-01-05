@@ -7,7 +7,7 @@ import { SagaEventHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_EVENT_HANDLER } from "../fixtures/aggregate-event-handler.fixture";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";

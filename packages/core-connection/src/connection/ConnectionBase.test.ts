@@ -1,6 +1,6 @@
 import { ConnectionBase } from "./ConnectionBase";
 import { ConnectionBaseOptions } from "../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 class Client {
   public constructor() {}

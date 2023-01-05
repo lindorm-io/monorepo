@@ -1,13 +1,13 @@
 import { CreateIndexesOptions, IndexSpecification } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { Attributes, MongoIndex, StoreIndexes } from "../../types";
 
 export abstract class MongoBase {
   protected readonly connection: IMongoConnection;
-  protected readonly logger: ILogger;
+  protected readonly logger: Logger;
 
-  protected constructor(connection: IMongoConnection, logger: ILogger) {
+  protected constructor(connection: IMongoConnection, logger: Logger) {
     this.connection = connection;
     this.logger = logger.createChildLogger(["MongoBase", this.constructor.name]);
   }

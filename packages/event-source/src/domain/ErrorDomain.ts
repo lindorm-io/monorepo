@@ -2,7 +2,7 @@ import Joi from "joi";
 import { Command, ErrorMessage } from "../message";
 import { ErrorHandlerImplementation } from "../handler";
 import { HandlerNotRegisteredError } from "../error";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
@@ -19,10 +19,10 @@ import {
 
 export class ErrorDomain implements IErrorDomain {
   private readonly errorHandlers: Array<IErrorHandler>;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly messageBus: IMessageBus;
 
-  public constructor(messageBus: IMessageBus, logger: ILogger) {
+  public constructor(messageBus: IMessageBus, logger: Logger) {
     this.logger = logger.createChildLogger(["ErrorDomain"]);
     this.messageBus = messageBus;
 

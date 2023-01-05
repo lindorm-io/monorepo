@@ -1,13 +1,13 @@
 import { CREATE_TABLE_EVENT_STORE } from "./sql/event-store";
 import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
 import { IEventStore, EventStoreFindFilter, EventStoreAttributes, EventData } from "../../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 
 export class PostgresEventStore extends PostgresBase implements IEventStore {
-  public constructor(connection: IPostgresConnection, logger: ILogger) {
+  public constructor(connection: IPostgresConnection, logger: Logger) {
     super(connection, logger);
   }
 

@@ -4,7 +4,7 @@ import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
 import { cacheEntityMiddleware } from "./cache-entity-middleware";
 import { createMockCache, TestCache } from "@lindorm-io/redis";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
 

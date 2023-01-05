@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
 
 export interface ICacheBase {
@@ -10,6 +10,6 @@ export interface ICacheBase {
 export interface CacheIndexBaseOptions<Interface> {
   connection: RedisConnection;
   indexKey: keyof Interface;
-  logger: ILogger;
+  logger: Logger;
   prefix: string;
 }

@@ -22,6 +22,6 @@
     "@lindorm-io/errors": "^0.1.13"
   },
   "devDependencies": {
-    "@lindorm-io/winston": "^0.4.11"
+    "@lindorm-io/core-logger": "^0.1.0"
   }
 }

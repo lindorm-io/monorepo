@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { RetryOptions, calculateRetry, sleep } from "@lindorm-io/core";
 
 type Callback = () => Promise<void>;
@@ -22,7 +22,7 @@ export enum IntervalWorkerEvent {
 export class IntervalWorker {
   private readonly callback: Callback;
   private readonly eventEmitter: EventEmitter;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly onError: OnError | undefined;
   private readonly retry: RetryOptions;
   private readonly time: number;
@@ -30,7 +30,7 @@ export class IntervalWorker {
   private interval: NodeJS.Timeout | undefined;
   private triggered: number;
 
-  public constructor(options: Options, logger: ILogger) {
+  public constructor(options: Options, logger: Logger) {
     this.callback = options.callback;
     this.onError = options.onError;
 

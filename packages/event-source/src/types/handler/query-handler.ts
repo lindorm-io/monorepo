@@ -1,6 +1,6 @@
 import { Constructor, DtoClass, State } from "../generic";
 import { HandlerIdentifier } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import {
   MemoryViewRepository,
   MongoViewRepository,
@@ -18,7 +18,7 @@ export interface QueryHandlerContext<
   TState extends State = State,
 > {
   query: TQuery;
-  logger: ILogger;
+  logger: Logger;
   repositories: QueryRepositories<TState>;
 }
 

@@ -3,7 +3,7 @@ import { TEST_DOMAIN_EVENT } from "../fixtures/domain-event.fixture";
 import { TEST_VIEW_OPTIONS } from "../fixtures/view.fixture";
 import { View } from "./View";
 import { ViewDestroyedError } from "../error";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("View", () => {
   const logger = createMockLogger();

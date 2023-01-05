@@ -1,5 +1,5 @@
 import { PostgresConnection } from "./PostgresConnection";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("PostgresConnection", () => {
   const logger = createMockLogger();

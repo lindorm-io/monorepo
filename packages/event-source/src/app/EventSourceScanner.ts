@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
 import { flatten, isArray, snakeCase, uniq } from "lodash";
 import {
@@ -42,7 +42,7 @@ import {
 } from "../util";
 
 export class EventSourceScanner {
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly options: EventSourcePrivateOptions;
   private readonly require: NodeJS.Require;
 
@@ -58,7 +58,7 @@ export class EventSourceScanner {
   public constructor(
     options: EventSourcePrivateOptions,
     custom: EventSourceCustomOptions,
-    logger: ILogger,
+    logger: Logger,
   ) {
     this.logger = logger;
     this.options = options;

@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { getViewStoreName } from "../../util";
@@ -19,7 +19,7 @@ export class PostgresViewRepository<TState = State>
 {
   private readonly view: HandlerIdentifier;
 
-  public constructor(connection: IPostgresConnection, view: HandlerIdentifier, logger: ILogger) {
+  public constructor(connection: IPostgresConnection, view: HandlerIdentifier, logger: Logger) {
     super(connection, logger);
 
     this.view = view;

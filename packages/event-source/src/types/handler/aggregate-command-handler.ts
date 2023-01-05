@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { Constructor, DtoClass, State } from "../generic";
 import { HandlerConditions, HandlerIdentifier } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 
 export interface AggregateCommandHandlerContext<
   TCommand extends DtoClass = DtoClass,
@@ -9,7 +9,7 @@ export interface AggregateCommandHandlerContext<
   TState extends State = State,
 > {
   command: TCommand;
-  logger: ILogger;
+  logger: Logger;
   state: TState;
   apply(event: TEvent): Promise<void>;
 }

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { Command, DomainEvent, TimeoutMessage } from "../message";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, snakeCase } from "lodash";
@@ -28,9 +28,9 @@ export class Saga<TState extends State = State> implements ISaga {
   private _destroyed: boolean;
   private _state: TState;
 
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
 
-  public constructor(options: SagaOptions<TState>, logger: ILogger) {
+  public constructor(options: SagaOptions<TState>, logger: Logger) {
     this.logger = logger.createChildLogger(["Saga"]);
 
     assertSnakeCase(options.context);

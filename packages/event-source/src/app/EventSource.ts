@@ -3,7 +3,7 @@ import { Command } from "../message";
 import { EventSourceScanner } from "./EventSourceScanner";
 import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { JOI_MESSAGE } from "../schema";
@@ -74,14 +74,14 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   // primary
   private readonly scanner: EventSourceScanner;
   private readonly options: EventSourcePrivateOptions;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly adapters: Array<HandlerIdentifier & ViewEventHandlerAdapter>;
   private status: "initialising" | "initialised" | "replaying" | "created";
 
   // promise
   private promise: () => Promise<void>;
 
-  public constructor(options: EventSourceOptions, logger: ILogger) {
+  public constructor(options: EventSourceOptions, logger: Logger) {
     const { connections = {}, custom = {}, ...appOptions } = options;
 
     // primary

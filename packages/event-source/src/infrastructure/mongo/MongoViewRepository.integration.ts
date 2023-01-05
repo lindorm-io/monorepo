@@ -1,7 +1,7 @@
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoViewRepository } from "./MongoViewRepository";
 import { ViewStoreAttributes, ViewIdentifier } from "../../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { getViewStoreName } from "../../util";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";

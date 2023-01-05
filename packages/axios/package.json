@@ -27,7 +27,7 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/winston": "^0.4.11",
+    "@lindorm-io/core-logger": "^0.1.0",
     "@types/lodash": "^4.14.182"
   }
 }

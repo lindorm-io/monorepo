@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { RedisConnection } from "@lindorm-io/redis";
@@ -28,7 +28,7 @@ type Options = {
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
   vaultService: VaultServiceOptions;
-  logger: ILogger;
+  logger: Logger;
   workerInterval?: string;
 };
 

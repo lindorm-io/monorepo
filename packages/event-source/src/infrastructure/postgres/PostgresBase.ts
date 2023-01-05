@@ -1,13 +1,13 @@
 import { Attributes, StoreIndexes } from "../../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 
 export abstract class PostgresBase {
   protected readonly connection: IPostgresConnection;
-  protected readonly logger: ILogger;
+  protected readonly logger: Logger;
   protected promise: () => Promise<void>;
 
-  protected constructor(connection: IPostgresConnection, logger: ILogger) {
+  protected constructor(connection: IPostgresConnection, logger: Logger) {
     this.connection = connection;
     this.logger = logger.createChildLogger(["PostgresBase", this.constructor.name]);
 

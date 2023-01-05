@@ -2,7 +2,7 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
 import { baseHash } from "@lindorm-io/core";
 import { basicAuthMiddleware } from "./basic-auth-middleware";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
 

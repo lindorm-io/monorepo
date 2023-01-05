@@ -1,6 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
 import { createTestKeyPairEC, createTestKeyPairRSA, Keystore } from "@lindorm-io/key-pair";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { keystoreMiddleware } from "./keystore-middleware";
 
 const next = () => Promise.resolve();

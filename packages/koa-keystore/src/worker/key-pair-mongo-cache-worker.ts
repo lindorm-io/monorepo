@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { KeyPairRepository } from "../infrastructure";
@@ -12,7 +12,7 @@ type Options = {
   mongoConnection: MongoConnection;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
-  logger: ILogger;
+  logger: Logger;
   workerInterval?: string;
 };
 

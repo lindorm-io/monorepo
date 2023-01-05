@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { DomainEvent } from "../message";
 import { EventSource } from "./EventSource";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import {
   AggregateCommandHandlerImplementation,

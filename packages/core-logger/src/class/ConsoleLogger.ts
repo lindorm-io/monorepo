@@ -33,10 +33,8 @@ export class ConsoleLogger extends LoggerBase implements Logger {
 
   public createChildLogger(context: LogContext): Logger {
     const logger = new ConsoleLogger({
-      context: this.normaliseContext(context),
-      filters: this.filters,
       parent: this,
-      session: this.session,
+      context: this.normaliseContext(context),
     });
 
     if (!this.level) return logger;
@@ -48,8 +46,6 @@ export class ConsoleLogger extends LoggerBase implements Logger {
 
   public createSessionLogger(session: LogSession): Logger {
     const logger = new ConsoleLogger({
-      context: this.context,
-      filters: this.filters,
       parent: this,
       session: this.normaliseSession(session),
     });

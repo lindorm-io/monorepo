@@ -4,7 +4,7 @@ import { PostgresSagaStore } from "./PostgresSagaStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import { stringifyBlob } from "@lindorm-io/string-blob";

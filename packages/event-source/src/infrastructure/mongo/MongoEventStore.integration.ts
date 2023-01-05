@@ -3,7 +3,7 @@ import { Collection } from "mongodb";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { MongoEventStore } from "./MongoEventStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
 

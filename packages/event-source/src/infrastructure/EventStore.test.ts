@@ -6,7 +6,7 @@ import { EventStore } from "./EventStore";
 import { EventStoreType } from "../enum";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_DOMAIN_EVENT_CREATE } from "../fixtures/domain-event.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockMongoConnection } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
 import {

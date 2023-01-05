@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
 import { bearerAuthMiddleware } from "./bearer-auth-middleware";
 import { createTestJwt } from "@lindorm-io/jwt";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

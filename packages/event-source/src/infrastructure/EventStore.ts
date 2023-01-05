@@ -3,7 +3,7 @@ import { AggregateEventHandlerImplementation } from "../handler";
 import { CausationMissingEventsError } from "../error";
 import { Command, DomainEvent } from "../message";
 import { EventStoreType } from "../enum";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { MemoryEventStore } from "./memory";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
@@ -19,9 +19,9 @@ import {
 
 export class EventStore implements IDomainEventStore {
   private readonly store: IEventStore;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
 
-  public constructor(options: EventStoreOptions, logger: ILogger) {
+  public constructor(options: EventStoreOptions, logger: Logger) {
     switch (options.type) {
       case EventStoreType.CUSTOM:
         if (!options.custom) throw new Error("IEventStore not provided");

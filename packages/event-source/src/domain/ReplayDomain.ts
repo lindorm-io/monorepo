@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import { DomainEvent, ReplayMessage } from "../message";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { ReplayEventName } from "../enum";
 import { intervalToDuration } from "date-fns";
@@ -20,10 +20,10 @@ export class ReplayDomain implements IReplayDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly messageBus: IMessageBus;
   private readonly eventStore: IDomainEventStore;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly context: string;
 
-  public constructor(options: ReplayDomainOptions, logger: ILogger) {
+  public constructor(options: ReplayDomainOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["ReplayDomain"]);
 
     this.messageBus = options.messageBus;

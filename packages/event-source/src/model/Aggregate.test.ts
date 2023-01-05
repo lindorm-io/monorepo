@@ -2,7 +2,7 @@ import { Aggregate } from "./Aggregate";
 import { Command, DomainEvent } from "../message";
 import { TEST_AGGREGATE_OPTIONS } from "../fixtures/aggregate.fixture";
 import { TEST_COMMAND, TEST_COMMAND_SET_STATE } from "../fixtures/command.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,

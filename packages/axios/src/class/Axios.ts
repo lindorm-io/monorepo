@@ -1,6 +1,6 @@
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
 import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { axiosRequestLoggerMiddleware } from "../middleware/private";
 import {
   axiosRequestHandler,
@@ -21,7 +21,7 @@ import {
 export class Axios {
   private readonly auth: AxiosBasicCredentials;
   private readonly host: string | undefined;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly middleware: Middleware[];
   private readonly port: number | undefined;
   private readonly protocol: Protocol | undefined;
@@ -29,7 +29,7 @@ export class Axios {
   private readonly timeout: number;
   private readonly withCredentials: boolean;
 
-  constructor(options: AxiosOptions = {}, logger: ILogger) {
+  constructor(options: AxiosOptions = {}, logger: Logger) {
     this.logger = logger.createChildLogger(options.name ? ["Axios", options.name] : ["Axios"]);
 
     const { host, port, protocol } = destructUrl(options.host);

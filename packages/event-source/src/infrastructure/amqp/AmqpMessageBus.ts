@@ -1,13 +1,13 @@
 import { DomainError } from "../../error";
 import { IAmqpConnection, IMessageBus, ISubscription, MessageBusBase } from "@lindorm-io/amqp";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessage } from "../../types";
 import { JOI_MESSAGE, JOI_SUBSCRIPTION } from "../../schema";
 import { MessageType } from "../../enum";
 import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } from "../../message";
 
 export class AmqpMessageBus extends MessageBusBase<IMessage> implements IMessageBus {
-  public constructor(connection: IAmqpConnection, logger: ILogger) {
+  public constructor(connection: IAmqpConnection, logger: Logger) {
     super({ connection, logger });
   }
 

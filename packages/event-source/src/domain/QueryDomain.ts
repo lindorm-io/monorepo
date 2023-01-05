@@ -1,5 +1,5 @@
 import { HandlerNotRegisteredError } from "../error";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { LindormError } from "@lindorm-io/errors";
@@ -23,12 +23,12 @@ import {
 export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends State = State>
   implements IQueryDomain<TQuery, TState>
 {
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly mongo: IMongoConnection;
   private readonly postgres: IPostgresConnection;
   private readonly queryHandlers: Array<IQueryHandler>;
 
-  public constructor(options: QueryDomainOptions, logger: ILogger) {
+  public constructor(options: QueryDomainOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["QueryDomain"]);
 
     this.mongo = options.mongo;

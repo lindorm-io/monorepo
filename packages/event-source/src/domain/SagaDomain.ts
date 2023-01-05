@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
@@ -28,11 +28,11 @@ import {
 export class SagaDomain implements ISagaDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<ISagaEventHandler>;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly messageBus: IMessageBus;
   private store: IDomainSagaStore;
 
-  public constructor(options: SagaDomainOptions, logger: ILogger) {
+  public constructor(options: SagaDomainOptions, logger: Logger) {
     this.eventEmitter = new EventEmitter();
     this.logger = logger.createChildLogger(["SagaDomain"]);
 

@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { MemoryViewStore } from "./memory";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
@@ -22,12 +22,12 @@ import {
 } from "../types";
 
 export class ViewStore implements IDomainViewStore {
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly memory: IViewStore;
   private readonly mongo: IViewStore;
   private readonly postgres: IViewStore;
 
-  public constructor(options: ViewStoreOptions, logger: ILogger) {
+  public constructor(options: ViewStoreOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["ViewStore"]);
 
     this.memory = new MemoryViewStore();

@@ -3,7 +3,7 @@ import { Saga } from "./Saga";
 import { SagaDestroyedError } from "../error";
 import { TEST_DOMAIN_EVENT } from "../fixtures/domain-event.fixture";
 import { TEST_SAGA_OPTIONS } from "../fixtures/saga.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("Saga", () => {
   const logger = createMockLogger();

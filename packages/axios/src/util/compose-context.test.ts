@@ -1,5 +1,5 @@
 import { composeContext } from "./compose-context";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("composeContext", () => {
   let req: any;

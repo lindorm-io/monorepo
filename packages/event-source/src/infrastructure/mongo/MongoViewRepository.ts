@@ -1,5 +1,5 @@
 import { Collection, Filter, FindOptions } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { getViewStoreName } from "../../util";
@@ -26,7 +26,7 @@ export class MongoViewRepository<TState = State>
 {
   private readonly collection: Collection<ViewStoreAttributes>;
 
-  public constructor(connection: IMongoConnection, view: HandlerIdentifier, logger: ILogger) {
+  public constructor(connection: IMongoConnection, view: HandlerIdentifier, logger: Logger) {
     super(connection, logger);
 
     this.collection = this.connection?.database?.collection<ViewStoreAttributes>(

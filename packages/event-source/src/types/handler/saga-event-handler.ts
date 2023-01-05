@@ -1,7 +1,7 @@
 import { Constructor, DtoClass, State } from "../generic";
 import { DomainEvent, TimeoutMessage } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { SagaDispatchOptions } from "../model";
 
 export interface SagaEventHandlerContext<
@@ -10,7 +10,7 @@ export interface SagaEventHandlerContext<
   TDispatch extends DtoClass = DtoClass,
 > {
   event: TEvent;
-  logger: ILogger;
+  logger: Logger;
   state: TState;
   destroy(): void;
   dispatch(command: TDispatch, options?: SagaDispatchOptions): void;

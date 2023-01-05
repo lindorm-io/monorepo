@@ -1,7 +1,7 @@
 import { Metric } from "@lindorm-io/koa";
 import { TestCache } from "@lindorm-io/redis";
 import { cacheMiddleware } from "./cache-middleware";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
 

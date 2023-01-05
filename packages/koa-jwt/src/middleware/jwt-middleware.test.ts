@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { JWT } from "@lindorm-io/jwt";
 import { Metric } from "@lindorm-io/koa";
 import { ServerError } from "@lindorm-io/errors";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { jwtMiddleware } from "./jwt-middleware";
 import {
   Algorithm,

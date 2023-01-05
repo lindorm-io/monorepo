@@ -1,10 +1,10 @@
 import { CacheOptions } from "../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
 
 export abstract class CacheBase {
   protected connection: RedisConnection;
-  protected logger: ILogger;
+  protected logger: Logger;
 
   protected constructor(options: CacheOptions) {
     this.connection = options.connection;

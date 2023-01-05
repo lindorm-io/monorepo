@@ -1,6 +1,6 @@
 import { Collection, IndexSpecification } from "mongodb";
 import { EntityAttributes } from "@lindorm-io/entity";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IndexOptions, LindormRepositoryOptions } from "../types";
 import { MongoConnection } from "../connection";
 
@@ -8,7 +8,7 @@ export abstract class RepositoryBase<Interface extends EntityAttributes> {
   protected readonly collectionName: string;
   protected readonly connection: MongoConnection;
   protected readonly indices: Array<IndexOptions<Interface>>;
-  protected readonly logger: ILogger;
+  protected readonly logger: Logger;
 
   protected collection: Collection | undefined;
   protected promise: () => Promise<void>;

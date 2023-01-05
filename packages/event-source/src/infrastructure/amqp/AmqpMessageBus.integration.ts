@@ -1,7 +1,7 @@
 import { AmqpConnection, ISubscription } from "@lindorm-io/amqp";
 import { Command, DomainEvent } from "../../message";
 import { AmqpMessageBus } from "./AmqpMessageBus";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
 

@@ -2,12 +2,12 @@ import { Axios, AxiosOptions } from "@lindorm-io/axios";
 import { JWK, KeyPair } from "@lindorm-io/key-pair";
 import { ServerError } from "@lindorm-io/errors";
 import { flatten } from "lodash";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 
 type Options = AxiosOptions & {
   currentKeys?: Array<KeyPair>;
   host: string;
-  logger: ILogger;
+  logger: Logger;
   path?: string;
 };
 

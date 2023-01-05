@@ -1,7 +1,7 @@
 import { Attributes, Constructor, DtoClass, State } from "../generic";
 import { DomainEvent } from "../../message";
 import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IViewStore, ViewStoreAdapterType } from "../view-store";
 import { StoreIndexes } from "../store-index";
 
@@ -10,7 +10,7 @@ export interface ViewEventHandlerContext<
   TState extends State = State,
 > {
   event: TEvent;
-  logger: ILogger;
+  logger: Logger;
   state: TState;
   destroy(): void;
   mergeState(data: Partial<TState>): void;

@@ -1,6 +1,6 @@
 import EventEmitter from "events";
 import { DomainEvent, ErrorMessage } from "../message";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
@@ -33,11 +33,11 @@ import {
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
   private readonly eventHandlers: Array<ViewEventHandlerImplementation>;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private messageBus: IMessageBus;
   private store: IDomainViewStore;
 
-  public constructor(options: ViewDomainOptions, logger: ILogger) {
+  public constructor(options: ViewDomainOptions, logger: Logger) {
     this.eventEmitter = new EventEmitter();
     this.logger = logger.createChildLogger(["ViewDomain"]);
 

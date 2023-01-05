@@ -1,5 +1,5 @@
 import { IntervalWorker } from "./IntervalWorker";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("IntervalWorker.ts", () => {
   let eventResult: any;

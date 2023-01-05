@@ -1,5 +1,5 @@
 import { MongoConnection } from "../connection";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { mongoQuery } from "./mongo-query";
 
 describe("mongoQuery", () => {

@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
 import { MongoConnection } from "@lindorm-io/mongo";
@@ -15,7 +15,7 @@ type Options = {
   passphrase?: string;
   retry?: Partial<RetryOptions>;
   rotationInterval?: string;
-  logger: ILogger;
+  logger: Logger;
   workerInterval?: string;
 };
 

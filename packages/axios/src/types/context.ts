@@ -1,5 +1,5 @@
 import { AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, Method } from "axios";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { Protocol } from "./request";
 import { RetryCallback, RetryOptions } from "./retry";
 
@@ -35,5 +35,5 @@ export type Context<
 > = {
   req: ContextRequest<Body, Headers, Params, Query>;
   res: AxiosResponse<ResponseData, Body>;
-  logger: ILogger;
+  logger: Logger;
 };

@@ -1,5 +1,5 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { find, isArray, remove } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { sanitizeRouteKey } from "../util";
@@ -22,7 +22,7 @@ export abstract class MessageBusBase<
   private readonly nackTimeout: number;
   private readonly subscriptions: Array<SubscriptionData<Subscription>>;
 
-  protected readonly logger: ILogger;
+  protected readonly logger: Logger;
 
   private isConnected: boolean;
 

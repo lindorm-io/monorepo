@@ -1,7 +1,7 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 
 export interface FetchDataContext<Data> {
-  logger: ILogger;
+  logger: Logger;
   clear(): void;
   delete(key: string): void;
   destroy(data: Data): void;
@@ -19,7 +19,7 @@ export interface InMemoryCacheOptions<Data> {
   getKeyFunction: GetKeyFunction<Data>;
   intervalTick?: number;
   intervalTimeout?: number;
-  logger: ILogger;
+  logger: Logger;
   name: string;
   ttl?: number;
 }

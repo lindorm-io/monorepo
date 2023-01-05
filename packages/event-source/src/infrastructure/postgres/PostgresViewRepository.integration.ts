@@ -3,7 +3,7 @@ import { PostgresViewRepository } from "./PostgresViewRepository";
 import { PostgresViewStore } from "./PostgresViewStore";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
 import { ViewIdentifier, ViewStoreAttributes } from "../../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { getViewStoreName } from "../../util";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";

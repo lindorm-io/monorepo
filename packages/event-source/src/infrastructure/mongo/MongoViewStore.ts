@@ -1,5 +1,5 @@
 import { Collection } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
@@ -23,7 +23,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   private readonly initialisedViews: Array<HandlerIdentifier>;
   private promise: () => Promise<void>;
 
-  public constructor(connection: IMongoConnection, logger: ILogger) {
+  public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger);
 
     this.initialisedViews = [];

@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { MemorySagaStore } from "./memory";
 import { MongoSagaStore } from "./mongo";
 import { PostgresSagaStore } from "./postgres";
@@ -23,9 +23,9 @@ import {
 
 export class SagaStore implements IDomainSagaStore {
   private readonly store: ISagaStore;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
 
-  public constructor(options: SagaStoreOptions, logger: ILogger) {
+  public constructor(options: SagaStoreOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["SagaStore"]);
 
     switch (options.type) {

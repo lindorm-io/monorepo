@@ -1,7 +1,7 @@
 import { ErrorDomain } from "./ErrorDomain";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { AggregateIdentifier, IErrorDomain } from "../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { MessageBus } from "../infrastructure";
 import { ErrorHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_COMMAND_HANDLER } from "../fixtures/aggregate-command-handler.fixture";

@@ -1,6 +1,6 @@
 import { RedisConnection } from "@lindorm-io/redis";
 import { clearRateLimitBackoff } from "./clear-rate-limit-backoff";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("clearRateLimitBackoff", () => {
   let connection: RedisConnection;

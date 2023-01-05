@@ -8,7 +8,7 @@ import { TEST_VIEW_IDENTIFIER } from "../fixtures/view.fixture";
 import { View } from "../model";
 import { ViewDomain } from "./ViewDomain";
 import { ViewEventHandlerImplementation } from "../handler";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";

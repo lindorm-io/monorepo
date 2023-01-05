@@ -1,5 +1,5 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection, PostgresConnectionOptions } from "../types";
 import { Pool, PoolConfig, QueryConfig, QueryResult, QueryResultRow } from "pg";
 
@@ -9,7 +9,7 @@ export class PostgresConnection
 {
   private readonly custom: typeof Pool;
 
-  public constructor(options: PostgresConnectionOptions, logger: ILogger) {
+  public constructor(options: PostgresConnectionOptions, logger: Logger) {
     const {
       connectInterval,
       connectTimeout,

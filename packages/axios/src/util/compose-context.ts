@@ -1,7 +1,7 @@
 import { Context, ContextRequest } from "../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 
-export const composeContext = (req: ContextRequest, logger: ILogger): Context => ({
+export const composeContext = (req: ContextRequest, logger: Logger): Context => ({
   req,
   res: {
     config: {},

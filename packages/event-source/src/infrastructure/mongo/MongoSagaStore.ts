@@ -1,5 +1,5 @@
 import { Collection } from "mongodb";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
@@ -24,7 +24,7 @@ import {
 export class MongoSagaStore extends MongoBase implements ISagaStore {
   private promise: () => Promise<void>;
 
-  public constructor(connection: IMongoConnection, logger: ILogger) {
+  public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger);
 
     this.promise = this.initialise;

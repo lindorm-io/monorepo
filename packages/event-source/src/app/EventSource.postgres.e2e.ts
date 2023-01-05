@@ -4,7 +4,7 @@ import { DomainEvent } from "../message";
 import { EventSource } from "./EventSource";
 import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
 import { PostgresConnection } from "@lindorm-io/postgres";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import {
   AggregateCommandHandlerImplementation,

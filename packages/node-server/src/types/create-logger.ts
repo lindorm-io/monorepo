@@ -1,8 +1,9 @@
-import { LoggerOptions, LogLevel } from "@lindorm-io/winston";
+import { LogLevel } from "@lindorm-io/core-logger";
+import { WinstonOptions } from "@lindorm-io/winston";
 
-export interface CreateLoggerOptions extends LoggerOptions {
+export type CreateLoggerOptions = WinstonOptions & {
   level: LogLevel;
   colours: boolean;
   readable: boolean;
   timestamp: boolean;
-}
+};

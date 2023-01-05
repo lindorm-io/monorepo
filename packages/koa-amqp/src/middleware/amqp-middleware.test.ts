@@ -1,6 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
 import { amqpMiddleware } from "./amqp-middleware";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
 

@@ -2,7 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
 import { StoredEntityCustomValidation } from "../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockRepository, TestRepository } from "@lindorm-io/mongo";
 import { repositoryEntityMiddleware } from "./repository-entity-middleware";
 

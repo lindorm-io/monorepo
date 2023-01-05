@@ -1,6 +1,6 @@
 import { CREATE_TABLE_SAGA_CAUSATION } from "./sql/saga-causation";
 import { CREATE_TABLE_SAGA_STORE } from "./sql/saga-store";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
@@ -23,7 +23,7 @@ import {
 } from "../../constant";
 
 export class PostgresSagaStore extends PostgresBase implements ISagaStore {
-  public constructor(connection: IPostgresConnection, logger: ILogger) {
+  public constructor(connection: IPostgresConnection, logger: Logger) {
     super(connection, logger);
   }
 

@@ -1,7 +1,7 @@
 import { AggregateIdentifier, SagaIdentifier, ViewIdentifier } from "../model";
 import { Constructor, DtoClass } from "../generic";
 import { HandlerIdentifierMultipleContexts } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessage } from "../message";
 
 export interface ErrorDispatchOptions {
@@ -15,7 +15,7 @@ export interface ErrorHandlerContext<TError = Error, TDispatch extends DtoClass 
   message: IMessage;
   saga?: SagaIdentifier;
   view?: ViewIdentifier;
-  logger: ILogger;
+  logger: Logger;
   dispatch(command: TDispatch, options?: ErrorDispatchOptions): Promise<void>;
 }
 

@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
@@ -28,7 +28,7 @@ export class JWT {
   private readonly issuer: string;
   private readonly keyType: KeyType | undefined;
   private readonly keystore: Keystore;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
 
   public constructor(options: JwtOptions) {
     this.clockTolerance = options.clockTolerance || 500;

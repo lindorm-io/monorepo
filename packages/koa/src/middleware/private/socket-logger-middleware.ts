@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { DefaultLindormSocketMiddleware } from "../../types";
 
 export const socketLoggerMiddleware =
-  (logger: ILogger): DefaultLindormSocketMiddleware =>
+  (logger: Logger): DefaultLindormSocketMiddleware =>
   (socket, next) => {
     socket.ctx.logger = logger.createSessionLogger({
       socketId: socket.id,

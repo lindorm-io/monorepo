@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
 
 export interface ICache<Interface, Entity> {
@@ -36,7 +36,7 @@ export type PostChangeCallback<Entity> = (entity: Entity) => Promise<void>;
 
 export interface CacheOptions {
   connection: RedisConnection;
-  logger: ILogger;
+  logger: Logger;
 }
 
 export interface LindormCacheOptions<Interface> extends CacheOptions {

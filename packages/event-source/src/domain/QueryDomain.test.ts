@@ -3,7 +3,7 @@ import { QueryDomain } from "./QueryDomain";
 import { QueryHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_COMMAND_HANDLER } from "../fixtures/aggregate-command-handler.fixture";
 import { ViewStoreAttributes } from "../types";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomString } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 

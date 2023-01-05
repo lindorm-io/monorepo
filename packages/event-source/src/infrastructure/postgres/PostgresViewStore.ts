@@ -1,5 +1,5 @@
 import { CREATE_TABLE_VIEW_CAUSATION } from "./sql/view-causation";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { PostgresBase } from "./PostgresBase";
 import { createViewStoreTable } from "./sql/view-store";
@@ -23,7 +23,7 @@ import {
 export class PostgresViewStore extends PostgresBase implements IViewStore {
   private readonly initialisedViews: Array<string>;
 
-  public constructor(connection: IPostgresConnection, logger: ILogger) {
+  public constructor(connection: IPostgresConnection, logger: Logger) {
     super(connection, logger);
 
     this.initialisedViews = [];

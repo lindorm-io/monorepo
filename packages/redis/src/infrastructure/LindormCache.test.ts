@@ -4,7 +4,7 @@ import { Redis } from "ioredis";
 import { RedisConnection } from "../connection";
 import { TestCache, TestCacheExpires, TestEntityExpires } from "../mocks";
 import { TestEntity } from "@lindorm-io/entity";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 
 MockDate.set("2022-01-01T08:00:00.000Z");

@@ -6,7 +6,7 @@ import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
 import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
 import { Environment } from "../enum";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "./IntervalWorker";
 import { Server as HttpServer, createServer } from "http";
 import { Server as IOServer } from "socket.io";
@@ -35,7 +35,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   private readonly ioServer: IOServer;
   private readonly koaApp: Koa;
   private readonly koaRouter: Router;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly middleware: Array<DefaultLindormMiddleware<Context>>;
   private readonly port: number;
   private readonly setup?: () => Promise<void>;

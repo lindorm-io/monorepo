@@ -1,7 +1,7 @@
 import { Aggregate } from "../model";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { assertSnakeCase } from "../util";
 import { cloneDeep, filter, find, findLast, snakeCase, some } from "lodash";
@@ -32,11 +32,11 @@ import {
 export class AggregateDomain implements IAggregateDomain {
   private readonly commandHandlers: Array<IAggregateCommandHandler>;
   private readonly eventHandlers: Array<IAggregateEventHandler>;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly messageBus: IMessageBus;
   private readonly store: IDomainEventStore;
 
-  public constructor(options: AggregateDomainOptions, logger: ILogger) {
+  public constructor(options: AggregateDomainOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["AggregateDomain"]);
 
     this.messageBus = options.messageBus;

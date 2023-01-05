@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "../connection";
 import {
   CountDocumentsOptions,
@@ -44,7 +44,7 @@ export type PostChangeCallback<Entity> = (entity: Entity) => Promise<void>;
 export interface RepositoryOptions {
   connection: MongoConnection;
   database?: string;
-  logger: ILogger;
+  logger: Logger;
 }
 
 export interface LindormRepositoryOptions<Interface> extends RepositoryOptions {

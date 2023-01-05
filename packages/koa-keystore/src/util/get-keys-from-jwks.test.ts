@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createTestKeyPairRSA } from "@lindorm-io/key-pair";
 import { getKeysFromJwks } from "./get-keys-from-jwks";
 

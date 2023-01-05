@@ -2,7 +2,7 @@ import { AggregateIdentifier, EventStoreAttributes } from "../../types";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { PostgresEventStore } from "./PostgresEventStore";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 import { subDays } from "date-fns";

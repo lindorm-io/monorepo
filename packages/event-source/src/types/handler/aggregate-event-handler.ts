@@ -1,13 +1,13 @@
 import { Constructor, DtoClass, State } from "../generic";
 import { HandlerIdentifier } from "./handler";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 
 export interface AggregateEventHandlerContext<
   TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   event: TEvent;
-  logger: ILogger;
+  logger: Logger;
   state: TState;
   destroy(): void;
   destroyNext(): void;

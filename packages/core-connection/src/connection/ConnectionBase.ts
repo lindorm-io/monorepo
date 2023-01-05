@@ -1,7 +1,7 @@
 import EventEmitter from "events";
 import { ConnectionStatus } from "../enum";
 import { ExtendedConnectionBaseOptions, IConnectionBase } from "../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
 import { sleep } from "@lindorm-io/core";
 
@@ -13,11 +13,11 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   protected readonly eventEmitter: EventEmitter;
   protected clientConnection: Client;
   protected connectOptions: ClientOptions;
-  protected logger: ILogger;
+  protected logger: Logger;
 
   public readonly type: string;
 
-  protected constructor(options: ExtendedConnectionBaseOptions<ClientOptions>, logger: ILogger) {
+  protected constructor(options: ExtendedConnectionBaseOptions<ClientOptions>, logger: Logger) {
     this.logger = logger.createChildLogger(["ConnectionBase", this.constructor.name]);
     this.eventEmitter = new EventEmitter();
 

@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { Axios, Middleware } from "@lindorm-io/axios";
 import { MetadataHeader } from "@lindorm-io/koa";
 import { axiosMiddleware } from "./axios-middleware";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 

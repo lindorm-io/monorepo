@@ -1,5 +1,5 @@
 import { InMemoryCache } from "./InMemoryCache";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { sleep } from "@lindorm-io/core";
 
 describe("InMemoryCache", () => {

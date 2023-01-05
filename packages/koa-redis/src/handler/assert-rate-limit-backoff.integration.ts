@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimitBackoff } from "./assert-rate-limit-backoff";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { getRateLimitBackoffExpireKey } from "../util";
 
 describe("assertRateLimitBackoff", () => {

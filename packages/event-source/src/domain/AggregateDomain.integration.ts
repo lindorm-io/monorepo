@@ -3,7 +3,7 @@ import { Command } from "../message";
 import { EventStore, MessageBus } from "../infrastructure";
 import { EventStoreType, MessageBusType } from "../enum";
 import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import { sleep } from "@lindorm-io/core";
 import {

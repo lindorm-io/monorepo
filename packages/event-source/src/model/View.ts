@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { DomainEvent } from "../message";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { IView, ViewOptions, ViewData, State } from "../types";
 import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { assertSnakeCase, assertSchema } from "../util";
@@ -19,9 +19,9 @@ export class View<TState extends State = State> implements IView<TState> {
   private _meta: Record<string, any>;
   private _state: TState;
 
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
 
-  public constructor(options: ViewOptions<TState>, logger: ILogger) {
+  public constructor(options: ViewOptions<TState>, logger: Logger) {
     this.logger = logger.createChildLogger(["View"]);
 
     assertSnakeCase(options.context);

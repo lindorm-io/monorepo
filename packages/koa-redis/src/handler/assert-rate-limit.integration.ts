@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { RedisConnection } from "@lindorm-io/redis";
 import { assertRateLimit } from "./assert-rate-limit";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { getRateLimitKey } from "../util";
 
 describe("assertRateLimit", () => {

@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { KeyPairCache } from "./KeyPairCache";
 import { RedisConnection } from "@lindorm-io/redis";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import {
   Algorithm,

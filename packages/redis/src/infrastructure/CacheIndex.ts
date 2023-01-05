@@ -1,12 +1,12 @@
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
-import { ILogger } from "@lindorm-io/winston";
+import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
 import { RedisError } from "../error";
 import { difference, snakeCase, uniq } from "lodash";
 
 export class CacheIndex<Interface> implements ICacheBase {
   private readonly connection: RedisConnection;
-  private readonly logger: ILogger;
+  private readonly logger: Logger;
   private readonly prefix: string;
 
   public readonly indexKey: keyof Interface;
