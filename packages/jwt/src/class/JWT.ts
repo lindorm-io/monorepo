@@ -1,16 +1,11 @@
 import { ILogger } from "@lindorm-io/winston";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { TokenError } from "../error";
+import { camelCase, snakeCase } from "@lindorm-io/case";
 import { decode, Jwt, sign, verify } from "jsonwebtoken";
+import { getExpires, removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
-import {
-  camelKeys,
-  getExpires,
-  removeUndefinedFromObject,
-  snakeKeys,
-  sortObjectKeys,
-} from "@lindorm-io/core";
 import {
   assertClaimDifference,
   assertClaimEquals,
@@ -83,8 +78,8 @@ export class JWT {
       usr: options.username,
 
       // payload & claims
-      ...(options.payload ? { ext: snakeKeys(options.payload) } : {}),
-      ...(options.claims ? snakeKeys(options.claims) : {}),
+      ...(options.payload ? { ext: snakeCase(options.payload) } : {}),
+      ...(options.claims ? snakeCase(options.claims) : {}),
     };
 
     const key = this.keystore.getSigningKey(options.keyType || this.keyType);
@@ -251,7 +246,7 @@ export class JWT {
       authMethodsReference: amr || [],
       authTime: auth_time || null,
       authorizedParty: azp || null,
-      claims: claims ? camelKeys<Claims>(claims) : ({} as Claims),
+      claims: claims ? camelCase<Claims>(claims) : ({} as Claims),
       expires: exp,
       expiresIn: exp - now,
       issuedAt: iat,
@@ -261,7 +256,7 @@ export class JWT {
       nonce: nonce || null,
       notBefore: nbf,
       now,
-      payload: ext ? camelKeys<Payload>(ext) : ({} as Payload),
+      payload: ext ? camelCase<Payload>(ext) : ({} as Payload),
       permissions: iam || [],
       scopes: scp || [],
       sessionId: sid || null,

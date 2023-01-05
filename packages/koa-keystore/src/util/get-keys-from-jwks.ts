@@ -2,12 +2,14 @@ import { Axios, AxiosOptions } from "@lindorm-io/axios";
 import { JWK, KeyPair } from "@lindorm-io/key-pair";
 import { ServerError } from "@lindorm-io/errors";
 import { flatten } from "lodash";
+import { ILogger } from "@lindorm-io/winston";
 
-interface Options extends AxiosOptions {
+type Options = AxiosOptions & {
   currentKeys?: Array<KeyPair>;
   host: string;
+  logger: ILogger;
   path?: string;
-}
+};
 
 interface Response {
   keys: Array<JWK>;
@@ -17,13 +19,14 @@ export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>>
   const {
     currentKeys = [],
     host,
+    logger,
     name = "jwks",
     path = "/.well-known/jwks.json",
     port,
     ...rest
   } = options;
 
-  const axios = new Axios({ host, name, port, ...rest });
+  const axios = new Axios({ host, name, port, ...rest }, logger);
 
   const { data } = await axios.get<Response>(path);
 

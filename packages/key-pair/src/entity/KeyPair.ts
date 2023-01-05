@@ -2,10 +2,11 @@ import Joi from "joi";
 import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
 import { JoseData, JWK, KeyJWK } from "../types";
 import { KeyPairError } from "../error";
-import { camelKeys, removeUndefinedFromObject, snakeKeys } from "@lindorm-io/core";
+import { camelCase, snakeCase } from "@lindorm-io/case";
 import { decodeKeys, encodeKeys } from "../util";
 import { fromUnixTime, getUnixTime } from "date-fns";
 import { includes, isString, orderBy } from "lodash";
+import { removeUndefinedFromObject } from "@lindorm-io/core";
 import {
   JOI_KEY_ALGORITHM,
   JOI_KEY_ALGORITHMS,
@@ -168,7 +169,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     });
 
     return removeUndefinedFromObject(
-      snakeKeys({
+      snakeCase({
         alg: this.preferredAlgorithm,
         allowedFrom: getUnixTime(this.allowed),
         createdAt: getUnixTime(this.created),
@@ -186,7 +187,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
 
   public static fromJWK(input: JWK): KeyPair {
     const data: JoseData = decodeKeys(input);
-    const jwk = camelKeys<JWK>(input);
+    const jwk = camelCase<JWK>(input);
 
     return new KeyPair({
       id: jwk.kid,

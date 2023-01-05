@@ -3,7 +3,7 @@ import { LogLevel } from "../enum";
 import { LoggerError } from "../error";
 import { cloneDeep, flatten, get, isArray, isError, isObject, merge, set } from "lodash";
 import { defaultFilterCallback, readableFormat } from "../util";
-import { snakeArray } from "@lindorm-io/core";
+import { snakeCase } from "@lindorm-io/case";
 import {
   FileTransportOptions,
   HttpTransportOptions,
@@ -32,7 +32,7 @@ export class Logger implements ILogger {
   public constructor(options: LoggerOptions = {}) {
     const { context = [], filters = {}, parent, session = {} } = options;
 
-    this.context = parent ? flatten([parent.context, snakeArray(context)]) : snakeArray(context);
+    this.context = parent ? flatten([parent.context, snakeCase(context)]) : snakeCase(context);
     this.filters = parent ? { ...parent.filters, ...filters } : filters;
     this.session = parent ? merge(cloneDeep(parent.session), session) : session;
     this.winston = parent ? parent.winston : winston.createLogger();
@@ -183,7 +183,7 @@ export class Logger implements ILogger {
     if (!isArray(context)) {
       throw new Error("Invalid context");
     }
-    this.context = flatten([this.context, snakeArray(context)]);
+    this.context = flatten([this.context, snakeCase(context)]);
   }
 
   public addSession(session: Record<string, any>): void {

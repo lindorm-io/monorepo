@@ -8,7 +8,7 @@ import { getKeysFromJwks } from "../util";
 import {
   Axios,
   axiosClientCredentialsMiddleware,
-  AxiosClientCredentialsMiddlewareConfig,
+  AxiosClientCredentialsMiddlewareOptions,
 } from "@lindorm-io/axios";
 
 type OAuthServiceOptions = {
@@ -23,7 +23,7 @@ type VaultServiceOptions = {
 };
 
 type Options = {
-  clientCredentials: AxiosClientCredentialsMiddlewareConfig;
+  clientCredentials: AxiosClientCredentialsMiddlewareOptions;
   oauthService: OAuthServiceOptions;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
@@ -52,12 +52,14 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
     workerInterval,
   });
 
-  const oauthClient = new Axios({
-    host: oauthService.host,
+  const oauthClient = new Axios(
+    {
+      host: oauthService.host,
+      name: "oauthClient",
+      port: oauthService.port,
+    },
     logger,
-    name: "oauthClient",
-    port: oauthService.port,
-  });
+  );
 
   const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
 

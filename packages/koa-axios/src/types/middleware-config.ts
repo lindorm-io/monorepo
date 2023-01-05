@@ -1,4 +1,4 @@
-import { AxiosMiddleware } from "@lindorm-io/axios";
+import { Middleware as AxiosMiddleware } from "@lindorm-io/axios";
 
 export interface AxiosMiddlewareConfig {
   clientName: string;
