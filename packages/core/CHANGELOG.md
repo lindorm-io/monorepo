@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.0...@lindorm-io/core@0.8.1) (2023-01-05)
+
+
+### Bug Fixes
+
+* move strict-object into private util ([0db0275](https://github.com/lindorm-io/monorepo/commit/0db0275a232310f91bbc1b88b42d1f6d611634e4))
+* remove case-switch from core ([83f1c92](https://github.com/lindorm-io/monorepo/commit/83f1c92c44644951a826436dffdbc73cbd0e1eb1))
+
+
+
+
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.7.1...@lindorm-io/core@0.8.0) (2023-01-04)
 
 

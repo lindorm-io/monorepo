@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.5...@lindorm-io/key-pair@0.6.6) (2023-01-05)
+
+
+### Bug Fixes
+
+* align packages with new case package ([b9519bd](https://github.com/lindorm-io/monorepo/commit/b9519bdd80cfd1daf3e9fd419211c9982e630d87))
+
+
+
+
+
 ## [0.6.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.4...@lindorm-io/key-pair@0.6.5) (2023-01-04)
 
 **Note:** Version bump only for package @lindorm-io/key-pair
