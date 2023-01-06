@@ -1,9 +1,9 @@
 import { Axios } from "../src";
-import { Logger, LogLevel } from "@lindorm-io/winston";
+import { ConsoleLogger, LogLevel } from "@lindorm-io/core-logger";
 import { axiosTransformBodyCaseMiddleware } from "../src";
 
 (async () => {
-  const logger = new Logger();
+  const logger = new ConsoleLogger();
   logger.addConsole(LogLevel.SILLY, { colours: true, readable: true, timestamp: true });
 
   const axios = new Axios({ middleware: [axiosTransformBodyCaseMiddleware()] }, logger);

@@ -1,8 +1,8 @@
 import { Controller, ControllerResponse } from "../../types";
 import { HttpStatus } from "../../constant";
-import { createURL } from "@lindorm-io/core";
-import { useController } from "./use-controller";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { createURL } from "@lindorm-io/url";
+import { useController } from "./use-controller";
 
 describe("useController", () => {
   let ctx: any;
@@ -96,6 +96,7 @@ describe("useController", () => {
           queryOne: "string",
           twoNumber: 22,
         },
+        queryCaseTransform: "snake",
       }),
     });
 

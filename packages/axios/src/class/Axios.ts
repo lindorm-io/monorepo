@@ -1,22 +1,15 @@
+import { AxiosOptions, MethodOptions, Middleware, RequestOptions, RetryOptions } from "../types";
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
 import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
 import { Logger } from "@lindorm-io/core-logger";
 import { axiosRequestLoggerMiddleware } from "../middleware/private";
+import { destructUrl, Protocol } from "@lindorm-io/url";
 import {
   axiosRequestHandler,
   composeContext,
   composeMiddleware,
   defaultRetryCallback,
-  destructUrl,
 } from "../util";
-import {
-  AxiosOptions,
-  MethodOptions,
-  Middleware,
-  Protocol,
-  RequestOptions,
-  RetryOptions,
-} from "../types";
 
 export class Axios {
   private readonly auth: AxiosBasicCredentials;

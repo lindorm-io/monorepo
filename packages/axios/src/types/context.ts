@@ -1,6 +1,6 @@
 import { AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, Method } from "axios";
 import { Logger } from "@lindorm-io/core-logger";
-import { Protocol } from "./request";
+import { Protocol } from "@lindorm-io/url";
 import { RetryCallback, RetryOptions } from "./retry";
 
 export type ContextRequest<

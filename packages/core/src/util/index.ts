@@ -13,4 +13,3 @@ export * from "./sleep";
 export * from "./sort-object-keys";
 export * from "./string-comparison";
 export * from "./string-time";
-export * from "./url";

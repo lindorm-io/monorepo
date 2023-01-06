@@ -1,8 +1,7 @@
 import { AxiosBasicCredentials, AxiosRequestConfig, Method } from "axios";
 import { Middleware } from "./middleware";
+import { Protocol } from "@lindorm-io/url";
 import { RetryCallback, RetryOptions } from "./retry";
-
-export type Protocol = "http" | "https";
 
 export type AxiosOptions = {
   auth?: AxiosBasicCredentials;
