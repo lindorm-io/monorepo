@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.11...@lindorm-io/jwt@0.8.12) (2023-01-06)
+
+
+### Bug Fixes
+
+* use core-logger ([132929d](https://github.com/lindorm-io/monorepo/commit/132929d91df04451bb4137c347cea896f14e767c))
+
+
+
+
+
 ## [0.8.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.10...@lindorm-io/jwt@0.8.11) (2023-01-05)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.3...@lindorm-io/mongo@0.11.4) (2023-01-06)
+
+
+### Bug Fixes
+
+* use core-logger ([132929d](https://github.com/lindorm-io/monorepo/commit/132929d91df04451bb4137c347cea896f14e767c))
+
+
+
+
+
 ## [0.11.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.2...@lindorm-io/mongo@0.11.3) (2023-01-05)
 
 **Note:** Version bump only for package @lindorm-io/mongo

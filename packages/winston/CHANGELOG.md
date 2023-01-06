@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.11...@lindorm-io/winston@0.5.0) (2023-01-06)
+
+
+### Features
+
+* major rework to use core logger ([fcc4366](https://github.com/lindorm-io/monorepo/commit/fcc436662c2958ef2528265d726fb3e88a520e0b))
+
+
+
+
+
 ## [0.4.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.4.10...@lindorm-io/winston@0.4.11) (2023-01-05)
 
 
