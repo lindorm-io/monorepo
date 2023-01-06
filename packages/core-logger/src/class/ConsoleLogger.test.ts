@@ -18,7 +18,7 @@ describe("ConsoleLogger", () => {
   afterEach(jest.resetAllMocks);
 
   test("should create a logger instance", () => {
-    expect(typeof logger.addConsole).toBe("function");
+    expect(logger.addConsole).toBeInstanceOf(Function);
   });
 
   test("should log error", () => {

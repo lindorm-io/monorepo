@@ -1,3 +1,3 @@
 export * from "./class";
 export * from "./types";
-export { LogLevel } from "@lindorm-io/core-logger";
+export { Level, LogLevel, Logger } from "@lindorm-io/core-logger";

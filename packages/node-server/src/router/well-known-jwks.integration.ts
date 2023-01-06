@@ -3,7 +3,7 @@ import request from "supertest";
 import { KeyPairCache } from "@lindorm-io/koa-keystore";
 import { KoaApp } from "@lindorm-io/koa";
 import { RedisConnection } from "@lindorm-io/redis";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { createNodeServer } from "../util/create-node-server";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
 import { createWellKnownJwksRouter } from "./well-known-jwks";
