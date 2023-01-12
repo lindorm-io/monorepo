@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.2...@lindorm-io/axios@0.5.3) (2023-01-12)
+
+
+### Bug Fixes
+
+* remove need for date-fns ([af97950](https://github.com/lindorm-io/monorepo/commit/af979505116b20cde4fd0b2308074d4f6e174619))
+* replace core with retry package ([404b2cc](https://github.com/lindorm-io/monorepo/commit/404b2cc9f48cd0a41124fd7cee93b1f497c32a8c))
+
+
+
+
+
 ## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.1...@lindorm-io/axios@0.5.2) (2023-01-12)
 
 

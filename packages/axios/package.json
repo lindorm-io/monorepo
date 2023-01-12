@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
