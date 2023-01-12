@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.1.1",
-    "@lindorm-io/core": "^0.8.2",
+    "@lindorm-io/retry": "^0.1.0",
     "@lindorm-io/url": "^0.2.1",
     "axios": "0.27.2",
     "date-fns": "^2.29.1",

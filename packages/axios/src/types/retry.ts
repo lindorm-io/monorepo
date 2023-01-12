@@ -1,4 +1,4 @@
-import { RetryStrategy } from "@lindorm-io/core";
+import { RetryStrategy } from "@lindorm-io/retry";
 import { AxiosError } from "axios";
 
 export type RetryOptions = {

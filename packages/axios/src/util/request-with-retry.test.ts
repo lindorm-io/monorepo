@@ -2,7 +2,7 @@ import _axios from "axios";
 import { requestWithRetry } from "./request-with-retry";
 
 jest.mock("axios");
-jest.mock("@lindorm-io/core");
+jest.mock("@lindorm-io/retry");
 
 const axios = _axios as any;
 

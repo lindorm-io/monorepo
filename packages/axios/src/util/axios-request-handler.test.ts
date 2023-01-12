@@ -4,7 +4,7 @@ import { requestWithRetry as _requestWithRetry } from "./request-with-retry";
 
 jest.mock("./compose-axios-config");
 jest.mock("./request-with-retry");
-jest.mock("@lindorm-io/core");
+jest.mock("@lindorm-io/retry");
 
 const composeAxiosConfig = _composeAxiosConfig as jest.Mock;
 const requestWithRetry = _requestWithRetry as jest.Mock;
