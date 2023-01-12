@@ -14,7 +14,7 @@ export const axiosRequestLoggerMiddleware =
 
       log.verbose("axios successful", {
         axios: ctx.axios,
-        config: ctx.res.config,
+        config: ctx.res?.config,
         request: {
           data: ctx.req.body,
           headers: ctx.req.headers,
@@ -22,12 +22,12 @@ export const axiosRequestLoggerMiddleware =
           query: ctx.req.query,
         },
         response: {
-          data: ctx.res.data,
-          headers: ctx.res.headers,
-          status: ctx.res.status,
-          statusText: ctx.res.statusText,
+          data: ctx.res?.data,
+          headers: ctx.res?.headers,
+          status: ctx.res?.status,
+          statusText: ctx.res?.statusText,
         },
-        time: getResponseTime(ctx.res.headers, start),
+        time: getResponseTime(ctx.res?.headers, start),
       });
     } catch (err) {
       if (!(err instanceof AxiosError)) {
@@ -52,7 +52,7 @@ export const axiosRequestLoggerMiddleware =
           status: err.response?.status || err.status,
           statusText: err.response?.statusText,
         },
-        time: getResponseTime(ctx.res.headers, start),
+        time: getResponseTime(ctx.res?.headers, start),
       });
 
       throw err;

@@ -3,7 +3,7 @@ import { RetryCallback } from "../types";
 export const defaultRetryCallback: RetryCallback = (err, attempt, options) => {
   if (attempt > options.maximumAttempts) return false;
 
-  switch (err.response.status) {
+  switch (err.response?.status) {
     case 500:
     case 502:
     case 503:
