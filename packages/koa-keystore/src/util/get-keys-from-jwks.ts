@@ -1,4 +1,4 @@
-import { Axios, AxiosOptions } from "@lindorm-io/axios";
+import { Axios, AxiosOptions, axiosRequestLoggerMiddleware } from "@lindorm-io/axios";
 import { JWK, KeyPair } from "@lindorm-io/key-pair";
 import { ServerError } from "@lindorm-io/errors";
 import { flatten } from "lodash";
@@ -26,7 +26,13 @@ export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>>
     ...rest
   } = options;
 
-  const axios = new Axios({ host, name, port, ...rest }, logger);
+  const axios = new Axios({
+    host,
+    middleware: [axiosRequestLoggerMiddleware(logger)],
+    name,
+    port,
+    ...rest,
+  });
 
   const { data } = await axios.get<Response>(path);
 

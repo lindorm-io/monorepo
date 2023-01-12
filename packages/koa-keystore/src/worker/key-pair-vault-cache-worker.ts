@@ -7,8 +7,9 @@ import { getExpiryDate, RetryOptions, stringToSeconds } from "@lindorm-io/core";
 import { getKeysFromJwks } from "../util";
 import {
   Axios,
-  axiosClientCredentialsMiddleware,
   AxiosClientCredentialsMiddlewareOptions,
+  axiosClientCredentialsMiddleware,
+  axiosRequestLoggerMiddleware,
 } from "@lindorm-io/axios";
 
 type OAuthServiceOptions = {
@@ -52,14 +53,12 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
     workerInterval,
   });
 
-  const oauthClient = new Axios(
-    {
-      host: oauthService.host,
-      name: "oauthClient",
-      port: oauthService.port,
-    },
-    logger,
-  );
+  const oauthClient = new Axios({
+    host: oauthService.host,
+    middleware: [axiosRequestLoggerMiddleware(logger)],
+    name: "oauthClient",
+    port: oauthService.port,
+  });
 
   const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
 
