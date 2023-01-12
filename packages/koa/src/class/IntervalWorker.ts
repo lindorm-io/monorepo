@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { Logger } from "@lindorm-io/core-logger";
-import { RetryOptions, calculateRetry, sleep } from "@lindorm-io/core";
+import { RetryOptions, calculateRetry, sleep } from "@lindorm-io/retry";
 
 type Callback = () => Promise<void>;
 type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
