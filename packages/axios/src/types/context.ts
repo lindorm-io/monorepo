@@ -1,9 +1,19 @@
 import { AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, Method } from "axios";
-import { Logger } from "@lindorm-io/core-logger";
 import { Protocol } from "@lindorm-io/url";
 import { RetryCallback, RetryOptions } from "./retry";
 
-export type ContextRequest<
+export type AxiosContext = {
+  auth: AxiosBasicCredentials;
+  host: string | null;
+  name: string | null;
+  port: number | null;
+  protocol: Protocol | null;
+  retry: RetryOptions;
+  timeout: number;
+  withCredentials: boolean;
+};
+
+export type RequestContext<
   Body = Record<string, any>,
   Headers = Record<string, string | number>,
   Params = Record<string, any>,
@@ -33,7 +43,7 @@ export type Context<
   Query = Record<string, any>,
   ResponseData = any,
 > = {
-  req: ContextRequest<Body, Headers, Params, Query>;
+  axios: AxiosContext;
+  req: RequestContext<Body, Headers, Params, Query>;
   res: AxiosResponse<ResponseData, Body>;
-  logger: Logger;
 };

@@ -1,8 +1,6 @@
 import { AxiosOptions, MethodOptions, Middleware, RequestOptions, RetryOptions } from "../types";
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
 import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
-import { Logger } from "@lindorm-io/core-logger";
-import { axiosRequestLoggerMiddleware } from "../middleware/private";
 import { destructUrl, Protocol } from "@lindorm-io/url";
 import {
   axiosRequestHandler,
@@ -14,22 +12,21 @@ import {
 export class Axios {
   private readonly auth: AxiosBasicCredentials;
   private readonly host: string | undefined;
-  private readonly logger: Logger;
   private readonly middleware: Middleware[];
+  private readonly name: string | undefined;
   private readonly port: number | undefined;
   private readonly protocol: Protocol | undefined;
   private readonly retry: RetryOptions;
   private readonly timeout: number;
   private readonly withCredentials: boolean;
 
-  constructor(options: AxiosOptions = {}, logger: Logger) {
-    this.logger = logger.createChildLogger(options.name ? ["Axios", options.name] : ["Axios"]);
-
+  constructor(options: AxiosOptions = {}) {
     const { host, port, protocol } = destructUrl(options.host);
 
     this.auth = options.auth || DEFAULT_AUTH_OPTIONS;
     this.host = host;
     this.middleware = options.middleware || [];
+    this.name = options.name;
     this.port = options.port || port;
     this.protocol = options.protocol || protocol || "https";
     this.retry = options.retry || DEFAULT_RETRY_OPTIONS;
@@ -117,6 +114,16 @@ export class Axios {
 
     const context = composeContext(
       {
+        auth: this.auth,
+        host: this.host || null,
+        name: this.name || null,
+        port: this.port || null,
+        protocol: this.protocol || null,
+        retry: this.retry,
+        timeout: this.timeout,
+        withCredentials: this.withCredentials,
+      },
+      {
         auth: auth || this.auth,
         body: body,
         config: config,
@@ -133,15 +140,9 @@ export class Axios {
         timeout: timeout || this.timeout,
         withCredentials: withCredentials || this.withCredentials,
       },
-      this.logger,
     );
 
-    const composed = composeMiddleware([
-      ...this.middleware,
-      ...middleware,
-      axiosRequestLoggerMiddleware,
-      axiosRequestHandler,
-    ]);
+    const composed = composeMiddleware([...this.middleware, ...middleware, axiosRequestHandler]);
 
     await composed(context);
 

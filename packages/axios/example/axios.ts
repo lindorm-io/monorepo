@@ -1,4 +1,4 @@
-import { Axios } from "../src";
+import { Axios, axiosRequestLoggerMiddleware } from "../src";
 import { ConsoleLogger, LogLevel } from "@lindorm-io/core-logger";
 import { axiosTransformBodyCaseMiddleware } from "../src";
 
@@ -6,7 +6,9 @@ import { axiosTransformBodyCaseMiddleware } from "../src";
   const logger = new ConsoleLogger();
   logger.addConsole(LogLevel.SILLY, { colours: true, readable: true, timestamp: true });
 
-  const axios = new Axios({ middleware: [axiosTransformBodyCaseMiddleware()] }, logger);
+  const axios = new Axios({
+    middleware: [axiosRequestLoggerMiddleware(logger), axiosTransformBodyCaseMiddleware()],
+  });
 
   const { request, ...result } = await axios.get("https://api.scryfall.com/bulk-data");
 

@@ -1,4 +1,4 @@
-import { Middleware } from "../../types";
+import { Middleware } from "../types";
 
 export const axiosBearerAuthMiddleware =
   (accessToken: string): Middleware =>

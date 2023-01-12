@@ -1,4 +1,4 @@
-import { Middleware } from "../../types";
+import { Middleware } from "../types";
 import { transformCase, TransformMode } from "@lindorm-io/case";
 
 export const axiosTransformQueryCaseMiddleware =

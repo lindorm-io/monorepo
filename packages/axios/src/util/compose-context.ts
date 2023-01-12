@@ -1,7 +1,7 @@
-import { Context, ContextRequest } from "../types";
-import { Logger } from "@lindorm-io/core-logger";
+import { AxiosContext, Context, RequestContext } from "../types";
 
-export const composeContext = (req: ContextRequest, logger: Logger): Context => ({
+export const composeContext = (axios: AxiosContext, req: RequestContext): Context => ({
+  axios,
   req,
   res: {
     config: {},
@@ -11,5 +11,4 @@ export const composeContext = (req: ContextRequest, logger: Logger): Context => 
     status: -1,
     statusText: "",
   },
-  logger,
 });

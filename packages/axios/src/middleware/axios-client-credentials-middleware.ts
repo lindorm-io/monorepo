@@ -1,6 +1,6 @@
-import { Axios } from "../../class";
-import { MetadataHeader } from "../../enum";
-import { Middleware, OAuthTokenResponseData } from "../../types";
+import { Axios } from "../class";
+import { MetadataHeader } from "../enum";
+import { Middleware, OAuthTokenResponseData } from "../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
 import { difference, flatten, isArray, isString, uniq } from "lodash";
