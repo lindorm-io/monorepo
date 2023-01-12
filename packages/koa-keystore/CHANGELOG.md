@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.11...@lindorm-io/koa-keystore@0.9.12) (2023-01-12)
+
+
+### Bug Fixes
+
+* add request logger middleware ([491dd55](https://github.com/lindorm-io/monorepo/commit/491dd556af6cc0398770bccbc93c9a71ba403d90))
+
+
+
+
+
 ## [0.9.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.10...@lindorm-io/koa-keystore@0.9.11) (2023-01-06)
 
 

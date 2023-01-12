@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.1.1",
-    "@lindorm-io/core": "^0.8.1",
-    "@lindorm-io/url": "^0.2.0",
+    "@lindorm-io/core": "^0.8.2",
+    "@lindorm-io/url": "^0.2.1",
     "axios": "0.27.2",
     "date-fns": "^2.29.1",
     "lodash": "4.17.21"

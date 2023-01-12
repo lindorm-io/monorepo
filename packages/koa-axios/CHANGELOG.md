@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.24](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.23...@lindorm-io/koa-axios@0.1.24) (2023-01-12)
+
+
+### Bug Fixes
+
+* update middleware ([5e25bce](https://github.com/lindorm-io/monorepo/commit/5e25bce73b305c18c5814df9f3917f30af69e2c8))
+
+
+
+
+
 ## [0.1.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.22...@lindorm-io/koa-axios@0.1.23) (2023-01-06)
 
 

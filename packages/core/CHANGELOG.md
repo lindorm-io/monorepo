@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.1...@lindorm-io/core@0.8.2) (2023-01-12)
+
+
+### Bug Fixes
+
+* use url package ([d2f8772](https://github.com/lindorm-io/monorepo/commit/d2f8772a4995a175814995b89c7cd6450df2cd94))
+
+
+
+
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.0...@lindorm-io/core@0.8.1) (2023-01-05)
 
 

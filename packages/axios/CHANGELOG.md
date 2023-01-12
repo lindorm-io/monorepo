@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.1...@lindorm-io/axios@0.5.2) (2023-01-12)
+
+
+### Bug Fixes
+
+* move request logger into middleware ([80dfd39](https://github.com/lindorm-io/monorepo/commit/80dfd390b9ab203dc9263b7e5f7492397a0d352d))
+* optional chaining ([ffc58ae](https://github.com/lindorm-io/monorepo/commit/ffc58ae83c36afb65c48cdeed9a4fb222978b1ef))
+* use url package ([d2f8772](https://github.com/lindorm-io/monorepo/commit/d2f8772a4995a175814995b89c7cd6450df2cd94))
+
+
+
+
+
 ## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.0...@lindorm-io/axios@0.5.1) (2023-01-06)
 
 
