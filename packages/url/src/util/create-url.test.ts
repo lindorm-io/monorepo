@@ -151,7 +151,7 @@ describe("createURL", () => {
     ).toBe("https://lindorm.io/?query_one=string");
   });
 
-  test.only("should keep current path", () => {
+  test("should keep current path", () => {
     expect(
       createURL("https://lindorm.io/test/:one/two?query_one=string", {
         params: {

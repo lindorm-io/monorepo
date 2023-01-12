@@ -37,6 +37,16 @@ export const destructUrl = (url: URL | string | undefined): UrlData => {
     return destruct(new URL(url));
   }
 
+  if (url.startsWith("/")) {
+    return {
+      host: undefined,
+      pathname: url,
+      port: undefined,
+      protocol: undefined,
+      query: {},
+    };
+  }
+
   if (URL_REGEX.test(url)) {
     return destruct(new URL(`https://${url}`));
   }
