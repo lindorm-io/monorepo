@@ -4,7 +4,7 @@ import { Middleware, OAuthTokenResponseData } from "../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
 import { difference, flatten, isArray, isString, uniq } from "lodash";
-import { getUnixTime } from "date-fns";
+import { getUnixTime } from "../util";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
   clientEnvironment?: string;
@@ -50,7 +50,7 @@ export const axiosClientCredentialsMiddleware = (
 
   return (oauthClient: Axios, scopes: Array<string> = [], force = false): Middleware =>
     async (ctx, next) => {
-      const now = getUnixTime(new Date());
+      const now = getUnixTime();
 
       if (
         force ||
