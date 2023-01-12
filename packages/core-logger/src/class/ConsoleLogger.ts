@@ -18,16 +18,12 @@ export class ConsoleLogger extends LoggerBase implements Logger {
 
   public constructor(options: LoggerOptions = {}) {
     super(options);
+
+    this.consoleOptions = { colours: false, readable: false, timestamp: false };
   }
 
   public addConsole(level: Level = "info", options: Partial<ConsoleOptions> = {}): void {
-    this.consoleOptions = {
-      colours: false,
-      readable: false,
-      timestamp: false,
-      ...options,
-    };
-
+    this.consoleOptions = { ...this.consoleOptions, ...options };
     this.level = level;
   }
 
@@ -58,6 +54,7 @@ export class ConsoleLogger extends LoggerBase implements Logger {
   }
 
   protected log(options: LoggerMessage): void {
+    if (!this.level) return;
     if (LEVEL_VALUE[options.level] < LEVEL_VALUE[this.level]) return;
 
     const data = this.consoleOptions.readable
