@@ -1,7 +1,6 @@
 import { CryptoError } from "../error";
 import { HmacSHA512 } from "crypto-js";
 import { CryptoSHAOptions } from "../types";
-import { stringComparison } from "@lindorm-io/core";
 
 export class CryptoSHA {
   private secret: string;
@@ -15,7 +14,7 @@ export class CryptoSHA {
   }
 
   public verify(input: string, signature: string): boolean {
-    return stringComparison(this.encrypt(input), signature);
+    return this.encrypt(input) === signature;
   }
 
   public assert(input: string, signature: string): void {

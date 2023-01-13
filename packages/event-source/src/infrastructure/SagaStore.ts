@@ -5,7 +5,7 @@ import { PostgresSagaStore } from "./postgres";
 import { Saga } from "../model";
 import { SagaStoreType } from "../enum";
 import { flatten } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   IDomainSagaStore,
   IMessage,

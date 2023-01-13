@@ -6,7 +6,7 @@ import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
 import { VIEW_CAUSATION } from "../../constant";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { getViewStoreName } from "../../util";
 import {

@@ -1,5 +1,6 @@
 import { CryptoError } from "../error";
 import { SignKey, SignMethod } from "../enum";
+import { startsWith } from "lodash";
 import {
   createSign,
   createVerify,
@@ -8,7 +9,6 @@ import {
   publicDecrypt,
   publicEncrypt,
 } from "crypto";
-import { startsWith } from "lodash";
 
 const DECRYPT_FORMAT = "utf8";
 const ENCRYPT_FORMAT = "base64";

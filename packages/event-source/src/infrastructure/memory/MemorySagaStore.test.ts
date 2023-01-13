@@ -5,7 +5,7 @@ import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../../fixtures/saga.fixture";
 import { filter, find } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,

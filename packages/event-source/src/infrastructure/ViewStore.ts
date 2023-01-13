@@ -5,7 +5,7 @@ import { PostgresViewStore } from "./postgres";
 import { View } from "../model";
 import { ViewStoreType } from "../enum";
 import { flatten } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   IDomainViewStore,
   IMessage,

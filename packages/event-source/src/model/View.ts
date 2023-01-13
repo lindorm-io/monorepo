@@ -5,7 +5,8 @@ import { IView, ViewOptions, ViewData, State } from "../types";
 import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge } from "lodash";
-import { processObjectChange, randomString } from "@lindorm-io/core";
+import { processObjectChange } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 export class View<TState extends State = State> implements IView<TState> {
   public readonly id: string;

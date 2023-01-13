@@ -1,6 +1,6 @@
 import { MemoryViewRepository } from "./MemoryViewRepository";
 import { ViewIdentifier } from "../../types";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { IN_MEMORY_VIEW_STORE } from "./in-memory";
 

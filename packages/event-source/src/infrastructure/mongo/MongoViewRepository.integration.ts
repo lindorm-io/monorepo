@@ -3,7 +3,7 @@ import { MongoViewRepository } from "./MongoViewRepository";
 import { ViewStoreAttributes, ViewIdentifier } from "../../types";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { getViewStoreName } from "../../util";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 describe("MongoViewRepository", () => {

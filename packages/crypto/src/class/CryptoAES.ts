@@ -1,7 +1,6 @@
 import { AES, enc } from "crypto-js";
-import { CryptoError } from "../error";
 import { CryptoAESOptions } from "../types";
-import { stringComparison } from "@lindorm-io/core";
+import { CryptoError } from "../error";
 
 export class CryptoAES {
   private secret: string;
@@ -19,7 +18,7 @@ export class CryptoAES {
   }
 
   public verify(input: string, signature: string): boolean {
-    return stringComparison(input, this.decrypt(signature));
+    return input === this.decrypt(signature);
   }
 
   public assert(input: string, signature: string): void {

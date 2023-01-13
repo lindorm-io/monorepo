@@ -5,7 +5,7 @@ import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
 import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 import { filter, find } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   AggregateIdentifier,

@@ -5,7 +5,7 @@ import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
 import { ViewIdentifier, ViewStoreAttributes } from "../../types";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { getViewStoreName } from "../../util";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 

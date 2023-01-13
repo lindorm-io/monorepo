@@ -2,7 +2,7 @@ import { CryptoAES } from "./CryptoAES";
 import { CryptoError } from "../error";
 import { CryptoSHA } from "./CryptoSHA";
 import { CryptoSecretOptions } from "../types";
-import { baseHash, baseParse, stringComparison } from "@lindorm-io/core";
+import { baseHash, baseParse } from "@lindorm-io/core";
 
 export class CryptoSecret {
   private aes: CryptoAES;
@@ -25,7 +25,7 @@ export class CryptoSecret {
     const aes = baseParse(signature);
     const hash = this.aes.decrypt(aes);
 
-    return stringComparison(sha, hash);
+    return sha === hash;
   }
 
   public assert(input: string, signature: string): void {

@@ -5,7 +5,7 @@ import { Logger } from "@lindorm-io/core-logger";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema } from "../util";
 import { cloneDeep, merge, snakeCase } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   AggregateIdentifier,
   DtoClass,

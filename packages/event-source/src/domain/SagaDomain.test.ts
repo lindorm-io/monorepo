@@ -9,7 +9,7 @@ import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
 import { TEST_SAGA_IDENTIFIER } from "../fixtures/saga.fixture";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockMessageBus, IMessageBus } from "@lindorm-io/amqp";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   HandlerNotRegisteredError,
