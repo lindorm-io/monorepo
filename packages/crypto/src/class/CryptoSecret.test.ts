@@ -22,7 +22,7 @@ describe("CryptoSecret", () => {
   });
 
   test("should assert", async () => {
-    expect(instance.assert("string", signature)).toBeUndefined();
+    expect(() => instance.assert("string", signature)).not.toThrow();
   });
 
   test("should throw error", async () => {

@@ -1,27 +1,30 @@
-export interface CryptoAESOptions {
+export type CryptoAESOptions = {
   secret: string;
-}
+};
 
-export interface CryptoArgonOptions {
+export type CryptoArgonOptions = {
   hashLength?: 64 | 128 | 256 | 512;
   memoryCost?: 1 | 2 | 4 | 8;
   parallelism?: number;
   saltLength?: 64 | 128 | 256 | 512;
   secret?: string;
   timeCost?: number;
-}
+};
 
-export interface CryptoSHAOptions {
+export type Hmac = "SHA256" | "SHA384" | "SHA512";
+
+export type CryptoSHAOptions = {
   secret: string;
-}
+  hmac?: Hmac;
+};
 
-export interface CryptoLayeredOptions {
+export type CryptoLayeredOptions = {
   aes: CryptoAESOptions;
   argon?: CryptoArgonOptions;
   sha: CryptoSHAOptions;
-}
+};
 
-export interface CryptoSecretOptions {
+export type CryptoSecretOptions = {
   aes: CryptoAESOptions;
   sha: CryptoSHAOptions;
-}
+};

@@ -22,9 +22,7 @@ export class CryptoAES {
   }
 
   public assert(input: string, signature: string): void {
-    if (this.verify(input, signature)) {
-      return;
-    }
+    if (this.verify(input, signature)) return;
 
     throw new CryptoError("Invalid AES input");
   }

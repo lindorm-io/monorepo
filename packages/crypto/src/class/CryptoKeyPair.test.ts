@@ -160,7 +160,7 @@ describe("CryptoKeyPair", () => {
     }, 10000);
 
     test("should sign/assert", () => {
-      expect(crypto.assert("string", signature)).toBeUndefined();
+      expect(() => crypto.assert("string", signature)).not.toThrow();
     }, 10000);
 
     test("should sign/throw error", () => {

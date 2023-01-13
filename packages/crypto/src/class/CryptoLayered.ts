@@ -33,9 +33,7 @@ export class CryptoLayered {
   }
 
   public async assert(input: string, signature: string): Promise<void> {
-    if (await this.verify(input, signature)) {
-      return;
-    }
+    if (await this.verify(input, signature)) return;
 
     throw new CryptoError("Invalid Layered input");
   }
