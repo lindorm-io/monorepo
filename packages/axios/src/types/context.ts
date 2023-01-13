@@ -1,6 +1,7 @@
 import { AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, Method } from "axios";
 import { Protocol } from "@lindorm-io/url";
-import { RetryCallback, RetryOptions } from "./retry";
+import { RetryCallback } from "./retry";
+import { RetryOptions } from "@lindorm-io/retry";
 
 export type AxiosContext = {
   auth: AxiosBasicCredentials;

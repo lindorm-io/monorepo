@@ -2,7 +2,8 @@ import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
-import { RetryOptions, stringToSeconds } from "@lindorm-io/core";
+import { RetryOptions } from "@lindorm-io/retry";
+import { stringToSeconds } from "@lindorm-io/core";
 
 type Options = {
   mongoConnection: MongoConnection;

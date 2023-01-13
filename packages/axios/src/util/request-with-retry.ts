@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { RetryCallback, RetryOptions } from "../types";
-import { calculateRetry, sleep } from "@lindorm-io/retry";
+import { RetryCallback } from "../types";
+import { calculateRetry, RetryOptions, sleep } from "@lindorm-io/retry";
 
 export const requestWithRetry = async (
   config: AxiosRequestConfig,

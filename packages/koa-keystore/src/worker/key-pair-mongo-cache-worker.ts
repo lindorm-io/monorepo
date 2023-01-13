@@ -1,12 +1,13 @@
-import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
 import { KeyPairRepository } from "../infrastructure";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
+import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, RetryOptions, stringToSeconds } from "@lindorm-io/core";
+import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
 
 type Options = {
   mongoConnection: MongoConnection;

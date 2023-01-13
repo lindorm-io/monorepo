@@ -1,10 +1,11 @@
-import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairRepository } from "../infrastructure";
+import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { RetryOptions } from "@lindorm-io/retry";
 import { add } from "date-fns";
 import { generateKeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";
-import { RetryOptions, stringToDurationObject, stringToMilliseconds } from "@lindorm-io/core";
+import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/core";
 
 type Options = {
   keyExpiry?: string;

@@ -31,6 +31,7 @@
     "@lindorm-io/koa": "^0.15.3",
     "@lindorm-io/mongo": "^0.11.5",
     "@lindorm-io/redis": "^0.11.4",
+    "@lindorm-io/retry": "^0.1.0",
     "joi": "^17.5.0",
     "lodash": "^4.17.21"
   },

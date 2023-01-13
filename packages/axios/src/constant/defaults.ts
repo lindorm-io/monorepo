@@ -1,5 +1,5 @@
 import { AxiosBasicCredentials } from "axios";
-import { RetryOptions } from "../types";
+import { RetryOptions } from "@lindorm-io/retry";
 
 export const DEFAULT_AUTH_OPTIONS: AxiosBasicCredentials = {
   username: undefined,

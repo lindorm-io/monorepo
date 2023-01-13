@@ -1,6 +1,7 @@
-import { AxiosOptions, MethodOptions, Middleware, RequestOptions, RetryOptions } from "../types";
+import { AxiosOptions, MethodOptions, Middleware, RequestOptions } from "../types";
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
 import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
+import { RetryOptions } from "@lindorm-io/retry";
 import { destructUrl, Protocol } from "@lindorm-io/url";
 import {
   axiosRequestHandler,

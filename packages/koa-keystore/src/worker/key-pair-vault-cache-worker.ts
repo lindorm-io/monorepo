@@ -1,9 +1,10 @@
-import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { KeyPairCache } from "../infrastructure";
+import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "@lindorm-io/redis";
+import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, RetryOptions, stringToSeconds } from "@lindorm-io/core";
+import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
 import { getKeysFromJwks } from "../util";
 import {
   Axios,
