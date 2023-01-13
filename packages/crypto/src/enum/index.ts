@@ -1,2 +1,2 @@
-export * from "./sign-key";
-export * from "./sign-method";
+export * from "./SignKey";
+export * from "./SignMethod";
