@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.3...@lindorm-io/core@0.8.4) (2023-01-13)
+
+
+### Bug Fixes
+
+* remove duplicate utils ([3c983a0](https://github.com/lindorm-io/monorepo/commit/3c983a0a0ee2834748597d298b12b0ad77f0f7a6))
+
+
+
+
+
 ## [0.8.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.2...@lindorm-io/core@0.8.3) (2023-01-13)
 
 

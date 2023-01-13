@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.5...@lindorm-io/event-source@0.2.6) (2023-01-13)
+
+
+### Bug Fixes
+
+* update and remove imports ([583520d](https://github.com/lindorm-io/monorepo/commit/583520d287f954af35f3345d3a7ce626e96f5bc4))
+
+
+
+
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.4...@lindorm-io/event-source@0.2.5) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/event-source

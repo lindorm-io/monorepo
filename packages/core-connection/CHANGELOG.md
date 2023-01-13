@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-connection@0.1.7...@lindorm-io/core-connection@0.1.8) (2023-01-13)
+
+**Note:** Version bump only for package @lindorm-io/core-connection
+
+
+
+
+
 ## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-connection@0.1.6...@lindorm-io/core-connection@0.1.7) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/core-connection
