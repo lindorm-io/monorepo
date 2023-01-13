@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -26,7 +26,7 @@
     "lodash": "4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.1.1",
+    "@lindorm-io/core-logger": "^0.1.2",
     "@types/lodash": "^4.14.182",
     "date-fns": "^2.29.1"
   }

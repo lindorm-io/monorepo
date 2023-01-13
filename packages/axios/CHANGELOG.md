@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.3...@lindorm-io/axios@0.5.4) (2023-01-13)
+
+
+### Bug Fixes
+
+* import missing type ([99779dc](https://github.com/lindorm-io/monorepo/commit/99779dc67de82e33588d77e1b06c5bce0ffce5b7))
+
+
+
+
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.2...@lindorm-io/axios@0.5.3) (2023-01-12)
 
 

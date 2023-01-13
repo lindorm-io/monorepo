@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-logger@0.1.1...@lindorm-io/core-logger@0.1.2) (2023-01-13)
+
+
+### Bug Fixes
+
+* improve console logger ([6253db9](https://github.com/lindorm-io/monorepo/commit/6253db9dfb0398685a731be1ba29536f8f638467))
+
+
+
+
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-logger@0.1.0...@lindorm-io/core-logger@0.1.1) (2023-01-06)
 
 

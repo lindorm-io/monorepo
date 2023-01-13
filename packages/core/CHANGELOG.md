@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.2...@lindorm-io/core@0.8.3) (2023-01-13)
+
+
+### Bug Fixes
+
+* remove retry from core ([843c4cf](https://github.com/lindorm-io/monorepo/commit/843c4cfb969167abba90c03f4bcacf2503370ba9))
+
+
+
+
+
 ## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.1...@lindorm-io/core@0.8.2) (2023-01-12)
 
 

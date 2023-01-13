@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.13...@lindorm-io/koa-keystore@0.9.14) (2023-01-13)
+
+
+### Bug Fixes
+
+* import missing type ([99779dc](https://github.com/lindorm-io/monorepo/commit/99779dc67de82e33588d77e1b06c5bce0ffce5b7))
+
+
+
+
+
 ## [0.9.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.12...@lindorm-io/koa-keystore@0.9.13) (2023-01-12)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore
