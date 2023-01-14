@@ -1,5 +1,5 @@
 import { basename, extname, join, relative, sep } from "path";
-import { endsWith, flatten, includes, isString } from "lodash";
+import { flatten } from "lodash";
 import { readdirSync, statSync } from "fs";
 
 export interface StructureScannerOptions {
@@ -39,7 +39,7 @@ export class StructureScanner {
   }
 
   public getRoute(file: FileData): string {
-    const omit = includes(this.omit, file.name);
+    const omit = this.omit.includes(file.name);
 
     if (!file.parents.length && !omit) {
       return this.renameRoute(`${this.prefix}/${file.name}`);
@@ -87,19 +87,19 @@ export class StructureScanner {
 
   private isApprovedExtension(file: string): boolean {
     for (const extension of this.include) {
-      if (endsWith(file, extension)) return true;
+      if (file.endsWith(extension)) return true;
     }
     return false;
   }
 
   private isExcludedExtension(file: string): boolean {
     for (const exclude of this.exclude) {
-      if (includes(file, exclude)) return true;
+      if (file.includes(exclude)) return true;
     }
     return false;
   }
 
   private renameRoute(name: string): string {
-    return isString(this.rename[name]) ? this.rename[name] : name;
+    return typeof this.rename[name] === "string" ? this.rename[name] : name;
   }
 }

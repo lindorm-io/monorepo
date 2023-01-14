@@ -1,14 +1,15 @@
 import EventEmitter from "events";
 import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, snakeCase, some } from "lodash";
+import { cloneDeep } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import {
   EventEmitterSagaData,
   EventEmitterListener,
@@ -65,23 +66,20 @@ export class SagaDomain implements ISagaDomain {
       });
     }
 
-    const contexts = isArray(eventHandler.aggregate.context)
+    const contexts = Array.isArray(eventHandler.aggregate.context)
       ? eventHandler.aggregate.context
       : [eventHandler.aggregate.context];
 
     for (const context of contexts) {
-      const existingHandler = some(this.eventHandlers, {
-        eventName: eventHandler.eventName,
-        version: eventHandler.version,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context,
-        },
-        saga: {
-          name: eventHandler.saga.name,
-          context: eventHandler.saga.context,
-        },
-      });
+      const existingHandler = this.eventHandlers.some(
+        (x) =>
+          x.eventName === eventHandler.eventName &&
+          x.version === eventHandler.version &&
+          x.aggregate.name === eventHandler.aggregate.name &&
+          x.aggregate.context === context &&
+          x.saga.name === eventHandler.saga.name &&
+          x.saga.context === eventHandler.saga.context,
+      );
 
       if (existingHandler) {
         throw new LindormError("Event handler has already been registered", {
@@ -154,18 +152,15 @@ export class SagaDomain implements ISagaDomain {
 
     const conditionValidators = [];
 
-    const eventHandler = find(this.eventHandlers, {
-      eventName: event.name,
-      version: event.version,
-      aggregate: {
-        name: event.aggregate.name,
-        context: event.aggregate.context,
-      },
-      saga: {
-        name: sagaIdentifier.name,
-        context: sagaIdentifier.context,
-      },
-    });
+    const eventHandler = this.eventHandlers.find(
+      (x) =>
+        x.eventName === event.name &&
+        x.version === event.version &&
+        x.aggregate.name === event.aggregate.name &&
+        x.aggregate.context === event.aggregate.context &&
+        x.saga.name === sagaIdentifier.name &&
+        x.saga.context === sagaIdentifier.context,
+    );
 
     if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
@@ -189,7 +184,7 @@ export class SagaDomain implements ISagaDomain {
       conditionValidators.push((saga: Saga) => {
         if (saga.revision > 0) {
           throw new SagaAlreadyCreatedError(
-            isUndefined(eventHandler.conditions.permanent) ||
+            eventHandler.conditions.permanent === undefined ||
               eventHandler.conditions.permanent === true,
           );
         }

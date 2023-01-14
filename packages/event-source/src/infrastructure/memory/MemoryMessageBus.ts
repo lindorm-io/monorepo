@@ -3,7 +3,7 @@ import { IMessage } from "../../types";
 import { IMessageBus, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { JOI_MESSAGE, JOI_SUBSCRIPTION } from "../../schema";
 import { MessageType } from "../../enum";
-import { filter, flatten, isArray, remove } from "lodash";
+import { flatten } from "lodash";
 import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } from "../../message";
 
 export class MemoryMessageBus implements IMessageBus {
@@ -14,12 +14,12 @@ export class MemoryMessageBus implements IMessageBus {
   }
 
   public async publish(messages: IMessage | Array<IMessage>): Promise<void> {
-    const list = isArray(messages) ? messages : [messages];
+    const list = Array.isArray(messages) ? messages : [messages];
 
     for (const message of list) {
       await this.validateMessage(message);
 
-      const subscriptions = filter(this.subscriptions, { topic: message.topic });
+      const subscriptions = this.subscriptions.filter((x) => x.topic === message.topic);
 
       for (const subscription of subscriptions) {
         if (message.delay) {
@@ -36,7 +36,7 @@ export class MemoryMessageBus implements IMessageBus {
   }
 
   public async subscribe(subscriptions: ISubscription | Array<ISubscription>): Promise<void> {
-    const list = isArray(subscriptions) ? subscriptions : [subscriptions];
+    const list = Array.isArray(subscriptions) ? subscriptions : [subscriptions];
 
     for (const subscription of list) {
       await this.validateSubscription(subscription);
@@ -48,10 +48,12 @@ export class MemoryMessageBus implements IMessageBus {
   public async unsubscribe(
     subscriptions: UnsubscribeOptions | Array<UnsubscribeOptions>,
   ): Promise<void> {
-    const list = isArray(subscriptions) ? subscriptions : [subscriptions];
+    const list = Array.isArray(subscriptions) ? subscriptions : [subscriptions];
 
     for (const subscription of list) {
-      remove(this.subscriptions, subscription);
+      this.subscriptions = this.subscriptions.filter(
+        (x) => x.topic !== subscription.topic && x.queue !== subscription.queue,
+      );
     }
   }
 

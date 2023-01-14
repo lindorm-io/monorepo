@@ -1,6 +1,5 @@
 import { MetaType } from "../enum";
-import { isArray, isString } from "lodash";
-import { isObjectStrict } from "@lindorm-io/core";
+import { isObject } from "@lindorm-io/core";
 import { parseArrayValue } from "./parse-array-value";
 import { parseErrorValue } from "./parse-error-value";
 
@@ -11,9 +10,9 @@ export const parseObjectValue = (
   const result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(json)) {
-    if (isObjectStrict(meta[key])) {
+    if (isObject(meta[key])) {
       result[key] = parseObjectValue(json[key], meta[key]);
-    } else if (isArray(meta[key])) {
+    } else if (Array.isArray(meta[key])) {
       result[key] = parseArrayValue(json[key], meta[key]);
     } else if (meta[key] === MetaType.BOOLEAN) {
       result[key] = JSON.parse(value);
@@ -24,7 +23,7 @@ export const parseObjectValue = (
     } else if (meta[key] === MetaType.NUMBER) {
       result[key] = parseInt(value, 10);
     } else if (meta[key] === MetaType.STRING) {
-      result[key] = isString(value) ? value : JSON.parse(value);
+      result[key] = typeof value === "string" ? value : JSON.parse(value);
     } else if (meta[key] === MetaType.NULL) {
       result[key] = null;
     } else if (meta[key] === MetaType.UNDEFINED) {

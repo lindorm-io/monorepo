@@ -1,18 +1,7 @@
 import { LogLevel } from "../enum";
 import { defaultFilterCallback } from "../util";
 import { snakeCase } from "@lindorm-io/case";
-import {
-  cloneDeep,
-  flatten,
-  get,
-  isArray,
-  isError,
-  isNumber,
-  isObject,
-  isString,
-  merge,
-  set,
-} from "lodash";
+import { cloneDeep, flatten, get, isObject, merge, set } from "lodash";
 import {
   ConsoleOptions,
   FilterCallback,
@@ -174,12 +163,16 @@ export abstract class LoggerBase implements Logger {
   // protected
 
   protected normaliseContext(context: LogContext): Array<string> {
-    if (!isArray(context) && !isString(context) && !isNumber(context)) {
+    if (!Array.isArray(context) && typeof context !== "string" && typeof context !== "number") {
       throw new Error(`Invalid context type [ ${typeof context} ]`);
     }
 
     return snakeCase(
-      isArray(context) ? context : isString(context) ? [context] : [context.toString()],
+      Array.isArray(context)
+        ? context
+        : typeof context === "string"
+        ? [context]
+        : [context.toString()],
     );
   }
 
@@ -194,7 +187,7 @@ export abstract class LoggerBase implements Logger {
 
   private getFilteredDetails(details: LogDetails): LogDetails {
     if (!isObject(details)) return details;
-    if (isError(details)) return details;
+    if (details instanceof Error) return details;
 
     const data = cloneDeep(details);
 

@@ -1,6 +1,6 @@
 import { ScanFileData } from "../types";
 import { basename, extname, join, relative, sep } from "path";
-import { endsWith, flatten, includes } from "lodash";
+import { flatten } from "lodash";
 import { readdirSync, statSync } from "fs";
 
 export class StructureScanner {
@@ -24,7 +24,7 @@ export class StructureScanner {
       const filePath = join(directory, file);
       const relativePath = relative(this.directory, filePath);
       const stats = statSync(filePath);
-      const isTest = includes(file, ".spec.") || includes(file, ".test.");
+      const isTest = file.includes(".spec.") || file.includes(".test.");
 
       if (stats.isFile() && this.isApprovedExtension(file) && !isTest) {
         const [name, type] = basename(file, extname(file)).split(".");
@@ -45,7 +45,7 @@ export class StructureScanner {
 
   private isApprovedExtension(file: string): boolean {
     for (const extension of this.extensions) {
-      if (!endsWith(file, extension)) continue;
+      if (!file.endsWith(extension)) continue;
       return true;
     }
     return false;

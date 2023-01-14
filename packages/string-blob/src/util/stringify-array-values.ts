@@ -1,24 +1,23 @@
-import { isArray, isDate, isError, isNull, isString, isUndefined } from "lodash";
-import { isObjectStrict } from "@lindorm-io/core";
+import { isObject } from "@lindorm-io/core";
 import { stringifyObjectValues } from "./stringify-object-values";
 
 export const stringifyArrayValues = (input: Array<any>): Array<any> => {
   const result: Array<any> = [];
 
   for (const value of input) {
-    if (isObjectStrict(value)) {
+    if (isObject(value)) {
       result.push(stringifyObjectValues(value));
-    } else if (isArray(value)) {
+    } else if (Array.isArray(value)) {
       result.push(stringifyArrayValues(value));
-    } else if (isDate(value)) {
+    } else if (value instanceof Date) {
       result.push(value.toJSON());
-    } else if (isError(value)) {
+    } else if (value instanceof Error) {
       result.push(JSON.stringify(value, Object.getOwnPropertyNames(value)));
-    } else if (isString(value)) {
+    } else if (typeof value === "string") {
       result.push(value);
-    } else if (isNull(value)) {
+    } else if (value === null) {
       result.push("null");
-    } else if (isUndefined(value)) {
+    } else if (value === undefined) {
       result.push("undefined");
     } else {
       result.push(JSON.stringify(value));

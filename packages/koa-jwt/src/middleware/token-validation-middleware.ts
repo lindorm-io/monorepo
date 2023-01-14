@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { flatten, get, isFunction, isString, uniq } from "lodash";
+import { flatten, get, uniq } from "lodash";
 import {
   TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
@@ -44,7 +44,7 @@ export const tokenValidationMiddleware =
     const audiences = uniq(flatten([config.audiences || [], options.audiences || []]));
 
     try {
-      if (!isString(token)) {
+      if (typeof token !== "string") {
         throw new ClientError("Token not found", {
           debug: { middlewareOptions: config, options, path, token },
         });
@@ -66,7 +66,7 @@ export const tokenValidationMiddleware =
         types,
       });
 
-      if (isFunction(customValidation)) {
+      if (customValidation instanceof Function) {
         await customValidation(ctx, ctx.token[contextKey]);
       }
 

@@ -2,9 +2,10 @@ import { CacheBase } from "./CacheBase";
 import { CacheIndex } from "./CacheIndex";
 import { ICache, LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
 import { RedisError } from "../error";
-import { find, filter as _filter, flatten, uniqBy, snakeCase } from "lodash";
-import { getUnixTime, isDate } from "date-fns";
+import { find, filter as _filter, flatten, uniqBy } from "lodash";
+import { getUnixTime } from "date-fns";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
+import { snakeCase } from "@lindorm-io/case";
 import {
   EntityAttributes,
   EntityNotCreatedError,
@@ -445,7 +446,7 @@ export abstract class LindormCache<
 
     const attribute = entity[this.ttlAttribute];
 
-    if (!isDate(attribute)) {
+    if (!(attribute instanceof Date)) {
       this.logger.warn("TTL Attribute is not a date", {
         key: this.ttlAttribute,
         value: attribute,

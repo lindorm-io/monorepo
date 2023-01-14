@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@lindorm-io/amqp": "^0.2.7",
+    "@lindorm-io/case": "^0.1.1",
     "@lindorm-io/core": "^0.8.4",
     "@lindorm-io/mongo": "^0.11.7",
     "@lindorm-io/postgres": "^0.1.7",

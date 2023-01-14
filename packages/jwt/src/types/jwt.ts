@@ -1,10 +1,7 @@
-import { Keystore, KeyType } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/core-logger";
+import { KeyType } from "@lindorm-io/key-pair";
 
-export interface JwtOptions {
-  clockTolerance?: number;
+export type JwtOptions = {
+  clockTolerance?: number; // number of seconds to tolerate when checking the nbf and exp claims
   issuer: string;
   keyType?: KeyType;
-  keystore: Keystore;
-  logger: Logger;
-}
+};

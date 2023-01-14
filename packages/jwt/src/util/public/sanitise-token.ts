@@ -1,7 +1,5 @@
-import { includes } from "lodash";
-
 export const sanitiseToken = (token: string): string => {
-  if (!token || !includes(token, ".")) return token;
+  if (!token || !token.includes(".")) return token;
 
   const split = token.split(".");
 

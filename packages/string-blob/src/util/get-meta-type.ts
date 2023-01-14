@@ -1,24 +1,14 @@
 import { MetaType } from "../enum";
-import {
-  isArray,
-  isBoolean,
-  isDate,
-  isError,
-  isNull,
-  isNumber,
-  isString,
-  isUndefined,
-} from "lodash";
 
 export const getMetaType = (value: any): string => {
-  if (isArray(value)) return MetaType.ARRAY;
-  if (isBoolean(value)) return MetaType.BOOLEAN;
-  if (isDate(value)) return MetaType.DATE;
-  if (isError(value)) return MetaType.ERROR;
-  if (isNull(value)) return MetaType.NULL;
-  if (isNumber(value)) return MetaType.NUMBER;
-  if (isString(value)) return MetaType.STRING;
-  if (isUndefined(value)) return MetaType.UNDEFINED;
+  if (Array.isArray(value)) return MetaType.ARRAY;
+  if (typeof value === "boolean") return MetaType.BOOLEAN;
+  if (value instanceof Date) return MetaType.DATE;
+  if (value instanceof Error) return MetaType.ERROR;
+  if (value === null) return MetaType.NULL;
+  if (typeof value === "number") return MetaType.NUMBER;
+  if (typeof value === "string") return MetaType.STRING;
+  if (value === undefined) return MetaType.UNDEFINED;
 
   return MetaType.UNKNOWN;
 };

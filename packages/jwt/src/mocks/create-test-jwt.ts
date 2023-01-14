@@ -1,12 +1,18 @@
 import { JWT } from "../class";
 import { JwtOptions } from "../types";
-import { createTestKeystore } from "@lindorm-io/key-pair";
-import { createMockLogger } from "@lindorm-io/core-logger";
+import { createTestKeystore, Keystore } from "@lindorm-io/key-pair";
+import { createMockLogger, Logger } from "@lindorm-io/core-logger";
 
-export const createTestJwt = (options: Partial<JwtOptions> = {}): JWT =>
-  new JWT({
-    issuer: "issuer",
-    keystore: createTestKeystore(),
-    logger: createMockLogger(),
-    ...options,
-  });
+export const createTestJwt = (
+  options: Partial<JwtOptions> = {},
+  keystore?: Keystore,
+  logger?: Logger,
+): JWT =>
+  new JWT(
+    {
+      issuer: "issuer",
+      ...options,
+    },
+    keystore || createTestKeystore(),
+    logger || createMockLogger(),
+  );

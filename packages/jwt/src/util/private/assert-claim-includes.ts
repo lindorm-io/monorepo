@@ -1,5 +1,4 @@
 import { TokenError } from "../../error";
-import { includes } from "lodash";
 
 export const assertClaimIncludes = (
   expect: Array<string>,
@@ -16,9 +15,7 @@ export const assertClaimIncludes = (
     });
   }
 
-  if (includes(expect, actual)) {
-    return;
-  }
+  if (expect.includes(actual)) return;
 
   throw new TokenError("Invalid token", {
     debug: {

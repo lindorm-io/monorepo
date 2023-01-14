@@ -118,13 +118,13 @@ describe("createURL", () => {
     ).toBe("https://lindorm.io/?queryOne=string");
   });
 
-  test("should transform query to kebab", () => {
+  test("should transform query to param", () => {
     expect(
       createURL("https://lindorm.io", {
         query: {
           QueryOne: "string",
         },
-        queryCaseTransform: "kebab",
+        queryCaseTransform: "param",
       }).toString(),
     ).toBe("https://lindorm.io/?query-one=string");
   });

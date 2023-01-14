@@ -1,8 +1,9 @@
 import { ClientError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
 import { RepositoryBase } from "@lindorm-io/mongo";
-import { camelCase, get, isFunction, isString } from "lodash";
+import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
+import { camelCase } from "@lindorm-io/case";
+import { get } from "lodash";
 
 interface MiddlewareOptions {
   entityKey?: string;
@@ -31,7 +32,7 @@ export const repositoryEntityMiddleware =
     const { attributeKey = "id", customValidation, optional } = options;
     const attributeValue = get(ctx, path);
 
-    if (!isString(attributeValue) && optional) {
+    if (typeof attributeValue !== "string" && optional) {
       ctx.logger.debug("optional entity identifier not found", { path });
 
       metric.end();
@@ -39,7 +40,7 @@ export const repositoryEntityMiddleware =
       return await next();
     }
 
-    if (!isString(attributeValue)) {
+    if (typeof attributeValue !== "string") {
       throw new ClientError("Invalid id", {
         debug: {
           path,
@@ -58,7 +59,7 @@ export const repositoryEntityMiddleware =
         [attributeKey]: attributeValue,
       });
 
-      if (isFunction(customValidation)) {
+      if (customValidation instanceof Function) {
         await customValidation(ctx, ctx.entity[entity]);
       }
     } catch (err: any) {

@@ -1,6 +1,5 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { Logger } from "@lindorm-io/core-logger";
-import { find, isArray, remove } from "lodash";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { sanitizeRouteKey } from "../util";
 import {
@@ -20,11 +19,10 @@ export abstract class MessageBusBase<
 {
   private readonly connection: IAmqpConnection;
   private readonly nackTimeout: number;
-  private readonly subscriptions: Array<SubscriptionData<Subscription>>;
+  private isConnected: boolean;
+  private subscriptions: Array<SubscriptionData<Subscription>>;
 
   protected readonly logger: Logger;
-
-  private isConnected: boolean;
 
   protected constructor(options: LindormMessageBusOptions) {
     const { connection, nackTimeout = 3000 } = options;
@@ -54,7 +52,7 @@ export abstract class MessageBusBase<
   public async publish(messages: Message | Array<Message>): Promise<void> {
     await this.connection.connect();
 
-    const array = isArray(messages) ? messages : [messages];
+    const array = Array.isArray(messages) ? messages : [messages];
 
     this.logger.verbose("Publishing messages", {
       messages: array,
@@ -69,7 +67,7 @@ export abstract class MessageBusBase<
   public async subscribe(subscriptions: Subscription | Array<Subscription>): Promise<void> {
     await this.connection.connect();
 
-    const array = isArray(subscriptions) ? subscriptions : [subscriptions];
+    const array = Array.isArray(subscriptions) ? subscriptions : [subscriptions];
 
     this.logger.verbose("Creating subscriptions", {
       subscriptions: array,
@@ -86,7 +84,7 @@ export abstract class MessageBusBase<
   ): Promise<void> {
     await this.connection.connect();
 
-    const array = isArray(subscriptions) ? subscriptions : [subscriptions];
+    const array = Array.isArray(subscriptions) ? subscriptions : [subscriptions];
 
     this.logger.verbose("Removing subscriptions", {
       subscriptions: array,
@@ -166,11 +164,11 @@ export abstract class MessageBusBase<
 
   private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {
     const { queue, topic } = subscription;
-    const { consumerTag } = find(this.subscriptions, { queue, topic });
+    const { consumerTag } = this.subscriptions.find((s) => s.queue === queue && s.topic === topic);
 
     await this.connection.channel.cancel(consumerTag);
 
-    remove(this.subscriptions, { consumerTag });
+    this.subscriptions = this.subscriptions.filter((x) => x.consumerTag !== consumerTag);
 
     this.logger.debug("Unsubscribe successful", { consumerTag, queue, topic });
   }

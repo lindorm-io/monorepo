@@ -3,7 +3,7 @@ import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
-import { find, flatten } from "lodash";
+import { flatten } from "lodash";
 import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
 import { getViewStoreName } from "../../util";
 import {
@@ -231,7 +231,8 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   ): Promise<void> {
     await this.promise();
 
-    if (find(this.initialisedViews, view)) return;
+    if (this.initialisedViews.find((x) => x.name === view.name && x.context === view.context))
+      return;
 
     const storeName = getViewStoreName(view);
     const custom = adapter.indexes || [];

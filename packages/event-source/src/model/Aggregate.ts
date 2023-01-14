@@ -4,7 +4,7 @@ import { Command, DomainEvent } from "../message";
 import { Logger } from "@lindorm-io/core-logger";
 import { JOI_MESSAGE } from "../schema";
 import { assertSnakeCase, assertSchema, assertSchemaAsync, extractDtoData } from "../util";
-import { cloneDeep, find, merge } from "lodash";
+import { cloneDeep, merge } from "lodash";
 import {
   AggregateData,
   AggregateEventHandlerContext,
@@ -156,10 +156,9 @@ export class Aggregate<TState extends State = State> implements IAggregate {
 
       const destroying = this._destroying;
 
-      const eventHandler: AggregateEventHandlerImplementation = find(this._eventHandlers, {
-        eventName: event.name,
-        version: event.version,
-      });
+      const eventHandler: AggregateEventHandlerImplementation = this._eventHandlers.find(
+        (x) => x.eventName === event.name && x.version === event.version,
+      );
 
       if (!(eventHandler instanceof AggregateEventHandlerImplementation)) {
         throw new HandlerNotRegisteredError();

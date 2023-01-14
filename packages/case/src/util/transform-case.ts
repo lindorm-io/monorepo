@@ -1,16 +1,28 @@
 import { CaseInput, TransformMode } from "../types";
 import { camelCase } from "./camel-case";
-import { kebabCase } from "./kebab-case";
+import { constantCase } from "./constant-case";
+import { dotCase } from "./dot-case";
+import { headerCase } from "./header-case";
+import { paramCase } from "./param-case";
 import { pascalCase } from "./pascal-case";
 import { snakeCase } from "./snake-case";
 
-export const transformCase = (input: CaseInput, mode: TransformMode) => {
+export const transformCase = (input: CaseInput, mode: TransformMode = "none") => {
   switch (mode) {
     case "camel":
       return camelCase(input);
 
-    case "kebab":
-      return kebabCase(input);
+    case "constant":
+      return constantCase(input);
+
+    case "dot":
+      return dotCase(input);
+
+    case "header":
+      return headerCase(input);
+
+    case "param":
+      return paramCase(input);
 
     case "pascal":
       return pascalCase(input);

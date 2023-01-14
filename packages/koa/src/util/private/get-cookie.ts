@@ -1,4 +1,3 @@
-import { includes } from "lodash";
 import { DefaultLindormKoaContext } from "../../types";
 import { Environment } from "../../enum";
 
@@ -14,7 +13,7 @@ export const getCookie =
       server: { environment },
     } = ctx;
 
-    const isDeployed = includes([Environment.PRODUCTION, Environment.STAGING], environment);
+    const isDeployed = [Environment.PRODUCTION, Environment.STAGING].includes(environment);
     const signed = options.signed || isDeployed;
 
     return cookies.get(name, { signed });

@@ -1,4 +1,3 @@
-import { find, findIndex } from "lodash";
 import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 import {
   IMessage,
@@ -13,12 +12,13 @@ import {
 
 export class MemoryViewStore implements IViewStore {
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
-    return !!find(IN_MEMORY_VIEW_CAUSATION_STORE, {
-      id: identifier.id,
-      name: identifier.name,
-      context: identifier.context,
-      causation_id: causation.id,
-    });
+    return !!IN_MEMORY_VIEW_CAUSATION_STORE.find(
+      (x) =>
+        x.id === identifier.id &&
+        x.name === identifier.name &&
+        x.context === identifier.context &&
+        x.causation_id === causation.id,
+    );
   }
 
   public async clearProcessedCausationIds(
@@ -26,8 +26,15 @@ export class MemoryViewStore implements IViewStore {
     data: ViewClearProcessedCausationIdsData,
     adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
-    const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
+    const fn = (x: ViewStoreAttributes) =>
+      x.id === updateFilter.id &&
+      x.name === updateFilter.name &&
+      x.context === updateFilter.context &&
+      x.hash === updateFilter.hash &&
+      x.revision === updateFilter.revision;
+
+    const found = IN_MEMORY_VIEW_STORE.find(fn);
+    const index = IN_MEMORY_VIEW_STORE.findIndex(fn);
 
     IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }
@@ -36,18 +43,20 @@ export class MemoryViewStore implements IViewStore {
     identifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
-    return find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, identifier);
+    return IN_MEMORY_VIEW_STORE.find(
+      (x) =>
+        x.id === identifier.id && x.name === identifier.name && x.context === identifier.context,
+    );
   }
 
   public async insert(
     attributes: ViewStoreAttributes,
     adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
-    const found = find(IN_MEMORY_VIEW_STORE, {
-      id: attributes.id,
-      name: attributes.name,
-      context: attributes.context,
-    });
+    const found = IN_MEMORY_VIEW_STORE.find(
+      (x) =>
+        x.id === attributes.id && x.name === attributes.name && x.context === attributes.context,
+    );
 
     if (found) {
       throw new Error("Causation already exists");
@@ -76,8 +85,15 @@ export class MemoryViewStore implements IViewStore {
     data: ViewUpdateData,
     adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
-    const found = find<ViewStoreAttributes>(IN_MEMORY_VIEW_STORE, updateFilter);
-    const index = findIndex(IN_MEMORY_VIEW_STORE, updateFilter);
+    const fn = (x: ViewStoreAttributes) =>
+      x.id === updateFilter.id &&
+      x.name === updateFilter.name &&
+      x.context === updateFilter.context &&
+      x.hash === updateFilter.hash &&
+      x.revision === updateFilter.revision;
+
+    const found = IN_MEMORY_VIEW_STORE.find(fn);
+    const index = IN_MEMORY_VIEW_STORE.findIndex(fn);
 
     IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }

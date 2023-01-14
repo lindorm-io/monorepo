@@ -1,4 +1,3 @@
-import { includes, isDate, isNumber } from "lodash";
 import { DefaultLindormKoaContext } from "../../types";
 import { Environment } from "../../enum";
 
@@ -19,7 +18,7 @@ export const setCookie =
       server: { environment, domain },
     } = ctx;
 
-    const isDeployed = includes([Environment.PRODUCTION, Environment.STAGING], environment);
+    const isDeployed = [Environment.PRODUCTION, Environment.STAGING].includes(environment);
     const expiry = options.expiry;
     const httpOnly = options.httpOnly || isDeployed;
     const overwrite = options.overwrite || isDeployed;
@@ -29,8 +28,8 @@ export const setCookie =
 
     cookies.set(name, value, {
       domain,
-      ...(isDate(expiry) ? { expires: expiry } : {}),
-      ...(isNumber(expiry) ? { maxAge: expiry } : {}),
+      ...(expiry instanceof Date ? { expires: expiry } : {}),
+      ...(typeof expiry === "number" ? { maxAge: expiry } : {}),
       httpOnly,
       overwrite,
       sameSite,

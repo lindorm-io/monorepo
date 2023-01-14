@@ -1,4 +1,4 @@
-export interface DefaultClaims {
+export type DefaultClaims = {
   aud: Array<string>; // audience
   exp: number; // expires at
   iat: number; // issued at
@@ -6,9 +6,9 @@ export interface DefaultClaims {
   jti: string; // id
   nbf: number; // not before
   sub: string; // subject
-}
+};
 
-export interface StandardClaims extends DefaultClaims {
+export type StandardClaims = DefaultClaims & {
   acr?: Array<string>; // authentication context class reference
   amr?: Array<string>; // authentication methods reference
   auth_time?: number; // time when authentication was performed
@@ -17,9 +17,9 @@ export interface StandardClaims extends DefaultClaims {
   sid?: string; // session id
   token_type: string;
   usr?: string; // username
-}
+};
 
-export interface LindormClaims extends StandardClaims {
+export type LindormClaims = StandardClaims & {
   aal?: number; // adjusted access level
   ext?: Record<string, any>; // payload
   iam?: Array<string>; // permissions
@@ -27,4 +27,4 @@ export interface LindormClaims extends StandardClaims {
   scp?: Array<string>; // scope
   sih?: string; // session hint
   suh?: string; // subject hint
-}
+};

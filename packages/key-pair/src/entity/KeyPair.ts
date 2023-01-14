@@ -5,7 +5,7 @@ import { KeyPairError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
 import { decodeKeys, encodeKeys } from "../util";
 import { fromUnixTime, getUnixTime } from "date-fns";
-import { includes, isString, orderBy } from "lodash";
+import { orderBy } from "lodash";
 import { removeUndefinedFromObject } from "@lindorm-io/core";
 import {
   JOI_KEY_ALGORITHM,
@@ -118,7 +118,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
   }
 
   public set preferredAlgorithm(preferredAlgorithm: Algorithm) {
-    if (!includes(this.algorithms, preferredAlgorithm)) {
+    if (!this.algorithms.includes(preferredAlgorithm)) {
       throw new KeyPairError("Invalid preferredAlgorithm", {
         data: { preferredAlgorithm },
         debug: {
@@ -212,7 +212,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       result.push(KeyOperation.DECRYPT);
     }
 
-    if (isString(options.privateKey)) {
+    if (typeof options.privateKey === "string") {
       result.push(KeyOperation.SIGN);
 
       if (options.type === KeyType.RSA) {

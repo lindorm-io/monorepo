@@ -10,7 +10,7 @@ import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
 import { ReplayEventName } from "../enum";
 import { extractDtoData, StructureScanner } from "../util";
-import { find, merge } from "lodash";
+import { merge } from "lodash";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import {
@@ -362,10 +362,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       context: this.scanner.context(view.context),
     };
 
-    const adapter = find(this.adapters, {
-      name: identifier.name,
-      context: identifier.context,
-    });
+    const adapter = this.adapters.find(
+      (x) => x.name === identifier.name && x.context === identifier.context,
+    );
 
     return this.viewDomain.inspect<TState>(identifier, adapter);
   }

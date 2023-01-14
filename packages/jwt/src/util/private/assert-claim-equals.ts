@@ -15,9 +15,7 @@ export const assertClaimEquals = (
     });
   }
 
-  if (expect === actual) {
-    return;
-  }
+  if (expect === actual) return;
 
   throw new TokenError("Invalid token", {
     debug: {

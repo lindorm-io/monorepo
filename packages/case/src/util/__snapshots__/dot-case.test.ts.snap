@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`camelCase should convert array values 1`] = `
+Array [
+  "camel.case",
+  "param.case",
+  "pascal.case",
+  "snake.case",
+]
+`;
+
+exports[`camelCase should convert camel case string 1`] = `"camel.case"`;
+
+exports[`camelCase should convert object keys to camelCase 1`] = `
+Object {
+  "camel.array": Array [
+    "camelArrayString",
+    "camel-array-string",
+    "CamelArrayString",
+    "camel_array_string",
+    Object {
+      "camel.object.string": "camel_object_string",
+    },
+  ],
+  "camel.object": Object {
+    "camel.object.string": "camel_object_string",
+  },
+  "camel.string": "camelString",
+  "param.array": Array [
+    "paramArrayString",
+    "param-array-string",
+    "ParamArrayString",
+    "param_array_string",
+    Object {
+      "param.object.string": "param_object_string",
+    },
+  ],
+  "param.object": Object {
+    "param.object.string": "param_object_string",
+  },
+  "param.string": "param-string",
+  "pascal.array": Array [
+    "pascalArrayString",
+    "pascal-array-string",
+    "PascalArrayString",
+    "pascal_array_string",
+    Object {
+      "pascal.object.string": "pascal_object_string",
+    },
+  ],
+  "pascal.object": Object {
+    "pascal.object.string": "pascal_object_string",
+  },
+  "pascal.string": "PascalString",
+  "snake.array": Array [
+    "snakeArrayString",
+    "snake-array-string",
+    "SnakeArrayString",
+    "snake_array_string",
+    Object {
+      "snake.object.string": "snake_object_string",
+    },
+  ],
+  "snake.object": Object {
+    "snake.object.string": "snake_object_string",
+  },
+  "snake.string": "snake_string",
+}
+`;
+
+exports[`camelCase should convert param case string 1`] = `"param.case"`;
+
+exports[`camelCase should convert pascal case string 1`] = `"pascal.case"`;
+
+exports[`camelCase should convert snake case string 1`] = `"snake.case"`;

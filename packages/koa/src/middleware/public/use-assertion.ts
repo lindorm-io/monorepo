@@ -1,6 +1,6 @@
 import { AssertionFunction, DefaultLindormKoaContext, DefaultLindormMiddleware } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
-import { get, isUndefined } from "lodash";
+import { get } from "lodash";
 
 interface Options {
   assertion?: AssertionFunction;
@@ -25,7 +25,7 @@ export const useAssertion =
       const expect = fromPath.expect ? get(ctx, fromPath.expect) : options.expect;
       const actual = get(ctx, fromPath.actual);
 
-      if (isUndefined(expect) || isUndefined(actual)) {
+      if (expect === undefined || actual === undefined) {
         throw new ClientError("Conflict", {
           debug: {
             expect,

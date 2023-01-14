@@ -1,6 +1,6 @@
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { DefaultLindormMongoSocketMiddleware } from "../types";
-import { camelCase } from "lodash";
+import { camelCase } from "@lindorm-io/case";
 import { getSocketError } from "@lindorm-io/koa";
 
 interface Options {

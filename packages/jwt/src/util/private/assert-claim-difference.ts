@@ -1,5 +1,4 @@
 import { TokenError } from "../../error";
-import { difference } from "lodash";
 
 export const assertClaimDifference = (
   expect: Array<string>,
@@ -16,9 +15,9 @@ export const assertClaimDifference = (
     });
   }
 
-  const diff = difference(expect, actual);
+  const difference = expect.filter((x) => !actual.includes(x));
 
-  if (!diff.length) {
+  if (!difference.length) {
     return;
   }
 
@@ -26,7 +25,7 @@ export const assertClaimDifference = (
     debug: {
       expect,
       actual,
-      diff,
+      difference,
     },
     description: `Claim [ ${key} ] is invalid`,
   });

@@ -1,13 +1,14 @@
 import EventEmitter from "events";
 import { DomainEvent, ErrorMessage } from "../message";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { View } from "../model";
 import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, isArray, isUndefined, snakeCase, some } from "lodash";
+import { cloneDeep } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import {
   ConcurrencyError,
   DomainError,
@@ -70,23 +71,20 @@ export class ViewDomain implements IViewDomain {
       });
     }
 
-    const contexts = isArray(eventHandler.aggregate.context)
+    const contexts = Array.isArray(eventHandler.aggregate.context)
       ? eventHandler.aggregate.context
       : [eventHandler.aggregate.context];
 
     for (const context of contexts) {
-      const existingHandler = some(this.eventHandlers, {
-        eventName: eventHandler.eventName,
-        version: eventHandler.version,
-        aggregate: {
-          name: eventHandler.aggregate.name,
-          context: eventHandler.aggregate.context,
-        },
-        view: {
-          name: eventHandler.view.name,
-          context: eventHandler.view.context,
-        },
-      });
+      const existingHandler = this.eventHandlers.some(
+        (x) =>
+          x.eventName === eventHandler.eventName &&
+          x.version === eventHandler.version &&
+          x.aggregate.name === eventHandler.aggregate.name &&
+          x.aggregate.context === eventHandler.aggregate.context &&
+          x.view.name === eventHandler.view.name &&
+          x.view.context === eventHandler.view.context,
+      );
 
       if (existingHandler) {
         throw new LindormError("Event handler has already been registered", {
@@ -157,18 +155,15 @@ export class ViewDomain implements IViewDomain {
 
     const conditionValidators = [];
 
-    const eventHandler = find(this.eventHandlers, {
-      eventName: event.name,
-      version: event.version,
-      aggregate: {
-        name: event.aggregate.name,
-        context: event.aggregate.context,
-      },
-      view: {
-        name: viewIdentifier.name,
-        context: viewIdentifier.context,
-      },
-    });
+    const eventHandler = this.eventHandlers.find(
+      (x) =>
+        x.eventName === event.name &&
+        x.version === event.version &&
+        x.aggregate.name === event.aggregate.name &&
+        x.aggregate.context === event.aggregate.context &&
+        x.view.name === viewIdentifier.name &&
+        x.view.context === viewIdentifier.context,
+    );
 
     if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
@@ -192,7 +187,7 @@ export class ViewDomain implements IViewDomain {
       conditionValidators.push((view: View) => {
         if (view.revision > 0) {
           throw new ViewAlreadyCreatedError(
-            isUndefined(eventHandler.conditions.permanent) ||
+            eventHandler.conditions.permanent === undefined ||
               eventHandler.conditions.permanent === true,
           );
         }

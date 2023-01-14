@@ -1,6 +1,7 @@
 import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
-import { flatten, isArray, snakeCase, uniq } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
+import { flatten, uniq } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -282,7 +283,7 @@ export class EventSourceScanner {
         errorName: snakeCase(handler.error.name),
         aggregate: {
           name: snakeCase(aggregate),
-          context: isArray(handler.aggregate?.context)
+          context: Array.isArray(handler.aggregate?.context)
             ? handler.aggregate.context.map((context) => snakeCase(context))
             : snakeCase(this.context(handler.aggregate?.context)),
         },
@@ -339,7 +340,7 @@ export class EventSourceScanner {
           eventName,
           aggregate: {
             name: snakeCase(aggregate),
-            context: isArray(handler.aggregate?.context)
+            context: Array.isArray(handler.aggregate?.context)
               ? handler.aggregate.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
@@ -382,7 +383,7 @@ export class EventSourceScanner {
           adapter: handler.adapter,
           aggregate: {
             name: snakeCase(aggregate),
-            context: isArray(handler.aggregate?.context)
+            context: Array.isArray(handler.aggregate?.context)
               ? handler.aggregate.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
@@ -428,7 +429,7 @@ export class EventSourceScanner {
       throw new Error(`Expected methods [ default | main ] from [ ${path} ]`);
     }
 
-    if (isArray(handlers)) {
+    if (Array.isArray(handlers)) {
       return handlers as Array<THandler>;
     }
 

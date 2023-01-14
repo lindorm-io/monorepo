@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm-io/errors";
 import { ValidationResult } from "joi";
-import { snakeCase } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 
 export const assertSchema = (result?: ValidationResult): void => {
   if (!result?.error) return;

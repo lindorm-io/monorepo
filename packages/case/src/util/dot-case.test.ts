@@ -1,15 +1,15 @@
-import { kebabCase } from "./kebab-case";
+import { dotCase } from "./dot-case";
 
 const inputCamel = "camelCase";
-const inputKebab = "kebab-case";
+const inputParam = "param-case";
 const inputPascal = "PascalCase";
 const inputSnake = "snake_case";
 
-const inputArray = ["camelCase", "kebab-case", "PascalCase", "snake_case"];
+const inputArray = ["camelCase", "param-case", "PascalCase", "snake_case"];
 
 const inputObject = {
   camelString: "camelString",
-  "kebab-string": "kebab-string",
+  "param-string": "param-string",
   PascalString: "PascalString",
   snake_string: "snake_string",
 
@@ -19,11 +19,11 @@ const inputObject = {
     CamelObjectString: "CamelObjectString",
     camel_object_string: "camel_object_string",
   },
-  "kebab-object": {
-    kebabObjectString: "kebabObjectString",
-    "kebab-object-string": "kebab-object-string",
-    KebabObjectString: "KebabObjectString",
-    kebab_object_string: "kebab_object_string",
+  "param-object": {
+    paramObjectString: "paramObjectString",
+    "param-object-string": "param-object-string",
+    ParamObjectString: "ParamObjectString",
+    param_object_string: "param_object_string",
   },
   PascalObject: {
     pascalObjectString: "pascalObjectString",
@@ -50,16 +50,16 @@ const inputObject = {
       camel_object_string: "camel_object_string",
     },
   ],
-  "kebab-array": [
-    "kebabArrayString",
-    "kebab-array-string",
-    "KebabArrayString",
-    "kebab_array_string",
+  "param-array": [
+    "paramArrayString",
+    "param-array-string",
+    "ParamArrayString",
+    "param_array_string",
     {
-      kebabObjectString: "kebabObjectString",
-      "kebab-object-string": "kebab-object-string",
-      KebabObjectString: "KebabObjectString",
-      kebab_object_string: "kebab_object_string",
+      paramObjectString: "paramObjectString",
+      "param-object-string": "param-object-string",
+      ParamObjectString: "ParamObjectString",
+      param_object_string: "param_object_string",
     },
   ],
   PascalArray: [
@@ -90,37 +90,37 @@ const inputObject = {
 
 describe("camelCase", () => {
   test("should convert camel case string", () => {
-    expect(kebabCase(inputCamel)).toMatchSnapshot();
+    expect(dotCase(inputCamel)).toMatchSnapshot();
   });
 
-  test("should convert kebab case string", () => {
-    expect(kebabCase(inputKebab)).toMatchSnapshot();
+  test("should convert param case string", () => {
+    expect(dotCase(inputParam)).toMatchSnapshot();
   });
 
   test("should convert pascal case string", () => {
-    expect(kebabCase(inputPascal)).toMatchSnapshot();
+    expect(dotCase(inputPascal)).toMatchSnapshot();
   });
 
   test("should convert snake case string", () => {
-    expect(kebabCase(inputSnake)).toMatchSnapshot();
+    expect(dotCase(inputSnake)).toMatchSnapshot();
   });
 
   test("should convert array values", () => {
-    expect(kebabCase(inputArray)).toMatchSnapshot();
+    expect(dotCase(inputArray)).toMatchSnapshot();
   });
 
   test("should convert object keys to camelCase", () => {
-    expect(kebabCase(inputObject)).toMatchSnapshot();
+    expect(dotCase(inputObject)).toMatchSnapshot();
   });
 
   test("should throw on invalid type", () => {
     const number: any = 1234;
-    expect(() => kebabCase(number)).toThrow(Error);
+    expect(() => dotCase(number)).toThrow(Error);
 
     const error: any = new Error("error");
-    expect(() => kebabCase(error)).toThrow(Error);
+    expect(() => dotCase(error)).toThrow(Error);
 
     const date: any = new Date();
-    expect(() => kebabCase(date)).toThrow(Error);
+    expect(() => dotCase(date)).toThrow(Error);
   });
 });

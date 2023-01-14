@@ -1,16 +1,16 @@
 import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "../types";
 import { MessageBusBase } from "../infrastructure";
-import { filter, flatten, isArray, remove } from "lodash";
+import { flatten } from "lodash";
 
 export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
   let array: Array<ISubscription> = [];
 
   const messageBus: IMessageBus = {
     publish: jest.fn().mockImplementation(async (messages: Array<IMessage>) => {
-      const list = isArray(messages) ? messages : [messages];
+      const list = Array.isArray(messages) ? messages : [messages];
 
       for (const message of list) {
-        const subscriptions = filter(array, { topic: message.topic });
+        const subscriptions = array.filter((a) => a.topic === message.topic);
 
         for (const subscription of subscriptions) {
           if (message.delay) {
@@ -29,10 +29,10 @@ export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
     unsubscribe: jest
       .fn()
       .mockImplementation(async (subscriptions: UnsubscribeOptions | Array<UnsubscribeOptions>) => {
-        const list = isArray(subscriptions) ? subscriptions : [subscriptions];
+        const list = Array.isArray(subscriptions) ? subscriptions : [subscriptions];
 
         for (const sub of list) {
-          remove(array, sub);
+          array = array.filter((x) => x.topic !== sub.topic && x.queue !== sub.queue);
         }
       }),
 

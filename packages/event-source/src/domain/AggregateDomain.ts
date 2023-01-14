@@ -1,10 +1,11 @@
 import { Aggregate } from "../model";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
+import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, filter, find, findLast, snakeCase, some } from "lodash";
+import { cloneDeep, findLast } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -64,14 +65,13 @@ export class AggregateDomain implements IAggregateDomain {
       });
     }
 
-    const existingHandler = some(this.commandHandlers, {
-      commandName: commandHandler.commandName,
-      version: commandHandler.version,
-      aggregate: {
-        name: commandHandler.aggregate.name,
-        context: commandHandler.aggregate.context,
-      },
-    });
+    const existingHandler = this.commandHandlers.some(
+      (x) =>
+        x.commandName === commandHandler.commandName &&
+        x.version === commandHandler.version &&
+        x.aggregate.name === commandHandler.aggregate.name &&
+        x.aggregate.context === commandHandler.aggregate.context,
+    );
 
     if (existingHandler) {
       throw new LindormError("Command handler already registered", {
@@ -124,14 +124,13 @@ export class AggregateDomain implements IAggregateDomain {
       });
     }
 
-    const existingHandler = some(this.eventHandlers, {
-      eventName: eventHandler.eventName,
-      version: eventHandler.version,
-      aggregate: {
-        name: eventHandler.aggregate.name,
-        context: eventHandler.aggregate.context,
-      },
-    });
+    const existingHandler = this.eventHandlers.some(
+      (x) =>
+        x.eventName === eventHandler.eventName &&
+        x.version === eventHandler.version &&
+        x.aggregate.name === eventHandler.aggregate.name &&
+        x.aggregate.context === eventHandler.aggregate.context,
+    );
 
     if (existingHandler) {
       throw new LindormError("Event handler already registered", {
@@ -207,14 +206,13 @@ export class AggregateDomain implements IAggregateDomain {
 
     const conditionValidators = [];
 
-    const commandHandler = find(this.commandHandlers, {
-      commandName: command.name,
-      version: command.version,
-      aggregate: {
-        name: command.aggregate.name,
-        context: command.aggregate.context,
-      },
-    });
+    const commandHandler = this.commandHandlers.find(
+      (x) =>
+        x.commandName === command.name &&
+        x.version === command.version &&
+        x.aggregate.name === command.aggregate.name &&
+        x.aggregate.context === command.aggregate.context,
+    );
 
     if (!(commandHandler instanceof AggregateCommandHandlerImplementation)) {
       throw new HandlerNotRegisteredError();
@@ -242,12 +240,11 @@ export class AggregateDomain implements IAggregateDomain {
       });
     }
 
-    const eventHandlers = filter(this.eventHandlers, {
-      aggregate: {
-        name: command.aggregate.name,
-        context: command.aggregate.context,
-      },
-    });
+    const eventHandlers = this.eventHandlers.filter(
+      (x) =>
+        x.aggregate.name === command.aggregate.name &&
+        x.aggregate.context === command.aggregate.context,
+    );
 
     const aggregate = await this.store.load(command.aggregate, eventHandlers);
     const lastCausationMatchesCommandId = findLast(aggregate.events, {

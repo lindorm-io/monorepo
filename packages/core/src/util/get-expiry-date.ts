@@ -1,7 +1,6 @@
 import { DateError } from "../error";
 import { Expiry } from "../types";
-import { add, fromUnixTime, isAfter, isDate } from "date-fns";
-import { isNumber, isString } from "lodash";
+import { add, fromUnixTime, isAfter } from "date-fns";
 import { stringToDurationObject } from "./string-time";
 
 const assertSeconds = (number: number): void => {
@@ -23,16 +22,16 @@ const assertExpiryDate = (date: Date): void => {
 };
 
 const convertExpiryToDate = (expiry: Expiry): Date => {
-  if (isString(expiry)) {
+  if (typeof expiry === "string") {
     return add(new Date(), stringToDurationObject(expiry));
   }
 
-  if (isNumber(expiry)) {
+  if (typeof expiry === "number") {
     assertSeconds(expiry);
     return fromUnixTime(expiry);
   }
 
-  if (isDate(expiry)) {
+  if (expiry instanceof Date) {
     return expiry;
   }
 

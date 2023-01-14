@@ -1,11 +1,12 @@
 import { HandlerNotRegisteredError } from "../error";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { QueryHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, find, snakeCase, some } from "lodash";
+import { cloneDeep } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import {
   DtoClass,
   IQueryDomain,
@@ -52,9 +53,7 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
       });
     }
 
-    const existingHandler = some(this.queryHandlers, {
-      queryName: queryHandler.queryName,
-    });
+    const existingHandler = this.queryHandlers.some((x) => x.queryName === queryHandler.queryName);
 
     if (existingHandler) {
       throw new LindormError("Query handler already registered", {
@@ -80,9 +79,9 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
     this.logger.debug("Handling query", { query });
 
     try {
-      const queryHandler = find(this.queryHandlers, {
-        queryName: snakeCase(query.constructor.name),
-      });
+      const queryHandler = this.queryHandlers.find(
+        (x) => x.queryName === snakeCase(query.constructor.name),
+      );
 
       if (!(queryHandler instanceof QueryHandlerImplementation)) {
         throw new HandlerNotRegisteredError();

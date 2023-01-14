@@ -1,6 +1,6 @@
 import { LevelOfAssurance } from "./loa";
 
-export interface JwtVerifyOptions {
+export type JwtVerifyOptions = {
   adjustedAccessLevel: LevelOfAssurance;
   audience: string;
   audiences: Array<string>;
@@ -16,9 +16,9 @@ export interface JwtVerifyOptions {
   subjectHint: string;
   subjects: Array<string>;
   types: Array<string>;
-}
+};
 
-export interface JwtVerifyData<Payload = never, Claims = never> {
+export type JwtVerifyData<Payload = never, Claims = never> = {
   id: string;
   active: boolean;
   adjustedAccessLevel: LevelOfAssurance;
@@ -46,4 +46,4 @@ export interface JwtVerifyData<Payload = never, Claims = never> {
   token: string;
   type: string;
   username: string | null;
-}
+};

@@ -3,7 +3,6 @@ import { MongoConnection } from "../connection";
 import { TestEntity } from "@lindorm-io/entity";
 import { TestRepository } from "../mocks";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { filter } from "lodash";
 import { randomUUID } from "crypto";
 
 describe("LindormRepository.ts", () => {
@@ -79,7 +78,7 @@ describe("LindormRepository.ts", () => {
     await repository.deleteMany({ name: "destroy-many" });
     const result = await repository.findMany({});
 
-    expect(filter(result, { name: "destroy-many" })).toStrictEqual([]);
+    expect(result.filter((x) => x.name === "destroy-many")).toStrictEqual([]);
   });
 
   test("should destroy one entity", async () => {
@@ -88,7 +87,7 @@ describe("LindormRepository.ts", () => {
     await repository.destroy(destroy);
     const result = await repository.findMany({});
 
-    expect(filter(result, { id: destroy.id })).toStrictEqual([]);
+    expect(result.filter((x) => x.id === destroy.id)).toStrictEqual([]);
   });
 
   test("should destroy many entities", async () => {
@@ -98,8 +97,8 @@ describe("LindormRepository.ts", () => {
     await repository.destroyMany([destroy1, destroy2]);
     const result = await repository.findMany({});
 
-    expect(filter(result, { id: destroy1.id })).toStrictEqual([]);
-    expect(filter(result, { id: destroy2.id })).toStrictEqual([]);
+    expect(result.filter((x) => x.id === destroy1.id)).toStrictEqual([]);
+    expect(result.filter((x) => x.id === destroy2.id)).toStrictEqual([]);
   });
 
   test("should find entity", async () => {

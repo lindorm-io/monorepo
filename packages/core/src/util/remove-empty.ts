@@ -1,6 +1,4 @@
-import { isNull, isUndefined } from "lodash";
-
-const isEmpty = (value: any): boolean => isUndefined(value) || isNull(value) || value === "";
+const isEmpty = (value: any): boolean => value === undefined || value === null || value === "";
 
 export const removeEmptyFromArray = <Input extends Array<any>, Output extends Array<any>>(
   input: Input,

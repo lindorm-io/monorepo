@@ -6,7 +6,7 @@ import { MessageBus } from "../infrastructure";
 import { ErrorHandlerImplementation } from "../handler";
 import { TEST_AGGREGATE_COMMAND_HANDLER } from "../fixtures/aggregate-command-handler.fixture";
 import { Command, ErrorMessage } from "../message";
-import { snakeCase } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import { AggregateAlreadyCreatedError } from "../error";
 import { randomUUID } from "crypto";
 

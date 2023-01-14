@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { flatten, get, isFunction, uniq } from "lodash";
+import { flatten, get, uniq } from "lodash";
 import {
   BearerTokenCustomValidation,
   DefaultLindormBearerAuthKoaMiddleware,
@@ -69,7 +69,7 @@ export const bearerAuthMiddleware =
         types,
       });
 
-      if (isFunction(customValidation)) {
+      if (customValidation instanceof Function) {
         await customValidation(ctx, ctx.token[contextKey]);
       }
 

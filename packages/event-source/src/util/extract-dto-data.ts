@@ -1,5 +1,5 @@
 import { DtoClass } from "../types";
-import { snakeCase } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 
 export interface NameData {
   name: string;

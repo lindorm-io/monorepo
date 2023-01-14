@@ -1,15 +1,15 @@
 import { pascalCase } from "./pascal-case";
 
 const inputCamel = "camelCase";
-const inputKebab = "kebab-case";
+const inputParam = "param-case";
 const inputPascal = "PascalCase";
 const inputSnake = "snake_case";
 
-const inputArray = ["camelCase", "kebab-case", "PascalCase", "snake_case"];
+const inputArray = ["camelCase", "param-case", "PascalCase", "snake_case"];
 
 const inputObject = {
   camelString: "camelString",
-  "kebab-string": "kebab-string",
+  "param-string": "param-string",
   PascalString: "PascalString",
   snake_string: "snake_string",
 
@@ -19,11 +19,11 @@ const inputObject = {
     CamelObjectString: "CamelObjectString",
     camel_object_string: "camel_object_string",
   },
-  "kebab-object": {
-    kebabObjectString: "kebabObjectString",
-    "kebab-object-string": "kebab-object-string",
-    KebabObjectString: "KebabObjectString",
-    kebab_object_string: "kebab_object_string",
+  "param-object": {
+    paramObjectString: "paramObjectString",
+    "param-object-string": "param-object-string",
+    ParamObjectString: "ParamObjectString",
+    param_object_string: "param_object_string",
   },
   PascalObject: {
     pascalObjectString: "pascalObjectString",
@@ -50,16 +50,16 @@ const inputObject = {
       camel_object_string: "camel_object_string",
     },
   ],
-  "kebab-array": [
-    "kebabArrayString",
-    "kebab-array-string",
-    "KebabArrayString",
-    "kebab_array_string",
+  "param-array": [
+    "paramArrayString",
+    "param-array-string",
+    "ParamArrayString",
+    "param_array_string",
     {
-      kebabObjectString: "kebabObjectString",
-      "kebab-object-string": "kebab-object-string",
-      KebabObjectString: "KebabObjectString",
-      kebab_object_string: "kebab_object_string",
+      paramObjectString: "paramObjectString",
+      "param-object-string": "param-object-string",
+      ParamObjectString: "ParamObjectString",
+      param_object_string: "param_object_string",
     },
   ],
   PascalArray: [
@@ -93,8 +93,8 @@ describe("camelCase", () => {
     expect(pascalCase(inputCamel)).toMatchSnapshot();
   });
 
-  test("should convert kebab case string", () => {
-    expect(pascalCase(inputKebab)).toMatchSnapshot();
+  test("should convert param case string", () => {
+    expect(pascalCase(inputParam)).toMatchSnapshot();
   });
 
   test("should convert pascal case string", () => {

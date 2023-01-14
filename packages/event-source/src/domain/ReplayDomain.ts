@@ -4,7 +4,6 @@ import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { ReplayEventName } from "../enum";
 import { intervalToDuration } from "date-fns";
-import { last } from "lodash";
 import {
   AggregateIdentifier,
   Data,
@@ -137,6 +136,8 @@ export class ReplayDomain implements IReplayDomain {
 
     this.logger.debug("Published events", { published });
 
+    const [lastEvent] = queriedEvents.reverse();
+
     await this.messageBus.publish(
       new ReplayMessage<ReplayMessageData>({
         name: ReplayEventName.PUBLISH_EVENTS,
@@ -146,7 +147,7 @@ export class ReplayDomain implements IReplayDomain {
           publishEvents: {
             ...event.data.publishEvents,
             amount: event.data.publishEvents.amount + filteredEvents.length,
-            timestamp: last(queriedEvents).timestamp,
+            timestamp: lastEvent.timestamp,
             previous: published,
           },
         },

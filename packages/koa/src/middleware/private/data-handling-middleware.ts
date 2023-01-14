@@ -1,13 +1,13 @@
 import { DefaultLindormMiddleware } from "../../types";
 import { camelCase, snakeCase } from "@lindorm-io/case";
-import { isObjectStrict } from "@lindorm-io/core";
+import { isObject } from "@lindorm-io/core";
 
 export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {
-  const body = isObjectStrict(ctx.request.body) ? camelCase(ctx.request.body) : {};
-  const query = isObjectStrict(ctx.query) ? camelCase<Record<string, string>>(ctx.query) : {};
+  const body = isObject(ctx.request.body) ? camelCase(ctx.request.body) : {};
+  const query = isObject(ctx.query) ? camelCase<Record<string, string>>(ctx.query) : {};
 
   for (const [key, value] of Object.entries(query)) {
     query[key] = decodeURIComponent(value);
@@ -20,5 +20,5 @@ export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
 
   await next();
 
-  ctx.body = isObjectStrict(ctx.body) ? snakeCase(ctx.body) : ctx.body;
+  ctx.body = isObject(ctx.body) ? snakeCase(ctx.body) : ctx.body;
 };

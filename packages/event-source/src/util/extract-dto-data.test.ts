@@ -32,7 +32,7 @@ describe("extractDtoData", () => {
   test("should only match version at end of name", () => {
     expect(extractDtoData(new V3ThirdTest("three"))).toStrictEqual({
       data: { three: "three" },
-      name: "v_3_third_test",
+      name: "v3_third_test",
       version: 1,
     });
   });

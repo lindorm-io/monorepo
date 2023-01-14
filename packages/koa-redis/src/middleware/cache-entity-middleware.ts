@@ -1,8 +1,9 @@
 import { CacheBase } from "@lindorm-io/redis";
-import { ClientError } from "@lindorm-io/errors";
 import { CachedEntityCustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
+import { ClientError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { camelCase, get, isFunction, isString } from "lodash";
+import { camelCase } from "@lindorm-io/case";
+import { get } from "lodash";
 
 interface MiddlewareOptions {
   cacheKey?: string;
@@ -24,7 +25,7 @@ export const cacheEntityMiddleware =
     const { attributeKey = "id", customValidation, optional } = options;
     const attributeValue = get(ctx, path);
 
-    if (!isString(attributeValue) && optional) {
+    if (typeof attributeValue !== "string" && optional) {
       ctx.logger.debug("optional entity identifier not found", { path });
 
       metric.end();
@@ -32,7 +33,7 @@ export const cacheEntityMiddleware =
       return await next();
     }
 
-    if (!isString(attributeValue)) {
+    if (typeof attributeValue !== "string") {
       throw new ClientError("Invalid key", {
         debug: {
           path,
@@ -51,7 +52,7 @@ export const cacheEntityMiddleware =
         [attributeKey]: attributeValue,
       });
 
-      if (isFunction(customValidation)) {
+      if (customValidation instanceof Function) {
         await customValidation(ctx, ctx.entity[entity]);
       }
     } catch (err: any) {

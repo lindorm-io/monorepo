@@ -1,6 +1,6 @@
 import { CacheBase } from "@lindorm-io/redis";
 import { DefaultLindormRedisKoaMiddleware } from "../types";
-import { camelCase } from "lodash";
+import { camelCase } from "@lindorm-io/case";
 
 interface Options {
   cacheKey?: string;

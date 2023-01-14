@@ -9,11 +9,7 @@ export const getJwt = (ctx: DefaultLindormJwtContext, issuer: string): JWT => {
     });
   }
 
-  ctx.keystore.getKeys();
+  ctx.keystore.assert();
 
-  return new JWT({
-    issuer,
-    keystore: ctx.keystore,
-    logger: ctx.logger,
-  });
+  return new JWT({ issuer }, ctx.keystore, ctx.logger);
 };

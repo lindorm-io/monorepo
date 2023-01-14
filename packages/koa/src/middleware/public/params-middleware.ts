@@ -1,9 +1,9 @@
 import { DefaultLindormMiddleware } from "../../types";
 import { camelCase } from "@lindorm-io/case";
-import { isObjectStrict } from "@lindorm-io/core";
+import { isObject } from "@lindorm-io/core";
 
 export const paramsMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
-  const params = isObjectStrict(ctx.params) ? camelCase<Record<string, string>>(ctx.params) : {};
+  const params = isObject(ctx.params) ? camelCase<Record<string, string>>(ctx.params) : {};
 
   for (const [key, value] of Object.entries(params)) {
     params[key] = decodeURIComponent(value);

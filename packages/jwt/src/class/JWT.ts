@@ -1,16 +1,16 @@
-import { Logger } from "@lindorm-io/core-logger";
 import { Keystore, KeyType } from "@lindorm-io/key-pair";
+import { Logger } from "@lindorm-io/core-logger";
 import { TokenError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
 import { decode, Jwt, sign, verify } from "jsonwebtoken";
 import { getExpires, removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
-import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 import {
   assertClaimDifference,
   assertClaimEquals,
   assertClaimIncludes,
   assertGreaterOrEqual,
+  getUnixTime,
 } from "../util/private";
 import {
   JwtDecodeData,
@@ -30,12 +30,13 @@ export class JWT {
   private readonly keystore: Keystore;
   private readonly logger: Logger;
 
-  public constructor(options: JwtOptions) {
-    this.clockTolerance = options.clockTolerance || 500;
+  public constructor(options: JwtOptions, keystore: Keystore, logger: Logger) {
+    this.logger = logger.createChildLogger(["jwt"]);
+
+    this.clockTolerance = options.clockTolerance || 5;
     this.issuer = options.issuer;
     this.keyType = options.keyType;
-    this.keystore = options.keystore;
-    this.logger = options.logger.createChildLogger(["jwt"]);
+    this.keystore = keystore;
   }
 
   public sign<Payload = Record<string, any>, Claims = Record<string, any>>(

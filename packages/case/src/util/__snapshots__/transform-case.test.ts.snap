@@ -3,7 +3,7 @@
 exports[`transformCase should convert array values 1`] = `
 Array [
   "camelCase",
-  "kebabCase",
+  "paramCase",
   "pascalCase",
   "snakeCase",
 ]
@@ -11,7 +11,7 @@ Array [
 
 exports[`transformCase should convert camel case string 1`] = `"camel_case"`;
 
-exports[`transformCase should convert kebab case string 1`] = `"kebabCase"`;
+exports[`transformCase should convert param case string 1`] = `"paramCase"`;
 
 exports[`transformCase should convert object keys to camelCase 1`] = `
 Object {
@@ -28,19 +28,19 @@ Object {
     "CamelObjectString": "camel_object_string",
   },
   "CamelString": "camelString",
-  "KebabArray": Array [
-    "kebabArrayString",
-    "kebab-array-string",
-    "KebabArrayString",
-    "kebab_array_string",
+  "ParamArray": Array [
+    "paramArrayString",
+    "param-array-string",
+    "ParamArrayString",
+    "param_array_string",
     Object {
-      "KebabObjectString": "kebab_object_string",
+      "ParamObjectString": "param_object_string",
     },
   ],
-  "KebabObject": Object {
-    "KebabObjectString": "kebab_object_string",
+  "ParamObject": Object {
+    "ParamObjectString": "param_object_string",
   },
-  "KebabString": "kebab-string",
+  "ParamString": "param-string",
   "PascalArray": Array [
     "pascalArrayString",
     "pascal-array-string",
@@ -74,4 +74,4 @@ exports[`transformCase should convert pascal case string 1`] = `"pascal-case"`;
 
 exports[`transformCase should convert snake case string 1`] = `"SnakeCase"`;
 
-exports[`transformCase should not convert 1`] = `"kebab-case"`;
+exports[`transformCase should not convert 1`] = `"param-case"`;

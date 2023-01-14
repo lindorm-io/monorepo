@@ -6,13 +6,13 @@ import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
 import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
 import { Environment } from "../enum";
-import { Logger } from "@lindorm-io/core-logger";
 import { IntervalWorker } from "./IntervalWorker";
+import { Logger } from "@lindorm-io/core-logger";
 import { Server as HttpServer, createServer } from "http";
 import { Server as IOServer } from "socket.io";
 import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
 import { createHealthRouter, createHeartbeatRouter } from "../router";
-import { isObject } from "lodash";
+import { isObject } from "@lindorm-io/core";
 import {
   dataHandlingMiddleware,
   defaultStatusMiddleware,

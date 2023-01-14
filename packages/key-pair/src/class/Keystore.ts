@@ -2,7 +2,7 @@ import { JWK } from "../types";
 import { KeyPair } from "../entity";
 import { KeyType } from "../enum";
 import { KeystoreError } from "../error";
-import { find, orderBy, uniqBy } from "lodash";
+import { orderBy, uniqBy } from "lodash";
 import {
   isKeyAllowed,
   isKeyCorrectType,
@@ -43,6 +43,16 @@ export class Keystore {
 
   // public
 
+  public assert(): void {
+    const keys = this.keys.filter(isKeyAllowed).filter(isKeyNotExpired);
+
+    if (keys.length) return;
+
+    throw new KeystoreError("Keys not found", {
+      description: "No keys  were found in Keystore",
+    });
+  }
+
   public getJWKS(options: Partial<GetJWKSOptions> = {}): Array<JWK> {
     const keys: Array<JWK> = [];
 
@@ -55,7 +65,7 @@ export class Keystore {
   }
 
   public getKey(id: string): KeyPair {
-    const key = find(this.getKeys(), { id });
+    const key = this.getKeys().find((x) => x.id === id);
 
     if (!key) {
       throw new KeystoreError("Invalid Key ID", {

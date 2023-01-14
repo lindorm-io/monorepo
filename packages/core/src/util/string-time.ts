@@ -1,5 +1,3 @@
-import { isFinite } from "lodash";
-
 enum Duration {
   YEARS = "years",
   MONTHS = "months",
@@ -42,7 +40,7 @@ const getNumber = (string: string, regex: RegExp): number => {
 
     const number = parseInt(result[0].replace(/\s+/g, ""));
 
-    if (!isFinite(number)) {
+    if (typeof number !== "number") {
       return 0;
     }
 

@@ -1,8 +1,7 @@
 import { ParamsRecord, Protocol, QueryRecord } from "../types";
 import { TransformMode, transformCase } from "@lindorm-io/case";
 import { destructUrl } from "./destruct-url";
-import { isArray } from "lodash";
-import { isObjectStrict } from "./is-object-strict";
+import { isObject } from "./private";
 
 type Options = {
   host?: string;
@@ -20,7 +19,7 @@ const replaceParamWithValue = (input: string, params: ParamsRecord): string => {
     throw new Error(`Parameter [ ${input} ] has no replacement variable`);
   }
 
-  if (isArray(param)) {
+  if (Array.isArray(param)) {
     return param.join(" ");
   }
 
@@ -28,7 +27,7 @@ const replaceParamWithValue = (input: string, params: ParamsRecord): string => {
 };
 
 const addParamsToPathname = (pathname: string, params: ParamsRecord): string => {
-  if (!isObjectStrict(params)) {
+  if (!isObject(params)) {
     return pathname;
   }
 
@@ -50,14 +49,14 @@ const addQueryToURL = (
   query: QueryRecord,
   queryCaseTransform: TransformMode = "none",
 ): URL => {
-  if (!isObjectStrict(query)) {
+  if (!isObject(query)) {
     return url;
   }
 
   for (const [key, value] of Object.entries(query)) {
     const transformed = transformCase(key, queryCaseTransform);
 
-    if (isArray(value)) {
+    if (Array.isArray(value)) {
       url.searchParams.append(transformed, value.join(" "));
     } else {
       url.searchParams.append(transformed, value.toString());

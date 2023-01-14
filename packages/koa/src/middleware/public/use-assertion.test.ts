@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { useAssertion } from "./use-assertion";
-import { includes } from "lodash";
 
 describe("useAssertion", () => {
   let ctx: any;
@@ -42,7 +41,7 @@ describe("useAssertion", () => {
   test("should resolve with custom assertion", async () => {
     await expect(
       useAssertion({
-        assertion: includes,
+        assertion: (expect, actual) => expect.includes(actual),
         fromPath: {
           expect: "data.array",
           actual: "entity.key",

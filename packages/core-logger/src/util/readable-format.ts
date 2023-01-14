@@ -3,7 +3,7 @@ import fastSafeStringify from "fast-safe-stringify";
 import { ConsoleOptions, LoggerMessage } from "../types";
 import { LogLevel } from "../enum";
 import { inspect } from "util";
-import { isError, isObject } from "lodash";
+import { isObject } from "lodash";
 
 const colourise = (chalk: Chalk, colours: boolean, input: string): string =>
   colours ? chalk(input) : input;
@@ -73,7 +73,7 @@ export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOpti
     const content = `${level}${colon} ${message}${context}`;
     const formatted = timestamp ? `${time}  ${content}` : content;
 
-    if (isError(info.details)) {
+    if (info.details instanceof Error) {
       const { errors, stack, ...rest } = info.details as any;
 
       if (Object.keys(rest).length) {

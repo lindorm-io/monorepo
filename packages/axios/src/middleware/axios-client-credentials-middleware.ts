@@ -3,7 +3,7 @@ import { MetadataHeader } from "../enum";
 import { Middleware, OAuthTokenResponseData } from "../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
-import { difference, flatten, isArray, isString, uniq } from "lodash";
+import { flatten, uniq } from "lodash";
 import { getUnixTime } from "../util";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
@@ -16,6 +16,8 @@ export type AxiosClientCredentialsMiddlewareOptions = {
   timeoutAdjustment?: number;
   useBasicAuth?: boolean;
 };
+
+const isString = (value?: any): value is string => typeof value === "string";
 
 export const axiosClientCredentialsMiddleware = (
   options: AxiosClientCredentialsMiddlewareOptions,
@@ -56,7 +58,7 @@ export const axiosClientCredentialsMiddleware = (
         force ||
         !bearerToken ||
         now >= bearerTimeout ||
-        difference(scopes, bearerScopes).length
+        scopes.filter((s) => !bearerScopes.includes(s)).length
       ) {
         const {
           data: { accessToken, expiresIn, scope },
@@ -70,7 +72,7 @@ export const axiosClientCredentialsMiddleware = (
           middleware,
         });
 
-        const array = isString(scope) ? scope.split(" ") : isArray(scope) ? scope : [];
+        const array = isString(scope) ? scope.split(" ") : Array.isArray(scope) ? scope : [];
 
         bearerScopes = uniq(flatten([bearerScopes, array]));
         bearerTimeout = now + expiresIn - timeoutAdjustment;

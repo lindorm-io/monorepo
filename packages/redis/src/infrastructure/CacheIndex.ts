@@ -1,8 +1,9 @@
+import { uniq } from "lodash";
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
 import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
 import { RedisError } from "../error";
-import { difference, snakeCase, uniq } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 
 export class CacheIndex<Interface> implements ICacheBase {
   private readonly connection: RedisConnection;
@@ -36,7 +37,10 @@ export class CacheIndex<Interface> implements ICacheBase {
   public async sub(key: string, value: Array<string>): Promise<void> {
     const array = await this.getArray(key);
 
-    await this.setArray(key, difference(array, value));
+    await this.setArray(
+      key,
+      array.filter((x) => !value.includes(x)),
+    );
   }
 
   // private

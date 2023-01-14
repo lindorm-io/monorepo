@@ -1,12 +1,11 @@
 import { Credentials } from "../types";
 import { baseParse } from "@lindorm-io/core";
-import { includes } from "lodash";
 import { ClientError } from "@lindorm-io/errors";
 
 export const getCredentials = (value: string): Credentials => {
   const credentials = baseParse(value);
 
-  if (!includes(credentials, ":")) {
+  if (!credentials.includes(":")) {
     throw new ClientError("Invalid Authorization", {
       description: "Malformed header",
       statusCode: ClientError.StatusCode.UNAUTHORIZED,

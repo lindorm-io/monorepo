@@ -1,11 +1,12 @@
 import Joi from "joi";
-import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { Command, DomainEvent, TimeoutMessage } from "../message";
-import { Logger } from "@lindorm-io/core-logger";
+import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
+import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase, assertSchema } from "../util";
-import { cloneDeep, merge, snakeCase } from "lodash";
+import { cloneDeep, merge } from "lodash";
 import { randomString } from "@lindorm-io/random";
+import { snakeCase } from "@lindorm-io/case";
 import {
   AggregateIdentifier,
   DtoClass,

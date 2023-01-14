@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm-io/errors";
-import { cloneDeep, find, isArray, isDate, isEqual } from "lodash";
+import { cloneDeep, isEqual } from "lodash";
 import { isBefore } from "date-fns";
-import { isObjectStrict } from "./is-object-strict";
+import { isObject } from "./is-object";
 
 type Meta = {
   value: any;
@@ -32,12 +32,13 @@ export const processArrayChange = (
     /**
      * example: [ { key: 1, number: 1, word: "hello" } ]
      */
-    if (isObjectStrict(currentItem)) {
-      const currentMeta = find(metadata, { value: { key: currentItem.key } });
-      const inputItem = find(inputArray, { key: currentItem.key });
-      const compareTime = isDate(currentMeta.timestamp)
-        ? currentMeta.timestamp
-        : new Date(currentMeta.timestamp);
+    if (isObject(currentItem)) {
+      const currentMeta = metadata.find((m) => m.value.key === currentItem.key);
+      const inputItem = inputArray.find((i) => i.key === currentItem.key);
+      const compareTime =
+        currentMeta.timestamp instanceof Date
+          ? currentMeta.timestamp
+          : new Date(currentMeta.timestamp);
 
       /**
        * when timestamp is before, that means another change is already there, and we will
@@ -73,7 +74,7 @@ export const processArrayChange = (
       /**
        * example: [1, 2, 3] => [1, 2]. Number 3 has been removed from the list
        */
-    } else if (!find(inputArray, (i) => i === currentItem)) {
+    } else if (!inputArray.find((i) => i === currentItem)) {
       meta.push({ value: currentItem, destroyed: true, timestamp });
 
       /**
@@ -81,7 +82,7 @@ export const processArrayChange = (
        * to check for any changes. They can either be added or removed. Not changed.
        */
     } else {
-      const currentMeta = find(metadata, { value: currentItem });
+      const currentMeta = metadata.find((m) => m.value === currentItem);
 
       meta.push(currentMeta);
       state.push(currentItem);
@@ -92,7 +93,7 @@ export const processArrayChange = (
     /**
      * example: [ { key: 2, number: 2, word: "general kenobi" } ]
      */
-    if (isObjectStrict(inputItem)) {
+    if (isObject(inputItem)) {
       if (!inputItem.key) {
         throw new LindormError("Invalid state change", {
           description: "Array items need to match [ { key: string } ] to correctly process changes",
@@ -105,7 +106,7 @@ export const processArrayChange = (
        * if we cannot find a matching object in our current array, we can safely
        * add our new input.
        */
-      if (!find(currentArray, { key: inputItem.key })) {
+      if (!currentArray.find((c) => c.key === inputItem.key)) {
         meta.push({ value: inputItem, destroyed: false, timestamp });
         state.push(inputItem);
       }
@@ -113,7 +114,7 @@ export const processArrayChange = (
       /**
        * example: [1, 2, 3] => [1, 2, 3, 4]. Number 4 has been added to the list
        */
-    } else if (!find(currentArray, (i) => i === inputItem)) {
+    } else if (!currentArray.find((i) => i === inputItem)) {
       meta.push({ value: inputItem, destroyed: false, timestamp });
       state.push(inputItem);
     }
@@ -133,7 +134,7 @@ export const processObjectChange = <TState = Record<string, any>>(
 
   for (const key in currentObject) {
     const metaTime = metadata[key] ? metadata[key].timestamp : metadata.timestamp;
-    const compareTime = isDate(metaTime) ? metaTime : new Date(metaTime);
+    const compareTime = metaTime instanceof Date ? metaTime : new Date(metaTime);
 
     /**
      * when timestamp is before, that means another change is already there, and we will
@@ -152,7 +153,7 @@ export const processObjectChange = <TState = Record<string, any>>(
       /**
        * if the removed item is an array, we let the array change handler resolve metadata.
        */
-      if (isArray(currentObject[key])) {
+      if (Array.isArray(currentObject[key])) {
         const result = processArrayChange(
           currentObject[key],
           inputObject[key],
@@ -165,7 +166,7 @@ export const processObjectChange = <TState = Record<string, any>>(
         /**
          * when the removed item is an object, we let recursively resolve metadata
          */
-      } else if (isObjectStrict(currentObject[key])) {
+      } else if (isObject(currentObject[key])) {
         const result = processObjectChange(
           currentObject[key],
           inputObject[key],
@@ -185,7 +186,7 @@ export const processObjectChange = <TState = Record<string, any>>(
       /**
        * when the updated value is an array, we let the array handler resolve state and metadata.
        */
-    } else if (isArray(currentObject[key])) {
+    } else if (Array.isArray(currentObject[key])) {
       const result = processArrayChange(
         currentObject[key],
         inputObject[key],
@@ -199,7 +200,7 @@ export const processObjectChange = <TState = Record<string, any>>(
       /**
        * when the updated value is an object, we recursively resolve state and metadata.
        */
-    } else if (isObjectStrict(currentObject[key])) {
+    } else if (isObject(currentObject[key])) {
       const result = processObjectChange(
         currentObject[key],
         inputObject[key],
@@ -237,7 +238,7 @@ export const processObjectChange = <TState = Record<string, any>>(
     /**
      * if the input is an array, we let our array handler resolve state and metadata.
      */
-    if (isArray(inputObject[key])) {
+    if (Array.isArray(inputObject[key])) {
       const result = processArrayChange(
         currentObject[key],
         inputObject[key],
@@ -251,7 +252,7 @@ export const processObjectChange = <TState = Record<string, any>>(
       /**
        * if the input is an object, we recursively let our handler resolve state and metadata
        */
-    } else if (isObjectStrict(inputObject[key])) {
+    } else if (isObject(inputObject[key])) {
       const result = processObjectChange(
         currentObject[key],
         inputObject[key],

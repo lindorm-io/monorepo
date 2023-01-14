@@ -1,4 +1,5 @@
-import { isObject } from "lodash";
+const isObject = (input: any): input is Record<string, any> =>
+  !!input && typeof input === "object" && input.constructor === Object;
 
 export const parseErrorValue = (input: any): Error => {
   const parsed = isObject(input) ? input : JSON.parse(input);

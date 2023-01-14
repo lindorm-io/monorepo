@@ -4,7 +4,7 @@ import { JwtSignOptions } from "../types";
 import { TokenError } from "../error";
 import { baseParse } from "@lindorm-io/core";
 import { createTestJwt } from "../mocks";
-import { getUnixTime } from "date-fns";
+import { getUnixTime } from "../util/private";
 import {
   createTestKeyPairEC,
   createTestKeyPairRSA,
@@ -57,11 +57,12 @@ describe("JWT", () => {
 
   describe("RS512", () => {
     beforeEach(() => {
-      jwt = createTestJwt({
-        keystore: createTestKeystore({
+      jwt = createTestJwt(
+        undefined,
+        createTestKeystore({
           keys: [createTestKeyPairRSA()],
         }),
-      });
+      );
     });
 
     test("should sign/verify", () => {
@@ -81,11 +82,12 @@ describe("JWT", () => {
 
   describe("ES512", () => {
     beforeEach(() => {
-      jwt = createTestJwt({
-        keystore: createTestKeystore({
+      jwt = createTestJwt(
+        undefined,
+        createTestKeystore({
           keys: [createTestKeyPairEC()],
         }),
-      });
+      );
     });
 
     test("should sign/verify", () => {

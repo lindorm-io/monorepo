@@ -1,6 +1,6 @@
 import { DefaultLindormMongoKoaMiddleware } from "../types";
 import { RepositoryBase } from "@lindorm-io/mongo";
-import { camelCase } from "lodash";
+import { camelCase } from "@lindorm-io/case";
 
 interface Options {
   repositoryKey?: string;

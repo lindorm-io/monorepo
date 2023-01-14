@@ -20,15 +20,13 @@
   "dependencies": {
     "@lindorm-io/core": "^0.8.4",
     "@lindorm-io/errors": "^0.1.13",
-    "@lindorm-io/koa": "^0.15.5",
-    "lodash": "^4.17.21"
+    "@lindorm-io/koa": "^0.15.5"
   },
   "devDependencies": {
     "@types/express-useragent": "^1.0.2",
     "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-router": "^7.4.4",
-    "@types/lodash": "^4.14.182",
     "koa": "^2.13.1",
     "koa-bodyparser": "^4.3.0"
   }

@@ -1,9 +1,7 @@
-import { isArray } from "lodash";
+import { CaseCallback } from "../../types";
 
-type Callback = (arg: string) => string;
-
-export const convertArrayValues = (input: Array<string>, callback: Callback): Array<string> => {
-  if (!isArray(input)) {
+export const convertArrayValues = (input: Array<string>, callback: CaseCallback): Array<string> => {
+  if (!Array.isArray(input)) {
     throw new Error(`Invalid input [ ${typeof input} ]`);
   }
 

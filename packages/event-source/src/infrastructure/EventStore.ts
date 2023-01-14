@@ -7,7 +7,6 @@ import { Logger } from "@lindorm-io/core-logger";
 import { MemoryEventStore } from "./memory";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
-import { filter, last, take } from "lodash";
 import {
   AggregateIdentifier,
   EventData,
@@ -67,13 +66,14 @@ export class EventStore implements IDomainEventStore {
       return events.map((item) => new DomainEvent(item));
     }
 
-    const causationEvents = filter<DomainEvent>(aggregate.events, { causationId: causation.id });
-    const expectedEvents = take<DomainEvent>(aggregate.events, aggregate.numberOfLoadedEvents);
-    const lastExpectedEvent = last<DomainEvent>(expectedEvents);
+    const causationEvents = aggregate.events.filter((x) => x.causationId === causation.id);
 
     if (causationEvents.length === 0) {
       throw new CausationMissingEventsError();
     }
+
+    const expectedEvents = aggregate.events.slice(0, aggregate.numberOfLoadedEvents);
+    const [lastExpectedEvent] = expectedEvents.reverse();
 
     this.logger.debug("Saving aggregate", {
       aggregate,

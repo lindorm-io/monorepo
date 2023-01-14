@@ -2,12 +2,13 @@ import Joi from "joi";
 import { Command, ErrorMessage } from "../message";
 import { ErrorHandlerImplementation } from "../handler";
 import { HandlerNotRegisteredError } from "../error";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { assertSchema, assertSnakeCase } from "../util";
-import { find, isArray, merge, snakeCase, some } from "lodash";
+import { merge } from "lodash";
+import { snakeCase } from "@lindorm-io/case";
 import {
   AggregateIdentifier,
   DtoClass,
@@ -44,18 +45,17 @@ export class ErrorDomain implements IErrorDomain {
       });
     }
 
-    const contexts = isArray(errorHandler.aggregate.context)
+    const contexts = Array.isArray(errorHandler.aggregate.context)
       ? errorHandler.aggregate.context
       : [errorHandler.aggregate.context];
 
     for (const context of contexts) {
-      const existingHandler = some(this.errorHandlers, {
-        errorName: errorHandler.errorName,
-        aggregate: {
-          name: errorHandler.aggregate.name,
-          context,
-        },
-      });
+      const existingHandler = this.errorHandlers.some(
+        (x) =>
+          x.errorName === errorHandler.errorName &&
+          x.aggregate.name === errorHandler.aggregate.name &&
+          x.aggregate.context === context,
+      );
 
       if (existingHandler) {
         throw new LindormError("Error handler has already been registered", {
@@ -103,13 +103,12 @@ export class ErrorDomain implements IErrorDomain {
   private async handleError(message: ErrorMessage): Promise<void> {
     this.logger.debug("Handling error", { message });
 
-    const errorHandler = find(this.errorHandlers, {
-      errorName: message.name,
-      aggregate: {
-        name: message.aggregate.name,
-        context: message.aggregate.context,
-      },
-    });
+    const errorHandler = this.errorHandlers.find(
+      (x) =>
+        x.errorName === message.name &&
+        x.aggregate.name === message.aggregate.name &&
+        x.aggregate.context === message.aggregate.context,
+    );
 
     if (!(errorHandler instanceof ErrorHandlerImplementation)) {
       throw new HandlerNotRegisteredError();

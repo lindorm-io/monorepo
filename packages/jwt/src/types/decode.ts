@@ -1,6 +1,6 @@
 import { LevelOfAssurance } from "./loa";
 
-export interface JwtDecodedClaims<Payload, Claims> {
+export type JwtDecodedClaims<Payload, Claims> = {
   id: string;
   adjustedAccessLevel: LevelOfAssurance;
   audiences: Array<string>;
@@ -20,9 +20,9 @@ export interface JwtDecodedClaims<Payload, Claims> {
   subjectHint: string | null;
   type: string;
   username: string | null;
-}
+};
 
-export interface JwtDecodeData<Payload, Claims> extends JwtDecodedClaims<Payload, Claims> {
+export type JwtDecodeData<Payload, Claims> = JwtDecodedClaims<Payload, Claims> & {
   active: boolean;
   expires: number;
   expiresIn: number;
@@ -31,4 +31,4 @@ export interface JwtDecodeData<Payload, Claims> extends JwtDecodedClaims<Payload
   keyId: string;
   notBefore: number;
   now: number;
-}
+};

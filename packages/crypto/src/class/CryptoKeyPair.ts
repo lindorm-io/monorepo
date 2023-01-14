@@ -1,6 +1,5 @@
 import { CryptoError } from "../error";
 import { SignKey, SignMethod } from "../enum";
-import { startsWith } from "lodash";
 import {
   createSign,
   createVerify,
@@ -40,11 +39,11 @@ export class CryptoKeyPair {
   }
 
   private key(type: SignKey): IKeyData {
-    if (type === SignKey.PRIVATE && startsWith(this.algorithm, "RS")) {
+    if (type === SignKey.PRIVATE && this.algorithm.startsWith("RS")) {
       return { key: this.privateKey, passphrase: this.passphrase };
     }
 
-    if (type === SignKey.PRIVATE && startsWith(this.algorithm, "ES")) {
+    if (type === SignKey.PRIVATE && this.algorithm.startsWith("ES")) {
       return { key: this.privateKey };
     }
 
@@ -78,7 +77,7 @@ export class CryptoKeyPair {
   }
 
   public encrypt(method: SignMethod, input: string): string {
-    if (!startsWith(this.algorithm, "RS")) {
+    if (!this.algorithm.startsWith("RS")) {
       throw new Error(`Algorithm does not support encryption/decryption: ${this.algorithm}`);
     }
 
@@ -92,7 +91,7 @@ export class CryptoKeyPair {
   }
 
   public decrypt(method: SignMethod, signature: string): string {
-    if (!startsWith(this.algorithm, "RS")) {
+    if (!this.algorithm.startsWith("RS")) {
       throw new Error(`Algorithm does not support encryption/decryption: ${this.algorithm}`);
     }
 
