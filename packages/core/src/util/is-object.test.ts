@@ -1,7 +1,12 @@
 import { isObject } from "./is-object";
 
+class test {
+  constructor() {}
+}
+
 const _array: any = ["array"];
 const _boolean: any = true;
+const _class: any = new test();
 const _date: any = new Date();
 const _error: any = new Error();
 const _null: any = null;
@@ -11,13 +16,14 @@ const _string: any = "string";
 const _undefined: any = undefined;
 
 describe("isObject", () => {
-  it("should resolve true on array", () => {
+  it("should resolve true on object", () => {
     expect(isObject(_object)).toBe(true);
   });
 
   it("should resolve false on everything else", () => {
     expect(isObject(_array)).toBe(false);
     expect(isObject(_boolean)).toBe(false);
+    expect(isObject(_class)).toBe(false);
     expect(isObject(_date)).toBe(false);
     expect(isObject(_error)).toBe(false);
     expect(isObject(_null)).toBe(false);
