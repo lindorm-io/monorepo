@@ -12,7 +12,6 @@ import { Server as HttpServer, createServer } from "http";
 import { Server as IOServer } from "socket.io";
 import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
 import { createHealthRouter, createHeartbeatRouter } from "../router";
-import { isObject } from "@lindorm-io/core";
 import {
   dataHandlingMiddleware,
   defaultStatusMiddleware,
@@ -151,8 +150,8 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   }
 
   public addRoute(route: string, router: Router): void {
-    if (!isObject(router)) {
-      throw new Error(`Invalid router [ ${typeof router} ]`);
+    if (!(router instanceof Router)) {
+      throw new Error(`Invalid router [ ${JSON.stringify(router)} ]`);
     }
 
     this.logger.debug("adding route", { route });
