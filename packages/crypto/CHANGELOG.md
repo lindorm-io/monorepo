@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.24](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.1.23...@lindorm-io/crypto@0.1.24) (2023-01-15)
+
+
+### Bug Fixes
+
+* add hmac modes to sha ([91b531a](https://github.com/lindorm-io/monorepo/commit/91b531af982e11bdae94bc9cc8c7f4c6028f62c9))
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.1.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.1.22...@lindorm-io/crypto@0.1.23) (2023-01-13)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.11.6...@lindorm-io/redis@0.11.7) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.11.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.11.5...@lindorm-io/redis@0.11.6) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/redis

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.2.11...@lindorm-io/in-memory-cache@0.2.12) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.2.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.2.10...@lindorm-io/in-memory-cache@0.2.11) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/in-memory-cache

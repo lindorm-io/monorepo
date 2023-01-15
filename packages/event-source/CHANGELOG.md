@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.6...@lindorm-io/event-source@0.2.7) (2023-01-15)
+
+
+### Bug Fixes
+
+* move metadata compose util ([7718f80](https://github.com/lindorm-io/monorepo/commit/7718f806aca39bd4100116b2664176d4d0e63efe))
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.5...@lindorm-io/event-source@0.2.6) (2023-01-13)
 
 

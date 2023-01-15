@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.31](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.30...@lindorm-io/koa-jwt@0.5.31) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.5.30](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.5.29...@lindorm-io/koa-jwt@0.5.30) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/koa-jwt

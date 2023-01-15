@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.0.10...@lindorm-io/koa-amqp@0.0.11) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.0.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.0.9...@lindorm-io/koa-amqp@0.0.10) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/koa-amqp

@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.5...@lindorm-io/koa@0.15.6) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+* update router validation ([dd8a975](https://github.com/lindorm-io/monorepo/commit/dd8a9753ffe6ebe8ff8aae37ed7634fd2f7b5fa3))
+
+
+
+
+
 ## [0.15.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.4...@lindorm-io/koa@0.15.5) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/koa

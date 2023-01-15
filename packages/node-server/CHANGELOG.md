@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.24](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.23...@lindorm-io/node-server@0.4.24) (2023-01-15)
+
+
+### Bug Fixes
+
+* reduce lodash footprint ([23308c3](https://github.com/lindorm-io/monorepo/commit/23308c342f2b956c3de7808c9cdabe45208ffa7e))
+
+
+
+
+
 ## [0.4.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.22...@lindorm-io/node-server@0.4.23) (2023-01-13)
 
 **Note:** Version bump only for package @lindorm-io/node-server
