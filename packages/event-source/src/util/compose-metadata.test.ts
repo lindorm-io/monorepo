@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm-io/errors";
-import { processObjectChange } from "./process-change";
+import { composeObjectMetadata } from "./compose-metadata";
 
 class TestEntity {
   state: any;
@@ -11,14 +11,14 @@ class TestEntity {
   }
 
   change(input: any, timestamp: Date) {
-    const { state, meta } = processObjectChange(this.state, input, this.meta, timestamp);
+    const { state, meta } = composeObjectMetadata(this.state, input, this.meta, timestamp);
 
     this.state = state;
     this.meta = meta;
   }
 }
 
-describe("objectDifference", () => {
+describe("composeObjectMetadata", () => {
   const ts1 = new Date("2022-01-01T08:00:00.000Z");
   const ts2 = new Date("2022-01-02T08:00:00.000Z");
   const ts3 = new Date("2022-01-03T08:00:00.000Z");

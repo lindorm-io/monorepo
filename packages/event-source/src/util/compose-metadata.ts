@@ -1,7 +1,7 @@
 import { LindormError } from "@lindorm-io/errors";
 import { cloneDeep, isEqual } from "lodash";
 import { isBefore } from "date-fns";
-import { isObject } from "./is-object";
+import { isObject } from "@lindorm-io/core";
 
 type Meta = {
   value: any;
@@ -19,7 +19,7 @@ type ObjectResult<TState> = {
   meta: any;
 };
 
-export const processArrayChange = (
+export const composeArrayMetadata = (
   currentArray: Array<any> = [],
   inputArray: Array<any> = [],
   metadata: Array<any> = [],
@@ -123,7 +123,7 @@ export const processArrayChange = (
   return { state, meta };
 };
 
-export const processObjectChange = <TState = Record<string, any>>(
+export const composeObjectMetadata = <TState = Record<string, any>>(
   currentObject: Record<string, any> = {},
   inputObject: Record<string, any> = {},
   metadata: Record<string, any> = {},
@@ -154,7 +154,7 @@ export const processObjectChange = <TState = Record<string, any>>(
        * if the removed item is an array, we let the array change handler resolve metadata.
        */
       if (Array.isArray(currentObject[key])) {
-        const result = processArrayChange(
+        const result = composeArrayMetadata(
           currentObject[key],
           inputObject[key],
           metadata[key],
@@ -167,7 +167,7 @@ export const processObjectChange = <TState = Record<string, any>>(
          * when the removed item is an object, we let recursively resolve metadata
          */
       } else if (isObject(currentObject[key])) {
-        const result = processObjectChange(
+        const result = composeObjectMetadata(
           currentObject[key],
           inputObject[key],
           metadata[key],
@@ -187,7 +187,7 @@ export const processObjectChange = <TState = Record<string, any>>(
        * when the updated value is an array, we let the array handler resolve state and metadata.
        */
     } else if (Array.isArray(currentObject[key])) {
-      const result = processArrayChange(
+      const result = composeArrayMetadata(
         currentObject[key],
         inputObject[key],
         metadata[key],
@@ -201,7 +201,7 @@ export const processObjectChange = <TState = Record<string, any>>(
        * when the updated value is an object, we recursively resolve state and metadata.
        */
     } else if (isObject(currentObject[key])) {
-      const result = processObjectChange(
+      const result = composeObjectMetadata(
         currentObject[key],
         inputObject[key],
         metadata[key],
@@ -239,7 +239,7 @@ export const processObjectChange = <TState = Record<string, any>>(
      * if the input is an array, we let our array handler resolve state and metadata.
      */
     if (Array.isArray(inputObject[key])) {
-      const result = processArrayChange(
+      const result = composeArrayMetadata(
         currentObject[key],
         inputObject[key],
         metadata[key],
@@ -253,7 +253,7 @@ export const processObjectChange = <TState = Record<string, any>>(
        * if the input is an object, we recursively let our handler resolve state and metadata
        */
     } else if (isObject(inputObject[key])) {
-      const result = processObjectChange(
+      const result = composeObjectMetadata(
         currentObject[key],
         inputObject[key],
         metadata[key],
