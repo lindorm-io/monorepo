@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/case@0.1.2...@lindorm-io/case@0.1.3) (2023-01-15)
+
+
+### Bug Fixes
+
+* use object validation from core ([3763db6](https://github.com/lindorm-io/monorepo/commit/3763db6f1ae15369c3870992ef14024521ce22b0))
+
+
+
+
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/case@0.1.1...@lindorm-io/case@0.1.2) (2023-01-15)
 
 
