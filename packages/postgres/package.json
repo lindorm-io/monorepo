@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/postgres",
   "description": "Postgres connection for lindorm.io",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core-connection": "^0.1.9",
+    "@lindorm-io/core-connection": "^0.1.10",
     "@lindorm-io/errors": "^0.1.14",
     "pg": "^8.7.3"
   },

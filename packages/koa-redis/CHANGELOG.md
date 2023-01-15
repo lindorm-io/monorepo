@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.20](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.19...@lindorm-io/koa-redis@0.6.20) (2023-01-15)
+
+
+### Bug Fixes
+
+* use expiry package ([efecb3a](https://github.com/lindorm-io/monorepo/commit/efecb3a3d46055295435795cf4845fdc88d78580))
+
+
+
+
+
 ## [0.6.19](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.18...@lindorm-io/koa-redis@0.6.19) (2023-01-15)
 
 

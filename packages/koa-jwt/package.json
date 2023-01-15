@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-jwt",
   "description": "Token issuer middleware for @lindorm-io/koa applications",
-  "version": "0.5.31",
+  "version": "0.5.32",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,11 +18,11 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.8.5",
+    "@lindorm-io/core": "^0.8.6",
     "@lindorm-io/errors": "^0.1.14",
-    "@lindorm-io/jwt": "^0.8.16",
-    "@lindorm-io/key-pair": "^0.6.10",
-    "@lindorm-io/koa": "^0.15.6",
+    "@lindorm-io/jwt": "^0.8.17",
+    "@lindorm-io/key-pair": "^0.6.11",
+    "@lindorm-io/koa": "^0.15.7",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

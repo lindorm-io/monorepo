@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.5...@lindorm-io/core@0.8.6) (2023-01-15)
+
+
+### Bug Fixes
+
+* improve exports ([a842889](https://github.com/lindorm-io/monorepo/commit/a842889b5320ec511dff1c73070f29118d3809d0))
+* remove expiry from core ([92e43b4](https://github.com/lindorm-io/monorepo/commit/92e43b406ffa0dea230d38179e6c7ffe9b9a6f16))
+
+
+
+
+
 ## [0.8.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.4...@lindorm-io/core@0.8.5) (2023-01-15)
 
 

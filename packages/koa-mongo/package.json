@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-mongo",
   "description": "Mongo Connection middleware for @lindorm-io/koa applications",
-  "version": "0.8.19",
+  "version": "0.8.20",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -21,8 +21,8 @@
     "@lindorm-io/case": "^0.1.2",
     "@lindorm-io/entity": "^0.3.5",
     "@lindorm-io/errors": "^0.1.14",
-    "@lindorm-io/koa": "^0.15.6",
-    "@lindorm-io/mongo": "^0.11.8",
+    "@lindorm-io/koa": "^0.15.7",
+    "@lindorm-io/mongo": "^0.11.9",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

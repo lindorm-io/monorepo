@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/event-source",
   "description": "Event Source for lindorm.io",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "license": "AGPL-3.0-or-later",
   "contributors": [
     "Jonn Nilsson",
@@ -35,13 +35,13 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/amqp": "^0.2.8",
+    "@lindorm-io/amqp": "^0.2.9",
     "@lindorm-io/case": "^0.1.2",
-    "@lindorm-io/core": "^0.8.5",
-    "@lindorm-io/mongo": "^0.11.8",
-    "@lindorm-io/postgres": "^0.1.8",
+    "@lindorm-io/core": "^0.8.6",
+    "@lindorm-io/mongo": "^0.11.9",
+    "@lindorm-io/postgres": "^0.1.9",
     "@lindorm-io/random": "^0.1.1",
-    "@lindorm-io/string-blob": "^0.0.20",
+    "@lindorm-io/string-blob": "^0.0.21",
     "joi": "^17.6.0",
     "lodash": "^4.17.21"
   },

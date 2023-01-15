@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.25](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.24...@lindorm-io/node-server@0.4.25) (2023-01-15)
+
+**Note:** Version bump only for package @lindorm-io/node-server
+
+
+
+
+
 ## [0.4.24](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.23...@lindorm-io/node-server@0.4.24) (2023-01-15)
 
 
