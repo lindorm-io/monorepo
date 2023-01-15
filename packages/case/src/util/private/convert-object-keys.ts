@@ -1,6 +1,6 @@
 import { CaseCallback } from "../../types";
 import { convertArrayObjectKeys } from "./convert-array-object-keys";
-import { isObject } from "./is-object";
+import { isObject } from "@lindorm-io/core";
 
 export const convertObjectKeys = <Output extends Record<string, any> = Record<string, any>>(
   input: Record<string, any>,

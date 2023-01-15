@@ -1,7 +1,7 @@
 import { ParamsRecord, Protocol, QueryRecord } from "../types";
 import { TransformMode, transformCase } from "@lindorm-io/case";
 import { destructUrl } from "./destruct-url";
-import { isObject } from "./private";
+import { isObject } from "@lindorm-io/core";
 
 type Options = {
   host?: string;

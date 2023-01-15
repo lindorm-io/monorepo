@@ -1,6 +1,6 @@
 import { CaseCallback } from "../../types";
 import { convertObjectKeys } from "./convert-object-keys";
-import { isObject } from "./is-object";
+import { isObject } from "@lindorm-io/core";
 
 export const convertArrayObjectKeys = (input: Array<any>, callback: CaseCallback): Array<any> => {
   if (!Array.isArray(input)) {
