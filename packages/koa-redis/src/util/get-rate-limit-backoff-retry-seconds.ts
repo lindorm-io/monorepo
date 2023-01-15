@@ -1,5 +1,5 @@
 import { MAXIMUM_RATE_LIMIT_ATTEMPTS, MAXIMUM_RATE_LIMIT_EXPIRY } from "../constant";
-import { stringToSeconds } from "@lindorm-io/core";
+import { stringToSeconds } from "@lindorm-io/expiry";
 
 export const getRateLimitBackoffRetrySeconds = (currentValue: number): number => {
   if (currentValue < MAXIMUM_RATE_LIMIT_ATTEMPTS) {

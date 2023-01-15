@@ -3,8 +3,9 @@ import { Logger } from "@lindorm-io/core-logger";
 import { TokenError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
 import { decode, Jwt, sign, verify } from "jsonwebtoken";
-import { getExpires, removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 import { randomUUID } from "crypto";
+import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
 import {
   assertClaimDifference,
   assertClaimEquals,
@@ -44,7 +45,7 @@ export class JWT {
   ): JwtSignData {
     const id = options.id || randomUUID();
 
-    const { expires, expiresIn, expiresUnix, now, nowUnix } = getExpires(options.expiry);
+    const { expires, expiresIn, expiresUnix, now, nowUnix } = expiryObject(options.expiry);
 
     this.logger.debug("sign token", {
       options,

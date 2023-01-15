@@ -7,7 +7,7 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 
 type Options = {
   mongoConnection: MongoConnection;
@@ -45,7 +45,7 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
 
         for (const entity of array) {
           if (!entity.expires) {
-            entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+            entity.expires = addSeconds(expiryDate(workerInterval), 15);
           }
           await cache.create(entity);
         }

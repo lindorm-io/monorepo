@@ -1,5 +1,5 @@
 import { KeyType } from "@lindorm-io/key-pair";
-import { Expiry } from "@lindorm-io/core";
+import { Expiry } from "@lindorm-io/expiry";
 import { LevelOfAssurance } from "./loa";
 
 export type JwtSignOptions<Payload = never, Claims = never> = {

@@ -5,7 +5,7 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
 import { add } from "date-fns";
 import { generateKeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";
-import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/core";
+import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/expiry";
 
 type Options = {
   keyExpiry?: string;

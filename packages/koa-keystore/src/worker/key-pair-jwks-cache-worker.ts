@@ -4,7 +4,7 @@ import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { getExpiryDate, stringToSeconds } from "@lindorm-io/core";
+import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 import { getKeysFromJwks } from "../util";
 
 type Options = {
@@ -48,7 +48,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
 
         for (const entity of keys) {
           if (!entity.expires) {
-            entity.expires = addSeconds(getExpiryDate(workerInterval), 15);
+            entity.expires = addSeconds(expiryDate(workerInterval), 15);
           }
           await cache.create(entity);
         }

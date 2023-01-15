@@ -1,4 +1,4 @@
-import { stringToSeconds } from "@lindorm-io/core";
+import { stringToSeconds } from "@lindorm-io/expiry";
 
 export const MAXIMUM_RATE_LIMIT_ATTEMPTS = 5;
 export const MAXIMUM_RATE_LIMIT_EXPIRY = stringToSeconds("60 minutes");

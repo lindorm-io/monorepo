@@ -21,6 +21,7 @@
     "@lindorm-io/case": "^0.1.2",
     "@lindorm-io/core": "^0.8.5",
     "@lindorm-io/errors": "^0.1.14",
+    "@lindorm-io/expiry": "^0.1.0",
     "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {

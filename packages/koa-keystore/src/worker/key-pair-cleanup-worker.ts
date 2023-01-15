@@ -3,7 +3,7 @@ import { KeyPairRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
-import { stringToSeconds } from "@lindorm-io/core";
+import { stringToSeconds } from "@lindorm-io/expiry";
 
 type Options = {
   mongoConnection: MongoConnection;
