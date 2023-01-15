@@ -19,6 +19,8 @@
 .prettierrc
 Thumbs.db
 
+docker-compose.yml
+jest.config.integration.js
 jest.config.js
 jest.global.setup.js
 nodemon.json
