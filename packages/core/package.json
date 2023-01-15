@@ -16,11 +16,5 @@
     "test:watch": "jest --watch --",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
-  },
-  "devDependencies": {
-    "@types/lodash": "^4.14.182"
   }
 }
