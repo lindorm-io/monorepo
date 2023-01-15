@@ -10,7 +10,7 @@ interface Result {
   nowUnix: number;
 }
 
-export const getExpires = (expiry: Expiry): Result => {
+export const getExpiryObject = (expiry: Expiry): Result => {
   const now = new Date();
   const nowUnix = getUnixTime(now);
   const expires = getExpiryDate(expiry);
@@ -25,3 +25,5 @@ export const getExpires = (expiry: Expiry): Result => {
     nowUnix,
   };
 };
+
+export const expiryObject = getExpiryObject;
