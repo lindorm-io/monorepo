@@ -1,0 +1,21 @@
+import { Middleware } from "../types";
+import { composeMiddleware } from "./compose-middleware";
+import clone from "clone";
+
+type Options = {
+  useClone?: boolean;
+};
+
+export const resolveMiddleware = async <Context>(
+  context: Context,
+  middleware: Middleware<Context>[],
+  options: Options = {},
+): Promise<Context> => {
+  const { useClone = true } = options;
+
+  const ctx = useClone ? clone(context) : context;
+
+  await composeMiddleware<Context>(middleware)(ctx);
+
+  return ctx;
+};
