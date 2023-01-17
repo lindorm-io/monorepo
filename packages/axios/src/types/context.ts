@@ -38,13 +38,13 @@ export type RequestContext<
 };
 
 export type Context<
-  Body = Record<string, any>,
-  Headers = Record<string, string | number>,
-  Params = Record<string, any>,
-  Query = Record<string, any>,
   ResponseData = any,
+  RequestBody = Record<string, any>,
+  RequestHeaders = Record<string, string | number>,
+  RequestParams = Record<string, any>,
+  RequestQuery = Record<string, any>,
 > = {
   axios: AxiosContext;
-  req: RequestContext<Body, Headers, Params, Query>;
+  req: RequestContext<RequestBody, RequestHeaders, RequestParams, RequestQuery>;
   res: AxiosResponse<ResponseData, Body>;
 };

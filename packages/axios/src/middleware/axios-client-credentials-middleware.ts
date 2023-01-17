@@ -3,7 +3,6 @@ import { MetadataHeader } from "../enum";
 import { Middleware, OAuthTokenResponseData } from "../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
-import { flatten, uniq } from "lodash";
 import { getUnixTime } from "../util";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
@@ -66,7 +65,7 @@ export const axiosClientCredentialsMiddleware = (
           body: {
             ...(!useBasicAuth ? { clientId, clientSecret } : {}),
             grantType,
-            scope: uniq(flatten([bearerScopes, scopes])).join(" "),
+            scope: [...new Set([bearerScopes, scopes].flat())].join(" "),
           },
           headers,
           middleware,
@@ -74,7 +73,7 @@ export const axiosClientCredentialsMiddleware = (
 
         const array = isString(scope) ? scope.split(" ") : Array.isArray(scope) ? scope : [];
 
-        bearerScopes = uniq(flatten([bearerScopes, array]));
+        bearerScopes = [...new Set([bearerScopes, array].flat())];
         bearerTimeout = now + expiresIn - timeoutAdjustment;
         bearerToken = accessToken;
       }

@@ -1,14 +1,15 @@
-import { AxiosOptions, MethodOptions, Middleware, RequestOptions } from "../types";
+import { AxiosOptions, Context, MethodOptions, Middleware, RequestOptions } from "../types";
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
-import { DEFAULT_AUTH_OPTIONS, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT_OPTIONS } from "../constant";
 import { RetryOptions } from "@lindorm-io/retry";
+import { axiosRequestHandler, defaultRetryCallback } from "../util";
 import { destructUrl, Protocol } from "@lindorm-io/url";
+import { resolveMiddleware } from "@lindorm-io/middleware";
 import {
-  axiosRequestHandler,
-  composeContext,
-  composeMiddleware,
-  defaultRetryCallback,
-} from "../util";
+  DEFAULT_AUTH_OPTIONS,
+  DEFAULT_AXIOS_RESPONSE,
+  DEFAULT_RETRY_OPTIONS,
+  DEFAULT_TIMEOUT_OPTIONS,
+} from "../constant";
 
 export class Axios {
   private readonly auth: AxiosBasicCredentials;
@@ -113,8 +114,8 @@ export class Axios {
 
     const url = destructUrl(pathOrUrl);
 
-    const context = composeContext(
-      {
+    const context = {
+      axios: {
         auth: this.auth,
         host: this.host || null,
         name: this.name || null,
@@ -124,7 +125,7 @@ export class Axios {
         timeout: this.timeout,
         withCredentials: this.withCredentials,
       },
-      {
+      req: {
         auth: auth || this.auth,
         body: body,
         config: config,
@@ -141,12 +142,15 @@ export class Axios {
         timeout: timeout || this.timeout,
         withCredentials: withCredentials || this.withCredentials,
       },
-    );
+      res: DEFAULT_AXIOS_RESPONSE,
+    };
 
-    const composed = composeMiddleware([...this.middleware, ...middleware, axiosRequestHandler]);
+    const result = await resolveMiddleware<Context<Data>>(context, [
+      ...this.middleware,
+      ...middleware,
+      axiosRequestHandler,
+    ]);
 
-    await composed(context);
-
-    return context.res;
+    return result.res;
   }
 }
