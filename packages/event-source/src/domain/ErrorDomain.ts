@@ -1,4 +1,5 @@
 import Joi from "joi";
+import merge from "merge";
 import { Command, ErrorMessage } from "../message";
 import { ErrorHandlerImplementation } from "../handler";
 import { HandlerNotRegisteredError } from "../error";
@@ -7,7 +8,6 @@ import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/core-logger";
 import { assertSchema, assertSnakeCase } from "../util";
-import { merge } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
 import {
   AggregateIdentifier,

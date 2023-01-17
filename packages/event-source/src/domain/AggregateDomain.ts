@@ -1,10 +1,11 @@
+import clone from "clone";
 import { Aggregate } from "../model";
 import { Command, ErrorMessage } from "../message";
 import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase } from "../util";
-import { cloneDeep, findLast } from "lodash";
+import { findLast } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
 import {
   AggregateCommandHandlerImplementation,
@@ -264,9 +265,9 @@ export class AggregateDomain implements IAggregateDomain {
         }
 
         const ctx: AggregateCommandHandlerContext = {
-          command: cloneDeep(command.data),
+          command: clone(command.data),
           logger: this.logger.createChildLogger(["AggregateCommandHandler"]),
-          state: cloneDeep(aggregate.state),
+          state: clone(aggregate.state),
 
           apply: aggregate.apply.bind(aggregate, command),
         };

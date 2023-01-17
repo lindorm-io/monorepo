@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { DefaultLindormRedisKoaMiddleware } from "../types";
 import { assertRateLimit } from "../handler";
-import { get } from "lodash";
+import { get } from "object-path";
 
 interface MiddlewareOptions {
   expiresInSeconds: number;

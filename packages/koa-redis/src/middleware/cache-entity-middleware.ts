@@ -3,7 +3,7 @@ import { CachedEntityCustomValidation, DefaultLindormRedisKoaMiddleware } from "
 import { ClientError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
 import { camelCase } from "@lindorm-io/case";
-import { get } from "lodash";
+import { get } from "object-path";
 
 interface MiddlewareOptions {
   cacheKey?: string;

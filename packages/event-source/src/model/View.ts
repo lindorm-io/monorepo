@@ -1,10 +1,11 @@
 import Joi from "joi";
+import clone from "clone";
+import merge from "merge";
 import { DomainEvent } from "../message";
 import { IView, ViewOptions, ViewData, State } from "../types";
 import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase, assertSchema, composeObjectMetadata } from "../util";
-import { cloneDeep, merge } from "lodash";
 import { randomString } from "@lindorm-io/random";
 
 export class View<TState extends State = State> implements IView<TState> {
@@ -93,9 +94,9 @@ export class View<TState extends State = State> implements IView<TState> {
       destroyed: this.destroyed,
       hash: this.hash,
       meta: this._meta,
-      processedCausationIds: cloneDeep(this.processedCausationIds),
+      processedCausationIds: clone(this.processedCausationIds),
       revision: this.revision,
-      state: cloneDeep(this.state),
+      state: clone(this.state),
     };
   }
 
@@ -122,7 +123,7 @@ export class View<TState extends State = State> implements IView<TState> {
 
     const { state, meta } = composeObjectMetadata<TState>(
       this._state,
-      merge(data, cloneDeep(this._state)),
+      merge(data, clone(this._state)),
       this._meta,
       causation.timestamp,
     );

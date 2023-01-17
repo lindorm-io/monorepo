@@ -1,9 +1,8 @@
 import { CREATE_TABLE_VIEW_CAUSATION } from "./sql/view-causation";
-import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { Logger } from "@lindorm-io/core-logger";
 import { PostgresBase } from "./PostgresBase";
 import { createViewStoreTable } from "./sql/view-store";
-import { flatten } from "lodash";
 import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
 import { getViewStoreName } from "../../util";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
@@ -335,7 +334,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   ): Promise<void> {
     const storeName = getViewStoreName(view);
     const custom = adapter.indexes || [];
-    const indexes = flatten([getViewStoreIndexes(view), custom]);
+    const indexes = [getViewStoreIndexes(view), custom].flat();
 
     if (this.initialisedViews.includes(storeName)) return;
 

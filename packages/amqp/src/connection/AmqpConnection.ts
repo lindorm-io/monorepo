@@ -1,10 +1,10 @@
 import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
+import merge from "merge";
 import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { ConsumeMessage } from "amqplib/properties";
 import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/core-logger";
-import { merge } from "lodash";
 import { parseBlob } from "@lindorm-io/string-blob";
 
 export class AmqpConnection

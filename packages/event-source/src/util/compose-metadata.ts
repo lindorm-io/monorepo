@@ -1,6 +1,7 @@
+import clone from "clone";
 import { LindormError } from "@lindorm-io/errors";
-import { cloneDeep, isEqual } from "lodash";
 import { isBefore } from "date-fns";
+import { isEqual } from "lodash";
 import { isObject } from "@lindorm-io/core";
 
 type Meta = {
@@ -130,7 +131,7 @@ export const composeObjectMetadata = <TState = Record<string, any>>(
   timestamp: Date,
 ): ObjectResult<TState> => {
   const state: Record<string, any> = {};
-  const meta: Record<string, Meta> = cloneDeep(metadata);
+  const meta: Record<string, Meta> = clone(metadata);
 
   for (const key in currentObject) {
     const metaTime = metadata[key] ? metadata[key].timestamp : metadata.timestamp;

@@ -1,5 +1,5 @@
-import { Logger } from "../types";
 import { ConsoleLogger } from "./ConsoleLogger";
+import { Logger } from "../types";
 
 const error = jest.spyOn(console, "error").mockImplementation(() => {});
 const warn = jest.spyOn(console, "warn").mockImplementation(() => {});

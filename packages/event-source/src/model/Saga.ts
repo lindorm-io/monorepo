@@ -1,10 +1,11 @@
 import Joi from "joi";
+import clone from "clone";
+import merge from "merge";
 import { Command, DomainEvent, TimeoutMessage } from "../message";
 import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
 import { JOI_MESSAGE } from "../schema";
 import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase, assertSchema } from "../util";
-import { cloneDeep, merge } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import { snakeCase } from "@lindorm-io/case";
 import {
@@ -102,10 +103,10 @@ export class Saga<TState extends State = State> implements ISaga {
       context: this.context,
       destroyed: this.destroyed,
       hash: this.hash,
-      messagesToDispatch: cloneDeep(this.messagesToDispatch),
-      processedCausationIds: cloneDeep(this.processedCausationIds),
+      messagesToDispatch: clone(this.messagesToDispatch),
+      processedCausationIds: clone(this.processedCausationIds),
       revision: this.revision,
-      state: cloneDeep(this.state),
+      state: clone(this.state),
     };
   }
 

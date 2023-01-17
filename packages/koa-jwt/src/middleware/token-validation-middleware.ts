@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { flatten, get, uniq } from "lodash";
+import { get } from "object-path";
 import {
   TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
@@ -41,7 +41,7 @@ export const tokenValidationMiddleware =
 
     const token = get(ctx, path);
 
-    const audiences = uniq(flatten([config.audiences || [], options.audiences || []]));
+    const audiences = [...new Set([config.audiences || [], options.audiences || []].flat())];
 
     try {
       if (typeof token !== "string") {

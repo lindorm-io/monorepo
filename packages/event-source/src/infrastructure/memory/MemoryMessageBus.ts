@@ -1,10 +1,9 @@
+import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } from "../../message";
 import { DomainError } from "../../error";
 import { IMessage } from "../../types";
 import { IMessageBus, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { JOI_MESSAGE, JOI_SUBSCRIPTION } from "../../schema";
 import { MessageType } from "../../enum";
-import { flatten } from "lodash";
-import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } from "../../message";
 
 export class MemoryMessageBus implements IMessageBus {
   private subscriptions: Array<ISubscription>;
@@ -42,7 +41,7 @@ export class MemoryMessageBus implements IMessageBus {
       await this.validateSubscription(subscription);
     }
 
-    this.subscriptions = flatten([this.subscriptions, list]);
+    this.subscriptions = [this.subscriptions, list].flat();
   }
 
   public async unsubscribe(

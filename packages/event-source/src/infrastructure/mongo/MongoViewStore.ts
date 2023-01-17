@@ -3,7 +3,6 @@ import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { MongoBase } from "./MongoBase";
 import { MongoNotUpdatedError } from "../../error";
-import { flatten } from "lodash";
 import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
 import { getViewStoreName } from "../../util";
 import {
@@ -236,7 +235,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
     const storeName = getViewStoreName(view);
     const custom = adapter.indexes || [];
-    const indexes = flatten([getViewStoreIndexes(view), custom]);
+    const indexes = [getViewStoreIndexes(view), custom].flat();
 
     await this.createIndexes(storeName, indexes);
 
@@ -255,7 +254,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   ): Promise<Collection<ViewStoreAttributes>> {
     const storeName = getViewStoreName(view);
     const custom = adapter.indexes || [];
-    const indexes = flatten([getViewStoreIndexes(view), custom]);
+    const indexes = [getViewStoreIndexes(view), custom].flat();
 
     await this.createIndexes(storeName, indexes);
 

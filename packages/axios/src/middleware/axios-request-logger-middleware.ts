@@ -1,7 +1,7 @@
 import { AxiosError } from "axios";
+import { Logger } from "@lindorm-io/core-logger";
 import { Middleware } from "../types";
 import { getResponseTime } from "../util";
-import { Logger } from "@lindorm-io/core-logger";
 
 export const axiosRequestLoggerMiddleware =
   (logger: Logger): Middleware =>

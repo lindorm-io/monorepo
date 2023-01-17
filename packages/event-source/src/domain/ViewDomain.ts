@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import clone from "clone";
 import { DomainEvent, ErrorMessage } from "../message";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
@@ -7,7 +8,6 @@ import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { View } from "../model";
 import { ViewEventHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
 import {
   ConcurrencyError,
@@ -248,9 +248,9 @@ export class ViewDomain implements IViewDomain {
     }
 
     const ctx: ViewEventHandlerContext = {
-      event: cloneDeep(event.data),
+      event: clone(event.data),
       logger: this.logger.createChildLogger(["ViewEventHandler"]),
-      state: cloneDeep(view.state),
+      state: clone(view.state),
 
       destroy: view.destroy.bind(view, event),
       mergeState: view.mergeState.bind(view, event),

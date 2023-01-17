@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { flatten, get, uniq } from "lodash";
+import { get } from "object-path";
 import {
   BearerTokenCustomValidation,
   DefaultLindormBearerAuthKoaMiddleware,
@@ -42,7 +42,7 @@ export const bearerAuthMiddleware =
     const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, permissions, scopes } =
       options;
 
-    const audiences = uniq(flatten([config.audiences || [], options.audiences || []]));
+    const audiences = [...new Set([config.audiences || [], options.audiences || []].flat())];
 
     try {
       const { type: tokenType, value: token } = ctx.getAuthorizationHeader() || {};

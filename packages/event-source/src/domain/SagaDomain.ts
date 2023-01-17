@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import clone from "clone";
 import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
 import { IMessageBus } from "@lindorm-io/amqp";
 import { LindormError } from "@lindorm-io/errors";
@@ -8,7 +9,6 @@ import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
 import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
 import { assertSnakeCase } from "../util";
-import { cloneDeep } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
 import {
   EventEmitterSagaData,
@@ -245,9 +245,9 @@ export class SagaDomain implements ISagaDomain {
       }
 
       const ctx: SagaEventHandlerContext = {
-        event: cloneDeep(event.data),
+        event: clone(event.data),
         logger: this.logger.createChildLogger(["SagaEventHandler"]),
-        state: cloneDeep(saga.state),
+        state: clone(saga.state),
 
         destroy: saga.destroy.bind(saga),
         dispatch: saga.dispatch.bind(saga, event),

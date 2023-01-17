@@ -2,7 +2,7 @@ import { CacheBase } from "./CacheBase";
 import { CacheIndex } from "./CacheIndex";
 import { ICache, LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
 import { RedisError } from "../error";
-import { find, filter as _filter, flatten, uniqBy } from "lodash";
+import { find, filter as _filter, uniqBy } from "lodash";
 import { getUnixTime } from "date-fns";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { snakeCase } from "@lindorm-io/case";
@@ -294,7 +294,7 @@ export abstract class LindormCache<
       );
 
       cursor = parseInt(cursorString, 10);
-      entityKeys = flatten([entityKeys, keys]);
+      entityKeys = [entityKeys, keys].flat();
     } while (cursor !== 0);
 
     this.logger.debug("scan entities", {

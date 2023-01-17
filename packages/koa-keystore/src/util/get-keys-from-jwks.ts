@@ -1,8 +1,7 @@
 import { Axios, AxiosOptions, axiosRequestLoggerMiddleware } from "@lindorm-io/axios";
 import { JWK, KeyPair } from "@lindorm-io/key-pair";
-import { ServerError } from "@lindorm-io/errors";
-import { flatten } from "lodash";
 import { Logger } from "@lindorm-io/core-logger";
+import { ServerError } from "@lindorm-io/errors";
 
 type Options = AxiosOptions & {
   currentKeys?: Array<KeyPair>;
@@ -48,5 +47,5 @@ export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>>
     keys.push(KeyPair.fromJWK(key));
   }
 
-  return flatten([currentKeys, keys]);
+  return [currentKeys, keys].flat();
 };

@@ -1,10 +1,11 @@
 import Joi from "joi";
+import clone from "clone";
+import merge from "merge";
 import { AggregateEventHandlerImplementation } from "../handler";
 import { Command, DomainEvent } from "../message";
-import { Logger } from "@lindorm-io/core-logger";
 import { JOI_MESSAGE } from "../schema";
+import { Logger } from "@lindorm-io/core-logger";
 import { assertSnakeCase, assertSchema, assertSchemaAsync, extractDtoData } from "../util";
-import { cloneDeep, merge } from "lodash";
 import {
   AggregateData,
   AggregateEventHandlerContext,
@@ -134,9 +135,9 @@ export class Aggregate<TState extends State = State> implements IAggregate {
       name: this.name,
       context: this.context,
       destroyed: this.destroyed,
-      events: cloneDeep(this.events),
-      numberOfLoadedEvents: cloneDeep(this.numberOfLoadedEvents),
-      state: cloneDeep(this.state),
+      events: clone(this.events),
+      numberOfLoadedEvents: clone(this.numberOfLoadedEvents),
+      state: clone(this.state),
     };
   }
 
@@ -165,9 +166,9 @@ export class Aggregate<TState extends State = State> implements IAggregate {
       }
 
       const ctx: AggregateEventHandlerContext = {
-        event: cloneDeep(event.data),
+        event: clone(event.data),
         logger: this.logger.createChildLogger(["AggregateEventHandler"]),
-        state: cloneDeep(this.state),
+        state: clone(this.state),
 
         destroy: this.destroy.bind(this),
         destroyNext: this.destroyNext.bind(this),

@@ -4,7 +4,6 @@ import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
 import { View } from "../model";
 import { ViewStoreType } from "../enum";
-import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import {
   IDomainViewStore,
@@ -160,7 +159,7 @@ export class ViewStore implements IDomainViewStore {
       destroyed: view.destroyed,
       hash: randomString(16),
       meta: view.meta,
-      processed_causation_ids: flatten([view.processedCausationIds, causation.id]),
+      processed_causation_ids: [view.processedCausationIds, causation.id].flat(),
       revision: view.revision + 1,
       state: view.state,
     };

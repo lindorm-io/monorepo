@@ -3,7 +3,7 @@ import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
 import { camelCase } from "@lindorm-io/case";
-import { get } from "lodash";
+import { get } from "object-path";
 
 interface MiddlewareOptions {
   entityKey?: string;

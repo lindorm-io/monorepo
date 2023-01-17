@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { DefaultLindormRedisKoaMiddleware } from "../types";
-import { get } from "lodash";
 import { assertRateLimitBackoff, clearRateLimitBackoff, setRateLimitBackoff } from "../handler";
+import { get } from "object-path";
 
 interface MiddlewareOptions {
   keyName: string;

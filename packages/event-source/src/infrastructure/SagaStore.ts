@@ -4,7 +4,6 @@ import { MongoSagaStore } from "./mongo";
 import { PostgresSagaStore } from "./postgres";
 import { Saga } from "../model";
 import { SagaStoreType } from "../enum";
-import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import {
   IDomainSagaStore,
@@ -109,7 +108,7 @@ export class SagaStore implements IDomainSagaStore {
       destroyed: saga.destroyed,
       hash: randomString(16),
       messages_to_dispatch: saga.messagesToDispatch,
-      processed_causation_ids: flatten([saga.processedCausationIds, causation.id]),
+      processed_causation_ids: [saga.processedCausationIds, causation.id].flat(),
       revision: saga.revision + 1,
       state: saga.state,
     };

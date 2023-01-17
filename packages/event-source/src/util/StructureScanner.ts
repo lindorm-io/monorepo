@@ -1,6 +1,5 @@
 import { ScanFileData } from "../types";
 import { basename, extname, join, relative, sep } from "path";
-import { flatten } from "lodash";
 import { readdirSync, statSync } from "fs";
 
 export class StructureScanner {
@@ -40,7 +39,7 @@ export class StructureScanner {
       }
     }
 
-    return flatten(array);
+    return array.flat();
   }
 
   private isApprovedExtension(file: string): boolean {

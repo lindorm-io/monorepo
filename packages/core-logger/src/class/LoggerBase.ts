@@ -1,7 +1,10 @@
+import clone from "clone";
+import merge from "merge";
 import { LogLevel } from "../enum";
 import { defaultFilterCallback } from "../util";
+import { get, set } from "object-path";
+import { isObject } from "@lindorm-io/core";
 import { snakeCase } from "@lindorm-io/case";
-import { cloneDeep, flatten, get, isObject, merge, set } from "lodash";
 import {
   ConsoleOptions,
   FilterCallback,
@@ -27,9 +30,9 @@ export abstract class LoggerBase implements Logger {
 
     this.className = this.constructor.name;
 
-    this._context = parent ? flatten([parent.context, snakeCase(context)]) : snakeCase(context);
+    this._context = parent ? [parent.context, snakeCase(context)].flat() : snakeCase(context);
     this._filters = parent ? { ...parent.filters, ...filters } : filters;
-    this._session = parent ? merge(cloneDeep(parent.session), session) : session;
+    this._session = parent ? merge(clone(parent.session), session) : session;
   }
 
   // public abstract
@@ -47,7 +50,7 @@ export abstract class LoggerBase implements Logger {
   // public properties
 
   public get context(): Array<string> {
-    return cloneDeep(this._context);
+    return clone(this._context);
   }
 
   public set context(_: Array<string>) {
@@ -55,7 +58,7 @@ export abstract class LoggerBase implements Logger {
   }
 
   public get filters(): FilterRecord {
-    return cloneDeep(this._filters);
+    return clone(this._filters);
   }
 
   public set filters(_: FilterRecord) {
@@ -63,7 +66,7 @@ export abstract class LoggerBase implements Logger {
   }
 
   public get session(): LogSession {
-    return cloneDeep(this._session);
+    return clone(this._session);
   }
 
   public set session(_: LogSession) {
@@ -141,11 +144,11 @@ export abstract class LoggerBase implements Logger {
   // public
 
   public addContext(context: LogContext): void {
-    this._context = flatten([this._context, this.normaliseContext(context)]);
+    this._context = [this._context, this.normaliseContext(context)].flat();
   }
 
   public addSession(session: LogSession): void {
-    this._session = merge(cloneDeep(this._session), this.normaliseSession(session));
+    this._session = merge(clone(this._session), this.normaliseSession(session));
   }
 
   public setFilter(path: string, callback?: FilterCallback): void {
@@ -189,7 +192,7 @@ export abstract class LoggerBase implements Logger {
     if (!isObject(details)) return details;
     if (details instanceof Error) return details;
 
-    const data = cloneDeep(details);
+    const data = clone(details);
 
     for (const [path, callback] of Object.entries(this.filters)) {
       if (!callback) continue;

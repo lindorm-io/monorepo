@@ -1,6 +1,6 @@
 import { DefaultLindormMiddleware } from "../../types";
 import { RedirectError } from "@lindorm-io/errors";
-import { get } from "lodash";
+import { get } from "object-path";
 import { isURL } from "../../util/private";
 
 export interface RedirectErrorMiddlewareOptions {

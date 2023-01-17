@@ -1,16 +1,16 @@
+import merge from "merge";
 import { Aggregate, Saga, View } from "../model";
 import { Command } from "../message";
 import { EventSourceScanner } from "./EventSourceScanner";
 import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { JOI_MESSAGE } from "../schema";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { ReplayEventName } from "../enum";
 import { extractDtoData, StructureScanner } from "../util";
-import { merge } from "lodash";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import {
@@ -86,7 +86,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
     // primary
     this.logger = logger.createChildLogger(["EventSource"]);
-    this.options = merge<Partial<EventSourcePrivateOptions>, EventSourcePrivateOptions>(
+    this.options = merge(
       {
         adapters: {
           eventStore: "memory",

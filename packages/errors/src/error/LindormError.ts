@@ -1,6 +1,6 @@
+import clone from "clone";
 import { ExtendableError } from "./ExtendableError";
-import { cloneDeep } from "lodash";
-import { randomUUID } from "crypto";
+import { v4 as uuid } from "uuid";
 
 export interface ILindormError {
   id: string;
@@ -39,11 +39,9 @@ export class LindormError extends ExtendableError {
     super(message);
 
     const inherited: ILindormError | null =
-      options.error && options.error instanceof LindormError
-        ? cloneDeep(options.error.toJSON())
-        : null;
+      options.error && options.error instanceof LindormError ? clone(options.error.toJSON()) : null;
 
-    this.id = inherited?.id || randomUUID();
+    this.id = inherited?.id || uuid();
     this.code = options.code || inherited?.code || null;
     this.data = options.data || inherited?.data || {};
     this.debug = options.debug || inherited?.debug || {};

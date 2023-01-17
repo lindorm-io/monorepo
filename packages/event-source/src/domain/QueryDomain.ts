@@ -1,3 +1,4 @@
+import clone from "clone";
 import { HandlerNotRegisteredError } from "../error";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
@@ -5,7 +6,6 @@ import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/core-logger";
 import { QueryHandlerImplementation } from "../handler";
 import { assertSnakeCase } from "../util";
-import { cloneDeep } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
 import {
   DtoClass,
@@ -88,7 +88,7 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
       }
 
       const ctx: QueryHandlerContext = {
-        query: cloneDeep(query),
+        query: clone(query),
         logger: this.logger.createChildLogger(["QueryHandler"]),
         repositories: {
           memory: new MemoryViewRepository<TState>(queryHandler.view),

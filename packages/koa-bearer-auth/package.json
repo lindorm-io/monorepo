@@ -24,7 +24,7 @@
     "@lindorm-io/key-pair": "^0.6.12",
     "@lindorm-io/koa": "^0.15.8",
     "@lindorm-io/koa-jwt": "^0.5.33",
-    "lodash": "^4.17.21"
+    "object-path": "^0.11.8"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.1.4",
@@ -32,6 +32,7 @@
     "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa-router": "^7.4.4",
+    "@types/object-path": "^0.11.1",
     "koa": "^2.13.3",
     "koa-bodyparser": "^4.3.0"
   }

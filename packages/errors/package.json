@@ -18,9 +18,11 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "clone": "^2.1.2",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.182"
+    "@types/clone": "^2.1.1",
+    "@types/uuid": "^9.0.0"
   }
 }

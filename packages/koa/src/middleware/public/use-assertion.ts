@@ -1,6 +1,6 @@
 import { AssertionFunction, DefaultLindormKoaContext, DefaultLindormMiddleware } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
-import { get } from "lodash";
+import { get } from "object-path";
 
 interface Options {
   assertion?: AssertionFunction;

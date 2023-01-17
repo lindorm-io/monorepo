@@ -1,6 +1,5 @@
 import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "../types";
 import { MessageBusBase } from "../infrastructure";
-import { flatten } from "lodash";
 
 export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
   let array: Array<ISubscription> = [];
@@ -23,7 +22,7 @@ export const createMockMessageBus = <Bus extends MessageBusBase>(): Bus => {
     }),
 
     subscribe: jest.fn().mockImplementation(async (subscriptions: Array<ISubscription>) => {
-      array = flatten([array, subscriptions]);
+      array = [array, subscriptions].flat();
     }),
 
     unsubscribe: jest

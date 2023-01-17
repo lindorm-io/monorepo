@@ -1,7 +1,6 @@
-import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
+import { Logger } from "@lindorm-io/core-logger";
 import { snakeCase } from "@lindorm-io/case";
-import { flatten, uniq } from "lodash";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -161,7 +160,7 @@ export class EventSourceScanner {
     const snake = snakeCase(name);
     const current = this.commandAggregates[snake] || [];
 
-    this.commandAggregates[snake] = uniq(flatten([current, aggregate]));
+    this.commandAggregates[snake] = [...new Set([current, aggregate].flat())];
   }
 
   public getCommandAggregate(name: string): string {

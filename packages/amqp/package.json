@@ -28,7 +28,7 @@
     "@lindorm-io/core-connection": "^0.1.11",
     "@lindorm-io/string-blob": "^0.0.21",
     "amqplib": "^0.10.1",
-    "lodash": "^4.17.21"
+    "merge": "^2.1.1"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.1.4",

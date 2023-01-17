@@ -3,7 +3,7 @@ import fastSafeStringify from "fast-safe-stringify";
 import { ConsoleOptions, LoggerMessage } from "../types";
 import { LogLevel } from "../enum";
 import { inspect } from "util";
-import { isObject } from "lodash";
+import { isObject } from "@lindorm-io/core";
 
 const colourise = (chalk: Chalk, colours: boolean, input: string): string =>
   colours ? chalk(input) : input;

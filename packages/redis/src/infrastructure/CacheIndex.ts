@@ -1,4 +1,3 @@
-import { uniq } from "lodash";
 import { CacheIndexBaseOptions, ICacheBase } from "../types";
 import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "../connection";
@@ -56,7 +55,7 @@ export class CacheIndex<Interface> implements ICacheBase {
 
     let result: string | null;
 
-    const uniqueArray = uniq(array);
+    const uniqueArray = [...new Set(array)];
     const indexKey = this.getKey(key);
     const data = JSON.stringify(uniqueArray);
     const method = expiresInSeconds ? "setex" : "set";
