@@ -1,22 +1,22 @@
+import { ConsoleLoggerOptions } from "../types";
 import { LEVEL_VALUE } from "../constant";
-import { LogLevel } from "../enum";
-import { LoggerBase } from "./LoggerBase";
 import { readableFormat } from "../util";
 import {
   ConsoleOptions,
   Level,
   LogContext,
+  LogLevel,
   LogSession,
   Logger,
+  LoggerBase,
   LoggerMessage,
-  LoggerOptions,
-} from "../types";
+} from "@lindorm-io/core-logger";
 
 export class ConsoleLogger extends LoggerBase implements Logger {
   private consoleOptions: ConsoleOptions;
   private level: Level;
 
-  public constructor(options: LoggerOptions = {}) {
+  public constructor(options: ConsoleLoggerOptions = {}) {
     super(options);
 
     this.consoleOptions = { colours: false, readable: false, timestamp: false };

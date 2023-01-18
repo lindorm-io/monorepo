@@ -1,5 +1,5 @@
 import { ConsoleLogger } from "./ConsoleLogger";
-import { Logger } from "../types";
+import { Logger } from "@lindorm-io/core-logger";
 
 const error = jest.spyOn(console, "error").mockImplementation(() => {});
 const warn = jest.spyOn(console, "warn").mockImplementation(() => {});

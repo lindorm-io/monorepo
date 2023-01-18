@@ -1,4 +1,4 @@
-import { Level } from "../types";
+import { Level } from "@lindorm-io/core-logger";
 
 export const LEVEL_VALUE: Record<Level, number> = {
   error: 5,
