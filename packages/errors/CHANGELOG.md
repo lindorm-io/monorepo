@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/errors@0.1.14...@lindorm-io/errors@0.1.15) (2023-01-18)
+
+
+### Bug Fixes
+
+* reduce dependence on lodash ([0634341](https://github.com/lindorm-io/monorepo/commit/063434170a923316aeac6a913291d85f01e8226c))
+
+
+
+
+
 ## [0.1.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/errors@0.1.13...@lindorm-io/errors@0.1.14) (2023-01-15)
 
 

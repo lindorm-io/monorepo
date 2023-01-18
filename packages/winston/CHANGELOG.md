@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.5.3...@lindorm-io/winston@0.5.4) (2023-01-18)
+
+
+### Bug Fixes
+
+* move readable format and chalk into winston ([fd947b1](https://github.com/lindorm-io/monorepo/commit/fd947b165a60dea7d0ae2e92da7e5157edb61cb2))
+
+
+
+
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.5.2...@lindorm-io/winston@0.5.3) (2023-01-15)
 
 **Note:** Version bump only for package @lindorm-io/winston

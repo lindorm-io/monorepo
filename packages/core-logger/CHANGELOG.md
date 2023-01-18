@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-logger@0.1.4...@lindorm-io/core-logger@0.2.0) (2023-01-18)
+
+
+### Bug Fixes
+
+* move readable format and chalk into winston ([fd947b1](https://github.com/lindorm-io/monorepo/commit/fd947b165a60dea7d0ae2e92da7e5157edb61cb2))
+* reduce dependence on lodash ([0634341](https://github.com/lindorm-io/monorepo/commit/063434170a923316aeac6a913291d85f01e8226c))
+* remove unused things from core logger ([ceb9d1c](https://github.com/lindorm-io/monorepo/commit/ceb9d1c1863260e0a27d92128b910f80428069c1))
+
+
+### Features
+
+* create console logger package ([e4fb066](https://github.com/lindorm-io/monorepo/commit/e4fb0666a4e5753e8582add7e2b3b5e4914bd94d))
+
+
+
+
+
 ## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core-logger@0.1.3...@lindorm-io/core-logger@0.1.4) (2023-01-15)
 
 **Note:** Version bump only for package @lindorm-io/core-logger

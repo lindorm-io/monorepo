@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/core-connection",
   "description": "Core Connection files for lindorm.io",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,9 +19,9 @@
   },
   "dependencies": {
     "@lindorm-io/core": "^0.8.6",
-    "@lindorm-io/errors": "^0.1.14"
+    "@lindorm-io/errors": "^0.1.15"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.1.4"
+    "@lindorm-io/core-logger": "^0.2.0"
   }
 }

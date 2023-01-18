@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.9...@lindorm-io/event-source@0.2.10) (2023-01-18)
+
+
+### Bug Fixes
+
+* reduce dependence on lodash ([0634341](https://github.com/lindorm-io/monorepo/commit/063434170a923316aeac6a913291d85f01e8226c))
+
+
+
+
+
 ## [0.2.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.8...@lindorm-io/event-source@0.2.9) (2023-01-15)
 
 **Note:** Version bump only for package @lindorm-io/event-source

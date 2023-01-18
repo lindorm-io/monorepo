@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/mongo",
   "description": "Mongo and Repository tools for lindorm.io",
-  "version": "0.11.10",
+  "version": "0.11.11",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -25,13 +25,13 @@
   },
   "dependencies": {
     "@lindorm-io/core": "^0.8.6",
-    "@lindorm-io/core-connection": "^0.1.11",
-    "@lindorm-io/entity": "^0.3.5",
-    "@lindorm-io/errors": "^0.1.14",
+    "@lindorm-io/core-connection": "^0.1.12",
+    "@lindorm-io/entity": "^0.3.6",
+    "@lindorm-io/errors": "^0.1.15",
     "mongodb": "^4.8.1"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.1.4",
+    "@lindorm-io/core-logger": "^0.2.0",
     "compd": "^4.1.1",
     "mongo-mock": "^4.1.0"
   }
