@@ -1,14 +1,13 @@
 import chalk, { Chalk } from "chalk";
 import fastSafeStringify from "fast-safe-stringify";
-import { ConsoleOptions, LoggerMessage } from "../types";
-import { LogLevel } from "../enum";
+import { ConsoleOptions, LoggerMessage, LogLevel } from "@lindorm-io/core-logger";
 import { inspect } from "util";
 import { isObject } from "@lindorm-io/core";
 
 const colourise = (chalk: Chalk, colours: boolean, input: string): string =>
   colours ? chalk(input) : input;
 
-const sanitize = (object: Record<string, any>): Record<string, any> => {
+const sanitise = (object: Record<string, any>): Record<string, any> => {
   return JSON.parse(fastSafeStringify(object));
 };
 
@@ -43,7 +42,7 @@ const levelColor = (level: string, colours: boolean, input: string): string => {
 };
 
 const formatContent = (details: Record<string, any>, colours: boolean): string => {
-  return inspect(sanitize(details), {
+  return inspect(sanitise(details), {
     colors: colours !== false,
     depth: Infinity,
     compact: 5,

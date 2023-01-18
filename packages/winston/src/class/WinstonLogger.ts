@@ -1,5 +1,6 @@
 import * as winston from "winston";
 import { WinstonOptions } from "../types";
+import { readableFormat } from "../util";
 import {
   ConsoleOptions,
   Level,
@@ -9,7 +10,6 @@ import {
   Logger,
   LoggerBase,
   LoggerMessage,
-  readableFormat,
 } from "@lindorm-io/core-logger";
 import {
   FileTransportOptions,
