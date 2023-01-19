@@ -6,14 +6,14 @@ export const DEFAULT_AUTH_OPTIONS: AxiosBasicCredentials = {
   password: undefined,
 };
 
-export const DEFAULT_AXIOS_RESPONSE: AxiosResponse = {
+export const DEFAULT_AXIOS_RESPONSE = {
   config: {},
   data: {},
   headers: {},
   request: {},
   status: -1,
   statusText: "",
-};
+} as AxiosResponse;
 
 export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maximumAttempts: 5,

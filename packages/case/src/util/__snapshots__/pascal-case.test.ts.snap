@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`camelCase should convert array values 1`] = `
-Array [
+[
   "CamelCase",
   "ParamCase",
   "PascalCase",
@@ -11,64 +11,64 @@ Array [
 
 exports[`camelCase should convert camel case string 1`] = `"CamelCase"`;
 
-exports[`camelCase should convert param case string 1`] = `"ParamCase"`;
-
 exports[`camelCase should convert object keys to camelCase 1`] = `
-Object {
-  "CamelArray": Array [
+{
+  "CamelArray": [
     "camelArrayString",
     "camel-array-string",
     "CamelArrayString",
     "camel_array_string",
-    Object {
+    {
       "CamelObjectString": "camel_object_string",
     },
   ],
-  "CamelObject": Object {
+  "CamelObject": {
     "CamelObjectString": "camel_object_string",
   },
   "CamelString": "camelString",
-  "ParamArray": Array [
+  "ParamArray": [
     "paramArrayString",
     "param-array-string",
     "ParamArrayString",
     "param_array_string",
-    Object {
+    {
       "ParamObjectString": "param_object_string",
     },
   ],
-  "ParamObject": Object {
+  "ParamObject": {
     "ParamObjectString": "param_object_string",
   },
   "ParamString": "param-string",
-  "PascalArray": Array [
+  "PascalArray": [
     "pascalArrayString",
     "pascal-array-string",
     "PascalArrayString",
     "pascal_array_string",
-    Object {
+    {
       "PascalObjectString": "pascal_object_string",
     },
   ],
-  "PascalObject": Object {
+  "PascalObject": {
     "PascalObjectString": "pascal_object_string",
   },
   "PascalString": "PascalString",
-  "SnakeArray": Array [
+  "SnakeArray": [
     "snakeArrayString",
     "snake-array-string",
     "SnakeArrayString",
     "snake_array_string",
-    Object {
+    {
       "SnakeObjectString": "snake_object_string",
     },
   ],
-  "SnakeObject": Object {
+  "SnakeObject": {
     "SnakeObjectString": "snake_object_string",
   },
   "SnakeString": "snake_string",
 }
 `;
+
+exports[`camelCase should convert param case string 1`] = `"ParamCase"`;
 
 exports[`camelCase should convert pascal case string 1`] = `"PascalCase"`;
 

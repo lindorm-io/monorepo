@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@lindorm-io/errors": "^0.1.15",
-    "date-fns": "^2.29.1"
+    "date-fns": "^2.29.3"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0"

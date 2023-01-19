@@ -28,6 +28,6 @@
     "@lindorm-io/core-logger": "^0.2.0",
     "@lindorm-io/key-pair": "^0.6.13",
     "@types/jsonwebtoken": "^9.0.1",
-    "date-fns": "^2.29.1"
+    "date-fns": "^2.29.3"
   }
 }

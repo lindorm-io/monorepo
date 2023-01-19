@@ -22,11 +22,11 @@
     "@lindorm-io/core": "^0.8.6",
     "@lindorm-io/entity": "^0.3.6",
     "@lindorm-io/errors": "^0.1.15",
-    "date-fns": "^2.29.1",
-    "joi": "^17.5.0",
+    "date-fns": "^2.29.3",
+    "joi": "^17.7.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.182"
+    "@types/lodash": "^4.14.191"
   }
 }

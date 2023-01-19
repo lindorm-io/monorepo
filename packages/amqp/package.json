@@ -27,13 +27,13 @@
     "@lindorm-io/core": "^0.8.6",
     "@lindorm-io/core-connection": "^0.1.12",
     "@lindorm-io/string-blob": "^0.0.21",
-    "amqplib": "^0.10.1",
+    "amqplib": "^0.10.3",
     "merge": "^2.1.1"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0",
-    "@types/amqplib": "^0.8.2",
+    "@types/amqplib": "^0.10.1",
     "compd": "^4.1.1",
-    "mock-amqplib": "^1.8.0"
+    "mock-amqplib": "^1.8.1"
   }
 }

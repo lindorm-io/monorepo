@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`InMemoryCache should await and get fetched value from cache 1`] = `
-Object {
+{
   "id": "1",
   "value": "one",
 }
 `;
 
 exports[`InMemoryCache should scan values async from cache 1`] = `
-Array [
-  Object {
+[
+  {
     "id": "1",
     "value": "one",
   },
@@ -17,8 +17,8 @@ Array [
 `;
 
 exports[`InMemoryCache should scan values from cache 1`] = `
-Array [
-  Object {
+[
+  {
     "id": "1",
     "value": "one",
   },
@@ -26,7 +26,7 @@ Array [
 `;
 
 exports[`InMemoryCache should set a new value in cache 1`] = `
-Object {
+{
   "id": "2",
   "value": "two",
 }

@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`generateRSAKeys should resolve 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
   ],
   "namedCurve": "P-521",

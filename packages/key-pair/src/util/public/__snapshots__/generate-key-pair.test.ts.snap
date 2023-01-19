@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`generateKeyPair should generate EC KeyPair 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
   ],
   "allowed": 2021-01-01T08:00:00.000Z,
@@ -11,7 +11,7 @@ Object {
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
   "namedCurve": "P-521",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -28,8 +28,8 @@ Object {
 `;
 
 exports[`generateKeyPair should generate EC KeyPair with namedCurve 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES384",
   ],
   "allowed": 2021-01-01T08:00:00.000Z,
@@ -38,7 +38,7 @@ Object {
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
   "namedCurve": "P-384",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -55,8 +55,8 @@ Object {
 `;
 
 exports[`generateKeyPair should generate KeyPair 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
   ],
   "allowed": 2021-01-01T08:00:00.000Z,
@@ -65,7 +65,7 @@ Object {
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
   "namedCurve": "P-521",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -82,8 +82,8 @@ Object {
 `;
 
 exports[`generateKeyPair should generate RSA KeyPair 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "RS256",
     "RS384",
     "RS512",
@@ -94,7 +94,7 @@ Object {
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
   "namedCurve": null,
-  "operations": Array [
+  "operations": [
     "decrypt",
     "encrypt",
     "sign",
@@ -113,8 +113,8 @@ Object {
 `;
 
 exports[`generateKeyPair should generate RSA KeyPair with passphrase 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "RS256",
     "RS384",
     "RS512",
@@ -125,7 +125,7 @@ Object {
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
   "namedCurve": null,
-  "operations": Array [
+  "operations": [
     "decrypt",
     "encrypt",
     "sign",

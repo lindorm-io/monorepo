@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getKeysFromJwks should resolve 1`] = `
-Array [
-  Object {
-    "algorithms": Array [
+[
+  {
+    "algorithms": [
       "RS256",
       "RS384",
       "RS512",
@@ -14,7 +14,7 @@ Array [
     "external": false,
     "id": "e6301473-e347-4035-8084-8645d034e4a3",
     "namedCurve": null,
-    "operations": Array [
+    "operations": [
       "decrypt",
       "encrypt",
       "sign",
@@ -53,8 +53,8 @@ tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=
     "updated": 2021-01-01T09:00:00.000Z,
     "version": 0,
   },
-  Object {
-    "algorithms": Array [
+  {
+    "algorithms": [
       "ES512",
     ],
     "allowed": 2021-01-01T08:00:00.000Z,
@@ -63,7 +63,7 @@ tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=
     "external": true,
     "id": "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
     "namedCurve": "P-521",
-    "operations": Array [
+    "operations": [
       "verify",
     ],
     "origin": "https://origin.uri",

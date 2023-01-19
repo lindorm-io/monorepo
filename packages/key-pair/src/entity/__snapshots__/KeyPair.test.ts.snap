@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`KeyPair.ts should create a new KeyPair from JWK 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
   ],
   "allowed": 2020-01-01T08:00:00.000Z,
@@ -11,7 +11,7 @@ Object {
   "external": true,
   "id": "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
   "namedCurve": "P-521",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -28,8 +28,8 @@ Object {
 `;
 
 exports[`KeyPair.ts should get json 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
     "ES384",
     "ES256",
@@ -40,7 +40,7 @@ Object {
   "external": false,
   "id": "259ff47d-e334-4784-a478-04bf6d6b5d84",
   "namedCurve": "P-521",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -57,8 +57,8 @@ Object {
 `;
 
 exports[`KeyPair.ts should have all data 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "ES512",
     "ES384",
     "ES256",
@@ -69,7 +69,7 @@ Object {
   "external": false,
   "id": "259ff47d-e334-4784-a478-04bf6d6b5d84",
   "namedCurve": "P-521",
-  "operations": Array [
+  "operations": [
     "sign",
     "verify",
   ],
@@ -86,8 +86,8 @@ Object {
 `;
 
 exports[`KeyPair.ts should have optional data 1`] = `
-Object {
-  "algorithms": Array [
+{
+  "algorithms": [
     "RS256",
     "RS384",
   ],
@@ -97,7 +97,7 @@ Object {
   "external": false,
   "id": "02dc19eb-2b8b-4a83-a0c0-9ac2b306bb9a",
   "namedCurve": null,
-  "operations": Array [
+  "operations": [
     "decrypt",
     "verify",
   ],
@@ -114,7 +114,7 @@ Object {
 `;
 
 exports[`KeyPair.ts toJWK should convert private RSA key with passphrase to JWK 1`] = `
-Object {
+{
   "alg": "RS512",
   "allowed_from": 1578099600,
   "created_at": 1578099600,
@@ -123,7 +123,7 @@ Object {
   "dp": "dp",
   "dq": "dq",
   "e": "e",
-  "key_ops": Array [
+  "key_ops": [
     "decrypt",
     "encrypt",
     "sign",
@@ -142,7 +142,7 @@ Object {
 `;
 
 exports[`KeyPair.ts toJWK should convert private key to JWK 1`] = `
-Object {
+{
   "alg": "ES512",
   "allowed_from": 1577926800,
   "created_at": 1577926800,
@@ -151,7 +151,7 @@ Object {
   "dp": "dp",
   "dq": "dq",
   "e": "e",
-  "key_ops": Array [
+  "key_ops": [
     "sign",
     "verify",
   ],

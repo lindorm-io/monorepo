@@ -43,20 +43,20 @@
     "@lindorm-io/random": "^0.1.1",
     "@lindorm-io/string-blob": "^0.0.21",
     "clone": "^2.1.2",
-    "joi": "^17.6.0",
+    "joi": "^17.7.0",
     "lodash": "^4.17.21",
     "merge": "^2.1.1"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0",
-    "@types/amqplib": "^0.8.2",
+    "@types/amqplib": "^0.10.1",
     "@types/clone": "^2.1.1",
-    "@types/ioredis-mock": "^5.6.0",
-    "@types/pg": "^8.6.5",
-    "amqplib": "^0.10.1",
+    "@types/ioredis-mock": "^8.2.1",
+    "@types/pg": "^8.6.6",
+    "amqplib": "^0.10.3",
     "compd": "^4.1.1",
-    "date-fns": "^2.29.1",
-    "mongodb": "^4.8.1",
-    "pg": "^8.7.3"
+    "date-fns": "^2.29.3",
+    "mongodb": "^4.13.0",
+    "pg": "^8.8.0"
   }
 }

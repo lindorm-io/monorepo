@@ -1,19 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`stringifyBlob should create a text blob with json and meta values 1`] = `
-Object {
+{
   "bar": true,
   "baz": 2020-01-01T08:00:00.000Z,
-  "foo": Array [
+  "foo": [
     true,
     2020-01-01T08:00:00.000Z,
     12345,
     "string",
-    Object {
+    {
       "amet": 123,
       "consectetur": "str",
       "dolor": false,
-      "ipsum": Array [
+      "ipsum": [
         true,
         123,
         "arr",
@@ -23,10 +23,10 @@ Object {
       "sit": 2020-01-01T08:00:00.000Z,
     },
   ],
-  "fred": Object {
+  "fred": {
     "adipiscing": "a",
     "do": true,
-    "eiusmod": Array [],
+    "eiusmod": [],
     "elit": 1,
     "sed": null,
     "tempor": undefined,

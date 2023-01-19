@@ -29,10 +29,10 @@
     "@lindorm-io/core-logger": "^0.2.0",
     "@types/express-useragent": "^1.0.2",
     "@types/koa": "^2.13.5",
-    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-router": "^7.4.4",
     "@types/object-path": "^0.11.1",
-    "koa": "^2.13.3",
+    "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0"
   }
 }

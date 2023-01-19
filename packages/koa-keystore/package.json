@@ -33,20 +33,20 @@
     "@lindorm-io/mongo": "^0.11.11",
     "@lindorm-io/redis": "^0.11.10",
     "@lindorm-io/retry": "^0.1.1",
-    "joi": "^17.5.0"
+    "joi": "^17.7.0"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0",
     "@types/express-useragent": "^1.0.2",
-    "@types/ioredis": "^4.28.10",
-    "@types/ioredis-mock": "^5.6.0",
+    "@types/ioredis": "^5.0.0",
+    "@types/ioredis-mock": "^8.2.1",
     "@types/koa": "^2.13.5",
-    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-router": "^7.4.4",
     "compd": "^4.1.1",
-    "koa": "^2.13.4",
+    "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
-    "mongodb": "^4.8.1",
+    "mongodb": "^4.13.0",
     "nock": "^13.3.0"
   }
 }

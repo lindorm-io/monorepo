@@ -28,11 +28,11 @@
     "@lindorm-io/core-connection": "^0.1.12",
     "@lindorm-io/entity": "^0.3.6",
     "@lindorm-io/errors": "^0.1.15",
-    "mongodb": "^4.8.1"
+    "mongodb": "^4.13.0"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0",
     "compd": "^4.1.1",
-    "mongo-mock": "^4.1.0"
+    "mongo-mock": "^4.2.0"
   }
 }

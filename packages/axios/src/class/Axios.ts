@@ -127,8 +127,8 @@ export class Axios {
       },
       req: {
         auth: auth || this.auth,
-        body: body,
-        config: config,
+        body,
+        config,
         headers: headers || {},
         host: url.host || this.host,
         method,

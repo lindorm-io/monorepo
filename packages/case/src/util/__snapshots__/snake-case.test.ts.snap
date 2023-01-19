@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`camelCase should convert array values 1`] = `
-Array [
+[
   "camel_case",
   "param_case",
   "pascal_case",
@@ -11,64 +11,64 @@ Array [
 
 exports[`camelCase should convert camel case string 1`] = `"camel_case"`;
 
-exports[`camelCase should convert param case string 1`] = `"param_case"`;
-
 exports[`camelCase should convert object keys to camelCase 1`] = `
-Object {
-  "camel_array": Array [
+{
+  "camel_array": [
     "camelArrayString",
     "camel-array-string",
     "CamelArrayString",
     "camel_array_string",
-    Object {
+    {
       "camel_object_string": "camel_object_string",
     },
   ],
-  "camel_object": Object {
+  "camel_object": {
     "camel_object_string": "camel_object_string",
   },
   "camel_string": "camelString",
-  "param_array": Array [
+  "param_array": [
     "paramArrayString",
     "param-array-string",
     "ParamArrayString",
     "param_array_string",
-    Object {
+    {
       "param_object_string": "param_object_string",
     },
   ],
-  "param_object": Object {
+  "param_object": {
     "param_object_string": "param_object_string",
   },
   "param_string": "param-string",
-  "pascal_array": Array [
+  "pascal_array": [
     "pascalArrayString",
     "pascal-array-string",
     "PascalArrayString",
     "pascal_array_string",
-    Object {
+    {
       "pascal_object_string": "pascal_object_string",
     },
   ],
-  "pascal_object": Object {
+  "pascal_object": {
     "pascal_object_string": "pascal_object_string",
   },
   "pascal_string": "PascalString",
-  "snake_array": Array [
+  "snake_array": [
     "snakeArrayString",
     "snake-array-string",
     "SnakeArrayString",
     "snake_array_string",
-    Object {
+    {
       "snake_object_string": "snake_object_string",
     },
   ],
-  "snake_object": Object {
+  "snake_object": {
     "snake_object_string": "snake_object_string",
   },
   "snake_string": "snake_string",
 }
 `;
+
+exports[`camelCase should convert param case string 1`] = `"param_case"`;
 
 exports[`camelCase should convert pascal case string 1`] = `"pascal_case"`;
 

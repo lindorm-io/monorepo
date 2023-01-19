@@ -23,7 +23,7 @@
     "@lindorm-io/middleware": "^0.1.0",
     "@lindorm-io/retry": "^0.1.1",
     "@lindorm-io/url": "^0.2.3",
-    "axios": "0.27.2"
+    "axios": "1.2.3"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.0"
