@@ -15,6 +15,9 @@ describe("dataHandlingMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
+      config: {
+        transformMode: "snake",
+      },
       request: {
         body: {
           PascalCaseOne: "PascalCaseOne",

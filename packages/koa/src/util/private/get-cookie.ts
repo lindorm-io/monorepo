@@ -5,16 +5,14 @@ export interface GetCookieOptions {
   signed: boolean;
 }
 
-export const getCookie =
-  (ctx: DefaultLindormKoaContext) =>
-  (name: string, options: Partial<GetCookieOptions> = {}): string | undefined => {
-    const {
-      cookies,
-      server: { environment },
-    } = ctx;
-
-    const isDeployed = [Environment.PRODUCTION, Environment.STAGING].includes(environment);
-    const signed = options.signed || isDeployed;
-
-    return cookies.get(name, { signed });
-  };
+export const getCookie = (
+  ctx: DefaultLindormKoaContext,
+  name: string,
+  options: Partial<GetCookieOptions> = {},
+): string | undefined => {
+  return ctx.cookies.get(name, {
+    signed:
+      options.signed ||
+      [Environment.PRODUCTION, Environment.STAGING].includes(ctx.server.environment),
+  });
+};

@@ -1,5 +1,5 @@
 import { DefaultLindormMiddleware } from "../../types";
-import { camelCase, snakeCase } from "@lindorm-io/case";
+import { camelCase, transformCase } from "@lindorm-io/case";
 import { isObject } from "@lindorm-io/core";
 
 export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
@@ -20,5 +20,5 @@ export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
 
   await next();
 
-  ctx.body = isObject(ctx.body) ? snakeCase(ctx.body) : ctx.body;
+  ctx.body = isObject(ctx.body) ? transformCase(ctx.body, ctx.config.transformMode) : ctx.body;
 };

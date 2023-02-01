@@ -5,6 +5,7 @@ import { Environment } from "../enum";
 import { IntervalWorker } from "../class";
 import { Logger } from "@lindorm-io/core-logger";
 import { ServerOptions } from "socket.io";
+import { TransformMode } from "@lindorm-io/case";
 
 export type SocketListeners = (io: IOServer) => void;
 
@@ -35,6 +36,7 @@ export interface KoaAppOptions<
   socket?: boolean;
   socketMiddleware?: Array<DefaultLindormSocketMiddleware>;
   socketOptions?: Partial<ServerOptions>;
+  transformMode?: TransformMode;
   workers?: Array<IntervalWorker>;
 
   // functions

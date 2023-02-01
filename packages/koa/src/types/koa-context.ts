@@ -5,8 +5,12 @@ import { GetCookieOptions, SetCookieOptions } from "../util/private";
 import { LindormKoaMetadata, LindormKoaMetadataHeaders } from "./metadata";
 import { Metric } from "../class";
 import { RouterContext } from "koa-router";
+import { TransformMode } from "@lindorm-io/case";
 
 interface KoaContext<Data = any> extends RouterContext {
+  config: {
+    transformMode: TransformMode;
+  };
   data: Data;
   metadata: LindormKoaMetadata;
   metrics: Record<string, number>;
