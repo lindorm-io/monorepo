@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/key-pair",
   "description": "ECC and RSA key-pair tools for lindorm.io",
-  "version": "0.6.13",
+  "version": "0.6.14",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,9 +18,9 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/case": "^0.1.3",
+    "@lindorm-io/case": "^0.1.4",
     "@lindorm-io/core": "^0.8.6",
-    "@lindorm-io/entity": "^0.3.6",
+    "@lindorm-io/entity": "^0.3.7",
     "@lindorm-io/errors": "^0.1.15",
     "date-fns": "^2.29.3",
     "joi": "^17.7.0",

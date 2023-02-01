@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-basic-auth",
   "description": "Basic Auth middleware for @lindorm-io/koa applications",
-  "version": "0.2.28",
+  "version": "0.2.29",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@lindorm-io/core": "^0.8.6",
     "@lindorm-io/errors": "^0.1.15",
-    "@lindorm-io/koa": "^0.15.9"
+    "@lindorm-io/koa": "^0.15.10"
   },
   "devDependencies": {
     "@types/express-useragent": "^1.0.2",
