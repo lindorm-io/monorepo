@@ -5,7 +5,6 @@ export * from "./init-context-middleware";
 export * from "./init-socket-context-middleware";
 export * from "./metadata-middleware";
 export * from "./response-time-middleware";
-export * from "./server-info-middleware";
 export * from "./session-logger-middleware";
 export * from "./socket-io-middleware";
 export * from "./socket-logger-middleware";
