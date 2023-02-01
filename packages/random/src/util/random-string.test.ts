@@ -34,4 +34,16 @@ describe("randomString", () => {
         .filter((s) => !/[A-Za-z0-9]/.test(s)).length,
     ).toBe(3);
   });
+
+  test("should resolve custom chars", () => {
+    expect(randomString(8, { custom: { chars: "A" } })).toBe("AAAAAAAA");
+  });
+
+  test("should resolve custom numbers", () => {
+    expect(randomString(8, { numbers: 8, custom: { numbers: "0" } })).toBe("00000000");
+  });
+
+  test("should resolve custom symbols", () => {
+    expect(randomString(8, { symbols: 8, custom: { symbols: "%" } })).toBe("%%%%%%%%");
+  });
 });

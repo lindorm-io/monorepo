@@ -1,13 +1,21 @@
 import { randomInteger } from "./random-integer";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const NUMBERS = "0123456789";
 const SYMBOLS = "!()-.,/?[]_~;:!@#$%^&*+=<>{}";
 
 const randomSort = () => 0.5 - Math.random();
 
+type Custom = {
+  chars?: string;
+  numbers?: string;
+  symbols?: string;
+};
+
 type Options = {
   numbers?: "random" | number;
   symbols?: "random" | number;
+  custom?: Custom;
 };
 
 export const randomString = (length: number, options: Options = {}): string => {
@@ -29,16 +37,18 @@ export const randomString = (length: number, options: Options = {}): string => {
 
   const result: string[] = [];
 
+  const { chars = CHARS, numbers = NUMBERS, symbols = SYMBOLS } = options.custom || {};
+
   for (let i = 0; i < numbersAmount; i++) {
-    result.push(randomInteger(9).toString());
+    result.push(numbers.charAt(Math.floor(Math.random() * numbers.length)));
   }
 
   for (let i = 0; i < symbolsAmount; i++) {
-    result.push(SYMBOLS.charAt(Math.floor(Math.random() * SYMBOLS.length)));
+    result.push(symbols.charAt(Math.floor(Math.random() * symbols.length)));
   }
 
   while (result.length < charsAmount) {
-    result.push(CHARS.charAt(Math.floor(Math.random() * CHARS.length)));
+    result.push(chars.charAt(Math.floor(Math.random() * chars.length)));
   }
 
   return result.sort(randomSort).join("");
