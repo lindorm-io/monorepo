@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.4...@lindorm-io/url@0.2.5) (2023-02-02)
+
+### Bug Fixes
+
+- default transform query to snake ([5080b57](https://github.com/lindorm-io/monorepo/commit/5080b57ef9d127420febb05533e15f83713c8a2c))
+
 ## [0.2.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.3...@lindorm-io/url@0.2.4) (2023-02-01)
 
 **Note:** Version bump only for package @lindorm-io/url

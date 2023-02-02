@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.24](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.23...@lindorm-io/koa-mongo@0.8.24) (2023-02-02)
+
+**Note:** Version bump only for package @lindorm-io/koa-mongo
+
 ## [0.8.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.22...@lindorm-io/koa-mongo@0.8.23) (2023-02-01)
 
 **Note:** Version bump only for package @lindorm-io/koa-mongo

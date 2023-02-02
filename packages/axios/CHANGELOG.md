@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.8...@lindorm-io/axios@0.5.9) (2023-02-02)
+
+### Bug Fixes
+
+- allow retry config to be partial ([1337e0e](https://github.com/lindorm-io/monorepo/commit/1337e0e5b3e1e7ff8dbc5a82d8a615bb836cc035))
+
 ## [0.5.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.7...@lindorm-io/axios@0.5.8) (2023-02-01)
 
 **Note:** Version bump only for package @lindorm-io/axios

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.10...@lindorm-io/koa@0.15.11) (2023-02-02)
+
+### Bug Fixes
+
+- restore higher order functions ([0dfc266](https://github.com/lindorm-io/monorepo/commit/0dfc26600197c9650c8d8ff21040f0af500bbde2))
+
 ## [0.15.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.9...@lindorm-io/koa@0.15.10) (2023-02-01)
 
 ### Bug Fixes
