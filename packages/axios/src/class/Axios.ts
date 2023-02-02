@@ -1,6 +1,7 @@
 import { AxiosOptions, Context, MethodOptions, Middleware, RequestOptions } from "../types";
 import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
 import { RetryOptions } from "@lindorm-io/retry";
+import { TransformMode } from "@lindorm-io/case";
 import { axiosRequestHandler, defaultRetryCallback } from "../util";
 import { destructUrl, Protocol } from "@lindorm-io/url";
 import { resolveMiddleware } from "@lindorm-io/middleware";
@@ -13,11 +14,13 @@ import {
 
 export class Axios {
   private readonly auth: AxiosBasicCredentials;
+  private readonly headers: Record<string, string>;
   private readonly host: string | undefined;
   private readonly middleware: Middleware[];
   private readonly name: string | undefined;
   private readonly port: number | undefined;
   private readonly protocol: Protocol | undefined;
+  private readonly queryCaseTransform: TransformMode;
   private readonly retry: RetryOptions;
   private readonly timeout: number;
   private readonly withCredentials: boolean;
@@ -28,8 +31,10 @@ export class Axios {
     this.auth = options.auth || DEFAULT_AUTH_OPTIONS;
     this.host = host;
     this.middleware = options.middleware || [];
+    this.headers = options.headers || {};
     this.name = options.name;
     this.port = options.port || port;
+    this.queryCaseTransform = options.queryCaseTransform || "snake";
     this.protocol = options.protocol || protocol || "https";
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
@@ -109,13 +114,14 @@ export class Axios {
       body,
       config,
       headers = {},
+      middleware = [],
       params = {},
       query = {},
+      queryCaseTransform,
       retry = {},
       retryCallback,
       timeout,
       withCredentials,
-      middleware = [],
     } = options;
 
     const url = destructUrl(pathOrUrl);
@@ -123,6 +129,7 @@ export class Axios {
     const context = {
       axios: {
         auth: this.auth,
+        headers: this.headers,
         host: this.host || null,
         name: this.name || null,
         port: this.port || null,
@@ -135,7 +142,7 @@ export class Axios {
         auth: auth || this.auth,
         body,
         config,
-        headers: headers || {},
+        headers: { ...headers, ...this.headers },
         host: url.host || this.host,
         method,
         params,
@@ -143,13 +150,14 @@ export class Axios {
         port: url.port || this.port,
         protocol: url.protocol || this.protocol,
         query: { ...url.query, ...query },
+        queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
         retry: { ...this.retry, ...retry },
         retryCallback: retryCallback || defaultRetryCallback,
         timeout: timeout || this.timeout,
         withCredentials: withCredentials || this.withCredentials,
       },
       res: DEFAULT_AXIOS_RESPONSE,
-    };
+    } satisfies Context;
 
     const result = await resolveMiddleware<Context<Data>>(context, [
       ...this.middleware,

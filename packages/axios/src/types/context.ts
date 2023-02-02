@@ -2,9 +2,11 @@ import { AxiosBasicCredentials, AxiosRequestConfig, AxiosResponse, Method } from
 import { Protocol } from "@lindorm-io/url";
 import { RetryCallback } from "./retry";
 import { RetryOptions } from "@lindorm-io/retry";
+import { TransformMode } from "@lindorm-io/case";
 
 export type AxiosContext = {
   auth: AxiosBasicCredentials;
+  headers: Record<string, string>;
   host: string | null;
   name: string | null;
   port: number | null;
@@ -31,6 +33,7 @@ export type RequestContext<
   port: number;
   protocol: Protocol;
   query: Query;
+  queryCaseTransform: TransformMode;
   retry: RetryOptions;
   retryCallback: RetryCallback;
   timeout: number;

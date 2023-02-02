@@ -15,12 +15,7 @@ export const axiosRequestLoggerMiddleware =
       log.verbose("axios successful", {
         axios: ctx.axios,
         config: ctx.res?.config,
-        request: {
-          data: ctx.req.body,
-          headers: ctx.req.headers,
-          params: ctx.req.params,
-          query: ctx.req.query,
-        },
+        request: ctx.req,
         response: {
           data: ctx.res?.data,
           headers: ctx.res?.headers,
@@ -40,12 +35,7 @@ export const axiosRequestLoggerMiddleware =
         axios: ctx.axios,
         code: err.code,
         config: err.config,
-        request: {
-          data: ctx.req.body,
-          headers: ctx.req.headers,
-          params: ctx.req.params,
-          query: ctx.req.query,
-        },
+        request: ctx.req,
         response: {
           data: err.response?.data,
           headers: err.response?.headers,

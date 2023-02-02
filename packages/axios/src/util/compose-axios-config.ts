@@ -6,6 +6,7 @@ export const composeAxiosConfig = (ctx: Context): AxiosRequestConfig => ({
   auth: ctx.req.auth,
   data: ctx.req.body,
   headers: ctx.req.headers,
+  method: ctx.req.method,
   timeout: ctx.req.timeout,
   url: createURL(ctx.req.path, {
     host: ctx.req.host,
