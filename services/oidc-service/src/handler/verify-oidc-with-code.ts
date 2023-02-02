@@ -3,7 +3,7 @@ import { OidcSession } from "../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
 import {
   axiosBasicAuthMiddleware,

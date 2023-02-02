@@ -23,6 +23,7 @@ describe("/internal/sessions", () => {
       .post("/internal/sessions")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
+        callback_id: "3ada5d06-23d0-41ac-9344-b91a18b22f19",
         callback_uri: "https://test.lindorm.io/callback",
         expires_at: "2021-01-02T08:00:00.000+05:00",
         identity_id: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
@@ -50,6 +51,7 @@ describe("/internal/sessions", () => {
   test("GET /:id", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
+        callbackId: "3ada5d06-23d0-41ac-9344-b91a18b22f19",
         identityId: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
         provider: "google",
         verified: true,
@@ -64,6 +66,7 @@ describe("/internal/sessions", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      callback_id: "3ada5d06-23d0-41ac-9344-b91a18b22f19",
       identity_id: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
       level_of_assurance: 2,
       provider: "google",

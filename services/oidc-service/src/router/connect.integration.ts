@@ -2,6 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { getTestAccessToken, setupIntegration } from "../fixtures/integration";
 import { server } from "../server/server";
+import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -20,6 +21,7 @@ describe("/connect", () => {
       .post("/connect")
       .set("Authorization", `Bearer ${accessToken}`)
       .send({
+        callback_id: randomUUID(),
         callback_uri: "https://test.lindorm.io/callback",
         provider: "microsoft",
       })

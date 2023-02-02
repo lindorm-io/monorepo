@@ -1,11 +1,13 @@
 import { ClientError } from "@lindorm-io/errors";
 import { OidcSession } from "../entity";
-import { PKCEMethod, createURL, randomString, removeEmptyFromObject } from "@lindorm-io/core";
 import { ResponseMode, ResponseType } from "../common";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
-import { createHash } from "crypto";
+import { createPKCE } from "@lindorm-io/node-pkce";
+import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
+import { randomString } from "@lindorm-io/random";
+import { removeEmptyFromObject } from "@lindorm-io/core";
 
 interface Options {
   callbackId: string;
@@ -37,11 +39,17 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
     scope,
   } = config;
 
+  const {
+    challenge: codeChallenge,
+    method: codeChallengeMethod,
+    verifier: codeVerifier,
+  } = createPKCE();
+
   const oidcSession = await oidcSessionCache.create(
     new OidcSession({
       callbackId,
       callbackUri,
-      codeVerifier: randomString(32),
+      codeVerifier,
       expires,
       identityId,
       nonce: randomString(16),
@@ -56,10 +64,8 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
       clientId,
       ...(responseType === ResponseType.CODE
         ? {
-            codeChallenge: createHash("sha256")
-              .update(oidcSession.codeVerifier, "utf8")
-              .digest("base64url"),
-            codeChallengeMethod: PKCEMethod.S256,
+            codeChallenge,
+            codeChallengeMethod,
           }
         : {}),
       loginHint,

@@ -1,15 +1,15 @@
 import Joi from "joi";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { CryptoAES } from "@lindorm-io/crypto";
+import { ProtectedRecord } from "../../entity";
+import { ServerKoaController } from "../../types";
+import { randomString } from "@lindorm-io/random";
+import { stringifyBlob } from "@lindorm-io/string-blob";
 import {
   CreateProtectedRecordRequestBody,
   CreateProtectedRecordResponseBody,
   JOI_GUID,
 } from "../../common";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
-import { ProtectedRecord } from "../../entity";
-import { randomString } from "@lindorm-io/core";
-import { stringifyBlob } from "@lindorm-io/string-blob";
 
 export const createProtectedRecordSchema = Joi.object<CreateProtectedRecordRequestBody>()
   .keys({
@@ -30,7 +30,7 @@ export const createProtectedRecordController: ServerKoaController<
     },
   } = ctx;
 
-  const key = randomString(128);
+  const key = randomString(128, { numbers: "random", symbols: "random" });
   const crypto = new CryptoAES({ secret: key });
 
   await protectedRecordRepository.create(

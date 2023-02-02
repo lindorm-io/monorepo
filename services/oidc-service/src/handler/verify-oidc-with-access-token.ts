@@ -4,7 +4,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { configuration } from "../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
 
 export const verifyOidcWithAccessToken = async (

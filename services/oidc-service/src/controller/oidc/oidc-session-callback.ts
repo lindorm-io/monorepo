@@ -1,10 +1,10 @@
 import Joi from "joi";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { OpenIDClaims, ResponseType } from "../../common";
-import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
 import {
   axiosAuthenticateOidcIdentity,

@@ -3,7 +3,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { createOidcSession } from "../../handler";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 
 interface RequestData {
   callbackId: string;
@@ -30,7 +30,7 @@ export const connectOidcToIdentityController: ServerKoaController<RequestData> =
   const redirect = await createOidcSession(ctx, {
     callbackId,
     callbackUri,
-    expires: getExpiryDate("15 minutes"),
+    expires: expiryDate("15 minutes"),
     identityId,
     provider,
   });

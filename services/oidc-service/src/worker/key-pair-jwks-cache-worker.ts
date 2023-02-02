@@ -8,6 +8,6 @@ export const keyPairOauthJwksWorker = keyPairJwksCacheWorker({
   port: configuration.services.oauth_service.port,
   name: "oauth",
   redisConnection,
-  retry: 30,
+  retry: { maximumAttempts: 30 },
   logger,
 });

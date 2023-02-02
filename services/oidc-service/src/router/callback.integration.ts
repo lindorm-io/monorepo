@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createURL, randomString } from "@lindorm-io/core";
 import { createTestOidcSession } from "../fixtures/entity";
+import { createURL } from "@lindorm-io/url";
+import { randomString } from "@lindorm-io/random";
 import { server } from "../server/server";
 import {
   getTestGoogleIdToken,

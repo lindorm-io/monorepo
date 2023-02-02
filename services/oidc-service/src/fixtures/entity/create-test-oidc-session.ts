@@ -1,6 +1,6 @@
 import { OidcSession, OidcSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 export const createTestOidcSession = (options: Partial<OidcSessionOptions> = {}): OidcSession =>
   new OidcSession({

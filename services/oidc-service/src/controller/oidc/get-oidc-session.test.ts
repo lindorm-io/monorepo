@@ -8,6 +8,7 @@ describe("getOidcSessionController", () => {
     ctx = {
       entity: {
         oidcSession: createTestOidcSession({
+          callbackId: "callbackId",
           identityId: "identity",
           verified: true,
         }),
@@ -18,6 +19,7 @@ describe("getOidcSessionController", () => {
   test("should resolve", async () => {
     await expect(getOidcSessionController(ctx)).resolves.toStrictEqual({
       body: {
+        callbackId: "callbackId",
         identityId: "identity",
         levelOfAssurance: 2,
         provider: "apple",
