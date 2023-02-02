@@ -38,7 +38,7 @@
     "@lindorm-io/koa-keystore": "^0.9.22",
     "@lindorm-io/koa-mongo": "^0.8.24",
     "@lindorm-io/mongo": "^0.11.13",
-    "@lindorm-io/node-server": "^0.4.30",
+    "@lindorm-io/node-server": "^0.4.31",
     "@lindorm-io/random": "^0.1.2",
     "@lindorm-io/redis": "^0.11.12",
     "date-fns": "^2.29.3",

@@ -1579,10 +1579,10 @@
     "@lindorm-io/errors" "^0.1.15"
     mongodb "^4.13.0"
 
-"@lindorm-io/node-server@^0.4.30":
-  version "0.4.30"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.30.tgz#fcb359772847499f7138aa0204cea36f9cf302cf"
-  integrity sha512-BTT2rgzFHmCgi2m7mD8f+zJpZ9XZE5hHV0awQKA+a+mBo8C9Cp8S1Z/CWVCxvF8y6PxBXb2OCYItggifOwslkQ==
+"@lindorm-io/node-server@^0.4.31":
+  version "0.4.31"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.4.31.tgz#c885af44354239490ea8ab387710532454fd876c"
+  integrity sha512-2HcK1rqO1+HRoElMZwYHYZMUqUICvpXk3fCPhueXXe4jOkIJj6BZOXQlRIIiU8V1r5No8meVeaKpE6DVWs9DBg==
   dependencies:
     "@lindorm-io/amqp" "^0.2.13"
     "@lindorm-io/axios" "^0.5.10"

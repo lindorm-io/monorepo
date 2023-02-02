@@ -30,7 +30,7 @@
     "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {
-    "@lindorm-io/axios": "^0.5.9",
+    "@lindorm-io/axios": "^0.5.10",
     "@lindorm-io/core": "^0.8.7",
     "@lindorm-io/crypto": "^0.1.28",
     "@lindorm-io/entity": "^0.3.7",
@@ -41,12 +41,12 @@
     "@lindorm-io/koa": "^0.15.11",
     "@lindorm-io/koa-bearer-auth": "^0.3.36",
     "@lindorm-io/koa-jwt": "^0.5.36",
-    "@lindorm-io/koa-keystore": "^0.9.21",
+    "@lindorm-io/koa-keystore": "^0.9.22",
     "@lindorm-io/koa-mongo": "^0.8.24",
     "@lindorm-io/koa-redis": "^0.6.24",
     "@lindorm-io/mongo": "^0.11.13",
     "@lindorm-io/node-pkce": "^0.1.2",
-    "@lindorm-io/node-server": "^0.4.29",
+    "@lindorm-io/node-server": "^0.4.31",
     "@lindorm-io/random": "^0.1.2",
     "@lindorm-io/redis": "^0.11.12",
     "@lindorm-io/url": "^0.2.5",

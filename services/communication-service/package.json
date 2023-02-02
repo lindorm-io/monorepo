@@ -33,7 +33,7 @@
     "@lindorm-io/koa": "^0.15.11",
     "@lindorm-io/koa-bearer-auth": "^0.3.36",
     "@lindorm-io/koa-keystore": "^0.9.22",
-    "@lindorm-io/node-server": "^0.4.30",
+    "@lindorm-io/node-server": "^0.4.31",
     "@lindorm-io/redis": "^0.11.12",
     "joi": "^17.7.0",
     "lodash": "^4.17.21"
