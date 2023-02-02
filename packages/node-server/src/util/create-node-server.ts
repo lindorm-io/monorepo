@@ -30,6 +30,10 @@ import {
   socketCacheMiddleware,
   socketRedisMiddleware,
 } from "@lindorm-io/koa-redis";
+import {
+  axiosTransformBodyCaseMiddleware,
+  axiosTransformQueryCaseMiddleware,
+} from "@lindorm-io/axios";
 
 export const createNodeServer = <
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
@@ -45,10 +49,20 @@ export const createNodeServer = <
 
   for (const service of options.services || []) {
     middleware.push(
-      axiosMiddleware({ clientName: service.name, host: service.host, port: service.port }),
+      axiosMiddleware({
+        clientName: service.name,
+        host: service.host,
+        port: service.port,
+        middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
+      }),
     );
     socketMiddleware.push(
-      socketAxiosMiddleware({ clientName: service.name, host: service.host, port: service.port }),
+      socketAxiosMiddleware({
+        clientName: service.name,
+        host: service.host,
+        port: service.port,
+        middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
+      }),
     );
   }
 
