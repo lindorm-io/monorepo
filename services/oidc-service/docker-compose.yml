@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mongo:
     image: mongo
-    container_name: mongo
+    container_name: mongo_test
     labels:
       - mongo
     ports:
@@ -14,7 +14,7 @@ services:
 
   redis:
     image: redis
-    container_name: redis
+    container_name: redis_test
     labels:
       - redis
     ports:
