@@ -47,7 +47,7 @@ const addParamsToPathname = (pathname: string, params: ParamsRecord): string => 
 const addQueryToURL = (
   url: URL,
   query: QueryRecord,
-  queryCaseTransform: TransformMode = "none",
+  queryCaseTransform: TransformMode = "snake",
 ): URL => {
   if (!isObject(query)) {
     return url;

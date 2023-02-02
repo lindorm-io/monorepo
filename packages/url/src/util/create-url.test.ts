@@ -160,6 +160,7 @@ describe("createURL", () => {
         query: {
           queryTwo: 123456,
         },
+        queryCaseTransform: "none",
       }).toString(),
     ).toBe("https://lindorm.io/test/one/two?query_one=string&queryTwo=123456");
   });
