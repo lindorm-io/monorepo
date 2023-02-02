@@ -1,33 +1,36 @@
 import { composeAxiosConfig } from "./compose-axios-config";
+import { RequestContext } from "../types";
 
 describe("composeAxiosConfig", () => {
   let ctx: any;
 
   beforeEach(() => {
-    ctx = {
-      req: {
-        auth: { username: "username" },
-        body: { body: "body" },
-        config: { config: "config" },
-        headers: { header: "header" },
-        host: "https://lindorm.io",
-        params: {},
-        path: "/test/path",
-        port: 3000,
-        protocol: "https",
-        query: {},
-        retry: {},
-        retryCallback: () => true,
-        timeout: 250,
-        withCredentials: true,
-      },
-    };
+    const req = {
+      auth: { username: "username", password: "password" },
+      body: { body: "body" },
+      config: {},
+      headers: { header: "header" },
+      host: "https://lindorm.io",
+      method: "post",
+      params: {},
+      path: "/test/path",
+      port: 3000,
+      protocol: "https",
+      query: {},
+      queryCaseTransform: "pascal",
+      retry: { maximumAttempts: 5, maximumMilliseconds: 10, milliseconds: 50, strategy: "linear" },
+      retryCallback: () => true,
+      timeout: 250,
+      withCredentials: true,
+    } satisfies RequestContext;
+
+    ctx = { req };
   });
 
   test("should resolve", () => {
     expect(composeAxiosConfig(ctx)).toStrictEqual({
-      auth: { username: "username" },
-      config: "config",
+      auth: { username: "username", password: "password" },
+      method: "post",
       data: { body: "body" },
       headers: { header: "header" },
       timeout: 250,
