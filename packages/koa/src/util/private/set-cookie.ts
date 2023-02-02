@@ -14,17 +14,14 @@ export interface SetCookieOptions {
   signed: boolean;
 }
 
-export const setCookie = (
-  ctx: DefaultLindormKoaContext,
-  name: string,
-  value: string,
-  options: Partial<SetCookieOptions> = {},
-): void => {
-  ctx.cookies.set(name, value, {
-    domain: ctx.server.domain,
-    ...options,
-    signed:
-      options.signed ||
-      [Environment.PRODUCTION, Environment.STAGING].includes(ctx.server.environment),
-  });
-};
+export const setCookie =
+  (ctx: DefaultLindormKoaContext) =>
+  (name: string, value: string, options: Partial<SetCookieOptions> = {}): void => {
+    ctx.cookies.set(name, value, {
+      domain: ctx.server.domain,
+      ...options,
+      signed:
+        options.signed ||
+        [Environment.PRODUCTION, Environment.STAGING].includes(ctx.server.environment),
+    });
+  };

@@ -9,12 +9,12 @@ import {
 } from "../../util/private";
 
 export const utilContextMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
-  ctx.deleteCookie = deleteCookie.bind(ctx);
-  ctx.getAuthorizationHeader = getAuthorizationHeader.bind(ctx);
-  ctx.getCookie = getCookie.bind(ctx);
-  ctx.getMetadataHeaders = getMetadataHeaders.bind(ctx);
+  ctx.deleteCookie = deleteCookie(ctx);
+  ctx.getAuthorizationHeader = getAuthorizationHeader(ctx);
+  ctx.getCookie = getCookie(ctx);
+  ctx.getMetadataHeaders = getMetadataHeaders(ctx);
   ctx.getMetric = (key: string): Metric => new Metric(ctx, key);
-  ctx.setCookie = setCookie.bind(ctx);
+  ctx.setCookie = setCookie(ctx);
 
   await next();
 };
