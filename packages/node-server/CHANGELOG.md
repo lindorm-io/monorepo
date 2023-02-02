@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.31](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.30...@lindorm-io/node-server@0.4.31) (2023-02-02)
+
+### Bug Fixes
+
+- transform body and query for node server services ([ee646b0](https://github.com/lindorm-io/monorepo/commit/ee646b03bf3f27de73cb4832e51973c8a622e287))
+
 ## [0.4.30](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.29...@lindorm-io/node-server@0.4.30) (2023-02-02)
 
 **Note:** Version bump only for package @lindorm-io/node-server
