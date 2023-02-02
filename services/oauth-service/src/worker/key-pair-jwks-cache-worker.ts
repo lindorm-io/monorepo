@@ -8,5 +8,6 @@ export const keyPairAuthenticationJwksWorker = keyPairJwksCacheWorker({
   port: configuration.services.authentication_service.port,
   name: "authentication",
   redisConnection,
+  retry: { maximumAttempts: 30 },
   logger,
 });
