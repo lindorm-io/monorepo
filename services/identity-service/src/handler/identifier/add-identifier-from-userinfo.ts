@@ -4,9 +4,9 @@ import { IdentifierType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { randomString } from "@lindorm-io/core";
 import { initialiseConnectSession, sendConnectSessionMessage } from "../sessions";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
+import { randomString } from "@lindorm-io/random";
 
 interface Options {
   identifier: string;

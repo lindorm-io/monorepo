@@ -1,11 +1,12 @@
 import Joi from "joi";
+import { AuthenticationMethod, JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { AuthenticationMode } from "../../enum";
 import { AuthenticationSession } from "../../entity";
-import { AuthenticationMethod, JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getExpiryDate, PKCEMethod } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import {
   JOI_AUTHENTICATION_METHOD,
@@ -59,7 +60,7 @@ export const initialiseStandardAuthenticationSession = async (
     nonce,
   } = options;
 
-  const expires = getExpiryDate(configuration.defaults.authentication_session_expiry);
+  const expires = expiryDate(configuration.defaults.authentication_session_expiry);
   const emailHint = loginHint?.find((item) => REGEX_EMAIL.test(item));
   const phoneHint = loginHint?.find((item) => REGEX_PHONE.test(item));
 

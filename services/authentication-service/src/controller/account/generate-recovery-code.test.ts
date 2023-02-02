@@ -7,8 +7,8 @@ import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/core", () => ({
-  ...jest.requireActual("@lindorm-io/core"),
+jest.mock("@lindorm-io/random", () => ({
+  ...jest.requireActual("@lindorm-io/random"),
 
   randomString: (num: number) => "1234567890".slice(0, num),
 }));

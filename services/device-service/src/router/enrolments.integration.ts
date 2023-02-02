@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { CertificateMethod } from "../enum";
 import { SessionStatus } from "../common";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { createTestEnrolmentSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";

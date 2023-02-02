@@ -1,12 +1,12 @@
 import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { randomString } from "@lindorm-io/random";
 import {
   ClientScope,
   CreateEncryptedRecordRequestBody,
   GetEncryptedRecordResponseBody,
 } from "../../common";
-import { clientCredentialsMiddleware } from "../../middleware";
-import { randomString } from "@lindorm-io/core";
 
 export const createAccountCallback =
   (ctx: ServerKoaContext) =>

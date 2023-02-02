@@ -5,8 +5,8 @@ import { initialiseChallengeController } from "./initialise";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/core", () => ({
-  ...(jest.requireActual("@lindorm-io/core") as object),
+jest.mock("@lindorm-io/random", () => ({
+  ...(jest.requireActual("@lindorm-io/random") as object),
 
   randomString: () => "random-value",
 }));

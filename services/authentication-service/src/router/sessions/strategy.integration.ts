@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { AuthenticationStrategy } from "../../enum";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   createTestAccount,

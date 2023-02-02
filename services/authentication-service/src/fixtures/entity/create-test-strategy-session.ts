@@ -1,7 +1,8 @@
 import { AuthenticationStrategy } from "../../enum";
 import { SessionStatus } from "../../common";
 import { StrategySession, StrategySessionOptions } from "../../entity";
-import { baseHash, randomNumber, randomString } from "@lindorm-io/core";
+import { baseHash } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestStrategySession = (

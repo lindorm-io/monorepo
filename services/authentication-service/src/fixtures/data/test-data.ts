@@ -1,5 +1,6 @@
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { createHash } from "crypto";
-import { randomString, PKCEMethod } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 interface Result {
   codeChallenge: string;

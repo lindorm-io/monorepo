@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getIdentifierUserinfo should resolve 1`] = `
-Object {
-  "connectedProviders": Array [
+{
+  "connectedProviders": [
     "https://one.com",
     "https://two.com",
   ],
@@ -14,8 +14,8 @@ Object {
 `;
 
 exports[`getIdentifierUserinfo should resolve data on caught error 1`] = `
-Object {
-  "connectedProviders": Array [],
+{
+  "connectedProviders": [],
   "email": null,
   "emailVerified": false,
   "phoneNumber": null,
@@ -24,8 +24,8 @@ Object {
 `;
 
 exports[`getIdentifierUserinfo should resolve data on empty array 1`] = `
-Object {
-  "connectedProviders": Array [],
+{
+  "connectedProviders": [],
   "email": null,
   "emailVerified": false,
   "phoneNumber": null,

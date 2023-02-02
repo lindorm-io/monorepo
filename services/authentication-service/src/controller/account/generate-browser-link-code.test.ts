@@ -14,8 +14,8 @@ jest.mock("crypto", () => ({
   randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
 }));
 
-jest.mock("@lindorm-io/core", () => ({
-  ...jest.requireActual("@lindorm-io/core"),
+jest.mock("@lindorm-io/random", () => ({
+  ...jest.requireActual("@lindorm-io/random"),
 
   randomString: (num: number) => "1234567890".slice(0, num),
 }));

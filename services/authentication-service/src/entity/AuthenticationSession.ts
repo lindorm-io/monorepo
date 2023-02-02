@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { AuthenticationMode, AuthenticationStrategy } from "../enum";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import {
   JOI_AUTHENTICATION_METHOD,
   JOI_AUTHENTICATION_STRATEGY,

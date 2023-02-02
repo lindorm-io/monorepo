@@ -8,7 +8,7 @@ import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
 import { flatten } from "lodash";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   ChallengeConfirmationTokenClaims,
   ChallengeStrategy,

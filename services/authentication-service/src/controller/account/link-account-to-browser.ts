@@ -4,7 +4,7 @@ import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { fetchAccountSalt } from "../../handler";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 import { BrowserLink } from "../../entity";
 
 interface RequestData {
@@ -49,7 +49,7 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
   );
 
   ctx.cookies.set(BROWSER_LINK_COOKIE_NAME, browserLink.id, {
-    expires: getExpiryDate("99 years"),
+    expires: expiryDate("99 years"),
     httpOnly: true,
     overwrite: true,
     signed: ctx.metadata.environment !== Environment.TEST,

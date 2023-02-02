@@ -1,6 +1,6 @@
 import { Identity, IdentityOptions } from "../../entity";
 import { NamingSystem } from "../../enum";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 
 export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Identity =>
   new Identity({

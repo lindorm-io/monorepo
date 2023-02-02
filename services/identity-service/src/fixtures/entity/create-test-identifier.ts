@@ -1,7 +1,7 @@
 import { Identifier, IdentifierOptions } from "../../entity";
 import { IdentifierType } from "../../common";
 import { configuration } from "../../server/configuration";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = {}): Identifier =>

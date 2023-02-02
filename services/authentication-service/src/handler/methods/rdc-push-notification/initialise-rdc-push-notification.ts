@@ -4,7 +4,7 @@ import { ClientScope, InitialiseRdcSessionRequestData, RdcSessionMode } from "..
 import { ServerKoaContext } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRdcBody } from "../../../util";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { AuthenticationStrategyConfig } from "../../../constant";
 
 interface Options {

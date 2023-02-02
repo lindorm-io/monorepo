@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { AuthenticationMethod } from "../common";
 import { AuthenticationStrategy } from "../enum";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 
 export const JOI_AUTHENTICATION_METHOD = Joi.string().valid(...Object.values(AuthenticationMethod));
 

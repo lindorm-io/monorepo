@@ -4,8 +4,8 @@ import { StrategySession } from "../../../entity";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
-import { createURL } from "@lindorm-io/core";
-import { randomString } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
+import { randomString } from "@lindorm-io/random";
 
 interface Options {
   strategySessionToken: string;

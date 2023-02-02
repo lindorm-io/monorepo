@@ -3,7 +3,7 @@ import { ClientScope, InitialiseRdcSessionRequestData, RdcSessionMode } from "..
 import { ServerKoaContext, StrategyInitialisation } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { getRdcBody } from "../../../util";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 interface Options {
   strategySessionToken: string;

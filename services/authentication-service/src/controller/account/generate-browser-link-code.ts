@@ -2,8 +2,8 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
-import { randomString } from "@lindorm-io/core";
 import { fetchAccountSalt } from "../../handler";
+import { randomString } from "@lindorm-io/random";
 
 interface ResponseBody {
   code: string;

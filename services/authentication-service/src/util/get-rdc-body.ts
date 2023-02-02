@@ -1,7 +1,7 @@
 import { AuthenticationSession, StrategySession } from "../entity";
 import { InitialiseRdcSessionRequestData, RdcSessionMode, RequestMethod } from "../common";
 import { configuration } from "../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 
 export const getRdcBody = (
   authenticationSession: AuthenticationSession,

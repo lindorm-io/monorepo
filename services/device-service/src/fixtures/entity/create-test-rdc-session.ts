@@ -1,6 +1,6 @@
 import { RdcSession, RdcSessionOptions } from "../../entity";
 import { SessionStatus, RdcSessionMode, RdcSessionType, RequestMethod } from "../../common";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestRdcSession = (options: Partial<RdcSessionOptions> = {}): RdcSession =>

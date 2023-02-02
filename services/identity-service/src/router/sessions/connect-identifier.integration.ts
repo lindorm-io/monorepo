@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { IdentifierType } from "../../common";
 import { argon } from "../../instance";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   TEST_CONNECT_SESSION_CACHE,

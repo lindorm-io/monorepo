@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ClientType, SessionStatus } from "../../common";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
 

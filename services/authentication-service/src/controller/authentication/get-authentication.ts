@@ -6,7 +6,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../common";
 import { argon } from "../../instance";
 import { generateClientConfig } from "../../util";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 type RequestData = {
   id: string;

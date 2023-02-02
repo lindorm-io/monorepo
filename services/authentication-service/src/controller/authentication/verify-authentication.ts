@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
-import { assertPKCE } from "@lindorm-io/core";
+import { assertPKCE } from "@lindorm-io/node-pkce";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
 import {

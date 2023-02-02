@@ -3,7 +3,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 import { isIdentifierStoredSeparately } from "../../util";
 
 export const initialiseConnectSession = async (
@@ -21,7 +21,7 @@ export const initialiseConnectSession = async (
     });
   }
 
-  const expires = getExpiryDate(configuration.defaults.connect_identifier_session_expiry);
+  const expires = expiryDate(configuration.defaults.connect_identifier_session_expiry);
 
   return await connectSessionCache.create(
     new ConnectSession({

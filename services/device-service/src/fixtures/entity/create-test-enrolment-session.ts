@@ -1,7 +1,7 @@
 import { CertificateMethod } from "../../enum";
 import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
 import { SessionStatus } from "../../common";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestEnrolmentSession = (

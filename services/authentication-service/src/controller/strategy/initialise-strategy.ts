@@ -5,8 +5,8 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
 import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
+import { expiryObject } from "@lindorm-io/expiry";
 import { findStrategyConfig } from "../../util";
-import { getExpires } from "@lindorm-io/core";
 import {
   DefaultStrategyConfig,
   ServerKoaController,
@@ -73,7 +73,7 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     throw new ClientError("Invalid strategy");
   }
 
-  const { expiresIn } = getExpires(authenticationSession.expires);
+  const { expiresIn } = expiryObject(authenticationSession.expires);
 
   const strategySession = await strategySessionCache.create(
     new StrategySession({

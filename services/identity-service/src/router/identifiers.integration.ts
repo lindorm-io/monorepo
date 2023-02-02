@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../server/server";
 import {
   getTestAccessToken,

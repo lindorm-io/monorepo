@@ -6,7 +6,7 @@ import { ServerKoaController } from "../../types";
 import { calculateAuthenticationStatus } from "../../util";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { resolveAllowedStrategies } from "../../handler";
 
 type RequestData = {

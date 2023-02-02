@@ -1,7 +1,7 @@
 import { AuthenticationStrategy } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../common";
-import { assertPKCE as _assertPKCE } from "@lindorm-io/core";
+import { assertPKCE as _assertPKCE } from "@lindorm-io/node-pkce";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateMfaCookie as _generateMfaCookie } from "../../handler";
@@ -11,8 +11,8 @@ import {
   canGenerateMfaCookie as _canGenerateMfaCookie,
 } from "../../util";
 
-jest.mock("@lindorm-io/core", () => ({
-  ...jest.requireActual("@lindorm-io/core"),
+jest.mock("@lindorm-io/node-pkce", () => ({
+  ...jest.requireActual("@lindorm-io/node-pkce"),
 
   assertPKCE: jest.fn(),
 }));

@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`updateIdentityController should update identity 1`] = `
-Array [
-  Array [
-    Object {
+[
+  [
+    {
       "active": true,
       "birthDate": "new-birthDate",
       "created": 2020-01-01T08:00:00.000Z,
-      "displayName": Object {
+      "displayName": {
         "name": null,
         "number": null,
       },
@@ -22,7 +22,7 @@ Array [
       "nationalIdentityNumber": "new-nationalIdentityNumber",
       "nationalIdentityNumberVerified": true,
       "nickname": "new-nickname",
-      "permissions": Array [
+      "permissions": [
         "lindorm.io/any/identity/any:user",
         "lindorm.io/oauth-service/identity/client:read",
         "lindorm.io/oauth-service/identity/client:write",
@@ -32,7 +32,7 @@ Array [
         "lindorm.io/oauth-service/identity/tenant:write",
       ],
       "picture": "new-picture",
-      "preferredAccessibility": Array [
+      "preferredAccessibility": [
         "new-setting",
       ],
       "preferredUsername": "new-username",

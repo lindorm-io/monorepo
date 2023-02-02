@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import { setupIntegration, TEST_AUTHENTICATION_SESSION_CACHE } from "../../fixtures/integration";
 

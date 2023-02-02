@@ -4,7 +4,7 @@ import { AuthenticationSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_PKCE_METHOD } from "../../constant";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ServerKoaController } from "../../types";
 import {
   initialiseElevateAuthenticationSession,

@@ -3,7 +3,7 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, RdcSessionMode, SessionStatus } from "../../common";
 import { filter, orderBy } from "lodash";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 
 interface RequestData {
   id: string;
@@ -41,7 +41,7 @@ export const getPendingRdcSessionsController: ServerKoaController = async (
   const sessions: Array<Session> = [];
 
   for (const item of pending) {
-    const { expiresIn } = getExpires(item.expires);
+    const { expiresIn } = expiryObject(item.expires);
 
     sessions.push({
       id: item.id,

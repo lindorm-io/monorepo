@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "../../common";
 import { createTestDeviceLink } from "../../fixtures/entity";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   TEST_DEVICE_REPOSITORY,

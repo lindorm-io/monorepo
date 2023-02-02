@@ -8,7 +8,7 @@ import { SessionStatus } from "../../common";
 import { argon } from "../../instance";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { getTestData } from "../../fixtures/data";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   setupIntegration,
@@ -133,7 +133,7 @@ describe("/sessions/authentication", () => {
           initialise_key: "none",
           method: "bank_id_se",
           rank: 1,
-          recommended: true,
+          recommended: false,
           requested: true,
           strategies: ["bank_id_se"],
         },
@@ -229,9 +229,13 @@ describe("/sessions/authentication", () => {
 
     expect(response.body).toStrictEqual({
       id: expect.any(String),
-      confirm_key: "otp",
-      expires_in: 31530060,
+      display_code: null,
+      expires_in: 31536000,
+      input_key: "otp",
+      input_length: 6,
+      input_mode: "numeric",
       polling_required: false,
+      qr_code: null,
       strategy_session_token: expect.any(String),
     });
 

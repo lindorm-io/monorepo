@@ -1,11 +1,11 @@
-import { ConnectSession, Identifier } from "../../entity";
 import { ClientScope, SendCodeRequestData } from "../../common";
+import { ConnectSession, Identifier } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { isIdentifierStoredSeparately } from "../../util";
-import { createURL } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
+import { createURL } from "@lindorm-io/url";
+import { isIdentifierStoredSeparately } from "../../util";
 
 export const sendConnectSessionMessage = async (
   ctx: ServerKoaContext,

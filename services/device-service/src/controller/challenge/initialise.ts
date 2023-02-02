@@ -4,7 +4,8 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint, TokenType } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getExpires, randomString } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
+import { randomString } from "@lindorm-io/random";
 import { sortedUniq } from "lodash";
 
 interface RequestData {
@@ -56,7 +57,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   }
 
   const certificateChallenge = randomString(128);
-  const { expires, expiresIn } = getExpires(configuration.defaults.challenge_session_expiry);
+  const { expires, expiresIn } = expiryObject(configuration.defaults.challenge_session_expiry);
 
   const session = await challengeSessionCache.create(
     new ChallengeSession({

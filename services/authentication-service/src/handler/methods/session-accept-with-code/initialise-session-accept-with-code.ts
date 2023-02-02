@@ -4,7 +4,7 @@ import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { ServerKoaContext, StrategyInitialisation } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { getValidIdentitySessions } from "../../authentication";
 import { AuthenticationStrategyConfig } from "../../../constant";
 

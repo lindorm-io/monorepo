@@ -6,8 +6,8 @@ import { JOI_CERTIFICATE_METHOD } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession, isRdcRequired } from "../../handler";
-import { getExpires } from "@lindorm-io/core";
-import { randomString } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
+import { randomString } from "@lindorm-io/random";
 import {
   JOI_GUID,
   RdcSessionMode,
@@ -78,7 +78,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const certificateChallenge = randomString(128);
 
-  const { expires, expiresIn } = getExpires(configuration.defaults.enrolment_session_expiry);
+  const { expires, expiresIn } = expiryObject(configuration.defaults.enrolment_session_expiry);
 
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
   const nonce = randomString(16);

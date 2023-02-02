@@ -1,7 +1,7 @@
 import { CertificateMethod } from "../../enum";
 import { DeviceLink, DeviceLinkOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 export const createTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): DeviceLink =>
   new DeviceLink({

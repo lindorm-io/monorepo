@@ -1,7 +1,8 @@
 import { AuthenticationMethod, SessionStatus } from "../../common";
-import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
 import { AuthenticationMode, AuthenticationStrategy } from "../../enum";
-import { PKCEMethod, randomString } from "@lindorm-io/core";
+import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestAuthenticationSession = (

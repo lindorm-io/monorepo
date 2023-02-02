@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { LindormError } from "@lindorm-io/errors";
-import { randomNumber } from "@lindorm-io/core";
+import { randomNumber } from "@lindorm-io/random";
 import { remove } from "lodash";
 import {
   EntityAttributes,

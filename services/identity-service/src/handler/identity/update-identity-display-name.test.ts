@@ -2,8 +2,8 @@ import { createMockLogger } from "@lindorm-io/winston";
 import { createTestDisplayName, createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityDisplayName } from "./update-identity-display-name";
 
-jest.mock("@lindorm-io/core", () => ({
-  ...(jest.requireActual("@lindorm-io/core") as object),
+jest.mock("@lindorm-io/random", () => ({
+  ...(jest.requireActual("@lindorm-io/random") as object),
 
   randomNumber: jest.fn().mockImplementation(async () => 4444),
 }));

@@ -1,7 +1,7 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/core";
 import { getUnixTime } from "date-fns";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   ClientPermission,

@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { IdentifierType } from "../../common";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   TEST_IDENTIFIER_REPOSITORY,

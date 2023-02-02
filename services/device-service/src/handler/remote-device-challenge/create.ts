@@ -1,9 +1,9 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ClientScope, EmitSocketEventRequestData, RdcSessionMode } from "../../common";
-import { ServerKoaContext } from "../../types";
 import { RdcSession, RdcSessionAttributes } from "../../entity";
+import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 
 interface Result {
   id: string;
@@ -104,7 +104,7 @@ export const createRdcSession = async (
     });
   }
 
-  const { expiresIn } = getExpires(expires);
+  const { expiresIn } = expiryObject(expires);
 
   return { id, expiresIn };
 };

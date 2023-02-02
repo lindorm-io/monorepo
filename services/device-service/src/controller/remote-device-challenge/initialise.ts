@@ -1,10 +1,10 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { RdcSessionMode, RdcSessionType } from "../../common";
+import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession } from "../../handler";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 import {
   JOI_FACTORS,
   JOI_RDC_CONFIRM_METHOD,
@@ -74,7 +74,7 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
     confirmUri,
     expires: expiresAt
       ? new Date(expiresAt)
-      : getExpiryDate(configuration.defaults.remote_device_challenge_session_expiry),
+      : expiryDate(configuration.defaults.remote_device_challenge_session_expiry),
     factors,
     identityId,
     mode,

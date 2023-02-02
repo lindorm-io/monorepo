@@ -5,7 +5,7 @@ import { ChallengeStrategy, DeviceFactor } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestDeviceLink } from "../fixtures/entity";
-import { randomNumber, randomString } from "@lindorm-io/core";
+import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 import {

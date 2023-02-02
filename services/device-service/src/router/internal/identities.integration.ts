@@ -16,7 +16,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/internal/identities", () => {
   beforeAll(setupIntegration);
 
-  test("GET /:id/deviceLinks", async () => {
+  test("GET /:id/device-links", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
 
     const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
@@ -34,7 +34,7 @@ describe("/internal/identities", () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
-      .get(`/internal/identities/${deviceLink.identityId}/deviceLinks`)
+      .get(`/internal/identities/${deviceLink.identityId}/device-links`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 

@@ -8,6 +8,7 @@ import {
   initialiseRdcQrCode as _initialiseRdcQrCode,
   initialiseSessionAcceptWithCode as _initialiseSessionAcceptWithCode,
 } from "../../handler";
+import { AuthenticationMethod } from "../../common";
 
 MockDate.set("2022-01-01T07:00:00.000Z");
 
@@ -20,6 +21,7 @@ const initialiseSessionAcceptWithCode = _initialiseSessionAcceptWithCode as jest
 
 describe("initialiseStrategyController", () => {
   let ctx: any;
+  let config: any;
 
   beforeEach(() => {
     ctx = {
@@ -44,12 +46,25 @@ describe("initialiseStrategyController", () => {
       },
     };
 
-    findStrategyConfig.mockImplementation((name) => ({
-      name,
-      confirmKey: "confirm_key",
+    config = {
+      method: AuthenticationMethod.DEVICE_LINK,
+      strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+      amrValuesMax: 0,
+      amrValuesMin: 0,
+      hint: "none",
+      initialiseKey: "none",
+      confirmKey: "challenge_confirmation_token",
+      confirmLength: 99,
+      confirmMode: "none",
+      mfaCookie: true,
       pollingRequired: true,
       tokenReturn: true,
-    }));
+      value: 3,
+      valueMax: 3,
+      weight: 90,
+    };
+
+    findStrategyConfig.mockImplementation(() => config);
     initialiseRdcQrCode.mockResolvedValue({ qrCode: "QR_CODE" });
     initialiseSessionAcceptWithCode.mockResolvedValue({ displayCode: "DISPLAY_CODE" });
   });
@@ -57,11 +72,15 @@ describe("initialiseStrategyController", () => {
   test("should resolve", async () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
+        displayCode: null,
+        expiresIn: 3600,
         id: expect.any(String),
-        confirmKey: "confirm_key",
-        strategySessionToken: "jwt.jwt.jwt",
-        expiresIn: 3006,
+        inputKey: "challenge_confirmation_token",
+        inputLength: 99,
+        inputMode: "none",
         pollingRequired: true,
+        qrCode: null,
+        strategySessionToken: "jwt.jwt.jwt",
       },
     });
 
@@ -74,11 +93,13 @@ describe("initialiseStrategyController", () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
-        confirmKey: "confirm_key",
-        strategySessionToken: "jwt.jwt.jwt",
-        expiresIn: 3006,
+        expiresIn: 3600,
+        inputKey: "challenge_confirmation_token",
+        inputLength: 99,
+        inputMode: "none",
         pollingRequired: true,
         qrCode: "QR_CODE",
+        strategySessionToken: "jwt.jwt.jwt",
       },
     });
   });
@@ -89,49 +110,49 @@ describe("initialiseStrategyController", () => {
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
-        confirmKey: "confirm_key",
-        strategySessionToken: "jwt.jwt.jwt",
-        expiresIn: 3006,
-        pollingRequired: true,
         displayCode: "DISPLAY_CODE",
+        expiresIn: 3600,
+        inputKey: "challenge_confirmation_token",
+        inputLength: 99,
+        inputMode: "none",
+        pollingRequired: true,
+        strategySessionToken: "jwt.jwt.jwt",
       },
     });
   });
 
   test("should resolve without token", async () => {
-    findStrategyConfig.mockImplementation((name) => ({
-      name,
-      confirmKey: "confirm_key",
-      pollingRequired: true,
-      tokenReturn: false,
-    }));
+    config.tokenReturn = false;
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
-        confirmKey: "confirm_key",
-        strategySessionToken: null,
-        expiresIn: 3006,
+        displayCode: null,
+        expiresIn: 3600,
+        inputKey: "challenge_confirmation_token",
+        inputLength: 99,
+        inputMode: "none",
         pollingRequired: true,
+        qrCode: null,
+        strategySessionToken: null,
       },
     });
   });
 
   test("should resolve without polling", async () => {
-    findStrategyConfig.mockImplementation((name) => ({
-      name,
-      confirmKey: "confirm_key",
-      pollingRequired: false,
-      tokenReturn: true,
-    }));
+    config.pollingRequired = false;
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         id: expect.any(String),
-        confirmKey: "confirm_key",
-        strategySessionToken: "jwt.jwt.jwt",
-        expiresIn: 3006,
+        displayCode: null,
+        expiresIn: 3600,
+        inputKey: "challenge_confirmation_token",
+        inputLength: 99,
+        inputMode: "none",
         pollingRequired: false,
+        qrCode: null,
+        strategySessionToken: "jwt.jwt.jwt",
       },
     });
   });

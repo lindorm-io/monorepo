@@ -1,16 +1,16 @@
 import Joi from "joi";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { IdentifierType } from "../../common";
 import { JOI_EMAIL, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
 import { ServerKoaController } from "../../types";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   findOrCreateIdentifier,
   initialiseConnectSession,
   sendConnectSessionMessage,
 } from "../../handler";
-import { ClientError } from "@lindorm-io/errors";
 
 interface RequestData {
   identifier: string;

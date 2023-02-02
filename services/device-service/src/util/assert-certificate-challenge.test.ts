@@ -1,7 +1,7 @@
 import { createSign } from "crypto";
 import { assertCertificateChallenge } from "./assert-certificate-challenge";
 import { CertificateMethod } from "../enum";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { ClientError } from "@lindorm-io/errors";
 
 const privateKey =

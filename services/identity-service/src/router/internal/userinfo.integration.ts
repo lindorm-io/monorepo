@@ -3,6 +3,9 @@ import nock from "nock";
 import request from "supertest";
 import { IdentifierType, IdentityPermission, Scope } from "../../common";
 import { Identity } from "../../entity";
+import { find } from "lodash";
+import { randomNumber, randomString } from "@lindorm-io/random";
+import { server } from "../../server/server";
 import {
   createTestAddress,
   createTestEmailIdentifier,
@@ -10,9 +13,6 @@ import {
   createTestIdentity,
   createTestPhoneIdentifier,
 } from "../../fixtures/entity";
-import { find } from "lodash";
-import { randomNumber, randomString } from "@lindorm-io/core";
-import { server } from "../../server/server";
 import {
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,

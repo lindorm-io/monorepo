@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getUserinfoResponseBody should resolve ACCESSIBILITY 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
-    "preferredAccessibility": Array [
+  "claims": {
+    "preferredAccessibility": [
       "setting1",
       "setting2",
       "setting3",
@@ -12,7 +12,7 @@ Object {
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -25,14 +25,14 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve ADDRESS 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "address": "getAddress",
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -45,16 +45,16 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve CONNECTED_PROVIDERS 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
-    "connectedProviders": Array [
+  "claims": {
+    "connectedProviders": [
       "provider",
     ],
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -67,15 +67,15 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve EMAIL 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "email": "email",
     "emailVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -88,15 +88,15 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve NATIONAL_IDENTITY_NUMBER 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "nationalIdentityNumber": "619492152033",
     "nationalIdentityNumberVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -109,15 +109,15 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve PHONE 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "phoneNumber": "phone",
     "phoneNumberVerified": false,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -130,9 +130,9 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve PROFILE 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "birthDate": "2000-01-01",
     "displayName": "getDisplayName",
     "familyName": "Torsson",
@@ -152,7 +152,7 @@ Object {
     "website": "https://website.url/",
     "zoneInfo": "Europe/Stockholm",
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -165,15 +165,15 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve SOCIAL_SECURITY_NUMBER 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "socialSecurityNumber": "279708557743",
     "socialSecurityNumberVerified": true,
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -186,14 +186,14 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve USERNAME 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
     "username": "bFp3ihd84Ps8Ocjf",
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",
@@ -206,13 +206,13 @@ Object {
 `;
 
 exports[`getUserinfoResponseBody should resolve basic data 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
+  "claims": {
     "sub": "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
     "updatedAt": 1596873600,
   },
-  "permissions": Array [
+  "permissions": [
     "lindorm.io/any/identity/any:user",
     "lindorm.io/oauth-service/identity/client:read",
     "lindorm.io/oauth-service/identity/client:write",

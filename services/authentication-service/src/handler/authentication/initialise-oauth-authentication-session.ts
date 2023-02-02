@@ -1,9 +1,9 @@
 import Joi from "joi";
+import { AuthenticationMethod, JOI_GUID } from "../../common";
 import { AuthenticationMode } from "../../enum";
 import { AuthenticationSession } from "../../entity";
-import { AuthenticationMethod, JOI_GUID } from "../../common";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { fetchOauthLoginData } from "../oauth-service";
