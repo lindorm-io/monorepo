@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.9...@lindorm-io/axios@0.5.10) (2023-02-02)
+
+### Bug Fixes
+
+- amend errors when composing axios config ([2eb0e32](https://github.com/lindorm-io/monorepo/commit/2eb0e32bf538a8c108d2c562edf42e3e5e46cb61))
+- update types ([65dd4f2](https://github.com/lindorm-io/monorepo/commit/65dd4f2662ba3bb0075ba8c30c5fbeace9723bb3))
+
 ## [0.5.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.8...@lindorm-io/axios@0.5.9) (2023-02-02)
 
 ### Bug Fixes
