@@ -1,8 +1,8 @@
-import { AxiosRequestConfig } from "axios";
+import { RawAxiosRequestConfig } from "axios";
 import { Context } from "../types";
 import { createURL } from "@lindorm-io/url";
 
-export const composeAxiosConfig = (ctx: Context): AxiosRequestConfig => ({
+export const composeAxiosConfig = (ctx: Context): RawAxiosRequestConfig => ({
   auth: ctx.req.auth,
   data: ctx.req.body,
   headers: ctx.req.headers,

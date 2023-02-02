@@ -1,4 +1,4 @@
-import { AxiosBasicCredentials, AxiosRequestConfig, Method } from "axios";
+import { AxiosBasicCredentials, RawAxiosRequestConfig, Method } from "axios";
 import { Middleware } from "./middleware";
 import { Protocol } from "@lindorm-io/url";
 import { RetryCallback } from "./retry";
@@ -7,7 +7,7 @@ import { TransformMode } from "@lindorm-io/case";
 
 export type AxiosOptions = {
   auth?: AxiosBasicCredentials;
-  headers?: Record<string, string>;
+  headers?: Record<string, string | number>;
   host?: string;
   middleware?: Middleware[];
   name?: string;
@@ -28,7 +28,7 @@ export type MethodOptions = {
 export type RequestOptions = {
   auth?: AxiosBasicCredentials;
   body?: Record<string, any>;
-  config?: AxiosRequestConfig;
+  config?: RawAxiosRequestConfig;
   headers?: Record<string, string | number>;
   host?: string;
   middleware?: Middleware[];

@@ -14,7 +14,7 @@ import {
 
 export class Axios {
   private readonly auth: AxiosBasicCredentials;
-  private readonly headers: Record<string, string>;
+  private readonly headers: Record<string, string | number>;
   private readonly host: string | undefined;
   private readonly middleware: Middleware[];
   private readonly name: string | undefined;
