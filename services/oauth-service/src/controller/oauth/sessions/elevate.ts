@@ -1,6 +1,15 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ElevationSession } from "../../../entity";
+import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { ServerKoaController } from "../../../types";
+import { SessionHint } from "../../../enum";
+import { assertRedirectUri, getAdjustedAccessLevel } from "../../../util";
+import { configuration } from "../../../server/configuration";
+import { fromUnixTime } from "date-fns";
+import { expiryDate } from "@lindorm-io/expiry";
+import { removeEmptyFromArray } from "@lindorm-io/core";
+import { uniq } from "lodash";
 import {
   AuthenticationMethod,
   JOI_COUNTRY_CODE,
@@ -11,14 +20,6 @@ import {
   JOI_NONCE,
   JOI_STATE,
 } from "../../../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { ServerKoaController } from "../../../types";
-import { SessionHint } from "../../../enum";
-import { configuration } from "../../../server/configuration";
-import { fromUnixTime } from "date-fns";
-import { assertRedirectUri, getAdjustedAccessLevel } from "../../../util";
-import { getExpiryDate, removeEmptyFromArray } from "@lindorm-io/core";
-import { uniq } from "lodash";
 
 type RequestData = {
   acrValue?: LevelOfAssurance;
@@ -72,7 +73,7 @@ export const elevateController: ServerKoaController<RequestData> = async (
     token: { bearerToken, idToken },
   } = ctx;
 
-  const expires = getExpiryDate(configuration.defaults.expiry.authorization_session);
+  const expires = expiryDate(configuration.defaults.expiry.authorization_session);
 
   if (redirectUri) {
     assertRedirectUri(redirectUri, client);

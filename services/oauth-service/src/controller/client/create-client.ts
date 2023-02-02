@@ -6,7 +6,7 @@ import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 interface RequestData {
   description: string;

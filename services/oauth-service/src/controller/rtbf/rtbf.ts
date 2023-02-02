@@ -23,7 +23,6 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
 
     await axiosClient.get(client.rtbfUri, {
       middleware: [axiosBearerAuthMiddleware(accessToken)],
-      retry: 5,
     });
   }
 

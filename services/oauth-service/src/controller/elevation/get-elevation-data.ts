@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetElevationDataResponseBody, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 
 interface RequestData {
   id: string;
@@ -21,7 +21,7 @@ export const getElevationDataController: ServerKoaController<RequestData> = asyn
     entity: { elevationSession },
   } = ctx;
 
-  const { expires, expiresIn } = getExpires(elevationSession.expires);
+  const { expires, expiresIn } = expiryObject(elevationSession.expires);
 
   return {
     body: {

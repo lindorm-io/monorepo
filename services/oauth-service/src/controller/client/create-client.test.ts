@@ -3,8 +3,8 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestClient, createTestTenant } from "../../fixtures/entity";
 
-jest.mock("@lindorm-io/core", () => ({
-  ...(jest.requireActual("@lindorm-io/core") as object),
+jest.mock("@lindorm-io/random", () => ({
+  ...(jest.requireActual("@lindorm-io/random") as object),
 
   randomString: jest.fn().mockImplementation(() => "random-string"),
 }));

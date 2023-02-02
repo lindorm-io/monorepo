@@ -4,7 +4,7 @@ import request from "supertest";
 import { LogoutSessionType } from "../../../enum";
 import { SessionStatus } from "../../../common";
 import { configuration } from "../../../server/configuration";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../../fixtures/data";
 import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
@@ -33,7 +33,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/sessions/logout", () => {
   beforeAll(setupIntegration);
 
-  nock("https://test.client.lindorm.io").post("/logout/back-channel").times(999).reply(200);
+  nock("https://test.client.lindorm.io").get("/logout/back-channel").times(999).reply(200);
 
   test("should create logout session for browser", async () => {
     const { state } = getTestData();

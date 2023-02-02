@@ -1,22 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`updateClientController should resolve updated client 1`] = `
-Array [
-  Array [
-    Object {
+[
+  [
+    {
       "active": true,
-      "allowed": Object {
-        "grantTypes": Array [
+      "allowed": {
+        "grantTypes": [
           "authorization_code",
           "client_credentials",
           "refresh_token",
         ],
-        "responseTypes": Array [
+        "responseTypes": [
           "code",
           "id_token",
           "token",
         ],
-        "scopes": Array [
+        "scopes": [
           "openid",
           "address",
           "email",
@@ -60,16 +60,16 @@ Array [
           "lindorm.io/vault-service/client/protected-record:write",
         ],
       },
-      "audiences": Array [],
+      "audiences": [],
       "created": 2021-01-01T08:00:00.000Z,
-      "defaults": Object {
-        "audiences": Array [],
+      "defaults": {
+        "audiences": [],
         "displayMode": "wap",
         "levelOfAssurance": 1,
         "responseMode": "fragment",
       },
       "description": "new description",
-      "expiry": Object {
+      "expiry": {
         "accessToken": "33 seconds",
         "idToken": "44 seconds",
         "refreshToken": "55 seconds",
@@ -79,7 +79,7 @@ Array [
       "logoUri": "https://new.test.client.com/logo",
       "logoutUri": "https://new.test.client.com/logout",
       "name": "new client",
-      "permissions": Array [
+      "permissions": [
         "lindorm.io/authentication-service/client/confidential",
         "lindorm.io/authentication-service/client/public",
         "lindorm.io/communication-service/client/confidential",
@@ -95,16 +95,16 @@ Array [
         "lindorm.io/vault-service/client/confidential",
         "lindorm.io/vault-service/client/public",
       ],
-      "redirectUris": Array [
+      "redirectUris": [
         "https://new.test.client.com/redirect",
       ],
-      "requiredScopes": Array [
+      "requiredScopes": [
         "openid",
       ],
       "revision": 0,
       "rtbfUri": "https://new.test.client.com/rtbf",
-      "scopeDescriptions": Array [
-        Object {
+      "scopeDescriptions": [
+        {
           "description": "Give the client access to your OpenID claims.",
           "name": "openid",
         },
@@ -120,22 +120,22 @@ Array [
 `;
 
 exports[`updateClientController should resolve updated client 2`] = `
-Array [
-  Array [
-    Object {
+[
+  [
+    {
       "active": true,
-      "allowed": Object {
-        "grantTypes": Array [
+      "allowed": {
+        "grantTypes": [
           "authorization_code",
           "client_credentials",
           "refresh_token",
         ],
-        "responseTypes": Array [
+        "responseTypes": [
           "code",
           "id_token",
           "token",
         ],
-        "scopes": Array [
+        "scopes": [
           "openid",
           "address",
           "email",
@@ -179,16 +179,16 @@ Array [
           "lindorm.io/vault-service/client/protected-record:write",
         ],
       },
-      "audiences": Array [],
+      "audiences": [],
       "created": 2021-01-01T08:00:00.000Z,
-      "defaults": Object {
-        "audiences": Array [],
+      "defaults": {
+        "audiences": [],
         "displayMode": "wap",
         "levelOfAssurance": 1,
         "responseMode": "fragment",
       },
       "description": "new description",
-      "expiry": Object {
+      "expiry": {
         "accessToken": "33 seconds",
         "idToken": "44 seconds",
         "refreshToken": "55 seconds",
@@ -198,7 +198,7 @@ Array [
       "logoUri": "https://new.test.client.com/logo",
       "logoutUri": "https://new.test.client.com/logout",
       "name": "new client",
-      "permissions": Array [
+      "permissions": [
         "lindorm.io/authentication-service/client/confidential",
         "lindorm.io/authentication-service/client/public",
         "lindorm.io/communication-service/client/confidential",
@@ -214,16 +214,16 @@ Array [
         "lindorm.io/vault-service/client/confidential",
         "lindorm.io/vault-service/client/public",
       ],
-      "redirectUris": Array [
+      "redirectUris": [
         "https://new.test.client.com/redirect",
       ],
-      "requiredScopes": Array [
+      "requiredScopes": [
         "openid",
       ],
       "revision": 0,
       "rtbfUri": "https://new.test.client.com/rtbf",
-      "scopeDescriptions": Array [
-        Object {
+      "scopeDescriptions": [
+        {
           "description": "Give the client access to your OpenID claims.",
           "name": "openid",
         },

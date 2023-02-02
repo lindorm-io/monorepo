@@ -3,7 +3,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { SessionStatus } from "../../common";
 import { configuration } from "../../server/configuration";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 
 const assertAuthorizationSession = (authorizationSession: AuthorizationSession): void => {
   if (
@@ -24,10 +24,10 @@ const assertAuthorizationSession = (authorizationSession: AuthorizationSession):
   });
 };
 
-const getExpires = (remember: boolean): Date => {
+const calculateExpiryDate = (remember: boolean): Date => {
   return remember === true
-    ? getExpiryDate(configuration.defaults.expiry.browser_session_remember)
-    : getExpiryDate(configuration.defaults.expiry.browser_session);
+    ? expiryDate(configuration.defaults.expiry.browser_session_remember)
+    : expiryDate(configuration.defaults.expiry.browser_session);
 };
 
 const createBrowserSession = async (
@@ -46,7 +46,7 @@ const createBrowserSession = async (
       amrValues: authorizationSession.confirmedLogin.amrValues,
       clients: [authorizationSession.clientId],
       country: authorizationSession.country,
-      expires: getExpires(authorizationSession.confirmedLogin.remember),
+      expires: calculateExpiryDate(authorizationSession.confirmedLogin.remember),
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
@@ -74,7 +74,7 @@ export const getUpdatedBrowserSession = async (
   });
 
   if (authorizationSession.status.login === SessionStatus.SKIP) {
-    browserSession.expires = getExpires(browserSession.remember);
+    browserSession.expires = calculateExpiryDate(browserSession.remember);
 
     return await browserSessionRepository.update(browserSession);
   }
@@ -88,7 +88,7 @@ export const getUpdatedBrowserSession = async (
   browserSession.acrValues = authorizationSession.confirmedLogin.acrValues;
   browserSession.amrValues = authorizationSession.confirmedLogin.amrValues;
   browserSession.country = authorizationSession.country;
-  browserSession.expires = getExpires(authorizationSession.confirmedLogin.remember);
+  browserSession.expires = calculateExpiryDate(authorizationSession.confirmedLogin.remember);
   browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
   browserSession.levelOfAssurance = authorizationSession.confirmedLogin.levelOfAssurance;
   browserSession.nonce = authorizationSession.nonce;

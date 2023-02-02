@@ -1,5 +1,5 @@
 import { createLogoutVerifyUri } from "./create-logout-verify-uri";
-import { createTestLogoutSession } from "../fixtures/entity";
+import { createTestLogoutSession } from "../../fixtures/entity";
 
 describe("createLogoutVerifyRedirectUri", () => {
   test("should resolve string", () => {

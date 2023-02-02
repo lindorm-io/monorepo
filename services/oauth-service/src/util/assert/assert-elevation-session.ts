@@ -1,4 +1,4 @@
-import { ElevationSession } from "../entity";
+import { ElevationSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 
 export const assertElevationSession = (elevationSession: ElevationSession): void => {

@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   JOI_COUNTRY_CODE,

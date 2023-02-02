@@ -7,7 +7,7 @@ import {
   JOI_NONCE,
 } from "../common";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   EntityAttributes,

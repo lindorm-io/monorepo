@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetLoginDataResponseBody, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 import { isLoginRequired } from "../../util";
 
 interface RequestData {
@@ -29,7 +29,7 @@ export const getLoginDataController: ServerKoaController<RequestData> = async (
 
   const loginRequired = isLoginRequired(authorizationSession, browserSession);
 
-  const { expires, expiresIn } = getExpires(authorizationSession.expires);
+  const { expires, expiresIn } = expiryObject(authorizationSession.expires);
 
   return {
     body: {

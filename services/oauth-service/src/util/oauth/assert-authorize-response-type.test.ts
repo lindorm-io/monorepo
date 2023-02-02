@@ -1,9 +1,9 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ResponseType } from "../../common";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
-import { PKCEMethod } from "@lindorm-io/core";
 
 describe("assertAuthorizeResponseType", () => {
   let authorizationSession: AuthorizationSession;

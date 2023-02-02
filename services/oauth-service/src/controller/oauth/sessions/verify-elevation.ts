@@ -3,8 +3,8 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
+import { createURL } from "@lindorm-io/url";
 import { verifyBrowserSessionElevation, verifyRefreshSessionElevation } from "../../../handler";
-import { createURL } from "@lindorm-io/core";
 
 type RequestData = {
   sessionId: string;

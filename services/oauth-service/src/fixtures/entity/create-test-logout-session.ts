@@ -1,6 +1,6 @@
 import { LogoutSession, LogoutSessionOptions } from "../../entity";
 import { LogoutSessionType } from "../../enum";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestLogoutSession = (

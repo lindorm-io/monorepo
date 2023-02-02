@@ -7,7 +7,7 @@ import { assertCodeChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { flatten, uniq } from "lodash";
 import { generateTokenResponse } from "./generate-token-response";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 
 export const handleAuthorizationCodeGrant = async (
   ctx: ServerKoaContext<OAuthTokenRequestData>,
@@ -105,7 +105,7 @@ export const handleAuthorizationCodeGrant = async (
         acrValues: browserSession.acrValues,
         amrValues: browserSession.amrValues,
         clientId: client.id,
-        expires: getExpiryDate(
+        expires: expiryDate(
           client.expiry.refreshToken || configuration.defaults.expiry.refresh_session,
         ),
         identityId: browserSession.identityId,

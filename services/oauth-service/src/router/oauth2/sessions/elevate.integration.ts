@@ -3,7 +3,8 @@ import request from "supertest";
 import { AuthenticationMethod, SessionStatus } from "../../../common";
 import { SessionHint } from "../../../enum";
 import { configuration } from "../../../server/configuration";
-import { createURL, randomString } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
+import { randomString } from "@lindorm-io/random";
 import { server } from "../../../server/server";
 import {
   createTestBrowserSession,

@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getTenantInfoController should resolve tenant 1`] = `
-Object {
-  "body": Object {
+{
+  "body": {
     "active": true,
-    "administrators": Array [
+    "administrators": [
       "0bbfd773-7eed-402b-83f3-916288ff978c",
       "330ae1ab-a858-4234-9f6a-01304be2f577",
     ],

@@ -1,5 +1,7 @@
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
-import { baseHash, PKCEMethod, randomString } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
+import { baseHash } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   AuthenticationMethod,

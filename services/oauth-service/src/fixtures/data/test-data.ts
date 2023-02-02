@@ -1,5 +1,7 @@
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { createHash } from "crypto";
-import { randomString, PKCEMethod, encodeBase64Url } from "@lindorm-io/core";
+import { encodeBase64Url } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 
 interface Result {
   code: string;

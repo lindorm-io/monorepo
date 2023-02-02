@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { DisplayMode, GrantType, PromptMode, ResponseMode, ResponseType } from "../common";
 
 export const JOI_CODE = Joi.string().length(128);

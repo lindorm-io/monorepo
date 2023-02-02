@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ResponseMode, ResponseType, Scope } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { getIdentityUserinfo } from "../identity";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
@@ -86,12 +86,14 @@ export const generateCallbackResponse = async (
 
     case ResponseMode.FRAGMENT:
       return {
-        redirect: createURL(redirectUri, { query: data }).toString().replace("?", "#"),
+        redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" })
+          .toString()
+          .replace("?", "#"),
       };
 
     case ResponseMode.QUERY:
       return {
-        redirect: createURL(redirectUri, { query: data }).toString(),
+        redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" }).toString(),
       };
 
     default:

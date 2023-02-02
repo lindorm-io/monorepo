@@ -5,7 +5,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { assertElevationSession } from "../../util";
 import { setBrowserSessionCookie } from "../cookies";
-import { stringComparison } from "@lindorm-io/core";
+import { stringComparison } from "@lindorm-io/node-pkce";
 
 export const verifyBrowserSessionElevation = async (
   ctx: ServerKoaContext,

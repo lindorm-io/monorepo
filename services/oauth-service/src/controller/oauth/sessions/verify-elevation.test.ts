@@ -3,12 +3,12 @@ import { ClientError } from "@lindorm-io/errors";
 import { SessionStatus } from "../../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestElevationSession } from "../../../fixtures/entity";
+import { randomString } from "@lindorm-io/random";
 import { verifyElevationController } from "./verify-elevation";
 import {
   verifyBrowserSessionElevation as _verifyBrowserSessionElevation,
   verifyRefreshSessionElevation as _verifyRefreshSessionElevation,
 } from "../../../handler";
-import { randomString } from "@lindorm-io/core";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

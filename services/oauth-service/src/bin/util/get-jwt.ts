@@ -10,5 +10,5 @@ export const getJwt = async (): Promise<JWT> => {
   const keys = await cache.findMany({});
   const keystore = new Keystore({ keys });
 
-  return new JWT({ issuer: configuration.server.issuer, keystore, logger });
+  return new JWT({ issuer: configuration.server.issuer }, keystore, logger);
 };

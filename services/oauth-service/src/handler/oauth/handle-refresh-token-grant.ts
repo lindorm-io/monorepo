@@ -3,7 +3,7 @@ import { ServerKoaContext, OAuthTokenRequestData, OAuthTokenResponseBody } from 
 import { TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { generateTokenResponse } from "./generate-token-response";
-import { getExpiryDate } from "@lindorm-io/core";
+import { expiryDate } from "@lindorm-io/expiry";
 import { isAfter } from "date-fns";
 import { randomUUID } from "crypto";
 
@@ -70,7 +70,7 @@ export const handleRefreshTokenGrant = async (
     });
   }
 
-  refreshSession.expires = getExpiryDate(
+  refreshSession.expires = expiryDate(
     client.expiry.refreshToken || configuration.defaults.expiry.refresh_session,
   );
 

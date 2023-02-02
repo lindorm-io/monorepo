@@ -1,6 +1,6 @@
-import { LogoutSession } from "../entity";
-import { createURL } from "@lindorm-io/core";
-import { configuration } from "../server/configuration";
+import { LogoutSession } from "../../entity";
+import { createURL } from "@lindorm-io/url";
+import { configuration } from "../../server/configuration";
 import { Environment } from "@lindorm-io/koa";
 
 export const createLogoutVerifyUri = (logoutSession: LogoutSession): string => {

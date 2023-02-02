@@ -6,7 +6,7 @@ import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { flatten, uniq } from "lodash";
 
 interface Options {

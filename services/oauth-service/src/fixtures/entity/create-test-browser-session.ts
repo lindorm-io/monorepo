@@ -1,6 +1,6 @@
 import { BrowserSession, BrowserSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { AuthenticationMethod } from "../../common";
 
 export const createTestBrowserSession = (

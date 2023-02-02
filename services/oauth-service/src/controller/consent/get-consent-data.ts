@@ -3,7 +3,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { GetConsentInfoResponseBody, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 import { isConsentRequired } from "../../util";
 
 interface RequestData {
@@ -41,7 +41,7 @@ export const getConsentDataController: ServerKoaController<RequestData> = async 
 
   const consentRequired = isConsentRequired(authorizationSession, browserSession, consentSession);
 
-  const { expires, expiresIn } = getExpires(authorizationSession.expires);
+  const { expires, expiresIn } = expiryObject(authorizationSession.expires);
 
   return {
     body: {

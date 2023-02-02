@@ -1,7 +1,7 @@
-import { AuthorizationSession, Client } from "../entity";
+import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertRedirectUri } from "./assert-redirect-uri";
-import { createTestAuthorizationSession, createTestClient } from "../fixtures/entity";
+import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 
 describe("assertAuthorizeRedirectUri", () => {
   let authorizationSession: AuthorizationSession;

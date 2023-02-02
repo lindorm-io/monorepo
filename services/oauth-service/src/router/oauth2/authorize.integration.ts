@@ -1,9 +1,10 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { DisplayMode, PromptMode, ResponseMode, ResponseType, Scope } from "../../common";
-import { baseHash, createURL } from "@lindorm-io/core";
+import { baseHash } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
 import { createTestClient } from "../../fixtures/entity";
+import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../fixtures/data";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";

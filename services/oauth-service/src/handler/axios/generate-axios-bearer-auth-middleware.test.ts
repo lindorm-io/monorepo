@@ -11,9 +11,7 @@ describe("generateAxiosBearerAuthMiddleware", () => {
 
   test("should resolve middleware", () => {
     expect(generateAxiosBearerAuthMiddleware(ctx, ["permissions"], ["scope"])).toStrictEqual(
-      expect.objectContaining({
-        request: expect.any(Function),
-      }),
+      expect.any(Function),
     );
   });
 });

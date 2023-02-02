@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_GUID, GetLogoutSessionInfoResponseBody } from "../../common";
-import { getExpires } from "@lindorm-io/core";
+import { expiryObject } from "@lindorm-io/expiry";
 
 interface RequestData {
   id: string;
@@ -21,7 +21,7 @@ export const getLogoutDataController: ServerKoaController<RequestData> = async (
     entity: { client, logoutSession },
   } = ctx;
 
-  const { expires, expiresIn } = getExpires(logoutSession.expires);
+  const { expires, expiresIn } = expiryObject(logoutSession.expires);
 
   return {
     body: {

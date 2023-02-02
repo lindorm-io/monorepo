@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { argon } from "../../instance";
 
 interface RequestData {

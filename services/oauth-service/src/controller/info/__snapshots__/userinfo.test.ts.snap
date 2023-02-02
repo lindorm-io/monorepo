@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`userinfoController should resolve user info 1`] = `
-Object {
-  "body": Object {
-    "address": Object {
+{
+  "body": {
+    "address": {
       "careOf": "careOf",
       "country": "country",
       "formatted": "streetAddress1
@@ -32,7 +32,7 @@ streetAddress2",
     "phoneNumber": "+46705498721",
     "phoneNumberVerified": true,
     "picture": "https://picture.url/",
-    "preferredAccessibility": Array [
+    "preferredAccessibility": [
       "setting1",
       "setting2",
       "setting3",

@@ -1,6 +1,6 @@
 import { AuthenticationMethod } from "../../common";
 import { ElevationSession, ElevationSessionAttributes } from "../../entity";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestElevationSession = (

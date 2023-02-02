@@ -1,4 +1,4 @@
-import { SessionStatus } from "../common";
+import { SessionStatus } from "../../common";
 import { ClientError } from "@lindorm-io/errors";
 
 export const assertSessionPending = (status: SessionStatus): void => {

@@ -1,5 +1,5 @@
-import { AuthorizationSession } from "../entity";
-import { createURL } from "@lindorm-io/core";
+import { AuthorizationSession } from "../../entity";
+import { createURL } from "@lindorm-io/url";
 
 export const createLoginRejectedUri = (authorizationSession: AuthorizationSession): string =>
   createURL(authorizationSession.redirectUri, {

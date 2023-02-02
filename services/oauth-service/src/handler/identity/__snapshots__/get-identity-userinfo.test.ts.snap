@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getIdentityUserinfo should resolve 1`] = `
-Object {
+{
   "active": true,
-  "claims": Object {
-    "address": Object {
+  "claims": {
+    "address": {
       "careOf": "careOf",
       "country": "country",
       "formatted": "streetAddress1
@@ -33,7 +33,7 @@ streetAddress2",
     "phoneNumber": "+46705498721",
     "phoneNumberVerified": true,
     "picture": "https://picture.url/",
-    "preferredAccessibility": Array [
+    "preferredAccessibility": [
       "setting1",
       "setting2",
       "setting3",
@@ -48,7 +48,7 @@ streetAddress2",
     "website": "https://website.url/",
     "zoneInfo": "Europe/Stockholm",
   },
-  "permissions": Array [
+  "permissions": [
     "user",
   ],
 }

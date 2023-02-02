@@ -3,7 +3,7 @@ import { BrowserSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { getExpiryDate } from "@lindorm-io/core";
+import { getExpiryDate } from "@lindorm-io/expiry";
 import { Environment } from "@lindorm-io/koa";
 
 export const tryFindBrowserSession = async (

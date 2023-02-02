@@ -1,4 +1,4 @@
-import { Client } from "../entity";
+import { Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 
 export const assertRedirectUri = (redirectUri: string, client: Client): void => {

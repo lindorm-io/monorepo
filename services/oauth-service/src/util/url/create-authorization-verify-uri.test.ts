@@ -1,5 +1,5 @@
 import { createAuthorizationVerifyUri } from "./create-authorization-verify-uri";
-import { createTestAuthorizationSession } from "../fixtures/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 
 describe("createAuthorizationVerifyRedirectUri", () => {
   test("should resolve string", () => {

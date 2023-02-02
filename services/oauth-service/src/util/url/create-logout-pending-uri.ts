@@ -1,6 +1,6 @@
-import { LogoutSession } from "../entity";
-import { createURL } from "@lindorm-io/core";
-import { configuration } from "../server/configuration";
+import { LogoutSession } from "../../entity";
+import { createURL } from "@lindorm-io/url";
+import { configuration } from "../../server/configuration";
 
 export const createLogoutPendingUri = (logoutSession: LogoutSession): string => {
   return createURL(configuration.redirect.logout, {

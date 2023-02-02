@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { assertAcrValues, assertSessionPending } from "../../util";
-import { stringComparison } from "@lindorm-io/core";
+import { stringComparison } from "@lindorm-io/node-pkce";
 import {
   ConfirmElevationRequestBody,
   JOI_GUID,

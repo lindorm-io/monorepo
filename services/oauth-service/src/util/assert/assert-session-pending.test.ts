@@ -1,5 +1,5 @@
 import { assertSessionPending } from "./assert-session-pending";
-import { SessionStatus } from "../common";
+import { SessionStatus } from "../../common";
 import { ClientError } from "@lindorm-io/errors";
 
 describe("assertSessionPending", () => {

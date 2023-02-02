@@ -4,7 +4,8 @@ import { JOI_GUID, JOI_JWT, JOI_STATE } from "../../../common";
 import { LogoutSession } from "../../../entity";
 import { ServerKoaController } from "../../../types";
 import { configuration } from "../../../server/configuration";
-import { createURL, getExpiryDate } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
+import { expiryDate } from "@lindorm-io/expiry";
 import { findSessionToLogout } from "../../../handler";
 
 interface RequestData {
@@ -44,7 +45,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
 
   const { session, type } = await findSessionToLogout(ctx, sessionId, idToken?.sessionHint);
 
-  const expires = getExpiryDate(configuration.defaults.expiry.logout_session);
+  const expires = expiryDate(configuration.defaults.expiry.logout_session);
 
   const logoutSession = await logoutSessionCache.create(
     new LogoutSession({

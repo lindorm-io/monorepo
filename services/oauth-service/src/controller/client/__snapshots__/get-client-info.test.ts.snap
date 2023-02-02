@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`getClientInfoController should resolve client 1`] = `
-Object {
-  "body": Object {
+{
+  "body": {
     "active": true,
-    "allowed": Object {
-      "grantTypes": Array [
+    "allowed": {
+      "grantTypes": [
         "authorization_code",
         "client_credentials",
         "refresh_token",
       ],
-      "responseTypes": Array [
+      "responseTypes": [
         "code",
         "id_token",
         "token",
       ],
-      "scopes": Array [
+      "scopes": [
         "openid",
         "address",
         "email",
@@ -59,21 +59,21 @@ Object {
         "lindorm.io/vault-service/client/protected-record:write",
       ],
     },
-    "defaults": Object {
-      "audiences": Array [],
+    "defaults": {
+      "audiences": [],
       "displayMode": "popup",
       "levelOfAssurance": 3,
       "responseMode": "query",
     },
     "description": "Client description",
-    "expiry": Object {
+    "expiry": {
       "accessToken": "99 seconds",
       "idToken": "99 seconds",
       "refreshToken": "99 seconds",
     },
     "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
     "name": "ClientName",
-    "permissions": Array [
+    "permissions": [
       "lindorm.io/authentication-service/client/confidential",
       "lindorm.io/authentication-service/client/public",
       "lindorm.io/communication-service/client/confidential",
@@ -89,15 +89,15 @@ Object {
       "lindorm.io/vault-service/client/confidential",
       "lindorm.io/vault-service/client/public",
     ],
-    "redirectUris": Array [
+    "redirectUris": [
       "https://test.client.lindorm.io/redirect",
     ],
-    "scopeDescriptions": Array [
-      Object {
+    "scopeDescriptions": [
+      {
         "description": "Give the client access to your OpenID claims.",
         "name": "openid",
       },
-      Object {
+      {
         "description": "Give the client access to your profile information.",
         "name": "profile",
       },

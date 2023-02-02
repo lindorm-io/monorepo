@@ -4,7 +4,7 @@ import request from "supertest";
 import { AuthenticationMethod, ResponseMode, Scope, SessionStatus } from "../../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
 import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { server } from "../../../server/server";
 import {
   setupIntegration,

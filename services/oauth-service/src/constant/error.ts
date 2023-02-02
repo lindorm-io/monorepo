@@ -1,4 +1,4 @@
-import { createURL } from "@lindorm-io/core";
+import { createURL } from "@lindorm-io/url";
 import { configuration } from "../server/configuration";
 
 export const ERROR_REDIRECT_URI = createURL(configuration.frontend.routes.error, {

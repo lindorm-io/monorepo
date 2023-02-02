@@ -1,5 +1,5 @@
-import { LogoutSession } from "../entity";
-import { createURL } from "@lindorm-io/core";
+import { LogoutSession } from "../../entity";
+import { createURL } from "@lindorm-io/url";
 
 export const createLogoutRejectedUri = (logoutSession: LogoutSession): string =>
   createURL(logoutSession.redirectUri, {

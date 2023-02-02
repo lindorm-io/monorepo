@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { assertPKCE, PKCEMethod } from "@lindorm-io/core";
+import { assertPKCE, PKCEMethod } from "@lindorm-io/node-pkce";
 
 export const assertCodeChallenge = (
   codeChallenge: string,

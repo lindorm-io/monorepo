@@ -1,5 +1,5 @@
 import { difference } from "lodash";
-import { ALLOWED_ACR_VALUES } from "../constant";
+import { ALLOWED_ACR_VALUES } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
 
 export const assertAcrValues = (acrValues: Array<string>): void => {

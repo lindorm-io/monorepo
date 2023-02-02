@@ -1,7 +1,7 @@
-import { AuthenticationMethod } from "../common";
+import { AuthenticationMethod } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { assertElevationSession } from "./assert-elevation-session";
-import { createTestElevationSession } from "../fixtures/entity";
+import { createTestElevationSession } from "../../fixtures/entity";
 
 describe("assertElevationSession", () => {
   test("should resolve", () => {

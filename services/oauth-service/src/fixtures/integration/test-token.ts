@@ -1,7 +1,7 @@
 import { IdentityServiceClaims, Scope, SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 

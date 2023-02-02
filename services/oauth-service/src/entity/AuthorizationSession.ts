@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/core";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import {
   EntityAttributes,
   EntityKeys,

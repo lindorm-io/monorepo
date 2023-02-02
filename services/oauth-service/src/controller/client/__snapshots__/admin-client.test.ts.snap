@@ -1,31 +1,31 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`adminClientController should resolve updated client 1`] = `
-Array [
-  Array [
-    Object {
+[
+  [
+    {
       "active": false,
-      "allowed": Object {
-        "grantTypes": Array [
+      "allowed": {
+        "grantTypes": [
           "refresh_token",
         ],
-        "responseTypes": Array [
+        "responseTypes": [
           "token",
         ],
-        "scopes": Array [
+        "scopes": [
           "openid",
         ],
       },
-      "audiences": Array [],
+      "audiences": [],
       "created": 2021-01-01T08:00:00.000Z,
-      "defaults": Object {
-        "audiences": Array [],
+      "defaults": {
+        "audiences": [],
         "displayMode": "popup",
         "levelOfAssurance": 3,
         "responseMode": "query",
       },
       "description": "Client description",
-      "expiry": Object {
+      "expiry": {
         "accessToken": "99 seconds",
         "idToken": "99 seconds",
         "refreshToken": "99 seconds",
@@ -35,24 +35,24 @@ Array [
       "logoUri": "https://logo.uri/logo",
       "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
       "name": "ClientName",
-      "permissions": Array [
+      "permissions": [
         "lindorm.io/oauth-service/client/public",
       ],
-      "redirectUris": Array [
+      "redirectUris": [
         "https://test.client.lindorm.io/redirect",
       ],
-      "requiredScopes": Array [
+      "requiredScopes": [
         "offline_access",
         "openid",
       ],
       "revision": 0,
       "rtbfUri": "https://test.client.lindorm.io/rtbf",
-      "scopeDescriptions": Array [
-        Object {
+      "scopeDescriptions": [
+        {
           "description": "Give the client access to your OpenID claims.",
           "name": "openid",
         },
-        Object {
+        {
           "description": "Give the client access to your profile information.",
           "name": "profile",
         },
@@ -68,31 +68,31 @@ Array [
 `;
 
 exports[`adminClientController should resolve updated client 2`] = `
-Array [
-  Array [
-    Object {
+[
+  [
+    {
       "active": false,
-      "allowed": Object {
-        "grantTypes": Array [
+      "allowed": {
+        "grantTypes": [
           "refresh_token",
         ],
-        "responseTypes": Array [
+        "responseTypes": [
           "token",
         ],
-        "scopes": Array [
+        "scopes": [
           "openid",
         ],
       },
-      "audiences": Array [],
+      "audiences": [],
       "created": 2021-01-01T08:00:00.000Z,
-      "defaults": Object {
-        "audiences": Array [],
+      "defaults": {
+        "audiences": [],
         "displayMode": "popup",
         "levelOfAssurance": 3,
         "responseMode": "query",
       },
       "description": "Client description",
-      "expiry": Object {
+      "expiry": {
         "accessToken": "99 seconds",
         "idToken": "99 seconds",
         "refreshToken": "99 seconds",
@@ -102,24 +102,24 @@ Array [
       "logoUri": "https://logo.uri/logo",
       "logoutUri": "https://test.client.lindorm.io/logout/back-channel",
       "name": "ClientName",
-      "permissions": Array [
+      "permissions": [
         "lindorm.io/oauth-service/client/public",
       ],
-      "redirectUris": Array [
+      "redirectUris": [
         "https://test.client.lindorm.io/redirect",
       ],
-      "requiredScopes": Array [
+      "requiredScopes": [
         "offline_access",
         "openid",
       ],
       "revision": 0,
       "rtbfUri": "https://test.client.lindorm.io/rtbf",
-      "scopeDescriptions": Array [
-        Object {
+      "scopeDescriptions": [
+        {
           "description": "Give the client access to your OpenID claims.",
           "name": "openid",
         },
-        Object {
+        {
           "description": "Give the client access to your profile information.",
           "name": "profile",
         },

@@ -1,6 +1,6 @@
 import { ServerKoaContext } from "../../types";
 import { SubjectHint, TokenType } from "../../common";
-import { axiosBearerAuthMiddleware, AxiosMiddleware } from "@lindorm-io/axios";
+import { axiosBearerAuthMiddleware, Middleware as AxiosMiddleware } from "@lindorm-io/axios";
 import { configuration } from "../../server/configuration";
 import { flatten, uniq } from "lodash";
 

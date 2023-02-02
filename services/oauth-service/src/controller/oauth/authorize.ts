@@ -1,10 +1,12 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
 import { ControllerResponse, Environment } from "@lindorm-io/koa";
+import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
+import { expiryDate } from "@lindorm-io/expiry";
 import { flatten, uniq } from "lodash";
-import { getExpiryDate, PKCEMethod, removeEmptyFromArray } from "@lindorm-io/core";
+import { removeEmptyFromArray } from "@lindorm-io/core";
 import { tryFindBrowserSession, tryFindConsentSession, tryFindRefreshSession } from "../../handler";
 import {
   DisplayMode,
@@ -121,7 +123,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   assertRedirectUri(redirectUri, client);
 
-  const expires = getExpiryDate(configuration.defaults.expiry.authorization_session);
+  const expires = expiryDate(configuration.defaults.expiry.authorization_session);
 
   const { levelOfAssurance: requiredLevel, methods: requiredMethods } = filterAcrValues({
     acrValues,

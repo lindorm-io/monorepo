@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`tokeninfoController should resolve token info 1`] = `
-Object {
-  "body": Object {
+{
+  "body": {
     "aal": 2,
-    "acr": Array [
+    "acr": [
       "acr1",
     ],
     "active": true,
-    "amr": Array [
+    "amr": [
       "amr1",
     ],
     "aud": "audiences",
