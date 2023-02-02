@@ -11,7 +11,7 @@ export type AxiosOptions = {
   name?: string;
   port?: number;
   protocol?: Protocol;
-  retry?: RetryOptions;
+  retry?: Partial<RetryOptions>;
   timeout?: number;
   withCredentials?: boolean;
 };
@@ -33,7 +33,7 @@ export type RequestOptions = {
   port?: number;
   protocol?: Protocol;
   query?: Record<string, any>;
-  retry?: RetryOptions;
+  retry?: Partial<RetryOptions>;
   retryCallback?: RetryCallback;
   timeout?: number;
   withCredentials?: boolean;

@@ -31,7 +31,13 @@ export class Axios {
     this.name = options.name;
     this.port = options.port || port;
     this.protocol = options.protocol || protocol || "https";
-    this.retry = options.retry || DEFAULT_RETRY_OPTIONS;
+    this.retry = {
+      maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
+      maximumMilliseconds:
+        options.retry?.maximumMilliseconds || DEFAULT_RETRY_OPTIONS.maximumMilliseconds,
+      milliseconds: options.retry?.milliseconds || DEFAULT_RETRY_OPTIONS.milliseconds,
+      strategy: options.retry?.strategy || DEFAULT_RETRY_OPTIONS.strategy,
+    };
     this.timeout = options.timeout || DEFAULT_TIMEOUT_OPTIONS;
     this.withCredentials = options.withCredentials === true;
   }
@@ -105,7 +111,7 @@ export class Axios {
       headers = {},
       params = {},
       query = {},
-      retry,
+      retry = {},
       retryCallback,
       timeout,
       withCredentials,
@@ -137,7 +143,7 @@ export class Axios {
         port: url.port || this.port,
         protocol: url.protocol || this.protocol,
         query: { ...url.query, ...query },
-        retry: retry || this.retry,
+        retry: { ...this.retry, ...retry },
         retryCallback: retryCallback || defaultRetryCallback,
         timeout: timeout || this.timeout,
         withCredentials: withCredentials || this.withCredentials,
