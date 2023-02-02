@@ -96,7 +96,7 @@
     "trailingComma": "all"
   },
   "volta": {
-    "node": "14.19.1",
+    "node": "14.20.1",
     "yarn": "1.22.17"
   },
   "workspaces": [
