@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/jwt",
   "description": "JWT tools for lindorm.io",
-  "version": "0.8.21",
+  "version": "0.8.22",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -25,7 +25,7 @@
     "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.1.0",
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/expiry": "^0.1.1",
     "@lindorm-io/key-pair": "^0.6.15",
     "@types/jsonwebtoken": "^9.0.1",

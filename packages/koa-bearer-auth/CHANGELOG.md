@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.37](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.36...@lindorm-io/koa-bearer-auth@0.3.37) (2023-02-04)
+
+### Bug Fixes
+
+- update jwt and remove permissions ([48331d9](https://github.com/lindorm-io/monorepo/commit/48331d9b18351bba0ceb55c2a6248a4602e95d10))
+
 ## [0.3.36](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.35...@lindorm-io/koa-bearer-auth@0.3.36) (2023-02-02)
 
 **Note:** Version bump only for package @lindorm-io/koa-bearer-auth
