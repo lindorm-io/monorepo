@@ -1,10 +1,10 @@
-import { KeyType } from "@lindorm-io/key-pair";
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { Expiry } from "@lindorm-io/expiry";
-import { LevelOfAssurance } from "./loa";
+import { KeyType } from "@lindorm-io/key-pair";
 
 export type JwtSignOptions<Payload = never, Claims = never> = {
   id?: string;
-  adjustedAccessLevel?: LevelOfAssurance;
+  adjustedAccessLevel?: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass?: Array<string>;
   authMethodsReference?: Array<string>;
@@ -17,7 +17,6 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   nonce?: string;
   notBefore?: Date;
   payload?: Payload;
-  permissions?: Array<string>;
   scopes?: Array<string>;
   sessionId?: string;
   sessionHint?: string;

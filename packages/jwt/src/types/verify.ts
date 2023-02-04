@@ -1,7 +1,7 @@
-import { LevelOfAssurance } from "./loa";
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 
 export type JwtVerifyOptions = {
-  adjustedAccessLevel: LevelOfAssurance;
+  adjustedAccessLevel: AdjustedAccessLevel;
   audience: string;
   audiences: Array<string>;
   authorizedParty: string;
@@ -10,7 +10,6 @@ export type JwtVerifyOptions = {
   levelOfAssurance: LevelOfAssurance;
   maxAge: string;
   nonce: string;
-  permissions: Array<string>;
   scopes: Array<string>;
   subject: string;
   subjectHint: string;
@@ -21,7 +20,7 @@ export type JwtVerifyOptions = {
 export type JwtVerifyData<Payload = never, Claims = never> = {
   id: string;
   active: boolean;
-  adjustedAccessLevel: LevelOfAssurance;
+  adjustedAccessLevel: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;
@@ -37,7 +36,6 @@ export type JwtVerifyData<Payload = never, Claims = never> = {
   notBefore: number;
   now: number;
   payload: Payload;
-  permissions: Array<string>;
   scopes: Array<string>;
   sessionId: string | null;
   sessionHint: string | null;

@@ -1,5 +1,5 @@
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { get } from "object-path";
 import {
   BearerTokenCustomValidation,
@@ -8,11 +8,10 @@ import {
 } from "../types";
 
 export interface BearerAuthOptions {
-  adjustedAccessLevel?: LevelOfAssurance;
+  adjustedAccessLevel?: AdjustedAccessLevel;
   audiences?: Array<string>;
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string;
-  permissions?: Array<string>;
   scopes?: Array<string>;
 
   fromPath?: {
@@ -39,8 +38,7 @@ export const bearerAuthMiddleware =
       types = ["access_token"],
     } = config;
 
-    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, permissions, scopes } =
-      options;
+    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, scopes } = options;
 
     const audiences = [...new Set([config.audiences || [], options.audiences || []].flat())];
 
@@ -62,7 +60,6 @@ export const bearerAuthMiddleware =
         levelOfAssurance,
         maxAge,
         nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
-        permissions,
         scopes,
         subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
         subjectHint,

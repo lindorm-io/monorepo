@@ -1,8 +1,8 @@
-import { LevelOfAssurance } from "./loa";
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 
 export type JwtDecodedClaims<Payload, Claims> = {
   id: string;
-  adjustedAccessLevel: LevelOfAssurance;
+  adjustedAccessLevel: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass: Array<string>;
   authMethodsReference: Array<string>;
@@ -12,7 +12,6 @@ export type JwtDecodedClaims<Payload, Claims> = {
   levelOfAssurance: LevelOfAssurance;
   nonce: string | null;
   payload: Payload;
-  permissions: Array<string>;
   scopes: Array<string>;
   sessionId: string | null;
   sessionHint: string | null;

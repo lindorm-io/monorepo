@@ -25,7 +25,8 @@
     "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.2",
+    "@lindorm-io/common-types": "^0.1.0",
+    "@lindorm-io/expiry": "^0.1.1",
     "@lindorm-io/key-pair": "^0.6.15",
     "@types/jsonwebtoken": "^9.0.1",
     "date-fns": "^2.29.3"

@@ -1,10 +1,10 @@
 import { DefaultLindormBearerAuthSocketMiddleware, BearerAuthMiddlewareConfig } from "../types";
 import { ClientError } from "@lindorm-io/errors";
 import { getSocketError } from "@lindorm-io/koa";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 
 interface Config extends BearerAuthMiddlewareConfig {
-  adjustedAccessLevel?: LevelOfAssurance;
+  adjustedAccessLevel?: AdjustedAccessLevel;
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string;
 }

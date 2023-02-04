@@ -41,7 +41,6 @@ describe("JWT", () => {
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: new Date(),
       payload: { payloadKey: "payloadValue" },
-      permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
@@ -136,7 +135,6 @@ describe("JWT", () => {
         ext: {
           payload_key: "payloadValue",
         },
-        iam: ["permission1", "permission2", "permission3"],
         iat: 1609488000,
         iss: "issuer",
         jti: id,
@@ -201,7 +199,6 @@ describe("JWT", () => {
       notBefore: 1609488000,
       now: 1609488000,
       payload: { payloadKey: "payloadValue" },
-      permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
@@ -282,16 +279,6 @@ describe("JWT", () => {
     ).toBeTruthy();
   });
 
-  test("should verify permissions", () => {
-    const { token } = jwt.sign(optionsFull);
-
-    expect(
-      jwt.verify(token, {
-        permissions: ["permission1", "permission2"],
-      }),
-    ).toBeTruthy();
-  });
-
   test("should verify scopes", () => {
     const { token } = jwt.sign(optionsFull);
 
@@ -364,7 +351,6 @@ describe("JWT", () => {
       notBefore: 1609488000,
       now: 1609488000,
       payload: { payloadKey: "payloadValue" },
-      permissions: ["permission1", "permission2", "permission3"],
       scopes: ["scope"],
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
@@ -398,7 +384,6 @@ describe("JWT", () => {
       notBefore: 1609488000,
       now: 1609488000,
       payload: {},
-      permissions: [],
       scopes: [],
       sessionId: null,
       sessionHint: null,
@@ -531,26 +516,6 @@ describe("JWT", () => {
         nbf: 1609488000,
       }),
     );
-  });
-
-  test("should reject missing permission", () => {
-    const { token } = jwt.sign({ ...optionsFull, permissions: [] });
-
-    expect(() =>
-      jwt.verify(token, {
-        permissions: ["unexpected"],
-      }),
-    ).toThrow(TokenError);
-  });
-
-  test("should reject invalid permission", () => {
-    const { token } = jwt.sign(optionsFull);
-
-    expect(() =>
-      jwt.verify(token, {
-        permissions: ["unexpected"],
-      }),
-    ).toThrow(TokenError);
   });
 
   test("should reject missing scope", () => {

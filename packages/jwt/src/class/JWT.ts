@@ -20,9 +20,12 @@ import {
   JwtSignOptions,
   JwtVerifyData,
   JwtVerifyOptions,
-  LevelOfAssurance,
-  LindormClaims,
 } from "../types";
+import {
+  AdjustedAccessLevel,
+  LevelOfAssurance,
+  LindormTokenClaims,
+} from "@lindorm-io/common-types";
 
 export class JWT {
   private readonly clockTolerance: number;
@@ -51,7 +54,7 @@ export class JWT {
       options,
     });
 
-    const object: LindormClaims = {
+    const object: LindormTokenClaims = {
       // required claims
       aud: options.audiences,
       exp: expiresUnix,
@@ -73,7 +76,6 @@ export class JWT {
       // optional lindorm claims
       aal: options.adjustedAccessLevel,
       loa: options.levelOfAssurance,
-      iam: options.permissions,
       scp: options.scopes,
       sih: options.sessionHint,
       suh: options.subjectHint,
@@ -122,7 +124,6 @@ export class JWT {
       levelOfAssurance,
       maxAge,
       nonce,
-      permissions,
       scopes,
       subject,
       subjectHint,
@@ -162,10 +163,6 @@ export class JWT {
 
       if (levelOfAssurance) {
         assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
-      }
-
-      if (permissions) {
-        assertClaimDifference(permissions, claims.permissions, "iam");
       }
 
       if (scopes) {
@@ -209,7 +206,7 @@ export class JWT {
       payload: object,
     } = decode(token, { complete: true }) as unknown as {
       header: any;
-      payload: LindormClaims & { [key: string]: any };
+      payload: LindormTokenClaims & { [key: string]: any };
     };
 
     const now = getUnixTime(new Date());
@@ -222,7 +219,6 @@ export class JWT {
       azp,
       exp,
       ext,
-      iam,
       iat,
       iss,
       jti,
@@ -242,7 +238,7 @@ export class JWT {
     return {
       id: jti,
       active: iat <= now && nbf <= now && exp >= now,
-      adjustedAccessLevel: (aal as LevelOfAssurance) || 0,
+      adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
       audiences: aud,
       authContextClass: acr || [],
       authMethodsReference: amr || [],
@@ -259,7 +255,6 @@ export class JWT {
       notBefore: nbf,
       now,
       payload: ext ? camelCase<Payload>(ext) : ({} as Payload),
-      permissions: iam || [],
       scopes: scp || [],
       sessionId: sid || null,
       sessionHint: sih || null,

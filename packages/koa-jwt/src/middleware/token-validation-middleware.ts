@@ -1,5 +1,5 @@
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { get } from "object-path";
 import {
   TokenCustomValidation,
@@ -8,11 +8,10 @@ import {
 } from "../types";
 
 export interface TokenValidationOptions {
-  adjustedAccessLevel?: LevelOfAssurance;
+  adjustedAccessLevel?: AdjustedAccessLevel;
   audiences?: Array<string>;
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string;
-  permissions?: Array<string>;
   scopes?: Array<string>;
 
   fromPath?: {
@@ -36,8 +35,7 @@ export const tokenValidationMiddleware =
 
     const { clockTolerance, contextKey, issuer, subjectHint, types } = config;
 
-    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, permissions, scopes } =
-      options;
+    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, scopes } = options;
 
     const token = get(ctx, path);
 
@@ -59,7 +57,6 @@ export const tokenValidationMiddleware =
         levelOfAssurance,
         maxAge,
         nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
-        permissions,
         scopes,
         subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
         subjectHint,
