@@ -1,8 +1,8 @@
 import { ReverseMap } from "../utility";
 
-export const RdcSessionTypeEnum = {
+export const RdcSessionTypes = {
   CALLBACK: "callback",
   ENROLMENT: "enrolment",
 } as const;
 
-export type RdcSessionType = ReverseMap<typeof RdcSessionTypeEnum>;
+export type RdcSessionType = ReverseMap<typeof RdcSessionTypes>;

@@ -1,6 +1,6 @@
 import { ReverseMap } from "../utility";
 
-export const SessionStatusEnum = {
+export const SessionStatuses = {
   ACKNOWLEDGED: "acknowledged",
   CODE: "code",
   CONFIRMED: "confirmed",
@@ -11,4 +11,4 @@ export const SessionStatusEnum = {
   VERIFIED: "verified",
 } as const;
 
-export type SessionStatus = ReverseMap<typeof SessionStatusEnum>;
+export type SessionStatus = ReverseMap<typeof SessionStatuses>;

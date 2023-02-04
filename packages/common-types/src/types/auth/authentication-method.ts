@@ -1,6 +1,6 @@
 import { ReverseMap } from "../utility";
 
-export const AuthenticationMethodEnum = {
+export const AuthenticationMethods = {
   BANK_ID_SE: "bank_id_se",
   DEVICE_LINK: "device_link",
   EMAIL: "email",
@@ -12,4 +12,4 @@ export const AuthenticationMethodEnum = {
   WEBAUTHN: "webauthn",
 } as const;
 
-export type AuthenticationMethod = ReverseMap<typeof AuthenticationMethodEnum>;
+export type AuthenticationMethod = ReverseMap<typeof AuthenticationMethods>;

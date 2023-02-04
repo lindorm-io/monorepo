@@ -1,6 +1,6 @@
 import { ReverseMap } from "../utility";
 
-export const RdcSessionMethodEnum = {
+export const RdcSessionMethods = {
   DELETE: "delete",
   GET: "get",
   PATCH: "patch",
@@ -8,4 +8,4 @@ export const RdcSessionMethodEnum = {
   PUT: "put",
 } as const;
 
-export type RdcSessionMethod = ReverseMap<typeof RdcSessionMethodEnum>;
+export type RdcSessionMethod = ReverseMap<typeof RdcSessionMethods>;

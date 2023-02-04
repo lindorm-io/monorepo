@@ -1,6 +1,6 @@
 import { ReverseMap } from "../utility";
 
-export const IdentifierTypeEnum = {
+export const IdentifierTypes = {
   EMAIL: "email",
   EXTERNAL: "external",
   NIN: "nin",
@@ -9,4 +9,4 @@ export const IdentifierTypeEnum = {
   USERNAME: "username",
 } as const;
 
-export type IdentifierType = ReverseMap<typeof IdentifierTypeEnum>;
+export type IdentifierType = ReverseMap<typeof IdentifierTypes>;

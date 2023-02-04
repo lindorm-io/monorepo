@@ -1,11 +1,11 @@
-import { AuthenticationTokenType, AuthenticationTokenTypeEnum } from "../auth";
-import { DeviceTokenType, DeviceTokenTypeEnum } from "../device";
-import { OpenIdTokenType, OpenIdTokenTypeEnum } from "../open-id";
+import { AuthenticationTokenType, AuthenticationTokenTypes } from "../auth";
+import { DeviceTokenType, DeviceTokenTypes } from "../device";
+import { OpenIdTokenType, OpenIdTokenTypes } from "../open-id";
 
-export const LindormTokenTypeEnum = {
-  ...AuthenticationTokenTypeEnum,
-  ...DeviceTokenTypeEnum,
-  ...OpenIdTokenTypeEnum,
+export const LindormTokenTypes = {
+  ...AuthenticationTokenTypes,
+  ...DeviceTokenTypes,
+  ...OpenIdTokenTypes,
 } as const;
 
 export type LindormTokenType = OpenIdTokenType & AuthenticationTokenType & DeviceTokenType;

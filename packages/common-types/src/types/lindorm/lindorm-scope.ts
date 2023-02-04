@@ -1,7 +1,7 @@
-import { OpenIdScope, OpenIdScopeEnum } from "../open-id";
+import { OpenIdScope, OpenIdScopes } from "../open-id";
 import { ReverseMap } from "../utility";
 
-const CustomScopeEnum = {
+const CustomScopes = {
   ACCESSIBILITY: "accessibility",
   CONNECTED_PROVIDERS: "connected_providers",
   NATIONAL_IDENTITY_NUMBER: "national_identity_number",
@@ -10,8 +10,8 @@ const CustomScopeEnum = {
   USERNAME: "username",
 } as const;
 
-type CustomScope = ReverseMap<typeof CustomScopeEnum>;
+type CustomScope = ReverseMap<typeof CustomScopes>;
 
-export const LindormScopeEnum = { ...OpenIdScopeEnum, ...CustomScopeEnum } as const;
+export const LindormScopes = { ...OpenIdScopes, ...CustomScopes } as const;
 
 export type LindormScope = OpenIdScope & CustomScope;

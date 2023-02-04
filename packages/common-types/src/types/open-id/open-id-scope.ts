@@ -1,6 +1,6 @@
 import { ReverseMap } from "../utility";
 
-export const OpenIdScopeEnum = {
+export const OpenIdScopes = {
   ADDRESS: "address",
   EMAIL: "email",
   OFFLINE_ACCESS: "offline_access",
@@ -9,4 +9,4 @@ export const OpenIdScopeEnum = {
   PROFILE: "profile",
 } as const;
 
-export type OpenIdScope = ReverseMap<typeof OpenIdScopeEnum>;
+export type OpenIdScope = ReverseMap<typeof OpenIdScopes>;

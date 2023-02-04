@@ -1,9 +1,9 @@
 import { ReverseMap } from "../utility";
 
-export const SubjectHintEnum = {
+export const SubjectHints = {
   CLIENT: "client",
   IDENTITY: "identity",
   SESSION: "session",
 } as const;
 
-export type SubjectHint = ReverseMap<typeof SubjectHintEnum>;
+export type SubjectHint = ReverseMap<typeof SubjectHints>;
