@@ -1,19 +1,20 @@
-import { ParamsRecord, Protocol, QueryRecord } from "../types";
+import { ParamsRecord, QueryRecord } from "@lindorm-io/common-types";
+import { Protocol } from "../types";
 import { TransformMode, transformCase } from "@lindorm-io/case";
 import { destructUrl } from "./destruct-url";
 import { isObject } from "@lindorm-io/core";
 
-type Options = {
+type Options<Params = ParamsRecord, Query = QueryRecord> = {
   host?: string;
-  params?: ParamsRecord;
+  params?: Params;
   port?: number;
   protocol?: Protocol;
-  query?: QueryRecord;
+  query?: Query;
   queryCaseTransform?: TransformMode;
 };
 
-const replaceParamWithValue = (input: string, params: ParamsRecord): string => {
-  const param = params[input.replace(":", "")];
+const replaceParamWithValue = <Params = ParamsRecord>(input: string, params: Params): string => {
+  const param = (params as Record<string, any>)[input.replace(":", "")];
 
   if (!param) {
     throw new Error(`Parameter [ ${input} ] has no replacement variable`);
@@ -26,7 +27,7 @@ const replaceParamWithValue = (input: string, params: ParamsRecord): string => {
   return param.toString();
 };
 
-const addParamsToPathname = (pathname: string, params: ParamsRecord): string => {
+const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params: Params): string => {
   if (!isObject(params)) {
     return pathname;
   }
@@ -35,7 +36,7 @@ const addParamsToPathname = (pathname: string, params: ParamsRecord): string => 
 
   for (const item of pathname.split("/")) {
     if (item.startsWith(":")) {
-      array.push(replaceParamWithValue(item, params));
+      array.push(replaceParamWithValue<Params>(item, params));
     } else {
       array.push(item);
     }
@@ -44,9 +45,9 @@ const addParamsToPathname = (pathname: string, params: ParamsRecord): string => 
   return array.join("/");
 };
 
-const addQueryToURL = (
+const addQueryToURL = <Query = QueryRecord>(
   url: URL,
-  query: QueryRecord,
+  query: Query,
   queryCaseTransform: TransformMode = "snake",
 ): URL => {
   if (!isObject(query)) {
@@ -66,19 +67,29 @@ const addQueryToURL = (
   return url;
 };
 
-const addToURL = (url: URL, options: Options = {}): URL => {
-  const pathname = addParamsToPathname(url.pathname, options.params);
+const addToURL = <Params = ParamsRecord, Query = QueryRecord>(
+  url: URL,
+  options: Options<Params, Query> = {},
+): URL => {
+  const pathname = addParamsToPathname<Params>(url.pathname, options.params);
   const string = url.toString().replace(url.pathname, pathname);
-  return addQueryToURL(new URL(string), options.query, options.queryCaseTransform);
+  return addQueryToURL<Query>(new URL(string), options.query, options.queryCaseTransform);
 };
 
-export const createURL = (pathOrUrl: URL | string, options: Options = {}): URL => {
+export const createURL = <Params = ParamsRecord, Query = QueryRecord>(
+  pathOrUrl: URL | string,
+  options: Options<Params, Query> = {},
+): URL => {
   if (pathOrUrl instanceof URL) {
-    return addToURL(pathOrUrl, options);
+    return addToURL<Params, Query>(pathOrUrl, options);
   }
 
   if (pathOrUrl.startsWith("http")) {
-    return addToURL(new URL(pathOrUrl), options);
+    return addToURL<Params, Query>(new URL(pathOrUrl), options);
+  }
+
+  if (!options.host) {
+    throw new Error("Invalid URL");
   }
 
   const destructed = destructUrl(options.host);
@@ -88,5 +99,5 @@ export const createURL = (pathOrUrl: URL | string, options: Options = {}): URL =
   const hostAndPort = port ? `${host}:${port}` : host;
   const url = `${protocol}://${hostAndPort}`;
 
-  return addToURL(new URL(pathOrUrl, url), options);
+  return addToURL<Params, Query>(new URL(pathOrUrl, url), options);
 };

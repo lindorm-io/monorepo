@@ -25,17 +25,22 @@ export type MethodOptions = {
   url?: URL | string;
 };
 
-export type RequestOptions = {
+export type RequestOptions<
+  Body = Record<string, any>,
+  Headers = Record<string, string | number>,
+  Params = Record<string, any>,
+  Query = Record<string, any>,
+> = {
   auth?: AxiosBasicCredentials;
-  body?: Record<string, any>;
+  body?: Body;
   config?: RawAxiosRequestConfig;
-  headers?: Record<string, string | number>;
+  headers?: Headers;
   host?: string;
   middleware?: Middleware[];
-  params?: Record<string, any>;
+  params?: Params;
   port?: number;
   protocol?: Protocol;
-  query?: Record<string, any>;
+  query?: Query;
   queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;
   retryCallback?: RetryCallback;

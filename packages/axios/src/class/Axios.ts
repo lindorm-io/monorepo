@@ -47,68 +47,171 @@ export class Axios {
     this.withCredentials = options.withCredentials === true;
   }
 
-  public async delete<Data = any>(
+  public async delete<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "delete", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "delete", options);
   }
 
-  public async get<Data = any>(
+  public async get<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "get", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "get", options);
   }
 
-  public async head<Data = any>(
+  public async head<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "head", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "head", options);
   }
 
-  public async options<Data = any>(
+  public async options<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "options", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "options", options);
   }
 
-  public async patch<Data = any>(
+  public async patch<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "patch", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "patch", options);
   }
 
-  public async post<Data = any>(
+  public async post<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "post", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "post", options);
   }
 
-  public async put<Data = any>(
+  public async put<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
-    options?: RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
-    return this.composeRequest<Data>(pathOrUrl, "put", options);
+    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(pathOrUrl, "put", options);
   }
 
-  public async request<Data = any>(
-    options: MethodOptions & RequestOptions,
-  ): Promise<AxiosResponse<Data>> {
+  public async request<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
+    options: MethodOptions &
+      RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+  ): Promise<AxiosResponse<ResponseData>> {
     const { method, path, url, ...rest } = options;
 
-    return this.composeRequest<Data>(url || path, method, rest);
+    return this.composeRequest<
+      ResponseData,
+      RequestBody,
+      RequestHeaders,
+      RequestParams,
+      RequestQuery
+    >(url || path, method, rest);
   }
 
-  private async composeRequest<Data = any>(
+  private async composeRequest<
+    ResponseData = any,
+    RequestBody = Record<string, any>,
+    RequestHeaders = Record<string, string | number>,
+    RequestParams = Record<string, any>,
+    RequestQuery = Record<string, any>,
+  >(
     pathOrUrl: URL | string,
     method: Method,
-    options: RequestOptions = {},
-  ): Promise<AxiosResponse<Data>> {
+    options: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery> = {},
+  ): Promise<AxiosResponse<ResponseData>> {
     const {
       auth,
       body,
@@ -159,7 +262,7 @@ export class Axios {
       res: DEFAULT_AXIOS_RESPONSE,
     } satisfies Context;
 
-    const result = await resolveMiddleware<Context<Data>>(context, [
+    const result = await resolveMiddleware<Context<ResponseData>>(context, [
       ...this.middleware,
       ...middleware,
       axiosRequestHandler,

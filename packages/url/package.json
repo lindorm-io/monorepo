@@ -20,5 +20,8 @@
   "dependencies": {
     "@lindorm-io/case": "^0.1.5",
     "@lindorm-io/core": "^0.8.7"
+  },
+  "devDependencies": {
+    "@lindorm-io/common-types": "^0.1.1"
   }
 }
