@@ -32,6 +32,7 @@ type RequestData = {
   profile: string;
   pronouns: string;
   socialSecurityNumber: string;
+  takenName: string;
   username: string;
   website: string;
   zoneInfo: string;
@@ -56,6 +57,7 @@ export const updateIdentitySchema = Joi.object<RequestData>()
     profile: Joi.string().uri().allow(null).optional(),
     pronouns: Joi.string().allow(null).optional(),
     socialSecurityNumber: Joi.string().allow(null).optional(),
+    takenName: Joi.string().allow(null).optional(),
     username: Joi.string().lowercase().allow(null).optional(),
     website: Joi.string().uri().allow(null).optional(),
     zoneInfo: JOI_ZONE_INFO.allow(null).optional(),
@@ -83,6 +85,7 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
       profile,
       pronouns,
       socialSecurityNumber,
+      takenName,
       username,
       website,
       zoneInfo,
@@ -116,6 +119,7 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     if (!isUndefined(nickname)) identity.nickname = nickname;
     if (!isUndefined(picture)) identity.picture = picture;
     if (!isUndefined(profile)) identity.profile = profile;
+    if (!isUndefined(takenName)) identity.takenName = takenName;
     if (!isUndefined(website)) identity.website = website;
     if (!isUndefined(zoneInfo)) identity.zoneInfo = zoneInfo;
   }

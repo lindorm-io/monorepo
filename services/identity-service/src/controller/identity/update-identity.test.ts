@@ -34,6 +34,7 @@ describe("updateIdentityController", () => {
         profile: "new-profile",
         pronouns: "new-pronouns",
         socialSecurityNumber: "new-socialSecurityNumber",
+        takenName: "new-takenName",
         username: "new-username",
         website: "new-website",
         zoneInfo: "new-zoneInfo",

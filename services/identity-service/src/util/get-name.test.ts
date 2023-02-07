@@ -27,6 +27,19 @@ describe("getName", () => {
     ).toBe("familyName givenName");
   });
 
+  test("should resolve TAKEN_FAMILY", () => {
+    expect(
+      getName(
+        new Identity({
+          familyName: "familyName",
+          givenName: "givenName",
+          namingSystem: NamingSystem.GIVEN_FAMILY,
+          takenName: "takenName",
+        }),
+      ),
+    ).toBe("takenName familyName");
+  });
+
   test("should resolve givenName", () => {
     expect(
       getName(
@@ -45,5 +58,16 @@ describe("getName", () => {
         }),
       ),
     ).toBe("familyName");
+  });
+
+  test("should resolve takenName", () => {
+    expect(
+      getName(
+        new Identity({
+          takenName: "takenName",
+          givenName: "givenName",
+        }),
+      ),
+    ).toBe("takenName");
   });
 });

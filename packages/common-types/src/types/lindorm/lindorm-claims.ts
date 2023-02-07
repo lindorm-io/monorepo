@@ -24,6 +24,9 @@ type CustomClaims = {
   // private
   username: string | null;
 
+  // profile
+  takenName: string | null;
+
   // social_security_number
   socialSecurityNumber: string | null;
   socialSecurityNumberVerified: boolean;

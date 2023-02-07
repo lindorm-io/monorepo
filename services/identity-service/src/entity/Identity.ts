@@ -41,6 +41,7 @@ export type IdentityAttributes = EntityAttributes & {
   pronouns: string;
   socialSecurityNumber: string;
   socialSecurityNumberVerified: boolean;
+  takenName: string;
   username: string;
   website: string;
   zoneInfo: string;
@@ -69,6 +70,7 @@ export type IdentityOptions = Optional<
   | "pronouns"
   | "socialSecurityNumber"
   | "socialSecurityNumberVerified"
+  | "takenName"
   | "username"
   | "website"
   | "zoneInfo"
@@ -98,6 +100,7 @@ const schema = Joi.object<IdentityAttributes>()
     pronouns: Joi.string().allow(null).required(),
     socialSecurityNumber: Joi.string().allow(null).required(),
     socialSecurityNumberVerified: Joi.boolean().required(),
+    takenName: Joi.string().allow(null).required(),
     username: Joi.string().lowercase().allow(null).required(),
     website: Joi.string().uri().allow(null).required(),
     zoneInfo: JOI_ZONE_INFO.allow(null).required(),
@@ -125,6 +128,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public pronouns: string;
   public socialSecurityNumber: string;
   public socialSecurityNumberVerified: boolean;
+  public takenName: string;
   public username: string;
   public website: string;
   public zoneInfo: string;
@@ -155,6 +159,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.pronouns = options.pronouns || null;
     this.socialSecurityNumber = options.socialSecurityNumber || null;
     this.socialSecurityNumberVerified = options.socialSecurityNumberVerified === true;
+    this.takenName = options.takenName || null;
     this.username = options.username || null;
     this.website = options.website || null;
     this.zoneInfo = options.zoneInfo || null;
@@ -188,6 +193,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       pronouns: this.pronouns,
       socialSecurityNumber: this.socialSecurityNumber,
       socialSecurityNumberVerified: this.socialSecurityNumberVerified,
+      takenName: this.takenName,
       username: this.username,
       website: this.website,
       zoneInfo: this.zoneInfo,
