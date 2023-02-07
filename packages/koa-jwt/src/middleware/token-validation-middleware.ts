@@ -7,21 +7,19 @@ import {
   TokenValidationMiddlewareConfig,
 } from "../types";
 
-export interface TokenValidationOptions {
+export type TokenValidationOptions = {
   adjustedAccessLevel?: AdjustedAccessLevel;
-  audiences?: Array<string>;
   levelOfAssurance?: LevelOfAssurance;
-  maxAge?: string;
-  scopes?: Array<string>;
+  maxAge?: string | number;
+  scopes?: string[];
 
   fromPath?: {
-    audience?: string;
     nonce?: string;
     subject?: string;
   };
 
   optional?: boolean;
-}
+};
 
 export const tokenValidationMiddleware =
   (config: TokenValidationMiddlewareConfig) =>
@@ -33,15 +31,13 @@ export const tokenValidationMiddleware =
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("token");
 
-    const { clockTolerance, contextKey, issuer, subjectHint, types } = config;
-
-    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, scopes } = options;
-
-    const token = get(ctx, path);
-
-    const audiences = [...new Set([config.audiences || [], options.audiences || []].flat())];
+    const { audience, clockTolerance, contextKey, issuer, subjectHints, tenant, types } = config;
+    const { adjustedAccessLevel, levelOfAssurance, maxAge, scopes, fromPath = {} } = options;
+    const { nonce, subject } = fromPath;
 
     try {
+      const token = get(ctx, path);
+
       if (typeof token !== "string") {
         throw new ClientError("Token not found", {
           debug: { middlewareOptions: config, options, path, token },
@@ -50,16 +46,16 @@ export const tokenValidationMiddleware =
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
         adjustedAccessLevel,
-        audience: fromPath?.audience ? get(ctx, fromPath.audience) : undefined,
-        audiences: audiences.length ? audiences : undefined,
+        audience,
         clockTolerance,
         issuer,
         levelOfAssurance,
         maxAge,
-        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
+        nonce: nonce ? get(ctx, nonce) : undefined,
         scopes,
-        subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
-        subjectHint,
+        subject: subject ? get(ctx, subject) : undefined,
+        subjectHints,
+        tenant,
         types,
       });
 

@@ -1,8 +1,9 @@
-export interface BearerAuthMiddlewareConfig {
-  audiences?: Array<string>;
+export type BearerAuthMiddlewareConfig = {
+  audience?: string;
   clockTolerance?: number;
   contextKey?: string;
   issuer: string;
-  subjectHint?: string;
-  types?: Array<string>;
-}
+  subjectHints?: string[];
+  tenant?: string;
+  types?: string[];
+};

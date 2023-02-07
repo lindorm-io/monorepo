@@ -1,18 +1,18 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { Metric } from "@lindorm-io/koa";
-import { bearerAuthMiddleware } from "./bearer-auth-middleware";
+import { bearerAuthMiddleware, BearerAuthOptions } from "./bearer-auth-middleware";
 import { createTestJwt } from "@lindorm-io/jwt";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { BearerAuthMiddlewareConfig } from "../types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 const next = () => Promise.resolve();
 
 describe("bearerAuthMiddleware", () => {
-  let middlewareOptions: any;
-  let options: any;
-  let optionsPath: any;
+  let config: BearerAuthMiddlewareConfig;
+  let options: BearerAuthOptions;
   let ctx: any;
 
   const logger = createMockLogger();
@@ -20,44 +20,45 @@ describe("bearerAuthMiddleware", () => {
   beforeEach(() => {
     const jwt = createTestJwt();
     const { token } = jwt.sign({
+      adjustedAccessLevel: 2,
       audiences: ["444a9836-d2c9-470e-9270-071bfcb61346"],
       expiry: "99 seconds",
+      levelOfAssurance: 3,
       nonce: "6142a95bc7004df59e365e37516170a9",
-      scopes: ["default", "edit"],
+      scopes: ["default", "openid", "email", "phone"],
       subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
       subjectHint: "identity",
+      tenant: "e5abd790-3e7f-449e-934c-f5783c24ccd8",
       type: "access_token",
     });
 
-    middlewareOptions = {
+    config = {
+      audience: "444a9836-d2c9-470e-9270-071bfcb61346",
+      clockTolerance: 50,
       issuer: "issuer",
-      maxAge: "90 minutes",
-      subjectHint: "identity",
+      subjectHints: ["identity"],
+      tenant: "e5abd790-3e7f-449e-934c-f5783c24ccd8",
     };
+
     options = {
-      audiences: ["444a9836-d2c9-470e-9270-071bfcb61346"],
-      nonce: "6142a95bc7004df59e365e37516170a9",
-      scopes: ["default"],
-      subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
-    };
-    optionsPath = {
-      audiencePath: "metadata.clientId",
-      noncePath: "request.body.nonce",
-      scopesPath: "request.body.scopes",
-      subjectPath: "request.body.subject",
+      adjustedAccessLevel: 2,
+      levelOfAssurance: 3,
+      maxAge: 300,
+      scopes: ["default", "openid"],
+
+      fromPath: {
+        nonce: "request.body.nonce",
+        subject: "request.body.subject",
+      },
     };
 
     ctx = {
       jwt,
       logger,
-      metadata: {
-        clientId: "444a9836-d2c9-470e-9270-071bfcb61346",
-      },
       metrics: {},
       request: {
         body: {
           nonce: "6142a95bc7004df59e365e37516170a9",
-          scopes: ["default"],
           subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
         },
       },
@@ -72,23 +73,7 @@ describe("bearerAuthMiddleware", () => {
   });
 
   test("should successfully validate bearer token auth with options", async () => {
-    await expect(
-      bearerAuthMiddleware(middlewareOptions)(options)(ctx, next),
-    ).resolves.toBeUndefined();
-
-    expect(ctx.token.bearerToken).toStrictEqual(
-      expect.objectContaining({
-        subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
-        token: expect.any(String),
-      }),
-    );
-    expect(ctx.metrics.auth).toStrictEqual(expect.any(Number));
-  });
-
-  test("should successfully validate bearer token auth with path options", async () => {
-    await expect(
-      bearerAuthMiddleware(middlewareOptions)(optionsPath)(ctx, next),
-    ).resolves.toBeUndefined();
+    await expect(bearerAuthMiddleware(config)(options)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.token.bearerToken).toStrictEqual(
       expect.objectContaining({
@@ -101,12 +86,12 @@ describe("bearerAuthMiddleware", () => {
 
   test("should successfully validate bearer token with custom validation callback", async () => {
     await expect(
-      bearerAuthMiddleware(middlewareOptions)({}, async (context, verifyData) => {
+      bearerAuthMiddleware(config)({}, async (context, verifyData) => {
         if (verifyData.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),
-    ).resolves.toBeUndefined();
+    ).resolves.not.toThrow();
 
     expect(ctx.token.bearerToken).toBeTruthy();
   });
@@ -117,9 +102,7 @@ describe("bearerAuthMiddleware", () => {
       value: "base64",
     });
 
-    await expect(bearerAuthMiddleware(middlewareOptions)(options)(ctx, next)).rejects.toThrow(
-      ClientError,
-    );
+    await expect(bearerAuthMiddleware(config)(options)(ctx, next)).rejects.toThrow(ClientError);
   });
 
   test("should throw error on erroneous token verification", async () => {
@@ -128,14 +111,12 @@ describe("bearerAuthMiddleware", () => {
       value: "jwt.jwt.jwt",
     });
 
-    await expect(bearerAuthMiddleware(middlewareOptions)(options)(ctx, next)).rejects.toThrow(
-      ClientError,
-    );
+    await expect(bearerAuthMiddleware(config)(options)(ctx, next)).rejects.toThrow(ClientError);
   });
 
   test("should throw error with custom validation callback", async () => {
     await expect(
-      bearerAuthMiddleware(middlewareOptions)({}, async (context) => {
+      bearerAuthMiddleware(config)({}, async (context) => {
         if (context.token.bearerToken.subject === "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }

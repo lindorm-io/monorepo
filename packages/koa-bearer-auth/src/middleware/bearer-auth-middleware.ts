@@ -7,19 +7,17 @@ import {
   BearerAuthMiddlewareConfig,
 } from "../types";
 
-export interface BearerAuthOptions {
+export type BearerAuthOptions = {
   adjustedAccessLevel?: AdjustedAccessLevel;
-  audiences?: Array<string>;
   levelOfAssurance?: LevelOfAssurance;
-  maxAge?: string;
-  scopes?: Array<string>;
+  maxAge?: string | number;
+  scopes?: string[];
 
   fromPath?: {
-    audience?: string;
     nonce?: string;
     subject?: string;
   };
-}
+};
 
 export const bearerAuthMiddleware =
   (config: BearerAuthMiddlewareConfig) =>
@@ -31,16 +29,17 @@ export const bearerAuthMiddleware =
     const metric = ctx.getMetric("auth");
 
     const {
+      audience,
       clockTolerance,
       contextKey = "bearerToken",
       issuer,
-      subjectHint,
+      subjectHints,
+      tenant,
       types = ["access_token"],
     } = config;
 
-    const { adjustedAccessLevel, fromPath, levelOfAssurance, maxAge, scopes } = options;
-
-    const audiences = [...new Set([config.audiences || [], options.audiences || []].flat())];
+    const { adjustedAccessLevel, levelOfAssurance, maxAge, scopes, fromPath = {} } = options;
+    const { nonce, subject } = fromPath;
 
     try {
       const { type: tokenType, value: token } = ctx.getAuthorizationHeader() || {};
@@ -53,16 +52,16 @@ export const bearerAuthMiddleware =
 
       ctx.token[contextKey] = ctx.jwt.verify(token, {
         adjustedAccessLevel,
-        audience: fromPath?.audience ? get(ctx, fromPath.audience) : undefined,
-        audiences: audiences.length ? audiences : undefined,
+        audience,
         clockTolerance,
         issuer,
         levelOfAssurance,
         maxAge,
-        nonce: fromPath?.nonce ? get(ctx, fromPath.nonce) : undefined,
+        nonce: nonce ? get(ctx, nonce) : undefined,
         scopes,
-        subject: fromPath?.subject ? get(ctx, fromPath.subject) : undefined,
-        subjectHint,
+        subject: subject ? get(ctx, subject) : undefined,
+        subjectHints,
+        tenant,
         types,
       });
 

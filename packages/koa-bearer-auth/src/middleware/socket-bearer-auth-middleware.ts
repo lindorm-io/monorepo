@@ -20,7 +20,7 @@ export const socketBearerAuthMiddleware =
         issuer,
         levelOfAssurance,
         maxAge,
-        subjectHint,
+        subjectHints,
         types,
       } = config;
 
@@ -40,7 +40,7 @@ export const socketBearerAuthMiddleware =
           issuer,
           levelOfAssurance,
           maxAge,
-          subjectHint,
+          subjectHints,
           types: types || ["access_token"],
         });
 
