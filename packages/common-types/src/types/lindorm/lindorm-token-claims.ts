@@ -8,6 +8,7 @@ type CustomClaims = {
   scp?: Array<string>; // scope
   sih?: string; // session hint
   suh?: string; // subject hint
+  tid?: string; // tenant id
 };
 
 export type LindormTokenClaims = StandardTokenClaims & OauthTokenClaims & CustomClaims;

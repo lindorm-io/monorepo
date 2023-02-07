@@ -18,10 +18,11 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   notBefore?: Date;
   payload?: Payload;
   scopes?: Array<string>;
-  sessionId?: string;
   sessionHint?: string;
+  sessionId?: string;
   subject: string;
   subjectHint?: string;
+  tenantId?: string;
   type: string;
   username?: string;
 };

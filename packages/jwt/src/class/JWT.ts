@@ -15,10 +15,10 @@ import {
 } from "../util/private";
 import {
   JwtDecodeData,
+  JwtDecodedClaims,
   JwtOptions,
   JwtSignData,
   JwtSignOptions,
-  JwtVerifyData,
   JwtVerifyOptions,
 } from "../types";
 import {
@@ -79,6 +79,7 @@ export class JWT {
       scp: options.scopes,
       sih: options.sessionHint,
       suh: options.subjectHint,
+      tid: options.tenantId,
       usr: options.username,
 
       // payload & claims
@@ -109,7 +110,7 @@ export class JWT {
   public verify<Payload = Record<string, any>, Claims = Record<string, any>>(
     token: string,
     options: Partial<JwtVerifyOptions> = {},
-  ): JwtVerifyData<Payload, Claims> {
+  ): JwtDecodedClaims<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
     const { keyId, ...claims } = JWT.decodeFormatted<Payload, Claims>(token);
@@ -128,6 +129,7 @@ export class JWT {
       subject,
       subjectHint,
       subjects,
+      tenantId,
       types,
     } = options;
 
@@ -135,7 +137,7 @@ export class JWT {
       verify(token, publicKey, {
         algorithms,
         audience,
-        clockTimestamp: getUnixTime(new Date()),
+        clockTimestamp: getUnixTime(),
         clockTolerance: clockTolerance || this.clockTolerance,
         issuer,
         maxAge,
@@ -181,9 +183,14 @@ export class JWT {
         assertClaimEquals(subjectHint, claims.subjectHint, "suh");
       }
 
+      if (tenantId) {
+        assertClaimEquals(tenantId, claims.tenantId, "tid");
+      }
+
       this.logger.debug("verify token success", { claims });
 
       return {
+        keyId,
         token,
         ...claims,
       };
@@ -209,7 +216,8 @@ export class JWT {
       payload: LindormTokenClaims & { [key: string]: any };
     };
 
-    const now = getUnixTime(new Date());
+    const now = getUnixTime();
+
     const {
       aal,
       acr,
@@ -230,6 +238,7 @@ export class JWT {
       sih,
       sub,
       suh,
+      tid,
       token_type,
       usr,
       ...claims
@@ -256,10 +265,12 @@ export class JWT {
       now,
       payload: ext ? camelCase<Payload>(ext) : ({} as Payload),
       scopes: scp || [],
-      sessionId: sid || null,
       sessionHint: sih || null,
+      sessionId: sid || null,
       subject: sub,
       subjectHint: suh || null,
+      tenantId: tid || null,
+      token,
       type: token_type,
       username: usr || null,
     };

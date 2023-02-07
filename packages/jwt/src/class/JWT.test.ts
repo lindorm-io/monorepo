@@ -42,10 +42,11 @@ describe("JWT", () => {
       notBefore: new Date(),
       payload: { payloadKey: "payloadValue" },
       scopes: ["scope"],
-      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
+      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
+      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       type: "type",
       username: "username",
     };
@@ -146,6 +147,7 @@ describe("JWT", () => {
         sih: "sessionHint",
         sub: "subject",
         suh: "subjectHint",
+        tid: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
         token_type: "type",
         usr: "username",
       },
@@ -200,10 +202,12 @@ describe("JWT", () => {
       now: 1609488000,
       payload: { payloadKey: "payloadValue" },
       scopes: ["scope"],
-      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
+      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
+      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      token,
       type: "type",
       username: "username",
     });
@@ -346,17 +350,19 @@ describe("JWT", () => {
       expiresIn: 10,
       issuedAt: 1609488000,
       issuer: "issuer",
+      keyId: "7531da89-12e9-403e-925a-5da49100635c",
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: 1609488000,
       now: 1609488000,
       payload: { payloadKey: "payloadValue" },
       scopes: ["scope"],
-      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "sessionHint",
+      sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
-      token: expect.any(String),
+      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      token,
       type: "type",
       username: "username",
     });
@@ -379,17 +385,19 @@ describe("JWT", () => {
       expiresIn: 10,
       issuedAt: 1609488000,
       issuer: "issuer",
+      keyId: "7531da89-12e9-403e-925a-5da49100635c",
       levelOfAssurance: 0,
       nonce: null,
       notBefore: 1609488000,
       now: 1609488000,
       payload: {},
       scopes: [],
-      sessionId: null,
       sessionHint: null,
+      sessionId: null,
       subject: "subject",
       subjectHint: null,
-      token: token,
+      tenantId: null,
+      token,
       type: "type",
       username: null,
     });
@@ -544,6 +552,16 @@ describe("JWT", () => {
     expect(() =>
       jwt.verify(token, {
         types: ["wrong-type"],
+      }),
+    ).toThrow(TokenError);
+  });
+
+  test("should reject invalid tenant", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(() =>
+      jwt.verify(token, {
+        tenantId: "wrong-id",
       }),
     ).toThrow(TokenError);
   });
