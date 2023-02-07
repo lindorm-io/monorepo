@@ -3,17 +3,15 @@ import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types"
 export type JwtVerifyOptions = {
   adjustedAccessLevel?: AdjustedAccessLevel;
   audience?: string;
-  audiences?: Array<string>;
   authorizedParty?: string;
   clockTolerance?: number;
   issuer?: string;
   levelOfAssurance?: LevelOfAssurance;
-  maxAge?: string;
+  maxAge?: string | number;
   nonce?: string;
-  scopes?: Array<string>;
+  scopes?: string[];
   subject?: string;
-  subjectHint?: string;
-  subjects?: Array<string>;
-  tenantId?: string;
-  types?: Array<string>;
+  subjectHints?: string[];
+  tenant?: string;
+  types?: string[];
 };

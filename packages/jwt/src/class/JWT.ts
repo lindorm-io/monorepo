@@ -79,7 +79,7 @@ export class JWT {
       scp: options.scopes,
       sih: options.sessionHint,
       suh: options.subjectHint,
-      tid: options.tenantId,
+      tid: options.tenant,
       usr: options.username,
 
       // payload & claims
@@ -109,7 +109,7 @@ export class JWT {
 
   public verify<Payload = Record<string, any>, Claims = Record<string, any>>(
     token: string,
-    options: Partial<JwtVerifyOptions> = {},
+    options: JwtVerifyOptions = {},
   ): JwtDecodedClaims<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
@@ -118,7 +118,6 @@ export class JWT {
     const {
       adjustedAccessLevel,
       audience,
-      audiences,
       authorizedParty,
       clockTolerance,
       issuer = this.issuer,
@@ -127,9 +126,8 @@ export class JWT {
       nonce,
       scopes,
       subject,
-      subjectHint,
-      subjects,
-      tenantId,
+      subjectHints,
+      tenant,
       types,
     } = options;
 
@@ -155,10 +153,6 @@ export class JWT {
         assertGreaterOrEqual(adjustedAccessLevel, claims.adjustedAccessLevel, "aal");
       }
 
-      if (audiences) {
-        assertClaimDifference(audiences, claims.audiences, "aud");
-      }
-
       if (authorizedParty) {
         assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
       }
@@ -167,24 +161,20 @@ export class JWT {
         assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
       }
 
-      if (scopes) {
+      if (scopes?.length) {
         assertClaimDifference(scopes, claims.scopes, "scp");
       }
 
-      if (types) {
+      if (types?.length) {
         assertClaimIncludes(types, claims.type, "token_type");
       }
 
-      if (subjects) {
-        assertClaimIncludes(subjects, claims.subject, "sub");
+      if (subjectHints?.length) {
+        assertClaimIncludes(subjectHints, claims.subjectHint, "suh");
       }
 
-      if (subjectHint) {
-        assertClaimEquals(subjectHint, claims.subjectHint, "suh");
-      }
-
-      if (tenantId) {
-        assertClaimEquals(tenantId, claims.tenantId, "tid");
+      if (tenant) {
+        assertClaimEquals(tenant, claims.tenant, "tid");
       }
 
       this.logger.debug("verify token success", { claims });
@@ -269,7 +259,7 @@ export class JWT {
       sessionId: sid || null,
       subject: sub,
       subjectHint: suh || null,
-      tenantId: tid || null,
+      tenant: tid || null,
       token,
       type: token_type,
       username: usr || null,

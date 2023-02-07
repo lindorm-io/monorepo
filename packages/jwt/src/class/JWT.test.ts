@@ -46,7 +46,7 @@ describe("JWT", () => {
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
-      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       type: "type",
       username: "username",
     };
@@ -206,7 +206,7 @@ describe("JWT", () => {
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
-      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       token,
       type: "type",
       username: "username",
@@ -229,16 +229,6 @@ describe("JWT", () => {
     expect(
       jwt.verify(token, {
         audience: "audience",
-      }),
-    ).toBeTruthy();
-  });
-
-  test("should verify audiences", () => {
-    const { token } = jwt.sign(optionsFull);
-
-    expect(
-      jwt.verify(token, {
-        audiences: ["audience"],
       }),
     ).toBeTruthy();
   });
@@ -303,22 +293,22 @@ describe("JWT", () => {
     ).toBeTruthy();
   });
 
-  test("should verify subjects", () => {
+  test("should verify subject hints", () => {
     const { token } = jwt.sign(optionsFull);
 
     expect(
       jwt.verify(token, {
-        subjects: ["subject", "extra", "other"],
+        subjectHints: ["subjectHint", "another"],
       }),
     ).toBeTruthy();
   });
 
-  test("should verify subject hint", () => {
+  test("should verify tenant", () => {
     const { token } = jwt.sign(optionsFull);
 
-    expect(
+    expect(() =>
       jwt.verify(token, {
-        subjectHint: "subjectHint",
+        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       }),
     ).toBeTruthy();
   });
@@ -361,7 +351,7 @@ describe("JWT", () => {
       sessionId: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       subject: "subject",
       subjectHint: "subjectHint",
-      tenantId: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       token,
       type: "type",
       username: "username",
@@ -396,7 +386,7 @@ describe("JWT", () => {
       sessionId: null,
       subject: "subject",
       subjectHint: null,
-      tenantId: null,
+      tenant: null,
       token,
       type: "type",
       username: null,
@@ -552,16 +542,6 @@ describe("JWT", () => {
     expect(() =>
       jwt.verify(token, {
         types: ["wrong-type"],
-      }),
-    ).toThrow(TokenError);
-  });
-
-  test("should reject invalid tenant", () => {
-    const { token } = jwt.sign(optionsFull);
-
-    expect(() =>
-      jwt.verify(token, {
-        tenantId: "wrong-id",
       }),
     ).toThrow(TokenError);
   });

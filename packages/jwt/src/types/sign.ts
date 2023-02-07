@@ -22,7 +22,7 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   sessionId?: string;
   subject: string;
   subjectHint?: string;
-  tenantId?: string;
+  tenant?: string;
   type: string;
   username?: string;
 };

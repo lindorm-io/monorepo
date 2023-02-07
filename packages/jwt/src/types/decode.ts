@@ -25,7 +25,7 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   sessionId: string | null;
   subject: string;
   subjectHint: string | null;
-  tenantId: string | null;
+  tenant: string | null;
   token: string;
   type: string;
   username: string | null;
