@@ -1,18 +1,17 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { isUndefined } from "lodash";
 
-interface RequestData {
+type RequestData = {
   id: string;
   active: boolean;
   owner: string;
-}
+};
 
 export const adminTenantSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     active: Joi.boolean().optional(),
     owner: Joi.string().optional(),
   })

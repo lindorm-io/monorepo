@@ -6,7 +6,6 @@ import { createTestAccount, createTestAuthenticationSession } from "../../fixtur
 import { resolveAllowedStrategies as _resolveAllowedStrategies } from "../../handler";
 import { randomUUID } from "crypto";
 import { ClientError } from "@lindorm-io/errors";
-import { AuthenticationStrategy } from "../../enum";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -19,7 +18,7 @@ describe("confirmOidcController", () => {
 
   beforeEach(() => {
     const authenticationSession = createTestAuthenticationSession({
-      allowedStrategies: [AuthenticationStrategy.BANK_ID_SE],
+      allowedStrategies: ["bank_id_se"],
       identityId: null,
     });
 
@@ -76,7 +75,7 @@ describe("confirmOidcController", () => {
         identityId: expect.any(String),
         confirmedOidcLevel: 5,
         confirmedOidcProvider: "provider",
-        allowedStrategies: [AuthenticationStrategy.BANK_ID_SE],
+        allowedStrategies: ["bank_id_se"],
         status: "confirmed",
       }),
     );

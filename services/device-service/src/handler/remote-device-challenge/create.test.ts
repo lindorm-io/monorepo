@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { RdcSessionMode, RdcSessionType } from "../../common";
 import { createRdcSession } from "./create";
 import { createTestDeviceLink } from "../../fixtures/entity";
 
@@ -46,12 +45,12 @@ describe("createRdcSession", () => {
       deviceLinkId: "deviceLinkId",
       expires: new Date("2021-01-01T08:15:00.000Z"),
       identityId: "identityId",
-      mode: RdcSessionMode.PUSH_NOTIFICATION,
+      mode: "push_notification",
       nonce: "nonce",
       payload: { test: true },
       scopes: ["scope"],
       template: "template",
-      type: RdcSessionType.CALLBACK,
+      type: "callback",
     };
   });
 
@@ -67,7 +66,7 @@ describe("createRdcSession", () => {
   });
 
   test("should resolve with a created qr_code session", async () => {
-    options.mode = RdcSessionMode.QR_CODE;
+    options.mode = "qr_code";
 
     await expect(createRdcSession(ctx, options)).resolves.toStrictEqual({
       expiresIn: 900,

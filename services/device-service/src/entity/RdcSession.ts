@@ -1,13 +1,5 @@
 import Joi from "joi";
-import {
-  JOI_GUID,
-  JOI_NONCE,
-  JOI_SESSION_STATUS,
-  RdcSessionMode,
-  RdcSessionType,
-  RequestMethod,
-  SessionStatus,
-} from "../common";
+import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
 import {
   JOI_FACTORS,
   JOI_RDC_CONFIRM_METHOD,
@@ -22,10 +14,18 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import {
+  RdcSessionMethod,
+  RdcSessionMethods,
+  RdcSessionMode,
+  RdcSessionType,
+  SessionStatus,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
 export interface RdcSessionAttributes extends EntityAttributes {
   audiences: Array<string>;
-  confirmMethod: RequestMethod;
+  confirmMethod: RdcSessionMethod;
   confirmPayload: Record<string, any>;
   confirmUri: string | null;
   deviceLinks: Array<string>;
@@ -35,7 +35,7 @@ export interface RdcSessionAttributes extends EntityAttributes {
   identityId: string | null;
   mode: RdcSessionMode;
   nonce: string;
-  rejectMethod: RequestMethod;
+  rejectMethod: RdcSessionMethod;
   rejectPayload: Record<string, any>;
   rejectUri: string | null;
   scopes: Array<string>;
@@ -70,15 +70,15 @@ const schema = Joi.object<RdcSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    audiences: Joi.array().items(JOI_GUID).required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
     confirmMethod: JOI_RDC_CONFIRM_METHOD.required(),
     confirmPayload: Joi.object().required(),
     confirmUri: Joi.string().uri().allow(null).required(),
     deviceLinks: Joi.array().items(Joi.string()).required(),
-    enrolmentSessionId: JOI_GUID.allow(null).required(),
+    enrolmentSessionId: Joi.string().guid().allow(null).required(),
     expires: Joi.date().required(),
     factors: JOI_FACTORS.required(),
-    identityId: JOI_GUID.allow(null).required(),
+    identityId: Joi.string().guid().allow(null).required(),
     mode: JOI_RDC_MODE.required(),
     nonce: JOI_NONCE.required(),
     rejectMethod: JOI_RDC_REJECT_METHOD.required(),
@@ -95,7 +95,7 @@ const schema = Joi.object<RdcSessionAttributes>()
 
 export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly audiences: Array<string>;
-  public readonly confirmMethod: RequestMethod;
+  public readonly confirmMethod: RdcSessionMethod;
   public readonly confirmPayload: Record<string, any>;
   public readonly confirmUri: string | null;
   public readonly deviceLinks: Array<string>;
@@ -105,7 +105,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly identityId: string | null;
   public readonly mode: RdcSessionMode;
   public readonly nonce: string;
-  public readonly rejectMethod: RequestMethod;
+  public readonly rejectMethod: RdcSessionMethod;
   public readonly rejectPayload: Record<string, any>;
   public readonly rejectUri: string | null;
   public readonly scopes: Array<string>;
@@ -120,7 +120,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     super(options);
 
     this.audiences = options.audiences || [];
-    this.confirmMethod = options.confirmMethod || RequestMethod.POST;
+    this.confirmMethod = options.confirmMethod || RdcSessionMethods.POST;
     this.confirmPayload = options.confirmPayload || {};
     this.confirmUri = options.confirmUri || null;
     this.deviceLinks = options.deviceLinks;
@@ -130,11 +130,11 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     this.identityId = options.identityId || null;
     this.mode = options.mode;
     this.nonce = options.nonce;
-    this.rejectMethod = options.rejectMethod || RequestMethod.POST;
+    this.rejectMethod = options.rejectMethod || RdcSessionMethods.POST;
     this.rejectPayload = options.confirmPayload || {};
     this.rejectUri = options.rejectUri || null;
     this.scopes = options.scopes || [];
-    this.status = options.status || SessionStatus.PENDING;
+    this.status = options.status || SessionStatuses.PENDING;
     this.templateName = options.templateName;
     this.templateParameters = options.templateParameters || {};
     this.tokenPayload = options.tokenPayload || {};

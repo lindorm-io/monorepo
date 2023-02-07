@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { SessionStatus } from "../../common";
 import { confirmConsentController } from "./confirm-consent";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
@@ -51,7 +50,7 @@ describe("confirmConsentController", () => {
           audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
           scopes: ["address", "email", "offline_access", "openid", "phone", "private", "profile"],
         },
-        status: expect.objectContaining({ consent: SessionStatus.CONFIRMED }),
+        status: expect.objectContaining({ consent: "confirmed" }),
       }),
     );
   });
@@ -59,8 +58,8 @@ describe("confirmConsentController", () => {
   test("should throw on invalid status", async () => {
     ctx.entity.authorizationSession = createTestAuthorizationSession({
       status: {
-        login: SessionStatus.CONFIRMED,
-        consent: SessionStatus.REJECTED,
+        login: "confirmed",
+        consent: "rejected",
       },
     });
 

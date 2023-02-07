@@ -1,20 +1,20 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { JOI_GUID, SessionStatus } from "../../common";
+import { ServerKoaController } from "../../types";
+import {
+  GetEnrolmentStatusRequestParams,
+  GetEnrolmentStatusResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetEnrolmentStatusRequestParams;
 
-interface ResponseBody {
-  status: SessionStatus;
-}
+type ResponseBody = GetEnrolmentStatusResponse;
 
 export const getEnrolmentStatusSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -35,6 +35,6 @@ export const getEnrolmentStatusController: ServerKoaController<RequestData> = as
       throw err;
     }
 
-    return { body: { status: SessionStatus.EXPIRED } };
+    return { body: { status: SessionStatuses.EXPIRED } };
   }
 };

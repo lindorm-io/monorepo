@@ -1,12 +1,17 @@
-import { IdentityServiceClaims, Scope, SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
+import {
+  LindormClaims,
+  LindormScopes,
+  LindormTokenTypes,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
 export const getTestIdToken = (
-  options: Partial<JwtSignOptions<any, Partial<IdentityServiceClaims>>> = {},
+  options: Partial<JwtSignOptions<any, Partial<LindormClaims>>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -18,11 +23,11 @@ export const getTestIdToken = (
     expiry: "10 seconds",
     levelOfAssurance: 3,
     nonce: "IpoPcFc9nWdB4hfZ",
-    scopes: Object.values(Scope),
+    scopes: Object.values(LindormScopes),
     sessionId: "4ed34efe-21da-47d2-bf18-b2dc5311ba56",
     subject: "5f55fbe6-0dc7-4d6c-b93e-88ec580be22d",
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.IDENTITY,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.ID,
     ...options,
   });
 
@@ -38,8 +43,8 @@ export const getTestRefreshToken = (options: Partial<JwtSignOptions<any, any>> =
     expiry: "10 seconds",
     sessionId: "13932ef4-1668-4ca7-ad3a-62f8a475378d",
     subject: "4634b8bf-a17e-4788-84d7-3054d2e522cb",
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.REFRESH,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.REFRESH,
     ...options,
   });
 
@@ -68,8 +73,8 @@ export const getTestAuthenticationConfirmationToken = (
     scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.AUTHENTICATION_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.AUTHENTICATION_CONFIRMATION,
     ...options,
   });
   return token;

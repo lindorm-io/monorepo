@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { IdentifierType } from "../../common";
 import { argon } from "../../instance";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
@@ -17,6 +16,7 @@ import {
   createTestIdentity,
   createTestPhoneIdentifier,
 } from "../../fixtures/entity";
+import { IdentifierTypes } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -60,7 +60,7 @@ describe("/sessions/connect-identifier", () => {
       .send({
         identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
         label: "label",
-        type: IdentifierType.EMAIL,
+        type: IdentifierTypes.EMAIL,
       })
       .expect(204);
   });

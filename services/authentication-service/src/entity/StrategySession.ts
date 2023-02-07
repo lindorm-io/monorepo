@@ -1,13 +1,7 @@
 import Joi from "joi";
-import { AuthenticationStrategy } from "../enum";
 import { JOI_AUTHENTICATION_STRATEGY } from "../constant";
-import {
-  JOI_EMAIL,
-  JOI_GUID,
-  JOI_PHONE_NUMBER,
-  JOI_SESSION_STATUS,
-  SessionStatus,
-} from "../common";
+import { JOI_EMAIL, JOI_PHONE_NUMBER, JOI_SESSION_STATUS } from "../common";
+import { AuthenticationStrategy, SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -16,7 +10,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface StrategySessionAttributes extends EntityAttributes {
+export type StrategySessionAttributes = EntityAttributes & {
   authenticationSessionId: string;
   code: string | null;
   email: string | null;
@@ -28,7 +22,7 @@ export interface StrategySessionAttributes extends EntityAttributes {
   phoneNumber: string | null;
   status: SessionStatus;
   username: string | null;
-}
+};
 
 export type StrategySessionOptions = Optional<
   StrategySessionAttributes,
@@ -39,7 +33,7 @@ const schema = Joi.object<StrategySessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    authenticationSessionId: JOI_GUID.required(),
+    authenticationSessionId: Joi.string().guid().required(),
     code: Joi.string().allow(null).required(),
     email: JOI_EMAIL.allow(null).required(),
     expires: Joi.date().required(),
@@ -82,7 +76,7 @@ export class StrategySession
     this.nonce = options.nonce || null;
     this.otp = options.otp || null;
     this.phoneNumber = options.phoneNumber || null;
-    this.status = options.status || SessionStatus.PENDING;
+    this.status = options.status || SessionStatuses.PENDING;
     this.username = options.username || null;
   }
 

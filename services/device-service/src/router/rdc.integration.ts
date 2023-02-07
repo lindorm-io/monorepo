@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy, DeviceFactor, SessionStatus } from "../common";
 import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
@@ -13,6 +12,7 @@ import {
   TEST_DEVICE_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
 } from "../fixtures/integration";
+import { ChallengeStrategies, PSD2Factors, SessionStatuses } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -77,7 +77,7 @@ describe("/rdc", () => {
         expires_in: 900,
         factors: 1,
         rdc_session_token: expect.any(String),
-        status: SessionStatus.ACKNOWLEDGED,
+        status: SessionStatuses.ACKNOWLEDGED,
       },
       template: {
         name: "template",
@@ -107,8 +107,8 @@ describe("/rdc", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
-        strategy: ChallengeStrategy.PINCODE,
+        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
+        strategy: ChallengeStrategies.PINCODE,
       },
       nonce: session.nonce,
       payload: session.tokenPayload,
@@ -176,7 +176,7 @@ describe("/rdc", () => {
       createTestRdcSession({
         deviceLinks: [deviceLink.id],
         identityId: deviceLink.identityId,
-        status: SessionStatus.PENDING,
+        status: SessionStatuses.PENDING,
       }),
     );
 

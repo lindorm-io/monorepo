@@ -1,36 +1,40 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { createLogoutPendingUri, createLogoutRejectedUri, createLogoutVerifyUri } from "../../util";
+import {
+  RedirectLogoutRequestParams,
+  RedirectLogoutResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RedirectLogoutRequestParams;
+
+type ResponseBody = RedirectLogoutResponse;
 
 export const redirectLogoutSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const redirectLogoutController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseWithRedirectBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { logoutSession },
   } = ctx;
 
   switch (logoutSession.status) {
-    case SessionStatus.CONFIRMED:
-    case SessionStatus.SKIP:
+    case SessionStatuses.CONFIRMED:
+    case SessionStatuses.SKIP:
       return { body: { redirectTo: createLogoutVerifyUri(logoutSession) } };
 
-    case SessionStatus.PENDING:
+    case SessionStatuses.PENDING:
       return { body: { redirectTo: createLogoutPendingUri(logoutSession) } };
 
-    case SessionStatus.REJECTED:
+    case SessionStatuses.REJECTED:
       return { body: { redirectTo: createLogoutRejectedUri(logoutSession) } };
 
     default:

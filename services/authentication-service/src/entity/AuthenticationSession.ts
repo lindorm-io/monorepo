@@ -1,19 +1,20 @@
 import Joi from "joi";
-import { AuthenticationMode, AuthenticationStrategy } from "../enum";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS } from "../common";
+import {
+  AuthenticationMethod,
+  AuthenticationMode,
+  AuthenticationModes,
+  AuthenticationStrategy,
+  LevelOfAssurance,
+  PKCEMethod,
+  SessionStatus,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 import {
   JOI_AUTHENTICATION_METHOD,
   JOI_AUTHENTICATION_STRATEGY,
   JOI_PKCE_METHOD,
 } from "../constant";
-import {
-  AuthenticationMethod,
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_SESSION_STATUS,
-  SessionStatus,
-} from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -22,7 +23,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface AuthenticationSessionAttributes extends EntityAttributes {
+export type AuthenticationSessionAttributes = EntityAttributes & {
   allowedStrategies: Array<AuthenticationStrategy>;
   clientId: string;
   code: string | null;
@@ -46,7 +47,7 @@ export interface AuthenticationSessionAttributes extends EntityAttributes {
   requiredLevel: LevelOfAssurance;
   requiredMethods: Array<AuthenticationMethod>;
   status: SessionStatus;
-}
+};
 
 export type AuthenticationSessionOptions = Optional<
   AuthenticationSessionAttributes,
@@ -76,7 +77,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     ...JOI_ENTITY_BASE,
 
     allowedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     code: Joi.string().allow(null).required(),
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
@@ -87,9 +88,11 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     country: Joi.string().lowercase().length(2).allow(null).required(),
     emailHint: Joi.string().allow(null).required(),
     expires: Joi.date().required(),
-    identityId: JOI_GUID.allow(null).required(),
+    identityId: Joi.string().guid().allow(null).required(),
     minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-    mode: Joi.string().valid(AuthenticationMode.OAUTH, AuthenticationMode.STANDARD).required(),
+    mode: Joi.string()
+      .valid(AuthenticationModes.ELEVATE, AuthenticationModes.NONE, AuthenticationModes.OAUTH)
+      .required(),
     nonce: Joi.string().allow(null).required(),
     phoneHint: Joi.string().allow(null).required(),
     recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
@@ -155,7 +158,7 @@ export class AuthenticationSession
     this.remember = options.remember === true;
     this.requiredLevel = options.requiredLevel || 1;
     this.requiredMethods = options.requiredMethods || [];
-    this.status = options.status || SessionStatus.PENDING;
+    this.status = options.status || SessionStatuses.PENDING;
   }
 
   public create(): void {

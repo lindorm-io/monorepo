@@ -1,4 +1,3 @@
-import { AuthenticationStrategy } from "../enum";
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 
@@ -7,11 +6,7 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: [
-            AuthenticationStrategy.EMAIL_OTP,
-            AuthenticationStrategy.PHONE_OTP,
-            AuthenticationStrategy.MFA_COOKIE,
-          ],
+          confirmedStrategies: ["email_otp", "phone_otp", "mfa_cookie"],
         }),
       ),
     ).toStrictEqual({ level: 3, maximum: 3 });
@@ -21,7 +16,7 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          confirmedStrategies: ["email_otp"],
         }),
       ),
     ).toStrictEqual({ level: 2, maximum: 2 });
@@ -31,7 +26,7 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.BANK_ID_SE],
+          confirmedStrategies: ["bank_id_se"],
         }),
       ),
     ).toStrictEqual({ level: 4, maximum: 4 });
@@ -52,7 +47,7 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.MFA_COOKIE],
+          confirmedStrategies: ["mfa_cookie"],
           confirmedOidcLevel: 2,
         }),
       ),

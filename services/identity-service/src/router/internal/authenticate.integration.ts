@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { IdentifierType } from "../../common";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
@@ -10,6 +9,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
 } from "../../fixtures/integration";
+import { IdentifierTypes } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,7 +27,7 @@ describe("/internal/authenticate", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
-        type: IdentifierType.EMAIL,
+        type: IdentifierTypes.EMAIL,
       })
       .expect(200);
 
@@ -70,7 +70,7 @@ describe("/internal/authenticate", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identifier: `${randomString(16).toLowerCase()}@lindorm.io`,
-        type: IdentifierType.EMAIL,
+        type: IdentifierTypes.EMAIL,
       })
       .expect(200);
 
@@ -88,7 +88,7 @@ describe("/internal/authenticate", () => {
       .send({
         identifier: randomString(32),
         provider: "https://login.apple.com/",
-        type: IdentifierType.EXTERNAL,
+        type: IdentifierTypes.EXTERNAL,
       })
       .expect(200);
 
@@ -105,7 +105,7 @@ describe("/internal/authenticate", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identifier: `+4670${randomNumber(7)}`,
-        type: IdentifierType.PHONE,
+        type: IdentifierTypes.PHONE,
       })
       .expect(200);
 
@@ -128,7 +128,7 @@ describe("/internal/authenticate", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identifier: identity.nationalIdentityNumber,
-        type: IdentifierType.NIN,
+        type: IdentifierTypes.NIN,
       })
       .expect(200);
 
@@ -151,7 +151,7 @@ describe("/internal/authenticate", () => {
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identifier: identity.username,
-        type: IdentifierType.USERNAME,
+        type: IdentifierTypes.USERNAME,
       })
       .expect(200);
 

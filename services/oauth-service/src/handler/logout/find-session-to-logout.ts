@@ -4,10 +4,10 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { LogoutSessionType, SessionHint } from "../../enum";
 import { ServerKoaContext } from "../../types";
 
-interface Result {
+type Result = {
   session: BrowserSession | RefreshSession;
   type: LogoutSessionType;
-}
+};
 
 export const findSessionToLogout = async (
   ctx: ServerKoaContext,

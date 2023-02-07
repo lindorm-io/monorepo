@@ -1,4 +1,3 @@
-import { IdentityPermission } from "../common";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
   createTenantController,
@@ -21,9 +20,8 @@ export default router;
 
 router.post(
   "/",
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.TENANT_WRITE],
-  }),
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
   useSchema(createTenantSchema),
   useController(createTenantController),
 );
@@ -31,9 +29,8 @@ router.post(
 router.get(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.TENANT_READ],
-  }),
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
   useSchema(getTenantInfoSchema),
   tenantEntityMiddleware("data.id"),
   assertTenantPermissionMiddleware,
@@ -43,9 +40,8 @@ router.get(
 router.patch(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.TENANT_WRITE],
-  }),
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
   useSchema(updateTenantSchema),
   tenantEntityMiddleware("data.id"),
   assertTenantPermissionMiddleware,
@@ -55,9 +51,8 @@ router.patch(
 router.delete(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.TENANT_WRITE],
-  }),
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
   useSchema(deleteTenantSchema),
   tenantEntityMiddleware("data.id"),
   assertTenantPermissionMiddleware,

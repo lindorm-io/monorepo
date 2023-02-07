@@ -6,11 +6,24 @@ import { createTestProtectedRecord } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+const aesDecrypt = jest.fn();
+jest.mock("@lindorm-io/crypto", () => ({
+  CryptoAES: class CryptoAES {
+    constructor() {}
+    decrypt() {
+      aesDecrypt();
+    }
+  },
+}));
+
 describe("deleteProtectedRecordController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
+      data: {
+        key: "key",
+      },
       entity: {
         protectedRecord: createTestProtectedRecord(),
       },
@@ -40,6 +53,14 @@ describe("deleteProtectedRecordController", () => {
 
   test("should throw on forbidden subject hint", async () => {
     ctx.token.bearerToken.subjectHint = "wrong";
+
+    await expect(deleteProtectedRecordController(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should destroy and throw on invalid key", async () => {
+    aesDecrypt.mockImplementation(() => {
+      throw new Error("message");
+    });
 
     await expect(deleteProtectedRecordController(ctx)).rejects.toThrow(ClientError);
   });

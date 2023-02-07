@@ -1,19 +1,22 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ElevationSession } from "../../../entity";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { ServerKoaController } from "../../../types";
 import { SessionHint } from "../../../enum";
 import { assertRedirectUri, getAdjustedAccessLevel } from "../../../util";
 import { configuration } from "../../../server/configuration";
-import { fromUnixTime } from "date-fns";
 import { expiryDate } from "@lindorm-io/expiry";
+import { fromUnixTime } from "date-fns";
 import { removeEmptyFromArray } from "@lindorm-io/core";
 import { uniq } from "lodash";
 import {
   AuthenticationMethod,
+  InitialiseElevateRequestBody,
+  InitialiseElevateResponse,
+  LevelOfAssurance,
+} from "@lindorm-io/common-types";
+import {
   JOI_COUNTRY_CODE,
-  JOI_GUID,
   JOI_JWT,
   JOI_LEVEL_OF_ASSURANCE,
   JOI_LOCALE,
@@ -21,29 +24,16 @@ import {
   JOI_STATE,
 } from "../../../common";
 
-type RequestData = {
-  acrValue?: LevelOfAssurance;
-  amrValues?: Array<AuthenticationMethod>;
-  authenticationHint?: Array<string>;
-  clientId: string;
-  country?: string;
-  idTokenHint?: string;
-  nonce?: string;
-  redirectUri?: string;
-  state?: string;
-  uiLocales?: Array<string>;
-};
+type RequestData = InitialiseElevateRequestBody;
 
-type ReturnBody = {
-  elevationSessionId: string;
-};
+type ResponseBody = InitialiseElevateResponse;
 
 export const elevateSchema = Joi.object<RequestData>()
   .keys({
     acrValue: JOI_LEVEL_OF_ASSURANCE.optional(),
     amrValues: Joi.array().items(Joi.string()).optional(),
     authenticationHint: Joi.array().items(Joi.string()).optional(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     country: JOI_COUNTRY_CODE.optional(),
     idTokenHint: JOI_JWT.optional(),
     nonce: JOI_NONCE.optional(),
@@ -56,7 +46,7 @@ export const elevateSchema = Joi.object<RequestData>()
 
 export const elevateController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ReturnBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { elevationSessionCache },
     data: {

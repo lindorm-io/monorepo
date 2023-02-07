@@ -1,15 +1,15 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaContext, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
-import { TokenType } from "../../common";
+import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { generateTokenResponse } from "./generate-token-response";
 import { expiryDate } from "@lindorm-io/expiry";
+import { generateTokenResponse } from "./generate-token-response";
 import { isAfter } from "date-fns";
 import { randomUUID } from "crypto";
+import { LindormTokenTypes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 
 export const handleRefreshTokenGrant = async (
-  ctx: ServerKoaContext<OAuthTokenRequestData>,
-): Promise<Partial<OAuthTokenResponseBody>> => {
+  ctx: ServerKoaContext<TokenRequestBody>,
+): Promise<Partial<TokenResponse>> => {
   const {
     data: { refreshToken },
     entity: { client },
@@ -19,7 +19,7 @@ export const handleRefreshTokenGrant = async (
 
   const { id, sessionId } = jwt.verify(refreshToken, {
     audience: client.id,
-    types: [TokenType.REFRESH],
+    types: [LindormTokenTypes.REFRESH],
   });
 
   let refreshSession = await refreshSessionRepository.find({

@@ -1,4 +1,4 @@
-import { IdentityPermission, Scope, SubjectHint, TokenType } from "../common";
+import { LindormScopes, LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 import { getClients } from "./util/get-clients";
 import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
@@ -16,12 +16,11 @@ const main = async (): Promise<void> => {
     authMethodsReference: ["generate_admin_token"],
     expiry: "15 minutes",
     levelOfAssurance: 4,
-    permissions: Object.values(IdentityPermission),
-    scopes: Object.values(Scope),
+    scopes: Object.values(LindormScopes),
     sessionId: randomUUID(),
     subject: id || randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ACCESS,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.ACCESS,
   });
 
   logger.info("Generated token", { token });

@@ -1,3 +1,4 @@
+export * from "./certificate-method";
 export * from "./challenge-strategy";
 export * from "./device-token-type";
 export * from "./psd2-factor";

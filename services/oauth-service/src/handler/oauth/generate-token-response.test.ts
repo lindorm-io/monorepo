@@ -1,5 +1,4 @@
 import { BrowserSession, Client, ConsentSession } from "../../entity";
-import { Scope } from "../../common";
 import { generateTokenResponse } from "./generate-token-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
 import {
@@ -70,7 +69,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve body with id token", async () => {
-    consentSession.scopes = [Scope.OPENID];
+    consentSession.scopes = ["openid"];
 
     await expect(
       generateTokenResponse(ctx, client, browserSession, consentSession),
@@ -83,7 +82,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    consentSession.scopes = [Scope.OFFLINE_ACCESS];
+    consentSession.scopes = ["offline_access"];
 
     await expect(
       generateTokenResponse(ctx, client, createTestRefreshSession(), consentSession),

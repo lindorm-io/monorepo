@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
@@ -35,7 +34,7 @@ describe("rejectConsentController", () => {
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({
-          consent: SessionStatus.REJECTED,
+          consent: "rejected",
         }),
       }),
     );

@@ -1,7 +1,7 @@
 import { Address } from "../entity";
-import { IdentityServiceAddress } from "../common";
+import { LindormAddress } from "@lindorm-io/common-types";
 
-const EMPTY: IdentityServiceAddress = {
+const EMPTY: LindormAddress = {
   formatted: null,
   streetAddress: null,
   careOf: null,
@@ -11,7 +11,7 @@ const EMPTY: IdentityServiceAddress = {
   country: null,
 };
 
-export const getAddress = (address: Address | undefined): IdentityServiceAddress => {
+export const getAddress = (address: Address | undefined): LindormAddress => {
   if (!address) return EMPTY;
 
   const { careOf, country, locality, postalCode, region, streetAddress } = address.toJSON();

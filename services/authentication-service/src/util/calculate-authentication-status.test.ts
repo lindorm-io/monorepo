@@ -1,7 +1,5 @@
 import { calculateAuthenticationStatus } from "./calculate-authentication-status";
 import { createTestAuthenticationSession } from "../fixtures/entity";
-import { AuthenticationStrategy } from "../enum";
-import { AuthenticationMethod, SessionStatus } from "../common";
 
 describe("calculateAuthenticationStatus", () => {
   test("should resolve pending on identity", () => {
@@ -21,69 +19,69 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
-          requiredMethods: [AuthenticationMethod.PHONE],
+          confirmedStrategies: ["email_otp"],
+          requiredMethods: ["phone"],
           minimumLevel: 1,
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
       ),
-    ).toBe(SessionStatus.PENDING);
+    ).toBe("pending");
   });
 
   test("should resolve pending on minimum level", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          confirmedStrategies: ["email_otp"],
           requiredMethods: [],
           minimumLevel: 4,
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
       ),
-    ).toBe(SessionStatus.PENDING);
+    ).toBe("pending");
   });
 
   test("should resolve pending on requested level", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          confirmedStrategies: ["email_otp"],
           requiredMethods: [],
           minimumLevel: 1,
           recommendedLevel: 4,
           requiredLevel: 4,
         }),
       ),
-    ).toBe(SessionStatus.PENDING);
+    ).toBe("pending");
   });
 
   test("should resolve confirmed on methods", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PASSWORD],
+          confirmedStrategies: ["email_otp", "password"],
           requiredMethods: [],
           minimumLevel: 1,
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
       ),
-    ).toBe(SessionStatus.CONFIRMED);
+    ).toBe("confirmed");
   });
 
   test("should resolve confirmed on level", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          confirmedStrategies: ["email_otp"],
           requiredMethods: [],
           minimumLevel: 2,
           recommendedLevel: 2,
           requiredLevel: 2,
         }),
       ),
-    ).toBe(SessionStatus.CONFIRMED);
+    ).toBe("confirmed");
   });
 });

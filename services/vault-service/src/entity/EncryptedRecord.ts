@@ -7,12 +7,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface EncryptedRecordAttributes extends EntityAttributes {
+export type EncryptedRecordAttributes = EntityAttributes & {
   expires: Date | null;
   encryptedData: string;
-}
+};
 
 export type EncryptedRecordOptions = Optional<EncryptedRecordAttributes, EntityKeys | "expires">;
+
 const schema = Joi.object<EncryptedRecordAttributes>({
   ...JOI_ENTITY_BASE,
 

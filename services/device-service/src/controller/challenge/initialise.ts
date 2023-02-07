@@ -1,35 +1,30 @@
 import Joi from "joi";
 import { ChallengeSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_NONCE, ChallengeStrategy, SubjectHint, TokenType } from "../../common";
+import { JOI_NONCE } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryObject } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import { sortedUniq } from "lodash";
+import {
+  ChallengeStrategies,
+  ChallengeStrategy,
+  InitialiseChallengeRequestBody,
+  InitialiseChallengeResponse,
+  LindormTokenTypes,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  audiences?: Array<string>;
-  deviceLinkId: string;
-  identityId: string;
-  nonce: string;
-  payload: Record<string, any>;
-  scopes: Array<string>;
-}
+type RequestData = InitialiseChallengeRequestBody;
 
-interface ResponseBody {
-  certificateChallenge: string;
-  challengeSessionId: string;
-  challengeSessionToken: string;
-  expiresIn: number;
-  strategies: Array<ChallengeStrategy>;
-}
+type ResponseBody = InitialiseChallengeResponse;
 
 export const initialiseChallengeSchema = Joi.object<RequestData>()
   .keys({
-    audiences: Joi.array().items(JOI_GUID).optional(),
-    deviceLinkId: JOI_GUID.required(),
-    identityId: JOI_GUID.required(),
+    audiences: Joi.array().items(Joi.string().guid()).optional(),
+    deviceLinkId: Joi.string().guid().required(),
+    identityId: Joi.string().guid().required(),
     nonce: JOI_NONCE.required(),
     payload: Joi.object().required(),
     scopes: Joi.array().items(Joi.string()).required(),
@@ -46,14 +41,14 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     jwt,
   } = ctx;
 
-  const strategies: Array<ChallengeStrategy> = [ChallengeStrategy.IMPLICIT];
+  const strategies: Array<ChallengeStrategy> = [ChallengeStrategies.IMPLICIT];
 
   if (deviceLink.biometry) {
-    strategies.push(ChallengeStrategy.BIOMETRY);
+    strategies.push(ChallengeStrategies.BIOMETRY);
   }
 
   if (deviceLink.pincode) {
-    strategies.push(ChallengeStrategy.PINCODE);
+    strategies.push(ChallengeStrategies.PINCODE);
   }
 
   const certificateChallenge = randomString(128);
@@ -77,8 +72,8 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     expiry: configuration.defaults.challenge_session_expiry,
     sessionId: session.id,
     subject: deviceLink.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_SESSION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.CHALLENGE_SESSION,
   });
 
   return {

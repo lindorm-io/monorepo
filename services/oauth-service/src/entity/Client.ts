@@ -1,6 +1,12 @@
 import Joi from "joi";
 import { ClientAllowed, ClientDefaults, ClientExpiry } from "../types";
 import {
+  OauthClientType,
+  OauthDisplayModes,
+  OauthResponseModes,
+  ScopeDescription,
+} from "@lindorm-io/common-types";
+import {
   EntityAttributes,
   EntityOptions,
   JOI_ENTITY_BASE,
@@ -14,18 +20,13 @@ import {
   JOI_RESPONSE_TYPE,
 } from "../constant";
 import {
-  ClientType,
-  DisplayMode,
   JOI_ARGON_STRING,
   JOI_CLIENT_TYPE,
-  JOI_GUID,
   JOI_LEVEL_OF_ASSURANCE,
   JOI_SCOPE_DESCRIPTION,
-  ResponseMode,
-  ScopeDescription,
 } from "../common";
 
-export interface ClientAttributes extends EntityAttributes {
+export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
   audiences: Array<string>;
@@ -36,17 +37,16 @@ export interface ClientAttributes extends EntityAttributes {
   logoUri: string | null;
   logoutUri: string;
   name: string;
-  permissions: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<string>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
   tenant: string;
-  type: ClientType;
-}
+  type: OauthClientType;
+};
 
-export interface ClientOptions extends EntityOptions {
+export type ClientOptions = EntityOptions & {
   active?: boolean;
   allowed?: Partial<ClientAllowed>;
   audiences?: Array<string>;
@@ -57,15 +57,14 @@ export interface ClientOptions extends EntityOptions {
   logoUri?: string | null;
   logoutUri: string;
   name: string;
-  permissions?: Array<string>;
   redirectUris?: Array<string>;
   requiredScopes?: Array<string>;
   rtbfUri?: string | null;
   scopeDescriptions?: Array<ScopeDescription>;
   secret: string;
   tenant: string;
-  type: ClientType;
-}
+  type: OauthClientType;
+};
 
 const schema = Joi.object<ClientAttributes>()
   .keys({
@@ -82,7 +81,7 @@ const schema = Joi.object<ClientAttributes>()
     audiences: Joi.array().items(Joi.string()).required(),
     defaults: Joi.object()
       .keys({
-        audiences: Joi.array().items(JOI_GUID).required(),
+        audiences: Joi.array().items(Joi.string().guid()).required(),
         displayMode: JOI_DISPLAY_MODE.required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
         responseMode: JOI_RESPONSE_MODE.required(),
@@ -100,13 +99,12 @@ const schema = Joi.object<ClientAttributes>()
     logoUri: Joi.string().uri().allow(null).required(),
     logoutUri: Joi.string().uri().required(),
     name: Joi.string().required(),
-    permissions: Joi.array().items(Joi.string()).required(),
     redirectUris: Joi.array().items(Joi.string().uri()).required(),
     requiredScopes: Joi.array().items(Joi.string()).required(),
     rtbfUri: Joi.string().uri().allow(null).required(),
     scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).required(),
     secret: JOI_ARGON_STRING.required(),
-    tenant: JOI_GUID.required(),
+    tenant: Joi.string().guid().required(),
     type: JOI_CLIENT_TYPE.required(),
   })
   .required();
@@ -122,14 +120,13 @@ export class Client extends LindormEntity<ClientAttributes> {
   public logoUri: string | null;
   public logoutUri: string;
   public name: string;
-  public permissions: Array<string>;
   public redirectUris: Array<string>;
   public requiredScopes: Array<string>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string | null;
   public tenant: string;
-  public type: ClientType;
+  public type: OauthClientType;
 
   public constructor(options: ClientOptions) {
     super(options);
@@ -143,9 +140,9 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.audiences = options.audiences || [];
     this.defaults = {
       audiences: options.defaults?.audiences || [],
-      displayMode: options.defaults?.displayMode || DisplayMode.PAGE,
+      displayMode: options.defaults?.displayMode || OauthDisplayModes.PAGE,
       levelOfAssurance: options.defaults?.levelOfAssurance || 1,
-      responseMode: options.defaults?.responseMode || ResponseMode.QUERY,
+      responseMode: options.defaults?.responseMode || OauthResponseModes.QUERY,
     };
     this.description = options.description || null;
     this.expiry = {
@@ -157,7 +154,6 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.logoUri = options.logoUri || null;
     this.logoutUri = options.logoutUri;
     this.name = options.name;
-    this.permissions = options.permissions || [];
     this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
     this.rtbfUri = options.rtbfUri || null;
@@ -185,7 +181,6 @@ export class Client extends LindormEntity<ClientAttributes> {
       logoUri: this.logoUri,
       logoutUri: this.logoutUri,
       name: this.name,
-      permissions: this.permissions,
       redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,
       rtbfUri: this.rtbfUri,

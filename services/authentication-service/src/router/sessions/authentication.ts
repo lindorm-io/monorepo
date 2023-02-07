@@ -30,7 +30,7 @@ router.get(
   useController(getAuthenticationController),
 );
 
-router.post(
+router.get(
   "/:id/oidc",
   paramsMiddleware,
   useSchema(initialiseOidcSchema),

@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ClientType, JOI_GUID, ScopeDescription, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
 import { fetchOauthConsentData } from "../../../handler";
+import { OauthClientType, ScopeDescription, SessionStatus } from "@lindorm-io/common-types";
 
 type RequestData = {
   id: string;
@@ -15,7 +15,7 @@ type ResponseBody = {
     logoUri: string | null;
     requiredScopes: Array<string>;
     scopeDescriptions: Array<ScopeDescription>;
-    type: ClientType;
+    type: OauthClientType;
   };
   requested: {
     audiences: Array<string>;
@@ -26,7 +26,7 @@ type ResponseBody = {
 
 export const getConsentSessionDataSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 

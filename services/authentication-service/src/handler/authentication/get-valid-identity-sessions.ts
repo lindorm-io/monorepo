@@ -1,6 +1,7 @@
-import { ClientScope, GetIdentitySessionsResponseBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../common";
 
 export const getValidIdentitySessions = async (
   ctx: ServerKoaContext,
@@ -15,17 +16,19 @@ export const getValidIdentitySessions = async (
   }
 
   try {
-    const { data } = await oauthClient.get<GetIdentitySessionsResponseBody>(
+    const { data } = await oauthClient.get<GetIdentitySessionsResponse>(
       "/internal/identities/:id/sessions",
       {
         params: { id: identityId },
-        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_IDENTITY_READ])],
+        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_IDENTITY_READ])],
       },
     );
 
     return data.sessions
-      .filter((item) => item.adjustedAccessLevel >= 2 && item.levelOfAssurance >= 2)
-      .map((item) => item.id);
+      .filter(
+        (item: IdentitySessionItem) => item.adjustedAccessLevel >= 2 && item.levelOfAssurance >= 2,
+      )
+      .map((item: IdentitySessionItem) => item.id);
   } catch (err) {
     return [];
   }

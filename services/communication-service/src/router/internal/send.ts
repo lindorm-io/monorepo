@@ -1,6 +1,4 @@
-import { ClientPermission } from "../../common";
 import { Router, useController, useSchema } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware } from "../../middleware";
 import {
   sendCodeController,
@@ -9,13 +7,12 @@ import {
   sendOtpSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.COMMUNICATION_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.post("/code", useSchema(sendCodeSchema), useController(sendCodeController));

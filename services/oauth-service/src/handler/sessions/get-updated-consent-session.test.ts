@@ -1,7 +1,6 @@
 import { createMockRepository } from "@lindorm-io/mongo";
 import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
 import { getUpdatedConsentSession } from "./get-updated-consent-session";
-import { SessionStatus } from "../../common";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { ServerError } from "@lindorm-io/errors";
 import {
@@ -45,7 +44,7 @@ describe("getUpdatedConsentSession", () => {
   afterEach(jest.clearAllMocks);
 
   test("should resolve skipped consent session", async () => {
-    authorizationSession.status.consent = SessionStatus.SKIP;
+    authorizationSession.status.consent = "skip";
 
     await expect(
       getUpdatedConsentSession(ctx, authorizationSession, browserSession),

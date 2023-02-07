@@ -1,14 +1,9 @@
 import Joi from "joi";
+import { AuthenticationMethod, ConfirmElevationRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes, JOI_JWT } from "../../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
-import {
-  AuthenticationMethod,
-  ClientScope,
-  ConfirmElevationRequestBody,
-  JOI_GUID,
-  JOI_JWT,
-} from "../../../common";
 
 interface RequestData {
   id: string;
@@ -16,7 +11,7 @@ interface RequestData {
 }
 
 export const confirmElevationSessionSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
+  id: Joi.string().guid().required(),
   authenticationConfirmationToken: JOI_JWT.required(),
 });
 
@@ -39,7 +34,7 @@ export const confirmElevationSessionController: ServerKoaController<RequestData>
     params: { id: authenticationConfirmationToken.sessionId },
     body,
     middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
+      clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
     ],
   });
 };

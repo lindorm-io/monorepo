@@ -1,14 +1,14 @@
 import { ClientError } from "@lindorm-io/errors";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
+import { IdentifierType } from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   identifier: string;
   provider?: string;
   type: IdentifierType;
-}
+};
 
 export const findVerifiedIdentifier = async (
   ctx: ServerKoaContext,

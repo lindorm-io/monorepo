@@ -2,18 +2,15 @@ import Joi from "joi";
 import { ServerKoaController } from "../../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { InvalidToken } from "../../../entity";
-import { JOI_GUID, JOI_JWT, TokenType } from "../../../common";
+import { JOI_JWT } from "../../../common";
 import { fromUnixTime } from "date-fns";
+import { LindormTokenTypes, RevokeTokenRequestBody } from "@lindorm-io/common-types";
 
-interface RequestData {
-  clientId: string;
-  clientSecret: string;
-  token: string;
-}
+type RequestData = RevokeTokenRequestBody;
 
-export const oauthRevokeSchema = Joi.object()
+export const oauthRevokeSchema = Joi.object<RequestData>()
   .keys({
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     clientSecret: Joi.string().required(),
     token: JOI_JWT.required(),
   })
@@ -30,12 +27,12 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   const { id, expires, sessionId, type } = jwt.verify(data.token, {
-    types: [TokenType.ACCESS, TokenType.REFRESH],
+    types: [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
   });
 
   await invalidTokenCache.create(new InvalidToken({ id, expires: fromUnixTime(expires) }));
 
-  if (type === TokenType.REFRESH) {
+  if (type === LindormTokenTypes.REFRESH) {
     await refreshSessionRepository.deleteMany({ id: sessionId });
   }
 };

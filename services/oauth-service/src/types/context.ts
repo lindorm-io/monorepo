@@ -26,49 +26,49 @@ import {
   TenantRepository,
 } from "../infrastructure";
 
-interface ServerAxios extends LindormNodeServerAxios {
+type ServerAxios = LindormNodeServerAxios & {
   authenticationClient: Axios;
   identityClient: Axios;
-}
+};
 
-interface ServerCache extends LindormNodeServerCache {
+type ServerCache = LindormNodeServerCache & {
   authorizationCodeCache: AuthorizationCodeCache;
   authorizationSessionCache: AuthorizationSessionCache;
   clientCache: ClientCache;
   elevationSessionCache: ElevationSessionCache;
   invalidTokenCache: InvalidTokenCache;
   logoutSessionCache: LogoutSessionCache;
-}
+};
 
-interface ServerEntity {
+type ServerEntity = {
   authorizationSession: AuthorizationSession;
   client: Client;
   elevationSession: ElevationSession;
   logoutSession: LogoutSession;
   tenant: Tenant;
-}
+};
 
-interface ServerRepository extends LindormNodeServerRepository {
+type ServerRepository = LindormNodeServerRepository & {
   browserSessionRepository: BrowserSessionRepository;
   clientRepository: ClientRepository;
   consentSessionRepository: ConsentSessionRepository;
   refreshSessionRepository: RefreshSessionRepository;
   tenantRepository: TenantRepository;
-}
+};
 
-interface ServerToken extends LindormNodeServerToken {
+type ServerToken = LindormNodeServerToken & {
   authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
   idToken: VerifiedIdentityToken;
   refreshToken: JwtVerifyData;
-}
+};
 
-interface Context extends LindormNodeServerContext {
+type Context = LindormNodeServerContext & {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   repository: ServerRepository;
   token: ServerToken;
-}
+};
 
 export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
 

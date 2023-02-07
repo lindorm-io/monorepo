@@ -11,30 +11,30 @@ import {
   LindormNodeServerRepository,
 } from "@lindorm-io/node-server";
 
-interface ServerAxios extends LindormNodeServerAxios {
+type ServerAxios = LindormNodeServerAxios & {
   oauthClient: Axios;
-}
+};
 
-interface ServerCache extends LindormNodeServerCache {
+type ServerCache = LindormNodeServerCache & {
   [key: string]: any; // TODO: FIX
-}
+};
 
-interface ServerEntity {
+type ServerEntity = {
   encryptedRecord: EncryptedRecord;
   protectedRecord: ProtectedRecord;
-}
+};
 
-interface ServerRepository extends LindormNodeServerRepository {
+type ServerRepository = LindormNodeServerRepository & {
   encryptedRecordRepository: EncryptedRecordRepository;
   protectedRecordRepository: ProtectedRecordRepository;
-}
+};
 
-interface Context extends LindormNodeServerContext {
+type Context = LindormNodeServerContext & {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   repository: ServerRepository;
-}
+};
 
 export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
 

@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { RdcSessionMode } from "../../common";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
@@ -10,6 +9,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
 } from "../../fixtures/integration";
+import { RdcSessionModes } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -57,7 +57,7 @@ describe("/internal/rdc", () => {
         confirm_payload: { confirm: true },
         confirm_uri: "https://callback.uri/confirm",
         identity_id: deviceLink.identityId,
-        mode: RdcSessionMode.PUSH_NOTIFICATION,
+        mode: RdcSessionModes.PUSH_NOTIFICATION,
         nonce: randomString(16),
         reject_payload: { reject: true },
         reject_uri: "https://callback.uri/reject",

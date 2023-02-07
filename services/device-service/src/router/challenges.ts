@@ -1,4 +1,3 @@
-import { ServerKoaContext } from "../types";
 import { includes } from "lodash";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -18,7 +17,7 @@ import {
   deviceLinkIdRateLimitBackoff,
 } from "../middleware";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(deviceFingerprintRateLimit("metadata.identifiers.fingerprint"));

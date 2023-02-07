@@ -1,16 +1,15 @@
 import Joi from "joi";
-import { ClientScope, JOI_GUID, ResponseWithRedirectBody } from "../../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
+import { ConfirmLogoutRequestParams, ConfirmLogoutResponse } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
-type RequestData = {
-  id: string;
-};
+type RequestData = ConfirmLogoutRequestParams;
 
 export const confirmLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -22,11 +21,11 @@ export const confirmLogoutSessionController: ServerKoaController<RequestData> = 
     data: { id },
   } = ctx;
 
-  const { data } = await oauthClient.post<ResponseWithRedirectBody>(
+  const { data } = await oauthClient.post<ConfirmLogoutResponse>(
     "/internal/sessions/logout/:id/confirm",
     {
       params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_LOGOUT_WRITE])],
+      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
     },
   );
 

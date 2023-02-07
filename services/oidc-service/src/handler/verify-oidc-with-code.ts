@@ -1,4 +1,3 @@
-import { GrantType, OpenIDClaims } from "../common";
 import { OidcSession } from "../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
@@ -10,12 +9,13 @@ import {
   axiosBearerAuthMiddleware,
   OAuthTokenResponseData,
 } from "@lindorm-io/axios";
+import { OauthGrantTypes, OpenIdClaims } from "@lindorm-io/common-types";
 
 export const verifyOidcWithCode = async (
   ctx: ServerKoaContext,
   oidcSession: OidcSession,
   code: string,
-): Promise<OpenIDClaims> => {
+): Promise<OpenIdClaims> => {
   const {
     axios: { axiosClient },
     logger,
@@ -46,7 +46,7 @@ export const verifyOidcWithCode = async (
       body: {
         code,
         codeVerifier: oidcSession.codeVerifier,
-        grantType: GrantType.AUTHORIZATION_CODE,
+        grantType: OauthGrantTypes.AUTHORIZATION_CODE,
         redirectUri: createURL("/callback", { host: configuration.server.host }).toString(),
         scope,
       },
@@ -56,7 +56,7 @@ export const verifyOidcWithCode = async (
 
   logger.debug("Resolving user info");
 
-  const { data } = await axiosClient.get<OpenIDClaims>(
+  const { data } = await axiosClient.get<OpenIdClaims>(
     createURL(userinfoEndpoint, { host }).toString(),
     {
       middleware: [axiosBearerAuthMiddleware(accessToken)],

@@ -46,6 +46,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/axios": "^0.5.10",
     "@lindorm-io/jwt": "^0.8.21",
     "@lindorm-io/winston": "^0.5.6",

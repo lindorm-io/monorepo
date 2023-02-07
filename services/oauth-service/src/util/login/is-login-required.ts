@@ -1,5 +1,5 @@
 import { AuthorizationSession, BrowserSession } from "../../entity";
-import { PromptMode, SessionStatus } from "../../common";
+import { OauthPromptModes } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { difference } from "lodash";
 import { getAdjustedAccessLevel } from "../get-adjusted-access-level";
@@ -15,9 +15,7 @@ export const isLoginRequired = (
     });
   }
 
-  if (
-    [SessionStatus.CONFIRMED, SessionStatus.VERIFIED].includes(authorizationSession.status.login)
-  ) {
+  if (["confirmed", "verified"].includes(authorizationSession.status.login)) {
     return false;
   }
 
@@ -65,7 +63,7 @@ export const isLoginRequired = (
     return true;
   }
 
-  if (authorizationSession.promptModes.includes(PromptMode.LOGIN)) {
+  if (authorizationSession.promptModes.includes(OauthPromptModes.LOGIN)) {
     return true;
   }
 

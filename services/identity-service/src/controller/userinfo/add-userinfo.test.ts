@@ -1,5 +1,5 @@
 import { Identity } from "../../entity";
-import { addUserinfoController } from "./add-userinfo";
+import { putUserinfoController } from "./add-userinfo";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
 import {
@@ -54,7 +54,7 @@ describe("addUserinfoController", () => {
   });
 
   test("should update identity", async () => {
-    await expect(addUserinfoController(ctx)).resolves.toBeUndefined();
+    await expect(putUserinfoController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({

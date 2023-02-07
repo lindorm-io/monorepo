@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
 import { randomNumber, randomString } from "@lindorm-io/random";
@@ -14,6 +13,7 @@ import {
   setupIntegration,
   signTestChallenge,
 } from "../fixtures/integration";
+import { ChallengeStrategies } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -119,7 +119,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategy.IMPLICIT,
+        strategy: ChallengeStrategies.IMPLICIT,
       })
       .expect(200);
 
@@ -167,7 +167,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategy.BIOMETRY,
+        strategy: ChallengeStrategies.BIOMETRY,
         biometry,
       })
       .expect(200);
@@ -216,7 +216,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategy.PINCODE,
+        strategy: ChallengeStrategies.PINCODE,
         pincode,
       })
       .expect(200);

@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { ClientType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
@@ -28,11 +27,7 @@ describe("/internal/identities", () => {
   test("GET /:id/sessions", async () => {
     const identityId = randomUUID();
 
-    const client = await TEST_CLIENT_CACHE.create(
-      createTestClient({
-        type: ClientType.CONFIDENTIAL,
-      }),
-    );
+    const client = await TEST_CLIENT_CACHE.create(createTestClient({ type: "confidential" }));
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],

@@ -1,5 +1,3 @@
-import { ServerKoaContext } from "../types";
-import { IdentityPermission } from "../common";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import {
   getDeviceLinkInfoController,
@@ -20,14 +18,10 @@ import {
   identityAuthMiddleware,
 } from "../middleware";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
-router.use(
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-);
+router.use(identityAuthMiddleware());
 
 router.get("/", useController(getDeviceLinkListController));
 

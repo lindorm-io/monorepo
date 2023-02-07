@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { AuthenticationStrategy } from "../../enum";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { findStrategyConfig as _findStrategyConfig } from "../../util";
@@ -8,7 +7,7 @@ import {
   initialiseRdcQrCode as _initialiseRdcQrCode,
   initialiseSessionAcceptWithCode as _initialiseSessionAcceptWithCode,
 } from "../../handler";
-import { AuthenticationMethod } from "../../common";
+import { AuthenticationStrategies } from "@lindorm-io/common-types";
 
 MockDate.set("2022-01-01T07:00:00.000Z");
 
@@ -33,12 +32,12 @@ describe("initialiseStrategyController", () => {
         nin: "nin",
         nonce: "nonce",
         phoneNumber: "phoneNumber",
-        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+        strategy: "device_challenge",
         username: "username",
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          allowedStrategies: Object.values(AuthenticationStrategy),
+          allowedStrategies: Object.values(AuthenticationStrategies),
         }),
       },
       jwt: {
@@ -47,8 +46,8 @@ describe("initialiseStrategyController", () => {
     };
 
     config = {
-      method: AuthenticationMethod.DEVICE_LINK,
-      strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+      method: "device_link",
+      strategy: "device_challenge",
       amrValuesMax: 0,
       amrValuesMin: 0,
       hint: "none",
@@ -88,7 +87,7 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve qr code", async () => {
-    ctx.data.strategy = AuthenticationStrategy.RDC_QR_CODE;
+    ctx.data.strategy = "rdc_qr_code";
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {
@@ -105,7 +104,7 @@ describe("initialiseStrategyController", () => {
   });
 
   test("should resolve display code", async () => {
-    ctx.data.strategy = AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE;
+    ctx.data.strategy = "session_accept_with_code";
 
     await expect(initialiseStrategyController(ctx)).resolves.toStrictEqual({
       body: {

@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { LogoutSessionType } from "../../../enum";
-import { SessionStatus } from "../../../common";
 import { createTestLogoutSession } from "../../../fixtures/entity";
 import { verifyLogoutController } from "./verify-logout";
 import {
@@ -34,7 +33,7 @@ describe("oauthVerifyLogoutController", () => {
       entity: {
         logoutSession: createTestLogoutSession({
           id: "ba965b10-44b4-4ec0-b276-10ac52f9d43f",
-          status: SessionStatus.CONFIRMED,
+          status: "confirmed",
           sessionType: LogoutSessionType.REFRESH,
           state: "YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
         }),
@@ -56,7 +55,7 @@ describe("oauthVerifyLogoutController", () => {
 
   test("should resolve for browser session", async () => {
     ctx.entity.logoutSession = createTestLogoutSession({
-      status: SessionStatus.CONFIRMED,
+      status: "confirmed",
       sessionType: LogoutSessionType.BROWSER,
     });
 
@@ -71,7 +70,7 @@ describe("oauthVerifyLogoutController", () => {
 
   test("should resolve for refresh session", async () => {
     ctx.entity.logoutSession = createTestLogoutSession({
-      status: SessionStatus.CONFIRMED,
+      status: "confirmed",
       sessionType: LogoutSessionType.REFRESH,
     });
 
@@ -85,7 +84,7 @@ describe("oauthVerifyLogoutController", () => {
   });
 
   test("should resolve pending logout redirect", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.PENDING;
+    ctx.entity.logoutSession.status = "pending";
 
     await expect(verifyLogoutController(ctx)).resolves.toStrictEqual({
       redirect: "createLogoutPendingUri",
@@ -95,7 +94,7 @@ describe("oauthVerifyLogoutController", () => {
   });
 
   test("should resolve rejected logout redirect", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.REJECTED;
+    ctx.entity.logoutSession.status = "rejected";
 
     await expect(verifyLogoutController(ctx)).resolves.toStrictEqual({
       redirect: "createLogoutRejectedUri",

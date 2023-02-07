@@ -1,39 +1,39 @@
 import { AuthenticationSession } from "../entity";
-import { SessionStatus } from "../common";
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { getMethodsFromStrategies } from "./get-methods-from-strategies";
+import { SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
 
 export const calculateAuthenticationStatus = (
   authenticationSession: AuthenticationSession,
 ): SessionStatus => {
   if (!authenticationSession.identityId) {
-    return SessionStatus.PENDING;
+    return SessionStatuses.PENDING;
   }
 
   const methods = getMethodsFromStrategies(authenticationSession.confirmedStrategies);
 
   for (const method of authenticationSession.requiredMethods) {
     if (methods.includes(method)) continue;
-    return SessionStatus.PENDING;
+    return SessionStatuses.PENDING;
   }
 
   const { level } = calculateLevelOfAssurance(authenticationSession);
 
   if (level < authenticationSession.minimumLevel) {
-    return SessionStatus.PENDING;
+    return SessionStatuses.PENDING;
   }
 
   if (level < authenticationSession.requiredLevel) {
-    return SessionStatus.PENDING;
+    return SessionStatuses.PENDING;
   }
 
   if (methods.length >= 2) {
-    return SessionStatus.CONFIRMED;
+    return SessionStatuses.CONFIRMED;
   }
 
   if (level >= authenticationSession.recommendedLevel) {
-    return SessionStatus.CONFIRMED;
+    return SessionStatuses.CONFIRMED;
   }
 
-  return SessionStatus.PENDING;
+  return SessionStatuses.PENDING;
 };

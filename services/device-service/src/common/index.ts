@@ -1,3 +1,2 @@
 export * from "./constant";
-export * from "./enum";
-export * from "./typing";
+export * from "./types";

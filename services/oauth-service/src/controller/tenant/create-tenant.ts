@@ -4,14 +4,14 @@ import { ServerKoaController } from "../../types";
 import { Tenant } from "../../entity";
 import { configuration } from "../../server/configuration";
 
-interface RequestData {
+type RequestData = {
   name: string;
   subdomain: string;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   id: string;
-}
+};
 
 export const createTenantSchema = Joi.object<RequestData>()
   .keys({

@@ -1,12 +1,6 @@
 import Joi from "joi";
-import {
-  AuthenticationMethod,
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_LOCALE,
-  JOI_NONCE,
-} from "../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_LOCALE, JOI_NONCE } from "../common";
+import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
@@ -17,7 +11,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface RefreshSessionAttributes extends EntityAttributes {
+export type RefreshSessionAttributes = EntityAttributes & {
   acrValues: Array<string>;
   amrValues: Array<AuthenticationMethod>;
   clientId: string;
@@ -29,7 +23,7 @@ export interface RefreshSessionAttributes extends EntityAttributes {
   previousRefreshSessionId: string;
   tokenId: string;
   uiLocales: Array<string>;
-}
+};
 
 export type RefreshSessionOptions = Optional<
   RefreshSessionAttributes,
@@ -47,14 +41,14 @@ const schema = Joi.object<RefreshSessionAttributes>()
 
     acrValues: Joi.array().items(Joi.string().lowercase()).required(),
     amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     expires: Joi.date().required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     nonce: JOI_NONCE.required(),
-    previousRefreshSessionId: JOI_GUID.allow(null).required(),
-    tokenId: JOI_GUID.required(),
+    previousRefreshSessionId: Joi.string().guid().allow(null).required(),
+    tokenId: Joi.string().guid().required(),
     uiLocales: Joi.array().items(JOI_LOCALE).required(),
   })
   .required();

@@ -1,21 +1,26 @@
-import { DisplayMode, GrantType, ResponseMode, ResponseType } from "../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import {
+  LevelOfAssurance,
+  OauthDisplayMode,
+  OauthGrantType,
+  OauthResponseMode,
+  OauthResponseType,
+} from "@lindorm-io/common-types";
 
-export interface ClientAllowed {
-  grantTypes: Array<GrantType>;
-  responseTypes: Array<ResponseType>;
+export type ClientAllowed = {
+  grantTypes: Array<OauthGrantType>;
+  responseTypes: Array<OauthResponseType>;
   scopes: Array<string>;
-}
+};
 
-export interface ClientDefaults {
+export type ClientDefaults = {
   audiences: Array<string>;
-  displayMode: DisplayMode;
+  displayMode: OauthDisplayMode;
   levelOfAssurance: LevelOfAssurance;
-  responseMode: ResponseMode;
-}
+  responseMode: OauthResponseMode;
+};
 
-export interface ClientExpiry {
+export type ClientExpiry = {
   accessToken: string;
   idToken: string;
   refreshToken: string;
-}
+};

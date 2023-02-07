@@ -2,14 +2,12 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
+import { ClientScopes, JOI_JWT } from "../../../common";
 import {
   AuthenticationMethod,
-  ClientScope,
   ConfirmLoginRequestBody,
-  JOI_GUID,
-  JOI_JWT,
-  ResponseWithRedirectBody,
-} from "../../../common";
+  ConfirmLoginResponse,
+} from "@lindorm-io/common-types";
 
 interface RequestData {
   id: string;
@@ -17,7 +15,7 @@ interface RequestData {
 }
 
 export const confirmLoginSessionSchema = Joi.object<RequestData>({
-  id: JOI_GUID.required(),
+  id: Joi.string().guid().required(),
   authenticationConfirmationToken: JOI_JWT.required(),
 });
 
@@ -37,13 +35,13 @@ export const confirmLoginSessionController: ServerKoaController<RequestData> = a
     remember: authenticationConfirmationToken.claims.remember,
   };
 
-  const { data } = await oauthClient.post<ResponseWithRedirectBody>(
+  const { data } = await oauthClient.post<ConfirmLoginResponse>(
     "/internal/sessions/login/:id/confirm",
     {
       params: { id: authenticationConfirmationToken.sessionId },
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
       ],
     },
   );

@@ -1,7 +1,5 @@
-import { IdentityPermission, Scope } from "../../common";
-import { Router } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
-import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { LindormScopes } from "@lindorm-io/common-types";
+import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
   connectSessionEntityMiddleware,
   identifierEntityMiddleware,
@@ -15,16 +13,13 @@ import {
   verifyIdentifierConnectSessionSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.post(
   "/",
   useSchema(initialiseIdentifierConnectSessionSchema),
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
-  }),
+  identityAuthMiddleware({ scopes: [LindormScopes.OPENID] }),
   identityEntityMiddleware("token.bearerToken.subject"),
   useController(initialiseIdentifierConnectSessionController),
 );

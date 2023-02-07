@@ -1,24 +1,24 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { GetConsentInfoResponseBody, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { expiryObject } from "@lindorm-io/expiry";
 import { isConsentRequired } from "../../util";
+import { GetConsentRequestParams, GetConsentResponse } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetConsentRequestParams;
+
+type ResponseBody = GetConsentResponse;
 
 export const getConsentDataSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getConsentDataController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetConsentInfoResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { authorizationSession, client },
     repository: { browserSessionRepository, consentSessionRepository },

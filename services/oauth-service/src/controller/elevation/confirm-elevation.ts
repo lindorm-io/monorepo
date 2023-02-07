@@ -1,26 +1,24 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { ServerKoaController } from "../../types";
 import { assertAcrValues, assertSessionPending } from "../../util";
 import { stringComparison } from "@lindorm-io/node-pkce";
 import {
   ConfirmElevationRequestBody,
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  SessionStatus,
-} from "../../common";
+  ConfirmElevationRequestParams,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData extends ConfirmElevationRequestBody {
-  id: string;
-}
+type RequestData = ConfirmElevationRequestParams & ConfirmElevationRequestBody;
 
 export const confirmElevationSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     acrValues: Joi.array().items(Joi.string().lowercase()).required(),
     amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
   })
   .required();
@@ -75,7 +73,7 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
   elevationSession.confirmedAuthentication.latestAuthentication = new Date();
   elevationSession.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
 
-  elevationSession.status = SessionStatus.CONFIRMED;
+  elevationSession.status = SessionStatuses.CONFIRMED;
 
   await elevationSessionCache.update(elevationSession);
 };

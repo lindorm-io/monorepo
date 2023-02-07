@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { CertificateMethod } from "../../enum";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EnrolmentSession } from "../../entity";
 import { JOI_CERTIFICATE_METHOD } from "../../constant";
@@ -9,37 +8,22 @@ import { createRdcSession, isRdcRequired } from "../../handler";
 import { expiryObject } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import {
-  JOI_GUID,
-  RdcSessionMode,
-  RdcSessionType,
-  SessionStatus,
-  SubjectHint,
-  TokenType,
-} from "../../common";
+  InitialiseEnrolmentRequestBody,
+  InitialiseEnrolmentResponse,
+  LindormTokenTypes,
+  RdcSessionModes,
+  RdcSessionTypes,
+  SessionStatuses,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  audiences?: Array<string>;
-  brand: string | null;
-  buildId: string | null;
-  buildNumber: string | null;
-  certificateMethod: CertificateMethod;
-  macAddress: string | null;
-  model: string | null;
-  publicKey: string;
-  systemName: string | null;
-}
+type RequestData = InitialiseEnrolmentRequestBody;
 
-interface ResponseBody {
-  certificateChallenge: string;
-  enrolmentSessionId: string;
-  enrolmentSessionToken: string;
-  expiresIn: number;
-  externalChallengeRequired: boolean;
-}
+type ResponseBody = InitialiseEnrolmentResponse;
 
 export const initialiseEnrolmentSchema = Joi.object<RequestData>()
   .keys({
-    audiences: Joi.array().items(JOI_GUID).optional(),
+    audiences: Joi.array().items(Joi.string().guid()).optional(),
     brand: Joi.string().required(),
     buildId: Joi.string().required(),
     buildNumber: Joi.string().required(),
@@ -102,7 +86,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       installationId,
       nonce,
       publicKey,
-      status: externalChallengeRequired ? SessionStatus.PENDING : SessionStatus.SKIP,
+      status: externalChallengeRequired ? SessionStatuses.PENDING : SessionStatuses.SKIP,
       uniqueId,
     }),
   );
@@ -112,8 +96,8 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     expiry: configuration.defaults.enrolment_session_expiry,
     sessionId: session.id,
     subject: identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ENROLMENT_SESSION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.ENROLMENT_SESSION,
   });
 
   if (externalChallengeRequired) {
@@ -123,7 +107,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       expires,
       factors: 2,
       identityId,
-      mode: RdcSessionMode.QR_CODE,
+      mode: RdcSessionModes.QR_CODE,
       nonce,
       templateName: "enrolment",
       templateParameters: {
@@ -133,7 +117,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
         systemName,
         systemVersion,
       },
-      type: RdcSessionType.ENROLMENT,
+      type: RdcSessionTypes.ENROLMENT,
     });
   }
 

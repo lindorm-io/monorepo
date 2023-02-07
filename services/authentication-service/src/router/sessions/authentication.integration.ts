@@ -1,15 +1,18 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationMethod } from "../../common";
-import { AuthenticationStrategy } from "../../enum";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { SessionStatus } from "../../common";
 import { argon } from "../../instance";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { getTestData } from "../../fixtures/data";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
+import { createURL } from "@lindorm-io/url";
+import {
+  AuthenticationMethods,
+  AuthenticationStrategies,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 import {
   setupIntegration,
   TEST_AUTHENTICATION_SESSION_CACHE,
@@ -51,9 +54,9 @@ describe("/sessions/authentication", () => {
         identity_id: null,
         minimum_level: 1,
         recommended_level: 2,
-        recommended_methods: [AuthenticationMethod.EMAIL],
+        recommended_methods: [AuthenticationMethods.EMAIL],
         required_level: 3,
-        required_methods: [AuthenticationMethod.PASSWORD],
+        required_methods: [AuthenticationMethods.PASSWORD],
       },
     });
 
@@ -127,7 +130,7 @@ describe("/sessions/authentication", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      client_config: [
+      config: [
         {
           hint: "none",
           initialise_key: "none",
@@ -178,8 +181,8 @@ describe("/sessions/authentication", () => {
   test("should return authentication code", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
-        status: SessionStatus.CONFIRMED,
+        confirmedStrategies: [AuthenticationStrategies.DEVICE_CHALLENGE],
+        status: SessionStatuses.CONFIRMED,
       }),
     );
 
@@ -202,13 +205,20 @@ describe("/sessions/authentication", () => {
       createTestAuthenticationSession(),
     );
 
-    const response = await request(server.callback())
-      .post(`/sessions/authentication/${authenticationSession.id}/oidc`)
-      .send({
+    const url = createURL("/sessions/authentication/:id/oidc", {
+      host: "https://test.test",
+      params: {
+        id: authenticationSession.id,
+      },
+      query: {
         provider: "apple",
         remember: true,
-      })
-      .expect(302);
+      },
+    })
+      .toString()
+      .replace("https://test.test", "");
+
+    const response = await request(server.callback()).get(url).expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://oidc-redirect.url");
@@ -223,7 +233,7 @@ describe("/sessions/authentication", () => {
       .post(`/sessions/authentication/${authenticationSession.id}/strategy`)
       .send({
         email: "test@lindorm.io",
-        strategy: AuthenticationStrategy.EMAIL_OTP,
+        strategy: AuthenticationStrategies.EMAIL_OTP,
       })
       .expect(200);
 
@@ -252,8 +262,11 @@ describe("/sessions/authentication", () => {
         codeChallenge,
         codeChallengeMethod,
         confirmedIdentifiers: ["test@email.com", "+46701234567"],
-        confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
-        status: SessionStatus.CODE,
+        confirmedStrategies: [
+          AuthenticationStrategies.EMAIL_OTP,
+          AuthenticationStrategies.PHONE_OTP,
+        ],
+        status: SessionStatuses.CODE,
       }),
     );
 

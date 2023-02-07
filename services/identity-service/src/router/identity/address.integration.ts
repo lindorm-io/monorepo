@@ -3,10 +3,10 @@ import request from "supertest";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
-  getTestAccessToken,
-  setupIntegration,
   TEST_ADDRESS_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
+  getTestAccessToken,
+  setupIntegration,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");

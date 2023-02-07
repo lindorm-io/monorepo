@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { IdentifierType, JOI_GUID } from "../common";
+import { IdentifierType } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,7 +8,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface IdentifierAttributes extends EntityAttributes {
+export type IdentifierAttributes = EntityAttributes & {
   identifier: string;
   identityId: string;
   label: string | null;
@@ -16,7 +16,7 @@ export interface IdentifierAttributes extends EntityAttributes {
   provider: string;
   type: IdentifierType;
   verified: boolean;
-}
+};
 
 export type IdentifierOptions = Optional<IdentifierAttributes, EntityKeys | "label">;
 
@@ -25,7 +25,7 @@ const schema = Joi.object<IdentifierAttributes>()
     ...JOI_ENTITY_BASE,
 
     identifier: Joi.string().required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     label: Joi.string().allow(null).required(),
     primary: Joi.boolean().required(),
     provider: Joi.string().required(),

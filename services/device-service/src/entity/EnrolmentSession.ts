@@ -1,8 +1,7 @@
 import Joi from "joi";
-import { CertificateMethod } from "../enum";
 import { DeviceMetadata } from "../types";
-import { JOI_GUID, JOI_NONCE, JOI_SESSION_STATUS } from "../common";
-import { SessionStatus } from "../common";
+import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
 import {
   JOI_CERTIFICATE_CHALLENGE,
   JOI_CERTIFICATE_METHOD,
@@ -40,7 +39,7 @@ const schema = Joi.object<EnrolmentSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    audiences: Joi.array().items(JOI_GUID).required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
     certificateChallenge: JOI_CERTIFICATE_CHALLENGE.required(),
     certificateMethod: JOI_CERTIFICATE_METHOD.required(),
     deviceMetadata: JOI_DEVICE_METADATA.required(),

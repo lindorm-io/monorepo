@@ -1,8 +1,8 @@
 import { AuthorizationSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { SessionStatus } from "../../common";
 import { getUpdatedConsentSession } from "../sessions";
+import { SessionStatuses } from "@lindorm-io/common-types";
 
 export const handleOauthConsentVerification = async (
   ctx: ServerKoaContext,
@@ -26,7 +26,7 @@ export const handleOauthConsentVerification = async (
   const consentSession = await getUpdatedConsentSession(ctx, authorizationSession, browserSession);
 
   authorizationSession.identifiers.consentSessionId = consentSession.id;
-  authorizationSession.status.consent = SessionStatus.VERIFIED;
+  authorizationSession.status.consent = SessionStatuses.VERIFIED;
 
   return await authorizationSessionCache.update(authorizationSession);
 };

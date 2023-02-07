@@ -1,6 +1,5 @@
 import Joi from "joi";
 import { Environment } from "@lindorm-io/koa";
-import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -22,7 +21,7 @@ export type BrowserLinkOptions = Optional<BrowserLinkAttributes, EntityKeys>;
 const schema = Joi.object<BrowserLinkAttributes>({
   ...JOI_ENTITY_BASE,
 
-  accountId: JOI_GUID.required(),
+  accountId: Joi.string().guid().required(),
   browser: Joi.string().required(),
   environment: Joi.string().required(),
   os: Joi.string().required(),

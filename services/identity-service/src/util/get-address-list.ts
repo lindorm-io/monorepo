@@ -1,6 +1,6 @@
 import { Address } from "../entity";
 
-interface PublicAddress {
+type PublicAddress = {
   id: string;
   careOf: string;
   country: string;
@@ -9,7 +9,7 @@ interface PublicAddress {
   postalCode: string;
   region: string;
   streetAddress: Array<string>;
-}
+};
 
 export const getAddressList = (addresses: Array<Address>): Array<PublicAddress> =>
   addresses.map((item) => ({

@@ -1,19 +1,18 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { isUndefined } from "lodash";
 import { setIdentifierAsPrimary } from "../../handler";
 
-interface RequestData {
+type RequestData = {
   id: string;
   label?: string | null;
   primary?: boolean;
-}
+};
 
 export const updateIdentifierSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     label: Joi.string().allow(null).optional(),
     primary: Joi.boolean().allow(true).optional(),
   })

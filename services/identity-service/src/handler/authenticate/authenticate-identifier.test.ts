@@ -1,5 +1,4 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { IdentifierType } from "../../common";
 import { Identity } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { authenticateIdentifier } from "./authenticate-identifier";
@@ -34,7 +33,7 @@ describe("authenticateIdentifier", () => {
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
   });
@@ -50,7 +49,7 @@ describe("authenticateIdentifier", () => {
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
         identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
   });
@@ -62,7 +61,7 @@ describe("authenticateIdentifier", () => {
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
         identityId: "73dd1131-9cbc-4d11-ac8d-3f76e556f0a3",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
 
@@ -83,7 +82,7 @@ describe("authenticateIdentifier", () => {
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
 
@@ -99,7 +98,7 @@ describe("authenticateIdentifier", () => {
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
 
@@ -116,7 +115,7 @@ describe("authenticateIdentifier", () => {
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identity));
 
@@ -131,7 +130,7 @@ describe("authenticateIdentifier", () => {
     await expect(
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).rejects.toThrow(ServerError);
   });
@@ -147,7 +146,7 @@ describe("authenticateIdentifier", () => {
       authenticateIdentifier(ctx, {
         identifier: "test@lindorm.io",
         identityId: "2dbf0b95-4798-4f6a-b8c8-8be39b2a779d",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).rejects.toThrow(ClientError);
   });

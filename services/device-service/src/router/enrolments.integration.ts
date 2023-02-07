@@ -1,8 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { CertificateMethod } from "../enum";
-import { SessionStatus } from "../common";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { createTestEnrolmentSession } from "../fixtures/entity";
 import { server } from "../server/server";
@@ -14,6 +12,7 @@ import {
   signTestChallenge,
   TEST_ENROLMENT_SESSION_CACHE,
 } from "../fixtures/integration";
+import { CertificateMethods, SessionStatuses } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -52,7 +51,7 @@ describe("/enrolments", () => {
         brand: "brand",
         build_id: "buildId",
         build_number: "buildNumber",
-        certificate_method: CertificateMethod.SHA384,
+        certificate_method: CertificateMethods.SHA384,
         mac_address: "4A:E2:BD:16:8F:5A",
         model: "model",
         public_key:
@@ -77,7 +76,7 @@ describe("/enrolments", () => {
   test("POST /:id/confirm", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
-        status: SessionStatus.SKIP,
+        status: SessionStatuses.SKIP,
       }),
     );
     const certificateVerifier = signTestChallenge(
@@ -145,7 +144,7 @@ describe("/enrolments", () => {
   test("POST /:id/status", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
-        status: SessionStatus.PENDING,
+        status: SessionStatuses.PENDING,
       }),
     );
     const accessToken = getTestAccessToken({

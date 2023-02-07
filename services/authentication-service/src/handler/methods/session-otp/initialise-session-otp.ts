@@ -1,12 +1,13 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { AuthenticationStrategyConfig } from "../../../constant";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ClientScope, EmitSocketEventRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { randomNumberAsync } from "../../../util";
 import { getValidIdentitySessions } from "../../authentication";
+import { EmitSocketEventRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
 export const initialiseSessionOtp = async (
   ctx: ServerKoaContext,
@@ -41,7 +42,7 @@ export const initialiseSessionOtp = async (
     });
   }
 
-  const body: EmitSocketEventRequestData = {
+  const body: EmitSocketEventRequestBody = {
     channels: { sessions },
     content: { otp },
     event: "authentication-service:session-otp-flow",
@@ -49,6 +50,6 @@ export const initialiseSessionOtp = async (
 
   await communicationClient.post("/internal/socket/emit", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT])],
   });
 };

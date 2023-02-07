@@ -1,14 +1,14 @@
 import { VerifiedAuthenticationConfirmationToken } from "../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { getAdjustedAccessLevel } from "./get-adjusted-access-level";
 
-interface ISession {
+interface SessionLike {
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
 }
 
 export const calculateUpdatedLoa = (
-  session: ISession,
+  session: SessionLike,
   token: VerifiedAuthenticationConfirmationToken,
 ): LevelOfAssurance => {
   const {

@@ -1486,6 +1486,11 @@
     "@lindorm-io/core" "^0.8.7"
     change-case "^4.1.2"
 
+"@lindorm-io/common-types@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/common-types/-/common-types-0.1.1.tgz#627c9a53d21fa69b3d8707e1274c11bd8d65c81b"
+  integrity sha512-/6T3kCrrwKrsau03J1ZozjnxEA8ZLxRqJIA+0IkowUiV982cDkOHi07exlb8CCPDG2dhX3BOqWDHnM3RA3QLUg==
+
 "@lindorm-io/core-connection@^0.1.14":
   version "0.1.14"
   resolved "https://registry.yarnpkg.com/@lindorm-io/core-connection/-/core-connection-0.1.14.tgz#edb1eebbcd0c34e932e1d09079ce0d0b84988acd"

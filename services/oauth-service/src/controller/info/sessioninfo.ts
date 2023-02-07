@@ -8,12 +8,12 @@ import {
   RefreshSessionAttributes,
 } from "../../entity";
 
-interface ResponseBody {
+type ResponseBody = {
   browserSessions: Array<Partial<BrowserSessionAttributes>>;
   clients: Array<Partial<ClientAttributes>>;
   consentSessions: Array<Partial<ConsentSessionAttributes>>;
   refreshSessions: Array<Partial<RefreshSessionAttributes>>;
-}
+};
 
 export const sessioninfoController: ServerKoaController = async (
   ctx,

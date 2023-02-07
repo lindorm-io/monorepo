@@ -1,9 +1,9 @@
-import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
 import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
+import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 
 export const getTestChallengeConfirmationToken = (
   options: Partial<JwtSignOptions<any, any>> = {},
@@ -23,8 +23,8 @@ export const getTestChallengeConfirmationToken = (
     scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
@@ -52,8 +52,8 @@ export const getTestAuthenticationConfirmationToken = (
     scopes: ["authentication"],
     sessionId: randomUUID(),
     subject: randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.AUTHENTICATION_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.AUTHENTICATION_CONFIRMATION,
     ...options,
   });
   return token;
@@ -68,8 +68,8 @@ export const getTestStrategySessionToken = (
     audiences: [configuration.oauth.client_id],
     expiry: "10 seconds",
     subject: randomUUID(),
-    subjectHint: SubjectHint.SESSION,
-    type: TokenType.STRATEGY_SESSION,
+    subjectHint: SubjectHints.SESSION,
+    type: LindormTokenTypes.STRATEGY_SESSION,
     ...options,
   });
   return token;

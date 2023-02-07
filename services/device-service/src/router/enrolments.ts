@@ -1,5 +1,3 @@
-import { ServerKoaContext } from "../types";
-import { IdentityPermission } from "../common";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import {
   confirmEnrolmentController,
@@ -20,7 +18,7 @@ import {
   identityIdRateLimit,
 } from "../middleware";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(deviceFingerprintRateLimit("metadata.identifiers.fingerprint"));
@@ -28,10 +26,7 @@ router.use(deviceIpRateLimit("metadata.device.ip"));
 
 router.post(
   "/",
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(initialiseEnrolmentSchema),
   useController(initialiseEnrolmentController),
@@ -40,10 +35,7 @@ router.post(
 router.post(
   "/:id/confirm",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(confirmEnrolmentSchema),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),
@@ -67,10 +59,7 @@ router.post(
 router.post(
   "/:id/reject",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(rejectEnrolmentSchema),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),

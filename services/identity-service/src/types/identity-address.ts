@@ -1,4 +1,4 @@
-export interface IdentityAddress {
+export type IdentityAddress = {
   careOf: string;
   country: string;
   label: string;
@@ -6,4 +6,4 @@ export interface IdentityAddress {
   postalCode: string;
   region: string;
   streetAddress: Array<string>;
-}
+};

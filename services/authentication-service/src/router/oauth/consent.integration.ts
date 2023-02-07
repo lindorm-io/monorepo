@@ -1,10 +1,10 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ClientType, SessionStatus } from "../../common";
 import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
+import { OauthClientTypes, SessionStatuses } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,7 +24,7 @@ describe("/oauth/consent", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/verify"))
+    .get((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/redirect"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-verify.url/",
@@ -41,9 +41,9 @@ describe("/oauth/consent", () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        consentStatus: SessionStatus.PENDING,
+        consentStatus: SessionStatuses.PENDING,
         client: {
-          type: ClientType.PUBLIC,
+          type: OauthClientTypes.PUBLIC,
         },
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
@@ -71,9 +71,9 @@ describe("/oauth/consent", () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        consentStatus: SessionStatus.CONFIRMED,
+        consentStatus: SessionStatuses.CONFIRMED,
         client: {
-          type: ClientType.PUBLIC,
+          type: OauthClientTypes.PUBLIC,
         },
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
@@ -100,9 +100,9 @@ describe("/oauth/consent", () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        consentStatus: SessionStatus.PENDING,
+        consentStatus: SessionStatuses.PENDING,
         client: {
-          type: ClientType.CONFIDENTIAL,
+          type: OauthClientTypes.CONFIDENTIAL,
         },
         requested: {
           audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],

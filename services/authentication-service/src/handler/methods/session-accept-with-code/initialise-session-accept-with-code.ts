@@ -1,12 +1,13 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ClientScope, EmitSocketEventRequestData } from "../../../common";
-import { ServerKoaContext, StrategyInitialisation } from "../../../types";
+import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { randomString } from "@lindorm-io/random";
 import { getValidIdentitySessions } from "../../authentication";
 import { AuthenticationStrategyConfig } from "../../../constant";
+import { AuthStrategyInitialisation, EmitSocketEventRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
 interface Options {
   strategySessionToken: string;
@@ -18,7 +19,7 @@ export const initialiseSessionAcceptWithCode = async (
   strategySession: StrategySession,
   config: AuthenticationStrategyConfig,
   options: Options,
-): Promise<StrategyInitialisation> => {
+): Promise<AuthStrategyInitialisation> => {
   const {
     axios: { communicationClient, oauthClient },
     cache: { strategySessionCache },
@@ -46,7 +47,7 @@ export const initialiseSessionAcceptWithCode = async (
     });
   }
 
-  const body: EmitSocketEventRequestData = {
+  const body: EmitSocketEventRequestBody = {
     channels: { sessions },
     content: { id: authenticationSession.id, strategySessionToken },
     event: "authentication-service:session-accept-with-code",
@@ -54,7 +55,7 @@ export const initialiseSessionAcceptWithCode = async (
 
   await communicationClient.post("/internal/socket/emit", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT])],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT])],
   });
 
   return {

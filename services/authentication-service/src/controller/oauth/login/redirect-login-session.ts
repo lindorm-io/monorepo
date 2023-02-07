@@ -5,15 +5,15 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { fetchOauthLoginData } from "../../../handler";
+import { ClientScopes } from "../../../common";
 import {
   AuthenticationMethod,
-  ClientScope,
   ConfirmLoginRequestBody,
-  JOI_GUID,
-  ResponseWithRedirectBody,
-  SessionStatus,
-  TokenType,
-} from "../../../common";
+  ConfirmLoginResponse,
+  LindormTokenTypes,
+  RedirectLoginResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
 interface RequestData {
   sessionId: string;
@@ -21,7 +21,7 @@ interface RequestData {
 
 export const redirectLoginSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -40,12 +40,12 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
     authorizationSession: { authToken },
   } = await fetchOauthLoginData(ctx, sessionId);
 
-  if (loginStatus !== SessionStatus.PENDING) {
+  if (loginStatus !== SessionStatuses.PENDING) {
     logger.warn("Invalid Session Status", { loginStatus });
 
     const {
       data: { redirectTo },
-    } = await oauthClient.get<ResponseWithRedirectBody>("/internal/sessions/login/:id/verify", {
+    } = await oauthClient.get<RedirectLoginResponse>("/internal/sessions/login/:id/redirect", {
       params: { id: sessionId },
     });
 
@@ -56,7 +56,7 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
     try {
       const authenticationConfirmationToken = jwt.verify(authToken, {
         issuer: configuration.server.issuer,
-        types: [TokenType.AUTHENTICATION_CONFIRMATION],
+        types: [LindormTokenTypes.AUTHENTICATION_CONFIRMATION],
       });
 
       const body: ConfirmLoginRequestBody = {
@@ -70,11 +70,11 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 
       const {
         data: { redirectTo },
-      } = await oauthClient.post<ResponseWithRedirectBody>("/internal/sessions/login/:id/confirm", {
+      } = await oauthClient.post<ConfirmLoginResponse>("/internal/sessions/login/:id/confirm", {
         params: { id: sessionId },
         body,
         middleware: [
-          clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_AUTHENTICATION_WRITE]),
+          clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
         ],
       });
 

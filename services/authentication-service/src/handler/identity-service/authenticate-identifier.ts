@@ -2,18 +2,18 @@ import { AuthenticationSession, StrategySession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { removeEmptyFromObject } from "@lindorm-io/core";
+import { ClientScopes } from "../../common";
 import {
-  AuthenticateIdentifierRequestData,
-  AuthenticateIdentifierResponseBody,
-  ClientScope,
-  IdentifierType,
-} from "../../common";
+  AuthenticateIdentifierRequestBody,
+  AuthenticateIdentifierResponse,
+  IdentifierTypes,
+} from "@lindorm-io/common-types";
 
 export const authenticateIdentifier = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
-): Promise<AuthenticateIdentifierResponseBody> => {
+): Promise<AuthenticateIdentifierResponse> => {
   const {
     axios: { identityClient, oauthClient },
   } = ctx;
@@ -21,23 +21,23 @@ export const authenticateIdentifier = async (
   const { identityId } = authenticationSession;
   const { email, nin, phoneNumber, username } = strategySession;
 
-  const body: AuthenticateIdentifierRequestData = removeEmptyFromObject({
+  const body: AuthenticateIdentifierRequestBody = removeEmptyFromObject({
     identifier: email || nin || phoneNumber || username,
     identityId,
-    type: IdentifierType.EMAIL,
+    type: IdentifierTypes.EMAIL,
 
-    ...(email ? { type: IdentifierType.EMAIL } : {}),
-    ...(nin ? { type: IdentifierType.NIN } : {}),
-    ...(phoneNumber ? { type: IdentifierType.PHONE } : {}),
-    ...(username ? { type: IdentifierType.USERNAME } : {}),
+    ...(email ? { type: IdentifierTypes.EMAIL } : {}),
+    ...(nin ? { type: IdentifierTypes.NIN } : {}),
+    ...(phoneNumber ? { type: IdentifierTypes.PHONE } : {}),
+    ...(username ? { type: IdentifierTypes.USERNAME } : {}),
   });
 
-  const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
+  const { data } = await identityClient.post<AuthenticateIdentifierResponse>(
     "/internal/authenticate",
     {
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTIFIER_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.IDENTITY_IDENTIFIER_WRITE]),
       ],
     },
   );

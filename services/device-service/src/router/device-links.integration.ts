@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy, DeviceFactor } from "../common";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestDeviceLink } from "../fixtures/entity";
@@ -14,6 +13,7 @@ import {
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
+import { ChallengeStrategies, PSD2Factors } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -157,8 +157,8 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
-        strategy: ChallengeStrategy.PINCODE,
+        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
+        strategy: ChallengeStrategies.PINCODE,
       },
       sessionId: randomUUID(),
       subject: deviceLink.identityId,
@@ -193,8 +193,8 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
-        strategy: ChallengeStrategy.PINCODE,
+        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
+        strategy: ChallengeStrategies.PINCODE,
       },
       sessionId: randomUUID(),
       subject: deviceLink.identityId,
@@ -228,8 +228,8 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE],
-        strategy: ChallengeStrategy.PINCODE,
+        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
+        strategy: ChallengeStrategies.PINCODE,
       },
       sessionId: randomUUID(),
       subject: deviceLink.identityId,

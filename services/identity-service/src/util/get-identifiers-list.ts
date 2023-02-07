@@ -1,13 +1,13 @@
 import { Identifier } from "../entity";
-import { IdentifierType } from "../common";
+import { IdentifierType } from "@lindorm-io/common-types";
 
-interface PublicIdentifier {
+type PublicIdentifier = {
   id: string;
   label: string | null;
   primary: boolean;
   value: string;
   verified: boolean;
-}
+};
 
 export const getIdentifiersList = (
   identifiers: Array<Identifier>,

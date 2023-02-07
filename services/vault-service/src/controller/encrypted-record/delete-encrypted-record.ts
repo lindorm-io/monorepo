@@ -2,17 +2,15 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoAES } from "@lindorm-io/crypto";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { getEncryptionKey } from "../../handler";
+import { DeleteEncryptedRecordRequestParams } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = DeleteEncryptedRecordRequestParams;
 
 export const deleteEncryptedRecordSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 

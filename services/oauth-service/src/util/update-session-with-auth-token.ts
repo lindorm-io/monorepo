@@ -1,17 +1,17 @@
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { VerifiedAuthenticationConfirmationToken } from "../common";
 import { calculateUpdatedLoa } from "./calculate-updated-loa";
 import { flatten, uniq } from "lodash";
 import { fromUnixTime } from "date-fns";
 
-interface ISession {
+interface SessionLike {
   acrValues: Array<string>;
   amrValues: Array<string>;
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
 }
 
-export const updateSessionWithAuthToken = <Session extends ISession>(
+export const updateSessionWithAuthToken = <Session extends SessionLike>(
   session: Session,
   token: VerifiedAuthenticationConfirmationToken,
 ): Session => {

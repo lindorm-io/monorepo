@@ -1,14 +1,7 @@
 import Joi from "joi";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
-import {
-  AuthenticationMethod,
-  JOI_COUNTRY_CODE,
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_LOCALE,
-  JOI_NONCE,
-} from "../common";
+import { JOI_COUNTRY_CODE, JOI_LEVEL_OF_ASSURANCE, JOI_LOCALE, JOI_NONCE } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -17,7 +10,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface BrowserSessionAttributes extends EntityAttributes {
+export type BrowserSessionAttributes = EntityAttributes & {
   acrValues: Array<string>;
   amrValues: Array<AuthenticationMethod>;
   clients: Array<string>;
@@ -29,7 +22,7 @@ export interface BrowserSessionAttributes extends EntityAttributes {
   nonce: string;
   remember: boolean;
   uiLocales: Array<string>;
-}
+};
 
 export type BrowserSessionOptions = Optional<
   BrowserSessionAttributes,
@@ -42,10 +35,10 @@ const schema = Joi.object<BrowserSessionAttributes>()
 
     acrValues: Joi.array().items(Joi.string().lowercase()).required(),
     amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    clients: Joi.array().items(JOI_GUID).required(),
+    clients: Joi.array().items(Joi.string().guid()).required(),
     country: JOI_COUNTRY_CODE.allow(null).required(),
     expires: Joi.date().required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     nonce: JOI_NONCE.required(),

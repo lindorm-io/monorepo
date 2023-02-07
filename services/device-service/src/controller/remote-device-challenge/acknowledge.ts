@@ -4,44 +4,24 @@ import { ServerKoaController } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { difference } from "lodash";
+import { ClientScopes } from "../../common";
 import {
-  ClientScope,
-  EmitSocketEventRequestData,
-  JOI_GUID,
-  RdcSessionMode,
-  SessionStatus,
-  SubjectHint,
-  TokenType,
-} from "../../common";
+  AcknowledgeRdcRequestParams,
+  AcknowledgeRdcResponse,
+  EmitSocketEventRequestBody,
+  LindormTokenTypes,
+  RdcSessionModes,
+  SessionStatuses,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = AcknowledgeRdcRequestParams;
 
-interface ResponseBody {
-  id: string;
-  challenge: {
-    audiences: Array<string>;
-    identityId: string;
-    nonce: string;
-    payload: Record<string, any>;
-    scopes: Array<string>;
-  };
-  session: {
-    expiresIn: number;
-    factors: number;
-    rdcSessionToken: string;
-    status: SessionStatus;
-  };
-  template: {
-    name: string;
-    parameters: Record<string, unknown>;
-  };
-}
+type ResponseBody = AcknowledgeRdcResponse;
 
 export const acknowledgeRdcSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -58,7 +38,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     },
   } = ctx;
 
-  rdcSession.status = SessionStatus.ACKNOWLEDGED;
+  rdcSession.status = SessionStatuses.ACKNOWLEDGED;
 
   const {
     id,
@@ -80,16 +60,16 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     expiry: expires,
     sessionId: id,
     subject: identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.REMOTE_DEVICE_CHALLENGE_SESSION,
   });
 
   await rdcSessionCache.update(rdcSession);
 
   const deviceLinks = difference(rdcSession.deviceLinks, [linkId]);
 
-  if (mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
-    const body: EmitSocketEventRequestData = {
+  if (mode === RdcSessionModes.PUSH_NOTIFICATION && deviceLinks.length) {
+    const body: EmitSocketEventRequestBody = {
       channels: { deviceLinks, identities: [identityId] },
       content: { id },
       event: "rdcSession:acknowledged",
@@ -98,7 +78,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     await communicationClient.post("/internal/socket/emit", {
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_EVENT_EMIT]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT]),
       ],
     });
   }

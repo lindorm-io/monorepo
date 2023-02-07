@@ -1,35 +1,39 @@
 import Joi from "joi";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { RdcSessionMode, RdcSessionType } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession } from "../../handler";
 import { expiryDate } from "@lindorm-io/expiry";
+import { JOI_NONCE } from "../../common";
+import {
+  InitialiseRdcSessionRequestBody,
+  InitialiseRdcSessionResponse,
+  RdcSessionModes,
+  RdcSessionTypes,
+} from "@lindorm-io/common-types";
 import {
   JOI_FACTORS,
   JOI_RDC_CONFIRM_METHOD,
   JOI_RDC_MODE,
   JOI_RDC_REJECT_METHOD,
 } from "../../constant";
-import {
-  InitialiseRdcSessionRequestData,
-  InitialiseRdcSessionResponseBody,
-  JOI_GUID,
-  JOI_NONCE,
-} from "../../common";
 
-export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>()
+type RequestData = InitialiseRdcSessionRequestBody;
+
+type ResponseBody = InitialiseRdcSessionResponse;
+
+export const initialiseRdcSchema = Joi.object<RequestData>()
   .keys({
-    audiences: Joi.array().items(JOI_GUID).optional(),
+    audiences: Joi.array().items(Joi.string().guid()).optional(),
     confirmMethod: JOI_RDC_CONFIRM_METHOD.optional(),
     confirmPayload: Joi.object().optional(),
     confirmUri: Joi.string().uri().required(),
     expiresAt: Joi.string().optional(),
     factors: JOI_FACTORS.optional(),
     identityId: Joi.when("mode", {
-      is: RdcSessionMode.PUSH_NOTIFICATION,
-      then: JOI_GUID.required(),
-      otherwise: JOI_GUID.optional(),
+      is: RdcSessionModes.PUSH_NOTIFICATION,
+      then: Joi.string().guid().required(),
+      otherwise: Joi.string().guid().optional(),
     }),
     mode: JOI_RDC_MODE.required(),
     nonce: JOI_NONCE.required(),
@@ -43,9 +47,9 @@ export const initialiseRdcSchema = Joi.object<InitialiseRdcSessionRequestData>()
   })
   .required();
 
-export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRequestData> = async (
+export const initialiseRdcController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<InitialiseRdcSessionResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     data: {
       audiences,
@@ -86,7 +90,7 @@ export const initialiseRdcController: ServerKoaController<InitialiseRdcSessionRe
     templateName,
     templateParameters,
     tokenPayload,
-    type: RdcSessionType.CALLBACK,
+    type: RdcSessionTypes.CALLBACK,
   });
 
   return { body: { id, expiresIn }, status: HttpStatus.Success.ACCEPTED };

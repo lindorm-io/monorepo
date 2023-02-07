@@ -1,5 +1,4 @@
 import { RefreshSession } from "../../entity";
-import { Scope } from "../../common";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestRefreshSession } from "../../fixtures/entity";
 import { tryFindRefreshSession } from "./try-find-refresh-session";
@@ -16,7 +15,7 @@ describe("tryFindRefreshSession", () => {
     };
 
     idToken = {
-      scopes: [Scope.OFFLINE_ACCESS],
+      scopes: ["offline_access"],
       sessionId: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
     };
   });

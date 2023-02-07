@@ -1,4 +1,3 @@
-import { SessionStatus } from "../../common";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
 import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
@@ -83,7 +82,7 @@ describe("confirmEnrolmentController", () => {
 
   test("should resolve enrolment session with trusted deviceLink", async () => {
     ctx.entity.enrolmentSession = createTestEnrolmentSession({
-      status: SessionStatus.CONFIRMED,
+      status: "confirmed",
     });
 
     await expect(confirmEnrolmentController(ctx)).resolves.toStrictEqual({
@@ -102,7 +101,7 @@ describe("confirmEnrolmentController", () => {
 
   test("should resolve enrolment session with non-trusted deviceLink", async () => {
     ctx.entity.enrolmentSession = createTestEnrolmentSession({
-      status: SessionStatus.PENDING,
+      status: "pending",
     });
 
     await expect(confirmEnrolmentController(ctx)).resolves.toStrictEqual({

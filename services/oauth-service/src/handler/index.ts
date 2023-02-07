@@ -1,4 +1,3 @@
-export * from "./axios";
 export * from "./cookies";
 export * from "./identity";
 export * from "./logout";

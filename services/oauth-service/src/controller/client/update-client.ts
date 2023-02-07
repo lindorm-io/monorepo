@@ -3,14 +3,10 @@ import { ClientDefaults, ClientExpiry, ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_DISPLAY_MODE, JOI_EXPIRY_REGEX, JOI_RESPONSE_MODE } from "../../constant";
 import { isUndefined } from "lodash";
-import {
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_SCOPE_DESCRIPTION,
-  ScopeDescription,
-} from "../../common";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
+import { ScopeDescription } from "@lindorm-io/common-types";
 
-interface RequestData {
+type RequestData = {
   id: string;
   audiences: Array<string>;
   defaults: ClientDefaults;
@@ -24,11 +20,11 @@ interface RequestData {
   requiredScopes: Array<string>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
-}
+};
 
 export const updateClientSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     audiences: Joi.array().items(Joi.string()).optional(),
     defaults: Joi.object()
       .keys({

@@ -1,12 +1,9 @@
 import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
+import { ClientScopes } from "../../common";
+import { CreateEncryptedRecordRequestBody } from "@lindorm-io/common-types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { randomString } from "@lindorm-io/random";
-import {
-  ClientScope,
-  CreateEncryptedRecordRequestBody,
-  GetEncryptedRecordResponseBody,
-} from "../../common";
 
 export const createAccountCallback =
   (ctx: ServerKoaContext) =>
@@ -26,7 +23,7 @@ export const createAccountCallback =
     await vaultClient.post("/internal/vault", {
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_WRITE]),
       ],
     });
   };
@@ -38,12 +35,12 @@ export const destroyAccountCallback =
       axios: { oauthClient, vaultClient },
     } = ctx;
 
-    await vaultClient.delete<GetEncryptedRecordResponseBody>("/internal/vault/:id", {
+    await vaultClient.delete("/internal/vault/:id", {
       params: {
         id: account.id,
       },
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_WRITE]),
       ],
     });
   };

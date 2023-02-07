@@ -2,7 +2,6 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { LogoutSessionType } from "../../../enum";
-import { SessionStatus } from "../../../common";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../../fixtures/data";
@@ -161,7 +160,7 @@ describe("/oauth2/sessions/logout", () => {
         clientId: client.id,
         sessionId: browserSession.id,
         sessionType: LogoutSessionType.BROWSER,
-        status: SessionStatus.CONFIRMED,
+        status: "confirmed",
       }),
     );
 
@@ -211,7 +210,7 @@ describe("/oauth2/sessions/logout", () => {
         clientId: client.id,
         sessionId: refreshSession.id,
         sessionType: LogoutSessionType.REFRESH,
-        status: SessionStatus.CONFIRMED,
+        status: "confirmed",
       }),
     );
 

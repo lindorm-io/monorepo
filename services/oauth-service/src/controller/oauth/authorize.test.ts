@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { DisplayMode, PromptMode, ResponseMode, ResponseType } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { oauthAuthorizeController } from "./authorize";
 import {
@@ -61,15 +60,15 @@ describe("oauthAuthorizeController", () => {
         codeChallenge: "codeChallenge",
         codeChallengeMethod: "codeChallengeMethod",
         country: "se",
-        display: DisplayMode.POPUP,
+        display: "popup",
         idTokenHint: "id.jwt.jwt",
         loginHint: "test@lindorm.io",
         maxAge: "500",
         nonce: "J2qVbRKmMg1UPCty",
-        prompt: [PromptMode.LOGIN, PromptMode.CONSENT].join(" "),
+        prompt: ["login", "consent"].join(" "),
         redirectUri: encodeURI("https://test.lindorm.io/redirect"),
-        responseMode: ResponseMode.QUERY,
-        responseType: [ResponseType.CODE, ResponseType.ID_TOKEN].join(" "),
+        responseMode: "query",
+        responseType: ["code", "id_token"].join(" "),
         scope: "openid offline_access",
         state: "l7wj9qEP90kfbAGa",
         uiLocales: "en-GB en-US",
@@ -228,7 +227,7 @@ describe("oauthAuthorizeController", () => {
 
     ctx.data = {
       redirectUri: "https://test.lindorm.io/redirect",
-      responseType: [ResponseType.CODE].join(" "),
+      responseType: ["code"].join(" "),
       scope: "openid offline_access",
       state: "l7wj9qEP90kfbAGa",
     };

@@ -1,6 +1,7 @@
-import { ClientScope, GetIdentityDeviceLinksResponseBody } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { GetIdentityDeviceLinksResponse } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../common";
 
 export const getValidDeviceLinks = async (
   ctx: ServerKoaContext,
@@ -15,11 +16,11 @@ export const getValidDeviceLinks = async (
   }
 
   try {
-    const { data } = await deviceClient.get<GetIdentityDeviceLinksResponseBody>(
+    const { data } = await deviceClient.get<GetIdentityDeviceLinksResponse>(
       "/internal/identities/:id/device-links",
       {
         params: { id: identityId },
-        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.DEVICE_IDENTITY_READ])],
+        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.DEVICE_IDENTITY_READ])],
       },
     );
 

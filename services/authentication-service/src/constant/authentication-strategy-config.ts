@@ -1,18 +1,25 @@
-import { AuthenticationMethod } from "../common";
-import { AuthenticationStrategy } from "../enum";
-import { InputKey, Hint, InitialiseKey, InputMode } from "../types";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import {
+  AuthenticationMethod,
+  AuthenticationMethods,
+  AuthenticationStrategies,
+  AuthenticationStrategy,
+  AuthMethodConfirmHint,
+  AuthMethodInitialiseKey,
+  AuthStrategyInputKey,
+  AuthStrategyInputMode,
+  LevelOfAssurance,
+} from "@lindorm-io/common-types";
 
 export type AuthenticationStrategyConfig = {
   method: AuthenticationMethod;
   strategy: AuthenticationStrategy;
   amrValuesMax: number;
   amrValuesMin: number;
-  confirmKey: InputKey;
+  confirmKey: AuthStrategyInputKey;
   confirmLength: number | null;
-  confirmMode: InputMode;
-  hint: Hint;
-  initialiseKey: InitialiseKey;
+  confirmMode: AuthStrategyInputMode;
+  hint: AuthMethodConfirmHint;
+  initialiseKey: AuthMethodInitialiseKey;
   mfaCookie: boolean;
   pollingRequired: boolean;
   tokenReturn: boolean;
@@ -23,8 +30,8 @@ export type AuthenticationStrategyConfig = {
 
 export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig> = [
   {
-    method: AuthenticationMethod.BANK_ID_SE,
-    strategy: AuthenticationStrategy.BANK_ID_SE,
+    method: AuthenticationMethods.BANK_ID_SE,
+    strategy: AuthenticationStrategies.BANK_ID_SE,
     amrValuesMax: 9,
     amrValuesMin: 0,
     hint: "none",
@@ -40,8 +47,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 90,
   },
   {
-    method: AuthenticationMethod.DEVICE_LINK,
-    strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+    method: AuthenticationMethods.DEVICE_LINK,
+    strategy: AuthenticationStrategies.DEVICE_CHALLENGE,
     amrValuesMax: 0,
     amrValuesMin: 0,
     hint: "none",
@@ -57,8 +64,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 90,
   },
   {
-    method: AuthenticationMethod.EMAIL,
-    strategy: AuthenticationStrategy.EMAIL_LINK,
+    method: AuthenticationMethods.EMAIL,
+    strategy: AuthenticationStrategies.EMAIL_LINK,
     amrValuesMax: 9,
     amrValuesMin: 0,
     hint: "email",
@@ -74,8 +81,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 10,
   },
   {
-    method: AuthenticationMethod.EMAIL,
-    strategy: AuthenticationStrategy.EMAIL_OTP,
+    method: AuthenticationMethods.EMAIL,
+    strategy: AuthenticationStrategies.EMAIL_OTP,
     amrValuesMax: 9,
     amrValuesMin: 0,
     hint: "email",
@@ -91,8 +98,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 30,
   },
   {
-    method: AuthenticationMethod.MFA_COOKIE,
-    strategy: AuthenticationStrategy.MFA_COOKIE,
+    method: AuthenticationMethods.MFA_COOKIE,
+    strategy: AuthenticationStrategies.MFA_COOKIE,
     amrValuesMax: 9,
     amrValuesMin: 1,
     hint: "none",
@@ -108,8 +115,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 999,
   },
   {
-    method: AuthenticationMethod.PASSWORD,
-    strategy: AuthenticationStrategy.PASSWORD,
+    method: AuthenticationMethods.PASSWORD,
+    strategy: AuthenticationStrategies.PASSWORD,
     amrValuesMax: 0,
     amrValuesMin: 0,
     hint: "email",
@@ -125,8 +132,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 10,
   },
   {
-    method: AuthenticationMethod.PASSWORD,
-    strategy: AuthenticationStrategy.PASSWORD_BROWSER_LINK,
+    method: AuthenticationMethods.PASSWORD,
+    strategy: AuthenticationStrategies.PASSWORD_BROWSER_LINK,
     amrValuesMax: 0,
     amrValuesMin: 0,
     hint: "email",
@@ -142,8 +149,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 20,
   },
   {
-    method: AuthenticationMethod.PHONE,
-    strategy: AuthenticationStrategy.PHONE_OTP,
+    method: AuthenticationMethods.PHONE,
+    strategy: AuthenticationStrategies.PHONE_OTP,
     amrValuesMax: 9,
     amrValuesMin: 1,
     hint: "phone",
@@ -159,8 +166,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 10,
   },
   {
-    method: AuthenticationMethod.DEVICE_LINK,
-    strategy: AuthenticationStrategy.RDC_PUSH_NOTIFICATION,
+    method: AuthenticationMethods.DEVICE_LINK,
+    strategy: AuthenticationStrategies.RDC_PUSH_NOTIFICATION,
     amrValuesMax: 9,
     amrValuesMin: 1,
     hint: "none",
@@ -176,8 +183,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 90,
   },
   {
-    method: AuthenticationMethod.DEVICE_LINK,
-    strategy: AuthenticationStrategy.RDC_QR_CODE,
+    method: AuthenticationMethods.DEVICE_LINK,
+    strategy: AuthenticationStrategies.RDC_QR_CODE,
     amrValuesMax: 9,
     amrValuesMin: 0,
     hint: "none",
@@ -193,8 +200,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 90,
   },
   {
-    method: AuthenticationMethod.SESSION_LINK,
-    strategy: AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
+    method: AuthenticationMethods.SESSION_LINK,
+    strategy: AuthenticationStrategies.SESSION_ACCEPT_WITH_CODE,
     amrValuesMax: 1,
     amrValuesMin: 0,
     hint: "none",
@@ -210,8 +217,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 80,
   },
   {
-    method: AuthenticationMethod.SESSION_LINK,
-    strategy: AuthenticationStrategy.SESSION_OTP,
+    method: AuthenticationMethods.SESSION_LINK,
+    strategy: AuthenticationStrategies.SESSION_OTP,
     amrValuesMax: 9,
     amrValuesMin: 1,
     hint: "none",
@@ -227,8 +234,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 80,
   },
   {
-    method: AuthenticationMethod.TIME_BASED_OTP,
-    strategy: AuthenticationStrategy.TIME_BASED_OTP,
+    method: AuthenticationMethods.TIME_BASED_OTP,
+    strategy: AuthenticationStrategies.TIME_BASED_OTP,
     amrValuesMax: 9,
     amrValuesMin: 1,
     hint: "none",
@@ -244,8 +251,8 @@ export const AUTHENTICATION_STRATEGY_CONFIG: Array<AuthenticationStrategyConfig>
     weight: 90,
   },
   {
-    method: AuthenticationMethod.WEBAUTHN,
-    strategy: AuthenticationStrategy.WEBAUTHN,
+    method: AuthenticationMethods.WEBAUTHN,
+    strategy: AuthenticationStrategies.WEBAUTHN,
     amrValuesMax: 9,
     amrValuesMin: 0,
     hint: "none",

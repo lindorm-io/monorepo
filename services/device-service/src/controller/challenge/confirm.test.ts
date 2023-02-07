@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { ChallengeStrategy } from "../../common";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmChallengeController } from "./confirm";
 import { createMockCache } from "@lindorm-io/redis";
@@ -38,7 +37,7 @@ describe("confirmChallengeController", () => {
         certificateVerifier: "certificateVerifier",
         pincode: "pincode",
         biometry: "biometry",
-        strategy: ChallengeStrategy.IMPLICIT,
+        strategy: "implicit",
       },
       entity: {
         challengeSession: createTestChallengeSession(),
@@ -86,7 +85,7 @@ describe("confirmChallengeController", () => {
   });
 
   test("should resolve challenge session with PINCODE", async () => {
-    ctx.data.strategy = ChallengeStrategy.PINCODE;
+    ctx.data.strategy = "pincode";
 
     await expect(confirmChallengeController(ctx)).resolves.toBeTruthy();
 
@@ -94,7 +93,7 @@ describe("confirmChallengeController", () => {
   });
 
   test("should resolve challenge session with BIOMETRY", async () => {
-    ctx.data.strategy = ChallengeStrategy.BIOMETRY;
+    ctx.data.strategy = "biometry";
 
     await expect(confirmChallengeController(ctx)).resolves.toBeTruthy();
 

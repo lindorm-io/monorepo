@@ -1,18 +1,14 @@
 import Joi from "joi";
+import { ConnectOidcToIdentityRequestQuery } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { createOidcSession } from "../../handler";
 import { expiryDate } from "@lindorm-io/expiry";
 
-interface RequestData {
-  callbackId: string;
-  callbackUri: string;
-  provider: string;
-}
+type RequestData = ConnectOidcToIdentityRequestQuery;
 
 export const connectOidcToIdentitySchema = Joi.object<RequestData>().keys({
-  callbackId: JOI_GUID.required(),
+  callbackId: Joi.string().guid().required(),
   callbackUri: Joi.string().uri().required(),
   provider: Joi.string().required(),
 });

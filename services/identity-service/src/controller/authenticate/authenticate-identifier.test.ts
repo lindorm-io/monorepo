@@ -1,4 +1,3 @@
-import { IdentifierType } from "../../common";
 import { authenticateIdentifierController } from "./authenticate-identifier";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
@@ -47,7 +46,7 @@ describe("authenticateIdentifierController", () => {
   });
 
   test("should resolve authenticated identifier", async () => {
-    ctx.data.type = IdentifierType.EMAIL;
+    ctx.data.type = "email";
 
     await expect(authenticateIdentifierController(ctx)).resolves.toStrictEqual({
       body: { identityId: "identityId" },
@@ -57,7 +56,7 @@ describe("authenticateIdentifierController", () => {
   });
 
   test("should resolve authenticated nin", async () => {
-    ctx.data.type = IdentifierType.NIN;
+    ctx.data.type = "nin";
 
     await expect(authenticateIdentifierController(ctx)).resolves.toStrictEqual({
       body: { identityId: "identityId" },
@@ -67,7 +66,7 @@ describe("authenticateIdentifierController", () => {
   });
 
   test("should resolve authenticated username", async () => {
-    ctx.data.type = IdentifierType.USERNAME;
+    ctx.data.type = "username";
 
     await expect(authenticateIdentifierController(ctx)).resolves.toStrictEqual({
       body: { identityId: "identityId" },

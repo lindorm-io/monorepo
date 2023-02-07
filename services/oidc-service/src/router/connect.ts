@@ -1,18 +1,14 @@
-import { IdentityPermission, Scope } from "../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
 import { identityAuthMiddleware } from "../middleware";
 import { redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/koa";
-import {
-  connectOidcToIdentityController,
-  connectOidcToIdentitySchema,
-} from "../controller/oidc/connect-oidc-to-identity";
+import { LindormScopes } from "@lindorm-io/common-types";
+import { connectOidcToIdentityController, connectOidcToIdentitySchema } from "../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
-router.post(
+router.get(
   "/",
   redirectErrorMiddleware({
     redirectUri: configuration.frontend.routes.error,
@@ -20,8 +16,7 @@ router.post(
   }),
   useSchema(connectOidcToIdentitySchema),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
   }),
   useController(connectOidcToIdentityController),
 );

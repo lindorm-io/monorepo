@@ -1,9 +1,13 @@
 import Joi from "joi";
-import { AuthenticationMethod, JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../../common";
-import { AuthenticationMode } from "../../enum";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { AuthenticationSession } from "../../entity";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
+import {
+  AuthenticationMethod,
+  AuthenticationMethods,
+  AuthenticationModes,
+  LevelOfAssurance,
+  PKCEMethod,
+} from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
@@ -29,11 +33,11 @@ type Options = {
 
 const schema = Joi.object<Options>()
   .keys({
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
     country: Joi.string().lowercase().length(2).optional(),
-    identityId: JOI_GUID.optional(),
+    identityId: Joi.string().guid().optional(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
     loginHint: Joi.array().items(Joi.string()).optional(),
     methods: Joi.array().items(JOI_AUTHENTICATION_METHOD).optional(),
@@ -73,11 +77,11 @@ export const initialiseStandardAuthenticationSession = async (
     expires,
     identityId,
     nonce,
-    mode: AuthenticationMode.STANDARD,
+    mode: AuthenticationModes.NONE,
     phoneHint,
     requiredLevel: levelOfAssurance,
     requiredMethods: methods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethod).includes(key),
+      Object.values(AuthenticationMethods).includes(key),
     ) as Array<AuthenticationMethod>,
   });
 };

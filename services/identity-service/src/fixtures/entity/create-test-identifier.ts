@@ -1,8 +1,8 @@
 import { Identifier, IdentifierOptions } from "../../entity";
-import { IdentifierType } from "../../common";
 import { configuration } from "../../server/configuration";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { IdentifierTypes } from "@lindorm-io/common-types";
 
 export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = {}): Identifier =>
   new Identifier({
@@ -11,7 +11,7 @@ export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = 
     label: "home",
     primary: true,
     provider: configuration.server.domain,
-    type: IdentifierType.EMAIL,
+    type: IdentifierTypes.EMAIL,
     verified: true,
     ...options,
   });
@@ -25,7 +25,7 @@ export const createTestExternalIdentifier = (
     label: "home",
     primary: false,
     provider: "https://login.apple.com/",
-    type: IdentifierType.EXTERNAL,
+    type: IdentifierTypes.EXTERNAL,
     verified: false,
     ...options,
   });
@@ -37,7 +37,7 @@ export const createTestPhoneIdentifier = (options: Partial<IdentifierOptions> = 
     label: "home",
     primary: true,
     provider: configuration.server.domain,
-    type: IdentifierType.PHONE,
+    type: IdentifierTypes.PHONE,
     verified: true,
     ...options,
   });

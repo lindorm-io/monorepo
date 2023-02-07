@@ -1,10 +1,11 @@
 import { AuthenticationSession, StrategySession } from "../../../entity";
 import { AuthenticationStrategyConfig } from "../../../constant";
-import { ClientScope, SendCodeRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { randomNumberAsync } from "../../../util";
+import { SendOtpRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
 interface Options {
   phoneNumber: string;
@@ -32,7 +33,7 @@ export const initialisePhoneOtp = async (
 
   await strategySessionCache.update(strategySession);
 
-  const body: SendCodeRequestData = {
+  const body: SendOtpRequestBody = {
     content: {
       expires: strategySession.expires,
       otp,
@@ -45,7 +46,7 @@ export const initialisePhoneOtp = async (
   await communicationClient.post("/internal/send/otp", {
     body,
     middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+      clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_MESSAGE_SEND]),
     ],
   });
 };

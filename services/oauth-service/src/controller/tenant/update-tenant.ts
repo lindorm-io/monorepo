@@ -1,20 +1,19 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { isUndefined } from "lodash";
 
-interface RequestData {
+type RequestData = {
   id: string;
   administrators: Array<string>;
   name: string;
   owner: string;
   subdomain: string;
-}
+};
 
 export const updateTenantSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     administrators: Joi.array().items(Joi.string()).optional(),
     name: Joi.string().optional(),
     owner: Joi.string().optional(),

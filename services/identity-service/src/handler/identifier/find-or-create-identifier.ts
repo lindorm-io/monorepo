@@ -1,17 +1,17 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { isIdentifierStoredSeparately } from "../../util";
+import { IdentifierType } from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   identifier: string;
   label?: string;
   provider?: string;
   type: IdentifierType;
-}
+};
 
 export const findOrCreateIdentifier = async (
   ctx: ServerKoaContext,

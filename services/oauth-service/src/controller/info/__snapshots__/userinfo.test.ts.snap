@@ -3,6 +3,7 @@
 exports[`userinfoController should resolve user info 1`] = `
 {
   "body": {
+    "active": true,
     "address": {
       "careOf": "careOf",
       "country": "country",

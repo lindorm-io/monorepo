@@ -1,11 +1,11 @@
 import { Address, Identity } from "../../entity";
-import { OpenIDAddress } from "../../common";
 import { ServerKoaContext } from "../../types";
+import { OpenIdAddress } from "@lindorm-io/common-types";
 
 export const addAddressFromUserinfo = async (
   ctx: ServerKoaContext,
   identity: Identity,
-  openIDAddress: OpenIDAddress,
+  openIDAddress: OpenIdAddress,
 ): Promise<Address> => {
   const {
     repository: { addressRepository },

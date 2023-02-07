@@ -1,34 +1,37 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { IdentifierType, JOI_NIN } from "../../common";
+import { JOI_NIN } from "../../common";
 import { Identity } from "../../entity";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { authenticateIdentifier, authenticateNationalIdentityNumber } from "../../handler";
+import { JOI_EMAIL, JOI_PHONE_NUMBER } from "../../common";
 import {
-  AuthenticateIdentifierRequestData,
-  AuthenticateIdentifierResponseBody,
-  JOI_EMAIL,
-  JOI_GUID,
-  JOI_PHONE_NUMBER,
-} from "../../common";
+  AuthenticateIdentifierRequestBody,
+  AuthenticateIdentifierResponse,
+  IdentifierTypes,
+} from "@lindorm-io/common-types";
 
-export const authenticateIdentifierSchema = Joi.object<AuthenticateIdentifierRequestData>()
+type RequestData = AuthenticateIdentifierRequestBody;
+
+type ResponseBody = AuthenticateIdentifierResponse;
+
+export const authenticateIdentifierSchema = Joi.object<RequestData>()
   .keys({
     identifier: Joi.when("type", {
       switch: [
-        { is: IdentifierType.EMAIL, then: JOI_EMAIL.required() },
-        { is: IdentifierType.EXTERNAL, then: Joi.string().required() },
-        { is: IdentifierType.NIN, then: JOI_NIN.required() },
-        { is: IdentifierType.PHONE, then: JOI_PHONE_NUMBER.required() },
-        { is: IdentifierType.USERNAME, then: Joi.string().required() },
+        { is: IdentifierTypes.EMAIL, then: JOI_EMAIL.required() },
+        { is: IdentifierTypes.EXTERNAL, then: Joi.string().required() },
+        { is: IdentifierTypes.NIN, then: JOI_NIN.required() },
+        { is: IdentifierTypes.PHONE, then: JOI_PHONE_NUMBER.required() },
+        { is: IdentifierTypes.USERNAME, then: Joi.string().required() },
       ],
       otherwise: Joi.forbidden(),
     }),
-    identityId: JOI_GUID.optional(),
+    identityId: Joi.string().guid().optional(),
     provider: Joi.when("type", {
-      is: IdentifierType.EXTERNAL,
+      is: IdentifierTypes.EXTERNAL,
       then: Joi.string().uri().required(),
       otherwise: Joi.forbidden(),
     }),
@@ -36,9 +39,9 @@ export const authenticateIdentifierSchema = Joi.object<AuthenticateIdentifierReq
   })
   .required();
 
-export const authenticateIdentifierController: ServerKoaController<
-  AuthenticateIdentifierRequestData
-> = async (ctx): ControllerResponse<AuthenticateIdentifierResponseBody> => {
+export const authenticateIdentifierController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
   const {
     data: { identifier, identityId, provider, type },
     repository: { identityRepository },
@@ -47,9 +50,9 @@ export const authenticateIdentifierController: ServerKoaController<
   let identity: Identity;
 
   switch (type) {
-    case IdentifierType.EMAIL:
-    case IdentifierType.EXTERNAL:
-    case IdentifierType.PHONE:
+    case IdentifierTypes.EMAIL:
+    case IdentifierTypes.EXTERNAL:
+    case IdentifierTypes.PHONE:
       identity = await authenticateIdentifier(ctx, {
         identifier,
         identityId,
@@ -58,14 +61,14 @@ export const authenticateIdentifierController: ServerKoaController<
       });
       break;
 
-    case IdentifierType.NIN:
+    case IdentifierTypes.NIN:
       identity = await authenticateNationalIdentityNumber(ctx, {
         identityId,
         nationalIdentityNumber: identifier,
       });
       break;
 
-    case IdentifierType.USERNAME:
+    case IdentifierTypes.USERNAME:
       identity = await identityRepository.find({
         ...(identityId ? { id: identityId } : {}),
         username: identifier,

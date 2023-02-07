@@ -1,24 +1,27 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetOidcSessionResponseBody, JOI_GUID } from "../../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { ServerKoaController } from "../../types";
 import { findOidcConfiguration } from "../../util";
+import {
+  GetOidcSessionRequestParams,
+  GetOidcSessionResponse,
+  LevelOfAssurance,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetOidcSessionRequestParams;
+
+type ResponseBody = GetOidcSessionResponse;
 
 export const getOidcSessionSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getOidcSessionController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetOidcSessionResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { oidcSession },
   } = ctx;

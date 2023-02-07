@@ -1,25 +1,13 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
 import { ControllerResponse, Environment } from "@lindorm-io/koa";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
 import { flatten, uniq } from "lodash";
 import { removeEmptyFromArray } from "@lindorm-io/core";
 import { tryFindBrowserSession, tryFindConsentSession, tryFindRefreshSession } from "../../handler";
-import {
-  DisplayMode,
-  JOI_COUNTRY_CODE,
-  JOI_GUID,
-  JOI_JWT,
-  JOI_NONCE,
-  JOI_STATE,
-  PromptMode,
-  ResponseMode,
-  ResponseType,
-  SessionStatus,
-} from "../../common";
+import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import {
   AUTHORIZATION_SESSION_COOKIE_NAME,
   JOI_DISPLAY_MODE,
@@ -39,36 +27,21 @@ import {
   isLoginRequired,
   isConsentRequired,
 } from "../../util";
+import {
+  AuthorizeRequestQuery,
+  OauthPromptMode,
+  OauthResponseType,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  acrValues?: string;
-  amrValues?: string; // lindorm.io
-  authToken?: string; // lindorm.io
-  clientId: string;
-  codeChallenge?: string;
-  codeChallengeMethod?: PKCEMethod;
-  country?: string; // lindorm.io
-  display?: DisplayMode;
-  idTokenHint?: string;
-  loginHint?: string;
-  maxAge?: string;
-  nonce?: string;
-  prompt?: string;
-  redirectData?: string; // lindorm.io
-  redirectUri: string;
-  responseMode?: ResponseMode;
-  responseType: string;
-  scope: string;
-  state: string;
-  uiLocales?: string;
-}
+type RequestData = AuthorizeRequestQuery;
 
 export const oauthAuthorizeSchema = Joi.object<RequestData>()
   .keys({
     acrValues: Joi.string().optional(),
     amrValues: Joi.string().optional(),
     authToken: JOI_JWT.optional(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     codeChallenge: Joi.string().optional(),
     codeChallengeMethod: JOI_PKCE_METHOD.optional(),
     country: JOI_COUNTRY_CODE.optional(),
@@ -117,8 +90,8 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     token: { idToken },
   } = ctx;
 
-  const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<PromptMode>) : [];
-  const responseTypes = responseType.toLowerCase().split(" ") as Array<ResponseType>;
+  const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OauthPromptMode>) : [];
+  const responseTypes = responseType.toLowerCase().split(" ") as Array<OauthResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
   assertRedirectUri(redirectUri, client);
@@ -193,12 +166,12 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   const loginRequired = isLoginRequired(authorizationSession, browserSession);
   if (!loginRequired) {
-    authorizationSession.status.login = SessionStatus.SKIP;
+    authorizationSession.status.login = SessionStatuses.SKIP;
   }
 
   const consentRequired = isConsentRequired(authorizationSession, browserSession, consentSession);
   if (!consentRequired) {
-    authorizationSession.status.consent = SessionStatus.SKIP;
+    authorizationSession.status.consent = SessionStatuses.SKIP;
   }
 
   assertAuthorizePrompt(authorizationSession, { consentRequired, loginRequired });

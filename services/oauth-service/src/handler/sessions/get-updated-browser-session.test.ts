@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { AuthenticationMethod, SessionStatus } from "../../common";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { getUpdatedBrowserSession } from "./get-updated-browser-session";
@@ -30,11 +29,7 @@ describe("getUpdatedBrowserSession", () => {
     authorizationSession = createTestAuthorizationSession({
       confirmedLogin: {
         acrValues: ["loa_3"],
-        amrValues: [
-          AuthenticationMethod.EMAIL,
-          AuthenticationMethod.PHONE,
-          AuthenticationMethod.SESSION_LINK,
-        ],
+        amrValues: ["email", "phone", "session_link"],
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
@@ -71,7 +66,7 @@ describe("getUpdatedBrowserSession", () => {
   });
 
   test("should resolve skipped browser session", async () => {
-    authorizationSession.status.login = SessionStatus.SKIP;
+    authorizationSession.status.login = "skip";
 
     await expect(getUpdatedBrowserSession(ctx, authorizationSession)).resolves.toStrictEqual(
       expect.any(BrowserSession),

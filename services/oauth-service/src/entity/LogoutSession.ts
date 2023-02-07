@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { LogoutSessionType } from "../enum";
-import { JOI_GUID, JOI_JWT, JOI_SESSION_STATUS, JOI_STATE, SessionStatus } from "../common";
+import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
+import { SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -9,7 +10,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface LogoutSessionAttributes extends EntityAttributes {
+export type LogoutSessionAttributes = EntityAttributes & {
   clientId: string;
   expires: Date;
   idTokenHint: string | null;
@@ -19,7 +20,7 @@ export interface LogoutSessionAttributes extends EntityAttributes {
   sessionType: LogoutSessionType;
   state: string | null;
   status: SessionStatus;
-}
+};
 
 export type LogoutSessionOptions = Optional<
   LogoutSessionAttributes,
@@ -30,12 +31,12 @@ const schema = Joi.object<LogoutSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     expires: Joi.date().required(),
     idTokenHint: JOI_JWT.allow(null).required(),
     originalUri: Joi.string().required(),
     redirectUri: Joi.string().uri().allow(null).required(),
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
     sessionType: Joi.string().required(),
     state: JOI_STATE.allow(null).required(),
     status: JOI_SESSION_STATUS.required(),
@@ -65,7 +66,7 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
     this.sessionId = options.sessionId;
     this.sessionType = options.sessionType;
     this.state = options.state || null;
-    this.status = options.status || SessionStatus.PENDING;
+    this.status = options.status || SessionStatuses.PENDING;
   }
 
   public async schemaValidation(): Promise<void> {

@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationMethod, ResponseMode, Scope, SessionStatus } from "../../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
 import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
 import { createURL } from "@lindorm-io/url";
@@ -21,8 +20,7 @@ describe("/oauth2/sessions/verify", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
-    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
-    .query(true)
+    .get("/userinfo")
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
@@ -34,20 +32,20 @@ describe("/oauth2/sessions/verify", () => {
         clientId: client.id,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+          scopes: ["openid", "offline_access", "email"],
         },
         confirmedLogin: {
           acrValues: ["loa_3"],
-          amrValues: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          amrValues: ["email", "phone"],
           identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
           remember: true,
         },
-        responseMode: ResponseMode.QUERY,
+        responseMode: "query",
         status: {
-          login: SessionStatus.CONFIRMED,
-          consent: SessionStatus.CONFIRMED,
+          login: "confirmed",
+          consent: "confirmed",
         },
       }),
     );
@@ -93,20 +91,20 @@ describe("/oauth2/sessions/verify", () => {
         clientId: client.id,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
+          scopes: ["openid", "offline_access", "email"],
         },
         confirmedLogin: {
           acrValues: ["loa_3"],
-          amrValues: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          amrValues: ["email", "phone"],
           identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
           remember: true,
         },
-        responseMode: ResponseMode.FORM_POST,
+        responseMode: "form_post",
         status: {
-          login: SessionStatus.CONFIRMED,
-          consent: SessionStatus.CONFIRMED,
+          login: "confirmed",
+          consent: "confirmed",
         },
       }),
     );

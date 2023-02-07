@@ -1,7 +1,5 @@
-import { IdentityPermission, Scope } from "../../common";
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { ServerKoaContext } from "../../types";
-import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { LindormScopes } from "@lindorm-io/common-types";
+import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
   addressEntityMiddleware,
   identityAuthMiddleware,
@@ -16,15 +14,14 @@ import {
   updateIdentityAddressSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.post(
   "/",
   useSchema(createIdentityAddressSchema),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID, LindormScopes.ADDRESS],
   }),
   identityEntityMiddleware("token.bearerToken.subject"),
   useController(createIdentityAddressController),
@@ -36,8 +33,7 @@ router.patch(
   useSchema(updateIdentityAddressSchema),
   addressEntityMiddleware("data.id"),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID, LindormScopes.ADDRESS],
     fromPath: {
       subject: "entity.address.identityId",
     },
@@ -51,8 +47,7 @@ router.delete(
   useSchema(deleteIdentityAddressSchema),
   addressEntityMiddleware("data.id"),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID, LindormScopes.ADDRESS],
     fromPath: {
       subject: "entity.address.identityId",
     },

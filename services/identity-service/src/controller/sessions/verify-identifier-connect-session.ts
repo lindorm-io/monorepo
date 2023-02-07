@@ -1,17 +1,16 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 
-interface RequestData {
+type RequestData = {
   id: string;
   code: string;
-}
+};
 
 export const verifyIdentifierConnectSessionSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     code: Joi.string().required(),
   })
   .required();

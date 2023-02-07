@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestLogoutSession } from "../../fixtures/entity";
 import { rejectLogoutController } from "./reject-logout";
@@ -35,13 +34,13 @@ describe("rejectLogoutController", () => {
 
     expect(ctx.cache.logoutSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: SessionStatus.REJECTED,
+        status: "rejected",
       }),
     );
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.REJECTED;
+    ctx.entity.logoutSession.status = "rejected";
 
     await expect(rejectLogoutController(ctx)).rejects.toThrow(ClientError);
   });

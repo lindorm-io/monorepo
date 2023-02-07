@@ -1,6 +1,4 @@
-import { AuthenticationStrategy } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../common";
 import { confirmStrategyController } from "./confirm-strategy";
 import { createMockCache } from "@lindorm-io/redis";
 import {
@@ -44,24 +42,24 @@ describe("confirmStrategyController", () => {
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
+          allowedStrategies: ["device_challenge"],
           identityId: null,
           confirmedIdentifiers: ["test@lindorm.io"],
           requiredLevel: 1,
-          status: SessionStatus.PENDING,
+          status: "pending",
         }),
         strategySession: createTestStrategySession({
           email: null,
           nin: null,
           phoneNumber: null,
           username: "username",
-          status: SessionStatus.PENDING,
-          strategy: AuthenticationStrategy.PASSWORD,
+          status: "pending",
+          strategy: "password",
         }),
       },
     };
 
-    calculateAuthenticationStatus.mockImplementation(() => SessionStatus.CONFIRMED);
+    calculateAuthenticationStatus.mockImplementation(() => "confirmed");
     calculateLevelOfAssurance.mockImplementation(() => ({
       levelOfAssurance: 3,
       maximumLevelOfAssurance: 3,
@@ -71,7 +69,7 @@ describe("confirmStrategyController", () => {
         id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
       }),
     );
-    resolveAllowedMethods.mockResolvedValue([AuthenticationStrategy.DEVICE_CHALLENGE]);
+    resolveAllowedMethods.mockResolvedValue(["device_challenge"]);
   });
 
   test("should resolve", async () => {

@@ -10,10 +10,10 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface DisplayNameAttributes extends EntityAttributes {
+export type DisplayNameAttributes = EntityAttributes & {
   name: string;
   numbers: Array<number>;
-}
+};
 
 export type DisplayNameOptions = Optional<DisplayNameAttributes, EntityKeys | "numbers">;
 

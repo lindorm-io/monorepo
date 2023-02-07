@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { JOI_GUID } from "../common";
+import { IdentityAddress } from "../types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,9 +7,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import { IdentityAddress } from "../types";
 
-export interface AddressAttributes extends EntityAttributes {
+export type AddressAttributes = EntityAttributes & {
   careOf: string | null;
   country: string | null;
   identityId: string;
@@ -19,7 +18,7 @@ export interface AddressAttributes extends EntityAttributes {
   primary: boolean;
   region: string | null;
   streetAddress: Array<string>;
-}
+};
 
 export type AddressOptions = Optional<AddressAttributes, EntityKeys | "label">;
 
@@ -29,7 +28,7 @@ const schema = Joi.object<AddressAttributes>()
 
     careOf: Joi.string().allow(null).required(),
     country: Joi.string().allow(null).required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     label: Joi.string().allow(null).required(),
     locality: Joi.string().allow(null).required(),
     postalCode: Joi.string().allow(null).required(),

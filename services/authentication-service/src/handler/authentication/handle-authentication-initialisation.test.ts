@@ -1,7 +1,5 @@
 import MockDate from "mockdate";
-import { AuthenticationMethod } from "../../common";
 import { AuthenticationSession } from "../../entity";
-import { AuthenticationStrategy } from "../../enum";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
@@ -37,10 +35,10 @@ describe("handleAuthenticationInitialisation", () => {
       codeChallenge: "codeChallenge",
       codeChallengeMethod: "codeChallengeMethod",
       requiredLevel: 4,
-      requiredMethods: [AuthenticationMethod.EMAIL],
+      requiredMethods: ["email"],
     };
 
-    resolveAllowedStrategies.mockResolvedValue([AuthenticationStrategy.DEVICE_CHALLENGE]);
+    resolveAllowedStrategies.mockResolvedValue(["device_challenge"]);
   });
 
   test("should resolve", async () => {

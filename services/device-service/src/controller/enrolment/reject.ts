@@ -1,16 +1,14 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT } from "../../common";
+import { JOI_JWT } from "../../common";
+import { RejectEnrolmentRequestBody, RejectEnrolmentRequestParams } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-  enrolmentSessionToken: string;
-}
+type RequestData = RejectEnrolmentRequestParams & RejectEnrolmentRequestBody;
 
 export const rejectEnrolmentSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     enrolmentSessionToken: JOI_JWT.required(),
   })
   .required();

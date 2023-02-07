@@ -1,9 +1,8 @@
-import { AuthenticationStrategy } from "../../enum";
-import { SessionStatus } from "../../common";
 import { StrategySession, StrategySessionOptions } from "../../entity";
 import { baseHash } from "@lindorm-io/core";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { AuthenticationStrategies, SessionStatuses } from "@lindorm-io/common-types";
 
 export const createTestStrategySession = (
   options: Partial<StrategySessionOptions> = {},
@@ -17,8 +16,8 @@ export const createTestStrategySession = (
     nonce: randomString(16),
     otp: baseHash(randomNumber(6).toString()),
     phoneNumber: `07${randomNumber(8)}`,
-    status: SessionStatus.PENDING,
-    strategy: AuthenticationStrategy.EMAIL_OTP,
+    status: SessionStatuses.PENDING,
+    strategy: AuthenticationStrategies.EMAIL_OTP,
     username: "username",
     ...options,
   });

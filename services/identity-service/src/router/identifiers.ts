@@ -1,8 +1,6 @@
-import { IdentityPermission, Scope } from "../common";
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { ServerKoaContext } from "../types";
+import { LindormScopes } from "@lindorm-io/common-types";
 import { identifierEntityMiddleware, identityAuthMiddleware } from "../middleware";
-import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
   deleteIdentifierController,
   deleteIdentifierSchema,
@@ -10,7 +8,7 @@ import {
   updateIdentifierSchema,
 } from "../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.patch(
@@ -19,8 +17,7 @@ router.patch(
   useSchema(updateIdentifierSchema),
   identifierEntityMiddleware("data.id"),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
     fromPath: {
       subject: "entity.identifier.identityId",
     },
@@ -34,8 +31,7 @@ router.delete(
   useSchema(deleteIdentifierSchema),
   identifierEntityMiddleware("data.id"),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
     fromPath: {
       subject: "entity.identifier.identityId",
     },

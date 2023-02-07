@@ -1,16 +1,16 @@
 import Joi from "joi";
-import { IdentifierType } from "../common";
 import { NamingSystem } from "../enum";
+import { IdentifierTypes } from "@lindorm-io/common-types";
 
 export const JOI_BIRTHDATE = Joi.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 
 export const JOI_IDENTIFIER_TYPE = Joi.string().valid(
-  IdentifierType.EMAIL,
-  IdentifierType.EXTERNAL,
-  IdentifierType.NIN,
-  IdentifierType.PHONE,
-  IdentifierType.SSN,
-  IdentifierType.USERNAME,
+  IdentifierTypes.EMAIL,
+  IdentifierTypes.EXTERNAL,
+  IdentifierTypes.NIN,
+  IdentifierTypes.PHONE,
+  IdentifierTypes.SSN,
+  IdentifierTypes.USERNAME,
 );
 
 export const JOI_IDENTITY_ADDRESS = Joi.object({

@@ -1,4 +1,3 @@
-import { DeviceFactor } from "../common";
 import { assertConfirmationTokenFactorLength } from "./assert-confirmation-token-factor-length";
 
 describe("assertConfirmationTokenFactorLength", () => {
@@ -6,7 +5,7 @@ describe("assertConfirmationTokenFactorLength", () => {
 
   beforeEach(() => {
     token = {
-      claims: { factors: [DeviceFactor.POSSESSION, DeviceFactor.KNOWLEDGE] },
+      claims: { factors: ["possession", "knowledge"] },
     };
   });
 

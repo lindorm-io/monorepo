@@ -1,4 +1,3 @@
-import { RdcSessionType } from "../../common";
 import { confirmRdcController } from "./confirm";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
@@ -45,7 +44,7 @@ describe("confirmRdcController", () => {
 
   test("should resolve with rdc session [ ENROLMENT ]", async () => {
     ctx.entity.rdcSession = createTestRdcSession({
-      type: RdcSessionType.ENROLMENT,
+      type: "enrolment",
     });
 
     await expect(confirmRdcController(ctx)).resolves.toBeUndefined();

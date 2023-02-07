@@ -1,7 +1,8 @@
 import { Account } from "../../entity";
 import { AccountSalt, ServerKoaContext } from "../../types";
-import { ClientScope, GetEncryptedRecordResponseBody } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { GetEncryptedRecordResponse } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../common";
 
 export const fetchAccountSalt = async (
   ctx: ServerKoaContext,
@@ -11,14 +12,14 @@ export const fetchAccountSalt = async (
     axios: { oauthClient, vaultClient },
   } = ctx;
 
-  const response = await vaultClient.get<GetEncryptedRecordResponseBody<AccountSalt>>(
+  const response = await vaultClient.get<GetEncryptedRecordResponse<AccountSalt>>(
     "/internal/vault/:id",
     {
       params: {
         id: account.id,
       },
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_READ]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_READ]),
       ],
     },
   );

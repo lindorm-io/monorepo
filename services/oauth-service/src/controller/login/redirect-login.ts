@@ -1,41 +1,45 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
+import {
+  RedirectLoginRequestParams,
+  RedirectLoginResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 import {
   createAuthorizationVerifyUri,
   createLoginPendingUri,
   createLoginRejectedUri,
 } from "../../util";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RedirectLoginRequestParams;
+
+type ResponseBody = RedirectLoginResponse;
 
 export const redirectLoginSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const redirectLoginController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseWithRedirectBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { authorizationSession },
   } = ctx;
 
   switch (authorizationSession.status.login) {
-    case SessionStatus.CONFIRMED:
-    case SessionStatus.SKIP:
-    case SessionStatus.VERIFIED:
+    case SessionStatuses.CONFIRMED:
+    case SessionStatuses.SKIP:
+    case SessionStatuses.VERIFIED:
       return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 
-    case SessionStatus.PENDING:
+    case SessionStatuses.PENDING:
       return { body: { redirectTo: createLoginPendingUri(authorizationSession) } };
 
-    case SessionStatus.REJECTED:
+    case SessionStatuses.REJECTED:
       return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
 
     default:

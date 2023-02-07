@@ -7,12 +7,12 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface AccountAttributes extends EntityAttributes {
+export type AccountAttributes = EntityAttributes & {
   browserLinkCode: string | null;
   password: string | null;
   recoveryCode: string | null;
   totp: string | null;
-}
+};
 
 export type AccountOptions = Optional<
   AccountAttributes,

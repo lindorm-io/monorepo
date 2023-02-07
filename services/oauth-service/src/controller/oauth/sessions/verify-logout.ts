@@ -2,25 +2,22 @@ import Joi from "joi";
 import { BROWSER_SESSION_COOKIE_NAME } from "../../../constant";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../../common";
 import { LogoutSessionType } from "../../../enum";
 import { ServerKoaController } from "../../../types";
 import { handleBrowserSessionLogout, handleRefreshSessionLogout } from "../../../handler";
+import { SessionStatuses, VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
 import {
   createLogoutPendingUri,
   createLogoutRedirectUri,
   createLogoutRejectedUri,
 } from "../../../util";
 
-interface RequestData {
-  redirectUri: string;
-  sessionId: string;
-}
+type RequestData = VerifyLogoutRequestQuery;
 
 export const verifyLogoutSchema = Joi.object<RequestData>()
   .keys({
     redirectUri: Joi.string().uri().required(),
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -37,14 +34,14 @@ export const verifyLogoutController: ServerKoaController<RequestData> = async (
   }
 
   switch (logoutSession.status) {
-    case SessionStatus.CONFIRMED:
-    case SessionStatus.SKIP:
+    case SessionStatuses.CONFIRMED:
+    case SessionStatuses.SKIP:
       break;
 
-    case SessionStatus.PENDING:
+    case SessionStatuses.PENDING:
       return { redirect: createLogoutPendingUri(logoutSession) };
 
-    case SessionStatus.REJECTED:
+    case SessionStatuses.REJECTED:
       return { redirect: createLogoutRejectedUri(logoutSession) };
 
     default:

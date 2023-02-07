@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,13 +7,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface ConsentSessionAttributes extends EntityAttributes {
+export type ConsentSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
   clientId: string;
   identityId: string;
   scopes: Array<string>;
   sessions: Array<string>;
-}
+};
 
 export type ConsentSessionOptions = Optional<
   ConsentSessionAttributes,
@@ -25,11 +24,11 @@ const schema = Joi.object<ConsentSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    audiences: Joi.array().items(JOI_GUID).required(),
-    clientId: JOI_GUID.required(),
-    identityId: JOI_GUID.required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
+    clientId: Joi.string().guid().required(),
+    identityId: Joi.string().guid().required(),
     scopes: Joi.array().items(Joi.string().lowercase()).required(),
-    sessions: Joi.array().items(JOI_GUID).required(),
+    sessions: Joi.array().items(Joi.string().guid()).required(),
   })
   .required();
 

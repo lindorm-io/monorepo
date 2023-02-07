@@ -1,14 +1,14 @@
 import { AUTHENTICATION_STRATEGY_CONFIG, AuthenticationStrategyConfig } from "../constant";
 import { AuthenticationSession } from "../entity";
-import { ClientConfig } from "../types";
 import { ServerError } from "@lindorm-io/errors";
 import { filter, find, orderBy, uniq } from "lodash";
+import { AuthMethodConfig } from "@lindorm-io/common-types";
 
 type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; requested: boolean };
 
 export const generateClientConfig = (
   authenticationSession: AuthenticationSession,
-): Array<ClientConfig> => {
+): Array<AuthMethodConfig> => {
   if (!authenticationSession.allowedStrategies.length) {
     throw new ServerError("Unexpected Error", {
       description: "AuthenticationSession has no allowed methods",
@@ -49,7 +49,7 @@ export const generateClientConfig = (
 
   const orderedMethods = uniq(orderedConfig.map((config) => config.method));
 
-  const clientConfig: Array<ClientConfig> = [];
+  const clientConfig: Array<AuthMethodConfig> = [];
   let rank = 1;
 
   for (const method of orderedMethods) {

@@ -2,7 +2,7 @@ import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { SessionHint } from "../../enum";
-import { SubjectHint, TokenType } from "../../common";
+import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 
 export const createLogoutToken = (
   ctx: ServerKoaContext,
@@ -22,7 +22,7 @@ export const createLogoutToken = (
     sessionId: session.id,
     sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
     subject: session.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.LOGOUT,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.LOGOUT,
   });
 };

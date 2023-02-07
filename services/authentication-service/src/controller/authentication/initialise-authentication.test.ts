@@ -1,4 +1,3 @@
-import { AuthenticationMethod } from "../../common";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { initialiseAuthenticationController } from "./initialise-authentication";
 import {
@@ -79,7 +78,7 @@ describe("initialiseAuthenticationController", () => {
       country: "se",
       identityId: "71781faf-5195-4cd9-8200-5a54b9ddcdc6",
       levelOfAssurance: 4,
-      methods: [AuthenticationMethod.EMAIL],
+      methods: ["email"],
       nonce: "nonce",
     };
 

@@ -2,17 +2,22 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
-import { JOI_GUID, JOI_JWT, GrantType } from "../../common";
-import { ServerKoaController, OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
+import { JOI_JWT } from "../../common";
+import { ServerKoaController } from "../../types";
+import { OauthGrantTypes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import {
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,
   handleRefreshTokenGrant,
 } from "../../handler";
 
-export const oauthTokenSchema = Joi.object()
+type RequestData = TokenRequestBody;
+
+type ResponseBody = TokenResponse;
+
+export const oauthTokenSchema = Joi.object<RequestData>()
   .keys({
-    clientId: JOI_GUID.optional(),
+    clientId: Joi.string().guid().optional(),
     clientSecret: Joi.string().optional(),
     code: JOI_CODE.optional(),
     codeVerifier: Joi.string().optional(),
@@ -23,9 +28,9 @@ export const oauthTokenSchema = Joi.object()
   })
   .required();
 
-export const oauthTokenController: ServerKoaController<OAuthTokenRequestData> = async (
+export const oauthTokenController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<Partial<OAuthTokenResponseBody>> => {
+): ControllerResponse<Partial<ResponseBody>> => {
   const {
     data: { grantType },
     entity: { client },
@@ -42,18 +47,18 @@ export const oauthTokenController: ServerKoaController<OAuthTokenRequestData> = 
     });
   }
 
-  let body: Partial<OAuthTokenResponseBody>;
+  let body: Partial<ResponseBody>;
 
   switch (grantType) {
-    case GrantType.AUTHORIZATION_CODE:
+    case OauthGrantTypes.AUTHORIZATION_CODE:
       body = await handleAuthorizationCodeGrant(ctx);
       break;
 
-    case GrantType.CLIENT_CREDENTIALS:
+    case OauthGrantTypes.CLIENT_CREDENTIALS:
       body = await handleClientCredentialsGrant(ctx);
       break;
 
-    case GrantType.REFRESH_TOKEN:
+    case OauthGrantTypes.REFRESH_TOKEN:
       body = await handleRefreshTokenGrant(ctx);
       break;
 

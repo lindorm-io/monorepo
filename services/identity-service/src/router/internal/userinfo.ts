@@ -1,37 +1,19 @@
-import { ClientPermission, ClientScope } from "../../common";
-import { ServerKoaContext } from "../../types";
+import { Router, useController, paramsMiddleware, useSchema } from "@lindorm-io/koa";
 import { clientAuthMiddleware, identityEntityMiddleware } from "../../middleware";
-import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
-import {
-  addUserinfoController,
-  addUserinfoSchema,
-  getUserinfoController,
-  getUserinfoSchema,
-} from "../../controller";
+import { putUserinfoController, putUserinfoSchema } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
-router.get(
-  "/:id",
-  paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTITY_IDENTITY_READ],
-  }),
-  useSchema(getUserinfoSchema),
-  identityEntityMiddleware("data.id"),
-  useController(getUserinfoController),
+router.use(
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.put(
   "/:id",
   paramsMiddleware,
-  clientAuthMiddleware({
-    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-    scopes: [ClientScope.IDENTITY_IDENTITY_WRITE],
-  }),
-  useSchema(addUserinfoSchema),
+  useSchema(putUserinfoSchema),
   identityEntityMiddleware("data.id"),
-  useController(addUserinfoController),
+  useController(putUserinfoController),
 );

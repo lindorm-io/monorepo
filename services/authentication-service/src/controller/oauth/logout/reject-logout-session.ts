@@ -1,8 +1,9 @@
 import Joi from "joi";
-import { ClientScope, JOI_GUID, ResponseWithRedirectBody } from "../../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
+import { RejectLogoutResponse } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
 type RequestData = {
   id: string;
@@ -10,7 +11,7 @@ type RequestData = {
 
 export const rejectLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -22,11 +23,11 @@ export const rejectLogoutSessionController: ServerKoaController<RequestData> = a
     data: { id },
   } = ctx;
 
-  const { data } = await oauthClient.post<ResponseWithRedirectBody>(
+  const { data } = await oauthClient.post<RejectLogoutResponse>(
     "/internal/sessions/logout/:id/reject",
     {
       params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_LOGOUT_WRITE])],
+      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
     },
   );
 

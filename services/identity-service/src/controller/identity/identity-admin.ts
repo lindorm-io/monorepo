@@ -1,19 +1,16 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { IdentityPermission, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 
-interface RequestData {
+type RequestData = {
   id: string;
   active: boolean;
-  permissions: Array<IdentityPermission>;
-}
+};
 
 export const identityAdminSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     active: Joi.boolean().optional(),
-    permissions: Joi.array().items(Joi.string()).optional(),
   })
   .required();
 
@@ -21,17 +18,13 @@ export const identityAdminController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    data: { active, permissions },
+    data: { active },
     entity: { identity },
     repository: { identityRepository },
   } = ctx;
 
   if (active !== undefined) {
     identity.active = active;
-  }
-
-  if (permissions !== undefined) {
-    identity.permissions = permissions;
   }
 
   await identityRepository.update(identity);

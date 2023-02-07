@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestElevationSession } from "../../../fixtures/entity";
 import { randomString } from "@lindorm-io/random";
@@ -28,7 +27,7 @@ describe("verifyElevationController", () => {
       data: {},
       entity: {
         elevationSession: createTestElevationSession({
-          status: SessionStatus.CONFIRMED,
+          status: "confirmed",
         }),
       },
     };
@@ -59,7 +58,7 @@ describe("verifyElevationController", () => {
     ctx.entity.elevationSession = createTestElevationSession({
       redirectUri: "https://test.uri/",
       state: randomString(16),
-      status: SessionStatus.CONFIRMED,
+      status: "confirmed",
     });
 
     await expect(verifyElevationController(ctx)).resolves.toStrictEqual({
@@ -68,7 +67,7 @@ describe("verifyElevationController", () => {
   });
 
   test("should reject on invalid status", async () => {
-    ctx.entity.elevationSession.status = SessionStatus.REJECTED;
+    ctx.entity.elevationSession.status = "rejected";
 
     await expect(verifyElevationController(ctx)).rejects.toThrow(ClientError);
   });

@@ -8,42 +8,34 @@ import { assertCertificateChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
 import { flatten } from "lodash";
 import { vaultGetSalt } from "../../handler";
+import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import {
-  ChallengeConfirmationTokenClaims,
-  ChallengeStrategy,
-  DeviceFactor,
-  JOI_GUID,
-  JOI_JWT,
-  SubjectHint,
-  TokenType,
-} from "../../common";
+  ChallengeStrategies,
+  ConfirmChallengeRequestBody,
+  ConfirmChallengeRequestParams,
+  ConfirmChallengeResponse,
+  LindormTokenTypes,
+  PSD2Factor,
+  PSD2Factors,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-  biometry: string;
-  certificateVerifier: string;
-  challengeSessionToken: string;
-  pincode: string;
-  strategy: ChallengeStrategy;
-}
+type RequestData = ConfirmChallengeRequestParams & ConfirmChallengeRequestBody;
 
-interface ResponseBody {
-  challengeConfirmationToken: string;
-  expiresIn: number;
-}
+type ResponseBody = ConfirmChallengeResponse;
 
 export const confirmChallengeSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     biometry: Joi.when("strategy", {
-      is: ChallengeStrategy.BIOMETRY,
+      is: ChallengeStrategies.BIOMETRY,
       then: JOI_BIOMETRY.required(),
       otherwise: Joi.forbidden(),
     }),
     certificateVerifier: Joi.string().base64().required(),
     challengeSessionToken: JOI_JWT.required(),
     pincode: Joi.when("strategy", {
-      is: ChallengeStrategy.PINCODE,
+      is: ChallengeStrategies.PINCODE,
       then: JOI_PINCODE.required(),
       otherwise: Joi.forbidden(),
     }),
@@ -72,7 +64,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     publicKey: deviceLink.publicKey,
   });
 
-  const factors: Array<DeviceFactor> = [DeviceFactor.POSSESSION];
+  const factors: Array<PSD2Factor> = [PSD2Factors.POSSESSION];
 
   const salt = await vaultGetSalt(ctx, deviceLink);
   const crypto = new CryptoLayered({
@@ -81,17 +73,17 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
   });
 
   switch (strategy) {
-    case ChallengeStrategy.IMPLICIT:
+    case ChallengeStrategies.IMPLICIT:
       break;
 
-    case ChallengeStrategy.PINCODE:
+    case ChallengeStrategies.PINCODE:
       await crypto.assert(pincode, deviceLink.pincode);
-      factors.push(DeviceFactor.KNOWLEDGE);
+      factors.push(PSD2Factors.KNOWLEDGE);
       break;
 
-    case ChallengeStrategy.BIOMETRY:
+    case ChallengeStrategies.BIOMETRY:
       await crypto.assert(biometry, deviceLink.biometry);
-      factors.push(DeviceFactor.INHERENCE);
+      factors.push(PSD2Factors.INHERENCE);
       break;
 
     default:
@@ -119,8 +111,8 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     scopes: challengeSession.scopes,
     sessionId: challengeSession.id,
     subject: deviceLink.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
   });
 
   await challengeSessionCache.destroy(challengeSession);

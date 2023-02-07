@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
 import { fetchOauthLoginData } from "../../../handler";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 type RequestData = {
   id: string;
@@ -19,7 +19,7 @@ type ResponseBody = {
 
 export const getLoginSessionDataSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 

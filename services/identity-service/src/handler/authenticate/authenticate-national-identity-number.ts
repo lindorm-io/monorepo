@@ -4,10 +4,10 @@ import { Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { randomUUID } from "crypto";
 
-interface Options {
+type Options = {
   identityId?: string;
   nationalIdentityNumber: string;
-}
+};
 
 export const authenticateNationalIdentityNumber = async (
   ctx: ServerKoaContext,

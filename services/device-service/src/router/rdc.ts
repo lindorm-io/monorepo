@@ -1,7 +1,6 @@
-import { ServerKoaContext } from "../types";
-import { IdentityPermission, SessionStatus } from "../common";
 import { includes } from "lodash";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { SessionStatuses } from "@lindorm-io/common-types";
 import {
   challengeConfirmationTokenMiddleware,
   rdcSessionEntityMiddleware,
@@ -19,21 +18,18 @@ import {
   getRdcSessionStatusSchema,
 } from "../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.post(
   "/:id/acknowledge",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   useSchema(acknowledgeRdcSchema),
   rdcSessionEntityMiddleware("data.id"),
   useAssertion({
     assertion: includes,
-    expect: [SessionStatus.PENDING],
+    expect: [SessionStatuses.PENDING],
     fromPath: {
       actual: "entity.rdcSession.status",
     },
@@ -52,10 +48,7 @@ router.post(
 router.post(
   "/:id/confirm",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   useSchema(confirmRdcSchema),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
@@ -87,10 +80,7 @@ router.post(
 router.post(
   "/:id/reject",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
-
+  identityAuthMiddleware(),
   useSchema(rejectRdcSchema),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
   rdcSessionEntityMiddleware("data.id"),

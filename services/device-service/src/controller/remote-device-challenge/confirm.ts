@@ -1,20 +1,22 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT, RdcSessionType, SessionStatus } from "../../common";
+import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
 import { assertConfirmationTokenFactorLength } from "../../util";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { updateEnrolmentStatus } from "../../handler";
+import {
+  ConfirmRdcRequestBody,
+  ConfirmRdcRequestParams,
+  RdcSessionTypes,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-  challengeConfirmationToken: string;
-  rdcSessionToken: string;
-}
+type RequestData = ConfirmRdcRequestParams & ConfirmRdcRequestBody;
 
 export const confirmRdcSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     challengeConfirmationToken: JOI_JWT.required(),
     rdcSessionToken: JOI_JWT.required(),
   })
@@ -32,10 +34,10 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
 
   assertConfirmationTokenFactorLength(challengeConfirmationToken, rdcSession.factors);
 
-  rdcSession.status = SessionStatus.CONFIRMED;
+  rdcSession.status = SessionStatuses.CONFIRMED;
 
   switch (rdcSession.type) {
-    case RdcSessionType.CALLBACK:
+    case RdcSessionTypes.CALLBACK:
       await axiosClient.request({
         body: {
           rdcSessionId: rdcSession.id,
@@ -49,7 +51,7 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
       });
       break;
 
-    case RdcSessionType.ENROLMENT:
+    case RdcSessionTypes.ENROLMENT:
       await updateEnrolmentStatus(ctx, rdcSession);
       break;
 

@@ -1,6 +1,17 @@
 import Joi from "joi";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
+import {
+  AuthenticationMethod,
+  LevelOfAssurance,
+  OauthDisplayMode,
+  OauthDisplayModes,
+  OauthPromptMode,
+  OauthResponseMode,
+  OauthResponseModes,
+  OauthResponseType,
+  PKCEMethod,
+  SessionStatus,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -9,20 +20,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 import {
-  AuthenticationMethod,
-  DisplayMode,
   JOI_COUNTRY_CODE,
-  JOI_GUID,
   JOI_JWT,
   JOI_LEVEL_OF_ASSURANCE,
   JOI_LOCALE,
   JOI_NONCE,
   JOI_SESSION_STATUS,
   JOI_STATE,
-  PromptMode,
-  ResponseMode,
-  ResponseType,
-  SessionStatus,
 } from "../common";
 import {
   JOI_CODE_CHALLENGE,
@@ -77,7 +81,7 @@ type AuthorizationSessionStatus = {
   login: SessionStatus;
 };
 
-export interface AuthorizationSessionAttributes extends EntityAttributes {
+export type AuthorizationSessionAttributes = EntityAttributes & {
   code: AuthorizationSessionCode;
   confirmedConsent: AuthorizationSessionConfirmedConsent;
   confirmedLogin: AuthorizationSessionConfirmedLogin;
@@ -89,21 +93,21 @@ export interface AuthorizationSessionAttributes extends EntityAttributes {
   authToken: string | null;
   clientId: string;
   country: string | null;
-  displayMode: DisplayMode;
+  displayMode: OauthDisplayMode;
   expires: Date;
   idTokenHint: string | null;
   loginHint: Array<string>;
   maxAge: number | null;
   nonce: string | null;
   originalUri: string;
-  promptModes: Array<PromptMode>;
+  promptModes: Array<OauthPromptMode>;
   redirectData: string | null;
   redirectUri: string;
-  responseMode: ResponseMode;
-  responseTypes: Array<ResponseType>;
+  responseMode: OauthResponseMode;
+  responseTypes: Array<OauthResponseType>;
   state: string;
   uiLocales: Array<string>;
-}
+};
 
 export type AuthorizationSessionOptions = Optional<
   AuthorizationSessionAttributes,
@@ -140,7 +144,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
     confirmedConsent: Joi.object<AuthorizationSessionConfirmedConsent>()
       .keys({
-        audiences: Joi.array().items(JOI_GUID).required(),
+        audiences: Joi.array().items(Joi.string().guid()).required(),
         scopes: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
@@ -148,7 +152,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .keys({
         acrValues: Joi.array().items(Joi.string()).required(),
         amrValues: Joi.array().items(Joi.string()).required(),
-        identityId: JOI_GUID.allow(null).required(),
+        identityId: Joi.string().guid().allow(null).required(),
         latestAuthentication: Joi.date().allow(null).required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
         remember: Joi.boolean().required(),
@@ -156,20 +160,20 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
     identifiers: Joi.object<AuthorizationSessionIdentifiers>()
       .keys({
-        browserSessionId: JOI_GUID.allow(null).required(),
-        consentSessionId: JOI_GUID.allow(null).required(),
-        refreshSessionId: JOI_GUID.allow(null).required(),
+        browserSessionId: Joi.string().guid().allow(null).required(),
+        consentSessionId: Joi.string().guid().allow(null).required(),
+        refreshSessionId: Joi.string().guid().allow(null).required(),
       })
       .required(),
     requestedConsent: Joi.object<AuthorizationSessionRequestedConsent>()
       .keys({
-        audiences: Joi.array().items(JOI_GUID).required(),
+        audiences: Joi.array().items(Joi.string().guid()).required(),
         scopes: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     requestedLogin: Joi.object<AuthorizationSessionRequestedLogin>()
       .keys({
-        identityId: JOI_GUID.allow(null).required(),
+        identityId: Joi.string().guid().allow(null).required(),
         minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
         recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
         recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
@@ -185,7 +189,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
 
     authToken: JOI_JWT.allow(null).required(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     country: JOI_COUNTRY_CODE.allow(null).required(),
     displayMode: JOI_DISPLAY_MODE.required(),
     expires: Joi.date().required(),
@@ -216,18 +220,18 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly authToken: string | null;
   public readonly clientId: string;
   public readonly country: string | null;
-  public readonly displayMode: DisplayMode;
+  public readonly displayMode: OauthDisplayMode;
   public readonly expires: Date;
   public readonly idTokenHint: string | null;
   public readonly loginHint: Array<string>;
   public readonly maxAge: number | null;
   public readonly nonce: string | null;
   public readonly originalUri: string;
-  public readonly promptModes: Array<PromptMode>;
+  public readonly promptModes: Array<OauthPromptMode>;
   public readonly redirectData: string | null;
   public readonly redirectUri: string;
-  public readonly responseMode: ResponseMode;
-  public readonly responseTypes: Array<ResponseType>;
+  public readonly responseMode: OauthResponseMode;
+  public readonly responseTypes: Array<OauthResponseType>;
   public readonly state: string;
   public readonly uiLocales: Array<string>;
 
@@ -268,14 +272,14 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       requiredMethods: options.requestedLogin?.requiredMethods || [],
     };
     this.status = {
-      consent: options.status?.consent || SessionStatus.PENDING,
-      login: options.status?.login || SessionStatus.PENDING,
+      consent: options.status?.consent || SessionStatuses.PENDING,
+      login: options.status?.login || SessionStatuses.PENDING,
     };
 
     this.authToken = options.authToken || null;
     this.clientId = options.clientId;
     this.country = options.country || null;
-    this.displayMode = options.displayMode || DisplayMode.PAGE;
+    this.displayMode = options.displayMode || OauthDisplayModes.PAGE;
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
     this.loginHint = options.loginHint || [];
@@ -285,7 +289,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;
     this.redirectUri = options.redirectUri;
-    this.responseMode = options.responseMode || ResponseMode.QUERY;
+    this.responseMode = options.responseMode || OauthResponseModes.QUERY;
     this.responseTypes = options.responseTypes;
     this.state = options.state;
     this.uiLocales = options.uiLocales || [];

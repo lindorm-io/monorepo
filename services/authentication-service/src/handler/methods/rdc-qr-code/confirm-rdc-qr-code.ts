@@ -1,7 +1,7 @@
 import { Account, StrategySession } from "../../../entity";
 import { ServerKoaContext } from "../../../types";
-import { TokenType } from "../../../common";
 import { configuration } from "../../../server/configuration";
+import { LindormTokenTypes } from "@lindorm-io/common-types";
 
 interface Options {
   challengeConfirmationToken: string;
@@ -27,7 +27,7 @@ export const confirmRdcQrCode = async (
     issuer: configuration.services.device_service.issuer,
     nonce: strategySession.nonce,
     scopes: ["authentication"],
-    types: [TokenType.CHALLENGE_CONFIRMATION],
+    types: [LindormTokenTypes.CHALLENGE_CONFIRMATION],
   });
 
   logger.debug("Resolving Account");

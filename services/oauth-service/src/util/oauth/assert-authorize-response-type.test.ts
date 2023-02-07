@@ -1,7 +1,6 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { PKCEMethod } from "@lindorm-io/node-pkce";
-import { ResponseType } from "../../common";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 
@@ -11,14 +10,14 @@ describe("assertAuthorizeResponseType", () => {
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      responseTypes: [ResponseType.CODE],
+      responseTypes: ["code"],
     });
 
     client = createTestClient();
 
     client.allowed = {
       ...client.allowed,
-      responseTypes: [ResponseType.CODE, ResponseType.ID_TOKEN],
+      responseTypes: ["code", "id_token"],
     };
   });
 
@@ -28,7 +27,7 @@ describe("assertAuthorizeResponseType", () => {
 
   test("should throw on invalid response type", () => {
     authorizationSession = createTestAuthorizationSession({
-      responseTypes: [ResponseType.TOKEN],
+      responseTypes: ["token"],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
@@ -40,7 +39,7 @@ describe("assertAuthorizeResponseType", () => {
         codeChallenge: null,
         codeChallengeMethod: PKCEMethod.S256,
       },
-      responseTypes: [ResponseType.CODE],
+      responseTypes: ["code"],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
@@ -52,7 +51,7 @@ describe("assertAuthorizeResponseType", () => {
         codeChallenge: "codeChallenge",
         codeChallengeMethod: null,
       },
-      responseTypes: [ResponseType.CODE],
+      responseTypes: ["code"],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);

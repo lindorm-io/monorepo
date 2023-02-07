@@ -1,18 +1,18 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { initialiseConnectSession, sendConnectSessionMessage } from "../sessions";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
 import { randomString } from "@lindorm-io/random";
+import { IdentifierType } from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   identifier: string;
   provider?: string;
   type: IdentifierType;
-}
+};
 
 export const addIdentifierFromUserinfo = async (
   ctx: ServerKoaContext,

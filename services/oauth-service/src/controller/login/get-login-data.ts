@@ -1,23 +1,23 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetLoginDataResponseBody, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { expiryObject } from "@lindorm-io/expiry";
 import { isLoginRequired } from "../../util";
+import { GetLoginRequestParams, GetLoginResponse } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetLoginRequestParams;
+
+type ResponseBody = GetLoginResponse;
 
 export const getLoginDataSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getLoginDataController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetLoginDataResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { authorizationSession, client },
     repository: { browserSessionRepository },

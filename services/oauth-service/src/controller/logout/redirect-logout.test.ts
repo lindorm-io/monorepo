@@ -1,5 +1,4 @@
 import { createTestLogoutSession } from "../../fixtures/entity";
-import { SessionStatus } from "../../common";
 import { redirectLogoutController } from "./redirect-logout";
 import {
   createLogoutVerifyUri as _createLogoutVerifyUri,
@@ -20,7 +19,7 @@ describe("redirectLogoutController", () => {
     ctx = {
       entity: {
         logoutSession: createTestLogoutSession({
-          status: SessionStatus.CONFIRMED,
+          status: "confirmed",
         }),
       },
     };
@@ -37,7 +36,7 @@ describe("redirectLogoutController", () => {
   });
 
   test("should redirect for skip", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.SKIP;
+    ctx.entity.logoutSession.status = "skip";
 
     await expect(redirectLogoutController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createLogoutVerifyUri" },
@@ -45,7 +44,7 @@ describe("redirectLogoutController", () => {
   });
 
   test("should redirect for pending", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.PENDING;
+    ctx.entity.logoutSession.status = "pending";
 
     await expect(redirectLogoutController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createLogoutPendingUri" },
@@ -53,7 +52,7 @@ describe("redirectLogoutController", () => {
   });
 
   test("should redirect for rejected", async () => {
-    ctx.entity.logoutSession.status = SessionStatus.REJECTED;
+    ctx.entity.logoutSession.status = "rejected";
 
     await expect(redirectLogoutController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createLogoutRejectedUri" },

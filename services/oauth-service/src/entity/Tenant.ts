@@ -7,13 +7,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface TenantAttributes extends EntityAttributes {
+export type TenantAttributes = EntityAttributes & {
   active: boolean;
   administrators: Array<string>;
   name: string;
   owner: string;
   subdomain: string;
-}
+};
 
 export type TenantOptions = Optional<TenantAttributes, EntityKeys>;
 

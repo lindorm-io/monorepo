@@ -1,17 +1,16 @@
+import { AuthorizationCode, RefreshSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { OAuthTokenRequestData, OAuthTokenResponseBody } from "../../types";
-import { AuthorizationCode, RefreshSession } from "../../entity";
-import { Scope } from "../../common";
 import { assertCodeChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
+import { expiryDate } from "@lindorm-io/expiry";
 import { flatten, uniq } from "lodash";
 import { generateTokenResponse } from "./generate-token-response";
-import { expiryDate } from "@lindorm-io/expiry";
+import { LindormScopes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 
 export const handleAuthorizationCodeGrant = async (
-  ctx: ServerKoaContext<OAuthTokenRequestData>,
-): Promise<Partial<OAuthTokenResponseBody>> => {
+  ctx: ServerKoaContext<TokenRequestBody>,
+): Promise<Partial<TokenResponse>> => {
   const {
     cache: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
@@ -99,7 +98,7 @@ export const handleAuthorizationCodeGrant = async (
   await authorizationCodeCache.destroy(authorizationCode);
   await authorizationSessionCache.destroy(authorizationSession);
 
-  if (authorizationSession.requestedConsent.scopes.includes(Scope.OFFLINE_ACCESS)) {
+  if (authorizationSession.requestedConsent.scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
     const refreshSession = await refreshSessionRepository.create(
       new RefreshSession({
         acrValues: browserSession.acrValues,

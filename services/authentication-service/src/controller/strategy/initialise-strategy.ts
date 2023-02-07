@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { AuthenticationStrategy } from "../../enum";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
@@ -7,20 +6,8 @@ import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { expiryObject } from "@lindorm-io/expiry";
 import { findStrategyConfig } from "../../util";
-import {
-  DefaultStrategyConfig,
-  ServerKoaController,
-  StrategyConfig,
-  StrategyInitialisation,
-} from "../../types";
-import {
-  JOI_EMAIL,
-  JOI_GUID,
-  JOI_NIN,
-  JOI_PHONE_NUMBER,
-  SubjectHint,
-  TokenType,
-} from "../../common";
+import { JOI_EMAIL, JOI_NIN, JOI_PHONE_NUMBER } from "../../common";
+import { ServerKoaController } from "../../types";
 import {
   initialiseBankIdSe,
   initialiseEmailLink,
@@ -32,22 +19,24 @@ import {
   initialiseSessionOtp,
   initialiseWebauthn,
 } from "../../handler";
+import {
+  AuthenticationStrategies,
+  AuthStrategyDefaultConfig,
+  AuthStrategyInitialisation,
+  InitialiseStrategyRequestBody,
+  InitialiseStrategyRequestParams,
+  InitialiseStrategyResponse,
+  LindormTokenTypes,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-type RequestData = {
-  id: string;
-  email?: string;
-  nin?: string;
-  nonce?: string;
-  phoneNumber?: string;
-  strategy: AuthenticationStrategy;
-  username?: string;
-};
+type RequestData = InitialiseStrategyRequestParams & InitialiseStrategyRequestBody;
 
-type ResponseBody = StrategyConfig;
+type ResponseBody = InitialiseStrategyResponse;
 
 export const initialiseStrategySchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     email: JOI_EMAIL.optional(),
     nin: JOI_NIN.optional(),
     nonce: Joi.string().optional(),
@@ -92,11 +81,11 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     audiences: [configuration.oauth.client_id],
     expiry: strategySession.expires,
     subject: strategySession.id,
-    subjectHint: SubjectHint.SESSION,
-    type: TokenType.STRATEGY_SESSION,
+    subjectHint: SubjectHints.SESSION,
+    type: LindormTokenTypes.STRATEGY_SESSION,
   });
 
-  const strategyConfig: DefaultStrategyConfig = {
+  const strategyConfig: AuthStrategyDefaultConfig = {
     id: strategySession.id,
     expiresIn,
     inputKey: config.confirmKey,
@@ -106,49 +95,49 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
     strategySessionToken: config.tokenReturn ? strategySessionToken : null,
   };
 
-  let strategyInitialisation: StrategyInitialisation = {
+  let strategyInitialisation: AuthStrategyInitialisation = {
     displayCode: null,
     qrCode: null,
   };
 
   switch (strategy) {
-    case AuthenticationStrategy.DEVICE_CHALLENGE:
-    case AuthenticationStrategy.MFA_COOKIE:
-    case AuthenticationStrategy.PASSWORD:
-    case AuthenticationStrategy.PASSWORD_BROWSER_LINK:
-    case AuthenticationStrategy.TIME_BASED_OTP:
+    case AuthenticationStrategies.DEVICE_CHALLENGE:
+    case AuthenticationStrategies.MFA_COOKIE:
+    case AuthenticationStrategies.PASSWORD:
+    case AuthenticationStrategies.PASSWORD_BROWSER_LINK:
+    case AuthenticationStrategies.TIME_BASED_OTP:
       break;
 
-    case AuthenticationStrategy.BANK_ID_SE:
+    case AuthenticationStrategies.BANK_ID_SE:
       await initialiseBankIdSe(ctx, authenticationSession, strategySession);
       break;
 
-    case AuthenticationStrategy.EMAIL_LINK:
+    case AuthenticationStrategies.EMAIL_LINK:
       await initialiseEmailLink(ctx, strategySession, {
         strategySessionToken,
         email,
       });
       break;
 
-    case AuthenticationStrategy.EMAIL_OTP:
+    case AuthenticationStrategies.EMAIL_OTP:
       await initialiseEmailOtp(ctx, strategySession, config, {
         email,
       });
       break;
 
-    case AuthenticationStrategy.PHONE_OTP:
+    case AuthenticationStrategies.PHONE_OTP:
       await initialisePhoneOtp(ctx, authenticationSession, strategySession, config, {
         phoneNumber,
       });
       break;
 
-    case AuthenticationStrategy.RDC_PUSH_NOTIFICATION:
+    case AuthenticationStrategies.RDC_PUSH_NOTIFICATION:
       await initialiseRdcPushNotification(ctx, authenticationSession, strategySession, config, {
         strategySessionToken,
       });
       break;
 
-    case AuthenticationStrategy.RDC_QR_CODE:
+    case AuthenticationStrategies.RDC_QR_CODE:
       strategyInitialisation = await initialiseRdcQrCode(
         ctx,
         authenticationSession,
@@ -159,7 +148,7 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
       );
       break;
 
-    case AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE:
+    case AuthenticationStrategies.SESSION_ACCEPT_WITH_CODE:
       strategyInitialisation = await initialiseSessionAcceptWithCode(
         ctx,
         authenticationSession,
@@ -169,11 +158,11 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
       );
       break;
 
-    case AuthenticationStrategy.SESSION_OTP:
+    case AuthenticationStrategies.SESSION_OTP:
       await initialiseSessionOtp(ctx, authenticationSession, strategySession, config);
       break;
 
-    case AuthenticationStrategy.WEBAUTHN:
+    case AuthenticationStrategies.WEBAUTHN:
       await initialiseWebauthn(ctx, authenticationSession, strategySession);
       break;
 

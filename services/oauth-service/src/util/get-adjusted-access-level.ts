@@ -1,13 +1,13 @@
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { addDays, addMinutes, isAfter } from "date-fns";
 import { configuration } from "../server/configuration";
 
-interface ISession {
+interface SessionLike {
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
 }
 
-const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
+const getHighestPossibleAdjustment = (session: SessionLike): LevelOfAssurance => {
   if (
     isAfter(
       new Date(),
@@ -47,7 +47,7 @@ const getHighestPossibleAdjustment = (session: ISession): LevelOfAssurance => {
   return 4;
 };
 
-export const getAdjustedAccessLevel = (session: ISession): LevelOfAssurance => {
+export const getAdjustedAccessLevel = (session: SessionLike): LevelOfAssurance => {
   const highest = getHighestPossibleAdjustment(session);
   return highest >= session.levelOfAssurance ? session.levelOfAssurance : highest;
 };

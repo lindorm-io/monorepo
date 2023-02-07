@@ -2,9 +2,9 @@ import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 
-interface RequestData {
+type RequestData = {
   id: string;
-}
+};
 
 export const deleteClientSchema = Joi.object<RequestData>()
   .keys({

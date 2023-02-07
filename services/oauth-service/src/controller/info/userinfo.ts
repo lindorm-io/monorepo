@@ -1,18 +1,18 @@
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { IdentityServiceClaims } from "../../common";
 import { getIdentityUserinfo } from "../../handler";
+import { LindormClaims } from "@lindorm-io/common-types";
 
 export const userinfoController: ServerKoaController = async (
   ctx,
-): ControllerResponse<Partial<IdentityServiceClaims>> => {
+): ControllerResponse<Partial<LindormClaims>> => {
   const {
     token: {
-      bearerToken: { subject, scopes },
+      bearerToken: { token },
     },
   } = ctx;
 
-  const { claims } = await getIdentityUserinfo(ctx, subject, scopes);
+  const body = await getIdentityUserinfo(ctx, token);
 
-  return { body: claims };
+  return { body };
 };

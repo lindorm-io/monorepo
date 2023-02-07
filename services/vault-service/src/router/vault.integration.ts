@@ -69,10 +69,12 @@ describe("/vault", () => {
     const subject = randomUUID();
     const clientCredentials = getTestClientCredentials({ subject });
 
+    const key = "secret";
+    const crypto = new CryptoAES({ secret: key });
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
-        protectedData: "encrypted-data",
-        expires: null,
+        protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
+        expires: new Date("2024-02-03T09:10:15.000Z"),
         owner: subject,
         ownerType: "client",
       }),
@@ -81,6 +83,7 @@ describe("/vault", () => {
     await request(server.callback())
       .delete(`/vault/${entity.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({ key })
       .expect(204);
   });
 });

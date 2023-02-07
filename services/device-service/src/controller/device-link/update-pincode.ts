@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { JOI_GUID, JOI_JWT } from "../../common";
+import { JOI_JWT } from "../../common";
 import { JOI_PINCODE } from "../../constant";
 import { assertConfirmationTokenFactorLength } from "../../util";
 import { vaultGetSalt } from "../../handler";
@@ -15,7 +15,7 @@ interface RequestData {
 
 export const updateDeviceLinkPincodeSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     challengeConfirmationToken: JOI_JWT.required(),
     pincode: JOI_PINCODE.required(),
   })

@@ -1,9 +1,11 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { EmitSocketEventRequestData } from "../../common";
 import { ServerKoaController } from "../../types";
+import { EmitSocketEventRequestBody } from "@lindorm-io/common-types";
 
-export const emitSocketEventSchema = Joi.object<EmitSocketEventRequestData>().keys({
+type RequestData = EmitSocketEventRequestBody;
+
+export const emitSocketEventSchema = Joi.object<RequestData>().keys({
   channels: Joi.object()
     .keys({
       sessions: Joi.array().items(Joi.string()).optional(),
@@ -15,7 +17,7 @@ export const emitSocketEventSchema = Joi.object<EmitSocketEventRequestData>().ke
   event: Joi.string().required(),
 });
 
-export const emitSocketEventController: ServerKoaController<EmitSocketEventRequestData> = async (
+export const emitSocketEventController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

@@ -1,18 +1,18 @@
 import { Client, BrowserSession, RefreshSession } from "../../entity";
-import { IdentityServiceClaims, SubjectHint, TokenType } from "../../common";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { LindormClaims, LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { SessionHint } from "../../enum";
 import { configuration } from "../../server/configuration";
-import { getUnixTime } from "date-fns";
 import { flatten, uniq } from "lodash";
+import { getUnixTime } from "date-fns";
 
-interface Options {
+type Options = {
   audiences: Array<string>;
-  claims: Partial<IdentityServiceClaims>;
+  claims: Partial<LindormClaims>;
   nonce: string;
   scopes: Array<string>;
-}
+};
 
 export const createIdToken = (
   ctx: ServerKoaContext,
@@ -37,7 +37,7 @@ export const createIdToken = (
     sessionId: session.id,
     sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
     subject: session.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.IDENTITY,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.ID,
   });
 };

@@ -1,19 +1,18 @@
 import { ALLOWED_ACR_VALUES } from "../constant";
-import { AuthenticationMethod } from "../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
 import { flatten, isNaN, last, uniq } from "lodash";
 
-interface Options {
+type Options = {
   acrArray?: Array<string> | null;
   acrValues?: string | null;
   amrArray?: Array<string> | null;
   amrValues?: string | null;
-}
+};
 
-interface Result {
+type Result = {
   levelOfAssurance: LevelOfAssurance;
   methods: Array<AuthenticationMethod>;
-}
+};
 
 export const filterAcrValues = (options: Options = {}): Result => {
   const splitAcr = options.acrValues ? options.acrValues.toLowerCase().split(" ") : [];

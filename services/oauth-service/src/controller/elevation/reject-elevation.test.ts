@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestElevationSession } from "../../fixtures/entity";
@@ -27,7 +26,7 @@ describe("rejectElevationController", () => {
 
     expect(ctx.cache.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: SessionStatus.REJECTED,
+        status: "rejected",
       }),
     );
   });

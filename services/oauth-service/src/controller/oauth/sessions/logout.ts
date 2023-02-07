@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT, JOI_STATE } from "../../../common";
+import { InitialiseLogoutRequestQuery } from "@lindorm-io/common-types";
+import { JOI_JWT, JOI_STATE } from "../../../common";
 import { LogoutSession } from "../../../entity";
 import { ServerKoaController } from "../../../types";
 import { configuration } from "../../../server/configuration";
@@ -8,33 +9,21 @@ import { createURL } from "@lindorm-io/url";
 import { expiryDate } from "@lindorm-io/expiry";
 import { findSessionToLogout } from "../../../handler";
 
-interface RequestData {
-  clientId: string;
-  idTokenHint: string;
-  redirectUri: string;
-  sessionId: string;
-  state: string;
-}
+type RequestData = InitialiseLogoutRequestQuery;
 
-interface ResponseQuery {
-  logoutId: string;
-  display: string;
-  uiLocales: Array<string>;
-}
-
-export const oauthLogoutSchema = Joi.object()
+export const oauthLogoutSchema = Joi.object<RequestData>()
   .keys({
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     idTokenHint: JOI_JWT.optional(),
     redirectUri: Joi.string().uri().optional(),
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
     state: JOI_STATE.optional(),
   })
   .required();
 
 export const oauthLogoutController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseQuery> => {
+): ControllerResponse => {
   const {
     cache: { logoutSessionCache },
     data: { redirectUri, sessionId, state },

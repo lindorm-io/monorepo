@@ -1,17 +1,18 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaContext, OAuthTokenRequestData } from "../../types";
+import { ServerKoaContext } from "../../types";
 import { createClientCredentialsToken } from "../token";
 import { difference } from "lodash";
+import { TokenRequestBody } from "@lindorm-io/common-types";
 
-interface ResponseBody {
+type ResponseBody = {
   accessToken: string;
   expiresIn: number;
   scope: Array<string>;
   tokenType: string;
-}
+};
 
 export const handleClientCredentialsGrant = async (
-  ctx: ServerKoaContext<OAuthTokenRequestData>,
+  ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<ResponseBody> => {
   const {
     data: { scope },

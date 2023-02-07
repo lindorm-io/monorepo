@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../common";
 import { confirmElevationController } from "./confirm-elevation";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -42,7 +41,7 @@ describe("confirmElevationController", () => {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 3,
         },
-        status: SessionStatus.CONFIRMED,
+        status: "confirmed",
       }),
     );
   });

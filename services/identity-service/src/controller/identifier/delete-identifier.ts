@@ -1,16 +1,15 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 
-interface RequestData {
+type RequestData = {
   id: string;
-}
+};
 
 export const deleteIdentifierSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 

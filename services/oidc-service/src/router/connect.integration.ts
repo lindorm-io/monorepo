@@ -3,6 +3,7 @@ import request from "supertest";
 import { getTestAccessToken, setupIntegration } from "../fixtures/integration";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
+import { createURL } from "@lindorm-io/url";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -12,19 +13,24 @@ jest.unmock("@lindorm-io/redis");
 describe("/connect", () => {
   beforeAll(setupIntegration);
 
-  test("POST /", async () => {
+  test("GET /", async () => {
     const accessToken = await getTestAccessToken({
       subject: "d821cde6-250f-4918-ad55-877a7abf0271",
     });
 
-    const response = await request(server.callback())
-      .post("/connect")
-      .set("Authorization", `Bearer ${accessToken}`)
-      .send({
-        callback_id: randomUUID(),
-        callback_uri: "https://test.lindorm.io/callback",
+    const url = createURL("https://test.test/connect", {
+      query: {
+        callbackId: randomUUID(),
+        callbackUri: "https://test.lindorm.io/callback",
         provider: "microsoft",
-      })
+      },
+    })
+      .toString()
+      .replace("https://test.test", "");
+
+    const response = await request(server.callback())
+      .get(url)
+      .set("Authorization", `Bearer ${accessToken}`)
       .expect(302);
 
     const location = new URL(response.headers.location);

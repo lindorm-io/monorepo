@@ -1,16 +1,19 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
+import { CryptoAES } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
+import {
+  DeleteProtectedRecordRequestBody,
+  DeleteProtectedRecordRequestParams,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = DeleteProtectedRecordRequestParams & DeleteProtectedRecordRequestBody;
 
 export const deleteProtectedRecordSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
+    key: Joi.string().required(),
   })
   .required();
 
@@ -18,6 +21,7 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse => {
   const {
+    data: { key },
     entity: { protectedRecord },
     repository: { protectedRecordRepository },
     token: {
@@ -29,6 +33,18 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
     throw new ClientError("Forbidden", {
       code: "invalid_owner",
       description: "Subject is not owner of the vault",
+      statusCode: ClientError.StatusCode.FORBIDDEN,
+    });
+  }
+
+  const crypto = new CryptoAES({ secret: key });
+
+  try {
+    crypto.decrypt(protectedRecord.protectedData);
+  } catch (err) {
+    throw new ClientError("Forbidden", {
+      code: "invalid_vault_key",
+      error: err,
       statusCode: ClientError.StatusCode.FORBIDDEN,
     });
   }

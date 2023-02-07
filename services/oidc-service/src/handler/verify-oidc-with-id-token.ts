@@ -3,13 +3,13 @@ import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
 import { find } from "lodash";
-import { OpenIDClaims } from "../common";
+import { OpenIdClaims } from "@lindorm-io/common-types";
 
 export const verifyOidcWithIdToken = async (
   ctx: ServerKoaContext,
   oidcSession: OidcSession,
   idToken: string,
-): Promise<OpenIDClaims> => {
+): Promise<OpenIdClaims> => {
   const { jwt, logger } = ctx;
 
   logger.debug("Resolving OIDC with id token");
@@ -22,7 +22,7 @@ export const verifyOidcWithIdToken = async (
 
   const { client_id: clientId, token_issuer: issuer } = config;
 
-  const { subject: sub, claims } = jwt.verify<never, OpenIDClaims>(idToken, {
+  const { subject: sub, claims } = jwt.verify<never, OpenIdClaims>(idToken, {
     audience: clientId,
     issuer,
     nonce: oidcSession.nonce,

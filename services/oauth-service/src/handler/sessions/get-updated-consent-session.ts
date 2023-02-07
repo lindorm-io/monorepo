@@ -1,9 +1,9 @@
 import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
-import { flatten, uniq } from "lodash";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { SessionStatus } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
+import { ServerKoaContext } from "../../types";
+import { SessionStatuses } from "@lindorm-io/common-types";
+import { flatten, uniq } from "lodash";
 
 const assertAuthorizationSession = (authorizationSession: AuthorizationSession): void => {
   if (
@@ -38,7 +38,7 @@ export const getUpdatedConsentSession = async (
 
     consentSession.sessions = uniq(flatten([consentSession.sessions, browserSession.id])).sort();
 
-    if (authorizationSession.status.consent === SessionStatus.SKIP) {
+    if (authorizationSession.status.consent === SessionStatuses.SKIP) {
       return await consentSessionRepository.update(consentSession);
     }
 

@@ -1,6 +1,5 @@
 import Joi from "joi";
 import { JOI_CODE } from "../constant";
-import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -9,11 +8,11 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface AuthorizationCodeAttributes extends EntityAttributes {
+export type AuthorizationCodeAttributes = EntityAttributes & {
   authorizationSessionId: string;
   code: string;
   expires: Date;
-}
+};
 
 export type AuthorizationCodeOptions = Optional<AuthorizationCodeAttributes, EntityKeys>;
 
@@ -21,7 +20,7 @@ const schema = Joi.object<AuthorizationCodeAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    authorizationSessionId: JOI_GUID.required(),
+    authorizationSessionId: Joi.string().guid().required(),
     code: JOI_CODE.required(),
     expires: Joi.date().required(),
   })

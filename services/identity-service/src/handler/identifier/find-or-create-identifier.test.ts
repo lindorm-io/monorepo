@@ -1,6 +1,5 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { ServerError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
@@ -32,7 +31,7 @@ describe("findOrCreateIdentifier", () => {
       findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
         label: "label",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identifier));
   });
@@ -44,7 +43,7 @@ describe("findOrCreateIdentifier", () => {
       findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
         label: "label",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identifier));
 
@@ -58,7 +57,7 @@ describe("findOrCreateIdentifier", () => {
       findOrCreateIdentifier(ctx, identity, {
         identifier: "test@lindorm.io",
         label: "label",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).rejects.toThrow(ServerError);
   });

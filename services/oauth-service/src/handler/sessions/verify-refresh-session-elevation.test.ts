@@ -4,7 +4,6 @@ import { ServerError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestElevationSession, createTestRefreshSession } from "../../fixtures/entity";
 import { verifyRefreshSessionElevation } from "./verify-refresh-session-elevation";
-import { AuthenticationMethod } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -36,7 +35,7 @@ describe("verifyRefreshSessionElevation", () => {
     elevationSession = createTestElevationSession({
       confirmedAuthentication: {
         acrValues: ["loa_4"],
-        amrValues: [AuthenticationMethod.BANK_ID_SE],
+        amrValues: ["bank_id_se"],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
       },

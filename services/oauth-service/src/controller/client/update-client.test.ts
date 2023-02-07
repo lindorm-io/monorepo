@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { DisplayMode, ResponseMode, Scope } from "../../common";
 import { SCOPE_OPENID } from "../../constant";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -18,9 +17,9 @@ describe("updateClientController", () => {
       },
       data: {
         defaults: {
-          displayMode: DisplayMode.WAP,
+          displayMode: "wap",
           levelOfAssurance: 1,
-          responseMode: ResponseMode.FRAGMENT,
+          responseMode: "fragment",
         },
         description: "new description",
         expiry: {
@@ -33,7 +32,7 @@ describe("updateClientController", () => {
         logoutUri: "https://new.test.client.com/logout",
         name: "new client",
         redirectUris: ["https://new.test.client.com/redirect"],
-        requiredScopes: [Scope.OPENID],
+        requiredScopes: ["openid"],
         rtbfUri: "https://new.test.client.com/rtbf",
         scopeDescriptions: [SCOPE_OPENID],
       },

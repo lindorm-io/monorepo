@@ -1,6 +1,6 @@
 import Joi from "joi";
+import { JOI_LOCALE } from "../common";
 import { NamingSystem } from "../enum";
-import { IdentityPermission, JOI_LOCALE } from "../common";
 import {
   JOI_BIRTHDATE,
   JOI_IDENTITY_DISPLAY_NAME,
@@ -15,12 +15,12 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface IdentityDisplayName {
+export type IdentityDisplayName = {
   name: string;
   number: number;
-}
+};
 
-export interface IdentityAttributes extends EntityAttributes {
+export type IdentityAttributes = EntityAttributes & {
   active: boolean;
   birthDate: string;
   displayName: IdentityDisplayName;
@@ -34,7 +34,6 @@ export interface IdentityAttributes extends EntityAttributes {
   nationalIdentityNumber: string;
   nationalIdentityNumberVerified: boolean;
   nickname: string;
-  permissions: Array<string>;
   picture: string;
   preferredAccessibility: Array<string>;
   preferredUsername: string;
@@ -45,7 +44,7 @@ export interface IdentityAttributes extends EntityAttributes {
   username: string;
   website: string;
   zoneInfo: string;
-}
+};
 
 export type IdentityOptions = Optional<
   IdentityAttributes,
@@ -63,7 +62,6 @@ export type IdentityOptions = Optional<
   | "nationalIdentityNumber"
   | "nationalIdentityNumberVerified"
   | "nickname"
-  | "permissions"
   | "picture"
   | "preferredAccessibility"
   | "preferredUsername"
@@ -93,7 +91,6 @@ const schema = Joi.object<IdentityAttributes>()
     nationalIdentityNumber: Joi.string().allow(null).required(),
     nationalIdentityNumberVerified: Joi.boolean().required(),
     nickname: Joi.string().allow(null).required(),
-    permissions: Joi.array().items(Joi.string()).required(),
     picture: Joi.string().uri().allow(null).required(),
     preferredAccessibility: Joi.array().items(Joi.string()).required(),
     preferredUsername: Joi.string().allow(null).required(),
@@ -121,7 +118,6 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public nationalIdentityNumber: string;
   public nationalIdentityNumberVerified: boolean;
   public nickname: string;
-  public permissions: Array<string>;
   public picture: string;
   public preferredAccessibility: Array<string>;
   public preferredUsername: string;
@@ -152,15 +148,6 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.nationalIdentityNumber = options.nationalIdentityNumber || null;
     this.nationalIdentityNumberVerified = options.nationalIdentityNumberVerified === true;
     this.nickname = options.nickname || null;
-    this.permissions = options.permissions || [
-      IdentityPermission.USER,
-      IdentityPermission.CLIENT_READ,
-      IdentityPermission.CLIENT_WRITE,
-      IdentityPermission.IDENTITY_READ,
-      IdentityPermission.IDENTITY_WRITE,
-      IdentityPermission.TENANT_READ,
-      IdentityPermission.TENANT_WRITE,
-    ];
     this.picture = options.picture || null;
     this.preferredAccessibility = options.preferredAccessibility || [];
     this.preferredUsername = options.preferredUsername || null;
@@ -194,7 +181,6 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       nationalIdentityNumber: this.nationalIdentityNumber,
       nationalIdentityNumberVerified: this.nationalIdentityNumberVerified,
       nickname: this.nickname,
-      permissions: this.permissions,
       picture: this.picture,
       preferredAccessibility: this.preferredAccessibility,
       preferredUsername: this.preferredUsername,

@@ -1,19 +1,20 @@
 import { ServerKoaContext } from "../types";
-import { AddUserinfoRequestBody, ClientScope } from "../common";
 import { clientCredentialsMiddleware } from "../middleware";
+import { ClientScopes } from "../common";
+import { AddUserinfoRequestBody } from "@lindorm-io/common-types";
 
 export const axiosUpdateIdentityUserinfo = async (
   ctx: ServerKoaContext,
   identityId: string,
-  options: Partial<AddUserinfoRequestBody>,
+  body: Partial<AddUserinfoRequestBody>,
 ): Promise<void> => {
   const {
     axios: { identityClient, oauthClient },
   } = ctx;
 
   await identityClient.put("/internal/userinfo/:id", {
-    body: options,
+    body,
     params: { id: identityId },
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTITY_WRITE])],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.IDENTITY_IDENTITY_WRITE])],
   });
 };

@@ -1,18 +1,18 @@
 import { Client, BrowserSession, RefreshSession, ConsentSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { Scope } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken, createRefreshToken } from "../token";
 import { getIdentityUserinfo } from "../identity";
+import { LindormScopes } from "@lindorm-io/common-types";
 
-interface ResponseBody {
+type ResponseBody = {
   accessToken: string;
   expiresIn: number;
   idToken: string;
   refreshToken: string;
   scope: Array<string>;
   tokenType: string;
-}
+};
 
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
@@ -22,10 +22,15 @@ export const generateTokenResponse = async (
 ): Promise<Partial<ResponseBody>> => {
   const body: Partial<ResponseBody> = {};
 
-  const { identityId, nonce } = session;
+  const { nonce } = session;
   const { audiences, scopes } = consentSession;
 
-  const { active, claims, permissions } = await getIdentityUserinfo(ctx, identityId, scopes);
+  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session, {
+    audiences,
+    scopes,
+  });
+
+  const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -35,17 +40,11 @@ export const generateTokenResponse = async (
     });
   }
 
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session, {
-    audiences,
-    permissions,
-    scopes,
-  });
-
   body.accessToken = accessToken;
   body.expiresIn = expiresIn;
   body.tokenType = "Bearer";
 
-  if (scopes.includes(Scope.OPENID)) {
+  if (scopes.includes(LindormScopes.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, session, {
       audiences,
       claims,
@@ -56,7 +55,7 @@ export const generateTokenResponse = async (
     body.idToken = idToken;
   }
 
-  if (scopes.includes(Scope.OFFLINE_ACCESS)) {
+  if (scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
     if (!(session instanceof RefreshSession)) {
       throw new ServerError("Unexpected session type");
     }

@@ -1,5 +1,4 @@
 import { createTestAuthorizationSession } from "../../fixtures/entity";
-import { SessionStatus } from "../../common";
 import { redirectConsentController } from "./redirect-consent";
 import {
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
@@ -21,8 +20,8 @@ describe("redirectConsentController", () => {
       entity: {
         authorizationSession: createTestAuthorizationSession({
           status: {
-            consent: SessionStatus.CONFIRMED,
-            login: SessionStatus.CONFIRMED,
+            consent: "confirmed",
+            login: "confirmed",
           },
         }),
       },
@@ -40,7 +39,7 @@ describe("redirectConsentController", () => {
   });
 
   test("should redirect for skip", async () => {
-    ctx.entity.authorizationSession.status.consent = SessionStatus.SKIP;
+    ctx.entity.authorizationSession.status.consent = "skip";
 
     await expect(redirectConsentController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createAuthorizationVerifyUri" },
@@ -48,7 +47,7 @@ describe("redirectConsentController", () => {
   });
 
   test("should redirect for pending", async () => {
-    ctx.entity.authorizationSession.status.consent = SessionStatus.PENDING;
+    ctx.entity.authorizationSession.status.consent = "pending";
 
     await expect(redirectConsentController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createConsentPendingUri" },
@@ -56,7 +55,7 @@ describe("redirectConsentController", () => {
   });
 
   test("should redirect for rejected", async () => {
-    ctx.entity.authorizationSession.status.consent = SessionStatus.REJECTED;
+    ctx.entity.authorizationSession.status.consent = "rejected";
 
     await expect(redirectConsentController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createConsentRejectedUri" },

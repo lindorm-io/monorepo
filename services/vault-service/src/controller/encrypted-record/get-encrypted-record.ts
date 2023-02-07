@@ -2,25 +2,28 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoAES } from "@lindorm-io/crypto";
-import { JOI_GUID, GetEncryptedRecordResponseBody } from "../../common";
 import { ServerKoaController } from "../../types";
 import { getEncryptionKey } from "../../handler";
 import { isAfter } from "date-fns";
 import { parseBlob } from "@lindorm-io/string-blob";
+import {
+  GetEncryptedRecordRequestParams,
+  GetEncryptedRecordResponse,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetEncryptedRecordRequestParams;
+
+type ResponseBody = GetEncryptedRecordResponse;
 
 export const getEncryptedRecordSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getEncryptedRecordController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetEncryptedRecordResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { encryptedRecord },
     repository: { encryptedRecordRepository },

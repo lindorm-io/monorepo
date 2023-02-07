@@ -1,16 +1,16 @@
-import { IdentifierType } from "../../common";
 import { Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { filter, orderBy } from "lodash";
 import { getListOfConnectedProviders } from "../../util";
+import { IdentifierTypes } from "@lindorm-io/common-types";
 
-interface Result {
+type Result = {
   connectedProviders: Array<string>;
   email: string | null;
   emailVerified: boolean;
   phoneNumber: string | null;
   phoneNumberVerified: boolean;
-}
+};
 
 const EMPTY: Result = {
   connectedProviders: [],
@@ -41,13 +41,13 @@ export const getIdentifierUserinfo = async (
 
     data.connectedProviders = getListOfConnectedProviders(ordered);
 
-    const [email] = filter(ordered, { type: IdentifierType.EMAIL });
+    const [email] = filter(ordered, { type: IdentifierTypes.EMAIL });
     if (email) {
       data.email = email.identifier;
       data.emailVerified = email.verified;
     }
 
-    const [phone] = filter(ordered, { type: IdentifierType.PHONE });
+    const [phone] = filter(ordered, { type: IdentifierTypes.PHONE });
     if (phone) {
       data.phoneNumber = phone.identifier;
       data.phoneNumberVerified = phone.verified;

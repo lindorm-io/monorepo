@@ -1,26 +1,30 @@
 import Joi from "joi";
 import { Client } from "../../entity";
-import { ClientType, DisplayMode, JOI_GUID, ResponseMode } from "../../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
 import { randomString } from "@lindorm-io/random";
+import {
+  LevelOfAssurance,
+  OauthClientTypes,
+  OauthDisplayModes,
+  OauthResponseModes,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
+type RequestData = {
   description: string;
   host: string;
   logoutUri: string;
   name: string;
   redirectUris: Array<string>;
   tenantId: string;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   id: string;
   secret: string;
-}
+};
 
 export const createClientSchema = Joi.object<RequestData>()
   .keys({
@@ -29,7 +33,7 @@ export const createClientSchema = Joi.object<RequestData>()
     logoutUri: Joi.string().uri().required(),
     name: Joi.string().required(),
     redirectUris: Joi.array().items(Joi.string().uri()).required(),
-    tenantId: JOI_GUID.required(),
+    tenantId: Joi.string().guid().required(),
   })
   .required();
 
@@ -50,9 +54,9 @@ export const createClientController: ServerKoaController<RequestData> = async (
       active: configuration.defaults.clients.active_state,
       defaults: {
         audiences: [],
-        displayMode: DisplayMode.PAGE,
+        displayMode: OauthDisplayModes.PAGE,
         levelOfAssurance: configuration.defaults.clients.level_of_assurance as LevelOfAssurance,
-        responseMode: ResponseMode.QUERY,
+        responseMode: OauthResponseModes.QUERY,
       },
       description,
       host,
@@ -61,7 +65,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
       tenant: tenant.id,
       redirectUris,
       secret: await argon.encrypt(secret),
-      type: ClientType.PUBLIC,
+      type: OauthClientTypes.PUBLIC,
     }),
   );
 

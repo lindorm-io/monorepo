@@ -1,19 +1,18 @@
 import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { SessionHint } from "../../enum";
-import { SubjectHint, TokenType } from "../../common";
 import { configuration } from "../../server/configuration";
+import { flatten, uniq } from "lodash";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";
 import { randomString } from "@lindorm-io/random";
-import { flatten, uniq } from "lodash";
 
-interface Options {
+type Options = {
   audiences: Array<string>;
-  permissions: Array<string>;
   scopes: Array<string>;
-}
+};
 
 export const createAccessToken = (
   ctx: ServerKoaContext,
@@ -30,12 +29,11 @@ export const createAccessToken = (
     expiry: client.expiry.accessToken || configuration.defaults.expiry.access_token,
     levelOfAssurance: session.levelOfAssurance,
     nonce: session.nonce || randomString(16),
-    permissions: options.permissions,
     scopes: options.scopes,
     sessionId: session.id,
     sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
     subject: session.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.ACCESS,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.ACCESS,
   });
 };

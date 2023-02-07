@@ -1,5 +1,5 @@
 import { AuthenticationSession } from "../entity";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { findStrategyConfig } from "./find-strategy-config";
 
 type Result = {

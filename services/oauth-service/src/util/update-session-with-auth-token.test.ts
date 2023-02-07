@@ -1,4 +1,3 @@
-import { AuthenticationMethod } from "../common";
 import { calculateUpdatedLoa as _calculateUpdatedLoa } from "./calculate-updated-loa";
 import { createTestBrowserSession } from "../fixtures/entity";
 import { getUnixTime } from "date-fns";
@@ -15,13 +14,13 @@ describe("updateSessionWithAuthToken", () => {
   beforeEach(() => {
     session = createTestBrowserSession({
       acrValues: ["loa_2"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       latestAuthentication: new Date("2000-01-01T01:00:00.000Z"),
       levelOfAssurance: 2,
     });
 
     token = {
-      authMethodsReference: [AuthenticationMethod.EMAIL, AuthenticationMethod.DEVICE_LINK],
+      authMethodsReference: ["email", "device_link"],
       authTime: getUnixTime(new Date("2020-01-01T02:00:00.000Z")),
     };
 

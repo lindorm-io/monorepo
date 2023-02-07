@@ -1,18 +1,21 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT, RdcSessionType, SessionStatus } from "../../common";
+import { JOI_JWT } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { updateEnrolmentStatus } from "../../handler";
+import {
+  RdcSessionTypes,
+  RejectRdcRequestBody,
+  RejectRdcRequestParams,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-  rdcSessionToken: string;
-}
+type RequestData = RejectRdcRequestParams & RejectRdcRequestBody;
 
 export const rejectRdcSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     rdcSessionToken: JOI_JWT.required(),
   })
   .required();
@@ -26,10 +29,10 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
     entity: { rdcSession },
   } = ctx;
 
-  rdcSession.status = SessionStatus.REJECTED;
+  rdcSession.status = SessionStatuses.REJECTED;
 
   switch (rdcSession.type) {
-    case RdcSessionType.CALLBACK:
+    case RdcSessionTypes.CALLBACK:
       await axiosClient.request({
         body: {
           rdcSessionId: rdcSession.id,
@@ -42,7 +45,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
       });
       break;
 
-    case RdcSessionType.ENROLMENT:
+    case RdcSessionTypes.ENROLMENT:
       await updateEnrolmentStatus(ctx, rdcSession);
       break;
 

@@ -3,13 +3,12 @@ import { ClientCache, ClientRepository, TenantRepository } from "../infrastructu
 import { argon, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./util/logger";
 import {
-  ClientPermission,
-  ClientScope,
-  ClientType,
-  GrantType,
-  ResponseType,
-  Scope,
-} from "../common";
+  LindormScopes,
+  OauthClientTypes,
+  OauthGrantTypes,
+  OauthResponseTypes,
+} from "@lindorm-io/common-types";
+import { ClientScopes } from "../common";
 
 const ids = {
   authenticationService: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
@@ -61,18 +60,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/authentication-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authenticationService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(authentication);
@@ -83,18 +81,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/communication-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.communicationService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(communication);
@@ -105,18 +102,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/device-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.deviceService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(device);
@@ -127,18 +123,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/identity-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.identityService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(identity);
@@ -149,18 +144,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/oidc-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.oidcService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(oidc);
@@ -171,18 +165,17 @@ const main = async (): Promise<void> => {
       active: true,
       audiences: Object.values(ids),
       allowed: {
-        grantTypes: [GrantType.CLIENT_CREDENTIALS],
+        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScope),
+        scopes: Object.values(ClientScopes),
       },
       host: "http://localhost",
       name: "lindorm.io/vault-service",
-      permissions: Object.values(ClientPermission),
       redirectUris: [],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.vaultService),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(vault);
@@ -192,18 +185,17 @@ const main = async (): Promise<void> => {
       id: ids.authApplication,
       active: true,
       allowed: {
-        grantTypes: [GrantType.AUTHORIZATION_CODE, GrantType.REFRESH_TOKEN],
-        responseTypes: [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN],
-        scopes: Object.values(Scope),
+        grantTypes: [OauthGrantTypes.AUTHORIZATION_CODE, OauthGrantTypes.REFRESH_TOKEN],
+        responseTypes: Object.values(OauthResponseTypes),
+        scopes: Object.values(LindormScopes),
       },
       host: "http://localhost:4100",
       name: "lindorm.io/auth-application",
-      permissions: [],
       redirectUris: ["http://localhost:4100/api/callback"],
       logoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authApplication),
       tenant: tenant.id,
-      type: ClientType.CONFIDENTIAL,
+      type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
   await caches.client.create(auth);

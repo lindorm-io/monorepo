@@ -1,4 +1,3 @@
-import { SessionStatus } from "../../common";
 import { createTestEnrolmentSession, createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus } from "./update-enrolment-status";
 
@@ -12,7 +11,7 @@ describe("updateEnrolmentStatus", () => {
         enrolmentSessionCache: {
           find: jest.fn().mockResolvedValue(
             createTestEnrolmentSession({
-              status: SessionStatus.PENDING,
+              status: "pending",
             }),
           ),
           update: jest.fn(),
@@ -20,7 +19,7 @@ describe("updateEnrolmentStatus", () => {
       },
     };
     rdc = createTestRdcSession({
-      status: SessionStatus.CONFIRMED,
+      status: "confirmed",
     });
   });
 

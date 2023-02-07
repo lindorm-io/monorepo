@@ -1,13 +1,13 @@
 import { Identity } from "../../entity";
+import { createMockLogger } from "@lindorm-io/winston";
 import { createMockRepository } from "@lindorm-io/mongo";
+import { getIdentifierUserinfo } from "./get-identifier-userinfo";
 import {
   createTestEmailIdentifier,
   createTestExternalIdentifier,
   createTestIdentity,
   createTestPhoneIdentifier,
 } from "../../fixtures/entity";
-import { createMockLogger } from "@lindorm-io/winston";
-import { getIdentifierUserinfo } from "./get-identifier-userinfo";
 
 describe("getIdentifierUserinfo", () => {
   let ctx: any;
@@ -56,18 +56,36 @@ describe("getIdentifierUserinfo", () => {
       }),
     ]);
 
-    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toMatchSnapshot();
+    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toStrictEqual({
+      connectedProviders: expect.arrayContaining(["https://two.com", "https://one.com"]),
+      email: "two@lindorm.io",
+      emailVerified: true,
+      phoneNumber: "+46701000002",
+      phoneNumberVerified: false,
+    });
   });
 
   test("should resolve data on empty array", async () => {
     ctx.repository.identifierRepository.findMany.mockResolvedValue([]);
 
-    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toMatchSnapshot();
+    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toStrictEqual({
+      connectedProviders: [],
+      email: null,
+      emailVerified: false,
+      phoneNumber: null,
+      phoneNumberVerified: false,
+    });
   });
 
   test("should resolve data on caught error", async () => {
     ctx.repository.identifierRepository.findMany.mockRejectedValue(new Error("message"));
 
-    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toMatchSnapshot();
+    await expect(getIdentifierUserinfo(ctx, identity)).resolves.toStrictEqual({
+      connectedProviders: [],
+      email: null,
+      emailVerified: false,
+      phoneNumber: null,
+      phoneNumberVerified: false,
+    });
   });
 });

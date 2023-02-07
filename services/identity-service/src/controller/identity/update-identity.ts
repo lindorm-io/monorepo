@@ -1,10 +1,11 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_LOCALE, Scope } from "../../common";
+import { JOI_LOCALE } from "../../common";
 import { NamingSystem } from "../../enum";
 import { ServerKoaController, IdentityAddress } from "../../types";
 import { isUndefined } from "lodash";
 import { updateIdentityDisplayName } from "../../handler";
+import { LindormScopes } from "@lindorm-io/common-types";
 import {
   JOI_BIRTHDATE,
   JOI_IDENTITY_ADDRESS,
@@ -13,7 +14,7 @@ import {
   JOI_ZONE_INFO,
 } from "../../constant";
 
-interface RequestData {
+type RequestData = {
   address: IdentityAddress;
   birthDate: string;
   displayName: string;
@@ -34,7 +35,7 @@ interface RequestData {
   username: string;
   website: string;
   zoneInfo: string;
-}
+};
 
 export const updateIdentitySchema = Joi.object<RequestData>()
   .keys({
@@ -93,39 +94,45 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     },
   } = ctx;
 
-  if (scopes.includes(Scope.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
+  if (scopes.includes(LindormScopes.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
     identity.preferredAccessibility = preferredAccessibility;
   }
 
-  if (scopes.includes(Scope.NATIONAL_IDENTITY_NUMBER) && !isUndefined(nationalIdentityNumber)) {
+  if (
+    scopes.includes(LindormScopes.NATIONAL_IDENTITY_NUMBER) &&
+    !isUndefined(nationalIdentityNumber)
+  ) {
     identity.nationalIdentityNumber = nationalIdentityNumber;
   }
 
-  if (scopes.includes(Scope.PROFILE)) {
-    if (!isUndefined(displayName) && displayName !== identity.displayName.name) {
-      await updateIdentityDisplayName(ctx, identity, displayName);
-    }
+  if (scopes.includes(LindormScopes.PROFILE)) {
     if (!isUndefined(birthDate)) identity.birthDate = birthDate;
     if (!isUndefined(familyName)) identity.familyName = familyName;
     if (!isUndefined(gender)) identity.gender = gender;
     if (!isUndefined(givenName)) identity.givenName = givenName;
-    if (!isUndefined(gravatarUri)) identity.gravatarUri = gravatarUri;
     if (!isUndefined(locale)) identity.locale = locale;
     if (!isUndefined(middleName)) identity.middleName = middleName;
     if (!isUndefined(namingSystem)) identity.namingSystem = namingSystem;
     if (!isUndefined(nickname)) identity.nickname = nickname;
     if (!isUndefined(picture)) identity.picture = picture;
     if (!isUndefined(profile)) identity.profile = profile;
-    if (!isUndefined(pronouns)) identity.pronouns = pronouns;
     if (!isUndefined(website)) identity.website = website;
     if (!isUndefined(zoneInfo)) identity.zoneInfo = zoneInfo;
   }
 
-  if (scopes.includes(Scope.SOCIAL_SECURITY_NUMBER) && !isUndefined(socialSecurityNumber)) {
+  if (scopes.includes(LindormScopes.PUBLIC)) {
+    if (!isUndefined(displayName) && displayName !== identity.displayName.name) {
+      await updateIdentityDisplayName(ctx, identity, displayName);
+    }
+    if (!isUndefined(gravatarUri)) identity.gravatarUri = gravatarUri;
+    if (!isUndefined(pronouns)) identity.pronouns = pronouns;
+  }
+
+  if (scopes.includes(LindormScopes.SOCIAL_SECURITY_NUMBER) && !isUndefined(socialSecurityNumber)) {
     identity.socialSecurityNumber = socialSecurityNumber;
   }
 
-  if (scopes.includes(Scope.USERNAME) && !isUndefined(username)) {
+  if (scopes.includes(LindormScopes.USERNAME) && !isUndefined(username)) {
     identity.preferredUsername = username;
     identity.username = username;
   }

@@ -1,4 +1,3 @@
-import { IdentityPermission, Scope } from "../../common";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   accountEntityMiddleware,
@@ -21,8 +20,6 @@ router.post(
   useSchema(linkAccountToBrowserSchema),
   identityAuthMiddleware({
     adjustedAccessLevel: 3,
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(linkAccountToBrowserController),
@@ -32,8 +29,6 @@ router.get(
   "/",
   identityAuthMiddleware({
     adjustedAccessLevel: 3,
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
   }),
   useController(getBrowserLinksController),
 );
@@ -44,8 +39,6 @@ router.delete(
   useSchema(deleteBrowserLinkSchema),
   identityAuthMiddleware({
     adjustedAccessLevel: 3,
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
   }),
   browserLinkEntityMiddleware("data.id"),
   useController(deleteBrowserLinkController),

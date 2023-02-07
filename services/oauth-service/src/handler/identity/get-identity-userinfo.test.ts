@@ -1,8 +1,5 @@
-import { Scope } from "../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { getIdentityUserinfo } from "./get-identity-userinfo";
-
-jest.mock("../axios");
 
 describe("getIdentityUserinfo", () => {
   let ctx: any;
@@ -20,9 +17,7 @@ describe("getIdentityUserinfo", () => {
   });
 
   test("should resolve", async () => {
-    await expect(
-      getIdentityUserinfo(ctx, "identityId", [Scope.OPENID, Scope.ADDRESS]),
-    ).resolves.toMatchSnapshot();
+    await expect(getIdentityUserinfo(ctx, "accessToken")).resolves.toMatchSnapshot();
 
     expect(ctx.axios.identityClient.get).toHaveBeenCalled();
   });

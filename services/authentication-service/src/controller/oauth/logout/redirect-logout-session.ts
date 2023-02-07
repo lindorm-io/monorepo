@@ -5,13 +5,13 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { fetchOauthLogoutData } from "../../../handler";
+import { ClientScopes } from "../../../common";
 import {
-  ClientScope,
-  ClientType,
-  JOI_GUID,
-  ResponseWithRedirectBody,
-  SessionStatus,
-} from "../../../common";
+  ConfirmLogoutResponse,
+  OauthClientTypes,
+  RedirectLogoutResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
 interface RequestData {
   sessionId: string;
@@ -19,7 +19,7 @@ interface RequestData {
 
 export const redirectLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -37,24 +37,24 @@ export const redirectLogoutSessionController: ServerKoaController<RequestData> =
     client: { type },
   } = await fetchOauthLogoutData(ctx, sessionId);
 
-  if (logoutStatus !== SessionStatus.PENDING) {
+  if (logoutStatus !== SessionStatuses.PENDING) {
     logger.warn("Invalid Session Status", { logoutStatus });
 
     const {
       data: { redirectTo },
-    } = await oauthClient.get<ResponseWithRedirectBody>("/internal/sessions/logout/:id/verify", {
+    } = await oauthClient.get<RedirectLogoutResponse>("/internal/sessions/logout/:id/redirect", {
       params: { id: sessionId },
     });
 
     return { redirect: redirectTo };
   }
 
-  if (type === ClientType.CONFIDENTIAL) {
+  if (type === OauthClientTypes.CONFIDENTIAL) {
     const {
       data: { redirectTo },
-    } = await oauthClient.post<ResponseWithRedirectBody>("/internal/sessions/logout/:id/confirm", {
+    } = await oauthClient.post<ConfirmLogoutResponse>("/internal/sessions/logout/:id/confirm", {
       params: { id: sessionId },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_LOGOUT_WRITE])],
+      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
     });
 
     return { redirect: redirectTo };

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, JOI_JWT } from "../../common";
+import { JOI_JWT } from "../../common";
 import { assertConfirmationTokenFactorLength } from "../../util";
 
 interface RequestData {
@@ -11,7 +11,7 @@ interface RequestData {
 
 export const updateDeviceLinkTrustedSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     challengeConfirmationToken: JOI_JWT.required(),
   })
   .required();

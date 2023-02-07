@@ -1,16 +1,13 @@
-import { ClientPermission } from "../../common";
 import { Router, useController } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware } from "../../middleware";
 import { getPrivateJwksController } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.VAULT_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.get("/", useController(getPrivateJwksController));

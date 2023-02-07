@@ -1,5 +1,4 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { IdentifierType } from "../../common";
 import { Identity } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { addIdentifierFromUserinfo } from "./add-identifier-from-userinfo";
@@ -52,13 +51,13 @@ describe("addIdentifierFromUserinfo", () => {
     await expect(
       addIdentifierFromUserinfo(ctx, identity, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         identifier: "test@lindorm.io",
         provider: "https://test.lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     );
   });
@@ -70,14 +69,14 @@ describe("addIdentifierFromUserinfo", () => {
     await expect(
       addIdentifierFromUserinfo(ctx, identity, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         identifier: "test@lindorm.io",
         primary: true,
         provider: "https://test.lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
         verified: false,
       }),
     );
@@ -94,14 +93,14 @@ describe("addIdentifierFromUserinfo", () => {
     await expect(
       addIdentifierFromUserinfo(ctx, identity, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         identifier: "test@lindorm.io",
         primary: false,
         provider: "https://test.lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
         verified: false,
       }),
     );
@@ -115,14 +114,14 @@ describe("addIdentifierFromUserinfo", () => {
     await expect(
       addIdentifierFromUserinfo(ctx, identity, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         identifier: "test@lindorm.io",
         primary: false,
         provider: "https://test.lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
         verified: false,
       }),
     );
@@ -134,7 +133,7 @@ describe("addIdentifierFromUserinfo", () => {
     await expect(
       addIdentifierFromUserinfo(ctx, identity, {
         identifier: "test@lindorm.io",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).rejects.toThrow(ServerError);
   });

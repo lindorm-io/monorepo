@@ -6,32 +6,35 @@ import { argon } from "../../instance";
 import { assertPKCE } from "@lindorm-io/node-pkce";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
+import { AuthenticationConfirmationTokenClaims } from "../../common";
+import {
+  LindormTokenTypes,
+  SessionStatuses,
+  SubjectHints,
+  VerifyAuthenticationRequestBody,
+  VerifyAuthenticationResponse,
+} from "@lindorm-io/common-types";
 import {
   calculateLevelOfAssurance,
   canGenerateMfaCookie,
   getMethodsFromStrategies,
 } from "../../util";
-import {
-  AuthenticationConfirmationTokenClaims,
-  JOI_GUID,
-  SessionStatus,
-  SubjectHint,
-  TokenType,
-  VerifyAuthenticationRequestData,
-  VerifyAuthenticationResponseBody,
-} from "../../common";
 
-export const verifyAuthenticationSchema = Joi.object<VerifyAuthenticationRequestData>()
+type RequestData = VerifyAuthenticationRequestBody;
+
+type ResponseBody = VerifyAuthenticationResponse;
+
+export const verifyAuthenticationSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     code: Joi.string().required(),
     codeVerifier: Joi.string().required(),
   })
   .required();
 
-export const verifyAuthenticationController: ServerKoaController<
-  VerifyAuthenticationRequestData
-> = async (ctx): ControllerResponse<VerifyAuthenticationResponseBody> => {
+export const verifyAuthenticationController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { authenticationSessionCache },
     data: { code, codeVerifier },
@@ -39,7 +42,7 @@ export const verifyAuthenticationController: ServerKoaController<
     jwt,
   } = ctx;
 
-  if (authenticationSession.status !== SessionStatus.CODE) {
+  if (authenticationSession.status !== SessionStatuses.CODE) {
     throw new ClientError("Invalid session status");
   }
 
@@ -56,6 +59,7 @@ export const verifyAuthenticationController: ServerKoaController<
   const authMethodsReference: Array<string> = getMethodsFromStrategies(
     authenticationSession.confirmedStrategies,
   );
+
   if (authenticationSession.confirmedOidcProvider) {
     authMethodsReference.push("oidc");
   }
@@ -80,8 +84,8 @@ export const verifyAuthenticationController: ServerKoaController<
     scopes: ["authentication"],
     sessionId: authenticationSession.id,
     subject: authenticationSession.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.AUTHENTICATION_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.AUTHENTICATION_CONFIRMATION,
   });
 
   if (canGenerateMfaCookie(authenticationSession)) {

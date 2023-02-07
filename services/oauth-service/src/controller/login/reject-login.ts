@@ -1,22 +1,26 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, ResponseWithRedirectBody, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createLoginRejectedUri } from "../../util";
+import {
+  RejectLoginRequestParams,
+  RejectLoginResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RejectLoginRequestParams;
+
+type ResponseBody = RejectLoginResponse;
 
 export const rejectLoginSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const rejectLoginController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseWithRedirectBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { authorizationSessionCache },
     entity: { authorizationSession },
@@ -27,7 +31,7 @@ export const rejectLoginController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.login = SessionStatus.REJECTED;
+  authorizationSession.status.login = SessionStatuses.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 

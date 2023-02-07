@@ -1,7 +1,6 @@
-import { AuthenticationMethod } from "../common";
-import { AuthenticationStrategy } from "../enum";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 import { generateClientConfig } from "./generate-client-config";
+import { AuthenticationStrategies } from "@lindorm-io/common-types";
 
 describe("calculateMethodsAndStrategies", () => {
   test("should calculate first factor values", () => {
@@ -9,15 +8,15 @@ describe("calculateMethodsAndStrategies", () => {
       generateClientConfig(
         createTestAuthenticationSession({
           allowedStrategies: [
-            AuthenticationStrategy.BANK_ID_SE,
-            AuthenticationStrategy.DEVICE_CHALLENGE,
-            AuthenticationStrategy.EMAIL_LINK,
-            AuthenticationStrategy.EMAIL_OTP,
-            AuthenticationStrategy.PASSWORD,
-            AuthenticationStrategy.PASSWORD_BROWSER_LINK,
-            AuthenticationStrategy.RDC_QR_CODE,
-            AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
-            AuthenticationStrategy.WEBAUTHN,
+            "bank_id_se",
+            "device_challenge",
+            "email_link",
+            "email_otp",
+            "password",
+            "password_browser_link",
+            "rdc_qr_code",
+            "session_accept_with_code",
+            "webauthn",
           ],
           recommendedMethods: [],
           requiredLevel: 1,
@@ -32,11 +31,11 @@ describe("calculateMethodsAndStrategies", () => {
       generateClientConfig(
         createTestAuthenticationSession({
           allowedStrategies: [
-            AuthenticationStrategy.MFA_COOKIE,
-            AuthenticationStrategy.PHONE_OTP,
-            AuthenticationStrategy.RDC_PUSH_NOTIFICATION,
-            AuthenticationStrategy.SESSION_OTP,
-            AuthenticationStrategy.TIME_BASED_OTP,
+            "mfa_cookie",
+            "phone_otp",
+            "rdc_push_notification",
+            "session_otp",
+            "time_based_otp",
           ],
           recommendedMethods: [],
           requiredLevel: 1,
@@ -50,8 +49,8 @@ describe("calculateMethodsAndStrategies", () => {
     expect(
       generateClientConfig(
         createTestAuthenticationSession({
-          allowedStrategies: Object.values(AuthenticationStrategy),
-          recommendedMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          allowedStrategies: Object.values(AuthenticationStrategies),
+          recommendedMethods: ["password", "email"],
           requiredLevel: 1,
           requiredMethods: [],
         }),
@@ -63,10 +62,10 @@ describe("calculateMethodsAndStrategies", () => {
     expect(
       generateClientConfig(
         createTestAuthenticationSession({
-          allowedStrategies: Object.values(AuthenticationStrategy),
+          allowedStrategies: Object.values(AuthenticationStrategies),
           recommendedMethods: [],
           requiredLevel: 1,
-          requiredMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          requiredMethods: ["password", "email"],
         }),
       ),
     ).toMatchSnapshot();

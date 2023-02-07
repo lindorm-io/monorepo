@@ -1,4 +1,3 @@
-import { IdentityPermission } from "../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -22,11 +21,14 @@ import {
 const router = new Router();
 export default router;
 
+router.use(
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
+);
+
 router.post(
   "/",
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.CLIENT_WRITE],
-  }),
+  //TODO: Add permissions middleware
   useSchema(createClientSchema),
   tenantEntityMiddleware("data.tenantId"),
   useController(createClientController),
@@ -35,9 +37,7 @@ router.post(
 router.get(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.CLIENT_READ],
-  }),
+  //TODO: Add permissions middleware
   useSchema(getClientInfoSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),
@@ -47,9 +47,6 @@ router.get(
 router.patch(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.CLIENT_WRITE],
-  }),
   useSchema(updateClientSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),
@@ -59,9 +56,6 @@ router.patch(
 router.delete(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.CLIENT_WRITE],
-  }),
   useSchema(deleteClientSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),
@@ -71,9 +65,6 @@ router.delete(
 router.get(
   "/:id/secret",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.CLIENT_WRITE],
-  }),
   useSchema(generateClientSecretSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),

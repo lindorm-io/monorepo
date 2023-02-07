@@ -1,23 +1,26 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
-import { StrategySessionAttributes } from "../../entity";
+import {
+  GetStrategyRequestParams,
+  GetStrategyResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetStrategyRequestParams;
+
+type ResponseBody = GetStrategyResponse;
 
 export const getStrategyInfoSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getStrategyInfoController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<Partial<StrategySessionAttributes>> => {
+): ControllerResponse<Partial<ResponseBody>> => {
   const {
     cache: { strategySessionCache },
     data: { id },
@@ -38,6 +41,6 @@ export const getStrategyInfoController: ServerKoaController<RequestData> = async
       throw err;
     }
 
-    return { body: { status: SessionStatus.EXPIRED } };
+    return { body: { status: SessionStatuses.EXPIRED } };
   }
 };

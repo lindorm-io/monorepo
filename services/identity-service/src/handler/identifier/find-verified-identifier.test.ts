@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { findVerifiedIdentifier } from "./find-verified-identifier";
@@ -29,7 +28,7 @@ describe("findVerifiedIdentifier", () => {
       findVerifiedIdentifier(ctx, identity, {
         identifier: "identifier",
         provider: "provider",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).resolves.toStrictEqual(expect.any(Identifier));
   });
@@ -45,7 +44,7 @@ describe("findVerifiedIdentifier", () => {
       findVerifiedIdentifier(ctx, identity, {
         identifier: "identifier",
         provider: "provider",
-        type: IdentifierType.EMAIL,
+        type: "email",
       }),
     ).rejects.toThrow(ClientError);
   });

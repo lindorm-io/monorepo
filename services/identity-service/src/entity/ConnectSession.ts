@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { JOI_ARGON_STRING, JOI_GUID } from "../common";
+import { JOI_ARGON_STRING } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,11 +8,11 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface ConnectSessionAttributes extends EntityAttributes {
+export type ConnectSessionAttributes = EntityAttributes & {
   code: string;
   expires: Date;
   identifierId: string;
-}
+};
 
 export type ConnectSessionOptions = Optional<ConnectSessionAttributes, EntityKeys>;
 
@@ -22,7 +22,7 @@ const schema = Joi.object<ConnectSessionAttributes>()
 
     code: JOI_ARGON_STRING.required(),
     expires: Joi.date().required(),
-    identifierId: JOI_GUID.required(),
+    identifierId: Joi.string().guid().required(),
   })
   .required();
 

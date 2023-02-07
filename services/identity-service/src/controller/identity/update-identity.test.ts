@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { Scope } from "../../common";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityController } from "./update-identity";
@@ -51,13 +50,14 @@ describe("updateIdentityController", () => {
       token: {
         bearerToken: {
           scopes: [
-            Scope.ACCESSIBILITY,
-            Scope.ADDRESS,
-            Scope.CONNECTED_PROVIDERS,
-            Scope.NATIONAL_IDENTITY_NUMBER,
-            Scope.PROFILE,
-            Scope.SOCIAL_SECURITY_NUMBER,
-            Scope.USERNAME,
+            "accessibility",
+            "address",
+            "connected_providers",
+            "national_identity_number",
+            "profile",
+            "public",
+            "social_security_number",
+            "username",
           ],
           subject: "identityId",
         },

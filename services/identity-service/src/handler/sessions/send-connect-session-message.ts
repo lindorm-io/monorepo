@@ -1,4 +1,3 @@
-import { ClientScope, SendCodeRequestData } from "../../common";
 import { ConnectSession, Identifier } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
@@ -6,6 +5,8 @@ import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { isIdentifierStoredSeparately } from "../../util";
+import { SendCodeRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../common";
 
 export const sendConnectSessionMessage = async (
   ctx: ServerKoaContext,
@@ -23,7 +24,7 @@ export const sendConnectSessionMessage = async (
     });
   }
 
-  const body: SendCodeRequestData = {
+  const body: SendCodeRequestBody = {
     content: {
       expires: connectSession.expires,
       url: createURL(configuration.frontend.routes.connect_callback, {
@@ -43,7 +44,7 @@ export const sendConnectSessionMessage = async (
   await communicationClient.post("/internal/send/code", {
     body,
     middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+      clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_MESSAGE_SEND]),
     ],
   });
 };

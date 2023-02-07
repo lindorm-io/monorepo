@@ -26,9 +26,7 @@ router.get("/", async (ctx) => {
 // router.post(
 //   "/authenticate",
 //   useSchema(initialiseSessionAuthenticationSchema),
-//   identityAuthMiddleware({
-//     permissions: [IdentityPermission.USER],
-//   }),
+//   identityAuthMiddleware(),
 //   idTokenMiddleware("data.idTokenHint", { optional: true }),
 //   useController(initialiseSessionAuthenticationController),
 // );
@@ -36,9 +34,7 @@ router.get("/", async (ctx) => {
 // router.put(
 //   "/authenticate",
 //   useSchema(updateSessionAuthenticationSchema),
-//   identityAuthMiddleware({
-//     permissions: [IdentityPermission.USER],
-//   }),
+//   identityAuthMiddleware(),
 //   authenticationConfirmationTokenMiddleware("data.authToken", {
 //     fromPath: { subject: "token.bearerToken.subject" },
 //   }),

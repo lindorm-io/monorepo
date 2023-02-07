@@ -5,21 +5,21 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { fetchOauthConsentData } from "../../../handler";
+import { ClientScopes } from "../../../common";
 import {
-  ClientScope,
-  ClientType,
-  JOI_GUID,
-  ResponseWithRedirectBody,
-  SessionStatus,
-} from "../../../common";
+  ConfirmConsentResponse,
+  OauthClientTypes,
+  RedirectConsentResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
+type RequestData = {
   sessionId: string;
-}
+};
 
 export const redirectConsentSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -38,28 +38,28 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
     requested: { audiences, scopes },
   } = await fetchOauthConsentData(ctx, sessionId);
 
-  if (consentStatus !== SessionStatus.PENDING) {
+  if (consentStatus !== SessionStatuses.PENDING) {
     logger.warn("Invalid Session Status", { consentStatus });
 
     const {
       data: { redirectTo },
-    } = await oauthClient.get<ResponseWithRedirectBody>("/internal/sessions/consent/:id/verify", {
+    } = await oauthClient.get<RedirectConsentResponse>("/internal/sessions/consent/:id/redirect", {
       params: { id: sessionId },
     });
 
     return { redirect: redirectTo };
   }
 
-  if (type === ClientType.CONFIDENTIAL) {
+  if (type === OauthClientTypes.CONFIDENTIAL) {
     const {
       data: { redirectTo },
-    } = await oauthClient.post<ResponseWithRedirectBody>("/internal/sessions/consent/:id/confirm", {
+    } = await oauthClient.post<ConfirmConsentResponse>("/internal/sessions/consent/:id/confirm", {
       params: { id: sessionId },
       body: {
         audiences,
         scopes,
       },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_CONSENT_WRITE])],
+      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
     });
 
     return { redirect: redirectTo };

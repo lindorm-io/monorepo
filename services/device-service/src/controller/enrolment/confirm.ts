@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { DeviceLink } from "../../entity";
@@ -10,34 +11,23 @@ import { createDeviceLinkCallback } from "../../handler";
 import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import {
-  ChallengeConfirmationTokenClaims,
-  ChallengeStrategy,
-  DeviceFactor,
-  JOI_GUID,
-  JOI_JWT,
-  SessionStatus,
-  SubjectHint,
-  TokenType,
-} from "../../common";
+  ChallengeStrategies,
+  ConfirmEnrolmentRequestBody,
+  ConfirmEnrolmentRequestParams,
+  ConfirmEnrolmentResponse,
+  LindormTokenTypes,
+  PSD2Factors,
+  SessionStatuses,
+  SubjectHints,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-  biometry: string;
-  certificateVerifier: string;
-  enrolmentSessionToken: string;
-  pincode: string;
-}
+type RequestData = ConfirmEnrolmentRequestParams & ConfirmEnrolmentRequestBody;
 
-interface ResponseBody {
-  challengeConfirmationToken: string;
-  deviceLinkId: string;
-  expiresIn: number;
-  trusted: boolean;
-}
+type ResponseBody = ConfirmEnrolmentResponse;
 
 export const confirmEnrolmentSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     biometry: JOI_BIOMETRY.optional(),
     certificateVerifier: Joi.string().base64().required(),
     enrolmentSessionToken: JOI_JWT.required(),
@@ -63,7 +53,10 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     publicKey: enrolmentSession.publicKey,
   });
 
-  const trusted = [SessionStatus.CONFIRMED, SessionStatus.SKIP].includes(enrolmentSession.status);
+  const trusted =
+    enrolmentSession.status === SessionStatuses.CONFIRMED ||
+    enrolmentSession.status === SessionStatuses.SKIP;
+
   const salt: DeviceLinkSalt = {
     aes: randomString(128),
     sha: randomString(128),
@@ -94,16 +87,16 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
-      factors: [DeviceFactor.POSSESSION],
-      strategy: ChallengeStrategy.IMPLICIT,
+      factors: [PSD2Factors.POSSESSION],
+      strategy: ChallengeStrategies.IMPLICIT,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: enrolmentSession.nonce,
     scopes: ["enrolment"],
     sessionId: enrolmentSession.id,
     subject: deviceLink.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.CHALLENGE_CONFIRMATION,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
   });
 
   await enrolmentSessionCache.destroy(enrolmentSession);

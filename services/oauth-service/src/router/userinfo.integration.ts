@@ -14,8 +14,7 @@ describe("/userinfo", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
-    .get("/internal/userinfo/d821cde6-250f-4918-ad55-877a7abf0271")
-    .query(true)
+    .get("/userinfo")
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
@@ -30,6 +29,7 @@ describe("/userinfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      active: true,
       address: {
         care_of: "careOf",
         country: "country",

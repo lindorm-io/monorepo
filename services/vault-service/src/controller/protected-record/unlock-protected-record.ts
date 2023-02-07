@@ -6,25 +6,25 @@ import { ServerKoaController } from "../../types";
 import { isAfter } from "date-fns";
 import { parseBlob } from "@lindorm-io/string-blob";
 import {
-  JOI_GUID,
   UnlockProtectedRecordRequestBody,
-  UnlockProtectedRecordResponseBody,
-} from "../../common";
+  UnlockProtectedRecordRequestParams,
+  UnlockProtectedRecordResponse,
+} from "@lindorm-io/common-types";
 
-interface RequestData extends UnlockProtectedRecordRequestBody {
-  id: string;
-}
+type RequestData = UnlockProtectedRecordRequestParams & UnlockProtectedRecordRequestBody;
+
+type ResponseBody = UnlockProtectedRecordResponse;
 
 export const unlockProtectedRecordSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     key: Joi.string().required(),
   })
   .required();
 
 export const unlockProtectedRecordController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<UnlockProtectedRecordResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     data: { key },
     entity: { protectedRecord },

@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
@@ -41,7 +40,7 @@ describe("rejectLoginController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession.authenticationStatus = SessionStatus.SKIP;
+    ctx.entity.authorizationSession.authenticationStatus = "skip";
 
     await expect(rejectLoginController(ctx)).rejects.toThrow(ClientError);
   });

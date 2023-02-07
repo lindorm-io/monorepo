@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { Scope } from "../common";
 import { configuration } from "../server/configuration";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
@@ -71,7 +70,20 @@ describe("/tokeninfo", () => {
       jti: tokenId,
       loa: 4,
       nbf: 1609488000,
-      scope: Object.values(Scope),
+      scope: [
+        "address",
+        "email",
+        "offline_access",
+        "openid",
+        "phone",
+        "profile",
+        "accessibility",
+        "connected_providers",
+        "national_identity_number",
+        "public",
+        "social_security_number",
+        "username",
+      ],
       sid: browserSession.id,
       sub: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
       token_type: "access_token",

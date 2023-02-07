@@ -1,7 +1,7 @@
 import { ServerKoaContext } from "../../types";
-import { GrantType, ResponseType, Scope } from "../../common";
 import { HttpStatus, Router } from "@lindorm-io/koa";
 import { configuration } from "../../server/configuration";
+import { LindormScopes, OauthGrantTypes, OauthResponseTypes } from "@lindorm-io/common-types";
 
 const router = new Router();
 export default router;
@@ -13,9 +13,9 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     backchannelLogoutSupported: true,
     claimsParameterSupported: false,
     grantTypesSupported: [
-      GrantType.AUTHORIZATION_CODE,
-      GrantType.CLIENT_CREDENTIALS,
-      GrantType.REFRESH_TOKEN,
+      OauthGrantTypes.AUTHORIZATION_CODE,
+      OauthGrantTypes.CLIENT_CREDENTIALS,
+      OauthGrantTypes.REFRESH_TOKEN,
     ],
     idTokenEncryptionAlgValuesSupported: [],
     idTokenEncryptionEncValuesSupported: [],
@@ -26,31 +26,32 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     requestParameterSupported: false,
     requestUriParameterSupported: true,
     responseTypesSupported: [
-      ResponseType.CODE,
-      ResponseType.ID_TOKEN,
-      ResponseType.TOKEN,
+      OauthResponseTypes.CODE,
+      OauthResponseTypes.ID_TOKEN,
+      OauthResponseTypes.TOKEN,
 
-      [ResponseType.CODE, ResponseType.ID_TOKEN].join(" "),
-      [ResponseType.CODE, ResponseType.TOKEN].join(" "),
-      [ResponseType.ID_TOKEN, ResponseType.TOKEN].join(" "),
+      [OauthResponseTypes.CODE, OauthResponseTypes.ID_TOKEN].join(" "),
+      [OauthResponseTypes.CODE, OauthResponseTypes.TOKEN].join(" "),
+      [OauthResponseTypes.ID_TOKEN, OauthResponseTypes.TOKEN].join(" "),
 
-      [ResponseType.CODE, ResponseType.ID_TOKEN, ResponseType.TOKEN].join(" "),
+      [OauthResponseTypes.CODE, OauthResponseTypes.ID_TOKEN, OauthResponseTypes.TOKEN].join(" "),
     ],
     revokeEndpoint: new URL("/oauth2/sessions/revoke", configuration.server.host).toString(),
     scopesSupported: [
-      Scope.OPENID,
-      Scope.ADDRESS,
-      Scope.EMAIL,
-      Scope.PHONE,
-      Scope.PROFILE,
+      LindormScopes.OPENID,
+      LindormScopes.ADDRESS,
+      LindormScopes.EMAIL,
+      LindormScopes.PHONE,
+      LindormScopes.PROFILE,
 
-      Scope.ACCESSIBILITY,
-      Scope.CONNECTED_PROVIDERS,
-      Scope.NATIONAL_IDENTITY_NUMBER,
-      Scope.SOCIAL_SECURITY_NUMBER,
-      Scope.USERNAME,
+      LindormScopes.ACCESSIBILITY,
+      LindormScopes.CONNECTED_PROVIDERS,
+      LindormScopes.NATIONAL_IDENTITY_NUMBER,
+      LindormScopes.PUBLIC,
+      LindormScopes.SOCIAL_SECURITY_NUMBER,
+      LindormScopes.USERNAME,
 
-      Scope.OFFLINE_ACCESS,
+      LindormScopes.OFFLINE_ACCESS,
     ],
     subjectTypesSupported: ["identity", "client"],
     tokenEndpoint: new URL("/oauth2/token", configuration.server.host).toString(),

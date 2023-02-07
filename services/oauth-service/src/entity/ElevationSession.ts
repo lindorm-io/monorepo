@@ -1,5 +1,10 @@
 import Joi from "joi";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import {
+  AuthenticationMethod,
+  LevelOfAssurance,
+  SessionStatus,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,16 +13,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 import {
-  AuthenticationMethod,
   JOI_COUNTRY_CODE,
-  JOI_GUID,
   JOI_JWT,
   JOI_LEVEL_OF_ASSURANCE,
   JOI_LOCALE,
   JOI_NONCE,
   JOI_SESSION_STATUS,
   JOI_STATE,
-  SessionStatus,
 } from "../common";
 
 type ElevationSessionConfirmedAuthentication = {
@@ -40,7 +42,7 @@ type ElevationSessionRequestedAuthentication = {
   requiredMethods: Array<AuthenticationMethod>;
 };
 
-export interface ElevationSessionAttributes extends EntityAttributes {
+export type ElevationSessionAttributes = EntityAttributes & {
   confirmedAuthentication: ElevationSessionConfirmedAuthentication;
   identifiers: ElevationSessionIdentifiers;
   requestedAuthentication: ElevationSessionRequestedAuthentication;
@@ -56,7 +58,7 @@ export interface ElevationSessionAttributes extends EntityAttributes {
   state: string | null;
   status: SessionStatus;
   uiLocales: Array<string>;
-}
+};
 
 export type ElevationSessionOptions = Optional<
   ElevationSessionAttributes,
@@ -88,8 +90,8 @@ const schema = Joi.object<ElevationSessionAttributes>()
       .required(),
     identifiers: Joi.object<ElevationSessionIdentifiers>()
       .keys({
-        browserSessionId: JOI_GUID.allow(null).required(),
-        refreshSessionId: JOI_GUID.allow(null).required(),
+        browserSessionId: Joi.string().guid().allow(null).required(),
+        refreshSessionId: Joi.string().guid().allow(null).required(),
       })
       .required(),
     requestedAuthentication: Joi.object<ElevationSessionRequestedAuthentication>()
@@ -103,11 +105,11 @@ const schema = Joi.object<ElevationSessionAttributes>()
       .required(),
 
     authenticationHint: Joi.array().items(Joi.string()).required(),
-    clientId: JOI_GUID.required(),
+    clientId: Joi.string().guid().required(),
     country: JOI_COUNTRY_CODE.allow(null).required(),
     expires: Joi.date().required(),
     idTokenHint: JOI_JWT.allow(null).required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     nonce: JOI_NONCE.allow(null).required(),
     redirectUri: Joi.string().uri().allow(null).required(),
     state: JOI_STATE.allow(null).required(),
@@ -167,7 +169,7 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     this.nonce = options.nonce || null;
     this.redirectUri = options.redirectUri || null;
     this.state = options.state || null;
-    this.status = options.status || SessionStatus.PENDING;
+    this.status = options.status || SessionStatuses.PENDING;
     this.uiLocales = options.uiLocales || [];
   }
 

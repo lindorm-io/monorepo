@@ -1,5 +1,4 @@
 import { AuthorizationSession, BrowserSession, Client, ConsentSession } from "../../entity";
-import { ResponseMode, ResponseType } from "../../common";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { baseHash } from "@lindorm-io/core";
 import { createAccessToken as _createAccessToken, createIdToken as _createIdToken } from "../token";
@@ -62,7 +61,7 @@ describe("generateCallbackResponse", () => {
 
   test("should resolve state on form post", async () => {
     authorizationSession = createTestAuthorizationSession({
-      responseMode: ResponseMode.FORM_POST,
+      responseMode: "form_post",
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -82,7 +81,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri on fragment", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseMode: ResponseMode.FRAGMENT,
+      responseMode: "fragment",
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -97,7 +96,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri on query", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseMode: ResponseMode.QUERY,
+      responseMode: "query",
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -112,7 +111,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with code", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: [ResponseType.CODE],
+      responseTypes: ["code"],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -128,7 +127,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with access token", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: [ResponseType.TOKEN],
+      responseTypes: ["token"],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -144,7 +143,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with id token", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: [ResponseType.ID_TOKEN],
+      responseTypes: ["id_token"],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -160,7 +159,7 @@ describe("generateCallbackResponse", () => {
       redirectData: baseHash(
         baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),
       ),
-      responseMode: ResponseMode.QUERY,
+      responseMode: "query",
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });

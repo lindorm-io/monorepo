@@ -1,15 +1,20 @@
 import Joi from "joi";
-import { CertificateMethod } from "../enum";
-import { ChallengeStrategy, RdcSessionMode, RdcSessionType, RequestMethod } from "../common";
+import {
+  CertificateMethods,
+  ChallengeStrategies,
+  RdcSessionMethods,
+  RdcSessionModes,
+  RdcSessionTypes,
+} from "@lindorm-io/common-types";
 
 export const JOI_BIOMETRY = Joi.string().length(128);
 
 export const JOI_CERTIFICATE_CHALLENGE = Joi.string().length(128);
 
 export const JOI_CERTIFICATE_METHOD = Joi.string().valid(
-  CertificateMethod.SHA256,
-  CertificateMethod.SHA384,
-  CertificateMethod.SHA512,
+  CertificateMethods.SHA256,
+  CertificateMethods.SHA384,
+  CertificateMethods.SHA512,
 );
 
 export const JOI_DEVICE_METADATA = Joi.object({
@@ -24,32 +29,32 @@ export const JOI_DEVICE_METADATA = Joi.object({
 export const JOI_FACTORS = Joi.number().valid(1, 2);
 
 export const JOI_RDC_CONFIRM_METHOD = Joi.string().valid(
-  RequestMethod.POST,
-  RequestMethod.PUT,
-  RequestMethod.PATCH,
+  RdcSessionMethods.POST,
+  RdcSessionMethods.PUT,
+  RdcSessionMethods.PATCH,
 );
 
 export const JOI_RDC_REJECT_METHOD = Joi.string().valid(
-  RequestMethod.DELETE,
-  RequestMethod.GET,
-  RequestMethod.PATCH,
-  RequestMethod.POST,
-  RequestMethod.PUT,
+  RdcSessionMethods.DELETE,
+  RdcSessionMethods.GET,
+  RdcSessionMethods.PATCH,
+  RdcSessionMethods.POST,
+  RdcSessionMethods.PUT,
 );
 
 export const JOI_RDC_MODE = Joi.string().valid(
-  RdcSessionMode.PUSH_NOTIFICATION,
-  RdcSessionMode.QR_CODE,
+  RdcSessionModes.PUSH_NOTIFICATION,
+  RdcSessionModes.QR_CODE,
 );
 
-export const JOI_RDC_TYPE = Joi.string().valid(RdcSessionType.CALLBACK, RdcSessionType.ENROLMENT);
+export const JOI_RDC_TYPE = Joi.string().valid(RdcSessionTypes.CALLBACK, RdcSessionTypes.ENROLMENT);
 
 export const JOI_PINCODE = Joi.string()
   .length(6)
   .pattern(/[0-9]+/);
 
 export const JOI_STRATEGY = Joi.string().valid(
-  ChallengeStrategy.IMPLICIT,
-  ChallengeStrategy.PINCODE,
-  ChallengeStrategy.BIOMETRY,
+  ChallengeStrategies.IMPLICIT,
+  ChallengeStrategies.PINCODE,
+  ChallengeStrategies.BIOMETRY,
 );

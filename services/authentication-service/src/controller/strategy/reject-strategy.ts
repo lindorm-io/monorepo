@@ -1,15 +1,13 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
+import { RejectStrategyRequestParams, SessionStatuses } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RejectStrategyRequestParams;
 
 export const rejectStrategySchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -21,7 +19,7 @@ export const rejectStrategyController: ServerKoaController<RequestData> = async 
     entity: { strategySession },
   } = ctx;
 
-  strategySession.status = SessionStatus.REJECTED;
+  strategySession.status = SessionStatuses.REJECTED;
 
   await strategySessionCache.update(strategySession);
 };

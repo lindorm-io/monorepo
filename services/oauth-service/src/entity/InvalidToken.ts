@@ -7,9 +7,9 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface InvalidTokenAttributes extends EntityAttributes {
+export type InvalidTokenAttributes = EntityAttributes & {
   expires: Date;
-}
+};
 
 export type InvalidTokenOptions = Optional<InvalidTokenAttributes, EntityKeys>;
 

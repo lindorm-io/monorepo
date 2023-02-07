@@ -1,10 +1,10 @@
-import { IdentifierType } from "../common";
+import { IdentifierType, IdentifierTypes } from "@lindorm-io/common-types";
 
 export const isIdentifierStoredSeparately = (type: IdentifierType): boolean => {
   switch (type) {
-    case IdentifierType.EMAIL:
-    case IdentifierType.EXTERNAL:
-    case IdentifierType.PHONE:
+    case IdentifierTypes.EMAIL:
+    case IdentifierTypes.EXTERNAL:
+    case IdentifierTypes.PHONE:
       return true;
 
     default:

@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { ClientPermission, ClientType, GrantType, ResponseType, Scope } from "../../common";
 import { adminClientController } from "./admin-client";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -18,12 +17,11 @@ describe("adminClientController", () => {
       data: {
         active: false,
         allowed: {
-          grantTypes: [GrantType.REFRESH_TOKEN],
-          responseTypes: [ResponseType.TOKEN],
-          scopes: [Scope.OPENID],
+          grantTypes: ["refresh_token"],
+          responseTypes: ["token"],
+          scopes: ["openid"],
         },
-        permissions: [ClientPermission.OAUTH_PUBLIC],
-        type: ClientType.PUBLIC,
+        type: "public",
       },
       entity: {
         client: createTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),

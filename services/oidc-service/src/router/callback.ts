@@ -1,11 +1,10 @@
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { ServerKoaContext } from "../types";
 import { redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/koa";
-import { oidcSessionCallbackController, oidcSessionCallbackSchema } from "../controller/oidc";
+import { oidcSessionCallbackController, oidcSessionCallbackSchema } from "../controller";
 import { oidcSessionEntityMiddleware } from "../middleware";
 import { configuration } from "../server/configuration";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.get(

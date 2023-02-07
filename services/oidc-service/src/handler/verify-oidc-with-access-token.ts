@@ -1,5 +1,5 @@
 import { OidcSession } from "../entity";
-import { OpenIDClaims } from "../common";
+import { OpenIdClaims } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
@@ -11,7 +11,7 @@ export const verifyOidcWithAccessToken = async (
   ctx: ServerKoaContext,
   oidcSession: OidcSession,
   accessToken: string,
-): Promise<OpenIDClaims> => {
+): Promise<OpenIdClaims> => {
   const {
     axios: { axiosClient },
     logger,
@@ -27,7 +27,7 @@ export const verifyOidcWithAccessToken = async (
 
   logger.debug("Resolving OIDC with access token");
 
-  const { data } = await axiosClient.get<OpenIDClaims>(
+  const { data } = await axiosClient.get<OpenIdClaims>(
     createURL(userinfoEndpoint, { host }).toString(),
     {
       middleware: [axiosBearerAuthMiddleware(accessToken)],

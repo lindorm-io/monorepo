@@ -1,9 +1,8 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 
-interface RequestData {
+type RequestData = {
   id: string;
   careOf: string | null;
   country: string | null;
@@ -12,11 +11,11 @@ interface RequestData {
   postalCode: string | null;
   region: string | null;
   streetAddress: Array<string>;
-}
+};
 
 export const updateIdentityAddressSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     careOf: Joi.string().allow(null).required(),
     country: Joi.string().allow(null).required(),
     label: Joi.string().allow(null).required(),

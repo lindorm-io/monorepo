@@ -1,27 +1,31 @@
 import { AuthenticationSession, StrategySession } from "../entity";
-import { InitialiseRdcSessionRequestData, RdcSessionMode, RequestMethod } from "../common";
 import { configuration } from "../server/configuration";
 import { createURL } from "@lindorm-io/url";
+import {
+  InitialiseRdcSessionRequestBody,
+  RdcSessionMethods,
+  RdcSessionModes,
+} from "@lindorm-io/common-types";
 
 export const getRdcBody = (
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
   strategySessionToken: string,
-): InitialiseRdcSessionRequestData => ({
+): InitialiseRdcSessionRequestBody => ({
   audiences: [configuration.oauth.client_id],
-  confirmMethod: RequestMethod.PUT,
+  confirmMethod: RdcSessionMethods.POST,
   confirmPayload: { strategySessionToken },
-  confirmUri: createURL("/authenticate/flows/:id/confirm", {
+  confirmUri: createURL("/sessions/strategy/:id/confirm", {
     host: configuration.server.host,
     port: configuration.server.port,
     params: { id: authenticationSession.id },
   }).toString(),
   expiresAt: authenticationSession.expires.toISOString(),
   factors: 2,
-  mode: RdcSessionMode.QR_CODE,
+  mode: RdcSessionModes.QR_CODE,
   nonce: strategySession.nonce,
-  rejectMethod: RequestMethod.PUT,
-  rejectUri: createURL("/authenticate/flows/:id/reject", {
+  rejectMethod: RdcSessionMethods.POST,
+  rejectUri: createURL("/sessions/strategy/:id/reject", {
     host: configuration.server.host,
     port: configuration.server.port,
     params: { id: authenticationSession.id },

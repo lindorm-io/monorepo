@@ -1,16 +1,17 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { JOI_JWT, TokenType } from "../../common";
+import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
 import { TokenError, JWT } from "@lindorm-io/jwt";
+import { LindormTokenTypes } from "@lindorm-io/common-types";
 
-interface RequestData {
+type RequestData = {
   token: string;
   tokenTypeHint: string;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   active: boolean;
   aal?: number;
   acr?: Array<string>;
@@ -28,7 +29,7 @@ interface ResponseBody {
   sub: string;
   tokenType: string;
   username?: string;
-}
+};
 
 export const tokeninfoSchema = Joi.object<RequestData>()
   .keys({
@@ -72,7 +73,9 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
   if (active) {
     try {
       jwt.verify(token, {
-        types: tokenTypeHint ? [tokenTypeHint] : [TokenType.ACCESS, TokenType.REFRESH],
+        types: tokenTypeHint
+          ? [tokenTypeHint]
+          : [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
       });
 
       verifiedToken = true;

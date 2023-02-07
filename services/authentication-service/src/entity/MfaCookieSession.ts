@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { JOI_AUTHENTICATION_METHOD } from "../constant";
-import { AuthenticationMethod, JOI_GUID, JOI_LEVEL_OF_ASSURANCE } from "../common";
-import { LevelOfAssurance } from "@lindorm-io/jwt";
+import { JOI_LEVEL_OF_ASSURANCE } from "../common";
+import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -10,12 +10,12 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface MfaCookieSessionAttributes extends EntityAttributes {
+export type MfaCookieSessionAttributes = EntityAttributes & {
   expires: Date;
   identityId: string;
   levelOfAssurance: LevelOfAssurance;
   methods: Array<AuthenticationMethod>;
-}
+};
 
 export type MfaCookieSessionOptions = Optional<MfaCookieSessionAttributes, EntityKeys>;
 
@@ -24,7 +24,7 @@ const schema = Joi.object<MfaCookieSessionAttributes>()
     ...JOI_ENTITY_BASE,
 
     expires: Joi.date().required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     methods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
   })

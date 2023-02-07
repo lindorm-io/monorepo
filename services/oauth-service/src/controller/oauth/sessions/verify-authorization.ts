@@ -2,8 +2,8 @@ import Joi from "joi";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../../constant";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse, Environment } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
+import { SessionStatuses, VerifyAuthorizationRequestQuery } from "@lindorm-io/common-types";
 import {
   generateCallbackResponse,
   handleOauthConsentVerification,
@@ -16,15 +16,12 @@ import {
   createLoginRejectedUri,
 } from "../../../util";
 
-type RequestData = {
-  redirectUri: string;
-  sessionId: string;
-};
+type RequestData = VerifyAuthorizationRequestQuery;
 
 export const verifyAuthorizationSchema = Joi.object<RequestData>()
   .keys({
     redirectUri: Joi.string().uri().required(),
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -58,20 +55,20 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.login) {
-    case SessionStatus.CONFIRMED:
+    case SessionStatuses.CONFIRMED:
       authorizationSession = await handleOauthLoginVerification(ctx, authorizationSession);
       break;
 
-    case SessionStatus.PENDING:
+    case SessionStatuses.PENDING:
       return { redirect: createLoginPendingUri(authorizationSession) };
 
-    case SessionStatus.REJECTED:
+    case SessionStatuses.REJECTED:
       return { redirect: createLoginRejectedUri(authorizationSession) };
 
-    case SessionStatus.SKIP:
+    case SessionStatuses.SKIP:
       break;
 
-    case SessionStatus.VERIFIED:
+    case SessionStatuses.VERIFIED:
       break;
 
     default:
@@ -79,20 +76,20 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.consent) {
-    case SessionStatus.CONFIRMED:
+    case SessionStatuses.CONFIRMED:
       authorizationSession = await handleOauthConsentVerification(ctx, authorizationSession);
       break;
 
-    case SessionStatus.PENDING:
+    case SessionStatuses.PENDING:
       return { redirect: createConsentPendingUri(authorizationSession) };
 
-    case SessionStatus.REJECTED:
+    case SessionStatuses.REJECTED:
       return { redirect: createConsentRejectedUri(authorizationSession) };
 
-    case SessionStatus.SKIP:
+    case SessionStatuses.SKIP:
       break;
 
-    case SessionStatus.VERIFIED:
+    case SessionStatuses.VERIFIED:
       break;
 
     default:

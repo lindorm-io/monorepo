@@ -1,7 +1,7 @@
-import { AuthenticationMethod } from "../../common";
 import { ElevationSession, ElevationSessionAttributes } from "../../entity";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { AuthenticationMethods } from "@lindorm-io/common-types";
 
 export const createTestElevationSession = (
   options: Partial<ElevationSessionAttributes> = {},
@@ -14,9 +14,9 @@ export const createTestElevationSession = (
     requestedAuthentication: {
       minimumLevel: 1,
       recommendedLevel: 1,
-      recommendedMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      recommendedMethods: [AuthenticationMethods.EMAIL, AuthenticationMethods.PHONE],
       requiredLevel: 2,
-      requiredMethods: [AuthenticationMethod.EMAIL],
+      requiredMethods: [AuthenticationMethods.EMAIL],
     },
 
     authenticationHint: ["test@lindorm.io"],

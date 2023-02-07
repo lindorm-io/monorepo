@@ -1,4 +1,3 @@
-import { ClientPermission } from "../../../common";
 import { elevationSessionEntityMiddleware, clientAuthMiddleware } from "../../../middleware";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -14,9 +13,8 @@ const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OAUTH_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.get(

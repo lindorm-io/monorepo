@@ -1,7 +1,7 @@
 import { Account, AuthenticationSession, StrategySession } from "../../../entity";
 import { ServerKoaContext } from "../../../types";
-import { TokenType } from "../../../common";
 import { configuration } from "../../../server/configuration";
+import { LindormTokenTypes } from "@lindorm-io/common-types";
 
 interface Options {
   challengeConfirmationToken: string;
@@ -29,7 +29,7 @@ export const confirmDeviceChallenge = async (
     nonce: strategySession.nonce,
     scopes: ["authentication"],
     subject: authenticationSession.identityId,
-    types: [TokenType.CHALLENGE_CONFIRMATION],
+    types: [LindormTokenTypes.CHALLENGE_CONFIRMATION],
   });
 
   logger.debug("Resolving Account");

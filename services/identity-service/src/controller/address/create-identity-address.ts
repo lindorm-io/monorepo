@@ -3,7 +3,7 @@ import { Address } from "../../entity";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 
-interface RequestData {
+type RequestData = {
   careOf: string | null;
   country: string | null;
   label: string | null;
@@ -11,11 +11,11 @@ interface RequestData {
   postalCode: string | null;
   region: string | null;
   streetAddress: Array<string>;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   addressId: string;
-}
+};
 
 export const createIdentityAddressSchema = Joi.object<RequestData>()
   .keys({

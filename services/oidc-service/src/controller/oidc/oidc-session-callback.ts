@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { OpenIDClaims, ResponseType } from "../../common";
+import { OauthResponseTypes, OpenIdClaims } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
@@ -14,14 +14,14 @@ import {
   verifyOidcWithIdToken,
 } from "../../handler";
 
-interface RequestData {
+type RequestData = {
   code: string;
   expiresIn: number;
   idToken: string;
   state: string;
   token: string;
   tokenType: string;
-}
+};
 
 export const oidcSessionCallbackSchema = Joi.object<RequestData>()
   .keys({
@@ -55,18 +55,18 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
 
   const { response_type: responseType } = config;
 
-  let claims: OpenIDClaims | undefined;
+  let claims: OpenIdClaims | undefined;
 
   switch (responseType) {
-    case ResponseType.CODE:
+    case OauthResponseTypes.CODE:
       claims = await verifyOidcWithCode(ctx, oidcSession, code);
       break;
 
-    case ResponseType.ID_TOKEN:
+    case OauthResponseTypes.ID_TOKEN:
       claims = await verifyOidcWithIdToken(ctx, oidcSession, idToken);
       break;
 
-    case ResponseType.TOKEN:
+    case OauthResponseTypes.TOKEN:
       claims = await verifyOidcWithAccessToken(ctx, oidcSession, token);
       break;
 

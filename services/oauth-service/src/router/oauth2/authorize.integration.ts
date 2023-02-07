@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { DisplayMode, PromptMode, ResponseMode, ResponseType, Scope } from "../../common";
 import { baseHash } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
 import { createTestClient } from "../../fixtures/entity";
@@ -50,24 +49,17 @@ describe("/oauth2/authorize", () => {
         clientId: client.id,
         codeChallenge,
         codeChallengeMethod,
-        display: DisplayMode.PAGE,
+        display: "page",
         idTokenHint: idToken,
         loginHint: "test@lindorm.io",
         maxAge: 3600,
         nonce,
-        prompt: [PromptMode.LOGIN, PromptMode.CONSENT],
+        prompt: ["login", "consent"],
         redirectData,
         redirectUri: "https://test.client.lindorm.io/redirect",
-        responseMode: ResponseMode.FRAGMENT,
-        responseType: [ResponseType.CODE, ResponseType.TOKEN],
-        scope: [
-          Scope.ADDRESS,
-          Scope.EMAIL,
-          Scope.OFFLINE_ACCESS,
-          Scope.OPENID,
-          Scope.PHONE,
-          Scope.PROFILE,
-        ],
+        responseMode: "fragment",
+        responseType: ["code", "token"],
+        scope: ["address", "email", "offline_access", "openid", "phone", "profile"],
         state,
         uiLocales: ["sv-SE", "en-GB"],
       },

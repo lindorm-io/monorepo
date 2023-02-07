@@ -53,6 +53,7 @@
     "random-number-csprng": "^1.0.2"
   },
   "devDependencies": {
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/jwt": "^0.8.21",
     "@lindorm-io/key-pair": "^0.6.15",
     "@lindorm-io/winston": "^0.5.6",

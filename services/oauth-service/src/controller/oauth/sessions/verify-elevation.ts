@@ -1,18 +1,16 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../../common";
 import { ServerKoaController } from "../../../types";
 import { createURL } from "@lindorm-io/url";
 import { verifyBrowserSessionElevation, verifyRefreshSessionElevation } from "../../../handler";
+import { SessionStatuses, VerifyElevationRequestQuery } from "@lindorm-io/common-types";
 
-type RequestData = {
-  sessionId: string;
-};
+type RequestData = VerifyElevationRequestQuery;
 
 export const verifyElevationSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -24,11 +22,11 @@ export const verifyElevationController: ServerKoaController<RequestData> = async
     entity: { elevationSession },
   } = ctx;
 
-  if (elevationSession.status !== SessionStatus.CONFIRMED) {
+  if (elevationSession.status !== SessionStatuses.CONFIRMED) {
     throw new ClientError("Invalid session status", {
       description: "Session must be confirmed before it can be verified",
       data: {
-        expect: SessionStatus.CONFIRMED,
+        expect: SessionStatuses.CONFIRMED,
         actual: elevationSession.status,
       },
     });

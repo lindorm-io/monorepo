@@ -1,4 +1,3 @@
-import { ClientScope, SendCodeRequestData } from "../../../common";
 import { ServerKoaContext } from "../../../types";
 import { StrategySession } from "../../../entity";
 import { argon } from "../../../instance";
@@ -6,6 +5,8 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { randomString } from "@lindorm-io/random";
+import { SendCodeRequestBody } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../../common";
 
 interface Options {
   strategySessionToken: string;
@@ -35,7 +36,7 @@ export const initialiseEmailLink = async (
     query: { strategySessionToken, code },
   });
 
-  const body: SendCodeRequestData = {
+  const body: SendCodeRequestBody = {
     content: {
       expires: strategySession.expires,
       url: url.toString(),
@@ -48,7 +49,7 @@ export const initialiseEmailLink = async (
   await communicationClient.post("/internal/send/code", {
     body,
     middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScope.COMMUNICATION_MESSAGE_SEND]),
+      clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_MESSAGE_SEND]),
     ],
   });
 };

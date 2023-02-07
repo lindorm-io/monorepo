@@ -3,7 +3,7 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { JOI_BIOMETRY } from "../../constant";
-import { JOI_GUID, JOI_JWT } from "../../common";
+import { JOI_JWT } from "../../common";
 import { assertConfirmationTokenFactorLength } from "../../util";
 import { vaultGetSalt } from "../../handler";
 
@@ -15,7 +15,7 @@ interface RequestData {
 
 export const updateDeviceLinkBiometrySchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     challengeConfirmationToken: JOI_JWT.required(),
     biometry: JOI_BIOMETRY.required(),
   })

@@ -1,11 +1,10 @@
 import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
+import { isConsentRequired } from "./is-consent-required";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestConsentSession,
 } from "../../fixtures/entity";
-import { isConsentRequired } from "./is-consent-required";
-import { SessionStatus } from "../../common";
 
 describe("isConsentRequired", () => {
   let authorizationSession: AuthorizationSession;
@@ -36,8 +35,8 @@ describe("isConsentRequired", () => {
   test("should not require consent when consent is confirmed", () => {
     authorizationSession = createTestAuthorizationSession({
       status: {
-        login: SessionStatus.PENDING,
-        consent: SessionStatus.CONFIRMED,
+        login: "pending",
+        consent: "confirmed",
       },
     });
 

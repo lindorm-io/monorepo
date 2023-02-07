@@ -2,23 +2,23 @@ import { OidcSession } from "../entity";
 import { ServerKoaContext } from "../types";
 import { clientCredentialsMiddleware } from "../middleware";
 import { removeEmptyFromObject } from "@lindorm-io/core";
+import { ClientScopes } from "../common";
 import {
-  AuthenticateIdentifierRequestData,
-  AuthenticateIdentifierResponseBody,
-  ClientScope,
-  IdentifierType,
-} from "../common";
+  AuthenticateIdentifierRequestBody,
+  AuthenticateIdentifierResponse,
+  IdentifierTypes,
+} from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   provider: string;
   subject: string;
-}
+};
 
 export const axiosAuthenticateOidcIdentity = async (
   ctx: ServerKoaContext,
   oidcSession: OidcSession,
   options: Options,
-): Promise<AuthenticateIdentifierResponseBody> => {
+): Promise<AuthenticateIdentifierResponse> => {
   const {
     axios: { identityClient, oauthClient },
   } = ctx;
@@ -26,19 +26,19 @@ export const axiosAuthenticateOidcIdentity = async (
   const { identityId } = oidcSession;
   const { provider, subject } = options;
 
-  const body: AuthenticateIdentifierRequestData = removeEmptyFromObject({
+  const body: AuthenticateIdentifierRequestBody = removeEmptyFromObject({
     identifier: subject,
     identityId,
     provider,
-    type: IdentifierType.EXTERNAL,
+    type: IdentifierTypes.EXTERNAL,
   });
 
-  const { data } = await identityClient.post<AuthenticateIdentifierResponseBody>(
+  const { data } = await identityClient.post<AuthenticateIdentifierResponse>(
     "/internal/authenticate",
     {
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.IDENTITY_IDENTIFIER_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.IDENTITY_IDENTIFIER_WRITE]),
       ],
     },
   );

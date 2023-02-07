@@ -1,16 +1,14 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending } from "../../util";
+import { RejectElevationRequestParams, SessionStatuses } from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RejectElevationRequestParams;
 
 export const rejectElevationSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
@@ -27,7 +25,7 @@ export const rejectElevationController: ServerKoaController<RequestData> = async
 
   logger.debug("Updating elevation session");
 
-  elevationSession.status = SessionStatus.REJECTED;
+  elevationSession.status = SessionStatuses.REJECTED;
 
   await elevationSessionCache.update(elevationSession);
 };

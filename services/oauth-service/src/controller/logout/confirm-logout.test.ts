@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { LogoutSessionType } from "../../enum";
-import { SessionStatus } from "../../common";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
@@ -40,7 +39,7 @@ describe("confirmLogoutController", () => {
 
     expect(ctx.cache.logoutSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: SessionStatus.CONFIRMED,
+        status: "confirmed",
       }),
     );
   });

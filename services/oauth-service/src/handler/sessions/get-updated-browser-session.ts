@@ -1,9 +1,9 @@
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { SessionStatus } from "../../common";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
+import { SessionStatuses } from "@lindorm-io/common-types";
 
 const assertAuthorizationSession = (authorizationSession: AuthorizationSession): void => {
   if (
@@ -73,7 +73,7 @@ export const getUpdatedBrowserSession = async (
     id: authorizationSession.identifiers.browserSessionId,
   });
 
-  if (authorizationSession.status.login === SessionStatus.SKIP) {
+  if (authorizationSession.status.login === SessionStatuses.SKIP) {
     browserSession.expires = calculateExpiryDate(browserSession.remember);
 
     return await browserSessionRepository.update(browserSession);

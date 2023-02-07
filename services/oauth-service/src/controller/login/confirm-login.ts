@@ -2,24 +2,24 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { assertAcrValues, assertSessionPending, createAuthorizationVerifyUri } from "../../util";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import {
   ConfirmLoginRequestBody,
-  JOI_GUID,
-  JOI_LEVEL_OF_ASSURANCE,
-  ResponseWithRedirectBody,
-  SessionStatus,
-} from "../../common";
+  ConfirmLoginRequestParams,
+  ConfirmLoginResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData extends ConfirmLoginRequestBody {
-  id: string;
-}
+type RequestData = ConfirmLoginRequestParams & ConfirmLoginRequestBody;
+
+type ResponseBody = ConfirmLoginResponse;
 
 export const confirmLoginSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     acrValues: Joi.array().items(Joi.string().lowercase()).required(),
     amrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    identityId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     remember: Joi.boolean().required(),
   })
@@ -27,7 +27,7 @@ export const confirmLoginSchema = Joi.object<RequestData>()
 
 export const confirmLoginController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseWithRedirectBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { authorizationSessionCache },
     data: { acrValues, amrValues, identityId, levelOfAssurance, remember },
@@ -47,7 +47,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
   authorizationSession.confirmedLogin.levelOfAssurance = levelOfAssurance;
   authorizationSession.confirmedLogin.remember = remember === true;
 
-  authorizationSession.status.login = SessionStatus.CONFIRMED;
+  authorizationSession.status.login = SessionStatuses.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 

@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,7 +7,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
-export interface OidcSessionAttributes extends EntityAttributes {
+export type OidcSessionAttributes = EntityAttributes & {
   callbackId: string;
   callbackUri: string;
   codeVerifier: string | null;
@@ -18,7 +17,7 @@ export interface OidcSessionAttributes extends EntityAttributes {
   provider: string;
   state: string;
   verified: boolean;
-}
+};
 
 export type OidcSessionOptions = Optional<
   OidcSessionAttributes,
@@ -29,11 +28,11 @@ const schema = Joi.object<OidcSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    callbackId: JOI_GUID.required(),
+    callbackId: Joi.string().guid().required(),
     callbackUri: Joi.string().uri().required(),
     codeVerifier: Joi.string().required(),
     expires: Joi.date().required(),
-    identityId: JOI_GUID.allow(null).required(),
+    identityId: Joi.string().guid().allow(null).required(),
     nonce: Joi.string().required(),
     provider: Joi.string().required(),
     state: Joi.string().required(),

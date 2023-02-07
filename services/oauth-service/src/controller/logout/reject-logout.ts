@@ -1,22 +1,26 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, SessionStatus } from "../../common";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createLogoutRejectedUri } from "../../util";
+import {
+  RejectLogoutRequestParams,
+  RejectLogoutResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = RejectLogoutRequestParams;
+
+type ResponseBody = RejectLogoutResponse;
 
 export const rejectLogoutSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const rejectLogoutController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse => {
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { logoutSessionCache },
     entity: { logoutSession },
@@ -27,7 +31,7 @@ export const rejectLogoutController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating logout session");
 
-  logoutSession.status = SessionStatus.REJECTED;
+  logoutSession.status = SessionStatuses.REJECTED;
 
   await logoutSessionCache.update(logoutSession);
 

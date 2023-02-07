@@ -13,13 +13,11 @@ describe("identityAdminController", () => {
     ctx = {
       data: {
         active: true,
-        permissions: ["one", "two"],
       },
       entity: {
         identity: createTestIdentity({
           id: "identityId",
           active: false,
-          permissions: [],
           nationalIdentityNumber: "480796381535",
           socialSecurityNumber: "200661435114",
           username: "li61qVCuw8eMH6xq",
@@ -38,7 +36,6 @@ describe("identityAdminController", () => {
     expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: true,
-        permissions: ["one", "two"],
       }),
     );
   });

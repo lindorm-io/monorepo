@@ -2,9 +2,9 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { JWK } from "@lindorm-io/key-pair";
 import { ServerKoaController } from "../../types";
 
-interface ResponseBody {
+type ResponseBody = {
   keys: Array<JWK>;
-}
+};
 
 export const getPrivateJwksController: ServerKoaController = async (
   ctx,

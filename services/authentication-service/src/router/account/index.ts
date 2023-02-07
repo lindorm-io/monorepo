@@ -1,6 +1,6 @@
-import { IdentityPermission, Scope } from "../../common";
 import { Router, useController } from "@lindorm-io/koa";
 import { accountEntityMiddleware, identityAuthMiddleware } from "../../middleware";
+import { LindormScopes } from "@lindorm-io/common-types";
 import {
   generateBrowserLinkCodeController,
   generateRecoveryCodeController,
@@ -13,8 +13,7 @@ export default router;
 router.get(
   "/",
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(getAccountController),
@@ -24,8 +23,7 @@ router.get(
   "/browser-link-code",
   identityAuthMiddleware({
     adjustedAccessLevel: 3,
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(generateBrowserLinkCodeController),
@@ -34,8 +32,7 @@ router.get(
 router.get(
   "/recovery-code",
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    scopes: [LindormScopes.OPENID],
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(generateRecoveryCodeController),

@@ -1,11 +1,11 @@
 import { AuthorizationSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { PromptMode } from "../../common";
+import { OauthPromptModes } from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   consentRequired: boolean;
   loginRequired: boolean;
-}
+};
 
 export const assertAuthorizePrompt = (
   authorizationSession: AuthorizationSession,
@@ -14,14 +14,14 @@ export const assertAuthorizePrompt = (
   const { promptModes } = authorizationSession;
   const { consentRequired, loginRequired } = options;
 
-  if (consentRequired && promptModes.includes(PromptMode.NONE)) {
+  if (consentRequired && promptModes.includes(OauthPromptModes.NONE)) {
     throw new ClientError("Login Required", {
       code: "login_required",
       description: "interaction_required",
     });
   }
 
-  if (loginRequired && promptModes.includes(PromptMode.NONE)) {
+  if (loginRequired && promptModes.includes(OauthPromptModes.NONE)) {
     throw new ClientError("Consent Required", {
       code: "consent_required",
       description: "interaction_required",

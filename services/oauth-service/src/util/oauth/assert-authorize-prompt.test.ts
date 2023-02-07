@@ -1,6 +1,5 @@
 import { AuthorizationSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { PromptMode } from "../../common";
 import { assertAuthorizePrompt } from "./assert-authorize-prompt";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 
@@ -9,7 +8,7 @@ describe("assertAuthorizePrompt", () => {
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: [PromptMode.LOGIN, PromptMode.CONSENT],
+      promptModes: ["login", "consent"],
     });
   });
 
@@ -42,7 +41,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should throw when login is required", () => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: [PromptMode.NONE],
+      promptModes: ["none"],
     });
 
     expect(() =>
@@ -55,7 +54,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should throw when consent is required", () => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: [PromptMode.NONE],
+      promptModes: ["none"],
     });
 
     expect(() =>

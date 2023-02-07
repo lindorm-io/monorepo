@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationStrategy } from "../../enum";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
@@ -17,6 +16,7 @@ import {
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
+import { AuthenticationStrategies } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -76,7 +76,7 @@ describe("/sessions/strategy", () => {
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
+        allowedStrategies: [AuthenticationStrategies.DEVICE_CHALLENGE],
         identityId: null,
         remember: false,
         requiredLevel: 4,
@@ -86,7 +86,7 @@ describe("/sessions/strategy", () => {
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
       createTestStrategySession({
         authenticationSessionId: authenticationSession.id,
-        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+        strategy: AuthenticationStrategies.DEVICE_CHALLENGE,
         nonce: randomString(16),
       }),
     );

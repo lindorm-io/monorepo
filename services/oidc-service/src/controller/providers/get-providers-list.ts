@@ -1,9 +1,11 @@
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetProvidersListResponseBody } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
+import { GetProviderListResponse } from "@lindorm-io/common-types";
+
+type ResponseBody = GetProviderListResponse;
 
 export const getProvidersListController: ServerKoaController =
-  async (): ControllerResponse<GetProvidersListResponseBody> => ({
+  async (): ControllerResponse<ResponseBody> => ({
     body: { providers: configuration.oidc_providers.map((item) => item.key) },
   });

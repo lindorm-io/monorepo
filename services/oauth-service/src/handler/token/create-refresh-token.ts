@@ -1,8 +1,8 @@
 import { Client, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
+import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { SessionHint } from "../../enum";
-import { SubjectHint, TokenType } from "../../common";
 
 export const createRefreshToken = (
   ctx: ServerKoaContext,
@@ -18,7 +18,7 @@ export const createRefreshToken = (
     sessionId: refreshSession.id,
     sessionHint: SessionHint.REFRESH,
     subject: refreshSession.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: TokenType.REFRESH,
+    subjectHint: SubjectHints.IDENTITY,
+    type: LindormTokenTypes.REFRESH,
   });
 };

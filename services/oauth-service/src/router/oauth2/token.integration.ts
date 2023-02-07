@@ -1,7 +1,6 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { GrantType } from "../../common";
 import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../fixtures/data";
 import { configuration } from "../../server/configuration";
 import { randomUUID } from "crypto";
@@ -35,8 +34,7 @@ describe("/oauth2/token", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/userinfo/"))
-    .query(true)
+    .get("/userinfo")
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
@@ -95,7 +93,7 @@ describe("/oauth2/token", () => {
         client_secret: "secret",
         code,
         code_verifier: codeVerifier,
-        grant_type: GrantType.AUTHORIZATION_CODE,
+        grant_type: "authorization_code",
         redirect_uri: authorizationSession.redirectUri,
       })
       .expect(200);
@@ -122,7 +120,7 @@ describe("/oauth2/token", () => {
       .send({
         client_id: client.id,
         client_secret: "secret",
-        grant_type: GrantType.CLIENT_CREDENTIALS,
+        grant_type: "client_credentials",
         scope: client.allowed.scopes.join(" "),
       })
       .expect(200);
@@ -172,7 +170,7 @@ describe("/oauth2/token", () => {
       .send({
         client_id: client.id,
         client_secret: "secret",
-        grant_type: GrantType.REFRESH_TOKEN,
+        grant_type: "refresh_token",
         refresh_token: refreshToken,
       })
       .expect(200);

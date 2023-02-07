@@ -3,14 +3,14 @@ import { createHash } from "crypto";
 import { encodeBase64Url } from "@lindorm-io/core";
 import { randomString } from "@lindorm-io/random";
 
-interface Result {
+type Result = {
   code: string;
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
   codeVerifier: string;
   nonce: string;
   state: string;
-}
+};
 
 export const getTestData = (): Result => {
   const code = randomString(128);

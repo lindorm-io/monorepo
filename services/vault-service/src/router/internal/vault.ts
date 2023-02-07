@@ -1,5 +1,3 @@
-import { ClientPermission } from "../../common";
-import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, encryptedRecordEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -11,13 +9,12 @@ import {
   getEncryptedRecordSchema,
 } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.VAULT_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.post(

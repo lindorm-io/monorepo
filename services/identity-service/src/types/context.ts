@@ -17,36 +17,36 @@ import {
   IdentityRepository,
 } from "../infrastructure";
 
-interface ServerAxios extends LindormNodeServerAxios {
+type ServerAxios = LindormNodeServerAxios & {
   communicationClient: Axios;
   oauthClient: Axios;
-}
+};
 
-interface ServerCache extends LindormNodeServerCache {
+type ServerCache = LindormNodeServerCache & {
   connectSessionCache: ConnectSessionCache;
-}
+};
 
-interface ServerEntity {
+type ServerEntity = {
   address: Address;
   connectSession: ConnectSession;
   displayName: DisplayName;
   identifier: Identifier;
   identity: Identity;
-}
+};
 
-interface ServerRepository extends LindormNodeServerRepository {
+type ServerRepository = LindormNodeServerRepository & {
   addressRepository: AddressRepository;
   displayNameRepository: DisplayNameRepository;
   identifierRepository: IdentifierRepository;
   identityRepository: IdentityRepository;
-}
+};
 
-interface Context extends LindormNodeServerContext {
+type Context = LindormNodeServerContext & {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   repository: ServerRepository;
-}
+};
 
 export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
 

@@ -1,7 +1,6 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 
 interface RequestData {
@@ -10,7 +9,7 @@ interface RequestData {
 
 export const deleteBrowserLinkSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 

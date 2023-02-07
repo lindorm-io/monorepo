@@ -1,7 +1,7 @@
 import { AUTHENTICATION_STRATEGY_CONFIG, AuthenticationStrategyConfig } from "../constant";
-import { AuthenticationStrategy } from "../enum";
 import { ServerError } from "@lindorm-io/errors";
 import { find } from "lodash";
+import { AuthenticationStrategy } from "@lindorm-io/common-types";
 
 export const findStrategyConfig = (
   strategy: AuthenticationStrategy,

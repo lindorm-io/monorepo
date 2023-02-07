@@ -5,7 +5,6 @@ import { verifyBrowserSessionElevation } from "./verify-browser-session-elevatio
 import { setBrowserSessionCookie as _setBrowserSessionCookie } from "../cookies";
 import { ElevationSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { AuthenticationMethod } from "../../common";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -41,7 +40,7 @@ describe("verifyBrowserSessionElevation", () => {
     elevationSession = createTestElevationSession({
       confirmedAuthentication: {
         acrValues: ["loa_4"],
-        amrValues: [AuthenticationMethod.BANK_ID_SE],
+        amrValues: ["bank_id_se"],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
       },

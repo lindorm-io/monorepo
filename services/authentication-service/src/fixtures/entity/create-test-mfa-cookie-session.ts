@@ -1,6 +1,6 @@
-import { AuthenticationMethod } from "../../common";
 import { MfaCookieSession, MfaCookieSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
+import { AuthenticationMethods } from "@lindorm-io/common-types";
 
 export const createTestMfaCookieSession = (
   options: Partial<MfaCookieSessionOptions> = {},
@@ -9,6 +9,6 @@ export const createTestMfaCookieSession = (
     expires: new Date("2023-01-01T08:00:00.000Z"),
     identityId: randomUUID(),
     levelOfAssurance: 3,
-    methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+    methods: [AuthenticationMethods.EMAIL, AuthenticationMethods.PHONE],
     ...options,
   });

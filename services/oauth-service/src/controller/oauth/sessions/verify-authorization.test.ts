@@ -1,5 +1,4 @@
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { verifyAuthorizationController } from "./verify-authorization";
@@ -48,8 +47,8 @@ describe("oauthVerifyController", () => {
         authorizationSession: createTestAuthorizationSession({
           id: "a49cce82-d0e4-413b-9098-f63d7f5e89e8",
           status: {
-            consent: SessionStatus.CONFIRMED,
-            login: SessionStatus.CONFIRMED,
+            consent: "confirmed",
+            login: "confirmed",
           },
         }),
         client: createTestClient(),
@@ -73,7 +72,7 @@ describe("oauthVerifyController", () => {
         ...session,
         status: {
           ...session.status,
-          login: SessionStatus.VERIFIED,
+          login: "verified",
         },
       }),
     );
@@ -82,7 +81,7 @@ describe("oauthVerifyController", () => {
         ...session,
         status: {
           ...session.status,
-          consent: SessionStatus.VERIFIED,
+          consent: "verified",
         },
       }),
     );
@@ -106,7 +105,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should resolve pending login redirect", async () => {
-    ctx.entity.authorizationSession.status.login = SessionStatus.PENDING;
+    ctx.entity.authorizationSession.status.login = "pending";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
       redirect: "createLoginPendingUri",
@@ -114,7 +113,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should resolve rejected login redirect", async () => {
-    ctx.entity.authorizationSession.status.login = SessionStatus.REJECTED;
+    ctx.entity.authorizationSession.status.login = "rejected";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
       redirect: "createLoginRejectedUri",
@@ -122,7 +121,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should resolve pending consent redirect", async () => {
-    ctx.entity.authorizationSession.status.consent = SessionStatus.PENDING;
+    ctx.entity.authorizationSession.status.consent = "pending";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
       redirect: "createConsentPendingUri",
@@ -130,7 +129,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should resolve rejected consent redirect", async () => {
-    ctx.entity.authorizationSession.status.consent = SessionStatus.REJECTED;
+    ctx.entity.authorizationSession.status.consent = "rejected";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
       redirect: "createConsentRejectedUri",

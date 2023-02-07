@@ -1,6 +1,4 @@
-import { AuthenticationStrategy } from "../../enum";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "../../common";
 import { assertPKCE as _assertPKCE } from "@lindorm-io/node-pkce";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
@@ -41,10 +39,10 @@ describe("verifyAuthenticationController", () => {
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
+          confirmedStrategies: ["device_challenge"],
           identityId: "9ebc4bb6-507c-4c9c-b77e-e5f8432431b7",
           nonce: "nonce",
-          status: SessionStatus.CODE,
+          status: "code",
         }),
       },
       data: {
@@ -88,7 +86,7 @@ describe("verifyAuthenticationController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authenticationSession.status = SessionStatus.PENDING;
+    ctx.entity.authenticationSession.status = "pending";
 
     await expect(verifyAuthenticationController(ctx)).rejects.toThrow(ClientError);
   });

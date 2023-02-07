@@ -7,21 +7,24 @@ import { randomString } from "@lindorm-io/random";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 import {
   CreateProtectedRecordRequestBody,
-  CreateProtectedRecordResponseBody,
-  JOI_GUID,
-} from "../../common";
+  CreateProtectedRecordResponse,
+} from "@lindorm-io/common-types";
 
-export const createProtectedRecordSchema = Joi.object<CreateProtectedRecordRequestBody>()
+type RequestData = CreateProtectedRecordRequestBody;
+
+type ResponseBody = CreateProtectedRecordResponse;
+
+export const createProtectedRecordSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
     data: Joi.object().required(),
     expires: Joi.string().allow(null).optional(),
   })
   .required();
 
-export const createProtectedRecordController: ServerKoaController<
-  CreateProtectedRecordRequestBody
-> = async (ctx): ControllerResponse<CreateProtectedRecordResponseBody> => {
+export const createProtectedRecordController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
   const {
     data: { id, data, expires },
     repository: { protectedRecordRepository },

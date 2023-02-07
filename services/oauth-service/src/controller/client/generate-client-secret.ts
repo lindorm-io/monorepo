@@ -4,13 +4,13 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { randomString } from "@lindorm-io/random";
 import { argon } from "../../instance";
 
-interface RequestData {
+type RequestData = {
   id: string;
-}
+};
 
-interface ResponseBody {
+type ResponseBody = {
   secret: string;
-}
+};
 
 export const generateClientSecretSchema = Joi.object<RequestData>()
   .keys({

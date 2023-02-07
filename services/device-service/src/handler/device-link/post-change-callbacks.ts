@@ -1,12 +1,9 @@
-import {
-  ClientScope,
-  CreateEncryptedRecordRequestBody,
-  GetEncryptedRecordResponseBody,
-} from "../../common";
+import { ClientScopes } from "../../common";
 import { DeviceLink } from "../../entity";
 import { DeviceLinkSalt, ServerKoaContext } from "../../types";
 import { PostChangeCallback } from "@lindorm-io/mongo";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { CreateEncryptedRecordRequestBody } from "@lindorm-io/common-types";
 
 export const createDeviceLinkCallback =
   (ctx: ServerKoaContext, salt: DeviceLinkSalt): PostChangeCallback<DeviceLink> =>
@@ -23,7 +20,7 @@ export const createDeviceLinkCallback =
     await vaultClient.post("/internal/vault", {
       body,
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_WRITE]),
       ],
     });
   };
@@ -35,12 +32,12 @@ export const destroyDeviceLinkCallback =
       axios: { oauthClient, vaultClient },
     } = ctx;
 
-    await vaultClient.delete<GetEncryptedRecordResponseBody>("/internal/vault/:id", {
+    await vaultClient.delete("/internal/vault/:id", {
       params: {
         id: deviceLink.id,
       },
       middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScope.VAULT_ENCRYPTED_RECORD_WRITE]),
+        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_WRITE]),
       ],
     });
   };

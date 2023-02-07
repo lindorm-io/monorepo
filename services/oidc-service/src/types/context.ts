@@ -12,29 +12,29 @@ import {
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 
-interface ServerAxios extends LindormNodeServerAxios {
+type ServerAxios = LindormNodeServerAxios & {
   identityClient: Axios;
   oauthClient: Axios;
-}
+};
 
-interface ServerCache extends LindormNodeServerCache {
+type ServerCache = LindormNodeServerCache & {
   oidcSessionCache: OidcSessionCache;
-}
+};
 
-interface ServerEntity {
+type ServerEntity = {
   oidcSession: OidcSession;
-}
+};
 
-interface ServerToken extends LindormNodeServerToken {
+type ServerToken = LindormNodeServerToken & {
   oidcSessionToken: JwtVerifyData;
-}
+};
 
-interface Context extends LindormNodeServerContext {
+type Context = LindormNodeServerContext & {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   token: ServerToken;
-}
+};
 
 export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
 

@@ -4,25 +4,28 @@ import { ServerKoaController } from "../../types";
 import { createOidcSession } from "../../handler";
 import { findOidcConfiguration } from "../../util";
 import {
-  InitialiseOidcSessionRequestData,
-  InitialiseOidcSessionResponseBody,
-  JOI_GUID,
-} from "../../common";
+  InitialiseOidcSessionRequestBody,
+  InitialiseOidcSessionResponse,
+} from "@lindorm-io/common-types";
 
-export const initialiseOidcSessionSchema = Joi.object<InitialiseOidcSessionRequestData>()
+type RequestData = InitialiseOidcSessionRequestBody;
+
+type ResponseBody = InitialiseOidcSessionResponse;
+
+export const initialiseOidcSessionSchema = Joi.object<RequestData>()
   .keys({
-    callbackId: JOI_GUID.required(),
+    callbackId: Joi.string().guid().required(),
     callbackUri: Joi.string().uri().required(),
     expiresAt: Joi.string().required(),
-    identityId: JOI_GUID.optional(),
+    identityId: Joi.string().guid().optional(),
     loginHint: Joi.string().optional(),
     provider: Joi.string().required(),
   })
   .required();
 
-export const initialiseOidcSessionController: ServerKoaController<
-  InitialiseOidcSessionRequestData
-> = async (ctx): ControllerResponse<InitialiseOidcSessionResponseBody> => {
+export const initialiseOidcSessionController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<ResponseBody> => {
   const {
     data: { callbackId, callbackUri, expiresAt, identityId, loginHint, provider },
   } = ctx;

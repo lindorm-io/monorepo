@@ -6,26 +6,26 @@ import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 import { difference } from "lodash";
 import {
   ConfirmConsentRequestBody,
-  JOI_GUID,
-  ResponseWithRedirectBody,
-  SessionStatus,
-} from "../../common";
+  ConfirmConsentRequestParams,
+  ConfirmConsentResponse,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData extends ConfirmConsentRequestBody {
-  id: string;
-}
+type RequestData = ConfirmConsentRequestParams & ConfirmConsentRequestBody;
+
+type ResponseBody = ConfirmConsentResponse;
 
 export const confirmConsentSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
-    audiences: Joi.array().items(JOI_GUID).required(),
+    id: Joi.string().guid().required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
     scopes: Joi.array().items(Joi.string()).required(),
   })
   .required();
 
 export const confirmConsentController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<ResponseWithRedirectBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     cache: { authorizationSessionCache },
     data: { audiences, scopes },
@@ -79,7 +79,7 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
   authorizationSession.confirmedConsent.audiences = audiences;
   authorizationSession.confirmedConsent.scopes = scopes;
 
-  authorizationSession.status.consent = SessionStatus.CONFIRMED;
+  authorizationSession.status.consent = SessionStatuses.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 

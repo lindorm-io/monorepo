@@ -1,4 +1,3 @@
-import { IdentityPermission } from "../../../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -20,9 +19,7 @@ export default router;
 router.post(
   "/",
   useSchema(elevateSchema),
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
+  identityAuthMiddleware(),
   clientEntityMiddleware("data.clientId"),
   idTokenMiddleware("data.idTokenHint", { optional: true }),
   useController(elevateController),
@@ -31,9 +28,7 @@ router.post(
 router.get(
   "/verify",
   useSchema(verifyElevationSchema),
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-  }),
+  identityAuthMiddleware(),
   elevationSessionEntityMiddleware("data.sessionId"),
   useController(verifyElevationController),
 );

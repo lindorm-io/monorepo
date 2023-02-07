@@ -1,31 +1,31 @@
 import Joi from "joi";
 import { BrowserSession, RefreshSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetIdentitySessionsResponseBody, IdentitySessionsData, JOI_GUID } from "../../common";
 import { ServerKoaController } from "../../types";
 import { flatten, orderBy } from "lodash";
 import { getAdjustedAccessLevel } from "../../util";
 import { isAfter } from "date-fns";
+import { IdentitySessionItem, GetIdentitySessionsResponse } from "@lindorm-io/common-types";
 
-interface IdentitySessionsRequestData {
+type RequestData = {
   id: string;
-}
+};
 
-export const getIdentitySessionsSchema = Joi.object<IdentitySessionsRequestData>()
+export const getIdentitySessionsSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
-export const getIdentitySessionsController: ServerKoaController<
-  IdentitySessionsRequestData
-> = async (ctx): ControllerResponse<GetIdentitySessionsResponseBody> => {
+export const getIdentitySessionsController: ServerKoaController<RequestData> = async (
+  ctx,
+): ControllerResponse<GetIdentitySessionsResponse> => {
   const {
     data: { id: identityId },
     repository: { browserSessionRepository, refreshSessionRepository },
   } = ctx;
 
-  const sessions: Array<IdentitySessionsData> = [];
+  const sessions: Array<IdentitySessionItem> = [];
 
   const now = new Date();
 

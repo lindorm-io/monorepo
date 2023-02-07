@@ -1,18 +1,18 @@
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { Identifier, Identity } from "../../entity";
-import { IdentifierType } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { isIdentifierStoredSeparately, isPrimaryUsedByIdentifier } from "../../util";
 import { randomUUID } from "crypto";
+import { IdentifierType } from "@lindorm-io/common-types";
 
-interface Options {
+type Options = {
   identifier: string;
   identityId?: string;
   provider?: string;
   type: IdentifierType;
-}
+};
 
 export const authenticateIdentifier = async (
   ctx: ServerKoaContext,

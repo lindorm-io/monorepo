@@ -1,24 +1,20 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { JOI_EMAIL, JOI_LOCALE, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { addAddressFromUserinfo, addIdentifierFromUserinfo } from "../../handler";
 import {
   AddUserinfoRequestBody,
-  IdentifierType,
-  JOI_EMAIL,
-  JOI_GUID,
-  JOI_LOCALE,
-  JOI_PHONE_NUMBER,
-} from "../../common";
+  AddUserinfoRequestParams,
+  IdentifierTypes,
+} from "@lindorm-io/common-types";
 
-interface RequestData extends AddUserinfoRequestBody {
-  id: string;
-}
+type RequestData = AddUserinfoRequestParams & AddUserinfoRequestBody;
 
-export const addUserinfoSchema = Joi.object<RequestData>()
+export const putUserinfoSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
 
     provider: Joi.string().uri().required(),
     sub: Joi.string().required(),
@@ -45,7 +41,7 @@ export const addUserinfoSchema = Joi.object<RequestData>()
   .unknown(true)
   .required();
 
-export const addUserinfoController: ServerKoaController<RequestData> = async (
+export const putUserinfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -95,20 +91,20 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
   if (email) {
     await addIdentifierFromUserinfo(ctx, identity, {
       identifier: email,
-      type: IdentifierType.EMAIL,
+      type: IdentifierTypes.EMAIL,
     });
   }
 
   if (phoneNumber) {
     await addIdentifierFromUserinfo(ctx, identity, {
       identifier: phoneNumber,
-      type: IdentifierType.PHONE,
+      type: IdentifierTypes.PHONE,
     });
   }
 
   await addIdentifierFromUserinfo(ctx, identity, {
     identifier: sub,
     provider,
-    type: IdentifierType.EXTERNAL,
+    type: IdentifierTypes.EXTERNAL,
   });
 };

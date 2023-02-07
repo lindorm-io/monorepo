@@ -1,15 +1,15 @@
+import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession, BrowserSession, Client, ConsentSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ResponseMode, ResponseType, Scope } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
 import { createURL } from "@lindorm-io/url";
-import { getIdentityUserinfo } from "../identity";
 import { generateAuthorizationCode } from "./generate-authorization-code";
-import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
+import { getIdentityUserinfo } from "../identity";
+import { LindormScopes, OauthResponseModes, OauthResponseTypes } from "@lindorm-io/common-types";
 
-interface Data {
+type Data = {
   accessToken: string;
   code: string;
   expiresIn: number;
@@ -17,7 +17,7 @@ interface Data {
   redirectData: string;
   state: string;
   tokenType: string;
-}
+};
 
 export const generateCallbackResponse = async (
   ctx: ServerKoaContext,
@@ -29,10 +29,14 @@ export const generateCallbackResponse = async (
   let authorizationSession = authSession;
 
   const { nonce, redirectUri, responseMode, responseTypes, state } = authorizationSession;
-  const { identityId } = browserSession;
   const { audiences, scopes } = consentSession;
 
-  const { active, claims, permissions } = await getIdentityUserinfo(ctx, identityId, scopes);
+  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, browserSession, {
+    audiences,
+    scopes,
+  });
+
+  const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -44,24 +48,21 @@ export const generateCallbackResponse = async (
 
   const data: Partial<Data> = {};
 
-  if (responseTypes.includes(ResponseType.CODE)) {
+  if (responseTypes.includes(OauthResponseTypes.CODE)) {
     const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
     data.code = authorizationCode.code;
   }
 
-  if (responseTypes.includes(ResponseType.TOKEN)) {
-    const { token: accessToken, expiresIn } = createAccessToken(ctx, client, browserSession, {
-      audiences,
-      permissions,
-      scopes,
-    });
-
+  if (responseTypes.includes(OauthResponseTypes.TOKEN)) {
     data.accessToken = accessToken;
     data.expiresIn = expiresIn;
     data.tokenType = "Bearer";
   }
 
-  if (responseTypes.includes(ResponseType.ID_TOKEN) && scopes.includes(Scope.OPENID)) {
+  if (
+    responseTypes.includes(OauthResponseTypes.ID_TOKEN) &&
+    scopes.includes(LindormScopes.OPENID)
+  ) {
     const { token: idToken } = createIdToken(ctx, client, browserSession, {
       audiences,
       claims,
@@ -81,17 +82,17 @@ export const generateCallbackResponse = async (
   ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME);
 
   switch (responseMode) {
-    case ResponseMode.FORM_POST:
+    case OauthResponseModes.FORM_POST:
       return { redirect: redirectUri, body: data };
 
-    case ResponseMode.FRAGMENT:
+    case OauthResponseModes.FRAGMENT:
       return {
         redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" })
           .toString()
           .replace("?", "#"),
       };
 
-    case ResponseMode.QUERY:
+    case OauthResponseModes.QUERY:
       return {
         redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" }).toString(),
       };

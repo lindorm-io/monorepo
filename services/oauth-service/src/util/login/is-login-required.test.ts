@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import { AuthorizationSession, BrowserSession } from "../../entity";
-import { AuthenticationMethod, PromptMode, SessionStatus } from "../../common";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isLoginRequired } from "./is-login-required";
@@ -26,14 +25,14 @@ describe("isAuthenticationRequired", () => {
         recommendedLevel: 0,
         recommendedMethods: [],
         requiredLevel: 1,
-        requiredMethods: [AuthenticationMethod.EMAIL],
+        requiredMethods: ["email"],
       },
-      promptModes: [PromptMode.NONE],
+      promptModes: ["none"],
     });
 
     browserSession = createTestBrowserSession({
       acrValues: ["loa_1"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
@@ -46,8 +45,8 @@ describe("isAuthenticationRequired", () => {
   test("should not require login when authentication is confirmed", () => {
     authorizationSession = createTestAuthorizationSession({
       status: {
-        login: SessionStatus.CONFIRMED,
-        consent: SessionStatus.PENDING,
+        login: "confirmed",
+        consent: "pending",
       },
     });
 
@@ -87,7 +86,7 @@ describe("isAuthenticationRequired", () => {
 
     browserSession = createTestBrowserSession({
       acrValues: ["loa_1"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
@@ -112,7 +111,7 @@ describe("isAuthenticationRequired", () => {
 
     browserSession = createTestBrowserSession({
       acrValues: ["loa_1"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       country: "US",
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
@@ -140,7 +139,7 @@ describe("isAuthenticationRequired", () => {
 
     browserSession = createTestBrowserSession({
       acrValues: ["loa_1"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 3,
@@ -157,11 +156,7 @@ describe("isAuthenticationRequired", () => {
         recommendedLevel: 0,
         recommendedMethods: [],
         requiredLevel: 3,
-        requiredMethods: [
-          AuthenticationMethod.EMAIL,
-          AuthenticationMethod.PHONE,
-          AuthenticationMethod.PASSWORD,
-        ],
+        requiredMethods: ["email", "phone", "password"],
       },
       idTokenHint: null,
       promptModes: [],
@@ -169,7 +164,7 @@ describe("isAuthenticationRequired", () => {
 
     browserSession = createTestBrowserSession({
       acrValues: ["loa_1"],
-      amrValues: [AuthenticationMethod.EMAIL],
+      amrValues: ["email"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 3,
@@ -189,7 +184,7 @@ describe("isAuthenticationRequired", () => {
         requiredMethods: [],
       },
       idTokenHint: null,
-      promptModes: [PromptMode.LOGIN],
+      promptModes: ["login"],
     });
 
     expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);

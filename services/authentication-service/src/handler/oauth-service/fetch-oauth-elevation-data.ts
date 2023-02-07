@@ -1,22 +1,20 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { ClientScope, GetElevationDataResponseBody } from "../../common";
+import { GetElevationResponse } from "@lindorm-io/common-types";
+import { ClientScopes } from "../../common";
 
 export const fetchOauthElevationData = async (
   ctx: ServerKoaContext,
   sessionId: string,
-): Promise<GetElevationDataResponseBody> => {
+): Promise<GetElevationResponse> => {
   const {
     axios: { oauthClient },
   } = ctx;
 
-  const { data } = await oauthClient.get<GetElevationDataResponseBody>(
-    "/internal/sessions/elevation/:id",
-    {
-      params: { id: sessionId },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OAUTH_ELEVATION_READ])],
-    },
-  );
+  const { data } = await oauthClient.get<GetElevationResponse>("/internal/sessions/elevation/:id", {
+    params: { id: sessionId },
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_ELEVATION_READ])],
+  });
 
   return data;
 };

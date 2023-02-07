@@ -1,7 +1,8 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { ClientScope, GetOidcSessionResponseBody, JOI_GUID, SessionStatus } from "../../common";
+import { ClientScopes } from "../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { GetOidcSessionResponse, SessionStatuses } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { calculateAuthenticationStatus } from "../../util";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -15,7 +16,7 @@ type RequestData = {
 
 export const confirmOidcSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: JOI_GUID.required(),
+    sessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -31,9 +32,9 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
 
   const {
     data: { callbackId, identityId, levelOfAssurance, provider },
-  } = await oidcClient.get<GetOidcSessionResponseBody>("/internal/sessions/:id", {
+  } = await oidcClient.get<GetOidcSessionResponse>("/internal/sessions/:id", {
     params: { id: sessionId },
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScope.OIDC_SESSION_READ])],
+    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OIDC_SESSION_READ])],
   });
 
   const authenticationSession = await authenticationSessionCache.find({ id: callbackId });
@@ -56,7 +57,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
 
   authenticationSession.status = calculateAuthenticationStatus(authenticationSession);
 
-  if (authenticationSession.status === SessionStatus.PENDING) {
+  if (authenticationSession.status === SessionStatuses.PENDING) {
     authenticationSession.allowedStrategies = await resolveAllowedStrategies(
       ctx,
       authenticationSession,

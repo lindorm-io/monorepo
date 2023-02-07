@@ -6,21 +6,21 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import { JOI_GUID } from "../common";
 
-export interface ProtectedRecordAttributes extends EntityAttributes {
+export type ProtectedRecordAttributes = EntityAttributes & {
   expires: Date | null;
   owner: string;
   ownerType: string;
   protectedData: string;
-}
+};
 
 export type ProtectedRecordOptions = Optional<ProtectedRecordAttributes, EntityKeys | "expires">;
+
 const schema = Joi.object<ProtectedRecordAttributes>({
   ...JOI_ENTITY_BASE,
 
   expires: Joi.date().allow(null).required(),
-  owner: JOI_GUID.required(),
+  owner: Joi.string().guid().required(),
   ownerType: Joi.string().required(),
   protectedData: Joi.string().required(),
 });

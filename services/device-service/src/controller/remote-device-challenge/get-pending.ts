@@ -1,30 +1,27 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_GUID, RdcSessionMode, SessionStatus } from "../../common";
 import { filter, orderBy } from "lodash";
 import { expiryObject } from "@lindorm-io/expiry";
+import {
+  GetPendingRdcRequestParams,
+  GetPendingRdcResponse,
+  PendingRdcSession,
+  RdcSessionModes,
+  SessionStatuses,
+} from "@lindorm-io/common-types";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetPendingRdcRequestParams;
 
-interface Session {
-  id: string;
-  expiresIn: number;
-}
-
-interface ResponseBody {
-  sessions: Array<Session>;
-}
+type ResponseBody = GetPendingRdcResponse;
 
 export const getPendingRdcSessionsSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
-export const getPendingRdcSessionsController: ServerKoaController = async (
+export const getPendingRdcSessionsController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
@@ -34,11 +31,11 @@ export const getPendingRdcSessionsController: ServerKoaController = async (
 
   const result = await rdcSessionCache.findMany({ identityId });
   const filtered = filter(result, {
-    mode: RdcSessionMode.PUSH_NOTIFICATION,
-    status: SessionStatus.PENDING,
+    mode: RdcSessionModes.PUSH_NOTIFICATION,
+    status: SessionStatuses.PENDING,
   });
   const pending = orderBy(filtered, ["created"], ["desc"]);
-  const sessions: Array<Session> = [];
+  const sessions: Array<PendingRdcSession> = [];
 
   for (const item of pending) {
     const { expiresIn } = expiryObject(item.expires);

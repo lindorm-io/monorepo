@@ -1,22 +1,22 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetElevationDataResponseBody, JOI_GUID } from "../../common";
+import { GetElevationRequestParams, GetElevationResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { expiryObject } from "@lindorm-io/expiry";
 
-interface RequestData {
-  id: string;
-}
+type RequestData = GetElevationRequestParams;
+
+type ResponseBody = GetElevationResponse;
 
 export const getElevationDataSchema = Joi.object<RequestData>()
   .keys({
-    id: JOI_GUID.required(),
+    id: Joi.string().guid().required(),
   })
   .required();
 
 export const getElevationDataController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetElevationDataResponseBody> => {
+): ControllerResponse<ResponseBody> => {
   const {
     entity: { elevationSession },
   } = ctx;

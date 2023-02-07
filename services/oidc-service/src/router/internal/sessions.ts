@@ -1,6 +1,4 @@
-import { ClientPermission } from "../../common";
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { ServerKoaContext } from "../../types";
 import { clientAuthMiddleware, oidcSessionEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
@@ -8,15 +6,14 @@ import {
   getOidcSessionSchema,
   initialiseOidcSessionController,
   initialiseOidcSessionSchema,
-} from "../../controller/oidc";
+} from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.OIDC_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.post(

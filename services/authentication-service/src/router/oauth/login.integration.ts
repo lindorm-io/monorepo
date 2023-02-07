@@ -1,13 +1,13 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { SessionStatus } from "../../common";
 import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
 } from "../../fixtures/integration";
+import { SessionStatuses } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,7 +27,7 @@ describe("/oauth/login", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions/login/") && uri.endsWith("/verify"))
+    .get((uri) => uri.startsWith("/internal/sessions/login/") && uri.endsWith("/redirect"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-verify.url/",
@@ -44,7 +44,7 @@ describe("/oauth/login", () => {
     nock("https://oauth.test.lindorm.io")
       .get("/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(200, {
-        loginStatus: SessionStatus.PENDING,
+        loginStatus: SessionStatuses.PENDING,
         authorizationSession: {
           authToken: null,
         },
@@ -69,7 +69,7 @@ describe("/oauth/login", () => {
     nock("https://oauth.test.lindorm.io")
       .get(`/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
       .reply(200, {
-        loginStatus: SessionStatus.CONFIRMED,
+        loginStatus: SessionStatuses.CONFIRMED,
         authorizationSession: {
           authToken: null,
         },
@@ -94,7 +94,7 @@ describe("/oauth/login", () => {
     nock("https://oauth.test.lindorm.io")
       .get(`/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
       .reply(200, {
-        loginStatus: SessionStatus.PENDING,
+        loginStatus: SessionStatuses.PENDING,
         authorizationSession: {
           authToken,
         },

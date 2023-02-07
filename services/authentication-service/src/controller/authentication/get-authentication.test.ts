@@ -1,4 +1,3 @@
-import { SessionStatus } from "../../common";
 import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateClientConfig as _generateClientConfig } from "../../util";
@@ -42,7 +41,7 @@ describe("getAuthenticationController", () => {
   test("should resolve", async () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
-        clientConfig: "CLIENT_CONFIG",
+        config: "CLIENT_CONFIG",
         emailHint: "test@lindorm.io",
         expires: new Date("2022-01-01T08:00:00.000Z"),
         mode: "oauth",
@@ -62,7 +61,7 @@ describe("getAuthenticationController", () => {
 
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
-        clientConfig: "CLIENT_CONFIG",
+        config: "CLIENT_CONFIG",
         emailHint: "test@lindorm.io",
         expires: new Date("2022-01-01T08:00:00.000Z"),
         mode: "oauth",
@@ -74,7 +73,7 @@ describe("getAuthenticationController", () => {
   });
 
   test("should resolve with code", async () => {
-    ctx.entity.authenticationSession.status = SessionStatus.CONFIRMED;
+    ctx.entity.authenticationSession.status = "confirmed";
 
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
@@ -86,7 +85,7 @@ describe("getAuthenticationController", () => {
     expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         code: expect.any(String),
-        status: SessionStatus.CODE,
+        status: "code",
       }),
     );
   });

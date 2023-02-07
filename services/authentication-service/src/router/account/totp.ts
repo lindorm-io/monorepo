@@ -1,4 +1,3 @@
-import { IdentityPermission, Scope } from "../../common";
 import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { accountEntityMiddleware, identityAuthMiddleware } from "../../middleware";
 import { deleteTotpController, deleteTotpSchema, generateTotpController } from "../../controller";
@@ -9,8 +8,7 @@ export default router;
 router.get(
   "/",
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    adjustedAccessLevel: 2,
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(generateTotpController),
@@ -20,8 +18,7 @@ router.delete(
   "/",
   useSchema(deleteTotpSchema),
   identityAuthMiddleware({
-    permissions: [IdentityPermission.USER],
-    scopes: [Scope.OPENID],
+    adjustedAccessLevel: 2,
   }),
   accountEntityMiddleware("token.bearerToken.subject"),
   useController(deleteTotpController),

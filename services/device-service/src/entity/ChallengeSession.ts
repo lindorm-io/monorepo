@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { JOI_CERTIFICATE_CHALLENGE, JOI_STRATEGY } from "../constant";
-import { JOI_GUID, JOI_NONCE, ChallengeStrategy } from "../common";
+import { JOI_NONCE } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,6 +8,7 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { ChallengeStrategy } from "@lindorm-io/common-types";
 
 export interface ChallengeSessionAttributes extends EntityAttributes {
   audiences: Array<string>;
@@ -29,9 +30,9 @@ const schema = Joi.object<ChallengeSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    audiences: Joi.array().items(JOI_GUID).required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
     certificateChallenge: JOI_CERTIFICATE_CHALLENGE.required(),
-    deviceLinkId: JOI_GUID.required(),
+    deviceLinkId: Joi.string().guid().required(),
     expires: Joi.date().required(),
     nonce: JOI_NONCE.required(),
     payload: Joi.object().required(),

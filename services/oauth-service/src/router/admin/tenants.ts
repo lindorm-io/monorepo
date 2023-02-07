@@ -1,4 +1,3 @@
-import { IdentityPermission } from "../../common";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import { updateTenantController, updateTenantSchema } from "../../controller";
 import {
@@ -10,12 +9,14 @@ import {
 const router = new Router();
 export default router;
 
+router.use(
+  identityAuthMiddleware(),
+  //TODO: Add permissions middleware
+);
+
 router.patch(
   "/:id",
   paramsMiddleware,
-  identityAuthMiddleware({
-    permissions: [IdentityPermission.TENANT_ADMIN],
-  }),
   useSchema(updateTenantSchema),
   tenantEntityMiddleware("data.id"),
   assertTenantPermissionMiddleware,

@@ -1,6 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { AuthenticationMethod, SessionStatus } from "../../../common";
 import { SessionHint } from "../../../enum";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
@@ -157,7 +156,7 @@ describe("/oauth2/sessions/elevate", () => {
       createTestElevationSession({
         confirmedAuthentication: {
           acrValues: ["loa_4"],
-          amrValues: [AuthenticationMethod.BANK_ID_SE],
+          amrValues: ["bank_id_se"],
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 4,
         },
@@ -168,15 +167,15 @@ describe("/oauth2/sessions/elevate", () => {
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.PASSWORD],
+          recommendedMethods: ["password"],
           requiredLevel: 4,
-          requiredMethods: [AuthenticationMethod.BANK_ID_SE],
+          requiredMethods: ["bank_id_se"],
         },
 
         identityId: browserSession.identityId,
         redirectUri: "https://test.client.lindorm.io/redirect",
         state: randomString(16),
-        status: SessionStatus.CONFIRMED,
+        status: "confirmed",
       }),
     );
 

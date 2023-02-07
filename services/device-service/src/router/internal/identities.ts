@@ -1,16 +1,13 @@
-import { ServerKoaContext } from "../../types";
-import { ClientPermission } from "../../common";
 import { clientAuthMiddleware } from "../../middleware";
 import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
 import { getIdentityDeviceLinksController, getIdentityDeviceLinksSchema } from "../../controller";
 
-const router = new Router<unknown, ServerKoaContext>();
+const router = new Router();
 export default router;
 
 router.use(
-  clientAuthMiddleware({
-    permissions: [ClientPermission.IDENTITY_CONFIDENTIAL],
-  }),
+  clientAuthMiddleware(),
+  //TODO: Add permissions middleware
 );
 
 router.get(

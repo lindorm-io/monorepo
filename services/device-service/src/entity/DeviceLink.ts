@@ -1,8 +1,6 @@
 import Joi from "joi";
-import { CertificateMethod } from "../enum";
 import { DeviceMetadata } from "../types";
 import { JOI_CERTIFICATE_METHOD, JOI_DEVICE_METADATA } from "../constant";
-import { JOI_GUID } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -10,6 +8,7 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { CertificateMethod } from "@lindorm-io/common-types";
 
 export interface DeviceLinkAttributes extends EntityAttributes {
   active: boolean;
@@ -37,8 +36,8 @@ const schema = Joi.object<DeviceLinkAttributes>()
     active: Joi.boolean().required(),
     biometry: Joi.string().base64().allow(null).required(),
     certificateMethod: JOI_CERTIFICATE_METHOD.required(),
-    identityId: JOI_GUID.required(),
-    installationId: JOI_GUID.required(),
+    identityId: Joi.string().guid().required(),
+    installationId: Joi.string().guid().required(),
     metadata: JOI_DEVICE_METADATA.required(),
     name: Joi.string().allow(null).required(),
     pincode: Joi.string().base64().allow(null).required(),
