@@ -127,7 +127,7 @@ export class ErrorDomain implements IErrorDomain {
       await errorHandler.handler(ctx);
 
       this.logger.verbose("Handled error message", { message });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to handle error", err);
     }
   }

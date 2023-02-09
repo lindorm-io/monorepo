@@ -12,7 +12,7 @@
     "removeComments": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": false,
+    "strict": true,
     "target": "ESNEXT"
     //    "allowSyntheticDefaultImports": true,
     //    "downlevelIteration": true,

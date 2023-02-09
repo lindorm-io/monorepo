@@ -21,8 +21,8 @@ export interface PostgresFindOneFilter {
 
 export interface IPostgresRepository<TState = State> {
   find(filter?: PostgresFindFilter): Promise<Array<ViewRepositoryData<TState>>>;
-  findById(id: string): Promise<ViewRepositoryData<TState>>;
-  findOne(filter: PostgresFindOneFilter): Promise<ViewRepositoryData<TState>>;
+  findById(id: string): Promise<ViewRepositoryData<TState> | undefined>;
+  findOne(filter: PostgresFindOneFilter): Promise<ViewRepositoryData<TState> | undefined>;
 }
 
 export type FindFilter<TState = State> = Filter<{

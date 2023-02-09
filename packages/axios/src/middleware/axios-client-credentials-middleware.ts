@@ -7,8 +7,8 @@ import { getUnixTime } from "../util";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
   clientEnvironment?: string;
-  clientId?: string;
-  clientSecret?: string;
+  clientId: string;
+  clientSecret: string;
   clientVersion?: string;
   grantType?: string;
   path?: string;
@@ -16,7 +16,7 @@ export type AxiosClientCredentialsMiddlewareOptions = {
   useBasicAuth?: boolean;
 };
 
-const isString = (value?: any): value is string => typeof value === "string";
+const isString = (value?: any): value is string => value && typeof value === "string";
 
 export const axiosClientCredentialsMiddleware = (
   options: AxiosClientCredentialsMiddlewareOptions,

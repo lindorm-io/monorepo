@@ -23,7 +23,7 @@ export interface ErrorHandlerFileAggregate {
   context?: Array<string> | string;
 }
 
-export interface ErrorHandler<TError, TDispatch extends DtoClass = DtoClass> {
+export interface ErrorHandler<TError extends Error = Error, TDispatch extends DtoClass = DtoClass> {
   error: Constructor<TError>;
   aggregate?: ErrorHandlerFileAggregate;
   handler(ctx: ErrorHandlerContext<TError, TDispatch>): Promise<void>;

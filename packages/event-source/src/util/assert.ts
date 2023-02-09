@@ -13,7 +13,7 @@ export const assertSchema = (result?: ValidationResult): void => {
 export const assertSchemaAsync = async (promise: Promise<any>): Promise<void> => {
   try {
     await promise;
-  } catch (err) {
+  } catch (err: any) {
     throw new LindormError("Schema Validation Error", {
       error: err,
     });

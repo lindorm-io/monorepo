@@ -79,12 +79,14 @@ export class PostgresViewRepository<TState = State>
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find views", err);
+
+      throw err;
     }
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<TState>> {
+  public async findById(id: string): Promise<ViewRepositoryData<TState> | undefined> {
     this.logger.debug("Finding view", { id });
 
     try {
@@ -110,12 +112,16 @@ export class PostgresViewRepository<TState = State>
       }
 
       return result[0];
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
+
+      throw err;
     }
   }
 
-  public async findOne(filter: PostgresFindOneFilter): Promise<ViewRepositoryData<TState>> {
+  public async findOne(
+    filter: PostgresFindOneFilter,
+  ): Promise<ViewRepositoryData<TState> | undefined> {
     this.logger.debug("Finding view", { filter });
 
     try {
@@ -130,8 +136,10 @@ export class PostgresViewRepository<TState = State>
       }
 
       return result[0];
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
+
+      throw err;
     }
   }
 

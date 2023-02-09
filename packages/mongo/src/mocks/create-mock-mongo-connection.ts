@@ -3,9 +3,7 @@ import { Db, MongoClient } from "mongodb";
 import { IMongoConnection } from "../types";
 import { MongoConnection } from "../connection";
 
-interface Options {
-  [key: string]: jest.Mock;
-
+type Options = {
   insertOne?: jest.Mock;
   insertMany?: jest.Mock;
   updateOne?: jest.Mock;
@@ -24,7 +22,7 @@ interface Options {
   update?: jest.Mock;
   remove?: jest.Mock;
   count?: jest.Mock;
-}
+};
 
 export const createMockMongoConnection = (o: Options = {}): MongoConnection => {
   const collection = {

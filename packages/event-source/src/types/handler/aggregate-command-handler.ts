@@ -15,8 +15,8 @@ export interface AggregateCommandHandlerContext<
 }
 
 export interface AggregateCommandHandler<
-  TCommand extends DtoClass,
-  TEvent extends DtoClass,
+  TCommand extends DtoClass = DtoClass,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
 > {
   command: Constructor<TCommand>;
@@ -46,7 +46,7 @@ export interface IAggregateCommandHandler<
   aggregate: HandlerIdentifier;
   commandName: string;
   conditions: HandlerConditions;
-  schema: Joi.Schema;
+  schema: Joi.Schema | undefined;
   version: number;
   handler(ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>): Promise<void>;
 }

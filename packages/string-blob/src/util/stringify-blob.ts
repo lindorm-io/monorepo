@@ -1,11 +1,17 @@
 import { getMetaArray } from "./get-meta-array";
 import { getMetaObject } from "./get-meta-object";
+import { isObjectLike } from "@lindorm-io/core";
 import { stringifyArrayValues } from "./stringify-array-values";
 import { stringifyObjectValues } from "./stringify-object-values";
 
 export const stringifyBlob = <T = Record<string, any>>(input: T): string => {
-  return JSON.stringify({
-    json: Array.isArray(input) ? stringifyArrayValues(input) : stringifyObjectValues(input),
-    meta: Array.isArray(input) ? getMetaArray(input) : getMetaObject(input),
-  });
+  if (Array.isArray(input)) {
+    return JSON.stringify({ json: stringifyArrayValues(input), meta: getMetaArray(input) });
+  }
+
+  if (isObjectLike(input)) {
+    return JSON.stringify({ json: stringifyObjectValues(input), meta: getMetaObject(input) });
+  }
+
+  throw new Error(`Invalid input type [ ${typeof input} ]`);
 };

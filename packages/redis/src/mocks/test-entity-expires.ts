@@ -26,7 +26,7 @@ export class TestEntityExpires extends LindormEntity<TestEntityExpiresAttributes
 
   public constructor(options: TestEntityExpiresOptions) {
     super(options);
-    this.name = options.name || null;
+    this.name = options.name || "name";
     this.expires = options.expires || null;
   }
 

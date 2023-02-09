@@ -39,7 +39,7 @@ export class RedisConnection
     if (custom) {
       this.clientConnection = custom;
     } else {
-      this.clientConnection = new IORedis(this.connectOptions);
+      this.clientConnection = new IORedis(this.connectOptions!);
     }
 
     this.clientConnection.on("connect", this.onConnect.bind(this));
@@ -50,6 +50,9 @@ export class RedisConnection
   // abstract implementation
 
   protected async createClientConnection(): Promise<Redis> {
+    if (!this.clientConnection) {
+      throw new Error("Client connection not found");
+    }
     return this.clientConnection;
   }
 

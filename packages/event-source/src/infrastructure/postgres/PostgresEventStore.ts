@@ -42,7 +42,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       this.logger.debug("Found event entities", { result });
 
       return PostgresEventStore.toEventData(result.rows);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find event entities", err);
 
       throw err;
@@ -85,7 +85,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       const result = await this.connection.query(text, values);
 
       this.logger.verbose("Inserted event entity", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert event entity", err);
 
       throw err;
@@ -111,7 +111,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       this.logger.debug("Found event entities", { result });
 
       return PostgresEventStore.toEventData(result.rows);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to list event entities", err);
 
       throw err;

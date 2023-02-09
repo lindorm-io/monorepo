@@ -15,7 +15,10 @@ export interface AggregateEventHandlerContext<
   setState(state: TState): void;
 }
 
-export interface AggregateEventHandler<TEvent extends DtoClass, TState extends State = State> {
+export interface AggregateEventHandler<
+  TEvent extends DtoClass = DtoClass,
+  TState extends State = State,
+> {
   event: Constructor<TEvent>;
   handler(ctx: AggregateEventHandlerContext<TEvent, TState>): Promise<void>;
 }

@@ -6,14 +6,13 @@ import { axiosRequestHandler, defaultRetryCallback } from "../util";
 import { destructUrl, Protocol } from "@lindorm-io/url";
 import { resolveMiddleware } from "@lindorm-io/middleware";
 import {
-  DEFAULT_AUTH_OPTIONS,
   DEFAULT_AXIOS_RESPONSE,
   DEFAULT_RETRY_OPTIONS,
   DEFAULT_TIMEOUT_OPTIONS,
 } from "../constant";
 
 export class Axios {
-  private readonly auth: AxiosBasicCredentials;
+  private readonly auth: AxiosBasicCredentials | undefined;
   private readonly headers: Record<string, string | number>;
   private readonly host: string | undefined;
   private readonly middleware: Middleware[];
@@ -28,7 +27,7 @@ export class Axios {
   constructor(options: AxiosOptions = {}) {
     const { host, port, protocol } = destructUrl(options.host);
 
-    this.auth = options.auth || DEFAULT_AUTH_OPTIONS;
+    this.auth = options.auth;
     this.host = host;
     this.middleware = options.middleware || [];
     this.headers = options.headers || {};
@@ -192,13 +191,18 @@ export class Axios {
   ): Promise<AxiosResponse<ResponseData>> {
     const { method, path, url, ...rest } = options;
 
+    const pathOrUrl = url || path;
+    if (!pathOrUrl) {
+      throw new Error(`Invalid request [ path: ${path} | url: ${url} ]`);
+    }
+
     return this.composeRequest<
       ResponseData,
       RequestBody,
       RequestHeaders,
       RequestParams,
       RequestQuery
-    >(url || path, method, rest);
+    >(url! || path!, method, rest);
   }
 
   private async composeRequest<
@@ -229,6 +233,11 @@ export class Axios {
 
     const url = destructUrl(pathOrUrl);
 
+    const host = url.host || this.host;
+    if (!host) {
+      throw new Error(`Invalid request [ host: ${typeof host} ]`);
+    }
+
     const context = {
       axios: {
         auth: this.auth,
@@ -243,13 +252,13 @@ export class Axios {
       },
       req: {
         auth: auth || this.auth,
-        body,
-        config,
+        body: body || {},
+        config: config || {},
         headers: { ...headers, ...this.headers },
-        host: url.host || this.host,
+        host,
         method,
-        params,
-        path: url.pathname,
+        params: params || {},
+        path: url.pathname || "/",
         port: url.port || this.port,
         protocol: url.protocol || this.protocol,
         query: { ...url.query, ...query },

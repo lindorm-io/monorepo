@@ -1,6 +1,7 @@
+import UserAgent from "koa-useragent/dist/lib/useragent";
 import { AuthorizationHeader } from "./authorization-header";
 import { DefaultLindormContext } from "./lindorm-context";
-import { Environment } from "../enum";
+import { Environment } from "@lindorm-io/common-types";
 import { GetCookieOptions, SetCookieOptions } from "../util/private";
 import { LindormKoaMetadata, LindormKoaMetadataHeaders } from "./metadata";
 import { Metric } from "../class";
@@ -19,13 +20,14 @@ interface KoaContext<Data = any> extends RouterContext {
     environment: Environment;
     host: string;
   };
+  userAgent: UserAgent;
 
+  deleteCookie(name: string): void;
   getAuthorizationHeader(): AuthorizationHeader;
+  getCookie(name: string, options?: Partial<GetCookieOptions>): string | undefined;
   getMetadataHeaders(): LindormKoaMetadataHeaders;
   getMetric(key: string): Metric;
-  getCookie(name: string, options?: Partial<GetCookieOptions>): string | undefined;
   setCookie(name: string, value: string, options?: Partial<SetCookieOptions>): void;
-  deleteCookie(name: string): void;
 }
 
 export type DefaultLindormKoaContext<

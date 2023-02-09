@@ -15,10 +15,10 @@ export class MongoConnection
   implements IMongoConnection
 {
   private readonly url: string;
-  private readonly custom: typeof MongoClient;
-  private readonly dbName: string;
-  private readonly dbOptions: DbOptions;
-  private db: Db;
+  private readonly custom: typeof MongoClient | undefined;
+  private readonly dbName: string | undefined;
+  private readonly dbOptions: DbOptions | undefined;
+  private db: Db | undefined;
 
   public constructor(options: MongoConnectionOptions, logger: Logger) {
     const {
@@ -63,6 +63,9 @@ export class MongoConnection
   // public properties
 
   public get database(): Db {
+    if (!this.db) {
+      throw new Error("Database has not been initialised");
+    }
     return this.db;
   }
   public set database(_: Db) {
@@ -72,7 +75,7 @@ export class MongoConnection
   // public
 
   public collection(collection: string, options?: CollectionOptions): Collection {
-    return this.db.collection(collection, options);
+    return this.database.collection(collection, options);
   }
 
   // abstract implementation
@@ -81,9 +84,9 @@ export class MongoConnection
     this.logger.debug("Connecting to Mongo", { url: this.url, options: this.connectOptions });
 
     if (this.custom) {
-      return await this.custom.connect(this.url, this.connectOptions);
+      return await this.custom.connect(this.url, this.connectOptions!);
     }
-    return await MongoClient.connect(this.url, this.connectOptions);
+    return await MongoClient.connect(this.url, this.connectOptions!);
   }
 
   protected async connectCallback(): Promise<void> {

@@ -7,7 +7,15 @@ import { Logger } from "@lindorm-io/core-logger";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
-import { SagaIdentifier, ISagaDomain, SagaDomainOptions, State, IDomainSagaStore } from "../types";
+import {
+  SagaIdentifier,
+  ISagaDomain,
+  SagaDomainOptions,
+  State,
+  IDomainSagaStore,
+  Data,
+  DtoClass,
+} from "../types";
 import { assertSnakeCase } from "../util";
 import { snakeCase } from "@lindorm-io/case";
 import {
@@ -43,14 +51,13 @@ export class SagaDomain implements ISagaDomain {
     this.eventHandlers = [];
   }
 
-  public on<TState extends State = State>(
-    eventName: string,
-    listener: EventEmitterListener<TState>,
-  ): void {
-    this.eventEmitter.on(eventName, listener);
+  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
+    this.eventEmitter.on(evt, listener);
   }
 
-  public async registerEventHandler(eventHandler: SagaEventHandlerImplementation): Promise<void> {
+  public async registerEventHandler<T extends DtoClass = DtoClass>(
+    eventHandler: SagaEventHandlerImplementation<T>,
+  ): Promise<void> {
     this.logger.debug("Registering event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
@@ -214,7 +221,7 @@ export class SagaDomain implements ISagaDomain {
       saga = await this.processCausationIds(saga);
 
       this.logger.verbose("Handled event", { event, saga: saga.toJSON() });
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
       } else if (err instanceof DomainError) {
@@ -270,7 +277,7 @@ export class SagaDomain implements ISagaDomain {
       });
 
       return saved;
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof DomainError && err.permanent) {
         this.logger.error("Failed to handle Saga", err);
 
@@ -335,7 +342,7 @@ export class SagaDomain implements ISagaDomain {
     return await this.store.clearProcessedCausationIds(saga);
   }
 
-  private emit<TState>(saga: Saga<TState>): void {
+  private emit<TState extends State = State>(saga: Saga<TState>): void {
     const data: EventEmitterSagaData<TState> = {
       id: saga.id,
       name: saga.name,

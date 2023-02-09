@@ -5,9 +5,9 @@ import { HttpStatus } from "@lindorm-io/koa";
 export const createWellKnownJwksRouter = <
   Context extends LindormNodeServerContext = LindormNodeServerContext,
 >(
-  exposeExternal: boolean,
+  exposeExternal: boolean = false,
 ): Router => {
-  const router = new Router<unknown, Context>();
+  const router = new Router<unknown, any>();
 
   router.get("/", async (ctx): Promise<void> => {
     ctx.body = { keys: ctx.keystore.getJWKS({ exposeExternal }) };

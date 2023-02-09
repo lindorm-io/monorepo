@@ -18,7 +18,7 @@ const formatContent = (details: Record<string, any>, colours: boolean): string =
 };
 
 export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOptions>): string => {
-  const { colours, timestamp } = options;
+  const { colours = false, timestamp = false } = options;
 
   if (!info.time || !info.context) {
     return formatContent(info, false);

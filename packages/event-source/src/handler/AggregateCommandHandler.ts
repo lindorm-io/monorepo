@@ -18,7 +18,7 @@ export class AggregateCommandHandlerImplementation<
   public readonly aggregate: HandlerIdentifier;
   public readonly commandName: string;
   public readonly conditions: HandlerConditions;
-  public readonly schema: Joi.Schema;
+  public readonly schema: Joi.Schema | undefined;
   public readonly version: number;
   public readonly handler: (
     ctx: AggregateCommandHandlerContext<TCommand, TEvent, TState>,

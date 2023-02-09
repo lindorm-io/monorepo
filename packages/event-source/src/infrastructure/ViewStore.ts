@@ -23,8 +23,8 @@ import {
 export class ViewStore implements IDomainViewStore {
   private readonly logger: Logger;
   private readonly memory: IViewStore;
-  private readonly mongo: IViewStore;
-  private readonly postgres: IViewStore;
+  private readonly mongo: IViewStore | undefined;
+  private readonly postgres: IViewStore | undefined;
 
   public constructor(options: ViewStoreOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["ViewStore"]);
@@ -174,15 +174,24 @@ export class ViewStore implements IDomainViewStore {
   private store(adapter: ViewEventHandlerAdapter): IViewStore {
     switch (adapter.type) {
       case ViewStoreType.CUSTOM:
+        if (!adapter.custom) {
+          throw new Error("Custom adapter not found");
+        }
         return adapter.custom;
 
       case ViewStoreType.MEMORY:
         return this.memory;
 
       case ViewStoreType.MONGO:
+        if (!this.mongo) {
+          throw new Error("Mongo adapter not found");
+        }
         return this.mongo;
 
       case ViewStoreType.POSTGRES:
+        if (!this.postgres) {
+          throw new Error("Postgres adapter not found");
+        }
         return this.postgres;
 
       default:

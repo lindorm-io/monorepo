@@ -17,7 +17,7 @@ export const socketMessageBusMiddleware =
       });
 
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

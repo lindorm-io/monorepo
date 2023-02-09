@@ -35,6 +35,10 @@ export class MemorySagaStore implements ISagaStore {
     const found = IN_MEMORY_SAGA_STORE.find(fn);
     const index = IN_MEMORY_SAGA_STORE.findIndex(fn);
 
+    if (!found || index === -1) {
+      throw new Error("Saga Store Item not found");
+    }
+
     IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }
 
@@ -51,6 +55,10 @@ export class MemorySagaStore implements ISagaStore {
 
     const found = IN_MEMORY_SAGA_STORE.find(fn);
     const index = IN_MEMORY_SAGA_STORE.findIndex(fn);
+
+    if (!found || index === -1) {
+      throw new Error("Saga Store Item not found");
+    }
 
     IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }
@@ -100,6 +108,10 @@ export class MemorySagaStore implements ISagaStore {
 
     const found = IN_MEMORY_SAGA_STORE.find(fn);
     const index = IN_MEMORY_SAGA_STORE.findIndex(fn);
+
+    if (!found || index === -1) {
+      throw new Error("Saga Store Item not found");
+    }
 
     IN_MEMORY_SAGA_STORE[index] = { ...found, ...data };
   }

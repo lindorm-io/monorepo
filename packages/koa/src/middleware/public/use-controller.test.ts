@@ -59,7 +59,7 @@ describe("useController", () => {
 
   test("should automatically determine status as OK", async () => {
     const controller: Controller = async (ctx): ControllerResponse => ({
-      body: ctx.request.body,
+      body: ctx.request.body as any,
     });
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();
@@ -124,7 +124,7 @@ describe("useController", () => {
   test("should resolve redirect with body", async () => {
     const controller: Controller = async (ctx): ControllerResponse => ({
       redirect: "https://test.lindorm.io/",
-      body: ctx.request.body,
+      body: ctx.request.body as any,
     });
 
     await expect(useController(controller)(ctx)).resolves.toBeUndefined();

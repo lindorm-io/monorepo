@@ -88,7 +88,7 @@ export abstract class LindormCache<
   ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
     const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
 
-    if (!results.length) return;
+    if (!results.length) return [];
 
     const promises = [];
 

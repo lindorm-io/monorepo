@@ -1,6 +1,7 @@
 export * from "./amqp";
 export * from "./memory";
 export * from "./mongo";
+export * from "./noop";
 export * from "./postgres";
 
 export * from "./EventStore";

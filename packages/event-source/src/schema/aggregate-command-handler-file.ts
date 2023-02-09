@@ -1,9 +1,7 @@
 import Joi from "joi";
 import { AggregateCommandHandler, HandlerConditions } from "../types";
 
-export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<
-  AggregateCommandHandler<unknown, unknown>
->().keys({
+export const JOI_AGGREGATE_COMMAND_HANDLER_FILE = Joi.object<AggregateCommandHandler>().keys({
   command: Joi.function().required(),
   conditions: Joi.object<HandlerConditions>()
     .keys({

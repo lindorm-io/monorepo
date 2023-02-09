@@ -4,8 +4,8 @@ import { createURL } from "@lindorm-io/url";
 
 export const composeAxiosConfig = (ctx: Context): RawAxiosRequestConfig => ({
   auth: ctx.req.auth,
-  data: ctx.req.body,
-  headers: ctx.req.headers,
+  data: Object.keys(ctx.req.body).length ? ctx.req.body : undefined,
+  headers: Object.keys(ctx.req.headers).length ? ctx.req.headers : undefined,
   method: ctx.req.method,
   timeout: ctx.req.timeout,
   url: createURL(ctx.req.path, {

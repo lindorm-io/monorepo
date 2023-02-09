@@ -24,7 +24,7 @@ export const axiosRequestLoggerMiddleware =
         },
         time: getResponseTime(ctx.res?.headers, start),
       });
-    } catch (err) {
+    } catch (err: any) {
       if (!(err instanceof AxiosError)) {
         log.error("unexpected error", err);
 

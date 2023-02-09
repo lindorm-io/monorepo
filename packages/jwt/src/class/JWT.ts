@@ -113,8 +113,8 @@ export class JWT {
   ): JwtDecodedClaims<Payload, Claims> {
     this.logger.debug("verify token", { token, options });
 
-    const { keyId, ...claims } = JWT.decodeFormatted<Payload, Claims>(token);
-    const { algorithms, publicKey } = this.keystore.getKey(keyId);
+    const claims = JWT.decodeFormatted<Payload, Claims>(token);
+    const { algorithms, publicKey } = this.keystore.getKey(claims.keyId);
     const {
       adjustedAccessLevel,
       audience,
@@ -179,11 +179,7 @@ export class JWT {
 
       this.logger.debug("verify token success", { claims });
 
-      return {
-        keyId,
-        token,
-        ...claims,
-      };
+      return claims;
     } catch (err: any) {
       this.logger.error("Failed to validate token", err);
 

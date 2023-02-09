@@ -43,6 +43,7 @@ import {
   IReplayDomain,
   ISagaDomain,
   IViewDomain,
+  Metadata,
   State,
   ViewEventHandlerAdapter,
 } from "../types";
@@ -54,9 +55,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   private readonly messageBus: IMessageBus;
 
   // connections
-  private readonly amqp: IAmqpConnection;
-  private readonly mongo: IMongoConnection;
-  private readonly postgres: IPostgresConnection;
+  private readonly amqp: IAmqpConnection | undefined;
+  private readonly mongo: IMongoConnection | undefined;
+  private readonly postgres: IPostgresConnection | undefined;
 
   // domains
   private readonly aggregateDomain: IAggregateDomain;
@@ -119,7 +120,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       {
         amqp: this.amqp,
         custom: custom.messageBus,
-        type: this.options.adapters.messageBus,
+        type: this.options.adapters.messageBus!,
       },
       this.logger,
     );
@@ -130,7 +131,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         custom: custom.eventStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.adapters.eventStore,
+        type: this.options.adapters.eventStore!,
       },
       this.logger,
     );
@@ -139,7 +140,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         custom: custom.sagaStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.adapters.sagaStore,
+        type: this.options.adapters.sagaStore!,
       },
       this.logger,
     );
@@ -253,7 +254,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
   // public app
 
-  public async command<TMetadata>(
+  public async command<TMetadata extends Metadata = Metadata>(
     command: TCommand,
     options: EventSourceCommandOptions<TMetadata> = {},
   ): Promise<EventSourceCommandResult> {
@@ -365,6 +366,12 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     const adapter = this.adapters.find(
       (x) => x.name === identifier.name && x.context === identifier.context,
     );
+
+    if (!adapter) {
+      throw new LindormError("Adapter not found", {
+        data: { identifier },
+      });
+    }
 
     return this.viewDomain.inspect<TState>(identifier, adapter);
   }

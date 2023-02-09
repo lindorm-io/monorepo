@@ -1,6 +1,6 @@
 import { CacheBase } from "@lindorm-io/redis";
 import { CachedEntityCustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, LindormError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
 import { camelCase } from "@lindorm-io/case";
 import { get } from "object-path";
@@ -46,6 +46,13 @@ export const cacheEntityMiddleware =
 
     const entity = middlewareOptions.entityKey || camelCase(Entity.name);
     const cache = middlewareOptions.cacheKey || camelCase(Cache.name);
+
+    if (!entity) {
+      throw new LindormError("Entity name not found");
+    }
+    if (!cache) {
+      throw new LindormError("Cache name not found");
+    }
 
     try {
       ctx.entity[entity] = await ctx.cache[cache].find({

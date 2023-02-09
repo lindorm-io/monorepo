@@ -19,7 +19,7 @@ export class TestEntity extends LindormEntity<TestEntityAttributes> {
 
   public constructor(options: TestEntityOptions = {}) {
     super(options);
-    this.name = options.name || null;
+    this.name = options.name || "name";
   }
 
   public async schemaValidation(): Promise<void> {

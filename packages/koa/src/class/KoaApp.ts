@@ -5,7 +5,7 @@ import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
 import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
-import { Environment } from "../enum";
+import { Environment, Environments } from "@lindorm-io/common-types";
 import { IntervalWorker } from "./IntervalWorker";
 import { Logger } from "@lindorm-io/core-logger";
 import { Server as HttpServer, createServer } from "http";
@@ -22,7 +22,6 @@ import {
   responseTimeMiddleware,
   sessionLoggerMiddleware,
   socketIoMiddleware,
-  socketLoggerMiddleware,
   utilContextMiddleware,
 } from "../middleware/private";
 
@@ -30,7 +29,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   private readonly environment: Environment;
   private readonly host: string;
   private readonly httpServer: HttpServer;
-  private readonly ioServer: IOServer;
+  private readonly ioServer: IOServer | undefined;
   private readonly koaApp: Koa;
   private readonly koaRouter: Router;
   private readonly logger: Logger;
@@ -48,7 +47,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
     this.koaRouter = new Router();
 
-    this.environment = options.environment;
+    this.environment = Environments.UNKNOWN;
     this.host = options.host;
     this.loaded = false;
     this.logger = options.logger;
@@ -78,13 +77,12 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       this.middleware.push(socketIoMiddleware(this.ioServer));
 
       const socketMiddleware = [
-        initSocketContextMiddleware,
-        socketLoggerMiddleware(this.logger),
+        initSocketContextMiddleware(this.logger),
         ...(options.socketMiddleware || []),
       ];
 
       for (const middleware of socketMiddleware) {
-        this.ioServer.use(middleware);
+        this.ioServer.use(middleware as any);
       }
 
       if (options.socketListeners) {
@@ -109,6 +107,9 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   }
 
   public get io(): IOServer {
+    if (!this.ioServer) {
+      throw new Error("IOServer has not been initialised");
+    }
     return this.ioServer;
   }
 

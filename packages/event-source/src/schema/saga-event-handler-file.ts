@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { HandlerConditions, SagaEventHandler, SagaEventHandlerFileAggregate } from "../types";
 
-export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandler<unknown>>().keys({
+export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandler>().keys({
   event: Joi.function().required(),
   saga: Joi.string().required(),
   aggregate: Joi.object<SagaEventHandlerFileAggregate>()

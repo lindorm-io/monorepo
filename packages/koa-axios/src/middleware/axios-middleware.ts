@@ -1,9 +1,10 @@
+import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
+import { removeEmptyFromObject } from "@lindorm-io/core";
 import {
   Axios,
   axiosRequestLoggerMiddleware,
   Middleware as AxiosMiddleware,
 } from "@lindorm-io/axios";
-import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
 
 export const axiosMiddleware =
   (config: AxiosMiddlewareConfig): DefaultLindormAxiosKoaMiddleware =>
@@ -11,7 +12,10 @@ export const axiosMiddleware =
     const start = Date.now();
 
     const metadataMiddleware: AxiosMiddleware = async (axiosCtx, axiosNext) => {
-      axiosCtx.req.headers = { ...axiosCtx.req.headers, ...ctx.getMetadataHeaders() };
+      axiosCtx.req.headers = {
+        ...axiosCtx.req.headers,
+        ...removeEmptyFromObject(ctx.getMetadataHeaders()),
+      };
 
       await axiosNext();
     };

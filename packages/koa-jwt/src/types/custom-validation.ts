@@ -1,6 +1,6 @@
-import { JwtVerifyData } from "@lindorm-io/jwt";
+import { JwtDecodeData } from "@lindorm-io/jwt";
 import { DefaultLindormKoaContext } from "@lindorm-io/koa";
 
 export type TokenCustomValidation<
   Context extends DefaultLindormKoaContext = DefaultLindormKoaContext,
-> = (ctx: Context, verifyData: JwtVerifyData<any, any>) => Promise<void>;
+> = (ctx: Context, verifyData: JwtDecodeData<any, any>) => Promise<void>;

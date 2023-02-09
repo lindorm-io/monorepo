@@ -9,7 +9,7 @@ export const socketMongoMiddleware =
       socket.ctx.connection.mongo = connection;
       socket.ctx.logger.debug("mongo connection added to context");
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

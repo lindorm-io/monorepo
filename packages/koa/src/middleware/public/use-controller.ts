@@ -24,14 +24,20 @@ export const useController =
           ? HttpStatus.Redirection.PERMANENT_REDIRECT
           : HttpStatus.Redirection.FOUND;
       } else {
-        ctx.body =
-          !body && status !== undefined && status !== HttpStatus.Success.NO_CONTENT ? {} : body;
-        ctx.status =
-          body && !status
-            ? HttpStatus.Success.OK
-            : !body && !status
-            ? HttpStatus.Success.NO_CONTENT
-            : status;
+        if (body) ctx.body = body;
+        if (status) ctx.status = status;
+
+        if (!body && status !== undefined && status !== HttpStatus.Success.NO_CONTENT) {
+          ctx.body = {};
+        }
+
+        if (body && !status) {
+          ctx.status = HttpStatus.Success.OK;
+        }
+
+        if (!body && !status) {
+          ctx.status = HttpStatus.Success.NO_CONTENT;
+        }
       }
 
       metric.end();

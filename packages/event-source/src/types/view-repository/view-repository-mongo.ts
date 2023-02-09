@@ -8,9 +8,9 @@ export interface IMongoRepository<TState = State> {
     filter?: Filter<ViewStoreAttributes>,
     options?: FindOptions<ViewStoreAttributes>,
   ): Promise<Array<ViewRepositoryData<TState>>>;
-  findById(id: string): Promise<ViewRepositoryData<TState>>;
+  findById(id: string): Promise<ViewRepositoryData<TState> | undefined>;
   findOne(
     find: Filter<ViewStoreAttributes>,
     options?: FindOptions<ViewStoreAttributes>,
-  ): Promise<ViewRepositoryData<TState>>;
+  ): Promise<ViewRepositoryData<TState> | undefined>;
 }

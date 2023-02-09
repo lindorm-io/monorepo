@@ -30,7 +30,7 @@ export class AmqpMessageBus extends MessageBusBase<IMessage> implements IMessage
       case MessageType.TIMEOUT_MESSAGE:
         return new TimeoutMessage(message);
 
-      case MessageType.UNKNOWN:
+      default:
         throw new DomainError("Unknown Message Type");
     }
   }

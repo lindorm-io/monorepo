@@ -1,20 +1,20 @@
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, LindormError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
 import { RepositoryBase } from "@lindorm-io/mongo";
 import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
 import { camelCase } from "@lindorm-io/case";
 import { get } from "object-path";
 
-interface MiddlewareOptions {
+type MiddlewareOptions = {
   entityKey?: string;
   repositoryKey?: string;
-}
+};
 
-export interface RepositoryEntityMiddlewareOptions {
+export type RepositoryEntityMiddlewareOptions = {
   attributeKey?: string;
   customValidation?: StoredEntityCustomValidation;
   optional?: boolean;
-}
+};
 
 export const repositoryEntityMiddleware =
   (
@@ -53,6 +53,13 @@ export const repositoryEntityMiddleware =
 
     const entity = middlewareOptions.entityKey || camelCase(Entity.name);
     const repository = middlewareOptions.repositoryKey || camelCase(Repository.name);
+
+    if (!entity) {
+      throw new LindormError("Entity name not found");
+    }
+    if (!repository) {
+      throw new LindormError("Repository name not found");
+    }
 
     try {
       ctx.entity[entity] = await ctx.repository[repository].find({

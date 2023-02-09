@@ -11,8 +11,8 @@ export class AmqpConnection
   extends ConnectionBase<Connection, Options.Connect>
   implements IAmqpConnection
 {
-  private readonly custom: typeof amqplib;
-  private confirmChannel: ConfirmChannel;
+  private readonly custom: typeof amqplib | undefined;
+  private confirmChannel: ConfirmChannel | undefined;
 
   public readonly deadLetters: string;
   public readonly exchange: string;
@@ -52,9 +52,9 @@ export class AmqpConnection
 
   protected async createClientConnection(): Promise<Connection> {
     if (this.custom) {
-      return await this.custom.connect(this.connectOptions);
+      return await this.custom.connect(this.connectOptions!);
     }
-    return await amqplib.connect(this.connectOptions);
+    return await amqplib.connect(this.connectOptions!);
   }
 
   protected async connectCallback(): Promise<void> {
@@ -75,6 +75,9 @@ export class AmqpConnection
   // properties
 
   public get channel(): ConfirmChannel {
+    if (!this.confirmChannel) {
+      throw new LindormError("Confirm Channel not initialised");
+    }
     return this.confirmChannel;
   }
   public set channel(_: ConfirmChannel) {
@@ -88,8 +91,8 @@ export class AmqpConnection
     topic: string,
     options?: Options.AssertQueue,
   ): Promise<void> {
-    await this.confirmChannel.assertQueue(queue, merge({ durable: true }, options));
-    await this.confirmChannel.bindQueue(queue, this.exchange, topic);
+    await this.channel.assertQueue(queue, merge({ durable: true }, options));
+    await this.channel.bindQueue(queue, this.exchange, topic);
 
     this.logger.debug("Successfully bound queue", {
       exchange: this.exchange,
@@ -104,7 +107,7 @@ export class AmqpConnection
   private onReturn(msg: ConsumeMessage): void {
     const message = parseBlob(msg.content.toString());
 
-    this.confirmChannel.publish(
+    this.channel.publish(
       this.exchange,
       this.deadLetters,
       msg.content,

@@ -195,7 +195,7 @@ export class EventSourceScanner {
       throw new Error("Invalid command handler location");
     }
 
-    const handlers = this.getFileHandlers<AggregateCommandHandler<unknown, unknown>>(file.path);
+    const handlers = this.getFileHandlers<AggregateCommandHandler>(file.path);
 
     if (handlers.length !== 1) {
       throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
@@ -231,7 +231,7 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<AggregateEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<AggregateEventHandler>(file.path);
 
     if (handlers.length !== 1) {
       throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
@@ -265,7 +265,7 @@ export class EventSourceScanner {
       throw new Error("Invalid error handler location");
     }
 
-    const handlers = this.getFileHandlers<ErrorHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<ErrorHandler>(file.path);
 
     if (handlers.length !== 1) {
       throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
@@ -283,7 +283,7 @@ export class EventSourceScanner {
         aggregate: {
           name: snakeCase(aggregate),
           context: Array.isArray(handler.aggregate?.context)
-            ? handler.aggregate.context.map((context) => snakeCase(context))
+            ? handler.aggregate!.context.map((context) => snakeCase(context))
             : snakeCase(this.context(handler.aggregate?.context)),
         },
         handler: handler.handler,
@@ -292,7 +292,7 @@ export class EventSourceScanner {
   }
 
   private loadQueryHandlers(file: ScanFileData): void {
-    const handlers = this.getFileHandlers<QueryHandler<unknown, unknown>>(file.path);
+    const handlers = this.getFileHandlers<QueryHandler>(file.path);
 
     if (handlers.length !== 1) {
       throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
@@ -325,7 +325,7 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<SagaEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<SagaEventHandler>(file.path);
 
     for (const handler of handlers) {
       this.logger.debug("Found saga event handler", { handler: file.name });
@@ -340,7 +340,7 @@ export class EventSourceScanner {
           aggregate: {
             name: snakeCase(aggregate),
             context: Array.isArray(handler.aggregate?.context)
-              ? handler.aggregate.context.map((context) => snakeCase(context))
+              ? handler.aggregate!.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
           saga: {
@@ -363,7 +363,7 @@ export class EventSourceScanner {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<ViewEventHandler<unknown>>(file.path);
+    const handlers = this.getFileHandlers<ViewEventHandler>(file.path);
 
     for (const handler of handlers) {
       this.logger.debug("Found view event handler", { handler: file.name });
@@ -383,7 +383,7 @@ export class EventSourceScanner {
           aggregate: {
             name: snakeCase(aggregate),
             context: Array.isArray(handler.aggregate?.context)
-              ? handler.aggregate.context.map((context) => snakeCase(context))
+              ? handler.aggregate!.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
           conditions: handler.conditions,

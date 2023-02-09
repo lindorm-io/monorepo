@@ -27,7 +27,7 @@ const replaceParamWithValue = <Params = ParamsRecord>(input: string, params: Par
   return param.toString();
 };
 
-const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params: Params): string => {
+const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params?: Params): string => {
   if (!isObject(params)) {
     return pathname;
   }
@@ -47,7 +47,7 @@ const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params: Pa
 
 const addQueryToURL = <Query = QueryRecord>(
   url: URL,
-  query: Query,
+  query?: Query,
   queryCaseTransform: TransformMode = "snake",
 ): URL => {
   if (!isObject(query)) {

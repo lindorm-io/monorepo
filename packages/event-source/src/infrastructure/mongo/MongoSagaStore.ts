@@ -48,7 +48,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       });
 
       return !!result;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to verify if causation exists", err);
 
       throw err;
@@ -89,7 +89,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       }
 
       this.logger.debug("Cleared messages", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear messages", err);
 
       throw err;
@@ -130,7 +130,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       }
 
       this.logger.debug("Cleared processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear processed causation ids", err);
 
       throw err;
@@ -160,7 +160,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       this.logger.debug("Found saga", { result });
 
       return result;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find saga", err);
 
       throw err;
@@ -178,7 +178,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const result = await collection.insertOne(attributes);
 
       this.logger.debug("Inserted saga", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert saga", err);
 
       throw err;
@@ -207,7 +207,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const result = await collection.insertMany(documents);
 
       this.logger.debug("Inserted processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert processed causation ids", err);
 
       throw err;
@@ -248,7 +248,7 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       }
 
       this.logger.debug("Updated saga", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to update saga", err);
 
       throw err;

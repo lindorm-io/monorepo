@@ -14,7 +14,7 @@ import {
 
 export class ConsoleLogger extends LoggerBase implements Logger {
   private consoleOptions: ConsoleOptions;
-  private level: Level;
+  private level: Level | undefined;
 
   public constructor(options: ConsoleLoggerOptions = {}) {
     super(options);

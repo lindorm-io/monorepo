@@ -11,8 +11,8 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   private connectionStatus: ConnectionStatus;
 
   protected readonly eventEmitter: EventEmitter;
-  protected clientConnection: Client;
-  protected connectOptions: ClientOptions;
+  protected clientConnection: Client | undefined;
+  protected connectOptions: ClientOptions | undefined;
   protected logger: Logger;
 
   public readonly type: string;
@@ -39,6 +39,9 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   // properties
 
   public get client(): Client {
+    if (!this.clientConnection) {
+      throw new LindormError("Client not initialised");
+    }
     return this.clientConnection;
   }
   public set client(_: Client) {
@@ -95,7 +98,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
       }
 
       this.logger.info("Connection successful");
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Connection error", err);
     }
   }
@@ -161,7 +164,7 @@ export abstract class ConnectionBase<Client, ClientOptions> implements IConnecti
   private async connectWithRetry(startDate = Date.now()): Promise<Client> {
     try {
       return await this.createClientConnection();
-    } catch (err) {
+    } catch (err: any) {
       this.logger.debug("Connection error", err);
 
       await sleep(this.connectInterval);

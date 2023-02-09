@@ -15,6 +15,7 @@ import {
   AggregateCommandHandlerContext,
   AggregateDomainOptions,
   AggregateIdentifier,
+  DtoClass,
   IAggregateCommandHandler,
   IAggregateDomain,
   IAggregateEventHandler,
@@ -48,8 +49,8 @@ export class AggregateDomain implements IAggregateDomain {
     this.eventHandlers = [];
   }
 
-  public async registerCommandHandler(
-    commandHandler: AggregateCommandHandlerImplementation,
+  public async registerCommandHandler<T extends DtoClass = DtoClass>(
+    commandHandler: AggregateCommandHandlerImplementation<T>,
   ): Promise<void> {
     this.logger.debug("Registering command handler", {
       aggregate: commandHandler.aggregate,
@@ -107,8 +108,8 @@ export class AggregateDomain implements IAggregateDomain {
     });
   }
 
-  public async registerEventHandler(
-    eventHandler: AggregateEventHandlerImplementation,
+  public async registerEventHandler<T extends DtoClass = DtoClass>(
+    eventHandler: AggregateEventHandlerImplementation<T>,
   ): Promise<void> {
     this.logger.debug("Registering event handler", {
       aggregate: eventHandler.aggregate,
@@ -254,10 +255,12 @@ export class AggregateDomain implements IAggregateDomain {
 
     try {
       if (!lastCausationMatchesCommandId) {
-        try {
-          await commandHandler.schema.validateAsync(command.data);
-        } catch (err) {
-          throw new CommandSchemaValidationError(err);
+        if (commandHandler.schema) {
+          try {
+            await commandHandler.schema.validateAsync(command.data);
+          } catch (err: any) {
+            throw new CommandSchemaValidationError(err);
+          }
         }
 
         for (const validator of conditionValidators) {
@@ -280,7 +283,7 @@ export class AggregateDomain implements IAggregateDomain {
       await this.messageBus.publish(events);
 
       this.logger.verbose("Handled command", { command });
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling command", err);
       } else if (err instanceof DomainError) {
@@ -318,7 +321,7 @@ export class AggregateDomain implements IAggregateDomain {
       ]);
 
       this.logger.verbose("Rejected command", { command, error });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to reject command", err);
 
       throw err;
@@ -327,11 +330,15 @@ export class AggregateDomain implements IAggregateDomain {
 
   // private static
 
-  private static getQueue(commandHandler: AggregateCommandHandlerImplementation): string {
+  private static getQueue<T extends DtoClass = DtoClass>(
+    commandHandler: AggregateCommandHandlerImplementation<T>,
+  ): string {
     return `queue.aggregate.${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 
-  private static getTopic(commandHandler: AggregateCommandHandlerImplementation): string {
+  private static getTopic<T extends DtoClass = DtoClass>(
+    commandHandler: AggregateCommandHandlerImplementation<T>,
+  ): string {
     return `${commandHandler.aggregate.context}.${commandHandler.aggregate.name}.${commandHandler.commandName}`;
   }
 }

@@ -29,11 +29,14 @@ import {
   ViewEventHandlerContext,
   ViewEventHandlerAdapter,
   ViewIdentifier,
+  Data,
+  DtoClass,
+  IViewEventHandler,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
-  private readonly eventHandlers: Array<ViewEventHandlerImplementation>;
+  private readonly eventHandlers: Array<IViewEventHandler>;
   private readonly logger: Logger;
   private messageBus: IMessageBus;
   private store: IDomainViewStore;
@@ -48,14 +51,13 @@ export class ViewDomain implements IViewDomain {
     this.eventHandlers = [];
   }
 
-  public on<TState extends State = State>(
-    eventName: string,
-    listener: EventEmitterListener<TState>,
-  ): void {
-    this.eventEmitter.on(eventName, listener);
+  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
+    this.eventEmitter.on(evt, listener);
   }
 
-  public async registerEventHandler(eventHandler: ViewEventHandlerImplementation): Promise<void> {
+  public async registerEventHandler<T extends DtoClass = DtoClass>(
+    eventHandler: ViewEventHandlerImplementation<T>,
+  ): Promise<void> {
     this.logger.debug("Registering event handler", {
       name: eventHandler.eventName,
       aggregate: eventHandler.aggregate,
@@ -110,7 +112,7 @@ export class ViewDomain implements IViewDomain {
       assertSnakeCase(eventHandler.eventName);
 
       this.eventHandlers.push(
-        new ViewEventHandlerImplementation({
+        new ViewEventHandlerImplementation<T>({
           eventName: eventHandler.eventName,
           adapter: eventHandler.adapter,
           aggregate: {
@@ -216,7 +218,7 @@ export class ViewDomain implements IViewDomain {
       view = await this.processCausationIds(view, eventHandler);
 
       this.logger.verbose("Handled event", { event, view: view.toJSON() });
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof ConcurrencyError) {
         this.logger.warn("Transient concurrency error while handling event", err);
       } else if (err instanceof DomainError) {
@@ -314,14 +316,14 @@ export class ViewDomain implements IViewDomain {
       ]);
 
       this.logger.verbose("Rejected event", { event, view, error });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.warn("Failed to reject event", err);
 
       throw err;
     }
   }
 
-  private emit<TState>(view: View<TState>): void {
+  private emit<TState extends State = State>(view: View<TState>): void {
     const data: EventEmitterViewData<TState> = {
       id: view.id,
       name: view.name,
@@ -339,11 +341,17 @@ export class ViewDomain implements IViewDomain {
 
   // private static
 
-  private static getQueue(context: string, eventHandler: ViewEventHandlerImplementation): string {
+  private static getQueue<T extends DtoClass = DtoClass>(
+    context: string,
+    eventHandler: ViewEventHandlerImplementation<T>,
+  ): string {
     return `queue.view.${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}.${eventHandler.view.context}.${eventHandler.view.name}`;
   }
 
-  private static getTopic(context: string, eventHandler: ViewEventHandlerImplementation): string {
+  private static getTopic<T extends DtoClass = DtoClass>(
+    context: string,
+    eventHandler: ViewEventHandlerImplementation<T>,
+  ): string {
     return `${context}.${eventHandler.aggregate.name}.${eventHandler.eventName}`;
   }
 }

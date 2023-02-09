@@ -16,7 +16,7 @@ const _string: any = "string";
 const _undefined: any = undefined;
 
 describe("isObjectLike", () => {
-  it("should resolve true on object", () => {
+  it("should resolve true", () => {
     expect(isObjectLike(_object)).toBe(true);
   });
 
@@ -32,7 +32,7 @@ describe("isObjectLike", () => {
     expect(isObjectLike(_error)).toBe(true);
   });
 
-  it("should resolve false on everything else", () => {
+  it("should resolve false", () => {
     expect(isObjectLike(_array)).toBe(false);
     expect(isObjectLike(_boolean)).toBe(false);
     expect(isObjectLike(_null)).toBe(false);

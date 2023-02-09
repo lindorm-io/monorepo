@@ -16,11 +16,11 @@ const _string: any = "string";
 const _undefined: any = undefined;
 
 describe("isObject", () => {
-  it("should resolve true on object", () => {
+  it("should resolve true", () => {
     expect(isObject(_object)).toBe(true);
   });
 
-  it("should resolve false on everything else", () => {
+  it("should resolve false", () => {
     expect(isObject(_array)).toBe(false);
     expect(isObject(_boolean)).toBe(false);
     expect(isObject(_class)).toBe(false);

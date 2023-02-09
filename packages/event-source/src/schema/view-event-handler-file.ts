@@ -7,7 +7,7 @@ import {
   StoreIndex,
 } from "../types";
 
-export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler<unknown>>().keys({
+export const JOI_VIEW_EVENT_HANDLER_FILE = Joi.object<ViewEventHandler>().keys({
   event: Joi.function().required(),
   view: Joi.string().required(),
   adapter: Joi.object<ViewEventHandlerAdapter>()

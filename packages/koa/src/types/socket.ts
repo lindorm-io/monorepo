@@ -10,12 +10,18 @@ export type IOServer<Data = any> = Server<
   Data
 >;
 
+export type IOSocket<Data = any> = Socket<
+  DefaultEventsMap,
+  DefaultEventsMap,
+  DefaultEventsMap,
+  Data
+>;
+
 export interface DefaultLindormSocket<
   Context extends DefaultLindormContext = DefaultLindormContext,
   Data = any,
-> extends Socket {
+> extends IOSocket<Data> {
   ctx: Context;
-  data: Data;
 }
 
 export type LindormSocketPromise<

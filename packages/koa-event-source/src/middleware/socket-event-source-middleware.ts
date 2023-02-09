@@ -27,7 +27,7 @@ export const socketEventSourceMiddleware =
 
       socket.ctx.logger.debug("Event Source added to context");
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

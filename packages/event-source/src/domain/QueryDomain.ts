@@ -18,6 +18,8 @@ import {
 import {
   MemoryViewRepository,
   MongoViewRepository,
+  NoopMongoViewRepository,
+  NoopPostgresViewRepository,
   PostgresViewRepository,
 } from "../infrastructure";
 
@@ -25,8 +27,8 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
   implements IQueryDomain<TQuery, TState>
 {
   private readonly logger: Logger;
-  private readonly mongo: IMongoConnection;
-  private readonly postgres: IPostgresConnection;
+  private readonly mongo: IMongoConnection | undefined;
+  private readonly postgres: IPostgresConnection | undefined;
   private readonly queryHandlers: Array<IQueryHandler>;
 
   public constructor(options: QueryDomainOptions, logger: Logger) {
@@ -38,7 +40,9 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
     this.queryHandlers = [];
   }
 
-  public registerQueryHandler(queryHandler: QueryHandlerImplementation): void {
+  public registerQueryHandler<T extends DtoClass = DtoClass>(
+    queryHandler: QueryHandlerImplementation<T>,
+  ): void {
     this.logger.debug("Registering query handler", {
       queryName: queryHandler.queryName,
       view: queryHandler.view,
@@ -92,17 +96,17 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
         logger: this.logger.createChildLogger(["QueryHandler"]),
         repositories: {
           memory: new MemoryViewRepository<TState>(queryHandler.view),
-          mongo: new MongoViewRepository<TState>(this.mongo, queryHandler.view, this.logger),
-          postgres: new PostgresViewRepository<TState>(
-            this.postgres,
-            queryHandler.view,
-            this.logger,
-          ),
+          mongo: this.mongo
+            ? new MongoViewRepository<TState>(this.mongo, queryHandler.view, this.logger)
+            : new NoopMongoViewRepository(),
+          postgres: this.postgres
+            ? new PostgresViewRepository<TState>(this.postgres, queryHandler.view, this.logger)
+            : new NoopPostgresViewRepository(),
         },
       };
 
       return await queryHandler.handler(ctx);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to handle query", err);
 
       throw err;

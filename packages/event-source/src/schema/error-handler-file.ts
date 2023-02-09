@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ErrorHandler, SagaEventHandlerFileAggregate } from "../types";
 
-export const JOI_ERROR_HANDLER_FILE = Joi.object<ErrorHandler<unknown, unknown>>().keys({
+export const JOI_ERROR_HANDLER_FILE = Joi.object<ErrorHandler>().keys({
   error: Joi.function().required(),
   aggregate: Joi.object<SagaEventHandlerFileAggregate>()
     .keys({

@@ -47,7 +47,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       });
 
       return !!result;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to verify if causation exists", err);
 
       throw err;
@@ -87,7 +87,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       }
 
       this.logger.debug("Cleared processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear processed causation ids", err);
 
       throw err;
@@ -116,7 +116,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       this.logger.debug("Found view", { result });
 
       return result;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
 
       throw err;
@@ -143,7 +143,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       const result = await collection.insertOne(attributes);
 
       this.logger.debug("Inserted view", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert view", err);
 
       throw err;
@@ -172,7 +172,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       const result = await collection.insertMany(documents);
 
       this.logger.debug("Inserted processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert processed causation ids", err);
 
       throw err;
@@ -215,7 +215,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       }
 
       this.logger.debug("Updated view", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to update view", err);
 
       throw err;

@@ -7,7 +7,7 @@ export class PostgresConnection
   extends ConnectionBase<Pool, PoolConfig>
   implements IPostgresConnection
 {
-  private readonly custom: typeof Pool;
+  private readonly custom: typeof Pool | undefined;
 
   public constructor(options: PostgresConnectionOptions, logger: Logger) {
     const {

@@ -157,7 +157,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
 
       const destroying = this._destroying;
 
-      const eventHandler: AggregateEventHandlerImplementation = this._eventHandlers.find(
+      const eventHandler = this._eventHandlers.find(
         (x) => x.eventName === event.name && x.version === event.version,
       );
 
@@ -185,7 +185,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
       this._events.push(event);
 
       this.logger.debug("Handle DomainEvent successful", { event });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Handle DomainEvent failed", err);
 
       throw err;

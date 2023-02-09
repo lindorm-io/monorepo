@@ -27,7 +27,10 @@ export interface ViewEventHandlerAdapter<TFields extends Attributes = Attributes
   type: ViewStoreAdapterType;
 }
 
-export interface ViewEventHandler<TEvent extends DtoClass, TState extends State = State> {
+export interface ViewEventHandler<
+  TEvent extends DtoClass = DtoClass,
+  TState extends State = State,
+> {
   event: Constructor<TEvent>;
   view: string;
   adapter: ViewEventHandlerAdapter;

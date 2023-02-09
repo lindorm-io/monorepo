@@ -53,7 +53,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const result = await this.connection.query<ViewCausationAttributes>(text, values);
 
       return !!result.rowCount;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to verify if causation exists", err);
 
       throw err;
@@ -101,7 +101,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Cleared processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear processed causation ids", err);
 
       throw err;
@@ -111,7 +111,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   public async find(
     identifier: StandardIdentifier,
     adapter: ViewEventHandlerAdapter,
-  ): Promise<ViewStoreAttributes> {
+  ): Promise<ViewStoreAttributes | undefined> {
     this.logger.debug("Finding view", { identifier });
 
     try {
@@ -155,7 +155,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
 
       throw err;
@@ -202,7 +202,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted view", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert view", err);
 
       throw err;
@@ -244,7 +244,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to ", err);
 
       throw err;
@@ -300,7 +300,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Updated view", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to ", err);
 
       throw err;

@@ -16,11 +16,11 @@ const _string: any = "string";
 const _undefined: any = undefined;
 
 describe("isClass", () => {
-  it("should resolve true on class", () => {
+  it("should resolve true", () => {
     expect(isClass(_class)).toBe(true);
   });
 
-  it("should resolve false on everything else", () => {
+  it("should resolve false", () => {
     expect(isClass(_array)).toBe(false);
     expect(isClass(_boolean)).toBe(false);
     expect(isClass(_date)).toBe(false);

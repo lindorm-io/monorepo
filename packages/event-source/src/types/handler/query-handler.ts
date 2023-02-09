@@ -1,16 +1,12 @@
 import { Constructor, DtoClass, State } from "../generic";
 import { HandlerIdentifier } from "./handler";
+import { IMemoryRepository, IMongoRepository, IPostgresRepository } from "../view-repository";
 import { Logger } from "@lindorm-io/core-logger";
-import {
-  MemoryViewRepository,
-  MongoViewRepository,
-  PostgresViewRepository,
-} from "../../infrastructure";
 
 export interface QueryRepositories<TState extends State = State> {
-  memory: MemoryViewRepository<TState>;
-  mongo: MongoViewRepository<TState>;
-  postgres: PostgresViewRepository<TState>;
+  memory: IMemoryRepository<TState>;
+  mongo: IMongoRepository<TState>;
+  postgres: IPostgresRepository<TState>;
 }
 
 export interface QueryHandlerContext<
@@ -22,7 +18,11 @@ export interface QueryHandlerContext<
   repositories: QueryRepositories<TState>;
 }
 
-export interface QueryHandler<TQuery extends DtoClass, TResult, TState extends State = State> {
+export interface QueryHandler<
+  TQuery extends DtoClass = DtoClass,
+  TResult = unknown,
+  TState extends State = State,
+> {
   query: Constructor<TQuery>;
   view: string;
   context?: string;

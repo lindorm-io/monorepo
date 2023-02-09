@@ -1,36 +1,23 @@
-import {
-  DefaultLindormContext,
-  DefaultLindormSocket,
-  DefaultLindormSocketMiddleware,
-} from "../../types";
+import { DefaultLindormSocketMiddleware } from "../../types";
+import { Logger } from "@lindorm-io/core-logger";
 
-interface CustomContext extends DefaultLindormContext {
-  jwt: undefined;
-  logger: undefined;
-}
+export const initSocketContextMiddleware =
+  (logger: Logger): DefaultLindormSocketMiddleware =>
+  (socket, next) => {
+    socket.ctx = {
+      axios: {},
+      cache: {},
+      connection: {},
+      entity: {},
+      eventSource: undefined,
+      jwt: undefined,
+      keys: [],
+      keystore: undefined,
+      logger: logger.createSessionLogger({ socketId: socket.id }),
+      messageBus: undefined,
+      repository: {},
+      token: {},
+    };
 
-interface CustomSocket extends DefaultLindormSocket {
-  ctx: CustomContext;
-}
-
-export const initSocketContextMiddleware: DefaultLindormSocketMiddleware<CustomSocket> = (
-  socket,
-  next,
-) => {
-  socket.ctx = {
-    axios: {},
-    cache: {},
-    connection: {},
-    entity: {},
-    eventSource: undefined,
-    jwt: undefined,
-    keys: [],
-    keystore: undefined,
-    logger: undefined,
-    messageBus: undefined,
-    repository: {},
-    token: {},
+    next();
   };
-
-  next();
-};

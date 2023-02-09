@@ -1,7 +1,7 @@
 import { DefaultLindormKoaContext } from "./koa-context";
 import { DefaultLindormMiddleware } from "./koa";
 import { DefaultLindormSocketMiddleware, IOServer } from "./socket";
-import { Environment } from "../enum";
+import { Environment } from "@lindorm-io/common-types";
 import { IntervalWorker } from "../class";
 import { Logger } from "@lindorm-io/core-logger";
 import { ServerOptions } from "socket.io";

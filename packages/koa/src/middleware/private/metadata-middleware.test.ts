@@ -1,5 +1,4 @@
 import { metadataMiddleware } from "./metadata-middleware";
-import { Environment } from "../../enum";
 
 jest.mock("crypto", () => ({
   randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
@@ -25,7 +24,7 @@ describe("metadataMiddleware", () => {
   });
 
   test("should use values from headers if they exist", async () => {
-    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware("test")(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual({
       agent: {
@@ -61,7 +60,7 @@ describe("metadataMiddleware", () => {
   test("should use agent data from header", async () => {
     ctx.get = jest.fn((): void => {});
 
-    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware("test")(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual(
       expect.objectContaining({
@@ -81,35 +80,35 @@ describe("metadataMiddleware", () => {
     ctx.get = jest.fn((): void => {});
     ctx.userAgent = {};
 
-    await expect(metadataMiddleware(Environment.TEST)(ctx, next)).resolves.toBeUndefined();
+    await expect(metadataMiddleware("test")(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.metadata).toStrictEqual({
       agent: {
-        browser: null,
-        geoIp: null,
-        os: null,
-        platform: null,
-        source: null,
-        version: null,
+        browser: undefined,
+        geoIp: undefined,
+        os: undefined,
+        platform: undefined,
+        source: undefined,
+        version: undefined,
       },
       client: {
         environment: "unknown",
-        id: null,
-        platform: null,
-        version: null,
+        id: undefined,
+        platform: undefined,
+        version: undefined,
       },
       device: {
-        installationId: null,
-        ip: null,
-        linkId: null,
-        name: null,
-        systemVersion: null,
-        uniqueId: null,
+        installationId: undefined,
+        ip: undefined,
+        linkId: undefined,
+        name: undefined,
+        systemVersion: undefined,
+        uniqueId: undefined,
       },
       environment: "test",
       identifiers: {
         correlationId: "a26dad28-e854-447d-bce6-5c685cddfea8",
-        fingerprint: null,
+        fingerprint: undefined,
       },
     });
   });

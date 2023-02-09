@@ -4,7 +4,7 @@ export type Protocol = "http" | "https";
 
 export type UrlData = {
   host: string | undefined;
-  pathname: string;
+  pathname: string | undefined;
   port: number | undefined;
   protocol: Protocol | undefined;
   query: QueryRecord;

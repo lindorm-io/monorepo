@@ -52,7 +52,7 @@ export const createNodeServer = <
       axiosMiddleware({
         clientName: service.name,
         host: service.host,
-        port: service.port,
+        port: service.port || undefined,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
@@ -60,7 +60,7 @@ export const createNodeServer = <
       socketAxiosMiddleware({
         clientName: service.name,
         host: service.host,
-        port: service.port,
+        port: service.port || undefined,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );

@@ -36,7 +36,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       if (!documents.length) return [];
 
       return MongoEventStore.toEventData(documents);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find event documents", err);
 
       throw err;
@@ -64,7 +64,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       });
 
       this.logger.verbose("Inserted event document", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert event document", err);
 
       if (err.code === 11000) {
@@ -96,7 +96,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       this.logger.debug("Found event documents", { documents });
 
       return MongoEventStore.toEventData(documents);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to list event documents", err);
 
       throw err;

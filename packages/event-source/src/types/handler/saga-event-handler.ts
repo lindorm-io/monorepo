@@ -24,7 +24,7 @@ export interface SagaEventHandlerFileAggregate {
 }
 
 export interface SagaEventHandler<
-  TEvent extends DtoClass,
+  TEvent extends DtoClass = DtoClass,
   TState extends State = State,
   TDispatch extends DtoClass = DtoClass,
 > {

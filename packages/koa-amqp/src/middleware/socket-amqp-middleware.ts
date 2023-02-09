@@ -9,7 +9,7 @@ export const socketAmqpMiddleware =
       socket.ctx.connection.amqp = connection;
       socket.ctx.logger.debug("amqp connection added to context");
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

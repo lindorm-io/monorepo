@@ -4,12 +4,13 @@ import {
   CountDocumentsOptions,
   CreateIndexesOptions,
   DeleteOptions,
+  Document,
   Filter,
   FindOptions,
   IndexDirection,
 } from "mongodb";
 
-export interface IRepository<Interface, Entity> {
+export interface IRepository<Interface extends Document, Entity> {
   count(filter: Partial<Filter<Interface>>, options: CountDocumentsOptions): Promise<number>;
   create(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity>;
   createMany(

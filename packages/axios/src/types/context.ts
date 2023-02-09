@@ -5,7 +5,7 @@ import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 
 export type AxiosContext = {
-  auth: AxiosBasicCredentials;
+  auth: AxiosBasicCredentials | undefined;
   headers: Record<string, string | number>;
   host: string | null;
   name: string | null;
@@ -22,7 +22,7 @@ export type RequestContext<
   Params = Record<string, any>,
   Query = Record<string, any>,
 > = {
-  auth: AxiosBasicCredentials;
+  auth: AxiosBasicCredentials | undefined;
   body: Body;
   config: RawAxiosRequestConfig;
   headers: Headers;
@@ -30,8 +30,8 @@ export type RequestContext<
   method: Method;
   params: Params;
   path: string;
-  port: number;
-  protocol: Protocol;
+  port: number | undefined;
+  protocol: Protocol | undefined;
   query: Query;
   queryCaseTransform: TransformMode;
   retry: RetryOptions;

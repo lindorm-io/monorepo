@@ -2,7 +2,7 @@ import { ComposedMiddleware, Dispatch, Middleware, Next } from "../types";
 
 export const composeMiddleware =
   <Context>(middleware: Middleware<Context>[]): ComposedMiddleware<Context> =>
-  (context: Context, next: Next): Promise<void> => {
+  (context: Context, next?: Next): Promise<void> => {
     let index = -1;
 
     const dispatch: Dispatch = (i: number) => {
@@ -15,7 +15,7 @@ export const composeMiddleware =
       let mw = middleware[i];
 
       if (i === middleware.length) {
-        mw = next;
+        mw = next as Middleware<Context>;
       }
 
       if (!mw) {

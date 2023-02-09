@@ -16,11 +16,11 @@ const _string: any = "string";
 const _undefined: any = undefined;
 
 describe("isDate", () => {
-  it("should resolve true on object", () => {
+  it("should resolve true", () => {
     expect(isDate(_date)).toBe(true);
   });
 
-  it("should resolve false on everything else", () => {
+  it("should resolve false", () => {
     expect(isDate(_array)).toBe(false);
     expect(isDate(_boolean)).toBe(false);
     expect(isDate(_class)).toBe(false);

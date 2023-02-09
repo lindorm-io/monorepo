@@ -6,7 +6,7 @@ export type ConsoleOptions = {
 
 export type FilterCallback = (data: any) => string;
 
-export type FilterRecord = Record<string, FilterCallback>;
+export type FilterRecord = Record<string, FilterCallback | undefined>;
 
 export type Level = "error" | "warn" | "info" | "verbose" | "debug" | "silly";
 

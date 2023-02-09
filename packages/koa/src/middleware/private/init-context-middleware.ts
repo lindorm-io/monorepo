@@ -1,8 +1,8 @@
 import { DefaultLindormMiddleware, KoaAppOptions } from "../../types";
-import { Environment } from "../../enum";
+import { Environments } from "@lindorm-io/common-types";
 
 export const initContextMiddleware =
-  (options: KoaAppOptions): DefaultLindormMiddleware =>
+  (options: KoaAppOptions<any>): DefaultLindormMiddleware<any> =>
   async (ctx, next): Promise<void> => {
     ctx.axios = {};
     ctx.config = {
@@ -16,7 +16,7 @@ export const initContextMiddleware =
     ctx.repository = {};
     ctx.server = {
       domain: options.domain || options.host,
-      environment: options.environment || Environment.DEVELOPMENT,
+      environment: options.environment || Environments.DEVELOPMENT,
       host: options.host,
     };
     ctx.token = {};

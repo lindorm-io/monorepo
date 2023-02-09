@@ -9,7 +9,7 @@ export const socketRedisMiddleware =
       socket.ctx.connection.redis = connection;
       socket.ctx.logger.debug("redis connection added to context");
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

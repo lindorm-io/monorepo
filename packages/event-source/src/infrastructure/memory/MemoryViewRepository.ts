@@ -34,14 +34,16 @@ export class MemoryViewRepository<TState extends State = State>
     }));
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<TState>> {
+  public async findById(id: string): Promise<ViewRepositoryData<TState> | undefined> {
     return this.findOne({ id });
   }
 
   public async findOne(
     findFilter: Partial<ViewStoreAttributes> = {},
-  ): Promise<ViewRepositoryData<TState>> {
+  ): Promise<ViewRepositoryData<TState> | undefined> {
     const found = find(IN_MEMORY_VIEW_STORE, { ...this.view, ...findFilter, destroyed: false });
+
+    if (!found) return;
 
     return {
       id: found.id,

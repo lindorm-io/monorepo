@@ -3,16 +3,14 @@ import { IRedisConnection } from "../types";
 import { Redis } from "ioredis";
 import { RedisConnection } from "../connection";
 
-interface Options {
-  [key: string]: jest.Mock;
-
+type Options = {
   del?: jest.Mock;
   get?: jest.Mock;
   scan?: jest.Mock;
   set?: jest.Mock;
   setex?: jest.Mock;
   ttl?: jest.Mock;
-}
+};
 
 export const createMockRedisConnection = (o: Options = {}): RedisConnection => {
   const client = {

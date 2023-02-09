@@ -1,6 +1,6 @@
 import { Aggregate, Saga, View } from "../model";
 import { AggregateIdentifier } from "./model";
-import { DtoClass, Data, State } from "./generic";
+import { DtoClass, Data, State, Metadata } from "./generic";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
@@ -20,70 +20,71 @@ import {
   ViewEventHandlerAdapter,
 } from "./handler";
 
-export interface EventSourceAdapterOptions {
+export type EventSourceAdapterOptions = {
   eventStore?: EventStoreAdapterType;
   sagaStore?: SagaStoreAdapterType;
   messageBus?: MessageBusQueueType;
-}
+};
 
-export interface EventSourceConnectionOptions {
+export type EventSourceConnectionOptions = {
   amqp?: IAmqpConnection;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
-}
+};
 
-export interface EventSourceCustomOptions {
+export type EventSourceCustomOptions = {
   messageBus?: IMessageBus;
   eventStore?: IEventStore;
   sagaStore?: ISagaStore;
   require?: NodeJS.Require;
-}
+};
 
-export interface EventSourceScannerOptions {
-  extensions?: Array<string>;
-  include?: Array<RegExp>;
-  exclude?: Array<RegExp>;
-}
+export type EventSourceScannerOptions = {
+  extensions: Array<string>;
+  include: Array<RegExp>;
+  exclude: Array<RegExp>;
+};
 
-export interface EventSourcePrivateOptions {
-  adapters?: EventSourceAdapterOptions;
-  context?: string;
-  aggregates?: string;
-  queries?: string;
-  scanner?: EventSourceScannerOptions;
-  dangerouslyRegisterHandlersManually?: boolean;
-}
+export type EventSourcePrivateOptions = {
+  adapters: EventSourceAdapterOptions;
+  context: string;
+  aggregates: string;
+  queries: string;
+  scanner: EventSourceScannerOptions;
+  dangerouslyRegisterHandlersManually: boolean;
+};
 
-export interface EventSourceOptions extends EventSourcePrivateOptions {
+export type EventSourceOptions = Partial<Omit<EventSourcePrivateOptions, "scanner">> & {
   connections?: EventSourceConnectionOptions;
   custom?: EventSourceCustomOptions;
-}
+  scanner?: Partial<EventSourceScannerOptions>;
+};
 
-export interface EventSourceCommandOptions<
-  TMetadata extends Record<string, any> = Record<string, any>,
-> {
+export type EventSourceCommandOptions<TMetadata extends Metadata = Metadata> = {
   aggregate?: Partial<AggregateIdentifier>;
   correlationId?: string;
   delay?: number;
   metadata?: TMetadata;
-}
+};
 
 export type EventSourceCommandResult = {
   result: "OK" | "QUEUED";
   aggregate: AggregateIdentifier;
 };
 
-export interface EventSourceInspectOptions {
+export type EventSourceInspectOptions = {
   id: string;
   name: string;
   context?: string;
-}
+};
 
 export interface EventSourceAdmin {
   inspect: {
-    aggregate<TState = State>(aggregate: EventSourceInspectOptions): Promise<Aggregate<TState>>;
-    saga<TState = State>(saga: EventSourceInspectOptions): Promise<Saga<TState>>;
-    view<TState = State>(view: EventSourceInspectOptions): Promise<View<TState>>;
+    aggregate<TState extends State = State>(
+      aggregate: EventSourceInspectOptions,
+    ): Promise<Aggregate<TState>>;
+    saga<TState extends State = State>(saga: EventSourceInspectOptions): Promise<Saga<TState>>;
+    view<TState extends State = State>(view: EventSourceInspectOptions): Promise<View<TState>>;
   };
   replay(options: ReplayOptions): Promise<void>;
 }
@@ -92,7 +93,7 @@ export interface EventSourceSetup {
   registerAggregateCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
   registerAggregateEventHandler(handler: IAggregateEventHandler): Promise<void>;
   registerErrorHandler(handler: IErrorHandler): Promise<void>;
-  registerQueryHandler(handler: IQueryHandler): Promise<void>;
+  registerQueryHandler(handler: IQueryHandler): void;
   registerSagaEventHandler(handler: ISagaEventHandler): Promise<void>;
   registerViewEventHandler(handler: IViewEventHandler): Promise<void>;
 
@@ -108,7 +109,7 @@ export interface IEventSource<
   init(): Promise<void>;
   initialise(): Promise<void>;
 
-  command<TMetadata>(
+  command<TMetadata extends Metadata = Metadata>(
     command: TCommand,
     options: EventSourceCommandOptions<TMetadata>,
   ): Promise<EventSourceCommandResult>;

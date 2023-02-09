@@ -26,7 +26,7 @@ export const socketCacheMiddleware =
       });
 
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

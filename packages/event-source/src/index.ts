@@ -5,6 +5,7 @@ export { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "./
 export {
   AggregateCommandHandler,
   AggregateEventHandler,
+  DtoClass,
   EventSourceAdmin,
   EventSourceCommandOptions,
   EventSourceCommandResult,
@@ -13,7 +14,9 @@ export {
   IEventStore,
   ISagaStore,
   IViewStore,
+  Metadata,
   QueryHandler,
   SagaEventHandler,
+  State,
   ViewEventHandler,
 } from "./types";

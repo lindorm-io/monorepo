@@ -14,7 +14,7 @@ export const socketAxiosMiddleware =
       });
 
       next();
-    } catch (err) {
+    } catch (err:any) {
       next(getSocketError(socket, err));
     }
   };

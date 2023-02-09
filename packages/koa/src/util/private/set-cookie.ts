@@ -1,5 +1,5 @@
+import { Environments } from "@lindorm-io/common-types";
 import { DefaultLindormKoaContext } from "../../types";
-import { Environment } from "../../enum";
 
 export interface SetCookieOptions {
   domain: string;
@@ -22,6 +22,7 @@ export const setCookie =
       ...options,
       signed:
         options.signed ||
-        [Environment.PRODUCTION, Environment.STAGING].includes(ctx.server.environment),
+        ctx.server.environment === Environments.PRODUCTION ||
+        ctx.server.environment === Environments.STAGING,
     });
   };

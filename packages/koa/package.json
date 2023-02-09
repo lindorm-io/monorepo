@@ -31,6 +31,7 @@
     "socket.io": "^4.5.4"
   },
   "devDependencies": {
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/core-logger": "^0.2.2",
     "@lindorm-io/url": "^0.2.5",
     "@types/express-useragent": "^1.0.2",

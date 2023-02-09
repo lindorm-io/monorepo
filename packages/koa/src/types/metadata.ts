@@ -1,63 +1,64 @@
-import { Environment, MetadataHeader } from "../enum";
+import { MetadataHeader } from "../enum";
+import { Environment } from "@lindorm-io/common-types";
 
-interface Agent {
-  browser: string | null;
-  geoIp: string | null;
-  os: string | null;
-  platform: string | null;
-  source: string | null;
-  version: string | null;
-}
+type Agent = {
+  browser: string | undefined;
+  geoIp: string | undefined;
+  os: string | undefined;
+  platform: string | undefined;
+  source: string | undefined;
+  version: string | undefined;
+};
 
-interface Client {
-  id: string | null;
+type Client = {
+  id: string | undefined;
   environment: Environment;
-  platform: string | null;
-  version: string | null;
-}
+  platform: string | undefined;
+  version: string | undefined;
+};
 
-interface Device {
-  installationId: string | null;
-  ip: string | null;
-  linkId: string | null;
-  name: string | null;
-  systemVersion: string | null;
-  uniqueId: string | null;
-}
+type Device = {
+  installationId: string | undefined;
+  ip: string | undefined;
+  linkId: string | undefined;
+  name: string | undefined;
+  systemVersion: string | undefined;
+  uniqueId: string | undefined;
+};
 
-interface Identifiers {
+type Identifiers = {
   correlationId: string;
-  fingerprint: string | null;
-}
+  fingerprint: string | undefined;
+};
 
-export interface LindormKoaMetadata {
+export type LindormKoaMetadata = {
   agent: Agent;
   client: Client;
   device: Device;
   environment: Environment;
   identifiers: Identifiers;
-}
+};
 
-export interface LindormKoaMetadataHeaders {
-  [MetadataHeader.AGENT_BROWSER]: string | null;
-  [MetadataHeader.AGENT_GEO_IP]: string | null;
-  [MetadataHeader.AGENT_OS]: string | null;
-  [MetadataHeader.AGENT_PLATFORM]: string | null;
-  [MetadataHeader.AGENT_SOURCE]: string | null;
-  [MetadataHeader.AGENT_VERSION]: string | null;
+export type LindormKoaMetadataHeaders = {
+  [MetadataHeader.AGENT_BROWSER]: string | undefined;
+  [MetadataHeader.AGENT_GEO_IP]: string | undefined;
+  [MetadataHeader.AGENT_OS]: string | undefined;
+  [MetadataHeader.AGENT_PLATFORM]: string | undefined;
+  [MetadataHeader.AGENT_SOURCE]: string | undefined;
+  [MetadataHeader.AGENT_VERSION]: string | undefined;
 
-  [MetadataHeader.CLIENT_ID]: string | null;
+  [MetadataHeader.CLIENT_ID]: string | undefined;
   [MetadataHeader.CLIENT_ENVIRONMENT]: Environment;
-  [MetadataHeader.CLIENT_PLATFORM]: string | null;
-  [MetadataHeader.CLIENT_VERSION]: string | null;
+  [MetadataHeader.CLIENT_PLATFORM]: string | undefined;
+  [MetadataHeader.CLIENT_VERSION]: string | undefined;
 
-  [MetadataHeader.DEVICE_INSTALLATION_ID]: string | null;
-  [MetadataHeader.DEVICE_IP]: string | null;
-  [MetadataHeader.DEVICE_LINK_ID]: string | null;
-  [MetadataHeader.DEVICE_NAME]: string | null;
-  [MetadataHeader.DEVICE_SYSTEM_VERSION]: string | null;
-  [MetadataHeader.DEVICE_UNIQUE_ID]: string | null;
+  [MetadataHeader.DEVICE_INSTALLATION_ID]: string | undefined;
+  [MetadataHeader.DEVICE_IP]: string | undefined;
+  [MetadataHeader.DEVICE_LINK_ID]: string | undefined;
+  [MetadataHeader.DEVICE_NAME]: string | undefined;
+  [MetadataHeader.DEVICE_SYSTEM_VERSION]: string | undefined;
+  [MetadataHeader.DEVICE_UNIQUE_ID]: string | undefined;
 
-  [MetadataHeader.CORRELATION_ID]: string | null;
-  [MetadataHeader.FINGERPRINT]: string | null;
-}
+  [MetadataHeader.CORRELATION_ID]: string | undefined;
+  [MetadataHeader.FINGERPRINT]: string | undefined;
+};

@@ -35,7 +35,6 @@ export class IntervalWorker {
     this.onError = options.onError;
 
     this.active = false;
-    this.interval = undefined;
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || 3,
       maximumMilliseconds: options.retry?.maximumMilliseconds || 30000,

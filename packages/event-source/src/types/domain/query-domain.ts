@@ -9,6 +9,6 @@ export interface QueryDomainOptions {
 }
 
 export interface IQueryDomain<TQuery extends DtoClass = DtoClass, TState extends State = State> {
-  registerQueryHandler(queryHandler: QueryHandlerImplementation<TQuery, unknown, TState>): void;
+  registerQueryHandler(queryHandler: QueryHandlerImplementation<TQuery, any, TState>): void;
   query<TResult>(query: TQuery): Promise<TResult>;
 }

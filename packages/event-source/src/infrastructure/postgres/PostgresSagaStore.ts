@@ -52,7 +52,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query<SagaCausationAttributes>(text, values);
 
       return !!result.rowCount;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to verify if causation exists", err);
 
       throw err;
@@ -100,7 +100,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Cleared messages", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear messages", err);
 
       throw err;
@@ -146,14 +146,14 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Cleared processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to clear processed causation ids", err);
 
       throw err;
     }
   }
 
-  public async find(identifier: StandardIdentifier): Promise<SagaStoreAttributes> {
+  public async find(identifier: StandardIdentifier): Promise<SagaStoreAttributes | undefined> {
     this.logger.debug("Finding saga", { identifier });
 
     try {
@@ -196,7 +196,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find saga", err);
 
       throw err;
@@ -239,7 +239,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted saga", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to insert saga", err);
 
       throw err;
@@ -281,7 +281,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Inserted processed causation ids", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to ", err);
 
       throw err;
@@ -332,7 +332,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
       const result = await this.connection.query(text, values);
 
       this.logger.debug("Updated saga", { result });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to ", err);
 
       throw err;

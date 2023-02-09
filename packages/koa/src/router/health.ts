@@ -7,7 +7,7 @@ export const createHealthRouter = <
 >(
   callback?: HealthCallback<Context>,
 ): Router => {
-  const router = new Router<unknown, Context>();
+  const router = new Router<unknown, any>();
 
   router.get("/", async (ctx): Promise<void> => {
     if (callback) {

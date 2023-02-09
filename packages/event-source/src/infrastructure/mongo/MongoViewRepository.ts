@@ -63,14 +63,14 @@ export class MongoViewRepository<TState = State>
       }
 
       return array;
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find views", err);
 
       throw err;
     }
   }
 
-  public async findById(id: string): Promise<ViewRepositoryData<TState>> {
+  public async findById(id: string): Promise<ViewRepositoryData<TState> | undefined> {
     this.logger.debug("Finding view", { id });
 
     try {
@@ -79,7 +79,7 @@ export class MongoViewRepository<TState = State>
       if (!result) {
         this.logger.debug("View not found");
 
-        return null;
+        return;
       }
 
       this.logger.debug("Found view", { result });
@@ -90,7 +90,7 @@ export class MongoViewRepository<TState = State>
         created_at: result.created_at,
         updated_at: result.updated_at,
       };
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
 
       throw err;
@@ -100,7 +100,7 @@ export class MongoViewRepository<TState = State>
   public async findOne(
     filter: Filter<ViewStoreAttributes>,
     options: FindOptions<ViewStoreAttributes> = {},
-  ): Promise<ViewRepositoryData<TState>> {
+  ): Promise<ViewRepositoryData<TState> | undefined> {
     this.logger.debug("Finding view", {
       filter,
       options,
@@ -115,7 +115,7 @@ export class MongoViewRepository<TState = State>
       if (!result) {
         this.logger.debug("View not found");
 
-        return null;
+        return;
       }
 
       this.logger.debug("Found view", { result });
@@ -126,7 +126,7 @@ export class MongoViewRepository<TState = State>
         created_at: result.created_at,
         updated_at: result.updated_at,
       };
-    } catch (err) {
+    } catch (err: any) {
       this.logger.error("Failed to find view", err);
 
       throw err;

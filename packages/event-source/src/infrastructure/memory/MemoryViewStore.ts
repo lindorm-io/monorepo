@@ -36,6 +36,10 @@ export class MemoryViewStore implements IViewStore {
     const found = IN_MEMORY_VIEW_STORE.find(fn);
     const index = IN_MEMORY_VIEW_STORE.findIndex(fn);
 
+    if (!found || index === -1) {
+      throw new Error("View Store Item not found");
+    }
+
     IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }
 
@@ -94,6 +98,10 @@ export class MemoryViewStore implements IViewStore {
 
     const found = IN_MEMORY_VIEW_STORE.find(fn);
     const index = IN_MEMORY_VIEW_STORE.findIndex(fn);
+
+    if (!found || index === -1) {
+      throw new Error("View Store Item not found");
+    }
 
     IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }

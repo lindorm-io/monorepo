@@ -12,8 +12,9 @@ export const errorMiddleware: DefaultLindormMiddleware = async (ctx, next): Prom
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
 
-        url.searchParams.append("error", encodeURI(err.code));
-
+        if (err.code?.length) {
+          url.searchParams.append("error", encodeURI(err.code));
+        }
         if (err.description?.length) {
           url.searchParams.append("error_description", encodeURI(err.description));
         }

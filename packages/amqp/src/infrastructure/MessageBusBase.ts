@@ -125,6 +125,8 @@ export abstract class MessageBusBase<
     });
 
     const { consumerTag } = await this.connection.channel.consume(queue, (msg) => {
+      if (!msg) return;
+
       const message = this.createMessage(parseBlob(msg.content.toString()) as Message);
 
       this.logger.debug("Subscription consuming message", {
@@ -164,7 +166,15 @@ export abstract class MessageBusBase<
 
   private async handleUnsubscribe(subscription: UnsubscribeOptions): Promise<void> {
     const { queue, topic } = subscription;
-    const { consumerTag } = this.subscriptions.find((s) => s.queue === queue && s.topic === topic);
+
+    const found = this.subscriptions.find((s) => s.queue === queue && s.topic === topic);
+
+    if (!found) {
+      this.logger.debug("Unsubscribe unsuccessful", { queue, topic });
+      return;
+    }
+
+    const { consumerTag } = found;
 
     await this.connection.channel.cancel(consumerTag);
 

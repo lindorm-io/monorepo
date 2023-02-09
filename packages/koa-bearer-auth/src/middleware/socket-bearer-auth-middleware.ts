@@ -46,7 +46,11 @@ export const socketBearerAuthMiddleware =
 
         socket.ctx.token[contextKey] = verified;
 
-        socket.join([verified.subject, verified.sessionId]);
+        const array = verified.sessionId
+          ? [verified.subject, verified.sessionId]
+          : [verified.subject];
+
+        socket.join(array);
       } catch (err: any) {
         throw new ClientError("Invalid Authorization", {
           error: err,
@@ -56,7 +60,7 @@ export const socketBearerAuthMiddleware =
       }
 
       next();
-    } catch (err) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };
