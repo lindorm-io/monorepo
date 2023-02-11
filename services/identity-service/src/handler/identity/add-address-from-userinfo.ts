@@ -20,11 +20,12 @@ export const addAddressFromUserinfo = async (
   const addresses = await addressRepository.findMany({ identityId: identity.id });
   const filtered = addresses.filter(
     (item) =>
-      item.country.toLowerCase() === country.toLowerCase() &&
-      item.locality.toLowerCase() === locality.toLowerCase() &&
-      item.postalCode.toLowerCase() === postalCode.toLowerCase() &&
-      item.region.toLowerCase() === region.toLowerCase() &&
-      item.streetAddress.join(" ").toLowerCase() === streetAddress.replace("\n", " ").toLowerCase(),
+      item.country?.toLowerCase() === country?.toLowerCase() &&
+      item.locality?.toLowerCase() === locality?.toLowerCase() &&
+      item.postalCode?.toLowerCase() === postalCode?.toLowerCase() &&
+      item.region?.toLowerCase() === region?.toLowerCase() &&
+      item.streetAddress.join(" ").toLowerCase() ===
+        streetAddress?.replace("\n", " ").toLowerCase(),
   );
 
   if (filtered.length) {
@@ -40,7 +41,7 @@ export const addAddressFromUserinfo = async (
       postalCode,
       primary: addresses.length < 1,
       region,
-      streetAddress: streetAddress.split("\n"),
+      streetAddress: streetAddress?.split("\n"),
     }),
   );
 };

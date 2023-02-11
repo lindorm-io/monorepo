@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/koa";
+import { Environment } from "@lindorm-io/common-types";
 import { OidcSessionCache } from "../infrastructure";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";

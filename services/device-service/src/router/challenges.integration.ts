@@ -65,8 +65,8 @@ describe("/challenges", () => {
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-link-id", deviceLink.id)
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
         device_link_id: deviceLink.id,
@@ -114,8 +114,8 @@ describe("/challenges", () => {
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-link-id", deviceLink.id)
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
@@ -162,8 +162,8 @@ describe("/challenges", () => {
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-link-id", deviceLink.id)
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
@@ -211,8 +211,8 @@ describe("/challenges", () => {
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-link-id", deviceLink.id)
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
@@ -248,8 +248,8 @@ describe("/challenges", () => {
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-link-id", deviceLink.id)
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         challenge_session_token: challengeSessionToken,
       })

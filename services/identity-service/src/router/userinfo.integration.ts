@@ -97,8 +97,8 @@ describe("/userinfo", () => {
       },
       birth_date: "2000-01-01",
       connected_providers: [external.provider],
-      display_name: `${identity.displayName.name}#${identity.displayName.number
-        .toString()
+      display_name: `${identity.displayName.name}#${identity.displayName
+        .number!.toString()
         .padStart(4, "0")}`,
       email: email.identifier,
       email_verified: true,

@@ -11,14 +11,14 @@ describe("tryFindBrowserSession", () => {
 
   beforeEach(() => {
     ctx = {
+      cookies: {
+        get: jest.fn().mockImplementation(() => "06715391-bea3-47db-acf4-ffa1f500bcc8"),
+      },
       repository: {
         browserSessionRepository: createMockRepository(createTestBrowserSession),
       },
-      metadata: {
+      server: {
         environment: "development",
-      },
-      cookies: {
-        get: jest.fn().mockImplementation(() => "06715391-bea3-47db-acf4-ffa1f500bcc8"),
       },
     };
   });

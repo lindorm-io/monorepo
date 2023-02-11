@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/koa";
+import { Environment } from "@lindorm-io/common-types";
 import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";

@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
+import { ChallengeStrategies, PSD2Factors } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestDeviceLink } from "../fixtures/entity";
@@ -13,7 +14,6 @@ import {
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
-import { ChallengeStrategies, PSD2Factors } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -167,6 +167,12 @@ describe("/device-links", () => {
     await request(server.callback())
       .put(`/device-links/${deviceLink.id}/biometry`)
       .set("Authorization", `Bearer ${accessToken}`)
+      .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
+      .set("x-device-unique-id", deviceLink.uniqueId)
       .send({
         challengeConfirmationToken,
         biometry: randomString(128),
@@ -203,6 +209,12 @@ describe("/device-links", () => {
     await request(server.callback())
       .put(`/device-links/${deviceLink.id}/pincode`)
       .set("Authorization", `Bearer ${accessToken}`)
+      .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
+      .set("x-device-unique-id", deviceLink.uniqueId)
       .send({
         challengeConfirmationToken,
         pincode: randomNumber(6).toString().padStart(6, "0"),
@@ -238,6 +250,12 @@ describe("/device-links", () => {
     await request(server.callback())
       .put(`/device-links/${deviceLink.id}/trusted`)
       .set("Authorization", `Bearer ${accessToken}`)
+      .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
+      .set("x-device-unique-id", deviceLink.uniqueId)
       .send({
         challengeConfirmationToken,
       })

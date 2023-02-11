@@ -13,6 +13,12 @@ export const verifyRefreshSessionElevation = async (
 
   assertElevationSession(elevationSession);
 
+  if (!elevationSession.identifiers.refreshSessionId) {
+    throw new ServerError("Invalid elevationSession", {
+      debug: { refreshSessionId: elevationSession.identifiers.refreshSessionId },
+    });
+  }
+
   const refreshSession = await refreshSessionRepository.find({
     id: elevationSession.identifiers.refreshSessionId,
   });
@@ -23,6 +29,12 @@ export const verifyRefreshSessionElevation = async (
 
   const { acrValues, amrValues, latestAuthentication, levelOfAssurance } =
     elevationSession.confirmedAuthentication;
+
+  if (!acrValues || !amrValues || !latestAuthentication || !levelOfAssurance) {
+    throw new ServerError("Invalid elevationSession", {
+      debug: { acrValues, amrValues, latestAuthentication, levelOfAssurance },
+    });
+  }
 
   refreshSession.acrValues = acrValues;
   refreshSession.amrValues = amrValues;

@@ -1,3 +1,6 @@
+import { ClientError } from "@lindorm-io/errors";
+import { ClientScopes } from "../../../common";
+import { SendCodeRequestBody } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../../types";
 import { StrategySession } from "../../../entity";
 import { argon } from "../../../instance";
@@ -5,12 +8,10 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { randomString } from "@lindorm-io/random";
-import { SendCodeRequestBody } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
 
 interface Options {
   strategySessionToken: string;
-  email: string;
+  email?: string;
 }
 
 export const initialiseEmailLink = async (
@@ -24,6 +25,12 @@ export const initialiseEmailLink = async (
   } = ctx;
 
   const { strategySessionToken, email } = options;
+
+  if (!email) {
+    throw new ClientError("Invalid input", {
+      data: { email },
+    });
+  }
 
   const code = randomString(64);
   strategySession.code = await argon.encrypt(code);

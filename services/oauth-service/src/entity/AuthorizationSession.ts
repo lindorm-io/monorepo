@@ -36,6 +36,7 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../constant";
+import { randomString } from "@lindorm-io/random";
 
 type AuthorizationSessionCode = {
   codeChallenge: string | null;
@@ -98,7 +99,7 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   idTokenHint: string | null;
   loginHint: Array<string>;
   maxAge: number | null;
-  nonce: string | null;
+  nonce: string;
   originalUri: string;
   promptModes: Array<OauthPromptMode>;
   redirectData: string | null;
@@ -196,7 +197,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
     idTokenHint: JOI_JWT.allow(null).required(),
     loginHint: Joi.array().items(Joi.string().lowercase()).required(),
     maxAge: Joi.number().allow(null).required(),
-    nonce: JOI_NONCE.allow(null).required(),
+    nonce: JOI_NONCE.required(),
     originalUri: Joi.string().uri().required(),
     promptModes: Joi.array().items(JOI_PROMPT_MODE).required(),
     redirectData: Joi.string().base64().allow(null).required(),
@@ -225,7 +226,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly idTokenHint: string | null;
   public readonly loginHint: Array<string>;
   public readonly maxAge: number | null;
-  public readonly nonce: string | null;
+  public readonly nonce: string;
   public readonly originalUri: string;
   public readonly promptModes: Array<OauthPromptMode>;
   public readonly redirectData: string | null;
@@ -284,7 +285,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.idTokenHint = options.idTokenHint || null;
     this.loginHint = options.loginHint || [];
     this.maxAge = options.maxAge || null;
-    this.nonce = options.nonce || null;
+    this.nonce = options.nonce || randomString(16);
     this.originalUri = options.originalUri;
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;

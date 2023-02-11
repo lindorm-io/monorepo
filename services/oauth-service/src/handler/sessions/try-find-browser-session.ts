@@ -1,10 +1,10 @@
 import { BROWSER_SESSION_COOKIE_NAME } from "../../constant";
 import { BrowserSession } from "../../entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
+import { Environments } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { getExpiryDate } from "@lindorm-io/expiry";
-import { Environment } from "@lindorm-io/koa";
 
 export const tryFindBrowserSession = async (
   ctx: ServerKoaContext,
@@ -14,7 +14,7 @@ export const tryFindBrowserSession = async (
   } = ctx;
 
   const cookieId = ctx.cookies.get(BROWSER_SESSION_COOKIE_NAME, {
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 
   if (!cookieId) {
@@ -29,7 +29,7 @@ export const tryFindBrowserSession = async (
       : getExpiryDate(configuration.defaults.expiry.browser_session);
 
     return await browserSessionRepository.update(browserSession);
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) throw err;
   }
 };

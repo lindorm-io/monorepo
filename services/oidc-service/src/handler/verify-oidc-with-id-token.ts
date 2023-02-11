@@ -22,10 +22,10 @@ export const verifyOidcWithIdToken = async (
 
   const { client_id: clientId, token_issuer: issuer } = config;
 
-  const { subject: sub, claims } = jwt.verify<never, OpenIdClaims>(idToken, {
+  const { subject: sub, claims } = jwt.verify<never, Omit<OpenIdClaims, "sub">>(idToken, {
     audience: clientId,
     issuer,
-    nonce: oidcSession.nonce,
+    ...(oidcSession.nonce ? { nonce: oidcSession.nonce } : {}),
   });
 
   logger.debug("Claims", { sub, ...claims });

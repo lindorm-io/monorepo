@@ -24,26 +24,26 @@ type ResponseBody = InitialiseRdcSessionResponse;
 
 export const initialiseRdcSchema = Joi.object<RequestData>()
   .keys({
-    audiences: Joi.array().items(Joi.string().guid()).optional(),
-    confirmMethod: JOI_RDC_CONFIRM_METHOD.optional(),
-    confirmPayload: Joi.object().optional(),
+    audiences: Joi.array().items(Joi.string().guid()),
+    confirmMethod: JOI_RDC_CONFIRM_METHOD,
+    confirmPayload: Joi.object(),
     confirmUri: Joi.string().uri().required(),
-    expiresAt: Joi.string().optional(),
-    factors: JOI_FACTORS.optional(),
+    expiresAt: Joi.string(),
+    factors: JOI_FACTORS,
     identityId: Joi.when("mode", {
       is: RdcSessionModes.PUSH_NOTIFICATION,
       then: Joi.string().guid().required(),
-      otherwise: Joi.string().guid().optional(),
+      otherwise: Joi.string().guid(),
     }),
     mode: JOI_RDC_MODE.required(),
     nonce: JOI_NONCE.required(),
-    rejectMethod: JOI_RDC_REJECT_METHOD.optional(),
-    rejectPayload: Joi.object().optional(),
+    rejectMethod: JOI_RDC_REJECT_METHOD,
+    rejectPayload: Joi.object(),
     rejectUri: Joi.string().uri().required(),
-    scopes: Joi.array().items(Joi.string()).optional(),
+    scopes: Joi.array().items(Joi.string()),
     templateName: Joi.string().required(),
-    templateParameters: Joi.object().optional(),
-    tokenPayload: Joi.object().optional(),
+    templateParameters: Joi.object(),
+    tokenPayload: Joi.object(),
   })
   .required();
 

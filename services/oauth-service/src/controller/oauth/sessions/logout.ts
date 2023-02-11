@@ -14,10 +14,10 @@ type RequestData = InitialiseLogoutRequestQuery;
 export const oauthLogoutSchema = Joi.object<RequestData>()
   .keys({
     clientId: Joi.string().guid().required(),
-    idTokenHint: JOI_JWT.optional(),
-    redirectUri: Joi.string().uri().optional(),
+    idTokenHint: JOI_JWT,
+    redirectUri: Joi.string().uri(),
     sessionId: Joi.string().guid().required(),
-    state: JOI_STATE.optional(),
+    state: JOI_STATE,
   })
   .required();
 

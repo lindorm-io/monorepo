@@ -14,6 +14,7 @@ import {
   SessionStatuses,
   SubjectHints,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = AcknowledgeRdcRequestParams;
 
@@ -37,6 +38,13 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
       device: { linkId },
     },
   } = ctx;
+
+  if (!linkId) {
+    throw new ClientError("Bad Request", {
+      description: "Missing metadata",
+      data: { linkId },
+    });
+  }
 
   rdcSession.status = SessionStatuses.ACKNOWLEDGED;
 
@@ -66,7 +74,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
 
   await rdcSessionCache.update(rdcSession);
 
-  const deviceLinks = difference(rdcSession.deviceLinks, [linkId]);
+  const deviceLinks = difference<string>(rdcSession.deviceLinks, [linkId]);
 
   if (mode === RdcSessionModes.PUSH_NOTIFICATION && deviceLinks.length) {
     const body: EmitSocketEventRequestBody = {

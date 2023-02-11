@@ -9,7 +9,7 @@ export const assertCodeChallenge = (
 ): void => {
   try {
     return assertPKCE(codeChallenge, codeChallengeMethod, codeVerifier);
-  } catch (err) {
+  } catch (err: any) {
     throw new ClientError("Invalid Code", {
       code: "invalid_code",
       error: err,

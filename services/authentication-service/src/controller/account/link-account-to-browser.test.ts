@@ -53,10 +53,12 @@ describe("linkAccountToBrowserController", () => {
         client: {
           environment: "client-environment",
         },
-        environment: "development",
       },
       repository: {
         browserLinkRepository: createMockRepository(createTestBrowserLink),
+      },
+      server: {
+        environment: "development",
       },
 
       cookies: {

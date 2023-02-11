@@ -1,11 +1,13 @@
 import Joi from "joi";
-import { ControllerResponse, Environment } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaController } from "../../types";
 import { fetchAccountSalt } from "../../handler";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
 import { expiryDate } from "@lindorm-io/expiry";
 import { BrowserLink } from "../../entity";
+import { ServerError } from "@lindorm-io/errors";
+import { Environments } from "@lindorm-io/common-types";
 
 interface RequestData {
   code: string;
@@ -35,8 +37,27 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     sha: { secret: salt.sha },
   });
 
+  if (!account.browserLinkCode) {
+    throw new ServerError("Invalid account", {
+      debug: { browserLinkCode: account.browserLinkCode },
+    });
+  }
+
   await crypto.assert(code, account.browserLinkCode);
+
+  if (!account.password) {
+    throw new ServerError("Invalid account", {
+      debug: { password: account.password },
+    });
+  }
+
   await crypto.assert(password, account.password);
+
+  if (!agent.browser || !agent.os || !agent.platform) {
+    throw new ServerError("Invalid agent", {
+      debug: { agent },
+    });
+  }
 
   const browserLink = await browserLinkRepository.create(
     new BrowserLink({
@@ -52,6 +73,6 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     expires: expiryDate("99 years"),
     httpOnly: true,
     overwrite: true,
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 };

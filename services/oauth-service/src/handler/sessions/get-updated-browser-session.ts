@@ -1,30 +1,11 @@
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
+import { SessionStatuses } from "@lindorm-io/common-types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
-import { SessionStatuses } from "@lindorm-io/common-types";
 
-const assertAuthorizationSession = (authorizationSession: AuthorizationSession): void => {
-  if (
-    authorizationSession.confirmedLogin.acrValues.length &&
-    authorizationSession.confirmedLogin.amrValues.length &&
-    authorizationSession.confirmedLogin.identityId &&
-    authorizationSession.confirmedLogin.latestAuthentication &&
-    authorizationSession.confirmedLogin.levelOfAssurance > 0
-  ) {
-    return;
-  }
-
-  throw new ServerError("Unexpected session data", {
-    description: "Authorization session has invalid login data",
-    debug: {
-      confirmedLogin: authorizationSession.confirmedLogin,
-    },
-  });
-};
-
-const calculateExpiryDate = (remember: boolean): Date => {
+const calculateExpiryDate = (remember?: boolean | null): Date => {
   return remember === true
     ? expiryDate(configuration.defaults.expiry.browser_session_remember)
     : expiryDate(configuration.defaults.expiry.browser_session);
@@ -38,7 +19,20 @@ const createBrowserSession = async (
     repository: { browserSessionRepository },
   } = ctx;
 
-  assertAuthorizationSession(authorizationSession);
+  if (
+    !authorizationSession.confirmedLogin.acrValues.length ||
+    !authorizationSession.confirmedLogin.amrValues.length ||
+    !authorizationSession.confirmedLogin.identityId ||
+    !authorizationSession.confirmedLogin.latestAuthentication ||
+    authorizationSession.confirmedLogin.levelOfAssurance === 0
+  ) {
+    throw new ServerError("Unexpected session data", {
+      description: "Authorization session has invalid login data",
+      debug: {
+        confirmedLogin: authorizationSession.confirmedLogin,
+      },
+    });
+  }
 
   return await browserSessionRepository.create(
     new BrowserSession({
@@ -55,6 +49,42 @@ const createBrowserSession = async (
       uiLocales: authorizationSession.uiLocales,
     }),
   );
+};
+
+const updateBrowserSession = async (
+  ctx: ServerKoaContext,
+  authorizationSession: AuthorizationSession,
+  browserSession: BrowserSession,
+): Promise<BrowserSession> => {
+  const {
+    repository: { browserSessionRepository },
+  } = ctx;
+
+  if (
+    !authorizationSession.confirmedLogin.acrValues.length ||
+    !authorizationSession.confirmedLogin.amrValues.length ||
+    !authorizationSession.confirmedLogin.identityId ||
+    !authorizationSession.confirmedLogin.latestAuthentication ||
+    authorizationSession.confirmedLogin.levelOfAssurance === 0
+  ) {
+    throw new ServerError("Unexpected session data", {
+      description: "Authorization session has invalid login data",
+      debug: {
+        confirmedLogin: authorizationSession.confirmedLogin,
+      },
+    });
+  }
+
+  browserSession.acrValues = authorizationSession.confirmedLogin.acrValues;
+  browserSession.amrValues = authorizationSession.confirmedLogin.amrValues;
+  browserSession.country = authorizationSession.country;
+  browserSession.expires = calculateExpiryDate(authorizationSession.confirmedLogin.remember);
+  browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
+  browserSession.levelOfAssurance = authorizationSession.confirmedLogin.levelOfAssurance;
+  browserSession.nonce = authorizationSession.nonce;
+  browserSession.remember = authorizationSession.confirmedLogin.remember;
+
+  return await browserSessionRepository.update(browserSession);
 };
 
 export const getUpdatedBrowserSession = async (
@@ -83,16 +113,5 @@ export const getUpdatedBrowserSession = async (
     return await createBrowserSession(ctx, authorizationSession);
   }
 
-  assertAuthorizationSession(authorizationSession);
-
-  browserSession.acrValues = authorizationSession.confirmedLogin.acrValues;
-  browserSession.amrValues = authorizationSession.confirmedLogin.amrValues;
-  browserSession.country = authorizationSession.country;
-  browserSession.expires = calculateExpiryDate(authorizationSession.confirmedLogin.remember);
-  browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
-  browserSession.levelOfAssurance = authorizationSession.confirmedLogin.levelOfAssurance;
-  browserSession.nonce = authorizationSession.nonce;
-  browserSession.remember = authorizationSession.confirmedLogin.remember;
-
-  return await browserSessionRepository.update(browserSession);
+  return await updateBrowserSession(ctx, authorizationSession, browserSession);
 };

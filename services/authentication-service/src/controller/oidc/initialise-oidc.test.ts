@@ -39,7 +39,7 @@ describe("initialiseOidcController", () => {
         callbackId: "048b2a65-3aeb-4839-a0a9-c647879bc2e3",
         callbackUri: "https://authentication.test.lindorm.io:3001/sessions/oidc/callback",
         expiresAt: "2022-01-01T08:00:00.000Z",
-        identityId: null,
+        identityId: undefined,
         provider: "provider",
       },
       middleware: expect.any(Array),

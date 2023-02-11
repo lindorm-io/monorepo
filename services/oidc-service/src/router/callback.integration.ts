@@ -95,7 +95,7 @@ describe("/callback", () => {
     const url = createURL("/callback", {
       host: "https://test.test",
       query: {
-        id_token: getTestGoogleIdToken({ nonce: oidcSession.nonce }),
+        id_token: getTestGoogleIdToken({ nonce: oidcSession.nonce! }),
         state: oidcSession.state,
       },
     });

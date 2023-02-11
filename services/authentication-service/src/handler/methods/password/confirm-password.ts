@@ -6,7 +6,7 @@ import { authenticateIdentifier } from "../../identity-service";
 import { fetchAccountSalt } from "../../vault-service";
 
 interface Options {
-  password: string;
+  password?: string;
 }
 
 export const confirmPassword = async (
@@ -21,6 +21,12 @@ export const confirmPassword = async (
   } = ctx;
 
   const { password } = options;
+
+  if (!password) {
+    throw new ClientError("Invalid input", {
+      data: { password },
+    });
+  }
 
   logger.debug("Verifying Identity");
 

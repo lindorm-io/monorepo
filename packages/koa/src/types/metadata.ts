@@ -29,13 +29,13 @@ type Device = {
 type Identifiers = {
   correlationId: string;
   fingerprint: string | undefined;
+  requestId: string;
 };
 
 export type LindormKoaMetadata = {
   agent: Agent;
   client: Client;
   device: Device;
-  environment: Environment;
   identifiers: Identifiers;
 };
 
@@ -61,4 +61,5 @@ export type LindormKoaMetadataHeaders = {
 
   [MetadataHeader.CORRELATION_ID]: string | undefined;
   [MetadataHeader.FINGERPRINT]: string | undefined;
+  [MetadataHeader.REQUEST_ID]: string | undefined;
 };

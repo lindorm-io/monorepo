@@ -1,5 +1,5 @@
 import { ChallengeStrategy, LindormClaims, PSD2Factor } from "@lindorm-io/common-types";
-import { JwtVerifyData } from "@lindorm-io/jwt";
+import { JwtDecodeData } from "@lindorm-io/jwt";
 
 export interface AuthenticationConfirmationTokenClaims {
   country: string;
@@ -8,7 +8,7 @@ export interface AuthenticationConfirmationTokenClaims {
   verifiedIdentifiers: Array<string>;
 }
 
-export type VerifiedAuthenticationConfirmationToken = JwtVerifyData<
+export type VerifiedAuthenticationConfirmationToken = JwtDecodeData<
   never,
   AuthenticationConfirmationTokenClaims
 >;
@@ -19,9 +19,9 @@ export interface ChallengeConfirmationTokenClaims {
   strategy: ChallengeStrategy;
 }
 
-export type VerifiedChallengeConfirmationToken = JwtVerifyData<
+export type VerifiedChallengeConfirmationToken = JwtDecodeData<
   Record<string, any>,
   ChallengeConfirmationTokenClaims
 >;
 
-export type VerifiedIdentityToken = JwtVerifyData<never, LindormClaims>;
+export type VerifiedIdentityToken = JwtDecodeData<never, LindormClaims>;

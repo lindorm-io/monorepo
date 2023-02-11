@@ -24,7 +24,7 @@ describe("verifyRefreshSessionElevation", () => {
           }),
         ),
       },
-      metadata: {
+      server: {
         environment: "development",
       },
       cookies: {

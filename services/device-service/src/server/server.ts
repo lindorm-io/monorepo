@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/koa";
+import { Environment } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";

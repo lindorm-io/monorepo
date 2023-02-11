@@ -33,6 +33,12 @@ export const initialiseSessionAcceptWithCode = async (
     });
   }
 
+  if (!config.confirmLength) {
+    throw new ServerError("Invalid config", {
+      debug: { confirmLength: config.confirmLength },
+    });
+  }
+
   const code = randomString(config.confirmLength).toUpperCase();
 
   strategySession.code = await argon.encrypt(code);

@@ -26,6 +26,12 @@ export const initialiseSessionOtp = async (
     });
   }
 
+  if (!config.confirmLength) {
+    throw new ServerError("Invalid config", {
+      debug: { confirmLength: config.confirmLength },
+    });
+  }
+
   const otp = (await randomNumberAsync(config.confirmLength))
     .toString()
     .padStart(config.confirmLength, "0");

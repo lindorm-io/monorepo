@@ -1,14 +1,14 @@
 import { ChallengeStrategy, LindormClaims, PSD2Factor } from "@lindorm-io/common-types";
-import { JwtVerifyData } from "@lindorm-io/jwt";
+import { JwtDecodeData } from "@lindorm-io/jwt";
 
 export type AuthenticationConfirmationTokenClaims = {
-  country: string;
+  country: string | null;
   maximumLoa: number;
   remember: boolean;
   verifiedIdentifiers: Array<string>;
 };
 
-export type VerifiedAuthenticationConfirmationToken = JwtVerifyData<
+export type VerifiedAuthenticationConfirmationToken = JwtDecodeData<
   never,
   AuthenticationConfirmationTokenClaims
 >;
@@ -19,9 +19,9 @@ export type ChallengeConfirmationTokenClaims = {
   strategy: ChallengeStrategy;
 };
 
-export type VerifiedChallengeConfirmationToken = JwtVerifyData<
+export type VerifiedChallengeConfirmationToken = JwtDecodeData<
   Record<string, any>,
   ChallengeConfirmationTokenClaims
 >;
 
-export type VerifiedIdentityToken = JwtVerifyData<never, LindormClaims>;
+export type VerifiedIdentityToken = JwtDecodeData<never, LindormClaims>;

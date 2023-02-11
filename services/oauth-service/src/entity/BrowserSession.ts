@@ -48,7 +48,6 @@ const schema = Joi.object<BrowserSessionAttributes>()
   .required();
 
 export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
-  public readonly consentSessionId: string;
   public readonly identityId: string;
 
   public acrValues: Array<string>;

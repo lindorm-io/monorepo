@@ -35,7 +35,7 @@ export const getConsentDataController: ServerKoaController<RequestData> = async 
       clientId: authorizationSession.clientId,
       identityId: authorizationSession.confirmedLogin.identityId,
     });
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) throw err;
   }
 

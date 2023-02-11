@@ -20,7 +20,7 @@ export type ClientDefaults = {
 };
 
 export type ClientExpiry = {
-  accessToken: string;
-  idToken: string;
-  refreshToken: string;
+  accessToken: string | null;
+  idToken: string | null;
+  refreshToken: string | null;
 };

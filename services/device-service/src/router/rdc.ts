@@ -1,6 +1,7 @@
-import { includes } from "lodash";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
 import { SessionStatuses } from "@lindorm-io/common-types";
+import { deviceHeadersEnrolledSchema } from "../schema";
+import { includes } from "lodash";
 import {
   challengeConfirmationTokenMiddleware,
   rdcSessionEntityMiddleware,
@@ -18,7 +19,7 @@ import {
   getRdcSessionStatusSchema,
 } from "../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.post(
@@ -26,6 +27,7 @@ router.post(
   paramsMiddleware,
   identityAuthMiddleware(),
   useSchema(acknowledgeRdcSchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   rdcSessionEntityMiddleware("data.id"),
   useAssertion({
     assertion: includes,
@@ -50,6 +52,7 @@ router.post(
   paramsMiddleware,
   identityAuthMiddleware(),
   useSchema(confirmRdcSchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
   rdcSessionEntityMiddleware("data.id"),
@@ -82,6 +85,7 @@ router.post(
   paramsMiddleware,
   identityAuthMiddleware(),
   useSchema(rejectRdcSchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
   rdcSessionEntityMiddleware("data.id"),
   useAssertion({

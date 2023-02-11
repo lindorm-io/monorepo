@@ -2,7 +2,7 @@ import { clientAuthMiddleware } from "../../middleware";
 import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
 import { getIdentityDeviceLinksController, getIdentityDeviceLinksSchema } from "../../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.use(

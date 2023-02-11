@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { LindormError } from "@lindorm-io/errors";
+import { LindormError, ServerError } from "@lindorm-io/errors";
 import { randomNumber } from "@lindorm-io/random";
 import { remove } from "lodash";
 import {
@@ -67,6 +67,8 @@ export class DisplayName extends LindormEntity<DisplayNameAttributes> {
 
       currentTry += 1;
     }
+
+    throw new ServerError("Unable to generate number");
   }
 
   public async schemaValidation(): Promise<void> {

@@ -2,7 +2,7 @@ import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { oauthRevokeController, oauthRevokeSchema } from "../../../controller";
 import { assertClientMiddleware } from "../../../middleware";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.post(

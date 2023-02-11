@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { EnrolmentSession } from "../../entity";
 import { JOI_CERTIFICATE_METHOD } from "../../constant";
@@ -66,6 +67,17 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
   const nonce = randomString(16);
+
+  if (!name || !installationId || !uniqueId) {
+    throw new ClientError("Bad Request", {
+      description: "Missing metadata",
+      data: {
+        name,
+        installationId,
+        uniqueId,
+      },
+    });
+  }
 
   const session = await enrolmentSessionCache.create(
     new EnrolmentSession({

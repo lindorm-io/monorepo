@@ -4,14 +4,14 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 
 export const tryFindConsentSession = async (
   ctx: ServerKoaContext,
-  browserSession: BrowserSession | undefined,
   client: Client,
+  browserSession?: BrowserSession,
 ): Promise<ConsentSession | undefined> => {
   const {
     repository: { consentSessionRepository },
   } = ctx;
 
-  if (!browserSession?.identityId) {
+  if (!browserSession) {
     return;
   }
 
@@ -20,7 +20,7 @@ export const tryFindConsentSession = async (
       clientId: client.id,
       identityId: browserSession.identityId,
     });
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) throw err;
   }
 };

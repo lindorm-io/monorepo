@@ -2,7 +2,7 @@ import { Router, useController, paramsMiddleware, useSchema } from "@lindorm-io/
 import { clientAuthMiddleware, identityEntityMiddleware } from "../../middleware";
 import { putUserinfoController, putUserinfoSchema } from "../../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.use(

@@ -13,7 +13,7 @@ export const handleAuthenticationInitialisation = async (
 
   const authenticationSession = new AuthenticationSession(options);
 
-  let account: Account;
+  let account: Account | undefined;
 
   if (options.identityId) {
     account = await accountRepository.tryFind({ id: options.identityId });

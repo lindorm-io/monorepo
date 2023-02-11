@@ -1,4 +1,5 @@
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { deviceHeadersEnrolledSchema } from "../schema";
 import {
   getDeviceLinkInfoController,
   getDeviceLinkListController,
@@ -18,7 +19,7 @@ import {
   identityAuthMiddleware,
 } from "../middleware";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.use(identityAuthMiddleware());
@@ -57,6 +58,7 @@ router.put(
   "/:id/biometry",
   paramsMiddleware,
   useSchema(updateDeviceLinkBiometrySchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
   useAssertion({
@@ -79,6 +81,7 @@ router.put(
   "/:id/pincode",
   paramsMiddleware,
   useSchema(updateDeviceLinkPincodeSchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
   useAssertion({
@@ -101,6 +104,7 @@ router.put(
   "/:id/trusted",
   paramsMiddleware,
   useSchema(updateDeviceLinkTrustedSchema),
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
   useAssertion({

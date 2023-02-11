@@ -1,7 +1,7 @@
 import { AuthorizationSession, Client, ElevationSession, LogoutSession, Tenant } from "../entity";
 import { Axios } from "@lindorm-io/axios";
 import { Controller } from "@lindorm-io/koa";
-import { JwtVerifyData } from "@lindorm-io/jwt";
+import { JwtDecodeData } from "@lindorm-io/jwt";
 import { VerifiedAuthenticationConfirmationToken, VerifiedIdentityToken } from "../common";
 import {
   LindormNodeServerAxios,
@@ -25,6 +25,7 @@ import {
   RefreshSessionRepository,
   TenantRepository,
 } from "../infrastructure";
+import { Dict } from "@lindorm-io/common-types";
 
 type ServerAxios = LindormNodeServerAxios & {
   authenticationClient: Axios;
@@ -59,7 +60,7 @@ type ServerRepository = LindormNodeServerRepository & {
 type ServerToken = LindormNodeServerToken & {
   authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
   idToken: VerifiedIdentityToken;
-  refreshToken: JwtVerifyData;
+  refreshToken: JwtDecodeData;
 };
 
 type Context = LindormNodeServerContext & {
@@ -70,8 +71,8 @@ type Context = LindormNodeServerContext & {
   token: ServerToken;
 };
 
-export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

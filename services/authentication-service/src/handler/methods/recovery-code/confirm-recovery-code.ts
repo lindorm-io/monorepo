@@ -1,5 +1,5 @@
 import { Account, AuthenticationSession } from "../../../entity";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ServerKoaContext } from "../../../types";
 import { fetchAccountSalt } from "../../vault-service";
@@ -21,6 +21,12 @@ export const confirmRecoveryCode = async (
   const { code } = options;
 
   logger.debug("Verifying Account");
+
+  if (!authenticationSession.identityId) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { identityId: authenticationSession.identityId },
+    });
+  }
 
   const account = await accountRepository.find({ id: authenticationSession.identityId });
 

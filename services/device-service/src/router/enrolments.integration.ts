@@ -45,8 +45,8 @@ describe("/enrolments", () => {
       .set("x-device-installation-id", "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75")
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", "27a10522a6994bbca0e1fc666804b350")
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         brand: "brand",
         build_id: "buildId",
@@ -98,8 +98,8 @@ describe("/enrolments", () => {
       .set("x-device-installation-id", "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75")
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", "27a10522a6994bbca0e1fc666804b350")
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         certificate_verifier: certificateVerifier,
         enrolment_session_token: enrolmentSessionToken,
@@ -133,15 +133,15 @@ describe("/enrolments", () => {
       .set("x-device-installation-id", "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75")
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", "27a10522a6994bbca0e1fc666804b350")
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .send({
         enrolment_session_token: enrolmentSessionToken,
       })
       .expect(204);
   });
 
-  test("POST /:id/status", async () => {
+  test("GET /:id/status", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
         status: SessionStatuses.PENDING,
@@ -158,8 +158,8 @@ describe("/enrolments", () => {
       .set("x-device-installation-id", "12be09f5-fcd4-438f-9b5d-dc1fb11e5e75")
       .set("x-device-ip", "127.0.0.1")
       .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", "27a10522a6994bbca0e1fc666804b350")
-      .set("x-fingerprint", "4f197712-0120-4654-99e7-828edc10b468")
       .expect(200);
 
     expect(response.body).toStrictEqual({

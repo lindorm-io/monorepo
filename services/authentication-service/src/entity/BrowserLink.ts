@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { Environment } from "@lindorm-io/koa";
+import { Environment } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,

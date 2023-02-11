@@ -7,7 +7,7 @@ import { isLoginRequiredByMaxAge } from "./is-login-required-by-max-age";
 
 export const isLoginRequired = (
   authorizationSession: AuthorizationSession,
-  browserSession: BrowserSession,
+  browserSession?: BrowserSession,
 ): boolean => {
   if (!authorizationSession) {
     throw new ServerError("Internal Server Error", {
@@ -24,10 +24,9 @@ export const isLoginRequired = (
   }
 
   if (
-    !browserSession.identityId ||
-    !browserSession.levelOfAssurance ||
     !browserSession.acrValues.length ||
-    !browserSession.amrValues.length
+    !browserSession.amrValues.length ||
+    !browserSession.levelOfAssurance
   ) {
     return true;
   }

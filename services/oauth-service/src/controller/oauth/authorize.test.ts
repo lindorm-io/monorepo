@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { createMockCache } from "@lindorm-io/redis";
 import { oauthAuthorizeController } from "./authorize";
+import { randomString as _randomString } from "@lindorm-io/random";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -24,10 +25,10 @@ import {
   isLoginRequired as _isLoginRequired,
   isConsentRequired as _isConsentRequired,
 } from "../../util";
-import { Environment } from "@lindorm-io/koa";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.mock("@lindorm-io/random");
 jest.mock("../../handler");
 jest.mock("../../util");
 
@@ -44,6 +45,8 @@ const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
 const filterAcrValues = _filterAcrValues as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
+
+const randomString = _randomString as jest.Mock;
 
 describe("oauthAuthorizeController", () => {
   let ctx: any;
@@ -97,8 +100,8 @@ describe("oauthAuthorizeController", () => {
           token: "id.jwt.jwt",
         },
       },
-      metadata: {
-        environment: Environment.DEVELOPMENT,
+      server: {
+        environment: "development",
       },
       cookies: {
         set: jest.fn(),
@@ -133,6 +136,8 @@ describe("oauthAuthorizeController", () => {
     }));
     isLoginRequired.mockImplementation(() => true);
     isConsentRequired.mockImplementation(() => true);
+
+    randomString.mockImplementation(() => "WuaUxGcvKAkxJJUF");
   });
 
   test("should resolve for all values", async () => {
@@ -267,7 +272,7 @@ describe("oauthAuthorizeController", () => {
         },
         loginHint: [],
         maxAge: null,
-        nonce: null,
+        nonce: "WuaUxGcvKAkxJJUF",
         originalUri: "https://oauth.test.lindorm.io/oauth2/authorize?query=query",
         promptModes: [],
         redirectData: null,

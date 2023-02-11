@@ -3,7 +3,7 @@ import { HttpStatus, Router } from "@lindorm-io/koa";
 import { configuration } from "../../server/configuration";
 import { LindormScopes, OauthGrantTypes, OauthResponseTypes } from "@lindorm-io/common-types";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.get("/", async (ctx: ServerKoaContext): Promise<void> => {

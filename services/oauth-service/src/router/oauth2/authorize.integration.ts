@@ -75,7 +75,7 @@ describe("/oauth2/authorize", () => {
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.find({
-      id: location.searchParams.get("session_id"),
+      id: location.searchParams.get("session_id")!,
     });
 
     expect(authorizationSession).toStrictEqual(

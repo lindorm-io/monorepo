@@ -47,7 +47,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
     this.koaRouter = new Router();
 
-    this.environment = Environments.UNKNOWN;
+    this.environment = options.environment || Environments.DEVELOPMENT;
     this.host = options.host;
     this.loaded = false;
     this.logger = options.logger;
@@ -64,7 +64,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       initContextMiddleware(options),
       utilContextMiddleware,
       dataHandlingMiddleware,
-      metadataMiddleware(this.environment),
+      metadataMiddleware,
       sessionLoggerMiddleware(this.logger),
       errorMiddleware,
       responseTimeMiddleware,

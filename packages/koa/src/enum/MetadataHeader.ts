@@ -20,4 +20,5 @@ export enum MetadataHeader {
 
   CORRELATION_ID = "x-correlation-id",
   FINGERPRINT = "x-fingerprint",
+  REQUEST_ID = "x-request-id",
 }

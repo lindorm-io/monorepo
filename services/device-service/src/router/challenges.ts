@@ -1,5 +1,6 @@
 import { includes } from "lodash";
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { deviceHeadersEnrolledSchema } from "../schema";
 import {
   confirmChallengeController,
   confirmChallengeSchema,
@@ -11,17 +12,18 @@ import {
 import {
   challengeSessionEntityMiddleware,
   challengeSessionTokenMiddleware,
-  deviceFingerprintRateLimit,
   deviceIpRateLimit,
   deviceLinkEntityMiddleware,
   deviceLinkIdRateLimitBackoff,
 } from "../middleware";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
-router.use(deviceFingerprintRateLimit("metadata.identifiers.fingerprint"));
-router.use(deviceIpRateLimit("metadata.device.ip"));
+router.use(
+  useSchema(deviceHeadersEnrolledSchema, "headers"),
+  deviceIpRateLimit("metadata.device.ip"),
+);
 
 router.post(
   "/",

@@ -9,6 +9,7 @@ import {
   CreateProtectedRecordRequestBody,
   CreateProtectedRecordResponse,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = CreateProtectedRecordRequestBody;
 
@@ -35,6 +36,13 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
 
   const key = randomString(128, { numbers: "random", symbols: "random" });
   const crypto = new CryptoAES({ secret: key });
+
+  if (!subjectHint) {
+    throw new ClientError("Bad Request", {
+      description: "Invalid token",
+      data: { subjectHint },
+    });
+  }
 
   await protectedRecordRepository.create(
     new ProtectedRecord({

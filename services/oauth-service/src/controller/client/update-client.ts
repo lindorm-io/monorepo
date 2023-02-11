@@ -25,30 +25,26 @@ type RequestData = {
 export const updateClientSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    audiences: Joi.array().items(Joi.string()).optional(),
-    defaults: Joi.object()
-      .keys({
-        displayMode: JOI_DISPLAY_MODE.optional(),
-        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.optional(),
-        responseMode: JOI_RESPONSE_MODE.optional(),
-      })
-      .optional(),
-    description: Joi.string().allow(null).optional(),
-    expiry: Joi.object()
-      .keys({
-        accessToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-        idToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-        refreshToken: JOI_EXPIRY_REGEX.allow(null).optional(),
-      })
-      .optional(),
-    host: Joi.string().uri().optional(),
-    logoUri: Joi.string().uri().allow(null).optional(),
-    logoutUri: Joi.string().uri().optional(),
-    name: Joi.string().optional(),
-    redirectUris: Joi.array().items(Joi.string().uri()).optional(),
-    requiredScopes: Joi.array().items(Joi.string()).optional(),
-    rtbfUri: Joi.string().uri().allow(null).optional(),
-    scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).optional(),
+    audiences: Joi.array().items(Joi.string()),
+    defaults: Joi.object().keys({
+      displayMode: JOI_DISPLAY_MODE,
+      levelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
+      responseMode: JOI_RESPONSE_MODE,
+    }),
+    description: Joi.string().allow(null),
+    expiry: Joi.object().keys({
+      accessToken: JOI_EXPIRY_REGEX.allow(null),
+      idToken: JOI_EXPIRY_REGEX.allow(null),
+      refreshToken: JOI_EXPIRY_REGEX.allow(null),
+    }),
+    host: Joi.string().uri(),
+    logoUri: Joi.string().uri().allow(null),
+    logoutUri: Joi.string().uri(),
+    name: Joi.string(),
+    redirectUris: Joi.array().items(Joi.string().uri()),
+    requiredScopes: Joi.array().items(Joi.string()),
+    rtbfUri: Joi.string().uri().allow(null),
+    scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION),
   })
   .required();
 

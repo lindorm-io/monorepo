@@ -22,6 +22,14 @@ export const handleRefreshTokenGrant = async (
     types: [LindormTokenTypes.REFRESH],
   });
 
+  if (!sessionId) {
+    throw new ClientError("Invalid Refresh Token", {
+      code: "invalid_refresh_token",
+      description: "Token claim is missing",
+      data: { sessionId },
+    });
+  }
+
   let refreshSession = await refreshSessionRepository.find({
     id: sessionId,
     clientId: client.id,

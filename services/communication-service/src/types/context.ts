@@ -1,17 +1,18 @@
 import { Controller, DefaultLindormSocket } from "@lindorm-io/koa";
+import { Dict } from "@lindorm-io/common-types";
 import {
   LindormNodeServerContext,
   LindormNodeServerKoaContext,
   LindormNodeServerKoaMiddleware,
 } from "@lindorm-io/node-server";
 
-export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<
   LindormNodeServerContext,
-  Data
+  D
 >;
 
-export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;
 
-export type ServerSocket<Data = any> = DefaultLindormSocket<LindormNodeServerContext, Data>;
+export type ServerSocket<D extends Dict = Dict> = DefaultLindormSocket<LindormNodeServerContext, D>;

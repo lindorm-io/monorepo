@@ -4,7 +4,7 @@ import { oidcSessionCallbackController, oidcSessionCallbackSchema } from "../con
 import { oidcSessionEntityMiddleware } from "../middleware";
 import { configuration } from "../server/configuration";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.get(

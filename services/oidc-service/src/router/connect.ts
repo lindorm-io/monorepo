@@ -5,7 +5,7 @@ import { redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/k
 import { LindormScopes } from "@lindorm-io/common-types";
 import { connectOidcToIdentityController, connectOidcToIdentitySchema } from "../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.get(

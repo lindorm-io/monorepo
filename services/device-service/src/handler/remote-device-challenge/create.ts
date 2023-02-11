@@ -1,19 +1,21 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ClientScopes } from "../../common";
-import { RdcSession, RdcSessionAttributes } from "../../entity";
 import { EmitSocketEventRequestBody, RdcSessionModes } from "@lindorm-io/common-types";
+import { RdcSession, RdcSessionOptions } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { expiryObject } from "@lindorm-io/expiry";
 
-interface Result {
+type Result = {
   id: string;
   expiresIn: number;
-}
+};
+
+type Options = Omit<RdcSessionOptions, "deviceLinks">;
 
 export const createRdcSession = async (
   ctx: ServerKoaContext,
-  options: Partial<RdcSessionAttributes>,
+  options: Options,
 ): Promise<Result> => {
   const {
     axios: { communicationClient, oauthClient },
@@ -92,7 +94,10 @@ export const createRdcSession = async (
 
   if (mode === RdcSessionModes.PUSH_NOTIFICATION) {
     const body: EmitSocketEventRequestBody = {
-      channels: { deviceLinks, identities: [identityId] },
+      channels: {
+        deviceLinks,
+        ...(identityId ? { identities: [identityId] } : {}),
+      },
       content: { id },
       event: "rdcSession:created",
     };

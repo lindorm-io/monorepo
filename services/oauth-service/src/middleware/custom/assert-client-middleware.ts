@@ -31,7 +31,7 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
   if (clientSecret) {
     try {
       await argon.assert(clientSecret, client.secret);
-    } catch (err) {
+    } catch (err: any) {
       throw new ClientError("Invalid Client Secret", {
         code: "invalid_request",
         description: "Invalid client secret",

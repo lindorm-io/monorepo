@@ -71,7 +71,7 @@ describe("/oauth2/sessions/logout", () => {
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.find({
-      id: location.searchParams.get("session_id"),
+      id: location.searchParams.get("session_id")!,
     });
 
     expect(logoutSession).toStrictEqual(
@@ -122,7 +122,7 @@ describe("/oauth2/sessions/logout", () => {
     expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.find({
-      id: location.searchParams.get("session_id"),
+      id: location.searchParams.get("session_id")!,
     });
 
     expect(logoutSession).toStrictEqual(

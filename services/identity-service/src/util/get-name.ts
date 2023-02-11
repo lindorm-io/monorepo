@@ -2,7 +2,7 @@ import { Identity } from "../entity";
 import { NamingSystem } from "../enum";
 import { ServerError } from "@lindorm-io/errors";
 
-export const getName = (identity: Identity): string => {
+export const getName = (identity: Identity): string | null => {
   const { familyName, givenName, namingSystem, takenName } = identity;
 
   const preferredName = takenName ? takenName : givenName;

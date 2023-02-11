@@ -13,7 +13,7 @@ export type OidcSessionAttributes = EntityAttributes & {
   codeVerifier: string | null;
   expires: Date;
   identityId: string | null;
-  nonce: string;
+  nonce: string | null;
   provider: string;
   state: string;
   verified: boolean;
@@ -46,10 +46,10 @@ export class OidcSession
 {
   public callbackId: string;
   public callbackUri: string;
-  public codeVerifier: string;
+  public codeVerifier: string | null;
   public expires: Date;
   public identityId: string | null;
-  public nonce: string;
+  public nonce: string | null;
   public provider: string;
   public state: string;
   public verified: boolean;
@@ -62,7 +62,7 @@ export class OidcSession
     this.codeVerifier = options.codeVerifier || null;
     this.expires = options.expires;
     this.identityId = options.identityId || null;
-    this.nonce = options.nonce;
+    this.nonce = options.nonce || null;
     this.provider = options.provider;
     this.state = options.state;
     this.state = options.state;

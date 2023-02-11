@@ -11,6 +11,7 @@ describe("updateEnrolmentStatus", () => {
         enrolmentSessionCache: {
           find: jest.fn().mockResolvedValue(
             createTestEnrolmentSession({
+              id: "439d212a-e91e-4093-bf3b-020adc91cf4d",
               status: "pending",
             }),
           ),
@@ -19,6 +20,7 @@ describe("updateEnrolmentStatus", () => {
       },
     };
     rdc = createTestRdcSession({
+      enrolmentSessionId: "439d212a-e91e-4093-bf3b-020adc91cf4d",
       status: "confirmed",
     });
   });

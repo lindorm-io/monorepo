@@ -16,35 +16,35 @@ import {
 } from "@lindorm-io/entity";
 
 export type IdentityDisplayName = {
-  name: string;
-  number: number;
+  name: string | null;
+  number: number | null;
 };
 
 export type IdentityAttributes = EntityAttributes & {
   active: boolean;
-  birthDate: string;
+  birthDate: string | null;
   displayName: IdentityDisplayName;
-  familyName: string;
-  gender: string;
-  givenName: string;
-  gravatarUri: string;
-  locale: string;
-  middleName: string;
-  namingSystem: string;
-  nationalIdentityNumber: string;
+  familyName: string | null;
+  gender: string | null;
+  givenName: string | null;
+  gravatarUri: string | null;
+  locale: string | null;
+  middleName: string | null;
+  namingSystem: string | null;
+  nationalIdentityNumber: string | null;
   nationalIdentityNumberVerified: boolean;
-  nickname: string;
-  picture: string;
+  nickname: string | null;
+  picture: string | null;
   preferredAccessibility: Array<string>;
-  preferredUsername: string;
-  profile: string;
-  pronouns: string;
-  socialSecurityNumber: string;
+  preferredUsername: string | null;
+  profile: string | null;
+  pronouns: string | null;
+  socialSecurityNumber: string | null;
   socialSecurityNumberVerified: boolean;
-  takenName: string;
-  username: string;
-  website: string;
-  zoneInfo: string;
+  takenName: string | null;
+  username: string | null;
+  website: string | null;
+  zoneInfo: string | null;
 };
 
 export type IdentityOptions = Optional<
@@ -109,29 +109,29 @@ const schema = Joi.object<IdentityAttributes>()
 
 export class Identity extends LindormEntity<IdentityAttributes> {
   public active: boolean;
-  public birthDate: string;
+  public birthDate: string | null;
   public displayName: IdentityDisplayName;
-  public familyName: string;
-  public gender: string;
-  public givenName: string;
-  public gravatarUri: string;
-  public locale: string;
-  public middleName: string;
-  public namingSystem: string;
-  public nationalIdentityNumber: string;
+  public familyName: string | null;
+  public gender: string | null;
+  public givenName: string | null;
+  public gravatarUri: string | null;
+  public locale: string | null;
+  public middleName: string | null;
+  public namingSystem: string | null;
+  public nationalIdentityNumber: string | null;
   public nationalIdentityNumberVerified: boolean;
-  public nickname: string;
-  public picture: string;
+  public nickname: string | null;
+  public picture: string | null;
   public preferredAccessibility: Array<string>;
-  public preferredUsername: string;
-  public profile: string;
-  public pronouns: string;
-  public socialSecurityNumber: string;
+  public preferredUsername: string | null;
+  public profile: string | null;
+  public pronouns: string | null;
+  public socialSecurityNumber: string | null;
   public socialSecurityNumberVerified: boolean;
-  public takenName: string;
-  public username: string;
-  public website: string;
-  public zoneInfo: string;
+  public takenName: string | null;
+  public username: string | null;
+  public website: string | null;
+  public zoneInfo: string | null;
 
   public constructor(options: IdentityOptions) {
     super(options);

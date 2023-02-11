@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaController } from "../../types";
 import { fetchAccountSalt } from "../../handler";
 
@@ -30,6 +31,12 @@ export const updateAccountPasswordController: ServerKoaController<RequestData> =
     aes: { secret: salt.aes },
     sha: { secret: salt.sha },
   });
+
+  if (!account.password) {
+    throw new ServerError("Invalid account", {
+      debug: { password: account.password },
+    });
+  }
 
   await crypto.assert(password, account.password);
 

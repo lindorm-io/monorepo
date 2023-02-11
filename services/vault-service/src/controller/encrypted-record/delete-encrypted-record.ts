@@ -26,7 +26,7 @@ export const deleteEncryptedRecordController: ServerKoaController<RequestData> =
 
   try {
     crypto.decrypt(encryptedRecord.encryptedData);
-  } catch (err) {
+  } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_owner",
       error: err,

@@ -14,7 +14,7 @@ import { Router } from "@lindorm-io/koa";
 // } from "../controller/sessions";
 //
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.get("/", async (ctx) => {

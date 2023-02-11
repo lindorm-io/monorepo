@@ -71,9 +71,9 @@ describe("/account/password", () => {
 
     expect(response.body).toStrictEqual({ uri: expect.any(String) });
 
-    const code = authenticator.generate(aes.decrypt(baseParse(found.totp)));
+    const code = authenticator.generate(aes.decrypt(baseParse(found.totp!)));
 
-    expect(() => totpHandler.assert(code, found.totp)).not.toThrow();
+    expect(() => totpHandler.assert(code, found.totp!)).not.toThrow();
   });
 
   test("DELETE /", async () => {

@@ -54,6 +54,8 @@ export const generateClientConfig = (
 
   for (const method of orderedMethods) {
     const config = find(orderedConfig, { method });
+    if (!config) continue;
+
     const strategies = filter(orderedConfig, { method }).map((config) => config.strategy);
 
     clientConfig.push({

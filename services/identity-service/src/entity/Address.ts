@@ -20,7 +20,18 @@ export type AddressAttributes = EntityAttributes & {
   streetAddress: Array<string>;
 };
 
-export type AddressOptions = Optional<AddressAttributes, EntityKeys | "label">;
+export type AddressOptions = Optional<
+  AddressAttributes,
+  | EntityKeys
+  | "careOf"
+  | "country"
+  | "label"
+  | "locality"
+  | "postalCode"
+  | "primary"
+  | "region"
+  | "streetAddress"
+>;
 
 const schema = Joi.object<AddressAttributes>()
   .keys({
@@ -41,13 +52,13 @@ const schema = Joi.object<AddressAttributes>()
 export class Address extends LindormEntity<AddressAttributes> implements IdentityAddress {
   public readonly identityId: string;
 
-  public careOf: string;
-  public country: string;
+  public careOf: string | null;
+  public country: string | null;
   public label: string | null;
-  public locality: string;
-  public postalCode: string;
+  public locality: string | null;
+  public postalCode: string | null;
   public primary: boolean;
-  public region: string;
+  public region: string | null;
   public streetAddress: Array<string>;
 
   public constructor(options: AddressOptions) {
@@ -59,7 +70,7 @@ export class Address extends LindormEntity<AddressAttributes> implements Identit
     this.label = options.label || null;
     this.locality = options.locality || null;
     this.postalCode = options.postalCode || null;
-    this.primary = options.primary;
+    this.primary = options.primary === true;
     this.region = options.region || null;
     this.streetAddress = options.streetAddress || [];
   }

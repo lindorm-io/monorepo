@@ -63,8 +63,6 @@ describe("isAuthenticationRequired", () => {
     browserSession = createTestBrowserSession({
       acrValues: [],
       amrValues: [],
-      identityId: null,
-      latestAuthentication: null,
       levelOfAssurance: 1,
     });
 

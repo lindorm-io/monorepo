@@ -3,9 +3,10 @@ import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { authenticateIdentifier } from "../../identity-service";
 import { createAccountCallback } from "../../account";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 
 interface Options {
-  code: string;
+  code?: string;
 }
 
 export const confirmEmailLink = async (
@@ -21,7 +22,19 @@ export const confirmEmailLink = async (
 
   const { code } = options;
 
+  if (!code) {
+    throw new ClientError("Invalid input", {
+      data: { code },
+    });
+  }
+
   logger.debug("Verifying Code");
+
+  if (!strategySession.code) {
+    throw new ServerError("Invalid strategySession", {
+      debug: { code: strategySession.code },
+    });
+  }
 
   await argon.assert(code, strategySession.code);
 

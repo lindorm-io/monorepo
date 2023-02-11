@@ -3,7 +3,7 @@ import { identityAuthMiddleware, identityEntityMiddleware } from "../../middlewa
 import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { updateIdentityController, updateIdentitySchema } from "../../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.patch(

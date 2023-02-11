@@ -24,4 +24,5 @@ export const getMetadataHeaders =
 
     [MetadataHeader.CORRELATION_ID]: ctx.metadata.identifiers.correlationId,
     [MetadataHeader.FINGERPRINT]: ctx.metadata.identifiers.fingerprint,
+    [MetadataHeader.REQUEST_ID]: ctx.metadata.identifiers.requestId,
   });

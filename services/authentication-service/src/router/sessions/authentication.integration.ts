@@ -197,7 +197,7 @@ describe("/sessions/authentication", () => {
 
     const found = await TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id });
 
-    await expect(argon.assert(response.body.code, found.code)).resolves.not.toThrow();
+    await expect(argon.assert(response.body.code, found.code!)).resolves.not.toThrow();
   });
 
   test("should resolve redirect to oidc", async () => {

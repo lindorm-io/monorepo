@@ -25,10 +25,10 @@ type ResponseBody = {
   loa?: number;
   nbf: number;
   scope: Array<string>;
-  sid: string;
+  sid: string | null;
   sub: string;
   tokenType: string;
-  username?: string;
+  username: string | null;
 };
 
 export const tokeninfoSchema = Joi.object<RequestData>()
@@ -79,7 +79,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
       });
 
       verifiedToken = true;
-    } catch (err) {
+    } catch (err: any) {
       if (!(err instanceof TokenError)) {
         throw err;
       }
@@ -91,7 +91,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
       await invalidTokenCache.find({ id });
 
       invalidToken = true;
-    } catch (err) {
+    } catch (err: any) {
       if (!(err instanceof EntityNotFoundError)) {
         throw err;
       }

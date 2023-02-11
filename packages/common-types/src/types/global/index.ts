@@ -1,3 +1,4 @@
+export * from "./dict";
 export * from "./environment";
 export * from "./params";
 export * from "./pkce-method";

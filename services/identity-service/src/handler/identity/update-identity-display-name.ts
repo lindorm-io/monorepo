@@ -10,7 +10,7 @@ export const updateIdentityDisplayName = async (
     repository: { displayNameRepository },
   } = ctx;
 
-  if (identity.displayName.name) {
+  if (identity.displayName.name && identity.displayName.number) {
     const current = await displayNameRepository.find({
       name: identity.displayName.name,
     });

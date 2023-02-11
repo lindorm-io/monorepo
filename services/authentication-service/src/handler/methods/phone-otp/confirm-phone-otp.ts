@@ -3,9 +3,10 @@ import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
 import { authenticateIdentifier } from "../../identity-service";
 import { createAccountCallback } from "../../account";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 
 interface Options {
-  otp: string;
+  otp?: string;
 }
 
 export const confirmPhoneOtp = async (
@@ -21,7 +22,19 @@ export const confirmPhoneOtp = async (
 
   const { otp } = options;
 
+  if (!otp) {
+    throw new ClientError("Invalid input", {
+      data: { otp },
+    });
+  }
+
   logger.debug("Verifying OTP");
+
+  if (!strategySession.otp) {
+    throw new ServerError("Invalid strategySession", {
+      debug: { otp: strategySession.otp },
+    });
+  }
 
   await argon.assert(otp, strategySession.otp);
 

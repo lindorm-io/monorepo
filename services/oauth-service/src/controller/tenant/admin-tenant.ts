@@ -12,8 +12,8 @@ type RequestData = {
 export const adminTenantSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    active: Joi.boolean().optional(),
-    owner: Joi.string().optional(),
+    active: Joi.boolean(),
+    owner: Joi.string(),
   })
   .required();
 

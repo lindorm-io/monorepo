@@ -1,9 +1,10 @@
 import { Account, AuthenticationSession, StrategySession } from "../../../entity";
 import { ServerKoaContext } from "../../../types";
 import { argon } from "../../../instance";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 
 interface Options {
-  otp: string;
+  otp?: string;
 }
 
 export const confirmSessionOtp = async (
@@ -19,11 +20,29 @@ export const confirmSessionOtp = async (
 
   const { otp } = options;
 
+  if (!otp) {
+    throw new ClientError("Invalid input", {
+      data: { otp },
+    });
+  }
+
   logger.debug("Verifying OTP");
+
+  if (!strategySession.otp) {
+    throw new ServerError("Invalid strategySession", {
+      debug: { otp: strategySession.otp },
+    });
+  }
 
   await argon.assert(otp, strategySession.otp);
 
   logger.debug("Resolving Account");
+
+  if (!authenticationSession.identityId) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { identityId: authenticationSession.identityId },
+    });
+  }
 
   return await accountRepository.find({ id: authenticationSession.identityId });
 };

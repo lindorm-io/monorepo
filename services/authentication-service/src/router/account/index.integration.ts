@@ -87,7 +87,7 @@ describe("/account", () => {
 
     const found = await TEST_ACCOUNT_REPOSITORY.find({ id: account.id });
 
-    await expect(crypto.assert(response.body.code, found.browserLinkCode)).resolves.not.toThrow();
+    await expect(crypto.assert(response.body.code, found.browserLinkCode!)).resolves.not.toThrow();
   });
 
   test("GET /recovery-code", async () => {
@@ -108,6 +108,6 @@ describe("/account", () => {
 
     const found = await TEST_ACCOUNT_REPOSITORY.find({ id: account.id });
 
-    await expect(crypto.assert(response.body.code, found.recoveryCode)).resolves.not.toThrow();
+    await expect(crypto.assert(response.body.code, found.recoveryCode!)).resolves.not.toThrow();
   });
 });

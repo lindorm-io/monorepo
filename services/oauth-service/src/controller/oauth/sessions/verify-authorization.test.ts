@@ -58,7 +58,7 @@ describe("oauthVerifyController", () => {
         consentSessionRepository: createMockRepository(createTestConsentSession),
       },
 
-      metadata: {
+      server: {
         environment: "development",
       },
       cookies: {

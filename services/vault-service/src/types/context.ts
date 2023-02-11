@@ -1,5 +1,6 @@
 import { Axios } from "@lindorm-io/axios";
 import { Controller } from "@lindorm-io/koa";
+import { Dict } from "@lindorm-io/common-types";
 import { EncryptedRecord, ProtectedRecord } from "../entity";
 import { EncryptedRecordRepository, ProtectedRecordRepository } from "../infrastructure";
 import {
@@ -36,8 +37,8 @@ type Context = LindormNodeServerContext & {
   repository: ServerRepository;
 };
 
-export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

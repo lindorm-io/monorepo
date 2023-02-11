@@ -12,7 +12,7 @@ type Result = {
 export const findSessionToLogout = async (
   ctx: ServerKoaContext,
   sessionId: string,
-  sessionHint?: string,
+  sessionHint?: string | null,
 ): Promise<Result> => {
   const {
     repository: { browserSessionRepository, refreshSessionRepository },

@@ -12,10 +12,6 @@ export const isLoginRequiredByMaxAge = (
     return false;
   }
 
-  if (!latestAuthentication) {
-    return true;
-  }
-
   const now = getUnixTime(new Date());
   const auth = getUnixTime(latestAuthentication);
 

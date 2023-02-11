@@ -31,7 +31,7 @@ describe("getLoginInfoController", () => {
       },
     });
     browserSession = createTestBrowserSession({
-      id: authorizationSession.identifiers.browserSessionId,
+      id: authorizationSession.identifiers.browserSessionId!,
     });
     client = createTestClient();
 

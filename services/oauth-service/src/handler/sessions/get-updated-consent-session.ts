@@ -52,7 +52,7 @@ export const getUpdatedConsentSession = async (
     ).sort();
 
     return await consentSessionRepository.update(consentSession);
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) throw err;
   }
 

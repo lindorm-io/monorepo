@@ -66,7 +66,7 @@ describe("/account/password", () => {
 
     const found = await TEST_ACCOUNT_REPOSITORY.find({ id: account.id });
 
-    await expect(crypto.assert("new-password", found.password)).resolves.not.toThrow();
+    await expect(crypto.assert("new-password", found.password!)).resolves.not.toThrow();
   });
 
   test("PATCH /", async () => {
@@ -91,6 +91,6 @@ describe("/account/password", () => {
 
     const found = await TEST_ACCOUNT_REPOSITORY.find({ id: account.id });
 
-    await expect(crypto.assert("new-password", found.password)).resolves.not.toThrow();
+    await expect(crypto.assert("new-password", found.password!)).resolves.not.toThrow();
   });
 });

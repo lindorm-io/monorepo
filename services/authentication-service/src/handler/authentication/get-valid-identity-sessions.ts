@@ -29,7 +29,7 @@ export const getValidIdentitySessions = async (
         (item: IdentitySessionItem) => item.adjustedAccessLevel >= 2 && item.levelOfAssurance >= 2,
       )
       .map((item: IdentitySessionItem) => item.id);
-  } catch (err) {
+  } catch (err: any) {
     return [];
   }
 };

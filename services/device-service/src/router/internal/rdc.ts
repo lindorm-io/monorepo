@@ -2,7 +2,7 @@ import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { clientAuthMiddleware } from "../../middleware";
 import { initialiseRdcController, initialiseRdcSchema } from "../../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.use(

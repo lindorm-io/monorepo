@@ -14,10 +14,10 @@ type RequestData = {
 export const updateTenantSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    administrators: Joi.array().items(Joi.string()).optional(),
-    name: Joi.string().optional(),
-    owner: Joi.string().optional(),
-    subdomain: Joi.string().optional(),
+    administrators: Joi.array().items(Joi.string()),
+    name: Joi.string(),
+    owner: Joi.string(),
+    subdomain: Joi.string(),
   })
   .required();
 

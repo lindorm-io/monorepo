@@ -59,8 +59,11 @@ describe("/rdc", () => {
       .post(`/rdc/${session.id}/acknowledge`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
-      .set("x-device-link-id", deviceLink.id)
       .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
       .expect(200);
 
@@ -101,7 +104,7 @@ describe("/rdc", () => {
       payload: session.tokenPayload,
       scopes: session.scopes,
       sessionId: session.id,
-      subject: session.identityId,
+      subject: session.identityId!,
     });
 
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
@@ -113,7 +116,7 @@ describe("/rdc", () => {
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
-      subject: session.identityId,
+      subject: session.identityId!,
     });
 
     const accessToken = getTestAccessToken({
@@ -124,8 +127,11 @@ describe("/rdc", () => {
       .post(`/rdc/${session.id}/confirm`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
-      .set("x-device-link-id", deviceLink.id)
       .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
       .send({
         challenge_confirmation_token: challengeConfirmationToken,
@@ -149,7 +155,7 @@ describe("/rdc", () => {
       payload: session.tokenPayload,
       scopes: session.scopes,
       sessionId: session.id,
-      subject: session.identityId,
+      subject: session.identityId!,
     });
 
     const accessToken = getTestAccessToken({
@@ -160,8 +166,11 @@ describe("/rdc", () => {
       .post(`/rdc/${session.id}/reject`)
       .set("Authorization", `Bearer ${accessToken}`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
-      .set("x-device-link-id", deviceLink.id)
       .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
       .send({
         rdcSession_token: rdcSessionToken,
@@ -183,8 +192,11 @@ describe("/rdc", () => {
     const response = await request(server.callback())
       .get(`/rdc/${session.id}/status`)
       .set("x-client-id", "a3a90c66-c7b6-4ffe-ba04-c1f9de429f04")
-      .set("x-device-link-id", deviceLink.id)
       .set("x-device-installation-id", deviceLink.installationId)
+      .set("x-device-ip", "127.0.0.1")
+      .set("x-device-link-id", deviceLink.id)
+      .set("x-device-name", "Test DeviceLink Name")
+      .set("x-device-system-version", "V12")
       .set("x-device-unique-id", deviceLink.uniqueId)
       .expect(200);
 

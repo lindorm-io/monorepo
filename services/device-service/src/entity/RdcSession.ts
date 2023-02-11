@@ -40,7 +40,7 @@ export interface RdcSessionAttributes extends EntityAttributes {
   rejectUri: string | null;
   scopes: Array<string>;
   status: SessionStatus;
-  templateName: string;
+  templateName: string | null;
   templateParameters: Record<string, any>;
   tokenPayload: Record<string, any>;
   type: RdcSessionType;
@@ -86,7 +86,7 @@ const schema = Joi.object<RdcSessionAttributes>()
     rejectUri: Joi.string().uri().allow(null).required(),
     scopes: Joi.array().items(Joi.string()).required(),
     status: JOI_SESSION_STATUS.required(),
-    templateName: Joi.string().required(),
+    templateName: Joi.string().allow(null).required(),
     templateParameters: Joi.object().required(),
     tokenPayload: Joi.object().required(),
     type: JOI_RDC_TYPE.required(),
@@ -109,7 +109,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly rejectPayload: Record<string, any>;
   public readonly rejectUri: string | null;
   public readonly scopes: Array<string>;
-  public readonly templateName: string;
+  public readonly templateName: string | null;
   public readonly templateParameters: Record<string, any>;
   public readonly tokenPayload: Record<string, any>;
   public readonly type: RdcSessionType;
@@ -135,7 +135,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     this.rejectUri = options.rejectUri || null;
     this.scopes = options.scopes || [];
     this.status = options.status || SessionStatuses.PENDING;
-    this.templateName = options.templateName;
+    this.templateName = options.templateName || null;
     this.templateParameters = options.templateParameters || {};
     this.tokenPayload = options.tokenPayload || {};
     this.type = options.type;

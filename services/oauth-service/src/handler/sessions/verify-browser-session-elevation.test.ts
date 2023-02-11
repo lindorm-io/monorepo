@@ -29,7 +29,7 @@ describe("verifyBrowserSessionElevation", () => {
           }),
         ),
       },
-      metadata: {
+      server: {
         environment: "development",
       },
       cookies: {

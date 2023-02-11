@@ -1,7 +1,8 @@
 import { Axios } from "@lindorm-io/axios";
 import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
 import { Controller } from "@lindorm-io/koa";
-import { JwtVerifyData } from "@lindorm-io/jwt";
+import { Dict } from "@lindorm-io/common-types";
+import { JwtDecodeData } from "@lindorm-io/jwt";
 import { VerifiedChallengeConfirmationToken } from "../common";
 import {
   LindormNodeServerAxios,
@@ -19,46 +20,46 @@ import {
   RdcSessionCache,
 } from "../infrastructure";
 
-interface ServerAxios extends LindormNodeServerAxios {
+type ServerAxios = LindormNodeServerAxios & {
   communicationClient: Axios;
   oauthClient: Axios;
   vaultClient: Axios;
-}
+};
 
-interface ServerCache extends LindormNodeServerCache {
+type ServerCache = LindormNodeServerCache & {
   challengeSessionCache: ChallengeSessionCache;
   rdcSessionCache: RdcSessionCache;
   enrolmentSessionCache: EnrolmentSessionCache;
-}
+};
 
-interface ServerEntity {
+type ServerEntity = {
   challengeSession: ChallengeSession;
   deviceLink: DeviceLink;
   rdcSession: RdcSession;
   enrolmentSession: EnrolmentSession;
-}
+};
 
-interface ServerRepository extends LindormNodeServerRepository {
+type ServerRepository = LindormNodeServerRepository & {
   deviceLinkRepository: DeviceLinkRepository;
-}
+};
 
-interface ServerToken extends LindormNodeServerToken {
+type ServerToken = LindormNodeServerToken & {
   challengeConfirmationToken: VerifiedChallengeConfirmationToken;
-  challengeSessionToken: JwtVerifyData;
-  rdcSessionToken: JwtVerifyData<Record<string, any>, Record<string, any>>;
-  enrolmentSessionToken: JwtVerifyData;
-}
+  challengeSessionToken: JwtDecodeData;
+  rdcSessionToken: JwtDecodeData<Record<string, any>, Record<string, any>>;
+  enrolmentSessionToken: JwtDecodeData;
+};
 
-interface Context extends LindormNodeServerContext {
+type Context = LindormNodeServerContext & {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   repository: ServerRepository;
   token: ServerToken;
-}
+};
 
-export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

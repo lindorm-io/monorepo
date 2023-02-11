@@ -13,7 +13,7 @@ describe("generateMfaCookie", () => {
       cache: {
         mfaCookieSessionCache: createMockCache(createTestMfaCookieSession),
       },
-      metadata: {
+      server: {
         environment: "development",
       },
     };

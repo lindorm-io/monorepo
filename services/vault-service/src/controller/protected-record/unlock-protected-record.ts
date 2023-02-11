@@ -55,7 +55,7 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
 
   try {
     blob = crypto.decrypt(protectedRecord.protectedData);
-  } catch (err) {
+  } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_vault_key",
       error: err,

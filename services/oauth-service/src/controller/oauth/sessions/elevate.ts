@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ElevationSession } from "../../../entity";
+import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaController } from "../../../types";
 import { SessionHint } from "../../../enum";
 import { assertRedirectUri, getAdjustedAccessLevel } from "../../../util";
@@ -30,16 +31,16 @@ type ResponseBody = InitialiseElevateResponse;
 
 export const elevateSchema = Joi.object<RequestData>()
   .keys({
-    acrValue: JOI_LEVEL_OF_ASSURANCE.optional(),
-    amrValues: Joi.array().items(Joi.string()).optional(),
-    authenticationHint: Joi.array().items(Joi.string()).optional(),
+    acrValue: JOI_LEVEL_OF_ASSURANCE,
+    amrValues: Joi.array().items(Joi.string()),
+    authenticationHint: Joi.array().items(Joi.string()),
     clientId: Joi.string().guid().required(),
-    country: JOI_COUNTRY_CODE.optional(),
-    idTokenHint: JOI_JWT.optional(),
-    nonce: JOI_NONCE.optional(),
-    redirectUri: Joi.string().uri().optional(),
-    state: JOI_STATE.optional(),
-    uiLocales: Joi.array().items(JOI_LOCALE).optional(),
+    country: JOI_COUNTRY_CODE,
+    idTokenHint: JOI_JWT,
+    nonce: JOI_NONCE,
+    redirectUri: Joi.string().uri(),
+    state: JOI_STATE,
+    uiLocales: Joi.array().items(JOI_LOCALE),
   })
   .options({ abortEarly: false })
   .required();
@@ -69,6 +70,14 @@ export const elevateController: ServerKoaController<RequestData> = async (
     assertRedirectUri(redirectUri, client);
   }
 
+  if (!bearerToken.authTime) {
+    throw new ServerError("Invalid Token", {
+      code: "invalid_token",
+      description: "Token claim is missing",
+      data: { authTime: bearerToken.authTime },
+    });
+  }
+
   const adjustedAccessLevel = getAdjustedAccessLevel({
     latestAuthentication: fromUnixTime(bearerToken.authTime),
     levelOfAssurance: bearerToken.levelOfAssurance,
@@ -86,10 +95,9 @@ export const elevateController: ServerKoaController<RequestData> = async (
         minimumLevel: (bearerToken.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
         recommendedLevel: idToken?.levelOfAssurance,
         recommendedMethods: idToken?.authMethodsReference as Array<AuthenticationMethod>,
-        requiredLevel: acrValue,
-        requiredMethods: amrValues,
+        requiredLevel: acrValue || 0,
+        requiredMethods: amrValues || [],
       },
-
       authenticationHint:
         authenticationHint ||
         removeEmptyFromArray(

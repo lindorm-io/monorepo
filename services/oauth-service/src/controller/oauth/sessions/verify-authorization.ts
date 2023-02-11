@@ -1,9 +1,13 @@
 import Joi from "joi";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse, Environment } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
-import { SessionStatuses, VerifyAuthorizationRequestQuery } from "@lindorm-io/common-types";
+import {
+  Environments,
+  SessionStatuses,
+  VerifyAuthorizationRequestQuery,
+} from "@lindorm-io/common-types";
 import {
   generateCallbackResponse,
   handleOauthConsentVerification,
@@ -37,7 +41,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   let authorizationSession = ctx.entity.authorizationSession;
 
   const cookieId = ctx.cookies.get(AUTHORIZATION_SESSION_COOKIE_NAME, {
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 
   if (cookieId !== authorizationSession.id) {

@@ -1,16 +1,11 @@
 import Joi from "joi";
-import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
+import { AuthenticationModes, LevelOfAssurance, PKCEMethod } from "@lindorm-io/common-types";
 import { AuthenticationSession } from "../../entity";
-import {
-  AuthenticationMethod,
-  AuthenticationMethods,
-  AuthenticationModes,
-  LevelOfAssurance,
-  PKCEMethod,
-} from "@lindorm-io/common-types";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
+import { filterAuthenticationMethods } from "../../util";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import {
   JOI_AUTHENTICATION_METHOD,
@@ -20,7 +15,7 @@ import {
 } from "../../constant";
 
 type Options = {
-  clientId?: string;
+  clientId: string;
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
   country?: string;
@@ -80,8 +75,6 @@ export const initialiseStandardAuthenticationSession = async (
     mode: AuthenticationModes.NONE,
     phoneHint,
     requiredLevel: levelOfAssurance,
-    requiredMethods: methods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethods).includes(key),
-    ) as Array<AuthenticationMethod>,
+    requiredMethods: filterAuthenticationMethods(methods),
   });
 };

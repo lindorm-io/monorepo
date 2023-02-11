@@ -124,7 +124,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public requiredScopes: Array<string>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
-  public secret: string | null;
+  public secret: string;
   public tenant: string;
   public type: OauthClientType;
 

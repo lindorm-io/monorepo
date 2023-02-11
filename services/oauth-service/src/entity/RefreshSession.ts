@@ -20,7 +20,7 @@ export type RefreshSessionAttributes = EntityAttributes & {
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
   nonce: string;
-  previousRefreshSessionId: string;
+  previousRefreshSessionId: string | null;
   tokenId: string;
   uiLocales: Array<string>;
 };
@@ -57,7 +57,7 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
   public readonly clientId: string;
   public readonly identityId: string;
   public readonly nonce: string;
-  public readonly previousRefreshSessionId: string;
+  public readonly previousRefreshSessionId: string | null;
   public readonly uiLocales: Array<string>;
 
   public acrValues: Array<string>;

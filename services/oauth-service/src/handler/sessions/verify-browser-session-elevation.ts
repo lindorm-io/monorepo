@@ -1,6 +1,6 @@
 import { BROWSER_SESSION_COOKIE_NAME } from "../../constant";
 import { ElevationSession } from "../../entity";
-import { Environment } from "@lindorm-io/koa";
+import { Environments } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { assertElevationSession } from "../../util";
@@ -16,7 +16,7 @@ export const verifyBrowserSessionElevation = async (
   } = ctx;
 
   const cookieId = ctx.cookies.get(BROWSER_SESSION_COOKIE_NAME, {
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 
   if (!cookieId) {
@@ -46,6 +46,12 @@ export const verifyBrowserSessionElevation = async (
 
   const { acrValues, amrValues, latestAuthentication, levelOfAssurance } =
     elevationSession.confirmedAuthentication;
+
+  if (!acrValues || !amrValues || !latestAuthentication || !levelOfAssurance) {
+    throw new ServerError("Invalid elevationSession", {
+      debug: { acrValues, amrValues, latestAuthentication, levelOfAssurance },
+    });
+  }
 
   browserSession.acrValues = acrValues;
   browserSession.amrValues = amrValues;

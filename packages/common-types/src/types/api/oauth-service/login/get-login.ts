@@ -23,8 +23,8 @@ export type GetLoginResponse = {
   };
   browserSession: {
     amrValues: Array<AuthenticationMethod>;
-    country: string;
-    identityId: string;
+    country: string | null;
+    identityId: string | null;
     levelOfAssurance: LevelOfAssurance;
     remember: boolean;
   };

@@ -17,14 +17,14 @@ type ResponseBody = TokenResponse;
 
 export const oauthTokenSchema = Joi.object<RequestData>()
   .keys({
-    clientId: Joi.string().guid().optional(),
-    clientSecret: Joi.string().optional(),
-    code: JOI_CODE.optional(),
-    codeVerifier: Joi.string().optional(),
+    clientId: Joi.string().guid(),
+    clientSecret: Joi.string(),
+    code: JOI_CODE,
+    codeVerifier: Joi.string(),
     grantType: JOI_GRANT_TYPE.required(),
-    redirectUri: Joi.string().uri().optional(),
-    refreshToken: JOI_JWT.optional(),
-    scope: Joi.string().optional(),
+    redirectUri: Joi.string().uri(),
+    refreshToken: JOI_JWT,
+    scope: Joi.string(),
   })
   .required();
 
@@ -47,7 +47,7 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
     });
   }
 
-  let body: Partial<ResponseBody>;
+  let body: Partial<ResponseBody> = {};
 
   switch (grantType) {
     case OauthGrantTypes.AUTHORIZATION_CODE:

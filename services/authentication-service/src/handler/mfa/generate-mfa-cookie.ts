@@ -1,10 +1,10 @@
 import { AuthenticationSession, MfaCookieSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
+import { Environments } from "@lindorm-io/common-types";
 import { MFA_COOKIE_NAME } from "../../constant";
+import { ServerKoaContext } from "../../types";
+import { calculateLevelOfAssurance, getMethodsFromStrategies } from "../../util";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
-import { calculateLevelOfAssurance, getMethodsFromStrategies } from "../../util";
-import { Environment } from "@lindorm-io/koa";
 
 export const generateMfaCookie = async (
   ctx: ServerKoaContext,
@@ -17,6 +17,10 @@ export const generateMfaCookie = async (
   const expires = expiryDate(configuration.defaults.mfa_cookie_expiry);
   const { level } = calculateLevelOfAssurance(authenticationSession);
   const methods = getMethodsFromStrategies(authenticationSession.confirmedStrategies);
+
+  if (!authenticationSession.identityId) {
+    throw new Error("Identity ID not found");
+  }
 
   const mfaCookieSession = await mfaCookieSessionCache.create(
     new MfaCookieSession({
@@ -31,6 +35,6 @@ export const generateMfaCookie = async (
     expires,
     httpOnly: true,
     overwrite: true,
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 };

@@ -1,7 +1,7 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { confirmOidcController, confirmOidcSchema } from "../../controller";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
 router.get(

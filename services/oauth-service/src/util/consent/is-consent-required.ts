@@ -4,8 +4,8 @@ import { difference } from "lodash";
 
 export const isConsentRequired = (
   authorizationSession: AuthorizationSession,
-  browserSession: BrowserSession,
-  consentSession: ConsentSession,
+  browserSession?: BrowserSession,
+  consentSession?: ConsentSession,
 ): boolean => {
   if (!authorizationSession) {
     throw new ServerError("Internal Server Error", {

@@ -4,6 +4,7 @@ import { ServerKoaController } from "../../types";
 import { TOTPHandler } from "../../class";
 import { configuration } from "../../server/configuration";
 import { fetchAccountSalt } from "../../handler";
+import { ServerError } from "@lindorm-io/errors";
 
 interface RequestData {
   totp: string;
@@ -29,6 +30,12 @@ export const deleteTotpController: ServerKoaController<RequestData> = async (
     aes: { secret: salt.aes },
     issuer: configuration.server.issuer,
   });
+
+  if (!account.totp) {
+    throw new ServerError("Invalid account", {
+      debug: { totp: account.totp },
+    });
+  }
 
   totpHandler.assert(totp, account.totp);
 

@@ -4,6 +4,8 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "./generate-token-response";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
+import { randomUUID } from "crypto";
+import { ClientError } from "@lindorm-io/errors";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
@@ -12,8 +14,6 @@ import {
   createTestConsentSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
-import { randomUUID } from "crypto";
-import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -36,6 +36,10 @@ describe("handleAuthorizationCodeGrant", () => {
         authorizationSessionCache: createMockCache((opts) =>
           createTestAuthorizationSession({
             clientId: "1fd075a0-eac1-4809-844b-23c4eb8946c2",
+            identifiers: {
+              browserSessionId: "38183591-069f-495b-83e8-db3b975ad5b7",
+              consentSessionId: "48833a69-e11a-4e4e-9cf9-32d808f788c6",
+            },
             ...opts,
           }),
         ),
@@ -58,6 +62,7 @@ describe("handleAuthorizationCodeGrant", () => {
         ),
         consentSessionRepository: createMockRepository((opts) =>
           createTestConsentSession({
+            id: "48833a69-e11a-4e4e-9cf9-32d808f788c6",
             sessions: ["38183591-069f-495b-83e8-db3b975ad5b7"],
           }),
         ),
@@ -86,6 +91,11 @@ describe("handleAuthorizationCodeGrant", () => {
     ctx.cache.authorizationSessionCache.find.mockResolvedValue(
       createTestAuthorizationSession({
         clientId: "1fd075a0-eac1-4809-844b-23c4eb8946c2",
+        identifiers: {
+          browserSessionId: "38183591-069f-495b-83e8-db3b975ad5b7",
+          consentSessionId: "48833a69-e11a-4e4e-9cf9-32d808f788c6",
+          refreshSessionId: null,
+        },
         requestedConsent: {
           audiences: [randomUUID()],
           scopes: ["openid", "email"],
@@ -137,6 +147,7 @@ describe("handleAuthorizationCodeGrant", () => {
     ctx.repository.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
         id: "38183591-069f-495b-83e8-db3b975ad5b7",
+        // @ts-ignore
         identityId: null,
       }),
     );

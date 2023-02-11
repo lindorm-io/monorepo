@@ -2,9 +2,10 @@ import { Account, AuthenticationSession, StrategySession } from "../../../entity
 import { ServerKoaContext } from "../../../types";
 import { configuration } from "../../../server/configuration";
 import { LindormTokenTypes } from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 
 interface Options {
-  challengeConfirmationToken: string;
+  challengeConfirmationToken?: string;
 }
 
 export const confirmDeviceChallenge = async (
@@ -21,7 +22,25 @@ export const confirmDeviceChallenge = async (
 
   const { challengeConfirmationToken } = options;
 
+  if (!challengeConfirmationToken) {
+    throw new ClientError("Invalid input", {
+      data: { challengeConfirmationToken },
+    });
+  }
+
   logger.debug("Verifying Challenge Confirmation Token");
+
+  if (!authenticationSession.identityId) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { identityId: authenticationSession.identityId },
+    });
+  }
+
+  if (!strategySession.nonce) {
+    throw new ServerError("Invalid strategySession", {
+      debug: { nonce: strategySession.nonce },
+    });
+  }
 
   const verifiedToken = jwt.verify(challengeConfirmationToken, {
     issuer:

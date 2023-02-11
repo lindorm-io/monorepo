@@ -6,9 +6,10 @@ import { clientCredentialsMiddleware } from "../../../middleware";
 import { randomNumberAsync } from "../../../util";
 import { SendOtpRequestBody } from "@lindorm-io/common-types";
 import { ClientScopes } from "../../../common";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 
 interface Options {
-  email: string;
+  email?: string;
 }
 
 export const initialiseEmailOtp = async (
@@ -23,6 +24,18 @@ export const initialiseEmailOtp = async (
   } = ctx;
 
   const { email } = options;
+
+  if (!email) {
+    throw new ClientError("Invalid input", {
+      data: { email },
+    });
+  }
+
+  if (!config.confirmLength) {
+    throw new ServerError("Invalid config", {
+      debug: { confirmLength: config.confirmLength },
+    });
+  }
 
   const otp = (await randomNumberAsync(config.confirmLength))
     .toString()

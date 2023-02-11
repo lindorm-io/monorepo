@@ -5,6 +5,7 @@ import { InvalidToken } from "../../../entity";
 import { JOI_JWT } from "../../../common";
 import { fromUnixTime } from "date-fns";
 import { LindormTokenTypes, RevokeTokenRequestBody } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = RevokeTokenRequestBody;
 
@@ -29,6 +30,14 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
   const { id, expires, sessionId, type } = jwt.verify(data.token, {
     types: [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
   });
+
+  if (!sessionId) {
+    throw new ClientError("Invalid Token", {
+      code: "invalid_token",
+      description: "Token claim is missing",
+      data: { sessionId },
+    });
+  }
 
   await invalidTokenCache.create(new InvalidToken({ id, expires: fromUnixTime(expires) }));
 

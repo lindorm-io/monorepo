@@ -1,5 +1,5 @@
 import { AuthorizationCode, RefreshSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { assertCodeChallenge } from "../../util";
 import { configuration } from "../../server/configuration";
@@ -22,7 +22,7 @@ export const handleAuthorizationCodeGrant = async (
 
   try {
     authorizationCode = await authorizationCodeCache.find({ code });
-  } catch (err) {
+  } catch (err: any) {
     throw new ClientError("Invalid Request", {
       code: "invalid_code",
       description: "Invalid Code",
@@ -34,11 +34,17 @@ export const handleAuthorizationCodeGrant = async (
     id: authorizationCode.authorizationSessionId,
   });
 
-  assertCodeChallenge(
-    authorizationSession.code.codeChallenge,
-    authorizationSession.code.codeChallengeMethod,
-    codeVerifier,
-  );
+  const { codeChallenge, codeChallengeMethod } = authorizationSession.code;
+
+  if (!codeChallenge || !codeChallengeMethod) {
+    throw new ServerError("Invalid Session", {
+      code: "invalid_session",
+      description: "Session data is missing",
+      data: { codeChallenge, codeChallengeMethod },
+    });
+  }
+
+  assertCodeChallenge(codeChallenge, codeChallengeMethod, codeVerifier);
 
   if (authorizationSession.clientId !== client.id) {
     throw new ClientError("Invalid Request", {
@@ -51,6 +57,14 @@ export const handleAuthorizationCodeGrant = async (
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid redirect URI",
+    });
+  }
+
+  if (!authorizationSession.identifiers.browserSessionId) {
+    throw new ServerError("Invalid Session", {
+      code: "invalid_session",
+      description: "Session data is missing",
+      data: { browserSessionId: authorizationSession.identifiers.browserSessionId },
     });
   }
 
@@ -73,6 +87,14 @@ export const handleAuthorizationCodeGrant = async (
         identityId: browserSession.identityId,
         levelOfAssurance: browserSession.levelOfAssurance,
       },
+    });
+  }
+
+  if (!authorizationSession.identifiers.consentSessionId) {
+    throw new ServerError("Invalid Session", {
+      code: "invalid_session",
+      description: "Session data is missing",
+      data: { consentSessionId: authorizationSession.identifiers.consentSessionId },
     });
   }
 

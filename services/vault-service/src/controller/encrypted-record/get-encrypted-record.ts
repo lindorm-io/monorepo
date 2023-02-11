@@ -42,7 +42,7 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
 
   try {
     blob = crypto.decrypt(encryptedRecord.encryptedData);
-  } catch (err) {
+  } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_encryption_Key",
       error: err,

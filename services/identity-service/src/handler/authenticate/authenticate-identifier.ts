@@ -62,7 +62,7 @@ export const authenticateIdentifier = async (
   const identity = await identityRepository.findOrCreate({ id });
 
   let primary = false;
-  if (isPrimaryUsedByIdentifier) {
+  if (isPrimaryUsedByIdentifier(type)) {
     const amount = await identifierRepository.count({ identityId: identity.id, provider, type });
     primary = amount < 1;
   }

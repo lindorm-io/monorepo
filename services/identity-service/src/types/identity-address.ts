@@ -1,9 +1,9 @@
 export type IdentityAddress = {
-  careOf: string;
-  country: string;
-  label: string;
-  locality: string;
-  postalCode: string;
-  region: string;
+  careOf: string | null;
+  country: string | null;
+  label: string | null;
+  locality: string | null;
+  postalCode: string | null;
+  region: string | null;
   streetAddress: Array<string>;
 };

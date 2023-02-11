@@ -25,7 +25,7 @@ export const getValidDeviceLinks = async (
     );
 
     return data.deviceLinks;
-  } catch (err) {
+  } catch (err: any) {
     return [];
   }
 };

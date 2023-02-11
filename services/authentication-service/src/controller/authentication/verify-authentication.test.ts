@@ -39,6 +39,7 @@ describe("verifyAuthenticationController", () => {
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
+          code: "code",
           confirmedStrategies: ["device_challenge"],
           identityId: "9ebc4bb6-507c-4c9c-b77e-e5f8432431b7",
           nonce: "nonce",

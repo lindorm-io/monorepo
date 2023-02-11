@@ -27,7 +27,7 @@ export const setIdentifierAsPrimary = async (
     current.primary = false;
 
     await identifierRepository.update(current);
-  } catch (err) {
+  } catch (err: any) {
     if (!(err instanceof EntityNotFoundError)) {
       throw err;
     }

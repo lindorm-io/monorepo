@@ -30,7 +30,7 @@ describe("tryFindConsentSession", () => {
   });
 
   test("should resolve consent session", async () => {
-    await expect(tryFindConsentSession(ctx, browserSession, client)).resolves.toStrictEqual(
+    await expect(tryFindConsentSession(ctx, client, browserSession)).resolves.toStrictEqual(
       expect.any(ConsentSession),
     );
 
@@ -38,11 +38,7 @@ describe("tryFindConsentSession", () => {
   });
 
   test("should resolve nothing when identity id is not set", async () => {
-    browserSession = createTestBrowserSession({
-      identityId: null,
-    });
-
-    await expect(tryFindConsentSession(ctx, browserSession, client)).resolves.toBeUndefined();
+    await expect(tryFindConsentSession(ctx, client, undefined)).resolves.toBeUndefined();
 
     expect(ctx.repository.consentSessionRepository.find).not.toHaveBeenCalled();
   });
@@ -50,12 +46,12 @@ describe("tryFindConsentSession", () => {
   test("should resolve nothing when session can not be found", async () => {
     ctx.repository.consentSessionRepository.find.mockRejectedValue(new EntityNotFoundError("test"));
 
-    await expect(tryFindConsentSession(ctx, browserSession, client)).resolves.toBeUndefined();
+    await expect(tryFindConsentSession(ctx, client, browserSession)).resolves.toBeUndefined();
   });
 
   test("should throw on unexpected error", async () => {
     ctx.repository.consentSessionRepository.find.mockRejectedValue(new Error("test"));
 
-    await expect(tryFindConsentSession(ctx, browserSession, client)).rejects.toThrow(Error);
+    await expect(tryFindConsentSession(ctx, client, browserSession)).rejects.toThrow(Error);
   });
 });

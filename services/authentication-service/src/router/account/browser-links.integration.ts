@@ -2,10 +2,10 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { Environments } from "@lindorm-io/common-types";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
-import { Environment } from "@lindorm-io/koa";
-import { EntityNotFoundError } from "@lindorm-io/entity";
 import {
   TEST_ACCOUNT_REPOSITORY,
   getTestAccessToken,
@@ -67,7 +67,7 @@ describe("/account/browser-link", () => {
         "User-Agent",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
       )
-      .set("x-client-environment", Environment.TEST)
+      .set("x-client-environment", Environments.TEST)
       .send({
         code: "browser-link-code",
         password: "password",

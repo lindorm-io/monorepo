@@ -2,7 +2,7 @@ import { AuthenticationMethod, LevelOfAssurance } from "../../../auth";
 import { PKCEMethod } from "../../../global";
 
 export type InitialiseAuthenticationRequestBody = {
-  clientId?: string;
+  clientId: string;
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
   country?: string;

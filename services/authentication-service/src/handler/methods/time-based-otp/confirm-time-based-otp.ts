@@ -1,12 +1,12 @@
 import { Account, AuthenticationSession } from "../../../entity";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../../types";
 import { TOTPHandler } from "../../../class";
 import { configuration } from "../../../server/configuration";
 import { fetchAccountSalt } from "../../vault-service";
 
 interface Options {
-  totp: string;
+  totp?: string;
 }
 
 export const confirmTimeBasedOtp = async (
@@ -21,7 +21,19 @@ export const confirmTimeBasedOtp = async (
 
   const { totp } = options;
 
+  if (!totp) {
+    throw new ClientError("Invalid input", {
+      data: { totp },
+    });
+  }
+
   logger.debug("Verifying Account");
+
+  if (!authenticationSession.identityId) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { identityId: authenticationSession.identityId },
+    });
+  }
 
   const account = await accountRepository.find({ id: authenticationSession.identityId });
 

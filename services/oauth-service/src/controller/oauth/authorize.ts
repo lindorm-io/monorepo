@@ -1,13 +1,13 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
-import { ControllerResponse, Environment } from "@lindorm-io/koa";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
 import { flatten, uniq } from "lodash";
 import { removeEmptyFromArray } from "@lindorm-io/core";
 import { tryFindBrowserSession, tryFindConsentSession, tryFindRefreshSession } from "../../handler";
-import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import {
   AUTHORIZATION_SESSION_COOKIE_NAME,
   JOI_DISPLAY_MODE,
@@ -29,6 +29,7 @@ import {
 } from "../../util";
 import {
   AuthorizeRequestQuery,
+  Environments,
   OauthPromptMode,
   OauthResponseType,
   SessionStatuses,
@@ -38,26 +39,26 @@ type RequestData = AuthorizeRequestQuery;
 
 export const oauthAuthorizeSchema = Joi.object<RequestData>()
   .keys({
-    acrValues: Joi.string().optional(),
-    amrValues: Joi.string().optional(),
-    authToken: JOI_JWT.optional(),
+    acrValues: Joi.string(),
+    amrValues: Joi.string(),
+    authToken: JOI_JWT,
     clientId: Joi.string().guid().required(),
-    codeChallenge: Joi.string().optional(),
-    codeChallengeMethod: JOI_PKCE_METHOD.optional(),
-    country: JOI_COUNTRY_CODE.optional(),
-    display: JOI_DISPLAY_MODE.optional(),
-    idTokenHint: Joi.string().optional(),
-    loginHint: Joi.string().optional(),
-    maxAge: Joi.string().pattern(/^\d+$/).optional(),
-    nonce: JOI_NONCE.optional(),
-    prompt: JOI_PROMPT_REGEX.optional(),
-    redirectData: Joi.string().base64().optional(),
+    codeChallenge: Joi.string(),
+    codeChallengeMethod: JOI_PKCE_METHOD,
+    country: JOI_COUNTRY_CODE,
+    display: JOI_DISPLAY_MODE,
+    idTokenHint: Joi.string(),
+    loginHint: Joi.string(),
+    maxAge: Joi.string().pattern(/^\d+$/),
+    nonce: JOI_NONCE,
+    prompt: JOI_PROMPT_REGEX,
+    redirectData: Joi.string().base64(),
     redirectUri: Joi.string().uri().required(),
-    responseMode: JOI_RESPONSE_MODE.optional(),
+    responseMode: JOI_RESPONSE_MODE,
     responseType: JOI_RESPONSE_TYPE_REGEX.required(),
     scope: Joi.string().required(),
     state: JOI_STATE.required(),
-    uiLocales: Joi.string().optional(),
+    uiLocales: Joi.string(),
   })
   .required();
 
@@ -109,7 +110,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   });
 
   const browserSession = await tryFindBrowserSession(ctx);
-  const consentSession = await tryFindConsentSession(ctx, browserSession, client);
+  const consentSession = await tryFindConsentSession(ctx, client, browserSession);
   const refreshSession = await tryFindRefreshSession(ctx, idToken);
 
   const audiences = idToken
@@ -118,8 +119,8 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     code: {
-      codeChallenge,
-      codeChallengeMethod,
+      codeChallenge: codeChallenge || null,
+      codeChallengeMethod: codeChallengeMethod || null,
     },
     requestedConsent: {
       audiences,
@@ -134,9 +135,9 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       requiredMethods,
     },
     identifiers: {
-      browserSessionId: browserSession?.id,
-      consentSessionId: consentSession?.id,
-      refreshSessionId: refreshSession?.id,
+      browserSessionId: browserSession?.id || null,
+      consentSessionId: consentSession?.id || null,
+      refreshSessionId: refreshSession?.id || null,
     },
     authToken,
     clientId: client.id,
@@ -161,7 +162,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     responseMode: responseMode || client.defaults.responseMode,
     responseTypes,
     state,
-    uiLocales: uiLocales ? uiLocales.split(" ") : null,
+    uiLocales: uiLocales ? uiLocales.split(" ") : [],
   });
 
   const loginRequired = isLoginRequired(authorizationSession, browserSession);
@@ -184,7 +185,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     expires: authorizationSession.expires,
     httpOnly: true,
     overwrite: true,
-    signed: ctx.metadata.environment !== Environment.TEST,
+    signed: ctx.server.environment !== Environments.TEST,
   });
 
   if (!loginRequired) {

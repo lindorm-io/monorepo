@@ -1,6 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
 import { ConnectSession, DisplayName, Identity, Identifier, Address } from "../entity";
 import { Controller } from "@lindorm-io/koa";
+import { Dict } from "@lindorm-io/common-types";
 import {
   LindormNodeServerAxios,
   LindormNodeServerCache,
@@ -48,8 +49,8 @@ type Context = LindormNodeServerContext & {
   repository: ServerRepository;
 };
 
-export type ServerKoaContext<Data = any> = LindormNodeServerKoaContext<Context, Data>;
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export type ServerKoaController<Data = any> = Controller<ServerKoaContext<Data>>;
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
 export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

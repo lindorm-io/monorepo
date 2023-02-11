@@ -79,7 +79,7 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
       });
 
       return { redirect: redirectTo };
-    } catch (err) {
+    } catch (err: any) {
       /* ignored */
     }
   }

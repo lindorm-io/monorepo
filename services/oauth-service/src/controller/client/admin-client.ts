@@ -16,13 +16,13 @@ type RequestData = {
 export const adminClientSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    active: Joi.boolean().optional(),
+    active: Joi.boolean(),
     allowed: Joi.object({
-      grantTypes: Joi.array().items(JOI_GRANT_TYPE).optional(),
-      responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).optional(),
-      scopes: Joi.array().items(Joi.string()).optional(),
-    }).optional(),
-    type: JOI_CLIENT_TYPE.optional(),
+      grantTypes: Joi.array().items(JOI_GRANT_TYPE),
+      responseTypes: Joi.array().items(JOI_RESPONSE_TYPE),
+      scopes: Joi.array().items(Joi.string()),
+    }),
+    type: JOI_CLIENT_TYPE,
   })
   .required();
 

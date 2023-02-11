@@ -6,10 +6,7 @@ export const sessionLoggerMiddleware =
   async (ctx, next): Promise<void> => {
     ctx.logger = logger.createSessionLogger({
       correlationId: ctx.metadata.identifiers.correlationId,
-
-      ...(ctx.metadata.identifiers.fingerprint
-        ? { fingerprint: ctx.metadata.identifiers.fingerprint }
-        : {}),
+      requestId: ctx.metadata.identifiers.requestId,
     });
 
     try {
@@ -32,9 +29,11 @@ export const sessionLoggerMiddleware =
         correlationId: ctx.metadata.identifiers.correlationId,
         response: {
           body: ctx.response.body,
+          config: ctx.config,
           header: ctx.response.header,
           message: ctx.response.message,
           metrics: ctx.metrics,
+          server: ctx.server,
           status: ctx.response.status,
         },
       });

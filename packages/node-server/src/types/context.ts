@@ -1,4 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
+import { Dict } from "@lindorm-io/common-types";
 import { JwtDecodeData, JWT } from "@lindorm-io/jwt";
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
 import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
@@ -47,14 +48,14 @@ export interface LindormNodeServerContext extends DefaultLindormContext {
 }
 
 export type LindormNodeServerKoaContext<
-  Context extends LindormNodeServerContext = LindormNodeServerContext,
-  Data extends Record<string, any> = Record<string, any>,
-> = DefaultLindormKoaContext<Context, Data>;
+  C extends LindormNodeServerContext = LindormNodeServerContext,
+  D extends Dict = Dict,
+> = DefaultLindormKoaContext<C, D>;
 
 export type LindormNodeServerKoaMiddleware<
-  Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
-> = DefaultLindormMiddleware<Context>;
+  C extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
+> = DefaultLindormMiddleware<C>;
 
 export type LindormNodeServerSocketMiddleware<
-  Socket extends DefaultLindormSocket = DefaultLindormSocket,
-> = DefaultLindormSocketMiddleware<Socket>;
+  S extends DefaultLindormSocket = DefaultLindormSocket,
+> = DefaultLindormSocketMiddleware<S>;

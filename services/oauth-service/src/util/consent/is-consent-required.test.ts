@@ -49,7 +49,6 @@ describe("isConsentRequired", () => {
 
   test("should require consent when required by browser session", () => {
     consentSession = createTestConsentSession({
-      identityId: null,
       audiences: [],
       scopes: [],
     });

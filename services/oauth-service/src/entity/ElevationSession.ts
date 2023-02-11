@@ -151,13 +151,14 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     };
     this.requestedAuthentication = {
       minimumLevel:
+        options.requestedAuthentication?.minimumLevel &&
         options.requestedAuthentication.minimumLevel > 0
-          ? options.requestedAuthentication.minimumLevel
+          ? options.requestedAuthentication?.minimumLevel
           : 1,
-      recommendedLevel: options.requestedAuthentication.recommendedLevel || 1,
-      recommendedMethods: options.requestedAuthentication.recommendedMethods || [],
-      requiredLevel: options.requestedAuthentication.requiredLevel || 1,
-      requiredMethods: options.requestedAuthentication.requiredMethods || [],
+      recommendedLevel: options.requestedAuthentication?.recommendedLevel || 1,
+      recommendedMethods: options.requestedAuthentication?.recommendedMethods || [],
+      requiredLevel: options.requestedAuthentication?.requiredLevel || 1,
+      requiredMethods: options.requestedAuthentication?.requiredMethods || [],
     };
 
     this.authenticationHint = options.authenticationHint || [];

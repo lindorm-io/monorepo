@@ -1,11 +1,5 @@
 import { rateLimitBackoffMiddleware, rateLimitMiddleware } from "@lindorm-io/koa-redis";
 
-export const deviceFingerprintRateLimit = rateLimitMiddleware({
-  expiresInSeconds: 60,
-  keyName: "device-fingerprint",
-  limit: 100,
-});
-
 export const deviceIpRateLimit = rateLimitMiddleware({
   expiresInSeconds: 60,
   keyName: "device-ip",

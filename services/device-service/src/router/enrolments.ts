@@ -1,4 +1,5 @@
 import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { deviceHeadersSchema } from "../schema";
 import {
   confirmEnrolmentController,
   confirmEnrolmentSchema,
@@ -10,7 +11,6 @@ import {
   getEnrolmentStatusSchema,
 } from "../controller";
 import {
-  deviceFingerprintRateLimit,
   deviceIpRateLimit,
   enrolmentSessionEntityMiddleware,
   enrolmentSessionTokenMiddleware,
@@ -18,10 +18,9 @@ import {
   identityIdRateLimit,
 } from "../middleware";
 
-const router = new Router();
+const router = new Router<any, any>();
 export default router;
 
-router.use(deviceFingerprintRateLimit("metadata.identifiers.fingerprint"));
 router.use(deviceIpRateLimit("metadata.device.ip"));
 
 router.post(
@@ -29,6 +28,7 @@ router.post(
   identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(initialiseEnrolmentSchema),
+  useSchema(deviceHeadersSchema, "headers"),
   useController(initialiseEnrolmentController),
 );
 
@@ -38,6 +38,7 @@ router.post(
   identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(confirmEnrolmentSchema),
+  useSchema(deviceHeadersSchema, "headers"),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),
   enrolmentSessionEntityMiddleware("data.id"),
   useAssertion({
@@ -62,6 +63,7 @@ router.post(
   identityAuthMiddleware(),
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(rejectEnrolmentSchema),
+  useSchema(deviceHeadersSchema, "headers"),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),
   enrolmentSessionEntityMiddleware("data.id"),
   useAssertion({

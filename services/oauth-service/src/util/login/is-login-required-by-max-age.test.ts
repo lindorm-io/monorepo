@@ -31,21 +31,8 @@ describe("isAuthenticationRequiredByMaxAge", () => {
     const authorizationSession = createTestAuthorizationSession({
       maxAge: null,
     });
-    const browserSession = createTestBrowserSession({
-      latestAuthentication: null,
-    });
+    const browserSession = createTestBrowserSession({});
 
     expect(isLoginRequiredByMaxAge(authorizationSession, browserSession)).toBe(false);
-  });
-
-  test("should return true when latestAuthentication does not exist", () => {
-    const authorizationSession = createTestAuthorizationSession({
-      maxAge: 600,
-    });
-    const browserSession = createTestBrowserSession({
-      latestAuthentication: null,
-    });
-
-    expect(isLoginRequiredByMaxAge(authorizationSession, browserSession)).toBe(true);
   });
 });

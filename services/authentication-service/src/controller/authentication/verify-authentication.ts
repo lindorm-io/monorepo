@@ -1,12 +1,12 @@
 import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
+import { AuthenticationConfirmationTokenClaims } from "../../common";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { assertPKCE } from "@lindorm-io/node-pkce";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
-import { AuthenticationConfirmationTokenClaims } from "../../common";
 import {
   LindormTokenTypes,
   SessionStatuses,
@@ -52,6 +52,12 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     codeVerifier,
   );
 
+  if (!authenticationSession.code) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { code: authenticationSession.code },
+    });
+  }
+
   await argon.assert(code, authenticationSession.code);
 
   const { level, maximum } = calculateLevelOfAssurance(authenticationSession);
@@ -62,6 +68,18 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
 
   if (authenticationSession.confirmedOidcProvider) {
     authMethodsReference.push("oidc");
+  }
+
+  if (!authenticationSession.nonce) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { nonce: authenticationSession.nonce },
+    });
+  }
+
+  if (!authenticationSession.identityId) {
+    throw new ServerError("Invalid authenticationSession", {
+      debug: { identityId: authenticationSession.identityId },
+    });
   }
 
   const { expiresIn, token: authenticationConfirmationToken } = jwt.sign<
