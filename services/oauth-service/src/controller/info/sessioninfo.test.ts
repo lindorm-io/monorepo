@@ -1,8 +1,10 @@
+import { createMockCache } from "@lindorm-io/redis";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { sessioninfoController } from "./sessioninfo";
 import {
+  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
-  createTestConsentSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
 
@@ -12,34 +14,7 @@ describe("sessioninfoController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: {
-          find: jest
-            .fn()
-            .mockResolvedValueOnce(
-              createTestClient({
-                id: "343d2d9b-2cf5-4dd3-afd4-fed8890e965a",
-                name: "343d2d9b",
-              }),
-            )
-            .mockResolvedValueOnce(
-              createTestClient({
-                id: "dfa00361-05bb-4cfd-9e51-4d7542079930",
-                name: "dfa00361",
-              }),
-            )
-            .mockResolvedValueOnce(
-              createTestClient({
-                id: "77c7554a-199f-4fce-bacb-835dc6d96a44",
-                name: "77c7554a",
-              }),
-            )
-            .mockResolvedValueOnce(
-              createTestClient({
-                id: "68fc5e90-1259-49c0-acf9-542d039e4d09",
-                name: "68fc5e90",
-              }),
-            ),
-        },
+        clientCache: createMockCache(createTestClient),
       },
       token: {
         bearerToken: {
@@ -47,47 +22,56 @@ describe("sessioninfoController", () => {
         },
       },
       repository: {
-        browserSessionRepository: {
-          findMany: jest.fn().mockResolvedValue([
-            createTestBrowserSession({
-              clients: [
-                "343d2d9b-2cf5-4dd3-afd4-fed8890e965a",
-                "dfa00361-05bb-4cfd-9e51-4d7542079930",
-              ],
-            }),
-            createTestBrowserSession({
-              clients: ["77c7554a-199f-4fce-bacb-835dc6d96a44"],
-            }),
-          ]),
-        },
-        consentSessionRepository: {
-          findMany: jest.fn().mockResolvedValue([
-            createTestConsentSession({
-              clientId: "343d2d9b-2cf5-4dd3-afd4-fed8890e965a",
-            }),
-            createTestConsentSession({
-              clientId: "dfa00361-05bb-4cfd-9e51-4d7542079930",
-            }),
-            createTestConsentSession({
-              clientId: "77c7554a-199f-4fce-bacb-835dc6d96a44",
-            }),
-            createTestConsentSession({
-              clientId: "68fc5e90-1259-49c0-acf9-542d039e4d09",
-            }),
-          ]),
-        },
-        refreshSessionRepository: {
-          findMany: jest.fn().mockResolvedValue([
-            createTestRefreshSession({
-              clientId: "68fc5e90-1259-49c0-acf9-542d039e4d09",
-            }),
-          ]),
-        },
+        accessSessionRepository: createMockRepository(createTestAccessSession),
+        browserSessionRepository: createMockRepository(createTestBrowserSession),
+        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
   });
 
   test("should resolve", async () => {
-    await expect(sessioninfoController(ctx)).resolves.toMatchSnapshot();
+    await expect(sessioninfoController(ctx)).resolves.toStrictEqual({
+      body: {
+        accessSessions: [
+          {
+            id: expect.any(String),
+            clientId: expect.any(String),
+            latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
+            levelOfAssurance: 2,
+            scopes: ["openid", "profile"],
+          },
+        ],
+        browserSessions: [
+          {
+            id: expect.any(String),
+            latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
+            levelOfAssurance: 2,
+            remember: true,
+          },
+        ],
+        clients: [
+          {
+            id: expect.any(String),
+            description: "Client description",
+            name: "ClientName",
+          },
+          {
+            id: expect.any(String),
+            description: "Client description",
+            name: "ClientName",
+          },
+        ],
+        refreshSessions: [
+          {
+            id: expect.any(String),
+            clientId: expect.any(String),
+            expires: new Date("2021-02-01T08:00:00.000Z"),
+            latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
+            levelOfAssurance: 2,
+            scopes: ["openid", "profile"],
+          },
+        ],
+      },
+    });
   });
 });

@@ -1,7 +1,7 @@
-import { ServerKoaContext } from "../../types";
 import { HttpStatus, Router } from "@lindorm-io/koa";
-import { configuration } from "../../server/configuration";
 import { LindormScopes, OauthGrantTypes, OauthResponseTypes } from "@lindorm-io/common-types";
+import { ServerKoaContext } from "../../types";
+import { configuration } from "../../server/configuration";
 
 const router = new Router<any, any>();
 export default router;
@@ -12,6 +12,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     backchannelLogoutSessionSupported: true,
     backchannelLogoutSupported: true,
     claimsParameterSupported: false,
+    endSessionEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
     grantTypesSupported: [
       OauthGrantTypes.AUTHORIZATION_CODE,
       OauthGrantTypes.CLIENT_CREDENTIALS,

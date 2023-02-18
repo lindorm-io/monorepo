@@ -5,11 +5,14 @@ import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
-import { flatten, uniq } from "lodash";
-import { removeEmptyFromArray } from "@lindorm-io/core";
-import { tryFindBrowserSession, tryFindConsentSession, tryFindRefreshSession } from "../../handler";
+import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import {
-  AUTHORIZATION_SESSION_COOKIE_NAME,
+  setAuthorizationSessionCookie,
+  tryFindAccessSession,
+  tryFindBrowserSessions,
+  tryFindRefreshSession,
+} from "../../handler";
+import {
   JOI_DISPLAY_MODE,
   JOI_PKCE_METHOD,
   JOI_PROMPT_REGEX,
@@ -18,22 +21,25 @@ import {
 } from "../../constant";
 import {
   assertAuthorizePrompt,
-  assertRedirectUri,
   assertAuthorizeResponseType,
   assertAuthorizeScope,
+  assertRedirectUri,
   createAuthorizationVerifyUri,
+  createConsentPendingUri,
   createLoginPendingUri,
+  createSelectAccountPendingUri,
   filterAcrValues,
-  isLoginRequired,
   isConsentRequired,
+  isLoginRequired,
+  isSelectAccountRequired,
 } from "../../util";
 import {
   AuthorizeRequestQuery,
-  Environments,
   OauthPromptMode,
   OauthResponseType,
   SessionStatuses,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = AuthorizeRequestQuery;
 
@@ -91,11 +97,19 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     token: { idToken },
   } = ctx;
 
+  if (!client.active) {
+    throw new ClientError("Invalid client", {
+      code: "invalid_request",
+      description: "Client is blocked",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
   const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OauthPromptMode>) : [];
   const responseTypes = responseType.toLowerCase().split(" ") as Array<OauthResponseType>;
   const scopes = scope.toLowerCase().split(" ");
 
-  assertRedirectUri(redirectUri, client);
+  assertRedirectUri(client, redirectUri);
 
   const expires = expiryDate(configuration.defaults.expiry.authorization_session);
 
@@ -109,13 +123,15 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     amrArray: idToken?.authMethodsReference,
   });
 
-  const browserSession = await tryFindBrowserSession(ctx);
-  const consentSession = await tryFindConsentSession(ctx, client, browserSession);
-  const refreshSession = await tryFindRefreshSession(ctx, idToken);
+  const browserSessions = await tryFindBrowserSessions(ctx, idToken);
+  const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
+
+  const accessSession = await tryFindAccessSession(ctx, client, browserSession);
+  const refreshSession = await tryFindRefreshSession(ctx, client, browserSession, idToken);
 
   const audiences = idToken
-    ? uniq(flatten([idToken.audiences, client.id, client.defaults.audiences])).sort()
-    : uniq(flatten([client.id, client.defaults.audiences])).sort();
+    ? uniqArray(idToken.audiences, client.id, client.defaults.audiences)
+    : uniqArray(client.id, client.defaults.audiences);
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     code: {
@@ -134,63 +150,93 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       requiredLevel,
       requiredMethods,
     },
-    identifiers: {
-      browserSessionId: browserSession?.id || null,
-      consentSessionId: consentSession?.id || null,
-      refreshSessionId: refreshSession?.id || null,
+    requestedSelectAccount: {
+      browserSessions: browserSessions.map((x) => ({
+        browserSessionId: x.id,
+        identityId: x.identityId,
+      })),
     },
+
     authToken,
+    browserSessionId: browserSession?.id || null,
     clientId: client.id,
+    accessSessionId: accessSession?.id || null,
     country,
     displayMode: display || client.defaults.displayMode,
     expires,
     idTokenHint: idToken ? idToken.token : null,
     loginHint: removeEmptyFromArray(
-      uniq([
+      uniqArray(
         loginHint,
         idToken?.claims?.email,
         idToken?.claims?.phoneNumber,
         idToken?.claims?.username,
-      ]),
-    ).sort(),
+      ),
+    ),
     maxAge: maxAge ? parseInt(maxAge, 10) : null,
-    nonce: nonce || idToken?.nonce || browserSession?.nonce,
+    nonce,
     originalUri: new URL(ctx.request.originalUrl, configuration.server.host).toString(),
     promptModes: prompts,
     redirectData,
     redirectUri,
+    refreshSessionId: refreshSession?.id || null,
     responseMode: responseMode || client.defaults.responseMode,
     responseTypes,
     state,
     uiLocales: uiLocales ? uiLocales.split(" ") : [],
   });
 
-  const loginRequired = isLoginRequired(authorizationSession, browserSession);
-  if (!loginRequired) {
-    authorizationSession.status.login = SessionStatuses.SKIP;
-  }
+  const selectAccountRequired = isSelectAccountRequired(authorizationSession);
 
-  const consentRequired = isConsentRequired(authorizationSession, browserSession, consentSession);
-  if (!consentRequired) {
-    authorizationSession.status.consent = SessionStatuses.SKIP;
-  }
+  authorizationSession.status.selectAccount = selectAccountRequired
+    ? SessionStatuses.PENDING
+    : SessionStatuses.SKIP;
 
-  assertAuthorizePrompt(authorizationSession, { consentRequired, loginRequired });
+  const loginRequired = isLoginRequired(
+    authorizationSession,
+    browserSession,
+    accessSession,
+    refreshSession,
+  );
+
+  authorizationSession.status.login = loginRequired
+    ? SessionStatuses.PENDING
+    : SessionStatuses.SKIP;
+
+  const consentRequired = isConsentRequired(
+    authorizationSession,
+    browserSession,
+    accessSession,
+    refreshSession,
+  );
+
+  authorizationSession.status.consent = consentRequired
+    ? SessionStatuses.PENDING
+    : SessionStatuses.SKIP;
+
+  assertAuthorizePrompt(authorizationSession, {
+    consentRequired,
+    loginRequired,
+    selectAccountRequired,
+  });
   assertAuthorizeResponseType(authorizationSession, client);
   assertAuthorizeScope(authorizationSession, client);
 
   authorizationSession = await authorizationSessionCache.create(authorizationSession);
 
-  ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME, authorizationSession.id, {
-    expires: authorizationSession.expires,
-    httpOnly: true,
-    overwrite: true,
-    signed: ctx.server.environment !== Environments.TEST,
-  });
+  setAuthorizationSessionCookie(ctx, authorizationSession);
 
-  if (!loginRequired) {
-    return { redirect: createAuthorizationVerifyUri(authorizationSession) };
+  if (authorizationSession.status.selectAccount === SessionStatuses.PENDING) {
+    return { redirect: createSelectAccountPendingUri(authorizationSession) };
   }
 
-  return { redirect: createLoginPendingUri(authorizationSession) };
+  if (authorizationSession.status.login === SessionStatuses.PENDING) {
+    return { redirect: createLoginPendingUri(authorizationSession) };
+  }
+
+  if (authorizationSession.status.consent === SessionStatuses.PENDING) {
+    return { redirect: createConsentPendingUri(authorizationSession) };
+  }
+
+  return { redirect: createAuthorizationVerifyUri(authorizationSession) };
 };

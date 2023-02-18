@@ -1,43 +1,42 @@
-import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
+import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { difference } from "lodash";
+import { OauthPromptModes, SessionStatuses } from "@lindorm-io/common-types";
+import { isNewConsentRequired } from "./is-new-consent-required";
 
 export const isConsentRequired = (
   authorizationSession: AuthorizationSession,
   browserSession?: BrowserSession,
-  consentSession?: ConsentSession,
+  accessSession?: AccessSession,
+  refreshSession?: RefreshSession,
 ): boolean => {
   if (!authorizationSession) {
-    throw new ServerError("Internal Server Error", {
-      description: "Authorization Session is missing",
+    throw new ServerError("Session not found", {
+      debug: { authorizationSession },
     });
   }
 
-  if (["confirmed", "verified"].includes(authorizationSession.status.consent)) {
+  if (
+    authorizationSession.status.consent === SessionStatuses.CONFIRMED ||
+    authorizationSession.status.consent === SessionStatuses.VERIFIED
+  ) {
     return false;
+  }
+
+  if (authorizationSession.promptModes.includes(OauthPromptModes.CONSENT)) {
+    return true;
   }
 
   if (!browserSession) {
     return true;
   }
 
-  if (!consentSession) {
-    return true;
+  if (accessSession) {
+    return isNewConsentRequired(authorizationSession, accessSession);
   }
 
-  if (!consentSession.audiences.length || !consentSession.scopes.length) {
-    return true;
+  if (refreshSession) {
+    return isNewConsentRequired(authorizationSession, refreshSession);
   }
 
-  if (
-    difference(authorizationSession.requestedConsent.audiences, consentSession.audiences).length
-  ) {
-    return true;
-  }
-
-  if (difference(authorizationSession.requestedConsent.scopes, consentSession.scopes).length) {
-    return true;
-  }
-
-  return false;
+  return true;
 };

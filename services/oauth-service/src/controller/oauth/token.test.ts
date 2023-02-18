@@ -1,12 +1,17 @@
 import { ClientError } from "@lindorm-io/errors";
 import { createTestClient } from "../../fixtures/entity";
 import { oauthTokenController } from "./token";
+import {
+  handleAuthorizationCodeGrant as _handleAuthorizationCodeGrant,
+  handleClientCredentialsGrant as _handleClientCredentialsGrant,
+  handleRefreshTokenGrant as _handleRefreshTokenGrant,
+} from "../../handler";
 
-jest.mock("../../handler", () => ({
-  handleAuthorizationCodeGrant: jest.fn().mockResolvedValue("AuthorizationCode"),
-  handleClientCredentialsGrant: jest.fn().mockResolvedValue("ClientCredentials"),
-  handleRefreshTokenGrant: jest.fn().mockResolvedValue("RefreshToken"),
-}));
+jest.mock("../../handler");
+
+const handleAuthorizationCodeGrant = _handleAuthorizationCodeGrant as jest.Mock;
+const handleClientCredentialsGrant = _handleClientCredentialsGrant as jest.Mock;
+const handleRefreshTokenGrant = _handleRefreshTokenGrant as jest.Mock;
 
 describe("oauthTokenController", () => {
   let ctx: any;
@@ -20,11 +25,15 @@ describe("oauthTokenController", () => {
         client: createTestClient(),
       },
     };
+
+    handleAuthorizationCodeGrant.mockResolvedValue("handleAuthorizationCodeGrant");
+    handleClientCredentialsGrant.mockResolvedValue("handleClientCredentialsGrant");
+    handleRefreshTokenGrant.mockResolvedValue("handleRefreshTokenGrant");
   });
 
   test("should resolve for authorization code", async () => {
     await expect(oauthTokenController(ctx)).resolves.toStrictEqual({
-      body: "AuthorizationCode",
+      body: "handleAuthorizationCodeGrant",
     });
   });
 
@@ -32,7 +41,7 @@ describe("oauthTokenController", () => {
     ctx.data.grantType = "client_credentials";
 
     await expect(oauthTokenController(ctx)).resolves.toStrictEqual({
-      body: "ClientCredentials",
+      body: "handleClientCredentialsGrant",
     });
   });
 
@@ -40,7 +49,7 @@ describe("oauthTokenController", () => {
     ctx.data.grantType = "refresh_token";
 
     await expect(oauthTokenController(ctx)).resolves.toStrictEqual({
-      body: "RefreshToken",
+      body: "handleRefreshTokenGrant",
     });
   });
 

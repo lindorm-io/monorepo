@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { LogoutSessionType } from "../enum";
 import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
 import { SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
 import {
@@ -10,63 +9,122 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 
+type ConfirmedLogout = {
+  accessSessionId: string | null;
+  refreshSessionId: string | null;
+  browserSessionId: string | null;
+};
+
+type RequestedLogout = {
+  accessSessionId: string | null;
+  accessSessions: Array<string>;
+  browserSessionId: string;
+  refreshSessionId: string | null;
+  refreshSessions: Array<string>;
+};
+
 export type LogoutSessionAttributes = EntityAttributes & {
-  clientId: string;
+  clientId: string | null;
+  confirmedLogout: ConfirmedLogout;
   expires: Date;
   idTokenHint: string | null;
+  identityId: string;
+  logoutHint: string | null;
   originalUri: string;
-  redirectUri: string | null;
-  sessionId: string;
-  sessionType: LogoutSessionType;
+  postLogoutRedirectUri: string | null;
+  requestedLogout: RequestedLogout;
   state: string | null;
   status: SessionStatus;
+  uiLocales: Array<string>;
 };
 
 export type LogoutSessionOptions = Optional<
   LogoutSessionAttributes,
-  EntityKeys | "idTokenHint" | "redirectUri" | "state" | "status"
+  | EntityKeys
+  | "confirmedLogout"
+  | "idTokenHint"
+  | "logoutHint"
+  | "postLogoutRedirectUri"
+  | "state"
+  | "status"
+  | "uiLocales"
 >;
 
 const schema = Joi.object<LogoutSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    confirmedLogout: Joi.object()
+      .keys({
+        accessSessionId: Joi.string().guid().allow(null).required(),
+        browserSessionId: Joi.string().guid().allow(null).required(),
+        refreshSessionId: Joi.string().guid().allow(null).required(),
+      })
+      .required(),
+    requestedLogout: Joi.object()
+      .keys({
+        accessSessionId: Joi.string().guid().allow(null).required(),
+        accessSessions: Joi.array().items(Joi.string().guid()).required(),
+        browserSessionId: Joi.string().guid().required(),
+        refreshSessionId: Joi.string().guid().allow(null).required(),
+        refreshSessions: Joi.array().items(Joi.string().guid()).required(),
+      })
+      .required(),
+
     clientId: Joi.string().guid().required(),
     expires: Joi.date().required(),
     idTokenHint: JOI_JWT.allow(null).required(),
-    originalUri: Joi.string().required(),
-    redirectUri: Joi.string().uri().allow(null).required(),
-    sessionId: Joi.string().guid().required(),
-    sessionType: Joi.string().required(),
+    identityId: Joi.string().guid().required(),
+    logoutHint: Joi.string().allow(null).required(),
+    originalUri: Joi.string().uri().required(),
+    postLogoutRedirectUri: Joi.string().uri().allow(null).required(),
     state: JOI_STATE.allow(null).required(),
     status: JOI_SESSION_STATUS.required(),
+    uiLocales: Joi.array().items(Joi.string()).required(),
   })
   .required();
 
 export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
-  public readonly clientId: string;
+  public readonly clientId: string | null;
+  public readonly confirmedLogout: ConfirmedLogout;
   public readonly expires: Date;
   public readonly idTokenHint: string | null;
+  public readonly identityId: string;
+  public readonly logoutHint: string | null;
   public readonly originalUri: string;
-  public readonly redirectUri: string | null;
-  public readonly sessionId: string;
-  public readonly sessionType: LogoutSessionType;
+  public readonly postLogoutRedirectUri: string | null;
+  public readonly requestedLogout: RequestedLogout;
   public readonly state: string | null;
+  public readonly uiLocales: Array<string>;
 
   public status: SessionStatus;
 
   public constructor(options: LogoutSessionOptions) {
     super(options);
 
-    this.clientId = options.clientId;
+    this.confirmedLogout = {
+      accessSessionId: options.confirmedLogout?.accessSessionId || null,
+      browserSessionId: options.confirmedLogout?.browserSessionId || null,
+      refreshSessionId: options.confirmedLogout?.refreshSessionId || null,
+    };
+    this.requestedLogout = {
+      accessSessionId: options.requestedLogout.accessSessionId,
+      accessSessions: options.requestedLogout.accessSessions,
+      browserSessionId: options.requestedLogout.browserSessionId,
+      refreshSessionId: options.requestedLogout.refreshSessionId,
+      refreshSessions: options.requestedLogout.refreshSessions,
+    };
+
+    this.clientId = options.clientId || null;
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
+    this.identityId = options.identityId;
+    this.logoutHint = options.logoutHint || null;
     this.originalUri = options.originalUri;
-    this.redirectUri = options.redirectUri || null;
-    this.sessionId = options.sessionId;
-    this.sessionType = options.sessionType;
+    this.postLogoutRedirectUri = options.postLogoutRedirectUri || null;
     this.state = options.state || null;
     this.status = options.status || SessionStatuses.PENDING;
+    this.uiLocales = options.uiLocales || [];
   }
 
   public async schemaValidation(): Promise<void> {
@@ -78,14 +136,17 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
       ...this.defaultJSON(),
 
       clientId: this.clientId,
+      confirmedLogout: this.confirmedLogout,
       expires: this.expires,
       idTokenHint: this.idTokenHint,
+      identityId: this.identityId,
+      logoutHint: this.logoutHint,
       originalUri: this.originalUri,
-      redirectUri: this.redirectUri,
-      sessionId: this.sessionId,
-      sessionType: this.sessionType,
+      postLogoutRedirectUri: this.postLogoutRedirectUri,
+      requestedLogout: this.requestedLogout,
       state: this.state,
       status: this.status,
+      uiLocales: this.uiLocales,
     };
   }
 }

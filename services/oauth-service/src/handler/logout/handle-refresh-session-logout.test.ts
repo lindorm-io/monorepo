@@ -1,21 +1,20 @@
-import { LogoutSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { Client, LogoutSession } from "../../entity";
+import { createLogoutToken as _createLogoutToken } from "../token";
 import { createMockRepository } from "@lindorm-io/mongo";
+import { handleRefreshSessionLogout } from "./handle-refresh-session-logout";
 import {
   createTestRefreshSession,
   createTestClient,
   createTestLogoutSession,
 } from "../../fixtures/entity";
-import { handleRefreshSessionLogout } from "./handle-refresh-session-logout";
 
-jest.mock("./handle-consent-session-on-logout");
+jest.mock("../token");
 
-jest.mock("../token", () => ({
-  createLogoutToken: jest.fn().mockImplementation(() => ({ token: "logout.jwt.jwt" })),
-}));
+const createLogoutToken = _createLogoutToken as jest.Mock;
 
 describe("handleRefreshSessionLogout", () => {
   let ctx: any;
+  let client: Client;
   let logoutSession: LogoutSession;
 
   beforeEach(() => {
@@ -25,19 +24,25 @@ describe("handleRefreshSessionLogout", () => {
           post: jest.fn(),
         },
       },
-      cache: {
-        clientCache: createMockCache(createTestClient),
-      },
       repository: {
         refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
     };
 
-    logoutSession = createTestLogoutSession();
+    client = createTestClient();
+    logoutSession = createTestLogoutSession({
+      confirmedLogout: {
+        accessSessionId: null,
+        browserSessionId: null,
+        refreshSessionId: "33287072-86da-42ca-986f-826767ce55e9",
+      },
+    });
+
+    createLogoutToken.mockImplementation(() => ({ token: "logout.jwt.jwt" }));
   });
 
   test("should resolve", async () => {
-    await expect(handleRefreshSessionLogout(ctx, logoutSession)).resolves.toBeUndefined();
+    await expect(handleRefreshSessionLogout(ctx, logoutSession, client)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient.post).toHaveBeenCalledTimes(1);
     expect(ctx.repository.refreshSessionRepository.destroy).toHaveBeenCalled();

@@ -5,6 +5,7 @@ import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
 import { TokenError, JWT } from "@lindorm-io/jwt";
 import { LindormTokenTypes } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = {
   token: string;
@@ -17,6 +18,8 @@ type ResponseBody = {
   acr?: Array<string>;
   amr?: Array<string>;
   aud: Array<string>;
+  authTime: number | null;
+  azp: string | null;
   clientId: string;
   exp: number;
   iat: number;
@@ -27,6 +30,7 @@ type ResponseBody = {
   scope: Array<string>;
   sid: string | null;
   sub: string;
+  tid: string | null;
   tokenType: string;
   username: string | null;
 };
@@ -48,21 +52,32 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
     jwt,
   } = ctx;
 
+  if (!client.active) {
+    throw new ClientError("Invalid client", {
+      code: "invalid_request",
+      description: "Client is blocked",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
   const {
     id,
-    adjustedAccessLevel,
     active,
+    adjustedAccessLevel,
     audiences,
     authContextClass,
     authMethodsReference,
+    authTime,
+    authorizedParty,
     expires,
     issuedAt,
     issuer,
     levelOfAssurance,
     notBefore,
     scopes,
-    sessionId,
+    session,
     subject,
+    tenant,
     type,
     username,
   } = JWT.decodeFormatted(token);
@@ -100,12 +115,14 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
 
   return {
     body: {
-      active: active && verifiedToken && !invalidToken,
-      clientId: client.id,
       aal: adjustedAccessLevel,
       acr: authContextClass,
+      active: active && verifiedToken && !invalidToken,
       amr: authMethodsReference,
       aud: audiences,
+      authTime,
+      azp: authorizedParty,
+      clientId: client.id,
       exp: expires,
       iat: issuedAt,
       iss: issuer,
@@ -113,8 +130,9 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
       loa: levelOfAssurance,
       nbf: notBefore,
       scope: scopes,
-      sid: sessionId,
+      sid: session,
       sub: subject,
+      tid: tenant,
       tokenType: type,
       username,
     },

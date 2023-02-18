@@ -5,6 +5,7 @@ import { OauthPromptModes } from "@lindorm-io/common-types";
 type Options = {
   consentRequired: boolean;
   loginRequired: boolean;
+  selectAccountRequired: boolean;
 };
 
 export const assertAuthorizePrompt = (
@@ -12,19 +13,26 @@ export const assertAuthorizePrompt = (
   options: Options,
 ): void => {
   const { promptModes } = authorizationSession;
-  const { consentRequired, loginRequired } = options;
+  const { consentRequired, loginRequired, selectAccountRequired } = options;
 
   if (consentRequired && promptModes.includes(OauthPromptModes.NONE)) {
     throw new ClientError("Login Required", {
       code: "login_required",
-      description: "interaction_required",
+      description: "The used prompt cannot be honored",
     });
   }
 
   if (loginRequired && promptModes.includes(OauthPromptModes.NONE)) {
     throw new ClientError("Consent Required", {
       code: "consent_required",
-      description: "interaction_required",
+      description: "The used prompt cannot be honored",
+    });
+  }
+
+  if (selectAccountRequired && promptModes.includes(OauthPromptModes.NONE)) {
+    throw new ClientError("Select Required", {
+      code: "select_account_required",
+      description: "The used prompt cannot be honored",
     });
   }
 };

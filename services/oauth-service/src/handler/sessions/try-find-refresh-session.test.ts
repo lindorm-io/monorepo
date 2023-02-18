@@ -1,10 +1,16 @@
-import { RefreshSession } from "../../entity";
+import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { createTestRefreshSession } from "../../fixtures/entity";
 import { tryFindRefreshSession } from "./try-find-refresh-session";
+import {
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 describe("tryFindRefreshSession", () => {
   let ctx: any;
+  let browserSession: BrowserSession;
+  let client: Client;
   let idToken: any;
 
   beforeEach(() => {
@@ -14,23 +20,44 @@ describe("tryFindRefreshSession", () => {
       },
     };
 
+    browserSession = createTestBrowserSession({
+      id: "3cda020f-0b63-4570-99da-a3bce76b7771",
+    });
+
+    client = createTestClient({
+      id: "df535455-a926-4541-9fcf-ccf75fc5bf0d",
+    });
+
     idToken = {
-      scopes: ["offline_access"],
-      sessionId: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
+      session: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
+      sessionHint: "refresh",
     };
   });
 
-  test("should resolve refresh session", async () => {
-    await expect(tryFindRefreshSession(ctx, idToken)).resolves.toStrictEqual(
+  test("should resolve refresh session with id token", async () => {
+    await expect(
+      tryFindRefreshSession(ctx, client, browserSession, idToken),
+    ).resolves.toStrictEqual(expect.any(RefreshSession));
+
+    expect(ctx.repository.refreshSessionRepository.tryFind).toHaveBeenCalledWith({
+      id: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
+    });
+  });
+
+  test("should resolve refresh session without id token", async () => {
+    await expect(tryFindRefreshSession(ctx, client, browserSession)).resolves.toStrictEqual(
       expect.any(RefreshSession),
     );
 
-    expect(ctx.repository.refreshSessionRepository.find).toHaveBeenCalled();
+    expect(ctx.repository.refreshSessionRepository.tryFind).toHaveBeenCalledWith({
+      browserSessionId: "3cda020f-0b63-4570-99da-a3bce76b7771",
+      clientId: "df535455-a926-4541-9fcf-ccf75fc5bf0d",
+    });
   });
 
-  test("should throw on unexpected error", async () => {
-    ctx.repository.refreshSessionRepository.find.mockRejectedValue(new Error("test"));
+  test("should resolve undefined", async () => {
+    await expect(tryFindRefreshSession(ctx, client)).resolves.toBeUndefined();
 
-    await expect(tryFindRefreshSession(ctx, idToken)).rejects.toThrow(Error);
+    expect(ctx.repository.refreshSessionRepository.tryFind).not.toHaveBeenCalled();
   });
 });

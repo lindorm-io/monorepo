@@ -7,7 +7,7 @@ import {
   AuthorizationSessionCache,
   ClientCache,
   ClientRepository,
-  ConsentSessionRepository,
+  AccessSessionRepository,
   BrowserSessionRepository,
   InvalidTokenCache,
   LogoutSessionCache,
@@ -23,9 +23,9 @@ export let TEST_ELEVATION_SESSION_CACHE: ElevationSessionCache;
 export let TEST_INVALID_TOKEN_CACHE: InvalidTokenCache;
 export let TEST_LOGOUT_SESSION_CACHE: LogoutSessionCache;
 
+export let TEST_ACCESS_SESSION_REPOSITORY: AccessSessionRepository;
 export let TEST_BROWSER_SESSION_REPOSITORY: BrowserSessionRepository;
 export let TEST_CLIENT_REPOSITORY: ClientRepository;
-export let TEST_CONSENT_SESSION_REPOSITORY: ConsentSessionRepository;
 export let TEST_REFRESH_SESSION_REPOSITORY: RefreshSessionRepository;
 
 export let TEST_ARGON: CryptoArgon;
@@ -49,15 +49,15 @@ export const setupIntegration = async (): Promise<void> => {
   TEST_INVALID_TOKEN_CACHE = new InvalidTokenCache({ connection: redisConnection, logger });
   TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
 
+  TEST_ACCESS_SESSION_REPOSITORY = new AccessSessionRepository({
+    connection: mongoConnection,
+    logger,
+  });
   TEST_BROWSER_SESSION_REPOSITORY = new BrowserSessionRepository({
     connection: mongoConnection,
     logger,
   });
   TEST_CLIENT_REPOSITORY = new ClientRepository({ connection: mongoConnection, logger });
-  TEST_CONSENT_SESSION_REPOSITORY = new ConsentSessionRepository({
-    connection: mongoConnection,
-    logger,
-  });
   TEST_REFRESH_SESSION_REPOSITORY = new RefreshSessionRepository({
     connection: mongoConnection,
     logger,

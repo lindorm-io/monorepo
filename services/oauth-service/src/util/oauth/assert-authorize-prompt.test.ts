@@ -17,6 +17,7 @@ describe("assertAuthorizePrompt", () => {
       assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: false,
+        selectAccountRequired: false,
       }),
     ).not.toThrow();
   });
@@ -26,6 +27,7 @@ describe("assertAuthorizePrompt", () => {
       assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: true,
+        selectAccountRequired: false,
       }),
     ).not.toThrow();
   });
@@ -35,6 +37,17 @@ describe("assertAuthorizePrompt", () => {
       assertAuthorizePrompt(authorizationSession, {
         consentRequired: true,
         loginRequired: false,
+        selectAccountRequired: false,
+      }),
+    ).not.toThrow();
+  });
+
+  test("should succeed with consent verification", () => {
+    expect(() =>
+      assertAuthorizePrompt(authorizationSession, {
+        consentRequired: false,
+        loginRequired: false,
+        selectAccountRequired: true,
       }),
     ).not.toThrow();
   });
@@ -48,6 +61,7 @@ describe("assertAuthorizePrompt", () => {
       assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: true,
+        selectAccountRequired: false,
       }),
     ).toThrow(ClientError);
   });
@@ -61,6 +75,21 @@ describe("assertAuthorizePrompt", () => {
       assertAuthorizePrompt(authorizationSession, {
         consentRequired: true,
         loginRequired: false,
+        selectAccountRequired: false,
+      }),
+    ).toThrow(ClientError);
+  });
+
+  test("should throw when select is required", () => {
+    authorizationSession = createTestAuthorizationSession({
+      promptModes: ["none"],
+    });
+
+    expect(() =>
+      assertAuthorizePrompt(authorizationSession, {
+        consentRequired: false,
+        loginRequired: false,
+        selectAccountRequired: true,
       }),
     ).toThrow(ClientError);
   });

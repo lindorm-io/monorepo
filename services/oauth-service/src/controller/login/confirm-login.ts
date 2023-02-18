@@ -1,8 +1,8 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { assertAcrValues, assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 import {
   ConfirmLoginRequestBody,
   ConfirmLoginRequestParams,
@@ -17,11 +17,11 @@ type ResponseBody = ConfirmLoginResponse;
 export const confirmLoginSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
+    sso: Joi.boolean().required(),
   })
   .required();
 
@@ -30,22 +30,21 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { authorizationSessionCache },
-    data: { acrValues, amrValues, identityId, levelOfAssurance, remember },
+    data: { identityId, levelOfAssurance, methods, remember, sso },
     entity: { authorizationSession },
     logger,
   } = ctx;
 
   assertSessionPending(authorizationSession.status.login);
-  assertAcrValues(acrValues);
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.confirmedLogin.acrValues = acrValues;
-  authorizationSession.confirmedLogin.amrValues = amrValues;
   authorizationSession.confirmedLogin.identityId = identityId;
   authorizationSession.confirmedLogin.latestAuthentication = new Date();
   authorizationSession.confirmedLogin.levelOfAssurance = levelOfAssurance;
-  authorizationSession.confirmedLogin.remember = remember === true;
+  authorizationSession.confirmedLogin.methods = methods;
+  authorizationSession.confirmedLogin.remember = remember;
+  authorizationSession.confirmedLogin.sso = sso;
 
   authorizationSession.status.login = SessionStatuses.CONFIRMED;
 

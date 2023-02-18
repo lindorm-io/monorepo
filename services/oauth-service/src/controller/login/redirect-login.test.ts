@@ -22,6 +22,7 @@ describe("redirectLoginController", () => {
           status: {
             consent: "confirmed",
             login: "confirmed",
+            selectAccount: "confirmed",
           },
         }),
       },

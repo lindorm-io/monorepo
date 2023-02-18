@@ -1,195 +1,102 @@
 import MockDate from "mockdate";
-import { AuthorizationSession, BrowserSession } from "../../entity";
-import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
-import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../get-adjusted-access-level";
+import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
 import { isLoginRequired } from "./is-login-required";
-import { isLoginRequiredByMaxAge as _isLoginRequiredByMaxAge } from "./is-login-required-by-max-age";
+import { isNewLoginRequired as _isNewLoginRequired } from "./is-new-login-required";
+import {
+  createTestAccessSession,
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("../get-adjusted-access-level");
-jest.mock("./is-login-required-by-max-age");
+jest.mock("./is-new-login-required");
 
-const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
-const isLoginRequiredByMaxAge = _isLoginRequiredByMaxAge as jest.Mock;
+const isNewLoginRequired = _isNewLoginRequired as jest.Mock;
 
-describe("isAuthenticationRequired", () => {
+describe("isLoginRequired", () => {
   let authorizationSession: AuthorizationSession;
+  let accessSession: AccessSession;
   let browserSession: BrowserSession;
+  let refreshSession: RefreshSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
       requestedLogin: {
         identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
         minimumLevel: 1,
-        recommendedLevel: 0,
-        recommendedMethods: [],
-        requiredLevel: 1,
-        requiredMethods: ["email"],
-      },
-      promptModes: ["none"],
-    });
-
-    browserSession = createTestBrowserSession({
-      acrValues: ["loa_1"],
-      amrValues: ["email"],
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 4,
-    });
-
-    getAdjustedAccessLevel.mockImplementation(() => 4);
-    isLoginRequiredByMaxAge.mockImplementation(() => false);
-  });
-
-  test("should not require login when authentication is confirmed", () => {
-    authorizationSession = createTestAuthorizationSession({
-      status: {
-        login: "confirmed",
-        consent: "pending",
-      },
-    });
-
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(false);
-  });
-
-  test("should not require login when all requirements are satisfied", () => {
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(false);
-  });
-
-  test("should require login when required by cookie data", () => {
-    getAdjustedAccessLevel.mockImplementation(() => 1);
-
-    browserSession = createTestBrowserSession({
-      acrValues: [],
-      amrValues: [],
-      levelOfAssurance: 1,
-    });
-
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
-  });
-
-  test("should require login when required by identityId", () => {
-    authorizationSession = createTestAuthorizationSession({
-      requestedLogin: {
-        identityId: "f78288ca-8753-420a-9db6-2775c4baf982",
-        minimumLevel: 1,
-        recommendedLevel: 0,
-        recommendedMethods: [],
-        requiredLevel: 1,
-        requiredMethods: [],
-      },
-      promptModes: [],
-    });
-
-    browserSession = createTestBrowserSession({
-      acrValues: ["loa_1"],
-      amrValues: ["email"],
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 4,
-    });
-
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
-  });
-
-  test("should require login when required by country", () => {
-    authorizationSession = createTestAuthorizationSession({
-      requestedLogin: {
-        identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-        minimumLevel: 1,
-        recommendedLevel: 0,
-        recommendedMethods: [],
-        requiredLevel: 1,
-        requiredMethods: [],
-      },
-      country: "SE",
-      promptModes: [],
-    });
-
-    browserSession = createTestBrowserSession({
-      acrValues: ["loa_1"],
-      amrValues: ["email"],
-      country: "US",
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 4,
-    });
-
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
-  });
-
-  test("should require login when required by level of assurance", () => {
-    getAdjustedAccessLevel.mockImplementation(() => 3);
-
-    authorizationSession = createTestAuthorizationSession({
-      requestedLogin: {
-        identityId: null,
-        minimumLevel: 1,
-        recommendedLevel: 0,
-        recommendedMethods: [],
-        requiredLevel: 4,
-        requiredMethods: [],
-      },
-      idTokenHint: null,
-      promptModes: [],
-    });
-
-    browserSession = createTestBrowserSession({
-      acrValues: ["loa_1"],
-      amrValues: ["email"],
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 3,
-    });
-
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
-  });
-
-  test("should require login when required by authentication methods", () => {
-    authorizationSession = createTestAuthorizationSession({
-      requestedLogin: {
-        identityId: null,
-        minimumLevel: 1,
-        recommendedLevel: 0,
+        recommendedLevel: 2,
         recommendedMethods: [],
         requiredLevel: 3,
-        requiredMethods: ["email", "phone", "password"],
+        requiredMethods: ["email"],
       },
-      idTokenHint: null,
       promptModes: [],
     });
 
-    browserSession = createTestBrowserSession({
-      acrValues: ["loa_1"],
-      amrValues: ["email"],
+    accessSession = createTestAccessSession({
+      methods: ["email"],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 3,
+      levelOfAssurance: 4,
     });
 
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
-  });
-
-  test("should require login when required by prompt", () => {
-    authorizationSession = createTestAuthorizationSession({
-      requestedLogin: {
-        identityId: null,
-        minimumLevel: 1,
-        recommendedLevel: 0,
-        recommendedMethods: [],
-        requiredLevel: 1,
-        requiredMethods: [],
-      },
-      idTokenHint: null,
-      promptModes: ["login"],
+    browserSession = createTestBrowserSession({
+      methods: ["email"],
+      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
+      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
+      levelOfAssurance: 4,
     });
 
-    expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
+    refreshSession = createTestRefreshSession({
+      methods: ["email"],
+      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
+      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
+      levelOfAssurance: 4,
+    });
+
+    isNewLoginRequired.mockImplementation(() => false);
   });
 
-  test("should require login when required by max age", () => {
-    isLoginRequiredByMaxAge.mockImplementation(() => true);
+  afterEach(jest.resetAllMocks);
+
+  test("should not require", () => {
+    expect(
+      isLoginRequired(authorizationSession, browserSession, accessSession, refreshSession),
+    ).toBe(false);
+  });
+
+  test("should not require on confirmed", () => {
+    authorizationSession.status.login = "confirmed";
+
+    expect(isLoginRequired(authorizationSession)).toBe(false);
+  });
+
+  test("should not require on confirmed", () => {
+    authorizationSession.status.login = "verified";
+
+    expect(isLoginRequired(authorizationSession)).toBe(false);
+  });
+
+  test("should require on prompt", () => {
+    authorizationSession.promptModes.push("login");
+
+    expect(isLoginRequired(authorizationSession)).toBe(true);
+  });
+
+  test("should require on sessions", () => {
+    isNewLoginRequired.mockImplementation(() => true);
+
+    expect(isLoginRequired(authorizationSession)).toBe(true);
+  });
+
+  test("should require on sso not enabled", () => {
+    isNewLoginRequired
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => false)
+      .mockImplementationOnce(() => true);
+
+    browserSession.sso = false;
 
     expect(isLoginRequired(authorizationSession, browserSession)).toBe(true);
   });

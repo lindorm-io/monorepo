@@ -73,6 +73,7 @@ describe("/.well-known/openid-configuration", () => {
         "website",
         "zone_info",
       ],
+      end_session_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/logout",
       grant_types_supported: ["authorization_code", "client_credentials", "refresh_token"],
       id_token_encryption_alg_values_supported: [],
       id_token_encryption_enc_values_supported: [],

@@ -28,7 +28,7 @@ describe("rejectLogoutController", () => {
     await expect(rejectLogoutController(ctx)).resolves.toStrictEqual({
       body: {
         redirectTo:
-          "https://test.client.lindorm.io/redirect?error=request_rejected&error_description=logout_rejected&state=YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
+          "https://test.client.lindorm.io/logout?error=request_rejected&error_description=logout_rejected&state=YuTs0Kaf8UV1I086TptUqz1Yh1PNoJow",
       },
     });
 

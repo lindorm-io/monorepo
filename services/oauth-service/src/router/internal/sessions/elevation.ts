@@ -1,10 +1,14 @@
-import { elevationSessionEntityMiddleware, clientAuthMiddleware } from "../../../middleware";
 import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import {
+  elevationSessionEntityMiddleware,
+  clientAuthMiddleware,
+  clientEntityMiddleware,
+} from "../../../middleware";
 import {
   confirmElevationController,
   confirmElevationSchema,
-  getElevationDataController,
-  getElevationDataSchema,
+  getElevationController,
+  getElevationSchema,
   rejectElevationController,
   rejectElevationSchema,
 } from "../../../controller";
@@ -20,9 +24,10 @@ router.use(
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getElevationDataSchema),
+  useSchema(getElevationSchema),
   elevationSessionEntityMiddleware("data.id"),
-  useController(getElevationDataController),
+  clientEntityMiddleware("entity.elevationSession.clientId"),
+  useController(getElevationController),
 );
 
 router.post(

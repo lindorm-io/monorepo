@@ -3,6 +3,7 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectConsentController } from "./reject-consent";
+import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -38,5 +39,11 @@ describe("rejectConsentController", () => {
         }),
       }),
     );
+  });
+
+  test("should throw on invalid status", async () => {
+    ctx.entity.authorizationSession.status.consent = "skip";
+
+    await expect(rejectConsentController(ctx)).rejects.toThrow(ClientError);
   });
 });

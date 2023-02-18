@@ -1,29 +1,24 @@
-import { AuthorizationSession, Client } from "../../entity";
+import { Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertRedirectUri } from "./assert-redirect-uri";
-import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
+import { createTestClient } from "../../fixtures/entity";
 
-describe("assertAuthorizeRedirectUri", () => {
-  let authorizationSession: AuthorizationSession;
+describe("assertRedirectUri", () => {
   let client: Client;
 
   beforeEach(() => {
-    authorizationSession = createTestAuthorizationSession({
-      redirectUri: "REDIRECT1",
-    });
-
     client = createTestClient();
-
-    client.redirectUris = ["REDIRECT1"];
   });
 
   test("should succeed", () => {
-    expect(() => assertRedirectUri(authorizationSession.redirectUri, client)).not.toThrow();
+    expect(() =>
+      assertRedirectUri(client, "https://test.client.lindorm.io/redirect"),
+    ).not.toThrow();
   });
 
   test("should throw", () => {
-    client.redirectUris = ["REDIRECT2"];
-
-    expect(() => assertRedirectUri(authorizationSession.redirectUri, client)).toThrow(ClientError);
+    expect(() => assertRedirectUri(client, "https://test.client.lindorm.io/wrong")).toThrow(
+      ClientError,
+    );
   });
 });

@@ -9,6 +9,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
 } from "../../../fixtures/integration";
+import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,7 +19,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/internal/sessions/logout", () => {
   beforeAll(setupIntegration);
 
-  test("should resolve consent data", async () => {
+  test("should resolve data", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
@@ -27,7 +28,16 @@ describe("/internal/sessions/logout", () => {
     });
 
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
-      createTestLogoutSession({ clientId: client.id }),
+      createTestLogoutSession({
+        requestedLogout: {
+          accessSessionId: "7a00f104-79e6-4f79-ae3d-d1ac31cfb1d6",
+          accessSessions: ["7a00f104-79e6-4f79-ae3d-d1ac31cfb1d6"],
+          browserSessionId: "7efdec2b-c155-4a8b-ac2b-e47e6e0a757d",
+          refreshSessionId: null,
+          refreshSessions: [],
+        },
+        clientId: client.id,
+      }),
     );
 
     const response = await request(server.callback())
@@ -36,6 +46,14 @@ describe("/internal/sessions/logout", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      logout: {
+        access_session_id: "7a00f104-79e6-4f79-ae3d-d1ac31cfb1d6",
+        access_sessions: ["7a00f104-79e6-4f79-ae3d-d1ac31cfb1d6"],
+        browser_session_id: "7efdec2b-c155-4a8b-ac2b-e47e6e0a757d",
+        refresh_session_id: null,
+        refresh_sessions: [],
+      },
+
       client: {
         description: "Client description",
         logo_uri: "https://logo.uri/logo",
@@ -43,12 +61,15 @@ describe("/internal/sessions/logout", () => {
         type: "confidential",
       },
       logout_session: {
-        id: logoutSession.id,
+        client_id: client.id,
         expires_at: "2021-01-02T08:00:00.000Z",
         expires_in: 86400,
+        id_token_hint: "jwt.jwt.jwt",
+        identity_id: logoutSession.identityId,
+        logout_hint: "logout-hint",
         original_uri: "https://localhost/oauth2/sessions/logout?query=query",
+        ui_locales: ["en-GB"],
       },
-      logout_status: "pending",
     });
   });
 
@@ -67,14 +88,21 @@ describe("/internal/sessions/logout", () => {
     const response = await request(server.callback())
       .post(`/internal/sessions/logout/${logoutSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        access_session_id: randomUUID(),
+        browser_session_id: randomUUID(),
+        refresh_session_id: randomUUID(),
+      })
       .expect(200);
 
     const url = new URL(response.body.redirect_to);
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/logout/verify");
-    expect(url.searchParams.get("session_id")).toStrictEqual(logoutSession.id);
-    expect(url.searchParams.get("redirect_uri")).toStrictEqual(logoutSession.redirectUri);
+    expect(url.searchParams.get("session")).toStrictEqual(logoutSession.id);
+    expect(url.searchParams.get("post_logout_redirect_uri")).toStrictEqual(
+      "https://test.client.lindorm.io/logout",
+    );
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -97,7 +125,7 @@ describe("/internal/sessions/logout", () => {
     const url = new URL(response.body.redirect_to);
 
     expect(url.origin).toBe("https://test.client.lindorm.io");
-    expect(url.pathname).toBe("/redirect");
+    expect(url.pathname).toBe("/logout");
     expect(url.searchParams.get("error")).toBe("request_rejected");
     expect(url.searchParams.get("error_description")).toBe("logout_rejected");
     expect(url.searchParams.get("state")).toBe(logoutSession.state);

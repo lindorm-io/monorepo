@@ -7,8 +7,8 @@ import {
 import {
   confirmLogoutController,
   confirmLogoutSchema,
-  getLogoutDataController,
-  getLogoutDataSchema,
+  getLogoutController,
+  getLogoutSchema,
   redirectLogoutController,
   redirectLogoutSchema,
   rejectLogoutController,
@@ -26,10 +26,10 @@ router.use(
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getLogoutDataSchema),
+  useSchema(getLogoutSchema),
   logoutSessionEntityMiddleware("data.id"),
   clientEntityMiddleware("entity.logoutSession.clientId"),
-  useController(getLogoutDataController),
+  useController(getLogoutController),
 );
 
 router.post(

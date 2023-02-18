@@ -1,7 +1,8 @@
 export * from "./assert";
-export * from "./login";
 export * from "./consent";
+export * from "./login";
 export * from "./oauth";
+export * from "./select-account";
 export * from "./url";
 
 export * from "./calculate-updated-loa";

@@ -3,8 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { ServerKoaController } from "../../types";
-import { assertAcrValues, assertSessionPending } from "../../util";
-import { stringComparison } from "@lindorm-io/node-pkce";
+import { assertSessionPending, createElevationVerifyUri } from "../../util";
 import {
   ConfirmElevationRequestBody,
   ConfirmElevationRequestParams,
@@ -16,10 +15,9 @@ type RequestData = ConfirmElevationRequestParams & ConfirmElevationRequestBody;
 export const confirmElevationSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    methods: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
@@ -28,15 +26,14 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse => {
   const {
     cache: { elevationSessionCache },
-    data: { acrValues, amrValues, identityId, levelOfAssurance },
+    data: { identityId, levelOfAssurance, methods },
     entity: { elevationSession },
     logger,
   } = ctx;
 
   assertSessionPending(elevationSession.status);
-  assertAcrValues(acrValues);
 
-  if (!stringComparison(identityId, elevationSession.identityId)) {
+  if (identityId !== elevationSession.identityId) {
     throw new ClientError("Invalid identity", {
       description: "The provided identityId is invalid",
       debug: {
@@ -68,12 +65,15 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
 
   logger.debug("Updating elevation session");
 
-  elevationSession.confirmedAuthentication.acrValues = acrValues;
-  elevationSession.confirmedAuthentication.amrValues = amrValues;
   elevationSession.confirmedAuthentication.latestAuthentication = new Date();
   elevationSession.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
+  elevationSession.confirmedAuthentication.methods = methods;
 
   elevationSession.status = SessionStatuses.CONFIRMED;
 
   await elevationSessionCache.update(elevationSession);
+
+  if (elevationSession.redirectUri) {
+    return { body: { redirectTo: createElevationVerifyUri(elevationSession) } };
+  }
 };

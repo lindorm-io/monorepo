@@ -10,7 +10,7 @@ router.get(
   "/verify",
   redirectErrorMiddleware({ path: "data.redirectUri", redirectUri: ERROR_REDIRECT_URI }),
   useSchema(verifyAuthorizationSchema),
-  authorizationSessionEntityMiddleware("data.sessionId"),
+  authorizationSessionEntityMiddleware("data.session"),
   clientEntityMiddleware("entity.authorizationSession.clientId"),
   useController(verifyAuthorizationController),
 );

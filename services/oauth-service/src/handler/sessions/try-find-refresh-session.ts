@@ -1,24 +1,26 @@
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { LindormScopes } from "@lindorm-io/common-types";
-import { RefreshSession } from "../../entity";
+import { BrowserSession, Client, RefreshSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
+import { SessionHint } from "../../enum";
 import { VerifiedIdentityToken } from "../../common";
 
 export const tryFindRefreshSession = async (
   ctx: ServerKoaContext,
+  client: Client,
+  browserSession?: BrowserSession,
   idToken?: VerifiedIdentityToken,
 ): Promise<RefreshSession | undefined> => {
   const {
     repository: { refreshSessionRepository },
   } = ctx;
 
-  if (!idToken) return;
-  if (!idToken.scopes.includes(LindormScopes.OFFLINE_ACCESS)) return;
-  if (!idToken.sessionId) return;
-
-  try {
-    return await refreshSessionRepository.find({ id: idToken.sessionId });
-  } catch (err: any) {
-    if (!(err instanceof EntityNotFoundError)) throw err;
+  if (idToken?.session && idToken?.sessionHint === SessionHint.REFRESH) {
+    return await refreshSessionRepository.tryFind({ id: idToken.session });
   }
+
+  if (!browserSession) return;
+
+  return await refreshSessionRepository.tryFind({
+    browserSessionId: browserSession.id,
+    clientId: client.id,
+  });
 };

@@ -1,15 +1,7 @@
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { SessionStatuses } from "@lindorm-io/common-types";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
-
-const calculateExpiryDate = (remember?: boolean | null): Date => {
-  return remember === true
-    ? expiryDate(configuration.defaults.expiry.browser_session_remember)
-    : expiryDate(configuration.defaults.expiry.browser_session);
-};
+import { uniqArray } from "@lindorm-io/core";
 
 const createBrowserSession = async (
   ctx: ServerKoaContext,
@@ -20,14 +12,13 @@ const createBrowserSession = async (
   } = ctx;
 
   if (
-    !authorizationSession.confirmedLogin.acrValues.length ||
-    !authorizationSession.confirmedLogin.amrValues.length ||
     !authorizationSession.confirmedLogin.identityId ||
     !authorizationSession.confirmedLogin.latestAuthentication ||
-    authorizationSession.confirmedLogin.levelOfAssurance === 0
+    !authorizationSession.confirmedLogin.levelOfAssurance ||
+    !authorizationSession.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
-      description: "Authorization session has invalid login data",
+      description: "Authorization session has invalid data",
       debug: {
         confirmedLogin: authorizationSession.confirmedLogin,
       },
@@ -36,17 +27,12 @@ const createBrowserSession = async (
 
   return await browserSessionRepository.create(
     new BrowserSession({
-      acrValues: authorizationSession.confirmedLogin.acrValues,
-      amrValues: authorizationSession.confirmedLogin.amrValues,
-      clients: [authorizationSession.clientId],
-      country: authorizationSession.country,
-      expires: calculateExpiryDate(authorizationSession.confirmedLogin.remember),
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
-      nonce: authorizationSession.nonce,
+      methods: authorizationSession.confirmedLogin.methods,
       remember: authorizationSession.confirmedLogin.remember,
-      uiLocales: authorizationSession.uiLocales,
+      sso: authorizationSession.confirmedLogin.sso,
     }),
   );
 };
@@ -61,28 +47,38 @@ const updateBrowserSession = async (
   } = ctx;
 
   if (
-    !authorizationSession.confirmedLogin.acrValues.length ||
-    !authorizationSession.confirmedLogin.amrValues.length ||
     !authorizationSession.confirmedLogin.identityId ||
     !authorizationSession.confirmedLogin.latestAuthentication ||
-    authorizationSession.confirmedLogin.levelOfAssurance === 0
+    !authorizationSession.confirmedLogin.levelOfAssurance ||
+    !authorizationSession.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
-      description: "Authorization session has invalid login data",
+      description: "Authorization session has invalid data",
       debug: {
         confirmedLogin: authorizationSession.confirmedLogin,
       },
     });
   }
 
-  browserSession.acrValues = authorizationSession.confirmedLogin.acrValues;
-  browserSession.amrValues = authorizationSession.confirmedLogin.amrValues;
-  browserSession.country = authorizationSession.country;
-  browserSession.expires = calculateExpiryDate(authorizationSession.confirmedLogin.remember);
   browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
-  browserSession.levelOfAssurance = authorizationSession.confirmedLogin.levelOfAssurance;
-  browserSession.nonce = authorizationSession.nonce;
-  browserSession.remember = authorizationSession.confirmedLogin.remember;
+
+  browserSession.levelOfAssurance =
+    authorizationSession.confirmedLogin.levelOfAssurance > browserSession.levelOfAssurance
+      ? authorizationSession.confirmedLogin.levelOfAssurance
+      : browserSession.levelOfAssurance;
+
+  browserSession.methods = uniqArray(
+    browserSession.methods,
+    authorizationSession.confirmedLogin.methods,
+  );
+
+  browserSession.remember = browserSession.remember
+    ? browserSession.remember
+    : authorizationSession.confirmedLogin.remember;
+
+  browserSession.sso = browserSession.sso
+    ? browserSession.sso
+    : authorizationSession.confirmedLogin.sso;
 
   return await browserSessionRepository.update(browserSession);
 };
@@ -95,19 +91,13 @@ export const getUpdatedBrowserSession = async (
     repository: { browserSessionRepository },
   } = ctx;
 
-  if (!authorizationSession.identifiers.browserSessionId) {
+  if (!authorizationSession.browserSessionId) {
     return await createBrowserSession(ctx, authorizationSession);
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: authorizationSession.identifiers.browserSessionId,
+    id: authorizationSession.browserSessionId,
   });
-
-  if (authorizationSession.status.login === SessionStatuses.SKIP) {
-    browserSession.expires = calculateExpiryDate(browserSession.remember);
-
-    return await browserSessionRepository.update(browserSession);
-  }
 
   if (browserSession.identityId !== authorizationSession.confirmedLogin.identityId) {
     return await createBrowserSession(ctx, authorizationSession);

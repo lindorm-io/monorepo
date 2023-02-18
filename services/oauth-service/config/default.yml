@@ -42,9 +42,11 @@ oauth:
   client_id: id
 
 redirect:
-  login: /oauth/login
   consent: /oauth/consent
+  elevate: /oauth/elevate
+  login: /oauth/login
   logout: /oauth/logout
+  select: /oauth/select
 
 redis:
   host: localhost

@@ -77,8 +77,10 @@ interface Oauth {
 
 interface Redirect {
   consent: string;
+  elevate: string;
   login:   string;
   logout:  string;
+  select:  string;
 }
 
 interface Server {

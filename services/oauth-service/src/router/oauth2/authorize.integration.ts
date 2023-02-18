@@ -63,25 +63,28 @@ describe("/oauth2/authorize", () => {
         state,
         uiLocales: ["sv-SE", "en-GB"],
       },
-    });
+    }).toString();
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get(url.replace("https://rm.rm", ""))
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oauth/login");
-    expect(location.searchParams.get("session_id")).toStrictEqual(expect.any(String));
+    expect(location.searchParams.get("session")).toStrictEqual(expect.any(String));
+    expect(location.searchParams.get("display")).toBe("page");
+    expect(location.searchParams.get("locales")).toBe("sv-SE en-GB");
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.find({
-      id: location.searchParams.get("session_id")!,
-    });
-
-    expect(authorizationSession).toStrictEqual(
+    await expect(
+      TEST_AUTHORIZATION_SESSION_CACHE.find({
+        id: location.searchParams.get("session")!,
+      }),
+    ).resolves.toStrictEqual(
       expect.objectContaining({
-        id: authorizationSession.id,
+        accessSessionId: null,
         authToken: "auth.jwt.jwt",
+        browserSessionId: null,
         clientId: client.id,
         code: {
           codeChallenge: codeChallenge,
@@ -92,31 +95,27 @@ describe("/oauth2/authorize", () => {
           scopes: [],
         },
         confirmedLogin: {
-          acrValues: [],
-          amrValues: [],
           identityId: null,
           latestAuthentication: null,
           levelOfAssurance: 0,
+          methods: [],
           remember: false,
+          sso: false,
         },
         country: null,
         displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: idToken,
-        identifiers: {
-          browserSessionId: null,
-          consentSessionId: null,
-          refreshSessionId: null,
-        },
         loginHint: ["+46705498721", "email@lindorm.io", "identity_username", "test@lindorm.io"],
         maxAge: 3600,
         nonce: nonce,
-        originalUri: expect.any(String),
+        originalUri: url.replace("https://rm.rm", "https://oauth.test.lindorm.io"),
         promptModes: ["login", "consent"],
         redirectData: "eyJzdHJpbmciOiJzdHJpbmciLCJudW1iZXIiOjEyMywiYm9vbGVhbiI6dHJ1ZX0=",
         redirectUri: "https://test.client.lindorm.io/redirect",
+        refreshSessionId: null,
         requestedConsent: {
-          audiences: expect.arrayContaining(["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id]),
+          audiences: expect.arrayContaining([configuration.oauth.client_id, client.id]),
           scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
         },
         requestedLogin: {
@@ -127,12 +126,17 @@ describe("/oauth2/authorize", () => {
           requiredLevel: 3,
           requiredMethods: ["email", "phone", "session"],
         },
+        requestedSelectAccount: {
+          browserSessions: [],
+        },
         responseMode: "fragment",
         responseTypes: ["code", "token"],
-        state: authorizationSession.state,
+        revision: 0,
+        state: state,
         status: {
           consent: "pending",
           login: "pending",
+          selectAccount: "skip",
         },
         uiLocales: ["sv-SE", "en-GB"],
       }),

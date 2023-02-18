@@ -1,78 +1,88 @@
-import { AuthorizationSession, BrowserSession, ConsentSession } from "../../entity";
+import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
 import { isConsentRequired } from "./is-consent-required";
+import { isNewConsentRequired as _isNewConsentRequired } from "./is-new-consent-required";
 import {
+  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
-  createTestConsentSession,
+  createTestRefreshSession,
 } from "../../fixtures/entity";
+
+jest.mock("./is-new-consent-required");
+
+const isNewConsentRequired = _isNewConsentRequired as jest.Mock;
 
 describe("isConsentRequired", () => {
   let authorizationSession: AuthorizationSession;
+  let accessSession: AccessSession;
   let browserSession: BrowserSession;
-  let consentSession: ConsentSession;
+  let refreshSession: RefreshSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      clientId: "client1",
       requestedConsent: {
-        audiences: [],
-        scopes: ["scope1", "scope2"],
+        audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
+        scopes: ["openid"],
       },
+      promptModes: [],
     });
 
-    browserSession = createTestBrowserSession({
-      id: "0d8143ae-b105-4989-9118-0663aa4d58f8",
+    accessSession = createTestAccessSession({
+      audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
+      scopes: ["openid", "email", "profile"],
     });
 
-    consentSession = createTestConsentSession({
-      identityId: "account1",
-      audiences: ["client1", "client2"],
-      scopes: ["scope1", "scope2", "scope3"],
-      sessions: ["0d8143ae-b105-4989-9118-0663aa4d58f8"],
+    browserSession = createTestBrowserSession();
+
+    refreshSession = createTestRefreshSession({
+      audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
+      scopes: ["openid", "email", "profile"],
     });
+
+    isNewConsentRequired.mockImplementation(() => false);
   });
 
-  test("should not require consent when consent is confirmed", () => {
-    authorizationSession = createTestAuthorizationSession({
-      status: {
-        login: "pending",
-        consent: "confirmed",
-      },
-    });
+  afterEach(jest.resetAllMocks);
 
-    expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(false);
+  test("should not require", () => {
+    expect(
+      isConsentRequired(authorizationSession, browserSession, accessSession, refreshSession),
+    ).toBe(false);
   });
 
-  test("should not require consent when all requirements are satisfied", () => {
-    expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(false);
+  test("should not require on confirmed", () => {
+    authorizationSession.status.consent = "confirmed";
+
+    expect(isConsentRequired(authorizationSession)).toBe(false);
   });
 
-  test("should require consent when required by browser session", () => {
-    consentSession = createTestConsentSession({
-      audiences: [],
-      scopes: [],
-    });
+  test("should not require on confirmed", () => {
+    authorizationSession.status.consent = "verified";
 
-    expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(true);
+    expect(isConsentRequired(authorizationSession)).toBe(false);
   });
 
-  test("should require consent when required by audience", () => {
-    authorizationSession = createTestAuthorizationSession({
-      clientId: "client3",
-    });
+  test("should require on prompt", () => {
+    authorizationSession.promptModes.push("consent");
 
-    expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(true);
+    expect(isConsentRequired(authorizationSession)).toBe(true);
   });
 
-  test("should require consent when required by scope", () => {
-    authorizationSession = createTestAuthorizationSession({
-      clientId: "client1",
-      requestedConsent: {
-        audiences: [],
-        scopes: ["scope4"],
-      },
-    });
+  test("should require on missing browser session", () => {
+    expect(isConsentRequired(authorizationSession)).toBe(true);
+  });
 
-    expect(isConsentRequired(authorizationSession, browserSession, consentSession)).toBe(true);
+  test("should require on access session", () => {
+    isNewConsentRequired.mockImplementation(() => true);
+
+    expect(isConsentRequired(authorizationSession, browserSession, accessSession)).toBe(true);
+  });
+
+  test("should require on refresh session", () => {
+    isNewConsentRequired.mockImplementation(() => true);
+
+    expect(isConsentRequired(authorizationSession, browserSession, undefined, refreshSession)).toBe(
+      true,
+    );
   });
 });

@@ -1,19 +1,16 @@
+import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
 import { getUnixTime } from "date-fns";
-import { AuthorizationSession, BrowserSession } from "../../entity";
 
 export const isLoginRequiredByMaxAge = (
   authorizationSession: AuthorizationSession,
-  browserSession: BrowserSession,
+  browserSession: AccessSession | BrowserSession | RefreshSession,
 ): boolean => {
-  const { maxAge } = authorizationSession;
-  const { latestAuthentication } = browserSession;
-
-  if (!maxAge) {
+  if (!authorizationSession.maxAge) {
     return false;
   }
 
   const now = getUnixTime(new Date());
-  const auth = getUnixTime(latestAuthentication);
+  const authTime = getUnixTime(browserSession.latestAuthentication);
 
-  return now - auth > maxAge;
+  return now - authTime > authorizationSession.maxAge;
 };

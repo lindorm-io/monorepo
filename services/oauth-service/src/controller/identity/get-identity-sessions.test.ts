@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getIdentitySessionsController } from "./get-identity-sessions";
-import { createTestBrowserSession, createTestRefreshSession } from "../../fixtures/entity";
+import { createTestAccessSession, createTestRefreshSession } from "../../fixtures/entity";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -18,29 +18,29 @@ describe("getIdentitySessions", () => {
         id: "identityId",
       },
       repository: {
-        browserSessionRepository: {
+        accessSessionRepository: {
           findMany: jest.fn().mockResolvedValue([
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "60e86c52-59ac-44e9-8e3e-d97079346034",
               levelOfAssurance: 1,
             }),
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "aedea909-4d62-4fe8-8aac-22e712f659d3",
               levelOfAssurance: 2,
             }),
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "f04405c1-fa40-454a-a3a9-a016d3b4aa17",
               levelOfAssurance: 3,
             }),
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "10fe070b-e584-4c43-89f8-df40f4a8797a",
               levelOfAssurance: 3,
             }),
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "1d1b9520-4c24-43bc-bbb0-b7c925771e8f",
               levelOfAssurance: 4,
             }),
-            createTestBrowserSession({
+            createTestAccessSession({
               id: "df87f057-a560-4476-9927-c25828b7c20c",
               levelOfAssurance: 4,
             }),

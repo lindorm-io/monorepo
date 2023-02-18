@@ -1,5 +1,4 @@
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { baseHash } from "@lindorm-io/core";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
@@ -10,7 +9,6 @@ import {
   OauthPromptModes,
   OauthResponseModes,
   OauthResponseTypes,
-  SessionStatuses,
 } from "@lindorm-io/common-types";
 
 export const createTestAuthorizationSession = (
@@ -19,7 +17,8 @@ export const createTestAuthorizationSession = (
   new AuthorizationSession({
     code: {
       codeChallenge: randomString(64),
-      codeChallengeMethod: PKCEMethod.S256,
+      codeChallengeMethod: "S256",
+      ...(options.code || {}),
     },
     requestedConsent: {
       audiences: [randomUUID()],
@@ -31,6 +30,7 @@ export const createTestAuthorizationSession = (
         LindormScopes.PHONE,
         LindormScopes.PROFILE,
       ],
+      ...(options.requestedConsent || {}),
     },
     requestedLogin: {
       identityId: randomUUID(),
@@ -39,13 +39,16 @@ export const createTestAuthorizationSession = (
       recommendedMethods: [AuthenticationMethods.EMAIL],
       requiredLevel: 3,
       requiredMethods: [AuthenticationMethods.EMAIL, AuthenticationMethods.PHONE],
+      ...(options.requestedLogin || {}),
     },
-    status: {
-      login: SessionStatuses.PENDING,
-      consent: SessionStatuses.PENDING,
+    requestedSelectAccount: {
+      browserSessions: [{ browserSessionId: randomUUID(), identityId: randomUUID() }],
+      ...(options.requestedSelectAccount || {}),
     },
 
+    accessSessionId: randomUUID(),
     authToken: "auth.jwt.jwt",
+    browserSessionId: randomUUID(),
     clientId: randomUUID(),
     country: "se",
     displayMode: OauthDisplayModes.POPUP,
@@ -55,14 +58,20 @@ export const createTestAuthorizationSession = (
     maxAge: 999,
     nonce: randomString(16),
     originalUri: "https://localhost/oauth2/authorize?query=query",
-    promptModes: [OauthPromptModes.LOGIN, OauthPromptModes.CONSENT],
+    promptModes: [
+      OauthPromptModes.LOGIN,
+      OauthPromptModes.CONSENT,
+      OauthPromptModes.SELECT_ACCOUNT,
+    ],
     redirectData: baseHash(
       baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),
     ),
     redirectUri: "https://test.client.lindorm.io/redirect",
+    refreshSessionId: randomUUID(),
     responseMode: OauthResponseModes.QUERY,
     responseTypes: [OauthResponseTypes.CODE, OauthResponseTypes.ID_TOKEN, OauthResponseTypes.TOKEN],
     state: randomString(16),
     uiLocales: ["sv-SE", "en-GB"],
+
     ...options,
   });

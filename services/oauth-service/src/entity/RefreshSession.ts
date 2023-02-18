@@ -1,6 +1,6 @@
 import Joi from "joi";
-import { JOI_LEVEL_OF_ASSURANCE, JOI_LOCALE, JOI_NONCE } from "../common";
 import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_NONCE } from "../common";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
@@ -12,75 +12,70 @@ import {
 } from "@lindorm-io/entity";
 
 export type RefreshSessionAttributes = EntityAttributes & {
-  acrValues: Array<string>;
-  amrValues: Array<AuthenticationMethod>;
+  audiences: Array<string>;
+  browserSessionId: string;
   clientId: string;
   expires: Date;
   identityId: string;
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
+  methods: Array<AuthenticationMethod>;
   nonce: string;
-  previousRefreshSessionId: string | null;
-  tokenId: string;
-  uiLocales: Array<string>;
+  refreshTokenId: string;
+  scopes: Array<string>;
 };
 
 export type RefreshSessionOptions = Optional<
   RefreshSessionAttributes,
-  | EntityKeys
-  | "latestAuthentication"
-  | "nonce"
-  | "previousRefreshSessionId"
-  | "tokenId"
-  | "uiLocales"
+  EntityKeys | "refreshTokenId"
 >;
 
 const schema = Joi.object<RefreshSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    acrValues: Joi.array().items(Joi.string().lowercase()).required(),
-    amrValues: Joi.array().items(Joi.string().lowercase()).required(),
+    audiences: Joi.array().items(Joi.string().guid()).required(),
+    browserSessionId: Joi.string().guid().required(),
     clientId: Joi.string().guid().required(),
     expires: Joi.date().required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    methods: Joi.array().items(Joi.string().lowercase()).required(),
     nonce: JOI_NONCE.required(),
-    previousRefreshSessionId: Joi.string().guid().allow(null).required(),
-    tokenId: Joi.string().guid().required(),
-    uiLocales: Joi.array().items(JOI_LOCALE).required(),
+    refreshTokenId: Joi.string().guid().required(),
+    scopes: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
 export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
+  public readonly browserSessionId: string;
   public readonly clientId: string;
   public readonly identityId: string;
-  public readonly nonce: string;
-  public readonly previousRefreshSessionId: string | null;
-  public readonly uiLocales: Array<string>;
 
-  public acrValues: Array<string>;
-  public amrValues: Array<AuthenticationMethod>;
+  public audiences: Array<string>;
   public expires: Date;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
-  public tokenId: string;
+  public methods: Array<AuthenticationMethod>;
+  public nonce: string;
+  public refreshTokenId: string;
+  public scopes: Array<string>;
 
   public constructor(options: RefreshSessionOptions) {
     super(options);
 
-    this.acrValues = options.acrValues;
-    this.amrValues = options.amrValues;
+    this.audiences = options.audiences || [];
+    this.browserSessionId = options.browserSessionId;
     this.clientId = options.clientId;
     this.expires = options.expires;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
+    this.methods = options.methods;
     this.nonce = options.nonce || randomString(16);
-    this.previousRefreshSessionId = options.previousRefreshSessionId || null;
-    this.tokenId = options.tokenId || randomUUID();
-    this.uiLocales = options.uiLocales || [];
+    this.refreshTokenId = options.refreshTokenId || randomUUID();
+    this.scopes = options.scopes || [];
   }
 
   public async schemaValidation(): Promise<void> {
@@ -91,17 +86,17 @@ export class RefreshSession extends LindormEntity<RefreshSessionAttributes> {
     return {
       ...this.defaultJSON(),
 
-      acrValues: this.acrValues,
-      amrValues: this.amrValues,
+      audiences: this.audiences,
+      browserSessionId: this.browserSessionId,
       clientId: this.clientId,
       expires: this.expires,
       identityId: this.identityId,
       latestAuthentication: this.latestAuthentication,
       levelOfAssurance: this.levelOfAssurance,
+      methods: this.methods,
       nonce: this.nonce,
-      previousRefreshSessionId: this.previousRefreshSessionId,
-      tokenId: this.tokenId,
-      uiLocales: this.uiLocales,
+      refreshTokenId: this.refreshTokenId,
+      scopes: this.scopes,
     };
   }
 }

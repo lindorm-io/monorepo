@@ -1,4 +1,4 @@
 export enum SessionHint {
-  BROWSER = "browser",
+  ACCESS = "access",
   REFRESH = "refresh",
 }

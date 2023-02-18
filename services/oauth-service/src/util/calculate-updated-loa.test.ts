@@ -21,6 +21,8 @@ describe("calculateUpdatedLoa", () => {
     getAdjustedAccessLevel.mockImplementation(() => 1);
   });
 
+  afterEach(jest.resetAllMocks);
+
   test("should resolve when token loa is higher than session loa", () => {
     token.claims.maximumLoa = 4;
     token.levelOfAssurance = 4;

@@ -1,8 +1,8 @@
+import { Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaMiddleware } from "../../types";
 import { argon } from "../../instance";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";
-import { Client } from "../../entity";
 
 export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Promise<void> => {
   const {
@@ -16,6 +16,14 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
 
   if (clientId) {
     client = await clientCache.find({ id: clientId });
+
+    if (client.enforceBasicAuth) {
+      throw new ClientError("Unauthorized", {
+        data: { enforceBasicAuth: client.enforceBasicAuth },
+        description: "Client is configured to require basic auth",
+        statusCode: ClientError.StatusCode.UNAUTHORIZED,
+      });
+    }
   } else {
     const { type, value } = ctx.getAuthorizationHeader();
 
@@ -28,6 +36,18 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
     client = await clientCache.find({ id: clientId });
   }
 
+  if (!client.active) {
+    throw new ClientError("Client is not active");
+  }
+
+  if (client.enforceSecret && !clientSecret) {
+    throw new ClientError("Unauthorized", {
+      data: { enforceSecret: client.enforceSecret },
+      description: "Client is configured to require secret",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
   if (clientSecret) {
     try {
       await argon.assert(clientSecret, client.secret);
@@ -38,10 +58,6 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
         error: err,
       });
     }
-  }
-
-  if (!client.active) {
-    throw new ClientError("Client is not active");
   }
 
   ctx.entity.client = client;

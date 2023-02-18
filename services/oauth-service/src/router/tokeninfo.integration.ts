@@ -9,13 +9,13 @@ import {
   createTestRefreshSession,
 } from "../fixtures/entity";
 import {
-  TEST_CLIENT_CACHE,
-  getTestClientCredentials,
-  setupIntegration,
-  getTestRefreshToken,
-  getTestAccessToken,
   TEST_BROWSER_SESSION_REPOSITORY,
+  TEST_CLIENT_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
+  getTestAccessToken,
+  getTestClientCredentials,
+  getTestRefreshToken,
+  setupIntegration,
 } from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -44,8 +44,9 @@ describe("/tokeninfo", () => {
     const token = getTestAccessToken({
       id: tokenId,
       audiences: [configuration.oauth.client_id, client.id],
-      sessionId: browserSession.id,
+      session: browserSession.id,
       subject: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
+      tenant: "980664cf-321a-4a5c-af47-8155ec49c6a6",
     });
 
     const response = await request(server.callback())
@@ -58,11 +59,13 @@ describe("/tokeninfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      active: true,
       aal: 4,
       acr: [],
+      active: true,
       amr: [],
       aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
+      auth_time: 1609488000,
+      azp: null,
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
@@ -86,6 +89,7 @@ describe("/tokeninfo", () => {
       ],
       sid: browserSession.id,
       sub: "7914aeb7-76bc-4341-8b1e-8392528b6fac",
+      tid: "980664cf-321a-4a5c-af47-8155ec49c6a6",
       token_type: "access_token",
       username: null,
     });
@@ -103,14 +107,16 @@ describe("/tokeninfo", () => {
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
       createTestRefreshSession({
         clientId: client.id,
-        tokenId,
+        refreshTokenId: tokenId,
       }),
     );
 
     const token = getTestRefreshToken({
       id: tokenId,
       audiences: [configuration.oauth.client_id, client.id],
-      sessionId: refreshSession.id,
+      tenant: "980664cf-321a-4a5c-af47-8155ec49c6a6",
+      subject: "84e08eb5-466c-4097-9bb7-d09c43f7cbe0",
+      session: refreshSession.id,
     });
 
     const response = await request(server.callback())
@@ -128,6 +134,8 @@ describe("/tokeninfo", () => {
       acr: [],
       amr: [],
       aud: ["6ea68f3d-e31e-4882-85a5-0a617f431fdd", client.id],
+      auth_time: null,
+      azp: null,
       client_id: client.id,
       exp: 1609488010,
       iat: 1609488000,
@@ -137,7 +145,8 @@ describe("/tokeninfo", () => {
       nbf: 1609488000,
       scope: [],
       sid: refreshSession.id,
-      sub: "4634b8bf-a17e-4788-84d7-3054d2e522cb",
+      sub: "84e08eb5-466c-4097-9bb7-d09c43f7cbe0",
+      tid: "980664cf-321a-4a5c-af47-8155ec49c6a6",
       token_type: "refresh_token",
       username: null,
     });

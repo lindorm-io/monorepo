@@ -17,7 +17,7 @@ const main = async (): Promise<void> => {
     expiry: "15 minutes",
     levelOfAssurance: 4,
     scopes: Object.values(LindormScopes),
-    sessionId: randomUUID(),
+    session: randomUUID(),
     subject: id || randomUUID(),
     subjectHint: SubjectHints.IDENTITY,
     type: LindormTokenTypes.ACCESS,

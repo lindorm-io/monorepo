@@ -9,9 +9,6 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("rejectLoginController", () => {
   let ctx: any;
-  let authorizationSession = createTestAuthorizationSession({
-    state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
-  });
 
   beforeEach(() => {
     ctx = {
@@ -19,7 +16,9 @@ describe("rejectLoginController", () => {
         authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       entity: {
-        authorizationSession,
+        authorizationSession: createTestAuthorizationSession({
+          state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+        }),
       },
       logger: createMockLogger(),
     };
@@ -40,7 +39,7 @@ describe("rejectLoginController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession.authenticationStatus = "skip";
+    ctx.entity.authorizationSession.status.login = "skip";
 
     await expect(rejectLoginController(ctx)).rejects.toThrow(ClientError);
   });

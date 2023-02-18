@@ -1,7 +1,7 @@
 import { Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 
-export const assertRedirectUri = (redirectUri: string, client: Client): void => {
+export const assertRedirectUri = (client: Client, redirectUri: string): void => {
   if (client.redirectUris.includes(redirectUri)) return;
 
   throw new ClientError("Invalid Redirect URI", {

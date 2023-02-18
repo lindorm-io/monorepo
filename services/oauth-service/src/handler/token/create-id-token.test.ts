@@ -1,7 +1,7 @@
 import { createIdToken } from "./create-id-token";
 import {
   createTestClient,
-  createTestBrowserSession,
+  createTestAccessSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
 
@@ -16,19 +16,17 @@ describe("createIdToken", () => {
     };
   });
 
-  test("should create id token for browser session", async () => {
+  test("should create id token for access session", async () => {
     await expect(
-      createIdToken(ctx, createTestClient(), createTestBrowserSession(), {
-        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
-        claims: { email: "test@lindorm.io" },
-        nonce: "Aem5ldu1tdUgrd9C",
-        scopes: ["scope1", "scope2"],
+      createIdToken(ctx, createTestClient(), createTestAccessSession(), {
+        email: "test@lindorm.io",
       }),
     ).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
-        sessionHint: "browser",
+        claims: { email: "test@lindorm.io" },
+        sessionHint: "access",
       }),
     );
   });
@@ -36,15 +34,13 @@ describe("createIdToken", () => {
   test("should create id token for refresh session", async () => {
     await expect(
       createIdToken(ctx, createTestClient(), createTestRefreshSession(), {
-        audiences: ["75f2e509-d2e2-4454-8f2d-3294322847d9"],
-        claims: { email: "test@lindorm.io" },
-        nonce: "Aem5ldu1tdUgrd9C",
-        scopes: ["scope1", "scope2"],
+        email: "test@lindorm.io",
       }),
     ).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
+        claims: { email: "test@lindorm.io" },
         sessionHint: "refresh",
       }),
     );

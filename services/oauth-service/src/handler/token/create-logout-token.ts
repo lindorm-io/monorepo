@@ -1,13 +1,13 @@
-import { BrowserSession, Client, RefreshSession } from "../../entity";
-import { ServerKoaContext } from "../../types";
+import { AccessSession, Client, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
-import { SessionHint } from "../../enum";
 import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
+import { ServerKoaContext } from "../../types";
+import { SessionHint } from "../../enum";
 
 export const createLogoutToken = (
   ctx: ServerKoaContext,
   client: Client,
-  session: BrowserSession | RefreshSession,
+  session: AccessSession | RefreshSession,
 ): JwtSignData => {
   const { jwt } = ctx;
 
@@ -18,11 +18,13 @@ export const createLogoutToken = (
         "http://schemas.openid.net/event/backchannel-logout": {},
       },
     },
+    client: client.id,
     expiry: "60 seconds",
-    sessionId: session.id,
-    sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
+    session: session.id,
+    sessionHint: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
     subject: session.identityId,
     subjectHint: SubjectHints.IDENTITY,
+    tenant: client.tenantId,
     type: LindormTokenTypes.LOGOUT,
   });
 };

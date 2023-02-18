@@ -1,23 +1,28 @@
-import { AuthorizationSession } from "../../entity";
-import {
-  createTestAuthorizationSession,
-  createTestBrowserSession,
-  createTestConsentSession,
-} from "../../fixtures/entity";
+import { AuthorizationSession, Client } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { getUpdatedConsentSession as _getUpdatedConsentSession } from "../sessions";
-import { randomUUID } from "crypto";
 import { handleOauthConsentVerification } from "./handle-oauth-consent-verification";
-import { ServerError } from "@lindorm-io/errors";
+import {
+  createTestAccessSession,
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../fixtures/entity";
+import {
+  getUpdatedAccessSession as _getUpdatedAccessSession,
+  getUpdatedRefreshSession as _getUpdatedRefreshSession,
+} from "../sessions";
 
 jest.mock("../sessions");
 
-const getUpdatedConsentSession = _getUpdatedConsentSession as jest.Mock;
+const getUpdatedAccessSession = _getUpdatedAccessSession as jest.Mock;
+const getUpdatedRefreshSession = _getUpdatedRefreshSession as jest.Mock;
 
 describe("handleOauthConsentVerification", () => {
   let ctx: any;
   let authorizationSession: AuthorizationSession;
+  let client: Client;
 
   beforeEach(() => {
     ctx = {
@@ -29,28 +34,60 @@ describe("handleOauthConsentVerification", () => {
       },
     };
 
-    authorizationSession = createTestAuthorizationSession({
-      identifiers: {
-        browserSessionId: randomUUID(),
-        consentSessionId: null,
-        refreshSessionId: null,
-      },
-    });
+    authorizationSession = createTestAuthorizationSession();
+    authorizationSession.confirmedConsent.scopes = ["openid"];
 
-    getUpdatedConsentSession.mockResolvedValue(createTestConsentSession());
+    client = createTestClient();
+
+    getUpdatedAccessSession.mockResolvedValue(createTestAccessSession());
+    getUpdatedRefreshSession.mockResolvedValue(createTestRefreshSession());
   });
 
+  afterEach(jest.resetAllMocks);
+
   test("should resolve", async () => {
-    await expect(handleOauthConsentVerification(ctx, authorizationSession)).resolves.toStrictEqual(
-      expect.any(AuthorizationSession),
+    await expect(
+      handleOauthConsentVerification(ctx, authorizationSession, client),
+    ).resolves.toStrictEqual(expect.any(AuthorizationSession));
+
+    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: expect.objectContaining({
+          consent: "verified",
+        }),
+      }),
     );
   });
 
-  test("should throw on missing browser session id", async () => {
-    authorizationSession.identifiers.browserSessionId = null;
+  test("should resolve refresh session", async () => {
+    authorizationSession.confirmedConsent.scopes.push("offline_access");
 
-    await expect(handleOauthConsentVerification(ctx, authorizationSession)).rejects.toThrow(
-      ServerError,
+    await expect(
+      handleOauthConsentVerification(ctx, authorizationSession, client),
+    ).resolves.toStrictEqual(expect.any(AuthorizationSession));
+
+    expect(getUpdatedRefreshSession).toHaveBeenCalled();
+
+    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accessSessionId: null,
+        refreshSessionId: expect.any(String),
+      }),
+    );
+  });
+
+  test("should resolve access session", async () => {
+    await expect(
+      handleOauthConsentVerification(ctx, authorizationSession, client),
+    ).resolves.toStrictEqual(expect.any(AuthorizationSession));
+
+    expect(getUpdatedAccessSession).toHaveBeenCalled();
+
+    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accessSessionId: expect.any(String),
+        refreshSessionId: null,
+      }),
     );
   });
 });

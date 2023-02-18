@@ -1,15 +1,18 @@
 import Joi from "joi";
-import { BrowserSession, RefreshSession } from "../../entity";
+import { AccessSession, RefreshSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { flatten, orderBy } from "lodash";
 import { getAdjustedAccessLevel } from "../../util";
 import { isAfter } from "date-fns";
-import { IdentitySessionItem, GetIdentitySessionsResponse } from "@lindorm-io/common-types";
+import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
+import { SessionHint } from "../../enum";
 
 type RequestData = {
   id: string;
 };
+
+type ResponseBody = GetIdentitySessionsResponse;
 
 export const getIdentitySessionsSchema = Joi.object<RequestData>()
   .keys({
@@ -19,31 +22,39 @@ export const getIdentitySessionsSchema = Joi.object<RequestData>()
 
 export const getIdentitySessionsController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse<GetIdentitySessionsResponse> => {
+): ControllerResponse<ResponseBody> => {
   const {
     data: { id: identityId },
-    repository: { browserSessionRepository, refreshSessionRepository },
+    repository: { accessSessionRepository, refreshSessionRepository },
   } = ctx;
 
   const sessions: Array<IdentitySessionItem> = [];
 
   const now = new Date();
 
-  const browserSessions = await browserSessionRepository.findMany({ identityId });
+  const accessSessions = await accessSessionRepository.findMany({ identityId });
   const refreshSessions = await refreshSessionRepository.findMany({ identityId });
 
-  const array = flatten<BrowserSession | RefreshSession>([browserSessions, refreshSessions]);
+  const array = flatten<AccessSession | RefreshSession>([accessSessions, refreshSessions]);
 
   for (const session of array) {
     if (session.levelOfAssurance === 0) continue;
-    if (isAfter(now, session.expires)) continue;
+    if (session instanceof RefreshSession && isAfter(now, session.expires)) continue;
 
     sessions.push({
       id: session.id,
       adjustedAccessLevel: getAdjustedAccessLevel(session),
+      latestAuthentication: session.latestAuthentication,
       levelOfAssurance: session.levelOfAssurance,
+      methods: session.methods,
+      scopes: session.scopes,
+      type: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
     });
   }
 
-  return { body: { sessions: orderBy(sessions, ["levelOfAssurance"], ["asc"]) } };
+  return {
+    body: {
+      sessions: orderBy(sessions, ["levelOfAssurance"], ["asc"]),
+    },
+  };
 };

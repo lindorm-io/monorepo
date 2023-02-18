@@ -7,8 +7,6 @@ import {
 import {
   confirmConsentController,
   confirmConsentSchema,
-  getConsentDataController,
-  getConsentDataSchema,
   rejectConsentController,
   rejectConsentSchema,
   redirectConsentController,
@@ -21,15 +19,6 @@ export default router;
 router.use(
   clientAuthMiddleware(),
   //TODO: Add permissions middleware
-);
-
-router.get(
-  "/:id",
-  paramsMiddleware,
-  useSchema(getConsentDataSchema),
-  authorizationSessionEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.authorizationSession.clientId"),
-  useController(getConsentDataController),
 );
 
 router.post(

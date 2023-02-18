@@ -9,5 +9,6 @@ export const createTestAuthorizationCode = (
     authorizationSessionId: randomUUID(),
     code: randomString(128),
     expires: new Date("2021-01-02T08:00:00.000Z"),
+
     ...options,
   });

@@ -7,8 +7,10 @@ import {
   idTokenMiddleware,
 } from "../../../middleware";
 import {
-  elevateController,
-  elevateSchema,
+  initialisePostElevationController,
+  initialisePostElevationSchema,
+  initialiseRedirectElevationController,
+  initialiseRedirectElevationSchema,
   verifyElevationController,
   verifyElevationSchema,
 } from "../../../controller";
@@ -16,19 +18,27 @@ import {
 const router = new Router<any, any>();
 export default router;
 
-router.post(
+router.use(identityAuthMiddleware());
+
+router.get(
   "/",
-  useSchema(elevateSchema),
-  identityAuthMiddleware(),
+  useSchema(initialiseRedirectElevationSchema),
   clientEntityMiddleware("data.clientId"),
   idTokenMiddleware("data.idTokenHint", { optional: true }),
-  useController(elevateController),
+  useController(initialiseRedirectElevationController),
+);
+
+router.post(
+  "/",
+  useSchema(initialisePostElevationSchema),
+  clientEntityMiddleware("data.clientId"),
+  idTokenMiddleware("data.idTokenHint", { optional: true }),
+  useController(initialisePostElevationController),
 );
 
 router.get(
   "/verify",
   useSchema(verifyElevationSchema),
-  identityAuthMiddleware(),
-  elevationSessionEntityMiddleware("data.sessionId"),
+  elevationSessionEntityMiddleware("data.session"),
   useController(verifyElevationController),
 );

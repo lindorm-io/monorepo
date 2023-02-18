@@ -2,16 +2,16 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { flatten, uniq } from "lodash";
 import {
+  AccessSessionAttributes,
   BrowserSessionAttributes,
   ClientAttributes,
-  ConsentSessionAttributes,
   RefreshSessionAttributes,
 } from "../../entity";
 
 type ResponseBody = {
+  accessSessions: Array<Partial<AccessSessionAttributes>>;
   browserSessions: Array<Partial<BrowserSessionAttributes>>;
   clients: Array<Partial<ClientAttributes>>;
-  consentSessions: Array<Partial<ConsentSessionAttributes>>;
   refreshSessions: Array<Partial<RefreshSessionAttributes>>;
 };
 
@@ -23,36 +23,37 @@ export const sessioninfoController: ServerKoaController = async (
     token: {
       bearerToken: { subject: identityId },
     },
-    repository: { browserSessionRepository, consentSessionRepository, refreshSessionRepository },
+    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
   } = ctx;
 
+  const accessList = await accessSessionRepository.findMany({ identityId });
   const browserList = await browserSessionRepository.findMany({ identityId });
-  const consentList = await consentSessionRepository.findMany({ identityId });
   const refreshList = await refreshSessionRepository.findMany({ identityId });
 
+  const accessSessions: Array<Partial<AccessSessionAttributes>> = [];
   const browserSessions: Array<Partial<BrowserSessionAttributes>> = [];
   const clients: Array<Partial<ClientAttributes>> = [];
   const clientsArray: Array<string | Array<string>> = [];
-  const consentSessions: Array<Partial<ConsentSessionAttributes>> = [];
   const refreshSessions: Array<Partial<RefreshSessionAttributes>> = [];
 
-  for (const item of browserList) {
-    clientsArray.push(item.clients);
+  for (const item of accessList) {
+    clientsArray.push(item.clientId);
 
-    browserSessions.push({
-      clients: item.clients,
-      expires: item.expires,
+    accessSessions.push({
+      id: item.id,
+      clientId: item.clientId,
+      latestAuthentication: item.latestAuthentication,
       levelOfAssurance: item.levelOfAssurance,
-      remember: item.remember,
+      scopes: item.scopes,
     });
   }
 
-  for (const item of consentList) {
-    clientsArray.push(item.clientId);
-
-    consentSessions.push({
-      clientId: item.clientId,
-      scopes: item.scopes,
+  for (const item of browserList) {
+    browserSessions.push({
+      id: item.id,
+      latestAuthentication: item.latestAuthentication,
+      levelOfAssurance: item.levelOfAssurance,
+      remember: item.remember,
     });
   }
 
@@ -60,9 +61,12 @@ export const sessioninfoController: ServerKoaController = async (
     clientsArray.push(item.clientId);
 
     refreshSessions.push({
+      id: item.id,
       clientId: item.clientId,
       expires: item.expires,
+      latestAuthentication: item.latestAuthentication,
       levelOfAssurance: item.levelOfAssurance,
+      scopes: item.scopes,
     });
   }
 
@@ -78,5 +82,5 @@ export const sessioninfoController: ServerKoaController = async (
     });
   }
 
-  return { body: { browserSessions, clients, consentSessions, refreshSessions } };
+  return { body: { accessSessions, browserSessions, clients, refreshSessions } };
 };

@@ -63,14 +63,14 @@ describe("/oauth2/sessions/revoke", () => {
       createTestRefreshSession({
         clientId: client.id,
         identityId: randomUUID(),
-        tokenId,
+        refreshTokenId: tokenId,
       }),
     );
 
     const token = getTestRefreshToken({
       id: tokenId,
       audiences: [configuration.oauth.client_id, client.id],
-      sessionId: refreshSession.id,
+      session: refreshSession.id,
     });
 
     await request(server.callback())

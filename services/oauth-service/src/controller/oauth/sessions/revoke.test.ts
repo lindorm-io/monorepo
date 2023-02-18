@@ -1,7 +1,7 @@
-import { oauthRevokeController } from "./revoke";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestInvalidToken, createTestRefreshSession } from "../../../fixtures/entity";
+import { oauthRevokeController } from "./revoke";
 
 describe("oauthRevokeController", () => {
   let ctx: any;
@@ -18,7 +18,7 @@ describe("oauthRevokeController", () => {
         verify: jest.fn().mockImplementation(() => ({
           id: "id",
           expiresIn: 77,
-          sessionId: "sessionId",
+          session: "sessionId",
           type: "access_token",
         })),
       },
@@ -40,7 +40,7 @@ describe("oauthRevokeController", () => {
     ctx.jwt.verify.mockImplementation(() => ({
       id: "id",
       expiresIn: 77,
-      sessionId: "sessionId",
+      session: "sessionId",
       type: "refresh_token",
     }));
 

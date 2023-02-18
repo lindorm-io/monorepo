@@ -1,15 +1,15 @@
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { AuthorizationSession, BrowserSession, Client, ConsentSession } from "../../entity";
+import { AccessSession, AuthorizationSession, Client, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { LindormScopes, OauthResponseModes, OauthResponseTypes } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
 import { createURL } from "@lindorm-io/url";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 import { getIdentityUserinfo } from "../identity";
-import { LindormScopes, OauthResponseModes, OauthResponseTypes } from "@lindorm-io/common-types";
 
-type Data = {
+type CallbackData = {
   accessToken: string;
   code: string;
   expiresIn: number;
@@ -21,21 +21,13 @@ type Data = {
 
 export const generateCallbackResponse = async (
   ctx: ServerKoaContext,
-  authSession: AuthorizationSession,
-  browserSession: BrowserSession,
-  consentSession: ConsentSession,
+  authorizationSession: AuthorizationSession,
   client: Client,
+  session: AccessSession | RefreshSession,
 ): ControllerResponse => {
-  let authorizationSession = authSession;
+  const { redirectUri, responseMode, responseTypes, state } = authorizationSession;
 
-  const { nonce, redirectUri, responseMode, responseTypes, state } = authorizationSession;
-  const { audiences, scopes } = consentSession;
-
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, browserSession, {
-    audiences,
-    scopes,
-  });
-
+  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
   const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
 
   if (!active) {
@@ -46,10 +38,11 @@ export const generateCallbackResponse = async (
     });
   }
 
-  const data: Partial<Data> = {};
+  const data: Partial<CallbackData> = {};
 
   if (responseTypes.includes(OauthResponseTypes.CODE)) {
     const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
+
     data.code = authorizationCode.code;
   }
 
@@ -61,14 +54,9 @@ export const generateCallbackResponse = async (
 
   if (
     responseTypes.includes(OauthResponseTypes.ID_TOKEN) &&
-    scopes.includes(LindormScopes.OPENID)
+    session.scopes.includes(LindormScopes.OPENID)
   ) {
-    const { token: idToken } = createIdToken(ctx, client, browserSession, {
-      audiences,
-      claims,
-      nonce,
-      scopes,
-    });
+    const { token: idToken } = createIdToken(ctx, client, session, claims);
 
     data.idToken = idToken;
   }

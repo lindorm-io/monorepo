@@ -27,21 +27,21 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
     repository: { refreshSessionRepository },
   } = ctx;
 
-  const { id, expires, sessionId, type } = jwt.verify(data.token, {
+  const { id, expires, session, type } = jwt.verify(data.token, {
     types: [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
   });
 
-  if (!sessionId) {
+  if (!session) {
     throw new ClientError("Invalid Token", {
       code: "invalid_token",
       description: "Token claim is missing",
-      data: { sessionId },
+      data: { session },
     });
   }
 
   await invalidTokenCache.create(new InvalidToken({ id, expires: fromUnixTime(expires) }));
 
   if (type === LindormTokenTypes.REFRESH) {
-    await refreshSessionRepository.deleteMany({ id: sessionId });
+    await refreshSessionRepository.deleteMany({ id: session });
   }
 };

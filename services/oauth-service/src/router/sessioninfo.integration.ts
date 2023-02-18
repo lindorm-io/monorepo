@@ -3,15 +3,15 @@ import request from "supertest";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
+  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
-  createTestConsentSession,
   createTestRefreshSession,
 } from "../fixtures/entity";
 import {
+  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
-  TEST_CONSENT_SESSION_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
@@ -30,39 +30,44 @@ describe("/sessioninfo", () => {
 
     const client1 = await TEST_CLIENT_CACHE.create(
       createTestClient({
+        id: "991187c9-ee8e-42c4-8763-2c570489be25",
         name: "client1",
       }),
     );
 
     const client2 = await TEST_CLIENT_CACHE.create(
       createTestClient({
+        id: "e2b6a09d-5e75-4bb3-b784-34b78dba6d45",
         name: "client2",
       }),
     );
 
     await TEST_BROWSER_SESSION_REPOSITORY.create(
       createTestBrowserSession({
-        clients: [client1.id],
+        id: "bb007a25-a77e-4286-8953-37bc47554f8a",
         identityId,
       }),
     );
 
     await TEST_REFRESH_SESSION_REPOSITORY.create(
       createTestRefreshSession({
+        id: "59a862da-8188-41d6-8c72-329b30ce8e42",
         clientId: client2.id,
         identityId,
       }),
     );
 
-    await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
+    await TEST_ACCESS_SESSION_REPOSITORY.create(
+      createTestAccessSession({
+        id: "7ef9b009-a400-4af7-bfdd-d155f58d21ad",
         clientId: client1.id,
         identityId,
       }),
     );
 
-    await TEST_CONSENT_SESSION_REPOSITORY.create(
-      createTestConsentSession({
+    await TEST_ACCESS_SESSION_REPOSITORY.create(
+      createTestAccessSession({
+        id: "98823ace-1c47-4293-bb50-050d21f884e0",
         clientId: client2.id,
         identityId,
       }),
@@ -78,43 +83,52 @@ describe("/sessioninfo", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      browser_sessions: expect.arrayContaining([
+      access_sessions: [
         {
-          clients: [client1.id],
-          expires: "2021-04-01T08:00:00.000Z",
+          id: "7ef9b009-a400-4af7-bfdd-d155f58d21ad",
+          client_id: "991187c9-ee8e-42c4-8763-2c570489be25",
+          latest_authentication: "2021-01-01T07:59:00.000Z",
+          level_of_assurance: 2,
+          scopes: ["openid", "profile"],
+        },
+        {
+          id: "98823ace-1c47-4293-bb50-050d21f884e0",
+          client_id: "e2b6a09d-5e75-4bb3-b784-34b78dba6d45",
+          latest_authentication: "2021-01-01T07:59:00.000Z",
+          level_of_assurance: 2,
+          scopes: ["openid", "profile"],
+        },
+      ],
+      browser_sessions: [
+        {
+          id: "bb007a25-a77e-4286-8953-37bc47554f8a",
+          latest_authentication: "2021-01-01T07:59:00.000Z",
           level_of_assurance: 2,
           remember: true,
         },
-      ]),
-      clients: expect.arrayContaining([
+      ],
+      clients: [
         {
+          id: "991187c9-ee8e-42c4-8763-2c570489be25",
           description: "Client description",
-          id: client1.id,
           name: "client1",
         },
         {
+          id: "e2b6a09d-5e75-4bb3-b784-34b78dba6d45",
           description: "Client description",
-          id: client2.id,
           name: "client2",
         },
-      ]),
-      consent_sessions: expect.arrayContaining([
+      ],
+      refresh_sessions: [
         {
-          client_id: client1.id,
-          scopes: ["openid", "email", "profile"],
-        },
-        {
-          client_id: client2.id,
-          scopes: ["openid", "email", "profile"],
-        },
-      ]),
-      refresh_sessions: expect.arrayContaining([
-        {
-          client_id: client2.id,
+          id: "59a862da-8188-41d6-8c72-329b30ce8e42",
+          client_id: "e2b6a09d-5e75-4bb3-b784-34b78dba6d45",
           expires: "2021-02-01T08:00:00.000Z",
+          latest_authentication: "2021-01-01T07:59:00.000Z",
           level_of_assurance: 2,
+          scopes: ["openid", "profile"],
         },
-      ]),
+      ],
     });
   });
 });

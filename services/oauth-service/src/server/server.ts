@@ -9,12 +9,12 @@ import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
 import { workers } from "./workers";
 import {
+  AccessSessionRepository,
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
   ClientCache,
   ClientRepository,
-  ConsentSessionRepository,
   ElevationSessionCache,
   InvalidTokenCache,
   LogoutSessionCache,
@@ -48,9 +48,9 @@ export const server = createNodeServer<ServerKoaContext>({
   port: configuration.server.port,
   redisConnection,
   repositories: [
+    AccessSessionRepository,
     BrowserSessionRepository,
     ClientRepository,
-    ConsentSessionRepository,
     KeyPairRepository,
     RefreshSessionRepository,
     TenantRepository,

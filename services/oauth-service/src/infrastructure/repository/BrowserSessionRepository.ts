@@ -12,14 +12,6 @@ export class BrowserSessionRepository extends LindormRepository<
       indices: [
         {
           index: {
-            expires: 1,
-          },
-          options: {
-            unique: false,
-          },
-        },
-        {
-          index: {
             identityId: 1,
           },
           options: {

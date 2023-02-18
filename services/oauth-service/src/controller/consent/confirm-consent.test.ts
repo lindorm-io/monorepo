@@ -60,6 +60,7 @@ describe("confirmConsentController", () => {
       status: {
         login: "confirmed",
         consent: "rejected",
+        selectAccount: "pending",
       },
     });
 

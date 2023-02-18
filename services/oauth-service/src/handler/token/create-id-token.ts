@@ -1,43 +1,43 @@
-import { Client, BrowserSession, RefreshSession } from "../../entity";
+import { Client, AccessSession, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { LindormClaims, LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { SessionHint } from "../../enum";
 import { configuration } from "../../server/configuration";
-import { flatten, uniq } from "lodash";
 import { getUnixTime } from "date-fns";
-
-type Options = {
-  audiences: Array<string>;
-  claims: Partial<LindormClaims>;
-  nonce: string;
-  scopes: Array<string>;
-};
+import { uniqArray } from "@lindorm-io/core";
 
 export const createIdToken = (
   ctx: ServerKoaContext,
   client: Client,
-  session: BrowserSession | RefreshSession,
-  options: Options,
+  session: AccessSession | RefreshSession,
+  claims: Partial<LindormClaims>,
 ): JwtSignData => {
   const { jwt } = ctx;
-
-  const { sub, updatedAt, ...claims } = options.claims;
+  const { sub, updatedAt, ...rest } = claims;
 
   return jwt.sign({
-    audiences: uniq(flatten([client.id, options.audiences, configuration.oauth.client_id])).sort(),
-    authContextClass: session.acrValues,
-    authMethodsReference: session.amrValues,
+    audiences: uniqArray(
+      client.id,
+      session.audiences,
+      configuration.oauth.client_id,
+      configuration.services.authentication_service.client_id,
+      configuration.services.identity_service.client_id,
+    ),
+    authContextClass: [`loa_${session.levelOfAssurance}`],
+    authMethodsReference: session.methods,
     authTime: getUnixTime(session.latestAuthentication),
-    claims: claims,
+    claims: rest,
+    client: client.id,
     expiry: client.expiry.idToken || configuration.defaults.expiry.id_token,
     levelOfAssurance: session.levelOfAssurance,
-    nonce: options.nonce,
-    scopes: options.scopes,
-    sessionId: session.id,
-    sessionHint: session instanceof BrowserSession ? SessionHint.BROWSER : SessionHint.REFRESH,
+    nonce: session.nonce,
+    scopes: session.scopes,
+    session: session.id,
+    sessionHint: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
     subject: session.identityId,
     subjectHint: SubjectHints.IDENTITY,
+    tenant: client.tenantId,
     type: LindormTokenTypes.ID,
   });
 };

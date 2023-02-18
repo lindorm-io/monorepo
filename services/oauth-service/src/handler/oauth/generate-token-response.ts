@@ -1,9 +1,9 @@
-import { Client, BrowserSession, RefreshSession, ConsentSession } from "../../entity";
+import { Client, AccessSession, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { LindormScopes } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken, createRefreshToken } from "../token";
 import { getIdentityUserinfo } from "../identity";
-import { LindormScopes } from "@lindorm-io/common-types";
 
 type ResponseBody = {
   accessToken: string;
@@ -17,19 +17,11 @@ type ResponseBody = {
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
   client: Client,
-  session: BrowserSession | RefreshSession,
-  consentSession: ConsentSession,
+  session: AccessSession | RefreshSession,
 ): Promise<Partial<ResponseBody>> => {
   const body: Partial<ResponseBody> = {};
 
-  const { nonce } = session;
-  const { audiences, scopes } = consentSession;
-
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session, {
-    audiences,
-    scopes,
-  });
-
+  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
   const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
 
   if (!active) {
@@ -44,18 +36,13 @@ export const generateTokenResponse = async (
   body.expiresIn = expiresIn;
   body.tokenType = "Bearer";
 
-  if (scopes.includes(LindormScopes.OPENID)) {
-    const { token: idToken } = createIdToken(ctx, client, session, {
-      audiences,
-      claims,
-      scopes,
-      nonce,
-    });
+  if (session.scopes.includes(LindormScopes.OPENID)) {
+    const { token: idToken } = createIdToken(ctx, client, session, claims);
 
     body.idToken = idToken;
   }
 
-  if (scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
+  if (session.scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
     if (!(session instanceof RefreshSession)) {
       throw new ServerError("Unexpected session type");
     }
@@ -65,7 +52,7 @@ export const generateTokenResponse = async (
     body.refreshToken = refreshToken;
   }
 
-  body.scope = scopes;
+  body.scope = session.scopes;
 
   return body;
 };

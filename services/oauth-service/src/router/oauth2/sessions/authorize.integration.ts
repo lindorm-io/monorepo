@@ -2,13 +2,23 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
-import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
+import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { server } from "../../../server/server";
 import {
-  setupIntegration,
+  createTestAccessSession,
+  createTestAuthorizationSession,
+  createTestBrowserSession,
+  createTestClient,
+  createTestRefreshSession,
+} from "../../../fixtures/entity";
+import {
+  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
+  TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_CACHE,
+  TEST_REFRESH_SESSION_REPOSITORY,
+  setupIntegration,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -16,7 +26,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
-describe("/oauth2/sessions/verify", () => {
+describe("/oauth2/sessions/authorize", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
@@ -26,26 +36,42 @@ describe("/oauth2/sessions/verify", () => {
 
   test("should resolve redirect with query", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
+    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
+      createTestAccessSession({
+        audiences: [configuration.oauth.client_id, client.id],
+        browserSessionId: browserSession.id,
+        clientId: client.id,
+        identityId: browserSession.identityId,
+        latestAuthentication: new Date(),
+        levelOfAssurance: 3,
+        scopes: ["openid", "offline_access", "email", "phone"],
+      }),
+    );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
         clientId: client.id,
+        accessSessionId: accessSession.id,
+        browserSessionId: browserSession.id,
+        refreshSessionId: null,
         confirmedConsent: {
           audiences: [client.id],
           scopes: ["openid", "offline_access", "email"],
         },
         confirmedLogin: {
-          acrValues: ["loa_3"],
-          amrValues: ["email", "phone"],
-          identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
+          identityId: accessSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
+          methods: ["email", "phone"],
           remember: true,
+          sso: true,
         },
         responseMode: "query",
         status: {
           login: "confirmed",
           consent: "confirmed",
+          selectAccount: "skip",
         },
       }),
     );
@@ -53,15 +79,16 @@ describe("/oauth2/sessions/verify", () => {
     const url = createURL("/oauth2/sessions/authorize/verify", {
       host: "https://test.test",
       query: {
-        sessionId: authorizationSession.id,
+        session: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
-    });
+    }).toString();
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
+      .get(url.replace("https://test.test", ""))
       .set("Cookie", [
         `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; httponly`,
+        `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
       .expect(302);
 
@@ -77,34 +104,54 @@ describe("/oauth2/sessions/verify", () => {
 
     expect(response.headers["set-cookie"]).toStrictEqual(
       expect.arrayContaining([
-        expect.stringContaining("lindorm_io_oauth_browser_session="),
-        expect.stringContaining("lindorm_io_oauth_authorization_session=;"),
+        expect.stringContaining(
+          "lindorm_io_oauth_authorization_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
+        ),
+        expect.stringContaining(
+          `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; expires=Mon, 01 Jan 2120 08:00:00 GMT; httponly`,
+        ),
       ]),
     );
   });
 
   test("should resolve redirect with form post", async () => {
     const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
+    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
+      createTestRefreshSession({
+        audiences: [configuration.oauth.client_id, client.id],
+        browserSessionId: browserSession.id,
+        clientId: client.id,
+        identityId: browserSession.identityId,
+        latestAuthentication: new Date(),
+        levelOfAssurance: 3,
+        scopes: ["openid", "offline_access", "email", "phone"],
+      }),
+    );
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
         clientId: client.id,
+        accessSessionId: null,
+        browserSessionId: browserSession.id,
+        refreshSessionId: refreshSession.id,
         confirmedConsent: {
           audiences: [client.id],
           scopes: ["openid", "offline_access", "email"],
         },
         confirmedLogin: {
-          acrValues: ["loa_3"],
-          amrValues: ["email", "phone"],
-          identityId: "d821cde6-250f-4918-ad55-877a7abf0271",
+          identityId: refreshSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
+          methods: ["email", "phone"],
           remember: true,
+          sso: true,
         },
         responseMode: "form_post",
         status: {
           login: "confirmed",
           consent: "confirmed",
+          selectAccount: "skip",
         },
       }),
     );
@@ -112,14 +159,17 @@ describe("/oauth2/sessions/verify", () => {
     const url = createURL("/oauth2/sessions/authorize/verify", {
       host: "https://test.test",
       query: {
-        sessionId: authorizationSession.id,
+        session: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
-    });
+    }).toString();
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
-      .set("Cookie", [`lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/;`])
+      .get(url.replace("https://test.test", ""))
+      .set("Cookie", [
+        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/;`,
+        `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
+      ])
       .expect(308);
 
     const location = new URL(response.headers.location);
@@ -138,8 +188,12 @@ describe("/oauth2/sessions/verify", () => {
 
     expect(response.headers["set-cookie"]).toStrictEqual(
       expect.arrayContaining([
-        expect.stringContaining("lindorm_io_oauth_browser_session="),
-        expect.stringContaining("lindorm_io_oauth_authorization_session=;"),
+        expect.stringContaining(
+          "lindorm_io_oauth_authorization_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; httponly",
+        ),
+        expect.stringContaining(
+          `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; expires=Mon, 01 Jan 2120 08:00:00 GMT; httponly`,
+        ),
       ]),
     );
   });

@@ -1,20 +1,15 @@
-import { Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { clientAuthMiddleware, clientEntityMiddleware } from "../middleware";
 import { tokeninfoController, tokeninfoSchema } from "../controller";
 
 const router = new Router<any, any>();
 export default router;
 
+router.use(clientAuthMiddleware());
+
 router.post(
   "/",
   useSchema(tokeninfoSchema),
-  clientAuthMiddleware(),
   clientEntityMiddleware("token.bearerToken.subject"),
-  useAssertion({
-    expect: true,
-    fromPath: {
-      actual: "entity.client.active",
-    },
-  }),
   useController(tokeninfoController),
 );

@@ -1,6 +1,6 @@
 import { createLogoutToken } from "./create-logout-token";
 import {
-  createTestBrowserSession,
+  createTestAccessSession,
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
@@ -17,11 +17,11 @@ describe("createLogoutToken", () => {
   });
 
   test("should create logout token", () => {
-    expect(createLogoutToken(ctx, createTestClient(), createTestBrowserSession())).toBe("signed");
+    expect(createLogoutToken(ctx, createTestClient(), createTestAccessSession())).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
-        sessionHint: "browser",
+        sessionHint: "access",
       }),
     );
   });

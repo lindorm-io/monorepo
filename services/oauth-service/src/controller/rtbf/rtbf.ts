@@ -6,9 +6,9 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
   const {
     axios: { axiosClient },
     repository: {
+      accessSessionRepository,
       browserSessionRepository,
       clientRepository,
-      consentSessionRepository,
       refreshSessionRepository,
     },
     token: {
@@ -26,7 +26,7 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
     });
   }
 
+  await accessSessionRepository.deleteMany({ identityId: subject });
   await browserSessionRepository.deleteMany({ identityId: subject });
-  await consentSessionRepository.deleteMany({ identityId: subject });
   await refreshSessionRepository.deleteMany({ identityId: subject });
 };

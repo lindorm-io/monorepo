@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { LogoutSessionType } from "../../enum";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
@@ -21,20 +20,23 @@ describe("confirmLogoutController", () => {
       cache: {
         logoutSessionCache: createMockCache(createTestLogoutSession),
       },
+      data: {
+        accessSessionId: "23de470a-b05a-4408-89cf-a7153de5a00b",
+        browserSessionId: "1efe4d7c-4de7-4647-9e8f-d4254055e02d",
+        refreshSessionId: "96759ddf-0e58-40ef-b8d5-17d3a7495fbf",
+      },
       entity: {
-        logoutSession: createTestLogoutSession({
-          sessionType: LogoutSessionType.BROWSER,
-        }),
+        logoutSession: createTestLogoutSession(),
       },
       logger: createMockLogger(),
     };
 
-    createLogoutVerifyRedirectUri.mockImplementation(() => "redirect-uri");
+    createLogoutVerifyRedirectUri.mockImplementation(() => "createLogoutVerifyRedirectUri");
   });
 
   test("should resolve", async () => {
     await expect(confirmLogoutController(ctx)).resolves.toStrictEqual({
-      body: { redirectTo: "redirect-uri" },
+      body: { redirectTo: "createLogoutVerifyRedirectUri" },
     });
 
     expect(ctx.cache.logoutSessionCache.update).toHaveBeenCalledWith(

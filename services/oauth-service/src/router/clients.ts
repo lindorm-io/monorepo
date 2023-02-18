@@ -7,8 +7,8 @@ import {
   deleteClientSchema,
   generateClientSecretController,
   generateClientSecretSchema,
-  getClientInfoController,
-  getClientInfoSchema,
+  getClientController,
+  getClientSchema,
   updateClientController,
   updateClientSchema,
 } from "../controller";
@@ -38,10 +38,10 @@ router.get(
   "/:id",
   paramsMiddleware,
   //TODO: Add permissions middleware
-  useSchema(getClientInfoSchema),
+  useSchema(getClientSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),
-  useController(getClientInfoController),
+  useController(getClientController),
 );
 
 router.patch(

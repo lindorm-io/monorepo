@@ -3,8 +3,8 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import { JOI_JWT } from "../../common";
-import { ServerKoaController } from "../../types";
 import { OauthGrantTypes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { ServerKoaController } from "../../types";
 import {
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,

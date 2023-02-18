@@ -1,4 +1,4 @@
-import { AuthorizationSession, BrowserSession, Client, ConsentSession } from "../../entity";
+import { AccessSession, AuthorizationSession, Client, RefreshSession } from "../../entity";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { baseHash } from "@lindorm-io/core";
 import { createAccessToken as _createAccessToken, createIdToken as _createIdToken } from "../token";
@@ -6,11 +6,11 @@ import { generateAuthorizationCode as _generateAuthorizationCode } from "./gener
 import { generateCallbackResponse } from "./generate-callback-response";
 import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
 import {
+  createTestAccessSession,
   createTestAuthorizationCode,
   createTestAuthorizationSession,
-  createTestBrowserSession,
   createTestClient,
-  createTestConsentSession,
+  createTestRefreshSession,
 } from "../../fixtures/entity";
 
 jest.mock("../identity");
@@ -25,8 +25,8 @@ const generateAuthorizationCode = _generateAuthorizationCode as jest.Mock;
 describe("generateCallbackResponse", () => {
   let ctx: any;
   let authorizationSession: AuthorizationSession;
-  let browserSession: BrowserSession;
-  let consentSession: ConsentSession;
+  let accessSession: AccessSession;
+  let refreshSession: RefreshSession;
   let client: Client;
 
   beforeEach(() => {
@@ -36,20 +36,28 @@ describe("generateCallbackResponse", () => {
       },
     };
 
-    authorizationSession = createTestAuthorizationSession();
-    browserSession = createTestBrowserSession();
-    consentSession = createTestConsentSession();
+    authorizationSession = createTestAuthorizationSession({
+      redirectData: null,
+      responseTypes: ["token"],
+      state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+    });
+
+    accessSession = createTestAccessSession();
+    refreshSession = createTestRefreshSession();
     client = createTestClient();
 
     createAccessToken.mockImplementation(() => ({
       token: "access.token.jwt",
       expiresIn: 999,
     }));
+
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
       expiresIn: 999,
     }));
+
     getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
+
     generateAuthorizationCode.mockResolvedValue(
       createTestAuthorizationCode({
         code: "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
@@ -59,6 +67,28 @@ describe("generateCallbackResponse", () => {
 
   afterEach(jest.resetAllMocks);
 
+  test("should resolve access session", async () => {
+    await expect(
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
+    ).resolves.toStrictEqual({
+      redirect:
+        "https://test.client.lindorm.io/redirect?access_token=access.token.jwt&expires_in=999&token_type=Bearer&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+    });
+
+    expect(createAccessToken).toHaveBeenCalledWith(ctx, client, accessSession);
+  });
+
+  test("should resolve refresh session", async () => {
+    await expect(
+      generateCallbackResponse(ctx, authorizationSession, client, refreshSession),
+    ).resolves.toStrictEqual({
+      redirect:
+        "https://test.client.lindorm.io/redirect?access_token=access.token.jwt&expires_in=999&token_type=Bearer&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+    });
+
+    expect(createAccessToken).toHaveBeenCalledWith(ctx, client, refreshSession);
+  });
+
   test("should resolve state on form post", async () => {
     authorizationSession = createTestAuthorizationSession({
       responseMode: "form_post",
@@ -67,7 +97,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect",
       body: {
@@ -87,7 +117,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect#state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -102,7 +132,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect?state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -116,7 +146,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "code=vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
@@ -132,7 +162,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "access_token=access.token.jwt&expires_in=999&token_type=Bearer",
@@ -148,7 +178,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining("id_token=id.token.jwt"),
     });
@@ -165,7 +195,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationSession, browserSession, consentSession, client),
+      generateCallbackResponse(ctx, authorizationSession, client, accessSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "redirect_data=ZXlKemRISnBibWNpT2lKemRISnBibWNpTENKdWRXMWlaWElpT2pFeU15d2lZbTl2YkdWaGJpSTZkSEoxWlgwPQ%3D%3D",

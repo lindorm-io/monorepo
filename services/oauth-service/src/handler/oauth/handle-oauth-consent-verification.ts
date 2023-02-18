@@ -1,31 +1,29 @@
-import { AuthorizationSession } from "../../entity";
-import { ServerError } from "@lindorm-io/errors";
+import { AuthorizationSession, Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { getUpdatedConsentSession } from "../sessions";
-import { SessionStatuses } from "@lindorm-io/common-types";
+import { LindormScopes, SessionStatuses } from "@lindorm-io/common-types";
+import { getUpdatedAccessSession, getUpdatedRefreshSession } from "../sessions";
 
 export const handleOauthConsentVerification = async (
   ctx: ServerKoaContext,
   authorizationSession: AuthorizationSession,
+  client: Client,
 ): Promise<AuthorizationSession> => {
   const {
     cache: { authorizationSessionCache },
-    repository: { browserSessionRepository },
   } = ctx;
 
-  if (!authorizationSession.identifiers.browserSessionId) {
-    throw new ServerError("Invalid session state", {
-      description: "Expected to find Browser Session",
-    });
+  if (authorizationSession.confirmedConsent.scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
+    const refreshSession = await getUpdatedRefreshSession(ctx, authorizationSession, client);
+
+    authorizationSession.accessSessionId = null;
+    authorizationSession.refreshSessionId = refreshSession.id;
+  } else {
+    const accessSession = await getUpdatedAccessSession(ctx, authorizationSession);
+
+    authorizationSession.accessSessionId = accessSession.id;
+    authorizationSession.refreshSessionId = null;
   }
 
-  const browserSession = await browserSessionRepository.find({
-    id: authorizationSession.identifiers.browserSessionId,
-  });
-
-  const consentSession = await getUpdatedConsentSession(ctx, authorizationSession, browserSession);
-
-  authorizationSession.identifiers.consentSessionId = consentSession.id;
   authorizationSession.status.consent = SessionStatuses.VERIFIED;
 
   return await authorizationSessionCache.update(authorizationSession);

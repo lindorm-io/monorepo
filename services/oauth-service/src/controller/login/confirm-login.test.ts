@@ -23,11 +23,11 @@ describe("confirmLoginController", () => {
         authorizationSessionCache: createMockCache(createTestAuthorizationSession),
       },
       data: {
-        acrValues: ["loa_3"],
-        amrValues: ["phone"],
         identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
         levelOfAssurance: 3,
+        methods: ["phone"],
         remember: true,
+        sso: true,
       },
       entity: {
         authorizationSession,
@@ -46,12 +46,12 @@ describe("confirmLoginController", () => {
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedLogin: {
-          acrValues: ["loa_3"],
-          amrValues: ["phone"],
           identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 3,
+          methods: ["phone"],
           remember: true,
+          sso: true,
         },
         status: expect.objectContaining({ login: "confirmed" }),
       }),
