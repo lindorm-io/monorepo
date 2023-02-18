@@ -59,7 +59,7 @@ const addQueryToURL = <Query = QueryRecord>(
 
     if (Array.isArray(value)) {
       url.searchParams.append(transformed, value.join(" "));
-    } else {
+    } else if (value) {
       url.searchParams.append(transformed, value.toString());
     }
   }
