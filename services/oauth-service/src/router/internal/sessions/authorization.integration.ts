@@ -13,7 +13,7 @@ import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
@@ -28,7 +28,7 @@ describe("/internal/sessions/authorization", () => {
   beforeAll(setupIntegration);
 
   test("should resolve data", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({

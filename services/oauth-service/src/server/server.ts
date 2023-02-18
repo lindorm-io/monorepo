@@ -13,7 +13,6 @@ import {
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
-  ClientCache,
   ClientRepository,
   ElevationSessionCache,
   InvalidTokenCache,
@@ -26,7 +25,6 @@ export const server = createNodeServer<ServerKoaContext>({
   caches: [
     AuthorizationCodeCache,
     AuthorizationSessionCache,
-    ClientCache,
     ElevationSessionCache,
     InvalidTokenCache,
     KeyPairCache,

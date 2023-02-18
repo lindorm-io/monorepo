@@ -12,7 +12,7 @@ import {
 import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
@@ -29,8 +29,8 @@ describe("/internal/identities", () => {
   test("GET /:id/sessions", async () => {
     const identityId = randomUUID();
 
-    const client1 = await TEST_CLIENT_CACHE.create(createTestClient({ type: "confidential" }));
-    const client2 = await TEST_CLIENT_CACHE.create(createTestClient({ type: "confidential" }));
+    const client1 = await TEST_CLIENT_REPOSITORY.create(createTestClient({ type: "confidential" }));
+    const client2 = await TEST_CLIENT_REPOSITORY.create(createTestClient({ type: "confidential" }));
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client1.id],

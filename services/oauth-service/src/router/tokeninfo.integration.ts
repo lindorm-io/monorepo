@@ -10,7 +10,7 @@ import {
 } from "../fixtures/entity";
 import {
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   getTestClientCredentials,
@@ -27,7 +27,7 @@ describe("/tokeninfo", () => {
   beforeAll(setupIntegration);
 
   test("POST / - ACCESS", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -96,7 +96,7 @@ describe("/tokeninfo", () => {
   });
 
   test("POST / - REFRESH", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,

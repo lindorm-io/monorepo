@@ -27,9 +27,9 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { clientCache, logoutSessionCache },
+    cache: { logoutSessionCache },
     data: { clientId, idTokenHint, logoutHint, postLogoutRedirectUri, state, uiLocales },
-    repository: { accessSessionRepository, refreshSessionRepository },
+    repository: { accessSessionRepository, clientRepository, refreshSessionRepository },
     request: { originalUrl },
     token: { idToken },
   } = ctx;
@@ -54,7 +54,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     });
   }
 
-  const client = await clientCache.find({ id: combinedClientId });
+  const client = await clientRepository.find({ id: combinedClientId });
 
   if (!client.active) {
     throw new ClientError("Inactive Client", {

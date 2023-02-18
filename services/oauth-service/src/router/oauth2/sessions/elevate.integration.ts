@@ -3,6 +3,7 @@ import request from "supertest";
 import { SessionHint } from "../../../enum";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
+import { getTestData } from "../../../fixtures/data";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../../server/server";
 import {
@@ -15,14 +16,13 @@ import {
 import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   getTestIdToken,
   setupIntegration,
 } from "../../../fixtures/integration";
-import { getTestData } from "../../../fixtures/data";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -35,7 +35,7 @@ describe("/oauth2/sessions/elevate", () => {
   test("should resolve initialised elevation with id token for browser session", async () => {
     const { state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({
@@ -130,7 +130,7 @@ describe("/oauth2/sessions/elevate", () => {
   });
 
   test("should resolve initialised elevation with request body for refresh session", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
       createTestRefreshSession({
@@ -202,7 +202,7 @@ describe("/oauth2/sessions/elevate", () => {
   });
 
   test("should resolve verified elevation session", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({

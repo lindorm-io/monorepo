@@ -9,13 +9,11 @@ describe("createTenantController", () => {
     ctx = {
       data: {
         name: "name",
+        owner: "66112712-c17b-4ba1-8e01-132d3e322bad",
         subdomain: "subdomain",
       },
       repository: {
         tenantRepository: createMockRepository(createTestTenant),
-      },
-      token: {
-        bearerToken: { subject: "identityId" },
       },
     };
   });

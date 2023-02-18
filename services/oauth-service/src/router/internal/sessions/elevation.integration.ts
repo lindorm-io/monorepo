@@ -12,7 +12,7 @@ import {
 import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestClientCredentials,
@@ -28,7 +28,7 @@ describe("/internal/sessions/elevation", () => {
   beforeAll(setupIntegration);
 
   test("should resolve data", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({
@@ -104,7 +104,7 @@ describe("/internal/sessions/elevation", () => {
   });
 
   test("should confirm and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
       createTestElevationSession({
         clientId: client.id,
@@ -135,7 +135,7 @@ describe("/internal/sessions/elevation", () => {
   });
 
   test("should reject and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],

@@ -9,7 +9,6 @@ import {
 
 export type TenantAttributes = EntityAttributes & {
   active: boolean;
-  administrators: Array<string>;
   name: string;
   owner: string;
   subdomain: string;
@@ -22,7 +21,6 @@ const schema = Joi.object<TenantAttributes>()
     ...JOI_ENTITY_BASE,
 
     active: Joi.boolean().required(),
-    administrators: Joi.array().items(Joi.string()).required(),
     name: Joi.string().required(),
     owner: Joi.string().required(),
     subdomain: Joi.string().required(),
@@ -31,7 +29,6 @@ const schema = Joi.object<TenantAttributes>()
 
 export class Tenant extends LindormEntity<TenantAttributes> {
   public active: boolean;
-  public administrators: Array<string>;
   public name: string;
   public owner: string;
   public subdomain: string;
@@ -40,7 +37,6 @@ export class Tenant extends LindormEntity<TenantAttributes> {
     super(options);
 
     this.active = options.active === true;
-    this.administrators = options.administrators;
     this.name = options.name;
     this.owner = options.owner;
     this.subdomain = options.subdomain;
@@ -55,7 +51,6 @@ export class Tenant extends LindormEntity<TenantAttributes> {
       ...this.defaultJSON(),
 
       active: this.active,
-      administrators: this.administrators,
       name: this.name,
       owner: this.owner,
       subdomain: this.subdomain,

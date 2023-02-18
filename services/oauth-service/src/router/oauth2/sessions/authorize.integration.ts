@@ -16,7 +16,7 @@ import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   setupIntegration,
 } from "../../../fixtures/integration";
@@ -35,7 +35,7 @@ describe("/oauth2/sessions/authorize", () => {
     .reply(200, TEST_GET_USERINFO_RESPONSE);
 
   test("should resolve redirect with query", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({
@@ -115,7 +115,7 @@ describe("/oauth2/sessions/authorize", () => {
   });
 
   test("should resolve redirect with form post", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
       createTestRefreshSession({

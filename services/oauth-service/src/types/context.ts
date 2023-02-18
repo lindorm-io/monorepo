@@ -18,7 +18,6 @@ import {
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
-  ClientCache,
   ClientRepository,
   ElevationSessionCache,
   InvalidTokenCache,
@@ -34,7 +33,6 @@ interface ServerAxios extends LindormNodeServerAxios {
 interface ServerCache extends LindormNodeServerCache {
   authorizationCodeCache: AuthorizationCodeCache;
   authorizationSessionCache: AuthorizationSessionCache;
-  clientCache: ClientCache;
   elevationSessionCache: ElevationSessionCache;
   invalidTokenCache: InvalidTokenCache;
   logoutSessionCache: LogoutSessionCache;

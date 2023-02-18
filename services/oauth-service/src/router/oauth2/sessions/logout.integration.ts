@@ -13,13 +13,13 @@ import {
   createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
-  getTestIdToken,
-  setupIntegration,
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
+  getTestIdToken,
+  setupIntegration,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -35,7 +35,7 @@ describe("/oauth2/sessions/logout", () => {
   test("should create logout session for access session", async () => {
     const { state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({
@@ -111,7 +111,7 @@ describe("/oauth2/sessions/logout", () => {
   test("should create logout session for refresh", async () => {
     const { state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
       createTestRefreshSession({
@@ -185,7 +185,7 @@ describe("/oauth2/sessions/logout", () => {
   });
 
   test("should logout refresh session", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
     const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
       createTestAccessSession({

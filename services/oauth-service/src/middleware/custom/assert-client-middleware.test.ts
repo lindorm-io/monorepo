@@ -1,7 +1,8 @@
-import { assertClientMiddleware } from "./assert-client-middleware";
-import { ClientError } from "@lindorm-io/errors";
-import { createTestClient } from "../../fixtures/entity";
 import { Client } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
+import { assertClientMiddleware } from "./assert-client-middleware";
+import { createMockRepository } from "@lindorm-io/mongo";
+import { createTestClient } from "../../fixtures/entity";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -26,16 +27,15 @@ describe("assertClientSecretMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        clientCache: {
-          find: jest.fn().mockResolvedValue(createTestClient()),
-        },
-      },
       data: {
         clientId: "clientId",
         clientSecret: "clientSecret",
       },
       entity: {},
+      repository: {
+        clientRepository: createMockRepository(createTestClient),
+      },
+
       getAuthorizationHeader: jest
         .fn()
         .mockImplementation(() => ({ type: "Basic", value: "username:password" })),
@@ -80,7 +80,7 @@ describe("assertClientSecretMiddleware", () => {
   });
 
   test("should throw on invalid client", async () => {
-    ctx.cache.clientCache.find.mockResolvedValue(createTestClient({ active: false }));
+    ctx.repository.clientRepository.find.mockResolvedValue(createTestClient({ active: false }));
 
     await expect(assertClientMiddleware(ctx, next)).rejects.toThrow(ClientError);
   });

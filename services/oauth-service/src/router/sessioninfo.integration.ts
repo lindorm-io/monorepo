@@ -11,7 +11,7 @@ import {
 import {
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
@@ -28,14 +28,14 @@ describe("/sessioninfo", () => {
   test("GET /", async () => {
     const identityId = randomUUID();
 
-    const client1 = await TEST_CLIENT_CACHE.create(
+    const client1 = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         id: "991187c9-ee8e-42c4-8763-2c570489be25",
         name: "client1",
       }),
     );
 
-    const client2 = await TEST_CLIENT_CACHE.create(
+    const client2 = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         id: "e2b6a09d-5e75-4bb3-b784-34b78dba6d45",
         name: "client2",

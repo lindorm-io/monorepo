@@ -6,13 +6,13 @@ import { createTestClient, createTestRefreshSession } from "../../../fixtures/en
 import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
 import {
-  TEST_CLIENT_CACHE,
   TEST_ARGON,
+  TEST_CLIENT_REPOSITORY,
+  TEST_INVALID_TOKEN_CACHE,
+  TEST_REFRESH_SESSION_REPOSITORY,
   getTestAccessToken,
   getTestRefreshToken,
   setupIntegration,
-  TEST_INVALID_TOKEN_CACHE,
-  TEST_REFRESH_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -24,7 +24,7 @@ describe("/oauth2/sessions/revoke", () => {
   beforeAll(setupIntegration);
 
   test("POST / - ACCESS", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
@@ -51,7 +51,7 @@ describe("/oauth2/sessions/revoke", () => {
   });
 
   test("POST / - REFRESH", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),

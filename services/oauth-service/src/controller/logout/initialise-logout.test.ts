@@ -31,7 +31,6 @@ describe("oauthLogoutController", () => {
   beforeEach(() => {
     ctx = {
       cache: {
-        clientCache: createMockCache(createTestClient),
         logoutSessionCache: createMockCache(createTestLogoutSession),
       },
       data: {
@@ -44,6 +43,7 @@ describe("oauthLogoutController", () => {
       },
       repository: {
         accessSessionRepository: createMockRepository(createTestAccessSession),
+        clientRepository: createMockRepository(createTestClient),
         refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
       request: {
@@ -124,7 +124,7 @@ describe("oauthLogoutController", () => {
   });
 
   test("should throw on inactive client", async () => {
-    ctx.cache.clientCache.find.mockResolvedValue(
+    ctx.repository.clientRepository.find.mockResolvedValue(
       createTestClient({
         active: false,
       }),

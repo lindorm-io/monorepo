@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 import {
   createTestAccessSession,
   createTestAuthorizationSession,
@@ -8,15 +9,14 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../../fixtures/entity";
-import { server } from "../../../server/server";
 import {
+  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_CLIENT_CACHE,
+  TEST_BROWSER_SESSION_REPOSITORY,
+  TEST_CLIENT_REPOSITORY,
+  TEST_REFRESH_SESSION_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-  TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_ACCESS_SESSION_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -28,7 +28,7 @@ describe("/internal/sessions/select-account", () => {
   beforeAll(setupIntegration);
 
   test("should confirm new and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -58,7 +58,7 @@ describe("/internal/sessions/select-account", () => {
   });
 
   test("should confirm existing and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
 
@@ -114,7 +114,7 @@ describe("/internal/sessions/select-account", () => {
   });
 
   test("should reject and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],

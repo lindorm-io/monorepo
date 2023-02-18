@@ -19,11 +19,15 @@ export const sessioninfoController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { clientCache },
     token: {
       bearerToken: { subject: identityId },
     },
-    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
+    repository: {
+      accessSessionRepository,
+      browserSessionRepository,
+      clientRepository,
+      refreshSessionRepository,
+    },
   } = ctx;
 
   const accessList = await accessSessionRepository.findMany({ identityId });
@@ -73,7 +77,7 @@ export const sessioninfoController: ServerKoaController = async (
   const clientsUniq = uniq(flatten(clientsArray)).sort();
 
   for (const id of clientsUniq) {
-    const client = await clientCache.find({ id });
+    const client = await clientRepository.find({ id });
 
     clients.push({
       id: client.id,

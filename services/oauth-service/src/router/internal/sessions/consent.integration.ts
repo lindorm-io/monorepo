@@ -1,11 +1,11 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import { configuration } from "../../../server/configuration";
-import { server } from "../../../server/server";
 import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
+import { server } from "../../../server/server";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
 } from "../../../fixtures/integration";
@@ -19,7 +19,7 @@ describe("/internal/sessions/consent", () => {
   beforeAll(setupIntegration);
 
   test("should confirm and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -54,7 +54,7 @@ describe("/internal/sessions/consent", () => {
   });
 
   test("should reject and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],

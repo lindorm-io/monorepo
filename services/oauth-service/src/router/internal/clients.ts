@@ -1,6 +1,11 @@
 import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
 import {
+  clientAuthMiddleware,
+  clientEntityMiddleware,
+  tenantEntityMiddleware,
+} from "../../middleware";
+import {
   createClientController,
   createClientSchema,
   deleteClientController,
@@ -11,24 +16,18 @@ import {
   getClientSchema,
   updateClientController,
   updateClientSchema,
-} from "../controller";
-import {
-  clientEntityMiddleware,
-  identityAuthMiddleware,
-  tenantEntityMiddleware,
-} from "../middleware";
+} from "../../controller";
 
 const router = new Router<any, any>();
 export default router;
 
 router.use(
-  identityAuthMiddleware(),
+  clientAuthMiddleware(),
   //TODO: Add permissions middleware
 );
 
 router.post(
   "/",
-  //TODO: Add permissions middleware
   useSchema(createClientSchema),
   tenantEntityMiddleware("data.tenantId"),
   useController(createClientController),
@@ -37,7 +36,6 @@ router.post(
 router.get(
   "/:id",
   paramsMiddleware,
-  //TODO: Add permissions middleware
   useSchema(getClientSchema),
   clientEntityMiddleware("data.id"),
   tenantEntityMiddleware("entity.client.tenantId"),

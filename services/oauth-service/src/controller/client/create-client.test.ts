@@ -1,5 +1,4 @@
 import { createClientController } from "./create-client";
-import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestClient, createTestTenant } from "../../fixtures/entity";
 
@@ -20,9 +19,6 @@ describe("createClientController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        clientCache: createMockCache(createTestClient),
-      },
       data: {
         description: "description",
         host: "host",
@@ -49,6 +45,5 @@ describe("createClientController", () => {
     });
 
     expect(ctx.repository.clientRepository.create).toHaveBeenCalled();
-    expect(ctx.cache.clientCache.create).toHaveBeenCalled();
   });
 });

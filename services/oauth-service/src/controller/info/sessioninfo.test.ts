@@ -1,4 +1,3 @@
-import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { sessioninfoController } from "./sessioninfo";
 import {
@@ -13,15 +12,13 @@ describe("sessioninfoController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        clientCache: createMockCache(createTestClient),
-      },
       token: {
         bearerToken: {
           subject: "identityId",
         },
       },
       repository: {
+        clientRepository: createMockRepository(createTestClient),
         accessSessionRepository: createMockRepository(createTestAccessSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
         refreshSessionRepository: createMockRepository(createTestRefreshSession),

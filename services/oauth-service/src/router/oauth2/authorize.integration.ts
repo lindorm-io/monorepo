@@ -8,10 +8,10 @@ import { getTestData } from "../../fixtures/data";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
 import {
+  TEST_AUTHORIZATION_SESSION_CACHE,
+  TEST_CLIENT_REPOSITORY,
   getTestIdToken,
   setupIntegration,
-  TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_CLIENT_CACHE,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -25,7 +25,7 @@ describe("/oauth2/authorize", () => {
   test("should resolve", async () => {
     const { codeChallenge, codeChallengeMethod, nonce, state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const identityId = randomUUID();
     const idToken = getTestIdToken({

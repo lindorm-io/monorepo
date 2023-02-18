@@ -2,14 +2,14 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { configuration } from "../../../server/configuration";
 import { createTestClient, createTestLogoutSession } from "../../../fixtures/entity";
+import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
 import {
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   getTestClientCredentials,
   setupIntegration,
 } from "../../../fixtures/integration";
-import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -20,7 +20,7 @@ describe("/internal/sessions/logout", () => {
   beforeAll(setupIntegration);
 
   test("should resolve data", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -74,7 +74,7 @@ describe("/internal/sessions/logout", () => {
   });
 
   test("should confirm and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -106,7 +106,7 @@ describe("/internal/sessions/logout", () => {
   });
 
   test("should reject and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],

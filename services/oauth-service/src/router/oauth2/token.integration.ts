@@ -19,7 +19,7 @@ import {
   TEST_AUTHORIZATION_CODE_CACHE,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
   getTestRefreshToken,
   setupIntegration,
@@ -41,7 +41,7 @@ describe("/oauth2/token", () => {
   test("should resolve for authorization code grant type", async () => {
     const { code, codeChallenge, codeChallengeMethod, codeVerifier, nonce, state } = getTestData();
 
-    const client = await TEST_CLIENT_CACHE.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
@@ -104,7 +104,7 @@ describe("/oauth2/token", () => {
   });
 
   test("should resolve for client credentials grant type", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),
@@ -128,7 +128,7 @@ describe("/oauth2/token", () => {
   });
 
   test("should resolve for refresh token grant type", async () => {
-    const client = await TEST_CLIENT_CACHE.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         secret: await TEST_ARGON.encrypt("secret"),
       }),

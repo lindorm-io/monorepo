@@ -11,8 +11,7 @@ export const handleBrowserSessionLogout = async (
 ): Promise<void> => {
   const {
     axios: { axiosClient },
-    cache: { clientCache },
-    repository: { accessSessionRepository, browserSessionRepository },
+    repository: { accessSessionRepository, browserSessionRepository, clientRepository },
   } = ctx;
 
   if (!logoutSession.confirmedLogout.browserSessionId) {
@@ -40,7 +39,7 @@ export const handleBrowserSessionLogout = async (
   });
 
   for (const accessSession of accessSessions) {
-    const client = await clientCache.find({ id: accessSession.clientId });
+    const client = await clientRepository.find({ id: accessSession.clientId });
 
     if (client.backChannelLogoutUri) {
       const { token } = createLogoutToken(ctx, client, accessSession);

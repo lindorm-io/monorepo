@@ -5,7 +5,7 @@ import { isUndefined } from "lodash";
 
 type RequestData = {
   id: string;
-  administrators: Array<string>;
+  active: boolean;
   name: string;
   owner: string;
   subdomain: string;
@@ -14,7 +14,7 @@ type RequestData = {
 export const updateTenantSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    administrators: Joi.array().items(Joi.string()),
+    active: Joi.boolean(),
     name: Joi.string(),
     owner: Joi.string(),
     subdomain: Joi.string(),
@@ -25,12 +25,12 @@ export const updateTenantController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    data: { administrators, name, owner, subdomain },
+    data: { active, name, owner, subdomain },
     entity: { tenant },
     repository: { tenantRepository },
   } = ctx;
 
-  if (!isUndefined(administrators)) tenant.administrators = administrators;
+  if (!isUndefined(active)) tenant.active = active;
   if (!isUndefined(name)) tenant.name = name;
   if (!isUndefined(owner)) tenant.owner = owner;
   if (!isUndefined(subdomain)) tenant.subdomain = subdomain;

@@ -6,8 +6,8 @@ import { getCredentials } from "@lindorm-io/koa-basic-auth";
 
 export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Promise<void> => {
   const {
-    cache: { clientCache },
     data,
+    repository: { clientRepository },
   } = ctx;
 
   let clientId = data.clientId;
@@ -15,7 +15,7 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
   let client: Client;
 
   if (clientId) {
-    client = await clientCache.find({ id: clientId });
+    client = await clientRepository.find({ id: clientId });
 
     if (client.enforceBasicAuth) {
       throw new ClientError("Unauthorized", {
@@ -33,7 +33,7 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
 
     ({ username: clientId, password: clientSecret } = getCredentials(value));
 
-    client = await clientCache.find({ id: clientId });
+    client = await clientRepository.find({ id: clientId });
   }
 
   if (!client.active) {

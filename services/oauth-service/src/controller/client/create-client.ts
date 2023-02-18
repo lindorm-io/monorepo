@@ -41,7 +41,6 @@ export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { clientCache },
     data: { description, host, name, postLogoutUris, redirectUris },
     entity: { tenant },
     repository: { clientRepository },
@@ -69,8 +68,6 @@ export const createClientController: ServerKoaController<RequestData> = async (
       type: OauthClientTypes.PUBLIC,
     }),
   );
-
-  await clientCache.create(client);
 
   return {
     body: { id: client.id, secret },

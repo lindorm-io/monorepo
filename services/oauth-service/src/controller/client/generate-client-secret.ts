@@ -1,8 +1,8 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { randomString } from "@lindorm-io/random";
+import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
+import { randomString } from "@lindorm-io/random";
 
 type RequestData = {
   id: string;
@@ -22,7 +22,6 @@ export const generateClientSecretController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { clientCache },
     entity: { client },
     repository: { clientRepository },
   } = ctx;
@@ -31,8 +30,7 @@ export const generateClientSecretController: ServerKoaController<RequestData> = 
 
   client.secret = await argon.encrypt(secret);
 
-  const updated = await clientRepository.update(client);
-  await clientCache.update(updated);
+  await clientRepository.update(client);
 
   return { body: { secret } };
 };

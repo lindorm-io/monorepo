@@ -25,7 +25,6 @@ export const getTenantInfoController: ServerKoaController<RequestData> = async (
   return {
     body: {
       active: tenant.active,
-      administrators: tenant.administrators,
       name: tenant.name,
       owner: tenant.owner,
       subdomain: tenant.subdomain,

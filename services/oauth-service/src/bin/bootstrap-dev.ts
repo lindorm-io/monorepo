@@ -1,5 +1,5 @@
 import { Client, Tenant } from "../entity";
-import { ClientCache, ClientRepository, TenantRepository } from "../infrastructure";
+import { ClientRepository, TenantRepository } from "../infrastructure";
 import { argon, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./util/logger";
 import {
@@ -35,10 +35,6 @@ const repositories = {
   tenant: new TenantRepository({ connection: mongoConnection, logger }),
 };
 
-const caches = {
-  client: new ClientCache({ connection: redisConnection, logger }),
-};
-
 const main = async (): Promise<void> => {
   await mongoConnection.connect();
   await redisConnection.connect();
@@ -47,14 +43,13 @@ const main = async (): Promise<void> => {
     new Tenant({
       id: "12507e8d-aa23-4132-8fd4-5aca0ae792cc",
       active: true,
-      administrators: ["acbfce9e-072b-450f-b451-5915cdd17a33"],
       name: "lindorm.io/tenant",
       owner: "acbfce9e-072b-450f-b451-5915cdd17a33",
       subdomain: "root",
     }),
   );
 
-  const authentication = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.authenticationService,
       active: true,
@@ -73,9 +68,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(authentication);
 
-  const communication = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.communicationService,
       active: true,
@@ -94,9 +88,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(communication);
 
-  const device = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.deviceService,
       active: true,
@@ -115,9 +108,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(device);
 
-  const identity = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.identityService,
       active: true,
@@ -136,9 +128,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(identity);
 
-  const oidc = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.oidcService,
       active: true,
@@ -157,9 +148,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(oidc);
 
-  const vault = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.vaultService,
       active: true,
@@ -178,9 +168,8 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(vault);
 
-  const auth = await repositories.client.create(
+  await repositories.client.create(
     new Client({
       id: ids.authApplication,
       active: true,
@@ -198,7 +187,6 @@ const main = async (): Promise<void> => {
       type: OauthClientTypes.CONFIDENTIAL,
     }),
   );
-  await caches.client.create(auth);
 
   logger.info("Generated Entities", {
     applications: {

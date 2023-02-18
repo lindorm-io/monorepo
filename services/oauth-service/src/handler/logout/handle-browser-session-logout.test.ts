@@ -1,6 +1,5 @@
 import { LogoutSession } from "../../entity";
 import { createLogoutToken as _createLogoutToken } from "../token";
-import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { handleBrowserSessionLogout } from "./handle-browser-session-logout";
 import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../sessions";
@@ -31,12 +30,10 @@ describe("handleBrowserSessionLogout", () => {
           post: jest.fn(),
         },
       },
-      cache: {
-        clientCache: createMockCache(createTestClient),
-      },
       repository: {
         accessSessionRepository: createMockRepository(createTestAccessSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
+        clientRepository: createMockRepository(createTestClient),
       },
     };
 

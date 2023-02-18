@@ -16,11 +16,9 @@ export const deleteClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { clientCache },
     entity: { client },
     repository: { clientRepository },
   } = ctx;
 
   await clientRepository.destroy(client);
-  await clientCache.destroy(client);
 };

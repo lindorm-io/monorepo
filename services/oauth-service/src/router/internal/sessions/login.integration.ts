@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_CLIENT_CACHE,
+  TEST_CLIENT_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
 } from "../../../fixtures/integration";
@@ -20,7 +20,7 @@ describe("/internal/sessions/login", () => {
   beforeAll(setupIntegration);
 
   test("should confirm and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
@@ -54,7 +54,7 @@ describe("/internal/sessions/login", () => {
   });
 
   test("should reject and resolve redirect uri", async () => {
-    const client = await TEST_CLIENT_CACHE.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
 
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
