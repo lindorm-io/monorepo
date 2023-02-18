@@ -1,3 +1,3 @@
 export type VerifyElevationRequestQuery = {
-  sessionId: string;
+  session: string;
 };

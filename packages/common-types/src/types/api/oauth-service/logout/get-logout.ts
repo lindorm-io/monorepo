@@ -1,4 +1,3 @@
-import { SessionStatus } from "../../../global";
 import { OauthClientType } from "../../../oauth";
 
 export type GetLogoutRequestParams = {
@@ -6,17 +5,29 @@ export type GetLogoutRequestParams = {
 };
 
 export type GetLogoutResponse = {
+  logout: {
+    accessSessionId: string | null;
+    accessSessions: Array<string>;
+    browserSessionId: string;
+    refreshSessionId: string | null;
+    refreshSessions: Array<string>;
+  };
+
   client: {
-    description: string;
-    logoUri: string;
+    description: string | null;
+    logoUri: string | null;
     name: string;
     type: OauthClientType;
   };
+
   logoutSession: {
-    id: string;
+    clientId: string | null;
     expiresAt: string;
     expiresIn: number;
+    idTokenHint: string | null;
+    identityId: string;
+    logoutHint: string | null;
     originalUri: string;
+    uiLocales: Array<string>;
   };
-  logoutStatus: SessionStatus;
 };

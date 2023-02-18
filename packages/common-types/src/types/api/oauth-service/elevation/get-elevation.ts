@@ -1,26 +1,35 @@
-import { SessionStatus } from "../../../global";
 import { AuthenticationMethod, LevelOfAssurance } from "../../../auth";
+import { OauthClientType, OauthDisplayMode } from "../../../oauth";
 import { StandardRequestParamsWithId } from "../../standard";
 
 export type GetElevationRequestParams = StandardRequestParamsWithId;
 
 export type GetElevationResponse = {
-  elevationStatus: SessionStatus;
-  elevationSession: {
-    id: string;
-    authenticationHint: Array<string>;
-    country: string;
-    expiresAt: string;
-    expiresIn: number;
-    identityId: string;
-    nonce: string;
-    uiLocales: Array<string>;
-  };
-  requested: {
+  elevation: {
+    isRequired: boolean;
     minimumLevel: LevelOfAssurance;
     recommendedLevel: LevelOfAssurance;
     recommendedMethods: Array<AuthenticationMethod>;
     requiredLevel: LevelOfAssurance;
     requiredMethods: Array<AuthenticationMethod>;
+  };
+
+  client: {
+    description: string | null;
+    logoUri: string | null;
+    name: string;
+    type: OauthClientType;
+  };
+
+  elevationSession: {
+    authenticationHint: Array<string>;
+    country: string | null;
+    displayMode: OauthDisplayMode;
+    expiresAt: string;
+    expiresIn: number;
+    idTokenHint: string | null;
+    identityId: string;
+    nonce: string;
+    uiLocales: Array<string>;
   };
 };

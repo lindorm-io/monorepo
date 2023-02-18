@@ -4,11 +4,11 @@ import { StandardRequestParamsWithId, StandardResponseWithRedirectTo } from "../
 export type ConfirmLoginRequestParams = StandardRequestParamsWithId;
 
 export type ConfirmLoginRequestBody = {
-  acrValues: Array<string>;
-  amrValues: Array<AuthenticationMethod>;
   identityId: string;
   levelOfAssurance: LevelOfAssurance;
+  methods: Array<AuthenticationMethod>;
   remember: boolean;
+  sso: boolean;
 };
 
 export type ConfirmLoginResponse = StandardResponseWithRedirectTo;
