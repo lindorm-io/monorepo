@@ -87,6 +87,7 @@ export abstract class LindormRepository<
 
       return entity;
     } catch (err: any) {
+      this.logger.silly("Mongo error", err);
       throw new EntityNotCreatedError("Unable to create entity", {
         error: err,
       });
@@ -159,6 +160,7 @@ export abstract class LindormRepository<
         await callback(entity);
       }
     } catch (err: any) {
+      this.logger.silly("Mongo error", err);
       throw new EntityNotRemovedError("Unable to remove entity", {
         error: err,
       });
@@ -212,6 +214,7 @@ export abstract class LindormRepository<
 
       return this.createEntity(result as unknown as Interface);
     } catch (err: any) {
+      this.logger.silly("Mongo error", err);
       throw new EntityNotFoundError("Unable to find entity", {
         error: err,
       });
@@ -329,6 +332,7 @@ export abstract class LindormRepository<
 
       return entity;
     } catch (err: any) {
+      this.logger.silly("Mongo error", err);
       throw new EntityNotUpdatedError("Unable to update entity", {
         error: err,
       });
