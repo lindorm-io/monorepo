@@ -10,7 +10,7 @@ export const createTestJwt = (
 ): JWT =>
   new JWT(
     {
-      issuer: "issuer",
+      issuer: "https://test.lindorm.io",
       ...options,
     },
     keystore || createTestKeystore(),

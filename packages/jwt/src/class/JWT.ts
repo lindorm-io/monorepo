@@ -71,10 +71,11 @@ export class JWT {
       auth_time: options.authTime,
       azp: options.authorizedParty,
       nonce: options.nonce,
-      sid: options.sessionId,
+      sid: options.session,
 
       // optional lindorm claims
       aal: options.adjustedAccessLevel,
+      cid: options.client,
       loa: options.levelOfAssurance,
       scp: options.scopes,
       sih: options.sessionHint,
@@ -119,12 +120,14 @@ export class JWT {
       adjustedAccessLevel,
       audience,
       authorizedParty,
+      client,
       clockTolerance,
       issuer = this.issuer,
       levelOfAssurance,
       maxAge,
       nonce,
       scopes,
+      session,
       subject,
       subjectHints,
       tenant,
@@ -157,6 +160,10 @@ export class JWT {
         assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
       }
 
+      if (client) {
+        assertClaimEquals(client, claims.client, "cid");
+      }
+
       if (levelOfAssurance) {
         assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
       }
@@ -167,6 +174,10 @@ export class JWT {
 
       if (types?.length) {
         assertClaimIncludes(types, claims.type, "token_type");
+      }
+
+      if (session) {
+        assertClaimEquals(session, claims.session, "sid");
       }
 
       if (subjectHints?.length) {
@@ -211,6 +222,7 @@ export class JWT {
       aud,
       auth_time,
       azp,
+      cid,
       exp,
       ext,
       iat,
@@ -240,6 +252,7 @@ export class JWT {
       authTime: auth_time || null,
       authorizedParty: azp || null,
       claims: claims ? camelCase<Claims>(claims) : ({} as Claims),
+      client: cid || null,
       expires: exp,
       expiresIn: exp - now,
       issuedAt: iat,
@@ -251,8 +264,8 @@ export class JWT {
       now,
       payload: ext ? camelCase<Payload>(ext) : ({} as Payload),
       scopes: scp || [],
+      session: sid || null,
       sessionHint: sih || null,
-      sessionId: sid || null,
       subject: sub,
       subjectHint: suh || null,
       tenant: tid || null,

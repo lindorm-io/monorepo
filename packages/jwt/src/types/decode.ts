@@ -10,6 +10,7 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   authTime: number | null;
   authorizedParty: string | null;
   claims: Claims;
+  client: string | null;
   expires: number;
   expiresIn: number;
   issuedAt: number;
@@ -21,8 +22,8 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   now: number;
   payload: Payload;
   scopes: Array<string>;
+  session: string | null;
   sessionHint: string | null;
-  sessionId: string | null;
   subject: string;
   subjectHint: string | null;
   tenant: string | null;

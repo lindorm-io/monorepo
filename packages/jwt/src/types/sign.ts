@@ -11,6 +11,7 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   authTime?: number;
   authorizedParty?: string;
   claims?: Claims;
+  client?: string;
   expiry: Expiry;
   keyType?: KeyType;
   levelOfAssurance?: LevelOfAssurance;
@@ -18,8 +19,8 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   notBefore?: Date;
   payload?: Payload;
   scopes?: Array<string>;
+  session?: string;
   sessionHint?: string;
-  sessionId?: string;
   subject: string;
   subjectHint?: string;
   tenant?: string;
