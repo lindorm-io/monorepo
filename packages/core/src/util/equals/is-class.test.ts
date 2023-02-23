@@ -14,10 +14,15 @@ const _number: any = 123456;
 const _object: any = { object: true };
 const _string: any = "string";
 const _undefined: any = undefined;
+const _url: any = new URL("https://test.lindorm.io");
 
 describe("isClass", () => {
   it("should resolve true", () => {
     expect(isClass(_class)).toBe(true);
+  });
+
+  it("should resolve true on url", () => {
+    expect(isClass(_url)).toBe(true);
   });
 
   it("should resolve false", () => {

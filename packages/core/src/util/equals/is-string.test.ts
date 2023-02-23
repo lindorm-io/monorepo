@@ -14,6 +14,7 @@ const _number: any = 123456;
 const _object: any = { object: true };
 const _string: any = "string";
 const _undefined: any = undefined;
+const _url: any = new URL("https://test.lindorm.io");
 
 describe("isString", () => {
   it("should resolve true", () => {
@@ -30,5 +31,6 @@ describe("isString", () => {
     expect(isString(_number)).toBe(false);
     expect(isString(_object)).toBe(false);
     expect(isString(_undefined)).toBe(false);
+    expect(isString(_url)).toBe(false);
   });
 });
