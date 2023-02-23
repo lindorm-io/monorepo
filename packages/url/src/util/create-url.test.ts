@@ -11,38 +11,57 @@ describe("createURL", () => {
     );
   });
 
-  test("should add host to path", () => {
-    expect(
-      createURL("/test", {
-        host: "https://lindorm.io",
-      }).toString(),
-    ).toBe("https://lindorm.io/test");
+  test("should accept URL string as primary arg", () => {
+    expect(createURL("https://lindorm.io/test").toString()).toBe("https://lindorm.io/test");
   });
 
-  test("should add host and protocol to path", () => {
+  test("should use host", () => {
     expect(
-      createURL("/test", {
-        host: "lindorm.io",
-        protocol: "https",
+      createURL("/path", {
+        host: "https://lindorm.io",
       }).toString(),
-    ).toBe("https://lindorm.io/test");
+    ).toBe("https://lindorm.io/path");
   });
 
-  test("should add port to path", () => {
+  test("should use baseURL", () => {
+    expect(
+      createURL("/path", {
+        baseURL: "https://lindorm.io",
+      }).toString(),
+    ).toBe("https://lindorm.io/path");
+  });
+
+  test("should use host with port", () => {
     expect(
       createURL("/test", {
-        host: "https://lindorm.io",
-        port: 3000,
+        host: "https://lindorm.io:3000",
       }).toString(),
     ).toBe("https://lindorm.io:3000/test");
   });
 
-  test("should use default protocol", () => {
+  test("should use host and port from options", () => {
     expect(
-      createURL("/test", {
-        host: "lindorm.io",
+      createURL("/path", {
+        host: "https://lindorm.io",
+        port: 3000,
       }).toString(),
-    ).toBe("https://lindorm.io/test");
+    ).toBe("https://lindorm.io:3000/path");
+  });
+
+  test("should add existing query", () => {
+    expect(
+      createURL("/path", {
+        host: "https://lindorm.io?test=one&hello=two",
+      }).toString(),
+    ).toBe("https://lindorm.io/path?test=one&hello=two");
+  });
+
+  test("should add existing path", () => {
+    expect(
+      createURL("/path", {
+        host: "https://lindorm.io/test",
+      }).toString(),
+    ).toBe("https://lindorm.io/test/path");
   });
 
   test("should add params to path", () => {

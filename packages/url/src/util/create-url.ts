@@ -1,14 +1,14 @@
 import { ParamsRecord, QueryRecord } from "@lindorm-io/common-types";
-import { Protocol } from "../types";
 import { TransformMode, transformCase } from "@lindorm-io/case";
-import { destructUrl } from "./destruct-url";
+import { createBaseUrl } from "./create-base-url";
+import { extractSearchParams } from "./extract-search-params";
 import { isObject } from "@lindorm-io/core";
 
 type Options<Params = ParamsRecord, Query = QueryRecord> = {
+  baseURL?: string;
   host?: string;
   params?: Params;
   port?: number;
-  protocol?: Protocol;
   query?: Query;
   queryCaseTransform?: TransformMode;
 };
@@ -88,16 +88,25 @@ export const createURL = <Params = ParamsRecord, Query = QueryRecord>(
     return addToURL<Params, Query>(new URL(pathOrUrl), options);
   }
 
-  if (!options.host) {
-    throw new Error("Invalid URL");
+  const baseURL = options.host || options.baseURL;
+
+  if (!baseURL) {
+    throw new Error(`Invalid base [ ${baseURL} ]`);
   }
 
-  const destructed = destructUrl(options.host);
-  const host = destructed.host;
-  const port = destructed.port || options.port;
-  const protocol = destructed.protocol || options.protocol || "https";
-  const hostAndPort = port ? `${host}:${port}` : host;
-  const url = `${protocol}://${hostAndPort}`;
+  const url = createBaseUrl({
+    baseURL: options.baseURL,
+    host: options.host,
+    port: options.port,
+  });
 
-  return addToURL<Params, Query>(new URL(pathOrUrl, url), options);
+  const pathname = url.pathname.length ? `${url.pathname}${pathOrUrl}` : pathOrUrl;
+  const path = pathname.replace(/\/\//, "/");
+
+  const searchParams = extractSearchParams<Query>(url);
+
+  return addToURL<Params, Query>(new URL(path, url), {
+    ...options,
+    query: { ...searchParams, ...(options.query || {}) },
+  });
 };
