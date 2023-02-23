@@ -1,4 +1,4 @@
-import { RetryCallback } from "../types";
+import { RetryCallback } from "../../types";
 
 export const defaultRetryCallback: RetryCallback = (err, attempt, options) => {
   if (!options.maximumAttempts) return false;

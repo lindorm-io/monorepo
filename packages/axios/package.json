@@ -26,6 +26,7 @@
     "axios": "1.2.3"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.2"
+    "@lindorm-io/core-logger": "^0.2.2",
+    "nock": "^13.3.0"
   }
 }

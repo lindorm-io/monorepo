@@ -1,20 +1,28 @@
-import { AxiosBasicCredentials, RawAxiosRequestConfig, Method } from "axios";
+import { AxiosBasicCredentials, Method } from "axios";
 import { Middleware } from "./middleware";
-import { Protocol } from "@lindorm-io/url";
+import { RawAxiosRequestConfigOptions } from "./overrides";
 import { RetryCallback } from "./retry";
 import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 
 export type AxiosOptions = {
-  auth?: AxiosBasicCredentials;
-  headers?: Record<string, string | number>;
-  host?: string;
   middleware?: Middleware[];
-  name?: string;
+
+  // is used to calculate baseURL
+  baseURL?: URL | string;
+  host?: string;
   port?: number;
-  protocol?: Protocol;
+
+  // will be placed in context
+  clientName?: string;
+  config?: RawAxiosRequestConfigOptions;
   queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;
+  retryCallback?: RetryCallback;
+
+  // will be placed in config in context
+  auth?: AxiosBasicCredentials;
+  headers?: Record<string, any>;
   timeout?: number;
   withCredentials?: boolean;
 };
@@ -26,20 +34,17 @@ export type MethodOptions = {
 };
 
 export type RequestOptions<
+  ResponseData = any,
   Body = Record<string, any>,
-  Headers = Record<string, string | number>,
   Params = Record<string, any>,
   Query = Record<string, any>,
 > = {
   auth?: AxiosBasicCredentials;
   body?: Body;
-  config?: RawAxiosRequestConfig;
-  headers?: Headers;
-  host?: string;
-  middleware?: Middleware[];
+  config?: RawAxiosRequestConfigOptions;
+  headers?: Record<string, any>;
+  middleware?: Array<Middleware<ResponseData, Body, Params, Query>>;
   params?: Params;
-  port?: number;
-  protocol?: Protocol;
   query?: Query;
   queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;

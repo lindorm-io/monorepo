@@ -1,9 +1,9 @@
-import { Axios } from "../class";
-import { MetadataHeader } from "../enum";
-import { Middleware, OAuthTokenResponseData } from "../types";
+import { Axios } from "../../class";
+import { MetadataHeader } from "../../enum";
+import { Middleware, OAuthTokenResponseData } from "../../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
-import { getUnixTime } from "../util";
+import { getUnixTime } from "../../util/private";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
   clientEnvironment?: string;

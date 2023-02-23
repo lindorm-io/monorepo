@@ -17,4 +17,4 @@ export const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   strategy: "exponential",
 };
 
-export const DEFAULT_TIMEOUT_OPTIONS = 30000;
+export const DEFAULT_TIMEOUT = 30000;

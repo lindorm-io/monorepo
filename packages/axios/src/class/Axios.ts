@@ -1,40 +1,57 @@
-import { AxiosOptions, Context, MethodOptions, Middleware, RequestOptions } from "../types";
-import { AxiosResponse, AxiosBasicCredentials, Method } from "axios";
+import { AxiosResponse, Method } from "axios";
+import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
 import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
-import { axiosRequestHandler, defaultRetryCallback } from "../util";
-import { destructUrl, Protocol } from "@lindorm-io/url";
+import { axiosRequestHandler } from "../middleware/private";
+import { defaultRetryCallback, validateStatus } from "../util/private";
+import {
+  createBaseUrl,
+  extractPlainUrlString,
+  extractSearchParams,
+  extractValidUrl,
+} from "@lindorm-io/url";
 import { resolveMiddleware } from "@lindorm-io/middleware";
 import {
-  DEFAULT_AXIOS_RESPONSE,
-  DEFAULT_RETRY_OPTIONS,
-  DEFAULT_TIMEOUT_OPTIONS,
-} from "../constant";
+  AppContext,
+  AxiosOptions,
+  Context,
+  MethodOptions,
+  Middleware,
+  RawAxiosRequestConfigContext,
+  RequestContext,
+  RequestOptions,
+  RetryCallback,
+} from "../types";
 
 export class Axios {
-  private readonly auth: AxiosBasicCredentials | undefined;
-  private readonly headers: Record<string, string | number>;
-  private readonly host: string | undefined;
-  private readonly middleware: Middleware[];
-  private readonly name: string | undefined;
-  private readonly port: number | undefined;
-  private readonly protocol: Protocol | undefined;
+  private readonly baseURL: URL | undefined;
+  private readonly clientName: string;
+  private readonly config: RawAxiosRequestConfigContext;
+  private readonly headers: Record<string, any>;
+  private readonly middleware: Array<Middleware>;
   private readonly queryCaseTransform: TransformMode;
   private readonly retry: RetryOptions;
-  private readonly timeout: number;
-  private readonly withCredentials: boolean;
+  private readonly retryCallback: RetryCallback;
 
   constructor(options: AxiosOptions = {}) {
-    const { host, port, protocol } = destructUrl(options.host);
+    this.config = {
+      auth: options.auth,
+      timeout: options.timeout || DEFAULT_TIMEOUT,
+      validateStatus,
+      withCredentials: options.withCredentials,
+      ...(options.config || {}),
+    };
 
-    this.auth = options.auth;
-    this.host = host;
-    this.middleware = options.middleware || [];
+    try {
+      this.baseURL = createBaseUrl(options);
+    } catch (_) {
+      /* ignored */
+    }
+
+    this.clientName = options.clientName || "AxiosClient";
     this.headers = options.headers || {};
-    this.name = options.name;
-    this.port = options.port || port;
+    this.middleware = options.middleware || [];
     this.queryCaseTransform = options.queryCaseTransform || "snake";
-    this.protocol = options.protocol || protocol || "https";
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
       maximumMilliseconds:
@@ -42,240 +59,208 @@ export class Axios {
       milliseconds: options.retry?.milliseconds || DEFAULT_RETRY_OPTIONS.milliseconds,
       strategy: options.retry?.strategy || DEFAULT_RETRY_OPTIONS.strategy,
     };
-    this.timeout = options.timeout || DEFAULT_TIMEOUT_OPTIONS;
-    this.withCredentials = options.withCredentials === true;
+    this.retryCallback = options.retryCallback || defaultRetryCallback;
   }
 
   public async delete<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "delete", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "delete",
+      options,
+    );
   }
 
   public async get<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "get", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "get",
+      options,
+    );
   }
 
   public async head<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "head", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "head",
+      options,
+    );
   }
 
   public async options<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "options", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "options",
+      options,
+    );
   }
 
   public async patch<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "patch", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "patch",
+      options,
+    );
   }
 
   public async post<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "post", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "post",
+      options,
+    );
   }
 
   public async put<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(pathOrUrl, "put", options);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      pathOrUrl,
+      "put",
+      options,
+    );
   }
 
   public async request<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
-    options: MethodOptions &
-      RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery>,
+    options: MethodOptions & RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<AxiosResponse<ResponseData>> {
     const { method, path, url, ...rest } = options;
-
     const pathOrUrl = url || path;
+
     if (!pathOrUrl) {
       throw new Error(`Invalid request [ path: ${path} | url: ${url} ]`);
     }
 
-    return this.composeRequest<
-      ResponseData,
-      RequestBody,
-      RequestHeaders,
-      RequestParams,
-      RequestQuery
-    >(url! || path!, method, rest);
+    return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
+      url! || path!,
+      method,
+      rest,
+    );
   }
 
   private async composeRequest<
     ResponseData = any,
     RequestBody = Record<string, any>,
-    RequestHeaders = Record<string, string | number>,
     RequestParams = Record<string, any>,
     RequestQuery = Record<string, any>,
   >(
     pathOrUrl: URL | string,
     method: Method,
-    options: RequestOptions<RequestBody, RequestHeaders, RequestParams, RequestQuery> = {},
+    options: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery> = {},
   ): Promise<AxiosResponse<ResponseData>> {
     const {
       auth,
-      body,
-      config,
+      body = {},
+      config = {},
       headers = {},
       middleware = [],
       params = {},
       query = {},
-      queryCaseTransform,
+      queryCaseTransform = this.queryCaseTransform,
       retry = {},
-      retryCallback,
+      retryCallback = this.retryCallback,
       timeout,
       withCredentials,
     } = options;
 
-    const url = destructUrl(pathOrUrl);
+    const url = extractValidUrl(pathOrUrl, this.baseURL);
 
-    const host = url.host || this.host;
-    if (!host) {
-      throw new Error(`Invalid request [ host: ${typeof host} ]`);
-    }
+    const app: AppContext = {
+      clientName: this.clientName,
+      config: this.config,
+      headers: this.headers,
+      queryCaseTransform: this.queryCaseTransform,
+      retry: this.retry,
+      retryCallback: this.retryCallback,
+    };
 
-    const context = {
-      axios: {
-        auth: this.auth,
-        headers: this.headers,
-        host: this.host || null,
-        name: this.name || null,
-        port: this.port || null,
-        protocol: this.protocol || null,
-        retry: this.retry,
-        timeout: this.timeout,
-        withCredentials: this.withCredentials,
-      },
-      req: {
-        auth: auth || this.auth,
-        body: body || {},
-        config: config || {},
-        headers: { ...headers, ...this.headers },
-        host,
+    const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
+      config: {
+        ...this.config,
+        ...config,
+
+        auth,
         method,
-        params: params || {},
-        path: url.pathname || "/",
-        port: url.port || this.port,
-        protocol: url.protocol || this.protocol,
-        query: { ...url.query, ...query },
-        queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
-        retry: { ...this.retry, ...retry },
-        retryCallback: retryCallback || defaultRetryCallback,
-        timeout: timeout || this.timeout,
-        withCredentials: withCredentials || this.withCredentials,
+        timeout,
+        withCredentials,
       },
-      res: DEFAULT_AXIOS_RESPONSE,
-    } satisfies Context;
+      headers: { ...this.headers, ...headers },
+      body: body as RequestBody,
+      params: params as RequestParams,
+      query: { ...extractSearchParams<RequestQuery>(url), ...query },
+      queryCaseTransform,
+      retry: { ...retry, ...this.retry },
+      retryCallback,
+      url: extractPlainUrlString(url),
+    };
 
-    const result = await resolveMiddleware<Context<ResponseData>>(context, [
-      ...this.middleware,
-      ...middleware,
-      axiosRequestHandler,
-    ]);
+    const context: Context<ResponseData, RequestBody, RequestParams, RequestQuery> = {
+      app,
+      req,
+      res: DEFAULT_AXIOS_RESPONSE,
+    };
+
+    const result = await resolveMiddleware<
+      Context<ResponseData, RequestBody, RequestParams, RequestQuery>
+    >(context, [...this.middleware, ...middleware, axiosRequestHandler]);
 
     return result.res;
   }

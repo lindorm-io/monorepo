@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`getResponseTime should return time object with data 1`] = `
-{
-  "axios": 125,
-  "diff": 25,
-  "server": 100,
-}
-`;

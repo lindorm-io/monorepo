@@ -1,22 +1,21 @@
 import { AxiosError } from "axios";
 import { Logger } from "@lindorm-io/core-logger";
-import { Middleware } from "../types";
-import { getResponseTime } from "../util";
+import { Middleware } from "../../types";
+import { getResponseTime } from "../../util/private";
 
 export const axiosRequestLoggerMiddleware =
   (logger: Logger): Middleware =>
   async (ctx, next) => {
-    const log = logger.createChildLogger(ctx.axios.name ? ["Axios", ctx.axios.name] : "Axios");
+    const log = logger.createChildLogger(["Axios", ctx.app.clientName]);
     const start = Date.now();
 
     try {
       await next();
 
-      log.verbose("axios successful", {
-        axios: ctx.axios,
-        config: ctx.res?.config,
-        request: ctx.req,
-        response: {
+      log.verbose("Request successful", {
+        app: ctx.app,
+        req: ctx.req,
+        res: {
           data: ctx.res?.data,
           headers: ctx.res?.headers,
           status: ctx.res?.status,
@@ -26,17 +25,18 @@ export const axiosRequestLoggerMiddleware =
       });
     } catch (err: any) {
       if (!(err instanceof AxiosError)) {
-        log.error("unexpected error", err);
+        log.error("Unexpected error", err);
 
         throw err;
       }
 
-      log.error("axios failed", {
-        axios: ctx.axios,
+      log.error("Request failed", {
         code: err.code,
         config: err.config,
-        request: ctx.req,
-        response: {
+
+        app: ctx.app,
+        req: ctx.req,
+        res: {
           data: err.response?.data,
           headers: err.response?.headers,
           status: err.response?.status || err.status,

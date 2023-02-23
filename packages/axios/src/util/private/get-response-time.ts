@@ -1,4 +1,4 @@
-import { ResponseTime } from "../types";
+import { ResponseTime } from "../../types";
 
 const getHeaderTime = (headers: Record<string, any>): number | undefined => {
   try {

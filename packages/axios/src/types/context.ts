@@ -1,53 +1,41 @@
-import { AxiosBasicCredentials, RawAxiosRequestConfig, AxiosResponse, Method } from "axios";
-import { Protocol } from "@lindorm-io/url";
+import { AxiosResponse } from "axios";
+import { RawAxiosRequestConfigContext } from "./overrides";
 import { RetryCallback } from "./retry";
 import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 
-export type AxiosContext = {
-  auth: AxiosBasicCredentials | undefined;
-  headers: Record<string, string | number>;
-  host: string | null;
-  name: string | null;
-  port: number | null;
-  protocol: Protocol | null;
+export type AppContext = {
+  clientName: string;
+  config: RawAxiosRequestConfigContext;
+  headers: Record<string, any>;
+  queryCaseTransform: TransformMode;
   retry: RetryOptions;
-  timeout: number;
-  withCredentials: boolean;
+  retryCallback: RetryCallback;
 };
 
 export type RequestContext<
   Body = Record<string, any>,
-  Headers = Record<string, string | number>,
   Params = Record<string, any>,
   Query = Record<string, any>,
 > = {
-  auth: AxiosBasicCredentials | undefined;
   body: Body;
-  config: RawAxiosRequestConfig;
-  headers: Headers;
-  host: string;
-  method: Method;
+  config: RawAxiosRequestConfigContext;
+  headers: Record<string, any>;
   params: Params;
-  path: string;
-  port: number | undefined;
-  protocol: Protocol | undefined;
   query: Query;
   queryCaseTransform: TransformMode;
   retry: RetryOptions;
   retryCallback: RetryCallback;
-  timeout: number;
-  withCredentials: boolean;
+  url: string;
 };
 
 export type Context<
   ResponseData = any,
   RequestBody = Record<string, any>,
-  RequestHeaders = Record<string, string | number>,
   RequestParams = Record<string, any>,
   RequestQuery = Record<string, any>,
 > = {
-  axios: AxiosContext;
-  req: RequestContext<RequestBody, RequestHeaders, RequestParams, RequestQuery>;
+  app: AppContext;
+  req: RequestContext<RequestBody, RequestParams, RequestQuery>;
   res: AxiosResponse<ResponseData, Body>;
 };
