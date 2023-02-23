@@ -1,6 +1,6 @@
+import clone from "clone";
 import { Middleware } from "../types";
 import { composeMiddleware } from "./compose-middleware";
-import clone from "clone";
 
 type Options = {
   useClone?: boolean;
@@ -8,7 +8,7 @@ type Options = {
 
 export const resolveMiddleware = async <Context>(
   context: Context,
-  middleware: Middleware<Context>[],
+  middleware: Array<Middleware<Context>>,
   options: Options = {},
 ): Promise<Context> => {
   const { useClone = true } = options;
