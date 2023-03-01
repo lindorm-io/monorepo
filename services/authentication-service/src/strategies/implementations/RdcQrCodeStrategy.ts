@@ -44,13 +44,11 @@ export class RdcQrCodeStrategy implements StrategyHandler {
       axios: { deviceClient },
     } = ctx;
 
-    const body: InitialiseRdcSessionRequestBody = {
-      ...getRdcBody(ctx, authenticationSession, strategySession),
-      mode: RdcSessionMode.QR_CODE,
-    };
-
-    await deviceClient.post("/admin/rdc", {
-      body,
+    await deviceClient.post<never, InitialiseRdcSessionRequestBody>("/admin/rdc", {
+      body: {
+        ...getRdcBody(ctx, authenticationSession, strategySession),
+        mode: RdcSessionMode.QR_CODE,
+      },
       middleware: [clientCredentialsMiddleware()],
     });
 

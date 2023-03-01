@@ -12,11 +12,12 @@ import {
   RecoveryCodeStrategy,
   SessionAcceptWithCodeStrategy,
   SessionOtpStrategy,
+  SessionQrCodeStrategy,
   TimeBasedOtpStrategy,
 } from "./implementations";
 
 export const ENABLED_STRATEGIES: Array<StrategyHandler> = [
-  // BankIdSeStrategy,
+  // new BankIdSeStrategy(),
   new DeviceChallengeStrategy(),
   new EmailCodeStrategy(),
   new EmailOtpStrategy(),
@@ -26,11 +27,11 @@ export const ENABLED_STRATEGIES: Array<StrategyHandler> = [
   new PhoneCodeStrategy(),
   new PhoneOtpStrategy(),
   new RdcPushNotificationStrategy(),
-  // RdcQrCodeStrategy,
+  // new RdcQrCodeStrategy(),
   new RecoveryCodeStrategy(),
   new SessionAcceptWithCodeStrategy(),
   new SessionOtpStrategy(),
-  // SessionQrCodeStrategy,
+  new SessionQrCodeStrategy(),
   new TimeBasedOtpStrategy(),
-  // WebauthnStrategy,
+  // new WebauthnStrategy(),
 ];

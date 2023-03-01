@@ -55,13 +55,11 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
     });
   }
 
-  const { status, strategy } = strategySession;
-
-  if (status !== SessionStatus.PENDING) {
+  if (![SessionStatus.ACKNOWLEDGED, SessionStatus.PENDING].includes(strategySession.status)) {
     throw new ClientError("Invalid Session Status");
   }
 
-  const handler = getStrategyHandler(strategy);
+  const handler = getStrategyHandler(strategySession.strategy);
   const account = await handler.confirm(ctx, authenticationSession, strategySession, {
     challengeConfirmationToken,
     code,
@@ -81,7 +79,7 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
     });
   }
 
-  authenticationSession.confirmedStrategies.push(strategy);
+  authenticationSession.confirmedStrategies.push(strategySession.strategy);
   authenticationSession.confirmedIdentifiers = removeEmptyFromArray(
     uniq(flatten([authenticationSession.confirmedIdentifiers, strategySession.identifier])),
   );

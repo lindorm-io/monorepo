@@ -1,10 +1,13 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   authenticationSessionEntityMiddleware,
+  identityAuthMiddleware,
   strategySessionEntityMiddleware,
   strategySessionTokenMiddleware,
 } from "../../middleware";
 import {
+  acknowledgeStrategyController,
+  acknowledgeStrategySchema,
   confirmStrategyController,
   confirmStrategySchema,
   getStrategyController,
@@ -22,6 +25,15 @@ router.get(
   useSchema(getStrategySchema),
   strategySessionEntityMiddleware("data.id"),
   useController(getStrategyController),
+);
+
+router.get(
+  "/:id/acknowledge",
+  paramsMiddleware,
+  identityAuthMiddleware(),
+  useSchema(acknowledgeStrategySchema),
+  strategySessionEntityMiddleware("data.id"),
+  useController(acknowledgeStrategyController),
 );
 
 router.post(

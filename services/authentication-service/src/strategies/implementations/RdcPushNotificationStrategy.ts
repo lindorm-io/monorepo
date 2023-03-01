@@ -42,7 +42,6 @@ export class RdcPushNotificationStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     const {
       axios: { deviceClient },
-      cache: { strategySessionCache },
     } = ctx;
 
     if (!authenticationSession.identityId) {
@@ -51,15 +50,11 @@ export class RdcPushNotificationStrategy implements StrategyHandler {
       });
     }
 
-    await strategySessionCache.update(strategySession);
-
-    const body: InitialiseRdcSessionRequestBody = {
-      ...getRdcBody(ctx, authenticationSession, strategySession),
-      mode: RdcSessionMode.PUSH_NOTIFICATION,
-    };
-
-    await deviceClient.post("/admin/rdc", {
-      body,
+    await deviceClient.post<never, InitialiseRdcSessionRequestBody>("/admin/rdc", {
+      body: {
+        ...getRdcBody(ctx, authenticationSession, strategySession),
+        mode: RdcSessionMode.PUSH_NOTIFICATION,
+      },
       middleware: [clientCredentialsMiddleware()],
     });
 

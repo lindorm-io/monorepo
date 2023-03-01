@@ -4,7 +4,7 @@ import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
-import { randomString } from "@lindorm-io/random";
+import { randomSecret } from "@lindorm-io/random";
 import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
@@ -60,7 +60,7 @@ export class EmailCodeStrategy implements StrategyHandler {
       });
     }
 
-    const code = randomString(32);
+    const code = randomSecret(32);
     strategySession.secret = await argon.encrypt(code);
 
     await strategySessionCache.update(strategySession);

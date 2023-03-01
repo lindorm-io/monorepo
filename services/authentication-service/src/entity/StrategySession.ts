@@ -16,6 +16,7 @@ export type StrategySessionAttributes = EntityAttributes & {
   expires: Date;
   identifier: string;
   identifierType: IdentifierType;
+  identityId: string | null;
   nonce: string | null;
   secret: string | null;
   status: SessionStatus;
@@ -25,7 +26,7 @@ export type StrategySessionAttributes = EntityAttributes & {
 
 export type StrategySessionOptions = Optional<
   StrategySessionAttributes,
-  EntityKeys | "nonce" | "secret" | "status" | "visualHint"
+  EntityKeys | "identityId" | "nonce" | "secret" | "status" | "visualHint"
 >;
 
 const schema = Joi.object<StrategySessionAttributes>()
@@ -34,6 +35,7 @@ const schema = Joi.object<StrategySessionAttributes>()
 
     authenticationSessionId: Joi.string().guid().required(),
     expires: Joi.date().required(),
+    identityId: Joi.string().guid().allow(null).required(),
     identifier: Joi.string().required(),
     identifierType: Joi.string()
       .valid(...Object.values(IdentifierType))
@@ -58,6 +60,7 @@ export class StrategySession
   public readonly strategy: AuthenticationStrategy;
   public readonly visualHint: string;
 
+  public identityId: string | null;
   public secret: string | null;
   public status: SessionStatus;
 
@@ -66,6 +69,7 @@ export class StrategySession
 
     this.authenticationSessionId = options.authenticationSessionId;
     this.expires = options.expires;
+    this.identityId = options.identityId || null;
     this.identifier = options.identifier;
     this.identifierType = options.identifierType;
     this.nonce = options.nonce || randomString(16);
@@ -89,6 +93,7 @@ export class StrategySession
 
       authenticationSessionId: this.authenticationSessionId,
       expires: this.expires,
+      identityId: this.identityId,
       identifier: this.identifier,
       identifierType: this.identifierType,
       nonce: this.nonce,

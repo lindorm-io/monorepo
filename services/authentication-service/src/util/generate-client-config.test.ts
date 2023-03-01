@@ -191,7 +191,7 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 6,
         recommended: false,
         required: false,
-        strategies: ["session_otp", "session_accept_with_code"],
+        strategies: ["session_otp", "session_qr_code", "session_accept_with_code"],
       },
       {
         identifierHint: "phone",
@@ -268,7 +268,7 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 6,
         recommended: false,
         required: false,
-        strategies: ["session_otp", "session_accept_with_code"],
+        strategies: ["session_otp", "session_qr_code", "session_accept_with_code"],
       },
       {
         identifierHint: "phone",

@@ -9,6 +9,7 @@ import {
   createTestStrategySession,
 } from "../../fixtures/entity";
 import {
+  getTestAccessToken,
   getTestChallengeConfirmationToken,
   getTestStrategySessionToken,
   setupIntegration,
@@ -16,6 +17,7 @@ import {
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
+import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -88,6 +90,37 @@ describe("/sessions/strategy", () => {
       strategy: "email_otp",
       status: "pending",
     });
+  });
+
+  test("should acknowledge strategy session", async () => {
+    const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
+      createTestStrategySession({
+        strategy: AuthenticationStrategy.SESSION_QR_CODE,
+      }),
+    );
+
+    const identityId = randomUUID();
+    const accessToken = getTestAccessToken({ subject: identityId });
+
+    const response = await request(server.callback())
+      .get(`/sessions/strategy/${strategySession.id}/acknowledge`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      code: expect.any(String),
+      strategy_session_token: expect.any(String),
+    });
+
+    await expect(
+      TEST_STRATEGY_SESSION_CACHE.find({ id: strategySession.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        secret: expect.any(String),
+        identityId,
+        status: SessionStatus.ACKNOWLEDGED,
+      }),
+    );
   });
 
   test("should confirm strategy session", async () => {
