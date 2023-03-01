@@ -1,4 +1,4 @@
-export const isUrlLike = (input: any, base?: any): boolean => {
+export const isUrlLike = (input: any, base?: any): input is URL | string => {
   if (input instanceof URL) return true;
 
   try {
