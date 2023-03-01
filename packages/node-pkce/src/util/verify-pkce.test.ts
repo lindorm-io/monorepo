@@ -1,5 +1,6 @@
 import { verifyPKCE } from "./verify-pkce";
 import { createHash } from "crypto";
+import { PKCEMethod } from "@lindorm-io/common-types";
 
 describe("verifyPKCE", () => {
   let pkceChallenge: string;
@@ -11,19 +12,19 @@ describe("verifyPKCE", () => {
   });
 
   test("should resolve for S256", () => {
-    expect(verifyPKCE(pkceChallenge, "S256", pkceVerifier)).toBe(true);
+    expect(verifyPKCE(pkceChallenge, PKCEMethod.SHA256, pkceVerifier)).toBe(true);
   });
 
   test("should fail for S256", () => {
-    expect(verifyPKCE(pkceChallenge, "S256", "wrong")).toBe(false);
+    expect(verifyPKCE(pkceChallenge, PKCEMethod.SHA256, "wrong")).toBe(false);
   });
 
   test("should resolve for PLAIN", () => {
-    expect(verifyPKCE(pkceChallenge, "plain", pkceChallenge)).toBe(true);
+    expect(verifyPKCE(pkceChallenge, PKCEMethod.PLAIN, pkceChallenge)).toBe(true);
   });
 
   test("should fail for PLAIN", () => {
-    expect(verifyPKCE(pkceChallenge, "plain", "wrong")).toBe(false);
+    expect(verifyPKCE(pkceChallenge, PKCEMethod.PLAIN, "wrong")).toBe(false);
   });
 
   test("should throw on invalid method", () => {

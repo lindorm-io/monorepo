@@ -1,6 +1,7 @@
 import { createPKCE } from "./create-pkce";
 import { randomBaseString as _randomBaseString } from "./random-base-string";
 import { createBaseHash as _createBaseHash } from "./create-base-hash";
+import { PKCEMethod } from "@lindorm-io/common-types";
 
 jest.mock("./random-base-string");
 jest.mock("./create-base-hash");
@@ -15,7 +16,7 @@ describe("createPKCE", () => {
   });
 
   test("should resolve S256", () => {
-    expect(createPKCE("S256")).toStrictEqual({
+    expect(createPKCE(PKCEMethod.SHA256)).toStrictEqual({
       challenge: "createBaseHash",
       method: "S256",
       verifier: "randomBaseString",
@@ -23,7 +24,7 @@ describe("createPKCE", () => {
   });
 
   test("should resolve plain", () => {
-    expect(createPKCE("plain")).toStrictEqual({
+    expect(createPKCE(PKCEMethod.PLAIN)).toStrictEqual({
       challenge: "randomBaseString",
       method: "plain",
       verifier: "randomBaseString",
