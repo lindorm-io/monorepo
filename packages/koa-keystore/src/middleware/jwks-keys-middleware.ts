@@ -7,10 +7,10 @@ export const jwksKeysMiddleware =
     const metric = ctx.getMetric("keystore");
 
     ctx.keys = await getKeysFromJwks({
+      clientName: config.clientName,
       currentKeys: ctx.keys,
       host: config.host,
       logger: ctx.logger,
-      name: config.name,
       path: config.path,
       port: config.port,
     });

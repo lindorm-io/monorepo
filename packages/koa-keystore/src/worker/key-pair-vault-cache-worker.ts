@@ -7,16 +7,9 @@ import { addSeconds } from "date-fns";
 import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 import { getKeysFromJwks } from "../util";
 import {
-  Axios,
-  AxiosClientCredentialsMiddlewareOptions,
   axiosClientCredentialsMiddleware,
-  axiosRequestLoggerMiddleware,
+  AxiosClientCredentialsMiddlewareOptions,
 } from "@lindorm-io/axios";
-
-type OAuthServiceOptions = {
-  host: string;
-  port?: number;
-};
 
 type VaultServiceOptions = {
   host: string;
@@ -26,7 +19,6 @@ type VaultServiceOptions = {
 
 type Options = {
   clientCredentials: AxiosClientCredentialsMiddlewareOptions;
-  oauthService: OAuthServiceOptions;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
   vaultService: VaultServiceOptions;
@@ -37,7 +29,6 @@ type Options = {
 export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
   const {
     clientCredentials,
-    oauthService,
     redisConnection,
     retry,
     vaultService,
@@ -49,16 +40,8 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
   const logger = options.logger.createChildLogger(["keyPairVaultCacheWorker"]);
 
   logger.debug("creating vault cache worker", {
-    oauthService,
     vaultService,
     workerInterval,
-  });
-
-  const oauthClient = new Axios({
-    host: oauthService.host,
-    middleware: [axiosRequestLoggerMiddleware(logger)],
-    name: "oauthClient",
-    port: oauthService.port,
   });
 
   const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
@@ -69,9 +52,9 @@ export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
         const cache = new KeyPairCache({ connection: redisConnection, logger });
 
         const keys = await getKeysFromJwks({
-          logger,
           host: vaultService.host,
-          middleware: [clientCredentialsMiddleware(oauthClient)],
+          logger,
+          middleware: [clientCredentialsMiddleware()],
           path: vaultService.path || "/internal/jwks",
           port: vaultService.port,
         });

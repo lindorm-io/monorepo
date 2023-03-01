@@ -46,9 +46,7 @@ export const socketBearerAuthMiddleware =
 
         socket.ctx.token[contextKey] = verified;
 
-        const array = verified.sessionId
-          ? [verified.subject, verified.sessionId]
-          : [verified.subject];
+        const array = verified.session ? [verified.subject, verified.session] : [verified.subject];
 
         socket.join(array);
       } catch (err: any) {

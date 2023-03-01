@@ -1,5 +1,5 @@
 import { DefaultLindormMiddleware } from "../../types";
-import { Environment, Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 import { MetadataHeader } from "../../enum";
 import { randomUUID } from "crypto";
 
@@ -18,7 +18,7 @@ export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): P
     client: {
       id: ctx.get(MetadataHeader.CLIENT_ID),
       environment:
-        (ctx.get(MetadataHeader.CLIENT_ENVIRONMENT) as Environment) || Environments.UNKNOWN,
+        (ctx.get(MetadataHeader.CLIENT_ENVIRONMENT) as Environment) || Environment.UNKNOWN,
       platform: ctx.get(MetadataHeader.CLIENT_PLATFORM),
       version: ctx.get(MetadataHeader.CLIENT_VERSION),
     },

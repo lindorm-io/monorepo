@@ -1,8 +1,3 @@
-import { Middleware as AxiosMiddleware } from "@lindorm-io/axios";
+import { AxiosOptions } from "@lindorm-io/axios";
 
-export interface AxiosMiddlewareConfig {
-  clientName: string;
-  host?: string;
-  port?: number;
-  middleware?: Array<AxiosMiddleware>;
-}
+export type AxiosMiddlewareConfig = AxiosOptions & Required<Pick<AxiosOptions, "clientName">>;

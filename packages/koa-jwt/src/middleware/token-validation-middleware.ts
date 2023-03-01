@@ -2,8 +2,8 @@ import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types"
 import { ClientError } from "@lindorm-io/errors";
 import { get } from "object-path";
 import {
-  TokenCustomValidation,
   DefaultLindormJwtKoaMiddleware,
+  TokenCustomValidation,
   TokenValidationMiddlewareConfig,
 } from "../types";
 

@@ -7,14 +7,12 @@ export const socketAxiosMiddleware =
   (socket, next): void => {
     try {
       socket.ctx.axios[config.clientName] = new Axios({
-        host: config.host,
-        port: config.port,
+        ...config,
         middleware: [axiosRequestLoggerMiddleware(socket.ctx.logger), ...(config.middleware || [])],
-        name: config.clientName,
       });
 
       next();
-    } catch (err:any) {
+    } catch (err: any) {
       next(getSocketError(socket, err));
     }
   };

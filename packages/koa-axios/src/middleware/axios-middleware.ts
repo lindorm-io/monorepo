@@ -21,14 +21,12 @@ export const axiosMiddleware =
     };
 
     ctx.axios[config.clientName] = new Axios({
-      host: config.host,
-      port: config.port,
+      ...config,
       middleware: [
         axiosRequestLoggerMiddleware(ctx.logger),
         metadataMiddleware,
         ...(config.middleware || []),
       ],
-      name: config.clientName,
     });
 
     ctx.metrics.axios = (ctx.metrics.axios || 0) + (Date.now() - start);

@@ -1,6 +1,6 @@
 export interface JwksKeysMiddlewareConfig {
   host: string;
-  name?: string;
+  clientName?: string;
   path?: string;
   port?: number;
 }

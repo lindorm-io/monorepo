@@ -16,19 +16,19 @@ interface Response {
 
 export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>> => {
   const {
+    clientName = "jwks",
     currentKeys = [],
     host,
     logger,
-    name = "jwks",
     path = "/.well-known/jwks.json",
     port,
     ...rest
   } = options;
 
   const axios = new Axios({
+    clientName,
     host,
     middleware: [axiosRequestLoggerMiddleware(logger)],
-    name,
     port,
     ...rest,
   });

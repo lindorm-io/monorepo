@@ -8,26 +8,34 @@ import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 import { getKeysFromJwks } from "../util";
 
 type Options = {
+  clientName?: string;
   host: string;
-  name?: string;
+  logger: Logger;
   path?: string;
   port?: number;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
-  logger: Logger;
   workerInterval?: string;
 };
 
 export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
-  const { host, name, path, port, redisConnection, retry, workerInterval = "5 minutes" } = options;
+  const {
+    clientName,
+    host,
+    path,
+    port,
+    redisConnection,
+    retry,
+    workerInterval = "5 minutes",
+  } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairJwksCacheWorker"]);
 
   logger.debug("creating jwks cache worker", {
+    clientName,
     host,
-    name,
     path,
     port,
     workerInterval,
@@ -39,9 +47,9 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
         const cache = new KeyPairCache({ connection: redisConnection, logger });
 
         const keys = await getKeysFromJwks({
-          logger,
+          clientName,
           host,
-          name,
+          logger,
           path,
           port,
         });

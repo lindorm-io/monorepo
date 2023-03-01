@@ -2,9 +2,9 @@ import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types"
 import { ClientError } from "@lindorm-io/errors";
 import { get } from "object-path";
 import {
+  BearerAuthMiddlewareConfig,
   BearerTokenCustomValidation,
   DefaultLindormBearerAuthKoaMiddleware,
-  BearerAuthMiddlewareConfig,
 } from "../types";
 
 export type BearerAuthOptions = {

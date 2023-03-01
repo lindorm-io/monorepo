@@ -1,5 +1,5 @@
 import { DefaultLindormKoaContext } from "../../types";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 
 export interface GetCookieOptions {
   signed: boolean;
@@ -11,7 +11,7 @@ export const getCookie =
     return ctx.cookies.get(name, {
       signed:
         options.signed ||
-        ctx.server.environment === Environments.PRODUCTION ||
-        ctx.server.environment === Environments.STAGING,
+        ctx.server.environment === Environment.PRODUCTION ||
+        ctx.server.environment === Environment.STAGING,
     });
   };

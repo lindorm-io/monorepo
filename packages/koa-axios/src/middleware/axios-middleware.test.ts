@@ -42,10 +42,6 @@ describe("axiosMiddleware", () => {
     await expect(axiosMiddleware(options)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient).toStrictEqual(expect.any(Axios));
-    expect(ctx.axios.axiosClient.host).toBe("lindorm.io");
-    expect(ctx.axios.axiosClient.port).toBe(4000);
-    expect(ctx.axios.axiosClient.protocol).toBe("https");
-    expect(ctx.axios.axiosClient.middleware.length).toBe(3);
     expect(ctx.metrics.axios).toBe(0);
   });
 });

@@ -35,7 +35,7 @@ describe("bearerAuthMiddleware", () => {
     config = {
       audience: "444a9836-d2c9-470e-9270-071bfcb61346",
       clockTolerance: 50,
-      issuer: "issuer",
+      issuer: "https://test.lindorm.io",
       subjectHints: ["identity"],
       tenant: "e5abd790-3e7f-449e-934c-f5783c24ccd8",
     };

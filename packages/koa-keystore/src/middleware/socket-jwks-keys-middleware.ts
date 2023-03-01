@@ -7,10 +7,10 @@ export const socketJwksKeysMiddleware = (
 ): DefaultLindormKeystoreSocketMiddleware =>
   promisifyLindormSocketMiddleware(async (socket) => {
     socket.ctx.keys = await getKeysFromJwks({
+      clientName: config.clientName,
       currentKeys: socket.ctx.keys,
       host: config.host,
       logger: socket.ctx.logger,
-      name: config.name,
       path: config.path,
       port: config.port,
     });

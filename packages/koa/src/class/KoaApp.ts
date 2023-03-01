@@ -5,7 +5,7 @@ import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
 import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
-import { Environment, Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 import { IntervalWorker } from "./IntervalWorker";
 import { Logger } from "@lindorm-io/core-logger";
 import { Server as HttpServer, createServer } from "http";
@@ -47,7 +47,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
     this.koaRouter = new Router();
 
-    this.environment = options.environment || Environments.DEVELOPMENT;
+    this.environment = options.environment || Environment.DEVELOPMENT;
     this.host = options.host;
     this.loaded = false;
     this.logger = options.logger;
