@@ -1,4 +1,11 @@
-import { AuthorizationSession, Client, ElevationSession, LogoutSession, Tenant } from "../entity";
+import {
+  AuthorizationSession,
+  ClaimsSession,
+  Client,
+  ElevationSession,
+  LogoutSession,
+  Tenant,
+} from "../entity";
 import { Axios } from "@lindorm-io/axios";
 import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
@@ -18,6 +25,7 @@ import {
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
+  ClaimsSessionCache,
   ClientRepository,
   ElevationSessionCache,
   InvalidTokenCache,
@@ -33,6 +41,7 @@ interface ServerAxios extends LindormNodeServerAxios {
 interface ServerCache extends LindormNodeServerCache {
   authorizationCodeCache: AuthorizationCodeCache;
   authorizationSessionCache: AuthorizationSessionCache;
+  claimsSessionCache: ClaimsSessionCache;
   elevationSessionCache: ElevationSessionCache;
   invalidTokenCache: InvalidTokenCache;
   logoutSessionCache: LogoutSessionCache;
@@ -40,6 +49,7 @@ interface ServerCache extends LindormNodeServerCache {
 
 interface ServerEntity {
   authorizationSession: AuthorizationSession;
+  claimsSession: ClaimsSession;
   client: Client;
   elevationSession: ElevationSession;
   logoutSession: LogoutSession;

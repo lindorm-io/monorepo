@@ -1,12 +1,16 @@
 import { canGenerateMfaCookie } from "./can-generate-mfa-cookie";
 import { createTestAuthenticationSession } from "../fixtures/entity";
+import { AuthenticationStrategy } from "@lindorm-io/common-types";
 
 describe("canFlowGenerateMfaCookie", () => {
   test("should resolve true", () => {
     expect(
       canGenerateMfaCookie(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp", "session_otp"],
+          confirmedStrategies: [
+            AuthenticationStrategy.EMAIL_OTP,
+            AuthenticationStrategy.SESSION_OTP,
+          ],
         }),
       ),
     ).toBe(true);
@@ -26,7 +30,7 @@ describe("canFlowGenerateMfaCookie", () => {
     expect(
       canGenerateMfaCookie(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
         }),
       ),
     ).toBe(false);

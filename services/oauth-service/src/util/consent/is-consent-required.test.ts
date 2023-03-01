@@ -7,6 +7,7 @@ import {
   createTestBrowserSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { OpenIdPromptMode, OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("./is-new-consent-required");
 
@@ -22,21 +23,21 @@ describe("isConsentRequired", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedConsent: {
         audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-        scopes: ["openid"],
+        scopes: [OpenIdScope.OPENID],
       },
       promptModes: [],
     });
 
     accessSession = createTestAccessSession({
       audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-      scopes: ["openid", "email", "profile"],
+      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
     });
 
     browserSession = createTestBrowserSession();
 
     refreshSession = createTestRefreshSession({
       audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-      scopes: ["openid", "email", "profile"],
+      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
     });
 
     isNewConsentRequired.mockImplementation(() => false);
@@ -51,19 +52,19 @@ describe("isConsentRequired", () => {
   });
 
   test("should not require on confirmed", () => {
-    authorizationSession.status.consent = "confirmed";
+    authorizationSession.status.consent = SessionStatus.CONFIRMED;
 
     expect(isConsentRequired(authorizationSession)).toBe(false);
   });
 
   test("should not require on confirmed", () => {
-    authorizationSession.status.consent = "verified";
+    authorizationSession.status.consent = SessionStatus.VERIFIED;
 
     expect(isConsentRequired(authorizationSession)).toBe(false);
   });
 
   test("should require on prompt", () => {
-    authorizationSession.promptModes.push("consent");
+    authorizationSession.promptModes.push(OpenIdPromptMode.CONSENT);
 
     expect(isConsentRequired(authorizationSession)).toBe(true);
   });

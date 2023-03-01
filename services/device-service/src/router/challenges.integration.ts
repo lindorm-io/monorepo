@@ -6,14 +6,14 @@ import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/en
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
+import { ChallengeStrategy } from "@lindorm-io/common-types";
 import {
-  TEST_CHALLENGE_SESSION_CACHE,
-  TEST_DEVICE_REPOSITORY,
   getTestChallengeSessionToken,
   setupIntegration,
   signTestChallenge,
+  TEST_CHALLENGE_SESSION_CACHE,
+  TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
-import { ChallengeStrategies } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,7 +34,7 @@ describe("/challenges", () => {
     });
 
   nock("https://vault.test.lindorm.io")
-    .get((uri) => uri.includes("/internal/vault"))
+    .get((uri) => uri.includes("/admin/vault"))
     .times(999)
     .reply(200, {
       data: {
@@ -104,7 +104,7 @@ describe("/challenges", () => {
       session.certificateChallenge,
     );
     const challengeSessionToken = getTestChallengeSessionToken({
-      sessionId: session.id,
+      session: session.id,
     });
 
     const response = await request(server.callback())
@@ -119,7 +119,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategies.IMPLICIT,
+        strategy: ChallengeStrategy.IMPLICIT,
       })
       .expect(200);
 
@@ -152,7 +152,7 @@ describe("/challenges", () => {
     );
 
     const challengeSessionToken = getTestChallengeSessionToken({
-      sessionId: session.id,
+      session: session.id,
     });
 
     const response = await request(server.callback())
@@ -167,7 +167,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategies.BIOMETRY,
+        strategy: ChallengeStrategy.BIOMETRY,
         biometry,
       })
       .expect(200);
@@ -201,7 +201,7 @@ describe("/challenges", () => {
     );
 
     const challengeSessionToken = getTestChallengeSessionToken({
-      sessionId: session.id,
+      session: session.id,
     });
 
     const response = await request(server.callback())
@@ -216,7 +216,7 @@ describe("/challenges", () => {
       .send({
         certificate_verifier: certificateVerifier,
         challenge_session_token: challengeSessionToken,
-        strategy: ChallengeStrategies.PINCODE,
+        strategy: ChallengeStrategy.PINCODE,
         pincode,
       })
       .expect(200);
@@ -238,7 +238,7 @@ describe("/challenges", () => {
     );
 
     const challengeSessionToken = getTestChallengeSessionToken({
-      sessionId: session.id,
+      session: session.id,
     });
 
     await request(server.callback())

@@ -1,13 +1,20 @@
 import { ControllerResponse } from "@lindorm-io/koa";
-import { LindormClaims, LindormScopes, GetUserinfoResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { getAddress, getDisplayName, getName } from "../../util";
-import { getIdentifierUserinfo } from "../../handler";
+import { getIdentifierClaims } from "../../handler";
 import { getUnixTime } from "date-fns";
+import {
+  GetUserinfoResponse,
+  LindormClaims,
+  LindormScope,
+  OpenIdScope,
+} from "@lindorm-io/common-types";
+
+type ResponseData = GetUserinfoResponse;
 
 export const getUserinfoController: ServerKoaController = async (
   ctx,
-): ControllerResponse<GetUserinfoResponse> => {
+): ControllerResponse<ResponseData> => {
   const {
     entity: { identity },
     repository: { addressRepository },
@@ -22,7 +29,7 @@ export const getUserinfoController: ServerKoaController = async (
     updatedAt: getUnixTime(identity.updated),
   };
 
-  if (!scopes.includes(LindormScopes.OPENID)) {
+  if (!scopes.includes(OpenIdScope.OPENID)) {
     return { body: claims };
   }
 
@@ -31,38 +38,25 @@ export const getUserinfoController: ServerKoaController = async (
     primary: true,
   });
 
-  const identifierUserinfo = await getIdentifierUserinfo(ctx, identity);
+  const identifierUserinfo = await getIdentifierClaims(ctx, identity);
 
   for (const scope of scopes.sort()) {
     switch (scope) {
-      case LindormScopes.ACCESSIBILITY:
-        claims.preferredAccessibility = identity.preferredAccessibility;
-        break;
-
-      case LindormScopes.ADDRESS:
+      case OpenIdScope.ADDRESS:
         claims.address = getAddress(primaryAddress);
         break;
 
-      case LindormScopes.CONNECTED_PROVIDERS:
-        claims.connectedProviders = identifierUserinfo.connectedProviders;
-        break;
-
-      case LindormScopes.EMAIL:
+      case OpenIdScope.EMAIL:
         claims.email = identifierUserinfo.email;
         claims.emailVerified = identifierUserinfo.emailVerified;
         break;
 
-      case LindormScopes.NATIONAL_IDENTITY_NUMBER:
-        claims.nationalIdentityNumber = identity.nationalIdentityNumber;
-        claims.nationalIdentityNumberVerified = identity.nationalIdentityNumberVerified;
-        break;
-
-      case LindormScopes.PHONE:
+      case OpenIdScope.PHONE:
         claims.phoneNumber = identifierUserinfo.phoneNumber;
         claims.phoneNumberVerified = identifierUserinfo.phoneNumberVerified;
         break;
 
-      case LindormScopes.PROFILE:
+      case OpenIdScope.PROFILE:
         claims.birthDate = identity.birthDate;
         claims.familyName = identity.familyName;
         claims.gender = identity.gender;
@@ -79,18 +73,27 @@ export const getUserinfoController: ServerKoaController = async (
         claims.zoneInfo = identity.zoneInfo;
         break;
 
-      case LindormScopes.PUBLIC:
+      case LindormScope.ACCESSIBILITY:
+        claims.preferredAccessibility = identity.preferredAccessibility;
+        break;
+
+      case LindormScope.NATIONAL_IDENTITY_NUMBER:
+        claims.nationalIdentityNumber = identifierUserinfo.nationalIdentityNumber;
+        claims.nationalIdentityNumberVerified = identifierUserinfo.nationalIdentityNumberVerified;
+        break;
+
+      case LindormScope.PUBLIC:
         claims.displayName = getDisplayName(identity);
-        claims.gravatarUri = identity.gravatarUri;
+        claims.avatarUri = identity.avatarUri;
         claims.pronouns = identity.pronouns;
         break;
 
-      case LindormScopes.SOCIAL_SECURITY_NUMBER:
-        claims.socialSecurityNumber = identity.socialSecurityNumber;
-        claims.socialSecurityNumberVerified = identity.socialSecurityNumberVerified;
+      case LindormScope.SOCIAL_SECURITY_NUMBER:
+        claims.socialSecurityNumber = identifierUserinfo.socialSecurityNumber;
+        claims.socialSecurityNumberVerified = identifierUserinfo.socialSecurityNumberVerified;
         break;
 
-      case LindormScopes.USERNAME:
+      case LindormScope.USERNAME:
         claims.username = identity.username;
         break;
 

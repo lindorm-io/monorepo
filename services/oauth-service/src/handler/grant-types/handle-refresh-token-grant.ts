@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { LindormTokenTypes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { OpenIdTokenType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
@@ -19,7 +19,7 @@ export const handleRefreshTokenGrant = async (
 
   const { id, session } = jwt.verify(refreshToken, {
     audience: client.id,
-    types: [LindormTokenTypes.REFRESH],
+    types: [OpenIdTokenType.REFRESH],
   });
 
   if (!session) {

@@ -1,6 +1,6 @@
 import { Identity, IdentityOptions } from "../../entity";
-import { NamingSystem } from "../../enum";
-import { randomNumber, randomString } from "@lindorm-io/random";
+import { NamingSystem } from "@lindorm-io/common-types";
+import { randomString } from "@lindorm-io/random";
 
 export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Identity =>
   new Identity({
@@ -12,20 +12,16 @@ export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Iden
     familyName: "Torsson",
     gender: "Female",
     givenName: "Oliver",
-    gravatarUri: "https://gravatar.url/",
+    avatarUri: "https://avatar.url/",
     locale: "sv-SE",
     middleName: "Rio",
     namingSystem: NamingSystem.GIVEN_FAMILY,
-    nationalIdentityNumber: randomNumber(12).toString().padEnd(12, "0"),
-    nationalIdentityNumberVerified: true,
     nickname: "Wheat",
     picture: "https://picture.url/",
     preferredAccessibility: ["setting1", "setting2", "setting3"],
     preferredUsername: "rio_wheat",
     profile: "https://profile.url/",
     pronouns: "she/her",
-    socialSecurityNumber: randomNumber(12).toString().padEnd(12, "0"),
-    socialSecurityNumberVerified: true,
     takenName: "Olivia",
     username: randomString(16),
     website: "https://website.url/",

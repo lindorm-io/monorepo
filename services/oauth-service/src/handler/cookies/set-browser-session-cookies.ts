@@ -1,5 +1,5 @@
 import { BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { expiryDate } from "@lindorm-io/expiry";
 
@@ -26,7 +26,7 @@ export const setBrowserSessionCookies = (
     expires: expiryDate("99 years"),
     httpOnly: true,
     overwrite: true,
-    signed: environment !== Environments.TEST,
+    signed: environment !== Environment.TEST,
   };
 
   logger.verbose("Setting cookie", {

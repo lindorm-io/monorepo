@@ -3,6 +3,7 @@ import { AuthorizationSession, BrowserSession } from "../../entity";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { getUpdatedBrowserSession } from "./get-updated-browser-session";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -22,7 +23,12 @@ describe("getUpdatedBrowserSession", () => {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
-        methods: ["email", "phone", "session_link"],
+        metadata: {},
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         remember: true,
         sso: true,
       },
@@ -73,7 +79,7 @@ describe("getUpdatedBrowserSession", () => {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 1,
-        methods: ["password"],
+        methods: [AuthenticationMethod.PASSWORD],
         remember: false,
         sso: false,
       }),
@@ -104,7 +110,7 @@ describe("getUpdatedBrowserSession", () => {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["password"],
+        methods: [AuthenticationMethod.PASSWORD],
         remember: true,
         sso: true,
       }),

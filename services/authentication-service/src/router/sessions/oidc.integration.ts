@@ -5,6 +5,7 @@ import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import { setupIntegration, TEST_AUTHENTICATION_SESSION_CACHE } from "../../fixtures/integration";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,7 +25,7 @@ describe("/sessions/authentication", () => {
     });
 
   nock("https://oidc.test.lindorm.io")
-    .get("/internal/sessions/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+    .get("/admin/sessions/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
     .times(999)
     .reply(200, {
       callback_id: "16eb29d7-9f02-4883-8973-004870b6901c",
@@ -47,7 +48,7 @@ describe("/sessions/authentication", () => {
 
     const url = createURL("/sessions/oidc/callback", {
       host: "https://rm.rm",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
+      query: { session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
     });
 
     const response = await request(server.callback())
@@ -57,7 +58,7 @@ describe("/sessions/authentication", () => {
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://frontend.url");
     expect(location.pathname).toBe("/api/oidc");
-    expect(location.searchParams.get("session_id")).toBe(authenticationSession.id);
+    expect(location.searchParams.get("session")).toBe(authenticationSession.id);
 
     await expect(
       TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
@@ -67,7 +68,7 @@ describe("/sessions/authentication", () => {
         confirmedOidcLevel: 3,
         confirmedOidcProvider: "apple",
         identityId: "6a45c383-fd41-4a9e-b76d-c8acb99ea88c",
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
   });

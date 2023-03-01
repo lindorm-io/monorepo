@@ -30,6 +30,7 @@ const createBrowserSession = async (
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
+      metadata: authorizationSession.confirmedLogin.metadata,
       methods: authorizationSession.confirmedLogin.methods,
       remember: authorizationSession.confirmedLogin.remember,
       sso: authorizationSession.confirmedLogin.sso,

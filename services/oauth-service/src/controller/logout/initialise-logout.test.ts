@@ -67,13 +67,20 @@ describe("oauthLogoutController", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.accessSessionRepository.findMany.mockResolvedValue([
+    ctx.repository.accessSessionRepository.tryFind.mockResolvedValue(
       createTestAccessSession({
         id: "946b598c-6873-4a95-b987-230380afa3ff",
         clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
         browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
       }),
-    ]);
+    );
+    ctx.repository.refreshSessionRepository.tryFind.mockResolvedValue(
+      createTestRefreshSession({
+        id: "078de016-11e5-4d65-9976-4c0f3aa1125b",
+        clientId: "04878ee1-7617-4290-a3b4-c4fed4b1a836",
+        browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
+      }),
+    );
 
     await expect(oauthLogoutController(ctx)).resolves.toStrictEqual({
       redirect: "createLogoutPendingUri",
@@ -97,10 +104,8 @@ describe("oauthLogoutController", () => {
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
           accessSessionId: "946b598c-6873-4a95-b987-230380afa3ff",
-          accessSessions: [expect.any(String)],
           browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
-          refreshSessionId: null,
-          refreshSessions: [expect.any(String)],
+          refreshSessionId: "078de016-11e5-4d65-9976-4c0f3aa1125b",
         },
         state: "76d3d90c16bee315",
         status: "pending",

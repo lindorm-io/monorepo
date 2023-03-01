@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategies, PSD2Factors } from "@lindorm-io/common-types";
+import { ChallengeStrategy, PSD2Factor } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestDeviceLink } from "../fixtures/entity";
@@ -34,7 +34,7 @@ describe("/device-links", () => {
     });
 
   nock("https://vault.test.lindorm.io")
-    .get((uri) => uri.includes("/internal/vault"))
+    .get((uri) => uri.includes("/admin/vault"))
     .times(999)
     .reply(200, {
       data: {
@@ -44,7 +44,7 @@ describe("/device-links", () => {
     });
 
   nock("https://vault.test.lindorm.io")
-    .delete((uri) => uri.includes("/internal/vault"))
+    .delete((uri) => uri.includes("/admin/vault"))
     .times(999)
     .reply(204);
 
@@ -157,10 +157,10 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
-        strategy: ChallengeStrategies.PINCODE,
+        factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
       },
-      sessionId: randomUUID(),
+      session: randomUUID(),
       subject: deviceLink.identityId,
     });
 
@@ -199,10 +199,10 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
-        strategy: ChallengeStrategies.PINCODE,
+        factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
       },
-      sessionId: randomUUID(),
+      session: randomUUID(),
       subject: deviceLink.identityId,
     });
 
@@ -240,10 +240,10 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
-        strategy: ChallengeStrategies.PINCODE,
+        factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
       },
-      sessionId: randomUUID(),
+      session: randomUUID(),
       subject: deviceLink.identityId,
     });
 

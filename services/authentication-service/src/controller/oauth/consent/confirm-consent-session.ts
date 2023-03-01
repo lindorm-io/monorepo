@@ -1,8 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
-import { ClientScopes } from "../../../common";
+import { confirmOauthConsent } from "../../../handler";
 import {
   ConfirmConsentRequestBody,
   ConfirmConsentRequestParams,
@@ -25,18 +24,10 @@ export const confirmConsentSessionController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    axios: { oauthClient },
     data: { id, audiences, scopes },
   } = ctx;
 
-  const { data } = await oauthClient.post<ConfirmConsentResponse>(
-    "/internal/sessions/consent/:id/confirm",
-    {
-      params: { id },
-      body: { audiences, scopes },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
-    },
-  );
+  const { redirectTo } = await confirmOauthConsent(ctx, id, { audiences, scopes });
 
-  return { body: data };
+  return { body: { redirectTo } };
 };

@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { RejectStrategyRequestParams, SessionStatuses } from "@lindorm-io/common-types";
+import { RejectStrategyRequestParams, SessionStatus } from "@lindorm-io/common-types";
 
 type RequestData = RejectStrategyRequestParams;
 
@@ -19,7 +19,7 @@ export const rejectStrategyController: ServerKoaController<RequestData> = async 
     entity: { strategySession },
   } = ctx;
 
-  strategySession.status = SessionStatuses.REJECTED;
+  strategySession.status = SessionStatus.REJECTED;
 
   await strategySessionCache.update(strategySession);
 };

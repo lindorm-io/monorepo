@@ -1,17 +1,13 @@
 import Joi from "joi";
 import { ClientAllowed, ClientDefaults, ClientExpiry } from "../types";
+import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import {
-  OauthClientType,
-  OauthDisplayModes,
-  OauthResponseModes,
+  LindormScope,
+  OpenIdClientType,
+  OpenIdScope,
+  Optional,
   ScopeDescription,
 } from "@lindorm-io/common-types";
-import {
-  EntityAttributes,
-  EntityOptions,
-  JOI_ENTITY_BASE,
-  LindormEntity,
-} from "@lindorm-io/entity";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -29,8 +25,8 @@ import {
 export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
-  audiences: Array<string>;
   backChannelLogoutUri: string | null;
+  claimsUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
   enforceBasicAuth: boolean;
@@ -42,37 +38,31 @@ export type ClientAttributes = EntityAttributes & {
   name: string;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
-  requiredScopes: Array<string>;
+  requiredScopes: Array<OpenIdScope | LindormScope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
   tenantId: string;
-  type: OauthClientType;
+  type: OpenIdClientType;
 };
 
-export type ClientOptions = EntityOptions & {
-  active?: boolean;
-  allowed?: Partial<ClientAllowed>;
-  audiences?: Array<string>;
-  backChannelLogoutUri?: string | null;
-  defaults?: Partial<ClientDefaults>;
-  description?: string | null;
-  enforceBasicAuth?: boolean;
-  enforceSecret?: boolean;
-  expiry?: Partial<ClientExpiry>;
-  frontChannelLogoutUri?: string | null;
-  host: string;
-  logoUri?: string | null;
-  name: string;
-  postLogoutUris?: Array<string>;
-  redirectUris?: Array<string>;
-  requiredScopes?: Array<string>;
-  rtbfUri?: string | null;
-  scopeDescriptions?: Array<ScopeDescription>;
-  secret: string;
-  tenantId: string;
-  type: OauthClientType;
-};
+export type ClientOptions = Optional<
+  ClientAttributes,
+  | EntityKeys
+  | "backChannelLogoutUri"
+  | "claimsUri"
+  | "description"
+  | "enforceBasicAuth"
+  | "enforceSecret"
+  | "expiry"
+  | "frontChannelLogoutUri"
+  | "logoUri"
+  | "postLogoutUris"
+  | "redirectUris"
+  | "requiredScopes"
+  | "rtbfUri"
+  | "scopeDescriptions"
+>;
 
 const schema = Joi.object<ClientAttributes>()
   .keys({
@@ -102,8 +92,8 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
 
     active: Joi.boolean().required(),
-    audiences: Joi.array().items(Joi.string()).required(),
     backChannelLogoutUri: Joi.string().uri().required(),
+    claimsUri: Joi.string().uri().allow(null).required(),
     description: Joi.string().allow(null).required(),
     enforceBasicAuth: Joi.boolean().required(),
     enforceSecret: Joi.boolean().required(),
@@ -125,8 +115,8 @@ const schema = Joi.object<ClientAttributes>()
 export class Client extends LindormEntity<ClientAttributes> {
   public active: boolean;
   public allowed: ClientAllowed;
-  public audiences: Array<string>;
   public backChannelLogoutUri: string | null;
+  public claimsUri: string | null;
   public defaults: ClientDefaults;
   public description: string | null;
   public enforceBasicAuth: boolean;
@@ -138,27 +128,16 @@ export class Client extends LindormEntity<ClientAttributes> {
   public name: string;
   public postLogoutUris: Array<string>;
   public redirectUris: Array<string>;
-  public requiredScopes: Array<string>;
+  public requiredScopes: Array<OpenIdScope | LindormScope>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string;
   public tenantId: string;
-  public type: OauthClientType;
+  public type: OpenIdClientType;
 
   public constructor(options: ClientOptions) {
     super(options);
 
-    this.allowed = {
-      grantTypes: options.allowed?.grantTypes || [],
-      responseTypes: options.allowed?.responseTypes || [],
-      scopes: options.allowed?.scopes || [],
-    };
-    this.defaults = {
-      audiences: options.defaults?.audiences || [],
-      displayMode: options.defaults?.displayMode || OauthDisplayModes.PAGE,
-      levelOfAssurance: options.defaults?.levelOfAssurance || 1,
-      responseMode: options.defaults?.responseMode || OauthResponseModes.QUERY,
-    };
     this.expiry = {
       accessToken: options.expiry?.accessToken || null,
       idToken: options.expiry?.idToken || null,
@@ -166,8 +145,10 @@ export class Client extends LindormEntity<ClientAttributes> {
     };
 
     this.active = options.active === true;
-    this.audiences = options.audiences || [];
+    this.allowed = options.allowed;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
+    this.claimsUri = options.claimsUri || null;
+    this.defaults = options.defaults;
     this.description = options.description || null;
     this.enforceBasicAuth = options.enforceBasicAuth === true;
     this.enforceSecret = options.enforceSecret === true;
@@ -195,8 +176,8 @@ export class Client extends LindormEntity<ClientAttributes> {
 
       active: this.active,
       allowed: this.allowed,
-      audiences: this.audiences,
       backChannelLogoutUri: this.backChannelLogoutUri,
+      claimsUri: this.claimsUri,
       defaults: this.defaults,
       description: this.description,
       enforceBasicAuth: this.enforceBasicAuth,

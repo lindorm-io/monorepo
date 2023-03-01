@@ -3,13 +3,13 @@ import nock from "nock";
 import request from "supertest";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
-  TEST_ACCOUNT_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
+  TEST_ACCOUNT_REPOSITORY,
   TEST_BROWSER_LINK_REPOSITORY,
 } from "../../fixtures/integration";
 
@@ -39,7 +39,7 @@ describe("/account/browser-link", () => {
     });
 
   nock("https://vault.test.lindorm.io")
-    .get((uri) => uri.includes("/internal/vault"))
+    .get((uri) => uri.includes("/admin/vault"))
     .times(999)
     .reply(200, {
       data: {
@@ -67,7 +67,7 @@ describe("/account/browser-link", () => {
         "User-Agent",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0",
       )
-      .set("x-client-environment", Environments.TEST)
+      .set("x-client-environment", Environment.TEST)
       .send({
         code: "browser-link-code",
         password: "password",

@@ -1,12 +1,12 @@
 import Joi from "joi";
 import { AccessSession, RefreshSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
+import { SessionHint } from "../../enum";
 import { flatten, orderBy } from "lodash";
 import { getAdjustedAccessLevel } from "../../util";
 import { isAfter } from "date-fns";
-import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
-import { SessionHint } from "../../enum";
 
 type RequestData = {
   id: string;
@@ -25,12 +25,15 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { id: identityId },
-    repository: { accessSessionRepository, refreshSessionRepository },
+    repository: {
+      accessSessionRepository,
+      clientRepository,
+      refreshSessionRepository,
+      tenantRepository,
+    },
   } = ctx;
 
   const sessions: Array<IdentitySessionItem> = [];
-
-  const now = new Date();
 
   const accessSessions = await accessSessionRepository.findMany({ identityId });
   const refreshSessions = await refreshSessionRepository.findMany({ identityId });
@@ -39,13 +42,23 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
 
   for (const session of array) {
     if (session.levelOfAssurance === 0) continue;
-    if (session instanceof RefreshSession && isAfter(now, session.expires)) continue;
+    if (session instanceof RefreshSession && isAfter(new Date(), session.expires)) continue;
+
+    const client = await clientRepository.find({ id: session.clientId });
+    const tenant = await tenantRepository.find({ id: client.tenantId });
 
     sessions.push({
       id: session.id,
+      client: {
+        name: client.name,
+        logoUri: client.logoUri,
+        tenant: tenant.name,
+        type: client.type,
+      },
       adjustedAccessLevel: getAdjustedAccessLevel(session),
-      latestAuthentication: session.latestAuthentication,
+      latestAuthentication: session.latestAuthentication.toISOString(),
       levelOfAssurance: session.levelOfAssurance,
+      metadata: session.metadata,
       methods: session.methods,
       scopes: session.scopes,
       type: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,

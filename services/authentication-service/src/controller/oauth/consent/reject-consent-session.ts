@@ -22,7 +22,7 @@ export const rejectConsentSessionController: ServerKoaController<RequestData> = 
   } = ctx;
 
   const { data } = await oauthClient.post<RejectConsentResponse>(
-    "/internal/sessions/consent/:id/reject",
+    "/admin/sessions/consent/:id/reject",
     {
       params: { id },
       middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],

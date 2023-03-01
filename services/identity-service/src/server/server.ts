@@ -9,14 +9,13 @@ import { logger } from "./logger";
 import { workers } from "./workers";
 import {
   AddressRepository,
-  ConnectSessionCache,
   DisplayNameRepository,
   IdentifierRepository,
   IdentityRepository,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [ConnectSessionCache],
+  caches: [],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,

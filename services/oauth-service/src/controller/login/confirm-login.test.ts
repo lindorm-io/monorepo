@@ -25,6 +25,7 @@ describe("confirmLoginController", () => {
       data: {
         identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
         levelOfAssurance: 3,
+        metadata: { ip: "127.0.0.1" },
         methods: ["phone"],
         remember: true,
         sso: true,
@@ -49,6 +50,7 @@ describe("confirmLoginController", () => {
           identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 3,
+          metadata: { ip: "127.0.0.1" },
           methods: ["phone"],
           remember: true,
           sso: true,

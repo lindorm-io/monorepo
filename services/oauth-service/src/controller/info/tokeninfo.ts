@@ -4,7 +4,7 @@ import { EntityNotFoundError } from "@lindorm-io/entity";
 import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
 import { TokenError, JWT } from "@lindorm-io/jwt";
-import { LindormTokenTypes } from "@lindorm-io/common-types";
+import { OpenIdTokenType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = {
@@ -88,9 +88,7 @@ export const tokeninfoController: ServerKoaController<RequestData> = async (
   if (active) {
     try {
       jwt.verify(token, {
-        types: tokenTypeHint
-          ? [tokenTypeHint]
-          : [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
+        types: tokenTypeHint ? [tokenTypeHint] : [OpenIdTokenType.ACCESS, OpenIdTokenType.REFRESH],
       });
 
       verifiedToken = true;

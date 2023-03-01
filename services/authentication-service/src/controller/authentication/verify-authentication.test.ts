@@ -8,6 +8,7 @@ import {
   calculateLevelOfAssurance as _calculateLevelOfAssurance,
   canGenerateMfaCookie as _canGenerateMfaCookie,
 } from "../../util";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("@lindorm-io/node-pkce", () => ({
   ...jest.requireActual("@lindorm-io/node-pkce"),
@@ -40,10 +41,10 @@ describe("verifyAuthenticationController", () => {
       entity: {
         authenticationSession: createTestAuthenticationSession({
           code: "code",
-          confirmedStrategies: ["device_challenge"],
+          confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: "9ebc4bb6-507c-4c9c-b77e-e5f8432431b7",
           nonce: "nonce",
-          status: "code",
+          status: SessionStatus.CODE,
         }),
       },
       data: {

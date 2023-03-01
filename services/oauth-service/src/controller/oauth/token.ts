@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import { JOI_JWT } from "../../common";
-import { OauthGrantTypes, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { OpenIdGrantType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import {
   handleAuthorizationCodeGrant,
@@ -50,15 +50,15 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
   let body: Partial<ResponseBody> = {};
 
   switch (grantType) {
-    case OauthGrantTypes.AUTHORIZATION_CODE:
+    case OpenIdGrantType.AUTHORIZATION_CODE:
       body = await handleAuthorizationCodeGrant(ctx);
       break;
 
-    case OauthGrantTypes.CLIENT_CREDENTIALS:
+    case OpenIdGrantType.CLIENT_CREDENTIALS:
       body = await handleClientCredentialsGrant(ctx);
       break;
 
-    case OauthGrantTypes.REFRESH_TOKEN:
+    case OpenIdGrantType.REFRESH_TOKEN:
       body = await handleRefreshTokenGrant(ctx);
       break;
 

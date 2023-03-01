@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { AuthenticationMethod, InitialiseElevateRequestQuery } from "@lindorm-io/common-types";
+import { AuthenticationMethod, InitialiseElevationRequestQuery } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_DISPLAY_MODE } from "../../constant";
 import { ServerKoaController } from "../../types";
@@ -13,7 +13,7 @@ import {
   JOI_STATE,
 } from "../../common";
 
-type RequestData = InitialiseElevateRequestQuery;
+type RequestData = InitialiseElevationRequestQuery;
 
 export const initialiseRedirectElevationSchema = Joi.object<RequestData>()
   .keys({

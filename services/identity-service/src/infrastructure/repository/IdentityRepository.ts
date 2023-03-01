@@ -8,13 +8,6 @@ export class IdentityRepository extends LindormRepository<IdentityAttributes, Id
       collection: "identity",
       indices: [
         {
-          index: { nationalIdentityNumber: 1 },
-          options: {
-            partialFilterExpression: { nationalIdentityNumber: { $gt: "" } },
-            unique: true,
-          },
-        },
-        {
           index: { username: 1 },
           options: {
             partialFilterExpression: { username: { $gt: "" } },

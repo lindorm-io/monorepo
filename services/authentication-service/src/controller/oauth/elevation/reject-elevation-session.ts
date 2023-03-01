@@ -21,7 +21,7 @@ export const rejectElevationSessionController: ServerKoaController<RequestData> 
     data: { id },
   } = ctx;
 
-  await oauthClient.post("/internal/sessions/elevation/:id/reject", {
+  await oauthClient.post("/admin/sessions/elevation/:id/reject", {
     params: { id },
     middleware: [
       clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),

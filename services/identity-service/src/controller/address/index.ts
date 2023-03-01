@@ -1,3 +1,3 @@
-export * from "./create-identity-address";
-export * from "./delete-identity-address";
-export * from "./update-identity-address";
+export * from "./add-address";
+export * from "./delete-address";
+export * from "./update-address";

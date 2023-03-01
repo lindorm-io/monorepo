@@ -10,6 +10,7 @@ import {
   createTestBrowserSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 jest.mock("../get-adjusted-access-level");
 jest.mock("./is-browser-session-expired");
@@ -33,27 +34,27 @@ describe("isNewLoginRequired", () => {
         recommendedLevel: 2,
         recommendedMethods: [],
         requiredLevel: 3,
-        requiredMethods: ["email"],
+        requiredMethods: [AuthenticationMethod.EMAIL],
       },
       promptModes: [],
     });
 
     accessSession = createTestAccessSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
     });
 
     browserSession = createTestBrowserSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
     });
 
     refreshSession = createTestRefreshSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
@@ -80,7 +81,7 @@ describe("isNewLoginRequired", () => {
 
   test("should require when identity is different", () => {
     browserSession = createTestBrowserSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: randomUUID(),
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
@@ -103,7 +104,7 @@ describe("isNewLoginRequired", () => {
 
   test("should require when methods are different", () => {
     browserSession = createTestBrowserSession({
-      methods: ["password"],
+      methods: [AuthenticationMethod.PASSWORD],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,

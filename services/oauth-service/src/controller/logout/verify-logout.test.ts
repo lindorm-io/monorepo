@@ -12,6 +12,7 @@ import {
   createLogoutRedirectUri as _createLogoutRedirectUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
 } from "../../util";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -40,7 +41,7 @@ describe("oauthVerifyLogoutController", () => {
             refreshSessionId: randomUUID(),
             browserSessionId: randomUUID(),
           },
-          status: "confirmed",
+          status: SessionStatus.CONFIRMED,
         }),
       },
       cookies: {

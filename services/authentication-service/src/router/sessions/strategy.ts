@@ -1,4 +1,4 @@
-import { paramsMiddleware, Router, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   authenticationSessionEntityMiddleware,
   strategySessionEntityMiddleware,
@@ -7,8 +7,8 @@ import {
 import {
   confirmStrategyController,
   confirmStrategySchema,
-  getStrategyInfoController,
-  getStrategyInfoSchema,
+  getStrategyController,
+  getStrategySchema,
   rejectStrategyController,
   rejectStrategySchema,
 } from "../../controller";
@@ -19,9 +19,9 @@ export default router;
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getStrategyInfoSchema),
+  useSchema(getStrategySchema),
   strategySessionEntityMiddleware("data.id"),
-  useController(getStrategyInfoController),
+  useController(getStrategyController),
 );
 
 router.post(
@@ -29,13 +29,6 @@ router.post(
   paramsMiddleware,
   useSchema(confirmStrategySchema),
   strategySessionTokenMiddleware("data.strategySessionToken"),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.strategySessionToken.subject",
-    },
-    hint: "id",
-  }),
   strategySessionEntityMiddleware("data.id"),
   authenticationSessionEntityMiddleware("entity.strategySession.authenticationSessionId"),
   useController(confirmStrategyController),

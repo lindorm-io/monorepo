@@ -1,22 +1,20 @@
-import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
-import { SessionStatuses } from "@lindorm-io/common-types";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { deviceHeadersEnrolledSchema } from "../schema";
-import { includes } from "lodash";
 import {
   challengeConfirmationTokenMiddleware,
+  identityAuthMiddleware,
   rdcSessionEntityMiddleware,
   rdcSessionTokenMiddleware,
-  identityAuthMiddleware,
 } from "../middleware";
 import {
   acknowledgeRdcController,
   acknowledgeRdcSchema,
   confirmRdcController,
   confirmRdcSchema,
-  rejectRdcController,
-  rejectRdcSchema,
   getRdcSessionStatusController,
   getRdcSessionStatusSchema,
+  rejectRdcController,
+  rejectRdcSchema,
 } from "../controller";
 
 const router = new Router<any, any>();
@@ -29,21 +27,6 @@ router.post(
   useSchema(acknowledgeRdcSchema),
   useSchema(deviceHeadersEnrolledSchema, "headers"),
   rdcSessionEntityMiddleware("data.id"),
-  useAssertion({
-    assertion: includes,
-    expect: [SessionStatuses.PENDING],
-    fromPath: {
-      actual: "entity.rdcSession.status",
-    },
-    hint: "status",
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "entity.rdcSession.identityId",
-      actual: "token.bearerToken.subject",
-    },
-    hint: "identityId",
-  }),
   useController(acknowledgeRdcController),
 );
 
@@ -56,27 +39,6 @@ router.post(
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
   rdcSessionEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.rdcSessionToken.sessionId",
-    },
-    hint: "sessionId",
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "token.challengeConfirmationToken.subject",
-      actual: "token.bearerToken.subject",
-    },
-    hint: "subject",
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "token.rdcSessionToken.nonce",
-      actual: "token.challengeConfirmationToken.nonce",
-    },
-    hint: "nonce",
-  }),
   useController(confirmRdcController),
 );
 
@@ -88,13 +50,6 @@ router.post(
   useSchema(deviceHeadersEnrolledSchema, "headers"),
   rdcSessionTokenMiddleware("data.rdcSessionToken"),
   rdcSessionEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.rdcSessionToken.sessionId",
-    },
-    hint: "sessionId",
-  }),
   useController(rejectRdcController),
 );
 

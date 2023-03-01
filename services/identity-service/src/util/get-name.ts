@@ -1,5 +1,5 @@
 import { Identity } from "../entity";
-import { NamingSystem } from "../enum";
+import { NamingSystem } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 
 export const getName = (identity: Identity): string | null => {

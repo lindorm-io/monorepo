@@ -1,5 +1,5 @@
 import { AuthenticationSession, MfaCookieSession } from "../../entity";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { ServerKoaContext } from "../../types";
 import { calculateLevelOfAssurance, getMethodsFromStrategies } from "../../util";
@@ -35,6 +35,6 @@ export const generateMfaCookie = async (
     expires,
     httpOnly: true,
     overwrite: true,
-    signed: ctx.server.environment !== Environments.TEST,
+    signed: ctx.server.environment !== Environment.TEST,
   });
 };

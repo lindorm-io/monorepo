@@ -2,6 +2,7 @@ export * from "./AccessSession";
 export * from "./AuthorizationCode";
 export * from "./AuthorizationSession";
 export * from "./BrowserSession";
+export * from "./ClaimsSession";
 export * from "./Client";
 export * from "./ElevationSession";
 export * from "./InvalidToken";

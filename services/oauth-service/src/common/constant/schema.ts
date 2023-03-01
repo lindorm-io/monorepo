@@ -1,13 +1,13 @@
 import Joi from "joi";
-import { OauthClientTypes, SessionStatuses } from "@lindorm-io/common-types";
+import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
 
 export const JOI_ARGON_STRING = Joi.string()
   .pattern(/^([$]argon2id[$]).+$/)
   .min(64);
 
 export const JOI_CLIENT_TYPE = Joi.string().valid(
-  OauthClientTypes.CONFIDENTIAL,
-  OauthClientTypes.PUBLIC,
+  OpenIdClientType.CONFIDENTIAL,
+  OpenIdClientType.PUBLIC,
 );
 
 export const JOI_COUNTRY_CODE = Joi.string().length(2).lowercase();
@@ -41,14 +41,14 @@ export const JOI_SCOPE_DESCRIPTION = Joi.object({
 });
 
 export const JOI_SESSION_STATUS = Joi.string().valid(
-  SessionStatuses.ACKNOWLEDGED,
-  SessionStatuses.CODE,
-  SessionStatuses.CONFIRMED,
-  SessionStatuses.EXPIRED,
-  SessionStatuses.PENDING,
-  SessionStatuses.REJECTED,
-  SessionStatuses.SKIP,
-  SessionStatuses.VERIFIED,
+  SessionStatus.ACKNOWLEDGED,
+  SessionStatus.CODE,
+  SessionStatus.CONFIRMED,
+  SessionStatus.EXPIRED,
+  SessionStatus.PENDING,
+  SessionStatus.REJECTED,
+  SessionStatus.SKIP,
+  SessionStatus.VERIFIED,
 );
 
 export const JOI_STATE = Joi.string().min(16).max(256);

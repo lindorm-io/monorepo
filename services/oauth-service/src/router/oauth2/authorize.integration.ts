@@ -3,15 +3,14 @@ import request from "supertest";
 import { baseHash } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
 import { createTestClient } from "../../fixtures/entity";
-import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../fixtures/data";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
 import {
-  TEST_AUTHORIZATION_SESSION_CACHE,
-  TEST_CLIENT_REPOSITORY,
   getTestIdToken,
   setupIntegration,
+  TEST_AUTHORIZATION_SESSION_CACHE,
+  TEST_CLIENT_REPOSITORY,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -40,33 +39,29 @@ describe("/oauth2/authorize", () => {
 
     const redirectData = baseHash(JSON.stringify({ string: "string", number: 123, boolean: true }));
 
-    const url = createURL("/oauth2/authorize", {
-      host: "https://rm.rm",
-      query: {
-        acrValues: ["loa_3", "session", "email", "phone"],
-        amrValues: ["session", "email", "phone"],
-        authToken: "auth.jwt.jwt",
-        clientId: client.id,
-        codeChallenge,
-        codeChallengeMethod,
-        display: "page",
-        idTokenHint: idToken,
-        loginHint: "test@lindorm.io",
-        maxAge: 3600,
-        nonce,
-        prompt: ["login", "consent"],
-        redirectData,
-        redirectUri: "https://test.client.lindorm.io/redirect",
-        responseMode: "fragment",
-        responseType: ["code", "token"],
-        scope: ["address", "email", "offline_access", "openid", "phone", "profile"],
-        state,
-        uiLocales: ["sv-SE", "en-GB"],
-      },
-    }).toString();
-
     const response = await request(server.callback())
-      .get(url.replace("https://rm.rm", ""))
+      .get("/oauth2/authorize")
+      .query({
+        acr_values: ["loa_3", "session", "email", "phone"].join(" "),
+        amr_values: ["session", "email", "phone"].join(" "),
+        auth_token: "auth.jwt.jwt",
+        client_id: client.id,
+        code_challenge: codeChallenge,
+        code_challenge_method: codeChallengeMethod,
+        display: "page",
+        id_token_hint: idToken,
+        login_hint: "test@lindorm.io",
+        max_age: 3600,
+        nonce,
+        prompt: ["login", "consent"].join(" "),
+        redirect_data: redirectData,
+        redirect_uri: "https://test.client.lindorm.io/redirect",
+        response_mode: "fragment",
+        response_type: ["code", "token"].join(" "),
+        scope: ["address", "email", "offline_access", "openid", "phone", "profile"].join(" "),
+        state,
+        ui_locales: ["sv-SE", "en-GB"].join(" "),
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -98,6 +93,7 @@ describe("/oauth2/authorize", () => {
           identityId: null,
           latestAuthentication: null,
           levelOfAssurance: 0,
+          metadata: {},
           methods: [],
           remember: false,
           sso: false,
@@ -109,7 +105,7 @@ describe("/oauth2/authorize", () => {
         loginHint: ["+46705498721", "email@lindorm.io", "identity_username", "test@lindorm.io"],
         maxAge: 3600,
         nonce: nonce,
-        originalUri: url.replace("https://rm.rm", "https://oauth.test.lindorm.io"),
+        originalUri: expect.any(String),
         promptModes: ["login", "consent"],
         redirectData: "eyJzdHJpbmciOiJzdHJpbmciLCJudW1iZXIiOjEyMywiYm9vbGVhbiI6dHJ1ZX0=",
         redirectUri: "https://test.client.lindorm.io/redirect",

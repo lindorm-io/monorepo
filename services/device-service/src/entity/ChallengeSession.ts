@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { JOI_CERTIFICATE_CHALLENGE, JOI_STRATEGY } from "../constant";
 import { JOI_NONCE } from "../common";
+import { ChallengeStrategy } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,7 +9,6 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import { ChallengeStrategy } from "@lindorm-io/common-types";
 
 export interface ChallengeSessionAttributes extends EntityAttributes {
   audiences: Array<string>;

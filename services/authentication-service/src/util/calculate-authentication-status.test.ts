@@ -1,5 +1,6 @@
 import { calculateAuthenticationStatus } from "./calculate-authentication-status";
 import { createTestAuthenticationSession } from "../fixtures/entity";
+import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
 
 describe("calculateAuthenticationStatus", () => {
   test("should resolve pending on identity", () => {
@@ -19,8 +20,8 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
-          requiredMethods: ["phone"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          requiredMethods: [AuthenticationMethod.PHONE],
           minimumLevel: 1,
           recommendedLevel: 4,
           requiredLevel: 1,
@@ -33,7 +34,7 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
           requiredMethods: [],
           minimumLevel: 4,
           recommendedLevel: 4,
@@ -47,7 +48,7 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
           requiredMethods: [],
           minimumLevel: 1,
           recommendedLevel: 4,
@@ -61,7 +62,7 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp", "password"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PASSWORD],
           requiredMethods: [],
           minimumLevel: 1,
           recommendedLevel: 4,
@@ -75,7 +76,7 @@ describe("calculateAuthenticationStatus", () => {
     expect(
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
           requiredMethods: [],
           minimumLevel: 2,
           recommendedLevel: 2,

@@ -1,8 +1,8 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
+import { OpenIdResponseType, PKCEMethod } from "@lindorm-io/common-types";
 
 describe("assertAuthorizeResponseType", () => {
   let authorizationSession: AuthorizationSession;
@@ -10,14 +10,14 @@ describe("assertAuthorizeResponseType", () => {
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      responseTypes: ["code"],
+      responseTypes: [OpenIdResponseType.CODE],
     });
 
     client = createTestClient();
 
     client.allowed = {
       ...client.allowed,
-      responseTypes: ["code", "id_token"],
+      responseTypes: [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN],
     };
   });
 
@@ -27,7 +27,7 @@ describe("assertAuthorizeResponseType", () => {
 
   test("should throw on invalid response type", () => {
     authorizationSession = createTestAuthorizationSession({
-      responseTypes: ["token"],
+      responseTypes: [OpenIdResponseType.TOKEN],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
@@ -37,9 +37,9 @@ describe("assertAuthorizeResponseType", () => {
     authorizationSession = createTestAuthorizationSession({
       code: {
         codeChallenge: null,
-        codeChallengeMethod: PKCEMethod.S256,
+        codeChallengeMethod: PKCEMethod.SHA256,
       },
-      responseTypes: ["code"],
+      responseTypes: [OpenIdResponseType.CODE],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
@@ -51,7 +51,7 @@ describe("assertAuthorizeResponseType", () => {
         codeChallenge: "codeChallenge",
         codeChallengeMethod: null,
       },
-      responseTypes: ["code"],
+      responseTypes: [OpenIdResponseType.CODE],
     });
 
     expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);

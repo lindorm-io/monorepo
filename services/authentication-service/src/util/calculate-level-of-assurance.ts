@@ -1,6 +1,6 @@
 import { AuthenticationSession } from "../entity";
 import { LevelOfAssurance } from "@lindorm-io/common-types";
-import { findStrategyConfig } from "./find-strategy-config";
+import { getStrategyConfig } from "../strategies";
 
 type Result = {
   level: LevelOfAssurance;
@@ -8,18 +8,18 @@ type Result = {
 };
 
 export const calculateLevelOfAssurance = (authenticationSession: AuthenticationSession): Result => {
-  let value: LevelOfAssurance = authenticationSession.confirmedOidcLevel;
-  let maxValue: LevelOfAssurance = authenticationSession.confirmedOidcLevel || 0;
+  let loa: LevelOfAssurance = authenticationSession.confirmedOidcLevel;
+  let loaMax: LevelOfAssurance = authenticationSession.confirmedOidcLevel || 0;
 
   for (const name of authenticationSession.confirmedStrategies) {
-    const config = findStrategyConfig(name);
+    const config = getStrategyConfig(name);
 
-    value = (value + config.value) as LevelOfAssurance;
-    maxValue = config.valueMax > maxValue ? config.valueMax : maxValue;
+    loa = (loa + config.loa) as LevelOfAssurance;
+    loaMax = config.loaMax > loaMax ? config.loaMax : loaMax;
   }
 
   return {
-    level: value > maxValue ? maxValue : value,
-    maximum: maxValue,
+    level: loa > loaMax ? loaMax : loa,
+    maximum: loaMax,
   };
 };

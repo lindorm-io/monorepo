@@ -6,16 +6,17 @@ import { server } from "../server/server";
 import {
   createTestAddress,
   createTestEmailIdentifier,
-  createTestExternalIdentifier,
   createTestIdentity,
+  createTestNinIdentifier,
   createTestPhoneIdentifier,
+  createTestSsnIdentifier,
 } from "../fixtures/entity";
 import {
+  getTestAccessToken,
+  setupIntegration,
   TEST_ADDRESS_REPOSITORY,
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
-  getTestAccessToken,
-  setupIntegration,
 } from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -34,11 +35,6 @@ describe("/userinfo", () => {
       expires_in: 100,
       scope: ["scope"],
     });
-
-  nock("https://communication.test.lindorm.io")
-    .post("/internal/send/code")
-    .times(999)
-    .reply(200, {});
 
   test("GET /", async () => {
     const identity = await TEST_IDENTITY_REPOSITORY.create(
@@ -69,9 +65,17 @@ describe("/userinfo", () => {
       }),
     );
 
-    const external = await TEST_IDENTIFIER_REPOSITORY.create(
-      createTestExternalIdentifier({
+    const nin = await TEST_IDENTIFIER_REPOSITORY.create(
+      createTestNinIdentifier({
         identityId: identity.id,
+        verified: true,
+      }),
+    );
+
+    const ssn = await TEST_IDENTIFIER_REPOSITORY.create(
+      createTestSsnIdentifier({
+        identityId: identity.id,
+        verified: false,
       }),
     );
 
@@ -96,31 +100,30 @@ describe("/userinfo", () => {
         street_address: "Long Street Name 12\nSecond Row",
       },
       birth_date: "2000-01-01",
-      connected_providers: [external.provider],
       display_name: `${identity.displayName.name}#${identity.displayName
         .number!.toString()
         .padStart(4, "0")}`,
-      email: email.identifier,
+      email: email.value,
       email_verified: true,
       family_name: "Torsson",
       gender: "Female",
       given_name: "Oliver",
-      gravatar_uri: "https://gravatar.url/",
+      avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
       middle_name: "Rio",
       name: "Olivia Torsson",
-      national_identity_number: identity.nationalIdentityNumber,
+      national_identity_number: nin.value,
       national_identity_number_verified: true,
       nickname: "Wheat",
-      phone_number: phone.identifier,
+      phone_number: phone.value,
       phone_number_verified: false,
       picture: "https://picture.url/",
       preferred_accessibility: ["setting1", "setting2", "setting3"],
       preferred_username: "rio_wheat",
       profile: "https://profile.url/",
       pronouns: "she/her",
-      social_security_number: identity.socialSecurityNumber,
-      social_security_number_verified: true,
+      social_security_number: ssn.value,
+      social_security_number_verified: false,
       sub: identity.id,
       taken_name: "Olivia",
       updated_at: 1609488000,

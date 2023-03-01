@@ -8,9 +8,10 @@ import { updateEnrolmentStatus } from "../../handler";
 import {
   ConfirmRdcRequestBody,
   ConfirmRdcRequestParams,
-  RdcSessionTypes,
-  SessionStatuses,
+  RdcSessionType,
+  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = ConfirmRdcRequestParams & ConfirmRdcRequestBody;
 
@@ -29,15 +30,47 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
     axios: { axiosClient, oauthClient },
     cache: { rdcSessionCache },
     entity: { rdcSession },
-    token: { challengeConfirmationToken },
+    token: { bearerToken, challengeConfirmationToken, rdcSessionToken },
   } = ctx;
+
+  if (![SessionStatus.ACKNOWLEDGED, SessionStatus.PENDING].includes(rdcSession.status)) {
+    throw new ClientError("Invalid session status");
+  }
+
+  if (rdcSession.identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token", {
+      description: "Bearer token subject does not match RDC session subject",
+      debug: {
+        expect: rdcSession.identityId,
+        actual: bearerToken.subject,
+      },
+    });
+  }
+
+  if (rdcSession.identityId !== challengeConfirmationToken.subject) {
+    throw new ClientError("Invalid confirmation token", {
+      description: "Confirmation token subject does not match RDC session subject",
+      debug: {
+        expect: rdcSession.identityId,
+        actual: challengeConfirmationToken.subject,
+      },
+    });
+  }
+
+  if (rdcSession.id !== rdcSessionToken.session) {
+    throw new ClientError("Invalid session token");
+  }
+
+  if (rdcSession.nonce !== challengeConfirmationToken.nonce) {
+    throw new ClientError("Invalid confirmation token");
+  }
 
   assertConfirmationTokenFactorLength(challengeConfirmationToken, rdcSession.factors);
 
-  rdcSession.status = SessionStatuses.CONFIRMED;
+  rdcSession.status = SessionStatus.CONFIRMED;
 
   switch (rdcSession.type) {
-    case RdcSessionTypes.CALLBACK:
+    case RdcSessionType.CALLBACK:
       await axiosClient.request({
         body: {
           rdcSessionId: rdcSession.id,
@@ -47,11 +80,11 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
         },
         method: rdcSession.confirmMethod,
         middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
-        url: rdcSession.confirmUri,
+        url: rdcSession.confirmUri || undefined,
       });
       break;
 
-    case RdcSessionTypes.ENROLMENT:
+    case RdcSessionType.ENROLMENT:
       await updateEnrolmentStatus(ctx, rdcSession);
       break;
 

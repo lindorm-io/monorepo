@@ -81,7 +81,6 @@ describe("/tokeninfo", () => {
         "phone",
         "profile",
         "accessibility",
-        "connected_providers",
         "national_identity_number",
         "public",
         "social_security_number",

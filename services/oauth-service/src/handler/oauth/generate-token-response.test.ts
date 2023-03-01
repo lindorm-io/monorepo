@@ -1,6 +1,6 @@
 import { AccessSession, Client, RefreshSession } from "../../entity";
 import { generateTokenResponse } from "./generate-token-response";
-import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
+import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   createTestAccessSession,
   createTestClient,
@@ -11,6 +11,7 @@ import {
   createIdToken as _createIdToken,
   createRefreshToken as _createRefreshToken,
 } from "../token";
+import { OpenIdScope } from "@lindorm-io/common-types";
 
 jest.mock("../identity");
 jest.mock("../token");
@@ -65,7 +66,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve body with id token", async () => {
-    accessSession.scopes = ["openid"];
+    accessSession.scopes = [OpenIdScope.OPENID];
 
     await expect(generateTokenResponse(ctx, client, accessSession)).resolves.toStrictEqual(
       expect.objectContaining({
@@ -76,7 +77,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    refreshSession.scopes = ["offline_access"];
+    refreshSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, refreshSession)).resolves.toStrictEqual({
       accessToken: "access.token.jwt",

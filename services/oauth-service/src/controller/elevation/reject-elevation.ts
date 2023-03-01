@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { RejectElevationRequestParams, SessionStatuses } from "@lindorm-io/common-types";
+import { RejectElevationRequestParams, SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createElevationRejectedUri } from "../../util";
 
@@ -25,7 +25,7 @@ export const rejectElevationController: ServerKoaController<RequestData> = async
 
   logger.debug("Updating elevation session");
 
-  elevationSession.status = SessionStatuses.REJECTED;
+  elevationSession.status = SessionStatus.REJECTED;
 
   await elevationSessionCache.update(elevationSession);
 

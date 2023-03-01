@@ -5,6 +5,7 @@ export type AuthenticationConfirmationTokenClaims = {
   country: string | null;
   maximumLoa: number;
   remember: boolean;
+  sso: boolean;
   verifiedIdentifiers: Array<string>;
 };
 

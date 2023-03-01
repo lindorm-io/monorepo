@@ -3,12 +3,14 @@ import { ClientRepository, TenantRepository } from "../infrastructure";
 import { argon, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./util/logger";
 import {
-  LindormScopes,
-  OauthClientTypes,
-  OauthGrantTypes,
-  OauthResponseTypes,
+  LindormScope,
+  OpenIdClientType,
+  OpenIdDisplayMode,
+  OpenIdGrantType,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  OpenIdScope,
 } from "@lindorm-io/common-types";
-import { ClientScopes } from "../common";
 
 const ids = {
   authenticationService: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
@@ -52,139 +54,169 @@ const main = async (): Promise<void> => {
   await repositories.client.create(
     new Client({
       id: ids.authenticationService,
-      active: true,
-      audiences: Object.values(ids),
       allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScopes),
+        scopes: [],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost",
       name: "lindorm.io/authentication-service",
-      redirectUris: [],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authenticationService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.communicationService,
-      active: true,
-      audiences: Object.values(ids),
       allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScopes),
+        scopes: [],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost",
       name: "lindorm.io/communication-service",
-      redirectUris: [],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.communicationService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.deviceService,
-      active: true,
-      audiences: Object.values(ids),
       allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScopes),
+        scopes: [],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost",
       name: "lindorm.io/device-service",
-      redirectUris: [],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.deviceService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.identityService,
-      active: true,
-      audiences: Object.values(ids),
       allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScopes),
+        scopes: [],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost",
       name: "lindorm.io/identity-service",
-      redirectUris: [],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.identityService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.oidcService,
-      active: true,
-      audiences: Object.values(ids),
       allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
-        scopes: Object.values(ClientScopes),
+        scopes: [],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost",
       name: "lindorm.io/oidc-service",
-      redirectUris: [],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.oidcService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.vaultService,
-      active: true,
-      audiences: Object.values(ids),
-      allowed: {
-        grantTypes: [OauthGrantTypes.CLIENT_CREDENTIALS],
-        responseTypes: [],
-        scopes: Object.values(ClientScopes),
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
       },
+      allowed: {
+        grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        responseTypes: [],
+        scopes: [],
+      },
+      active: true,
+      backChannelLogoutUri: "http://localhost/logout",
       host: "http://localhost",
       name: "lindorm.io/vault-service",
-      redirectUris: [],
-      backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.vaultService),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 
   await repositories.client.create(
     new Client({
       id: ids.authApplication,
-      active: true,
       allowed: {
-        grantTypes: [OauthGrantTypes.AUTHORIZATION_CODE, OauthGrantTypes.REFRESH_TOKEN],
-        responseTypes: Object.values(OauthResponseTypes),
-        scopes: Object.values(LindormScopes),
+        grantTypes: [OpenIdGrantType.AUTHORIZATION_CODE, OpenIdGrantType.REFRESH_TOKEN],
+        responseTypes: Object.values(OpenIdResponseType),
+        scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
       },
+      defaults: {
+        audiences: Object.values(ids),
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      active: true,
       host: "http://localhost:4100",
       name: "lindorm.io/auth-application",
       redirectUris: ["http://localhost:4100/api/callback"],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authApplication),
       tenantId: tenant.id,
-      type: OauthClientTypes.CONFIDENTIAL,
+      type: OpenIdClientType.CONFIDENTIAL,
     }),
   );
 

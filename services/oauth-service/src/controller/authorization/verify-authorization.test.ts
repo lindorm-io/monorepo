@@ -21,6 +21,7 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -50,9 +51,9 @@ describe("oauthVerifyController", () => {
         authorizationSession: createTestAuthorizationSession({
           id: "a49cce82-d0e4-413b-9098-f63d7f5e89e8",
           status: {
-            consent: "confirmed",
-            login: "confirmed",
-            selectAccount: "confirmed",
+            consent: SessionStatus.CONFIRMED,
+            login: SessionStatus.CONFIRMED,
+            selectAccount: SessionStatus.CONFIRMED,
           },
         }),
         client: createTestClient(),

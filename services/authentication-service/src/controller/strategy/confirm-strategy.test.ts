@@ -1,26 +1,22 @@
+import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
 import { confirmStrategyController } from "./confirm-strategy";
 import { createMockCache } from "@lindorm-io/redis";
+import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
+import { resolveAllowedStrategies as _resolveAllowedMethods } from "../../handler";
 import {
   createTestAccount,
   createTestAuthenticationSession,
   createTestStrategySession,
 } from "../../fixtures/entity";
-import {
-  confirmPassword as _confirmPassword,
-  resolveAllowedStrategies as _resolveAllowedMethods,
-} from "../../handler";
-import {
-  calculateAuthenticationStatus as _calculateAuthenticationStatus,
-  calculateLevelOfAssurance as _calculateLevelOfAssurance,
-} from "../../util";
 
 jest.mock("../../handler");
+jest.mock("../../strategies");
 jest.mock("../../util");
 
 const calculateAuthenticationStatus = _calculateAuthenticationStatus as jest.Mock;
-const calculateLevelOfAssurance = _calculateLevelOfAssurance as jest.Mock;
-const confirmPassword = _confirmPassword as jest.Mock;
+const getStrategyHandler = _getStrategyHandler as jest.Mock;
 const resolveAllowedMethods = _resolveAllowedMethods as jest.Mock;
 
 describe("confirmStrategyController", () => {
@@ -37,38 +33,42 @@ describe("confirmStrategyController", () => {
         code: "code",
         otp: "otp",
         password: "password",
-        remember: true,
+        token: "password",
         totp: "totp",
+
+        remember: true,
+        sso: true,
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
-          allowedStrategies: ["device_challenge"],
+          allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: null,
           confirmedIdentifiers: ["test@lindorm.io"],
           requiredLevel: 1,
-          status: "pending",
+          status: SessionStatus.PENDING,
         }),
         strategySession: createTestStrategySession({
-          email: null,
-          nin: null,
-          phoneNumber: null,
-          username: "username",
-          status: "pending",
-          strategy: "password",
+          id: "0e8f3c0d-264f-45e2-8d95-9e4dbb18063e",
+          identifier: "username",
+          identifierType: IdentifierType.USERNAME,
+          status: SessionStatus.PENDING,
+          strategy: AuthenticationStrategy.PASSWORD,
         }),
+      },
+      token: {
+        strategySessionToken: {
+          session: "0e8f3c0d-264f-45e2-8d95-9e4dbb18063e",
+        },
       },
     };
 
-    calculateAuthenticationStatus.mockImplementation(() => "confirmed");
-    calculateLevelOfAssurance.mockImplementation(() => ({
-      levelOfAssurance: 3,
-      maximumLevelOfAssurance: 3,
+    getStrategyHandler.mockImplementation(() => ({
+      confirm: async () =>
+        createTestAccount({
+          id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
+        }),
     }));
-    confirmPassword.mockImplementation(async () =>
-      createTestAccount({
-        id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
-      }),
-    );
+    calculateAuthenticationStatus.mockImplementation(() => "confirmed");
     resolveAllowedMethods.mockResolvedValue(["device_challenge"]);
   });
 
@@ -82,13 +82,13 @@ describe("confirmStrategyController", () => {
         confirmedStrategies: ["password"],
         identityId: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
         remember: true,
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
 
     expect(ctx.cache.strategySessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
   });
@@ -97,6 +97,12 @@ describe("confirmStrategyController", () => {
     ctx.entity.authenticationSession.identityId = "c9cfca6e-c4f5-43b1-b42f-050900e50d60";
 
     await expect(confirmStrategyController(ctx)).resolves.toBeUndefined();
+  });
+
+  test("should throw on invalid session", async () => {
+    ctx.token.strategySessionToken.session = "wrong";
+
+    await expect(confirmStrategyController(ctx)).rejects.toThrow(ClientError);
   });
 
   test("should throw on invalid identityId", async () => {

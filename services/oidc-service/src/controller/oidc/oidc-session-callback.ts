@@ -1,14 +1,15 @@
 import Joi from "joi";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { OauthResponseTypes, OpenIdClaims } from "@lindorm-io/common-types";
+import { OpenIdClaims, OpenIdResponseType } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
 import {
-  axiosAuthenticateOidcIdentity,
-  axiosUpdateIdentityUserinfo,
+  authenticateIdentity,
+  resolveIdentity,
+  updateIdentityUserinfo,
   verifyOidcWithAccessToken,
   verifyOidcWithCode,
   verifyOidcWithIdToken,
@@ -40,6 +41,9 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
   const {
     cache: { oidcSessionCache },
     data: { code, idToken, token },
+  } = ctx;
+
+  let {
     entity: { oidcSession },
   } = ctx;
 
@@ -58,15 +62,15 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
   let claims: OpenIdClaims | undefined;
 
   switch (responseType) {
-    case OauthResponseTypes.CODE:
+    case OpenIdResponseType.CODE:
       claims = await verifyOidcWithCode(ctx, oidcSession, code);
       break;
 
-    case OauthResponseTypes.ID_TOKEN:
+    case OpenIdResponseType.ID_TOKEN:
       claims = await verifyOidcWithIdToken(ctx, oidcSession, idToken);
       break;
 
-    case OauthResponseTypes.TOKEN:
+    case OpenIdResponseType.TOKEN:
       claims = await verifyOidcWithAccessToken(ctx, oidcSession, token);
       break;
 
@@ -74,14 +78,16 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
       throw new ServerError("Unknown response type");
   }
 
-  const { identityId } = await axiosAuthenticateOidcIdentity(ctx, oidcSession, {
+  const options = {
     provider: config.base_url,
     subject: claims.sub,
-  });
+  };
 
-  oidcSession.identityId = identityId;
+  oidcSession = await resolveIdentity(ctx, oidcSession, options);
 
-  await axiosUpdateIdentityUserinfo(ctx, identityId, {
+  await authenticateIdentity(ctx, oidcSession, options);
+
+  await updateIdentityUserinfo(ctx, oidcSession.identityId, {
     provider: config.base_url,
     ...claims,
   });
@@ -91,6 +97,6 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
   await oidcSessionCache.update(oidcSession);
 
   return {
-    redirect: createURL(oidcSession.callbackUri, { query: { sessionId: oidcSession.id } }),
+    redirect: createURL(oidcSession.callbackUri, { query: { session: oidcSession.id } }),
   };
 };

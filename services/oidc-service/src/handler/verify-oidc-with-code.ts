@@ -1,4 +1,5 @@
 import { OidcSession } from "../entity";
+import { OpenIdClaims, OpenIdGrantType } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
@@ -9,7 +10,6 @@ import {
   axiosBearerAuthMiddleware,
   OAuthTokenResponseData,
 } from "@lindorm-io/axios";
-import { OauthGrantTypes, OpenIdClaims } from "@lindorm-io/common-types";
 
 export const verifyOidcWithCode = async (
   ctx: ServerKoaContext,
@@ -46,7 +46,7 @@ export const verifyOidcWithCode = async (
       body: {
         code,
         codeVerifier: oidcSession.codeVerifier,
-        grantType: OauthGrantTypes.AUTHORIZATION_CODE,
+        grantType: OpenIdGrantType.AUTHORIZATION_CODE,
         redirectUri: createURL("/callback", { host: configuration.server.host }).toString(),
         scope,
       },

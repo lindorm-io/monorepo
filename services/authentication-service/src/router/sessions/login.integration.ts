@@ -6,6 +6,7 @@ import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
 } from "../../fixtures/integration";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -25,26 +26,19 @@ describe("/sessions/login", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get("/internal/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8")
+    .get((url) => url.startsWith("/admin/sessions/authorization/"))
     .times(999)
-    .reply(200, {
-      login_status: "pending",
-      client: {
-        name: "name",
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-      },
-    });
+    .reply(200, mockFetchOauthAuthorizationSession());
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/login/9937434e-aacb-489c-adc9-faa945be8145/confirm")
+    .post("/admin/sessions/login/9937434e-aacb-489c-adc9-faa945be8145/confirm")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8/reject")
+    .post("/admin/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8/reject")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-reject.url/",
@@ -57,9 +51,10 @@ describe("/sessions/login", () => {
 
     expect(response.body).toStrictEqual({
       client: {
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-        name: "name",
+        logo_uri: "https://test.client.com/logo.png",
+        name: "Test Client",
+        tenant: "Test Tenant",
+        type: "public",
       },
       status: "pending",
     });
@@ -67,7 +62,7 @@ describe("/sessions/login", () => {
 
   test("should confirm and redirect", async () => {
     const authenticationConfirmationToken = getTestAuthenticationConfirmationToken({
-      sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
+      session: "9937434e-aacb-489c-adc9-faa945be8145",
     });
 
     const response = await request(server.callback())

@@ -5,7 +5,7 @@ import { assertSessionPending, createSelectAccountRejectedUri } from "../../util
 import {
   RejectSelectAccountRequestParams,
   RejectSelectAccountResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = RejectSelectAccountRequestParams;
@@ -31,7 +31,7 @@ export const rejectSelectAccountController: ServerKoaController<RequestData> = a
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.selectAccount = SessionStatuses.REJECTED;
+  authorizationSession.status.selectAccount = SessionStatus.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 

@@ -8,16 +8,14 @@ import { getTestData } from "../../fixtures/data";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import { createURL } from "@lindorm-io/url";
-import {
-  AuthenticationMethods,
-  AuthenticationStrategies,
-  SessionStatuses,
-} from "@lindorm-io/common-types";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import {
   setupIntegration,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { StrategySession } from "../../entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -36,36 +34,18 @@ describe("/sessions/authentication", () => {
       scope: ["scope"],
     });
 
-  nock("https://communication.test.lindorm.io")
-    .post("/internal/send/otp")
-    .times(999)
-    .reply(200, {});
+  nock("https://communication.test.lindorm.io").post("/admin/send/otp").times(999).reply(200, {});
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions/login/"))
-    .reply(200, {
-      authorizationSession: {
-        country: "se",
-        expires_at: "2021-01-01T08:30:00.000Z",
-        login_hint: ["test@email.com", "+46701234567"],
-        nonce: "IpoPcFc9nWdB4hfZ",
-      },
-      requested: {
-        identity_id: null,
-        minimum_level: 1,
-        recommended_level: 2,
-        recommended_methods: [AuthenticationMethods.EMAIL],
-        required_level: 3,
-        required_methods: [AuthenticationMethods.PASSWORD],
-      },
-    });
+    .get((uri) => uri.startsWith("/admin/sessions/authorization/"))
+    .reply(200, mockFetchOauthAuthorizationSession());
 
-  nock("https://oidc.test.lindorm.io").post("/internal/sessions").times(999).reply(200, {
+  nock("https://oidc.test.lindorm.io").post("/admin/sessions").times(999).reply(200, {
     redirect_to: "https://oidc-redirect.url",
   });
 
   nock("https://oidc.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions"))
+    .get((uri) => uri.startsWith("/admin/sessions"))
     .times(999)
     .reply(200, {
       identity_id: null,
@@ -132,43 +112,33 @@ describe("/sessions/authentication", () => {
     expect(response.body).toStrictEqual({
       config: [
         {
-          hint: "none",
-          initialise_key: "none",
-          method: "bank_id_se",
+          identifier_hint: "email",
+          identifier_type: "email",
+          method: "email",
           rank: 1,
-          recommended: false,
-          requested: true,
-          strategies: ["bank_id_se"],
+          recommended: true,
+          required: false,
+          strategies: ["email_otp", "email_code"],
         },
         {
-          hint: "email",
-          initialise_key: "email",
-          method: "email",
+          identifier_hint: "phone",
+          identifier_type: "phone",
+          method: "phone",
           rank: 2,
           recommended: true,
-          requested: false,
-          strategies: ["email_otp", "email_link"],
+          required: false,
+          strategies: ["phone_otp", "phone_otp"],
         },
         {
-          hint: "phone",
-          initialise_key: "phone_number",
-          method: "phone",
-          rank: 3,
-          recommended: true,
-          requested: false,
-          strategies: ["phone_otp"],
-        },
-        {
-          hint: "none",
-          initialise_key: "none",
+          identifier_hint: "none",
+          identifier_type: "none",
           method: "device_link",
-          rank: 4,
+          rank: 3,
           recommended: false,
-          requested: false,
+          required: false,
           strategies: ["device_challenge"],
         },
       ],
-
       email_hint: "test@lindorm.io",
       expires: "2022-01-01T08:00:00.000Z",
       mode: "oauth",
@@ -181,8 +151,8 @@ describe("/sessions/authentication", () => {
   test("should return authentication code", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        confirmedStrategies: [AuthenticationStrategies.DEVICE_CHALLENGE],
-        status: SessionStatuses.CONFIRMED,
+        confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
+        status: SessionStatus.CONFIRMED,
       }),
     );
 
@@ -232,24 +202,28 @@ describe("/sessions/authentication", () => {
     const response = await request(server.callback())
       .post(`/sessions/authentication/${authenticationSession.id}/strategy`)
       .send({
-        email: "test@lindorm.io",
-        strategy: AuthenticationStrategies.EMAIL_OTP,
+        identifier: "test@lindorm.io",
+        identifier_type: "email",
+        strategy: AuthenticationStrategy.EMAIL_OTP,
       })
       .expect(200);
 
     expect(response.body).toStrictEqual({
       id: expect.any(String),
+      confirm_key: "otp",
+      confirm_length: 6,
+      confirm_mode: "numeric",
       display_code: null,
       expires_in: 31536000,
-      input_key: "otp",
-      input_length: 6,
-      input_mode: "numeric",
       polling_required: false,
       qr_code: null,
       strategy_session_token: expect.any(String),
+      visual_hint: expect.any(String),
     });
 
-    await expect(TEST_STRATEGY_SESSION_CACHE.find({ id: response.body.id })).resolves.not.toThrow();
+    await expect(TEST_STRATEGY_SESSION_CACHE.find({ id: response.body.id })).resolves.toStrictEqual(
+      expect.any(StrategySession),
+    );
   });
 
   test("should verify authentication code", async () => {
@@ -262,11 +236,8 @@ describe("/sessions/authentication", () => {
         codeChallenge,
         codeChallengeMethod,
         confirmedIdentifiers: ["test@email.com", "+46701234567"],
-        confirmedStrategies: [
-          AuthenticationStrategies.EMAIL_OTP,
-          AuthenticationStrategies.PHONE_OTP,
-        ],
-        status: SessionStatuses.CODE,
+        confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
+        status: SessionStatus.CODE,
       }),
     );
 

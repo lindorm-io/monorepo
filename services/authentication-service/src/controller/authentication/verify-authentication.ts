@@ -8,10 +8,11 @@ import { assertPKCE } from "@lindorm-io/node-pkce";
 import { generateMfaCookie } from "../../handler";
 import { getUnixTime } from "date-fns";
 import {
-  LindormTokenTypes,
-  SessionStatuses,
-  SubjectHints,
+  AuthenticationTokenType,
+  SessionStatus,
+  SubjectHint,
   VerifyAuthenticationRequestBody,
+  VerifyAuthenticationRequestParams,
   VerifyAuthenticationResponse,
 } from "@lindorm-io/common-types";
 import {
@@ -20,7 +21,7 @@ import {
   getMethodsFromStrategies,
 } from "../../util";
 
-type RequestData = VerifyAuthenticationRequestBody;
+type RequestData = VerifyAuthenticationRequestParams & VerifyAuthenticationRequestBody;
 
 type ResponseBody = VerifyAuthenticationResponse;
 
@@ -42,7 +43,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     jwt,
   } = ctx;
 
-  if (authenticationSession.status !== SessionStatuses.CODE) {
+  if (authenticationSession.status !== SessionStatus.CODE) {
     throw new ClientError("Invalid session status");
   }
 
@@ -92,18 +93,19 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     authTime: getUnixTime(new Date()),
     claims: {
       country: authenticationSession.country,
-      remember: authenticationSession.remember,
       maximumLoa: maximum,
+      remember: authenticationSession.remember,
+      sso: authenticationSession.sso,
       verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
     },
     expiry: "60 seconds",
     levelOfAssurance: level,
     nonce: authenticationSession.nonce,
     scopes: ["authentication"],
-    sessionId: authenticationSession.id,
+    session: authenticationSession.id,
     subject: authenticationSession.identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.AUTHENTICATION_CONFIRMATION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
   });
 
   if (canGenerateMfaCookie(authenticationSession)) {

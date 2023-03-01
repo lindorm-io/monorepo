@@ -1,7 +1,7 @@
+import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier } from "../../fixtures/entity";
 import { deleteIdentifierController } from "./delete-identifier";
-import { ClientError } from "@lindorm-io/errors";
 
 describe("deleteIdentifierController", () => {
   let ctx: any;

@@ -1,4 +1,3 @@
-export * from "./authenticate";
+export * from "./axios";
 export * from "./identifier";
 export * from "./identity";
-export * from "./sessions";

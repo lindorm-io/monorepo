@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ClientScopes } from "../../common";
-import { EmitSocketEventRequestBody, RdcSessionModes } from "@lindorm-io/common-types";
+import { EmitSocketEventRequestBody, RdcSessionMode } from "@lindorm-io/common-types";
 import { RdcSession, RdcSessionOptions } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -46,7 +46,7 @@ export const createRdcSession = async (
 
   let deviceLinks: Array<string> = [];
 
-  if (mode === RdcSessionModes.PUSH_NOTIFICATION) {
+  if (mode === RdcSessionMode.PUSH_NOTIFICATION) {
     if (!identityId) {
       throw new ClientError("Invalid Request", {
         description: "identityId nerdcSession to be provided when using push_notification mode",
@@ -92,7 +92,7 @@ export const createRdcSession = async (
 
   const { id } = rdcSession;
 
-  if (mode === RdcSessionModes.PUSH_NOTIFICATION) {
+  if (mode === RdcSessionMode.PUSH_NOTIFICATION) {
     const body: EmitSocketEventRequestBody = {
       channels: {
         deviceLinks,
@@ -102,7 +102,7 @@ export const createRdcSession = async (
       event: "rdcSession:created",
     };
 
-    await communicationClient.post("/internal/socket/emit", {
+    await communicationClient.post("/admin/socket/emit", {
       body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT]),

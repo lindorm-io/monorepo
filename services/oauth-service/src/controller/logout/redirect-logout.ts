@@ -6,7 +6,7 @@ import { createLogoutPendingUri, createLogoutRejectedUri, createLogoutVerifyUri 
 import {
   RedirectLogoutRequestParams,
   RedirectLogoutResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = RedirectLogoutRequestParams;
@@ -27,14 +27,14 @@ export const redirectLogoutController: ServerKoaController<RequestData> = async 
   } = ctx;
 
   switch (logoutSession.status) {
-    case SessionStatuses.CONFIRMED:
-    case SessionStatuses.SKIP:
+    case SessionStatus.CONFIRMED:
+    case SessionStatus.SKIP:
       return { body: { redirectTo: createLogoutVerifyUri(logoutSession) } };
 
-    case SessionStatuses.PENDING:
+    case SessionStatus.PENDING:
       return { body: { redirectTo: createLogoutPendingUri(logoutSession) } };
 
-    case SessionStatuses.REJECTED:
+    case SessionStatus.REJECTED:
       return { body: { redirectTo: createLogoutRejectedUri(logoutSession) } };
 
     default:

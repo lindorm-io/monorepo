@@ -3,8 +3,8 @@ import { authenticationConfirmationTokenMiddleware } from "../../middleware";
 import {
   confirmElevationSessionController,
   confirmElevationSessionSchema,
-  getElevationSessionDataController,
-  getElevationSessionDataSchema,
+  getElevationSessionController,
+  getElevationSessionSchema,
   rejectElevationSessionController,
   rejectElevationSessionSchema,
 } from "../../controller";
@@ -15,8 +15,8 @@ export default router;
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getElevationSessionDataSchema),
-  useController(getElevationSessionDataController),
+  useSchema(getElevationSessionSchema),
+  useController(getElevationSessionController),
 );
 
 router.post(

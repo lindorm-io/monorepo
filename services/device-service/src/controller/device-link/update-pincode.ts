@@ -6,6 +6,7 @@ import { JOI_JWT } from "../../common";
 import { JOI_PINCODE } from "../../constant";
 import { assertConfirmationTokenFactorLength } from "../../util";
 import { vaultGetSalt } from "../../handler";
+import { ClientError } from "@lindorm-io/errors";
 
 interface RequestData {
   id: string;
@@ -27,12 +28,18 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
   const {
     data: { pincode },
     entity: { deviceLink },
-    metadata: {
-      device: { name },
-    },
+    metadata,
     repository: { deviceLinkRepository },
-    token: { challengeConfirmationToken },
+    token: { bearerToken, challengeConfirmationToken },
   } = ctx;
+
+  if (deviceLink.identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token");
+  }
+
+  if (deviceLink.id !== challengeConfirmationToken.claims.deviceLinkId) {
+    throw new ClientError("Invalid confirmation token");
+  }
 
   assertConfirmationTokenFactorLength(challengeConfirmationToken, 2);
 
@@ -43,7 +50,10 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
   });
 
   deviceLink.pincode = await crypto.encrypt(pincode);
-  deviceLink.name = name;
+
+  if (metadata.device.name) {
+    deviceLink.name = metadata.device.name;
+  }
 
   await deviceLinkRepository.update(deviceLink);
 };

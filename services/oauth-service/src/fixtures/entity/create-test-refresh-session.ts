@@ -1,4 +1,4 @@
-import { AuthenticationMethods } from "@lindorm-io/common-types";
+import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import { RefreshSession, RefreshSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
 import { randomString } from "@lindorm-io/random";
@@ -14,9 +14,10 @@ export const createTestRefreshSession = (
     identityId: randomUUID(),
     latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
     levelOfAssurance: 2,
-    methods: [AuthenticationMethods.EMAIL, AuthenticationMethods.PHONE],
+    metadata: { ip: "10.0.0.1", deviceName: "Test Device", platform: "iOS" },
+    methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     nonce: randomString(16),
     refreshTokenId: randomUUID(),
-    scopes: ["openid", "profile"],
+    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
     ...options,
   });

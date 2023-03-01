@@ -38,6 +38,11 @@ describe("acknowledgeRdcController", () => {
           linkId: "e68ec1b8-786a-443d-bd94-18ba78b95ca0",
         },
       },
+      token: {
+        bearerToken: {
+          subject: "9b6c9a47-7335-4ad5-85ed-af698199cdd9",
+        },
+      },
     };
   });
 

@@ -1,51 +1,38 @@
 import Joi from "joi";
-import { Account } from "../../entity";
-import { ClientError, ServerError } from "@lindorm-io/errors";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
 import { calculateAuthenticationStatus } from "../../util";
 import { flatten, uniq } from "lodash";
+import { getStrategyHandler } from "../../strategies";
 import { removeEmptyFromArray } from "@lindorm-io/core";
+import { resolveAllowedStrategies } from "../../handler";
 import {
-  AuthenticationStrategies,
   ConfirmStrategyRequestBody,
   ConfirmStrategyRequestParams,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
-import {
-  confirmBankIdSe,
-  confirmDeviceChallenge,
-  confirmEmailLink,
-  confirmEmailOtp,
-  confirmMfaCookie,
-  confirmPassword,
-  confirmPasswordBrowserLink,
-  confirmPhoneOtp,
-  confirmRdcPushNotification,
-  confirmRdcQrCode,
-  confirmSessionAcceptWithCode,
-  confirmSessionOtp,
-  confirmTimeBasedOtp,
-  confirmWebauthn,
-  resolveAllowedStrategies,
-} from "../../handler";
 
 type RequestData = ConfirmStrategyRequestParams & ConfirmStrategyRequestBody;
 
 export const confirmStrategySchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    challengeConfirmationToken: JOI_JWT.optional(),
-    code: Joi.string().optional(),
-    otp: Joi.string().optional(),
-    password: Joi.string().optional(),
-    rdcSessionId: Joi.string().optional(),
-    rdcSessionStatus: Joi.string().optional(),
-    remember: Joi.boolean().optional(),
+
+    challengeConfirmationToken: JOI_JWT,
+    code: Joi.string(),
+    otp: Joi.string(),
+    password: Joi.string(),
+    token: JOI_JWT,
+    totp: Joi.string(),
+
     strategySessionToken: JOI_JWT.required(),
-    totp: Joi.string().optional(),
+
+    remember: Joi.boolean(),
+    sso: Joi.boolean(),
   })
+  .options({ abortEarly: true, allowUnknown: true })
   .required();
 
 export const confirmStrategyController: ServerKoaController<RequestData> = async (
@@ -53,104 +40,36 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
 ): ControllerResponse => {
   const {
     cache: { authenticationSessionCache, strategySessionCache },
-    data: { challengeConfirmationToken, code, otp, password, remember, totp },
+    data: { challengeConfirmationToken, code, otp, password, token, totp, remember, sso },
     entity: { authenticationSession, strategySession },
+    token: { strategySessionToken },
   } = ctx;
+
+  if (strategySessionToken.session !== strategySession.id) {
+    throw new ClientError("Forbidden", {
+      debug: {
+        expect: strategySession.id,
+        actual: strategySessionToken.session,
+      },
+      statusCode: ClientError.StatusCode.FORBIDDEN,
+    });
+  }
 
   const { status, strategy } = strategySession;
 
-  if (status !== SessionStatuses.PENDING) {
+  if (status !== SessionStatus.PENDING) {
     throw new ClientError("Invalid Session Status");
   }
 
-  let account: Account;
-
-  switch (strategy) {
-    case AuthenticationStrategies.BANK_ID_SE:
-      account = await confirmBankIdSe(ctx, authenticationSession, strategySession, {
-        data: null,
-      });
-      break;
-
-    case AuthenticationStrategies.DEVICE_CHALLENGE:
-      account = await confirmDeviceChallenge(ctx, authenticationSession, strategySession, {
-        challengeConfirmationToken,
-      });
-      break;
-
-    case AuthenticationStrategies.EMAIL_LINK:
-      account = await confirmEmailLink(ctx, authenticationSession, strategySession, {
-        code,
-      });
-      break;
-
-    case AuthenticationStrategies.EMAIL_OTP:
-      account = await confirmEmailOtp(ctx, authenticationSession, strategySession, {
-        otp,
-      });
-      break;
-
-    case AuthenticationStrategies.MFA_COOKIE:
-      account = await confirmMfaCookie(ctx, authenticationSession);
-      break;
-
-    case AuthenticationStrategies.PASSWORD:
-      account = await confirmPassword(ctx, authenticationSession, strategySession, {
-        password,
-      });
-      break;
-
-    case AuthenticationStrategies.PASSWORD_BROWSER_LINK:
-      account = await confirmPasswordBrowserLink(ctx, authenticationSession, strategySession, {
-        password,
-      });
-      break;
-
-    case AuthenticationStrategies.PHONE_OTP:
-      account = await confirmPhoneOtp(ctx, authenticationSession, strategySession, {
-        otp,
-      });
-      break;
-
-    case AuthenticationStrategies.RDC_PUSH_NOTIFICATION:
-      account = await confirmRdcPushNotification(ctx, strategySession, {
-        challengeConfirmationToken,
-      });
-      break;
-
-    case AuthenticationStrategies.RDC_QR_CODE:
-      account = await confirmRdcQrCode(ctx, strategySession, {
-        challengeConfirmationToken,
-      });
-      break;
-
-    case AuthenticationStrategies.SESSION_ACCEPT_WITH_CODE:
-      account = await confirmSessionAcceptWithCode(ctx, authenticationSession, strategySession, {
-        code,
-      });
-      break;
-
-    case AuthenticationStrategies.SESSION_OTP:
-      account = await confirmSessionOtp(ctx, authenticationSession, strategySession, {
-        otp,
-      });
-      break;
-
-    case AuthenticationStrategies.TIME_BASED_OTP:
-      account = await confirmTimeBasedOtp(ctx, authenticationSession, {
-        totp,
-      });
-      break;
-
-    case AuthenticationStrategies.WEBAUTHN:
-      account = await confirmWebauthn(ctx, authenticationSession, strategySession, {
-        data: null,
-      });
-      break;
-
-    default:
-      throw new ServerError("Unknown Strategy");
-  }
+  const handler = getStrategyHandler(strategy);
+  const account = await handler.confirm(ctx, authenticationSession, strategySession, {
+    challengeConfirmationToken,
+    code,
+    otp,
+    password,
+    token,
+    totp,
+  });
 
   if (authenticationSession.identityId && authenticationSession.identityId !== account.id) {
     throw new ClientError("Invalid Identity", {
@@ -164,22 +83,15 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
 
   authenticationSession.confirmedStrategies.push(strategy);
   authenticationSession.confirmedIdentifiers = removeEmptyFromArray(
-    uniq(
-      flatten([
-        authenticationSession.confirmedIdentifiers,
-        strategySession.email,
-        strategySession.nin,
-        strategySession.phoneNumber,
-        strategySession.username,
-      ]),
-    ),
+    uniq(flatten([authenticationSession.confirmedIdentifiers, strategySession.identifier])),
   );
   authenticationSession.identityId = account.id;
 
   authenticationSession.remember = remember === true;
+  authenticationSession.sso = sso === true;
   authenticationSession.status = calculateAuthenticationStatus(authenticationSession);
 
-  if (authenticationSession.status === SessionStatuses.PENDING) {
+  if (authenticationSession.status === SessionStatus.PENDING) {
     authenticationSession.allowedStrategies = await resolveAllowedStrategies(
       ctx,
       authenticationSession,
@@ -189,7 +101,7 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
 
   await authenticationSessionCache.update(authenticationSession);
 
-  strategySession.status = SessionStatuses.CONFIRMED;
+  strategySession.status = SessionStatus.CONFIRMED;
 
   await strategySessionCache.update(strategySession);
 };

@@ -10,7 +10,5 @@ server:
   workers: true
 
 services:
-  communication_service:
-    host: https://communication.staging.lindorm.io
   oauth_service:
     host: https://oauth.staging.lindorm.io

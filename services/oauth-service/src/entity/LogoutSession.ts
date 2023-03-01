@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
-import { SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -17,10 +17,8 @@ type ConfirmedLogout = {
 
 type RequestedLogout = {
   accessSessionId: string | null;
-  accessSessions: Array<string>;
   browserSessionId: string;
   refreshSessionId: string | null;
-  refreshSessions: Array<string>;
 };
 
 export type LogoutSessionAttributes = EntityAttributes & {
@@ -54,20 +52,18 @@ const schema = Joi.object<LogoutSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    confirmedLogout: Joi.object()
+    confirmedLogout: Joi.object<ConfirmedLogout>()
       .keys({
         accessSessionId: Joi.string().guid().allow(null).required(),
         browserSessionId: Joi.string().guid().allow(null).required(),
         refreshSessionId: Joi.string().guid().allow(null).required(),
       })
       .required(),
-    requestedLogout: Joi.object()
+    requestedLogout: Joi.object<RequestedLogout>()
       .keys({
         accessSessionId: Joi.string().guid().allow(null).required(),
-        accessSessions: Joi.array().items(Joi.string().guid()).required(),
         browserSessionId: Joi.string().guid().required(),
         refreshSessionId: Joi.string().guid().allow(null).required(),
-        refreshSessions: Joi.array().items(Joi.string().guid()).required(),
       })
       .required(),
 
@@ -109,10 +105,8 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
     };
     this.requestedLogout = {
       accessSessionId: options.requestedLogout.accessSessionId,
-      accessSessions: options.requestedLogout.accessSessions,
       browserSessionId: options.requestedLogout.browserSessionId,
       refreshSessionId: options.requestedLogout.refreshSessionId,
-      refreshSessions: options.requestedLogout.refreshSessions,
     };
 
     this.clientId = options.clientId || null;
@@ -123,7 +117,7 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
     this.originalUri = options.originalUri;
     this.postLogoutRedirectUri = options.postLogoutRedirectUri || null;
     this.state = options.state || null;
-    this.status = options.status || SessionStatuses.PENDING;
+    this.status = options.status || SessionStatus.PENDING;
     this.uiLocales = options.uiLocales || [];
   }
 

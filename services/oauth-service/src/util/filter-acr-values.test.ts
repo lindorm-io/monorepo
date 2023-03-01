@@ -1,4 +1,5 @@
 import { filterAcrValues } from "./filter-acr-values";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 describe("filterAcrValues", () => {
   test("should resolve all desired values", () => {
@@ -21,7 +22,7 @@ describe("filterAcrValues", () => {
         acrValues: "email phone",
       }),
     ).toStrictEqual({
-      methods: ["email", "phone"],
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 0,
     });
   });
@@ -43,7 +44,7 @@ describe("filterAcrValues", () => {
         amrValues: "email email phone phone",
       }),
     ).toStrictEqual({
-      methods: ["email", "phone"],
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 0,
     });
   });
@@ -55,7 +56,7 @@ describe("filterAcrValues", () => {
         amrArray: ["email", "phone"],
       }),
     ).toStrictEqual({
-      methods: ["email", "phone"],
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 4,
     });
   });

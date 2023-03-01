@@ -1,0 +1,100 @@
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { ConfirmStrategyOptions, StrategyBase } from "../../class";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { fetchAccountSalt } from "../../handler";
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  AuthStrategyConfig,
+  IdentifierType,
+} from "@lindorm-io/common-types";
+
+export class RecoveryCodeStrategy extends StrategyBase {
+  public config(): AuthenticationStrategyConfig {
+    return {
+      identifierHint: "none",
+      identifierType: IdentifierType.USERNAME,
+      loa: 1,
+      loaMax: 3,
+      method: AuthenticationMethod.PASSWORD,
+      methodsMax: 9,
+      methodsMin: 0,
+      mfaCookie: false,
+      strategy: AuthenticationStrategy.RECOVERY_CODE,
+      weight: 0,
+    };
+  }
+
+  public async initialise(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+  ): Promise<AuthStrategyConfig> {
+    return {
+      id: strategySession.id,
+      confirmKey: AuthenticationStrategyConfirmKey.CODE,
+      confirmLength: null,
+      confirmMode: AuthenticationStrategyConfirmMode.TEXT,
+      displayCode: null,
+      expiresIn: this.expiresIn(strategySession),
+      pollingRequired: false,
+      qrCode: null,
+      strategySessionToken: this.sessionToken(ctx, strategySession),
+      visualHint: null,
+    };
+  }
+
+  public async confirm(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: ConfirmStrategyOptions = {},
+  ): Promise<Account> {
+    const {
+      logger,
+      repository: { accountRepository },
+    } = ctx;
+
+    const { code } = options;
+
+    if (!code) {
+      throw new ClientError("Invalid input", {
+        data: { code },
+      });
+    }
+
+    logger.debug("Verifying Account");
+
+    if (!authenticationSession.identityId) {
+      throw new ServerError("Invalid authenticationSession", {
+        debug: { identityId: authenticationSession.identityId },
+      });
+    }
+
+    const account = await accountRepository.find({ id: authenticationSession.identityId });
+
+    if (!account.recoveryCode) {
+      throw new ClientError("Invalid Strategy", {
+        description: "Account does not have a Recovery Code",
+      });
+    }
+
+    logger.debug("Verifying Recovery Code");
+
+    const salt = await fetchAccountSalt(ctx, account);
+    const crypto = new CryptoLayered({
+      aes: { secret: salt.aes },
+      sha: { secret: salt.sha },
+    });
+
+    await crypto.assert(code, account.recoveryCode);
+
+    account.recoveryCode = null;
+
+    return accountRepository.update(account);
+  }
+}

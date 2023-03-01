@@ -15,6 +15,7 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { OpenIdScope } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -61,7 +62,7 @@ describe("handleAuthorizationCodeGrant", () => {
         refreshSessionId: null,
         requestedConsent: {
           audiences: [randomUUID()],
-          scopes: ["openid", "email"],
+          scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
         },
       }),
     );
@@ -83,7 +84,7 @@ describe("handleAuthorizationCodeGrant", () => {
         clientId: ctx.entity.client.id,
         requestedConsent: {
           audiences: [randomUUID()],
-          scopes: ["openid", "email", "offline_access"],
+          scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.OFFLINE_ACCESS],
         },
       }),
     );

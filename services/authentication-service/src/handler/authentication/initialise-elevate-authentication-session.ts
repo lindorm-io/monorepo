@@ -3,14 +3,9 @@ import { AuthenticationSession } from "../../entity";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
-import { fetchOauthElevationData } from "../oauth-service";
+import { getOauthElevationSession } from "../oauth-service";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
-import {
-  AuthenticationMethod,
-  AuthenticationMethods,
-  AuthenticationModes,
-  PKCEMethod,
-} from "@lindorm-io/common-types";
+import { AuthenticationMethod, AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
 
 type Options = {
   codeChallenge: string;
@@ -35,15 +30,15 @@ export const initialiseElevateAuthenticationSession = async (
   const { codeChallenge, codeChallengeMethod, elevationSessionId } = options;
 
   const {
-    elevationSession: { authenticationHint, country, expiresAt, identityId, nonce },
-    requested: {
+    elevation: {
       minimumLevel,
       recommendedLevel,
       recommendedMethods,
       requiredLevel,
       requiredMethods,
     },
-  } = await fetchOauthElevationData(ctx, elevationSessionId);
+    elevationSession: { authenticationHint, country, expiresAt, identityId, nonce },
+  } = await getOauthElevationSession(ctx, elevationSessionId);
 
   const emailHint = authenticationHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = authenticationHint?.find((item: string) => REGEX_PHONE.test(item));
@@ -58,16 +53,16 @@ export const initialiseElevateAuthenticationSession = async (
     expires: new Date(expiresAt),
     identityId,
     minimumLevel,
-    mode: AuthenticationModes.OAUTH,
+    mode: AuthenticationMode.OAUTH,
     nonce,
     phoneHint,
     recommendedLevel,
     recommendedMethods: recommendedMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethods).includes(key),
+      Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
     requiredLevel,
     requiredMethods: requiredMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethods).includes(key),
+      Object.values(AuthenticationMethod).includes(key),
     ) as Array<AuthenticationMethod>,
   });
 };

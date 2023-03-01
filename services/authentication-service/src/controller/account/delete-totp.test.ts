@@ -7,6 +7,7 @@ jest.mock("../../class", () => ({
   TOTPHandler: class TOTPHandler {
     async assert() {}
   },
+  StrategyBase: class StrategyBase {},
 }));
 
 jest.mock("../../handler");

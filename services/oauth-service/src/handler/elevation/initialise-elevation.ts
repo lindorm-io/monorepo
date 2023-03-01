@@ -1,4 +1,8 @@
-import { AuthenticationMethod, LevelOfAssurance, OauthDisplayMode } from "@lindorm-io/common-types";
+import {
+  AuthenticationMethod,
+  LevelOfAssurance,
+  OpenIdDisplayMode,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ElevationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
@@ -13,7 +17,7 @@ import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 type Options = {
   authenticationHint?: Array<string>;
   country?: string;
-  display?: OauthDisplayMode;
+  display?: OpenIdDisplayMode;
   levelOfAssurance?: LevelOfAssurance;
   methods?: Array<AuthenticationMethod>;
   nonce?: string;

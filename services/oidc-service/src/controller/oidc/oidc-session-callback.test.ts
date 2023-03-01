@@ -2,8 +2,9 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createTestOidcSession } from "../../fixtures/entity";
 import { oidcSessionCallbackController } from "./oidc-session-callback";
 import {
-  axiosAuthenticateOidcIdentity as _axiosAuthenticateOidcIdentity,
-  axiosUpdateIdentityUserinfo as _axiosUpdateIdentityUserinfo,
+  authenticateIdentity as _authenticateIdentity,
+  resolveIdentity as _resolveIdentity,
+  updateIdentityUserinfo as _updateIdentityUserinfo,
   verifyOidcWithAccessToken as _verifyOidcWithAccessToken,
   verifyOidcWithCode as _verifyOidcWithCode,
   verifyOidcWithIdToken as _verifyOidcWithIdToken,
@@ -11,8 +12,9 @@ import {
 
 jest.mock("../../handler");
 
-const axiosAuthenticateOidcIdentity = _axiosAuthenticateOidcIdentity as jest.Mock;
-const axiosUpdateIdentityUserinfo = _axiosUpdateIdentityUserinfo as jest.Mock;
+const authenticateIdentity = _authenticateIdentity as jest.Mock;
+const resolveIdentity = _resolveIdentity as jest.Mock;
+const updateIdentityUserinfo = _updateIdentityUserinfo as jest.Mock;
 const verifyOidcWithAccessToken = _verifyOidcWithAccessToken as jest.Mock;
 const verifyOidcWithCode = _verifyOidcWithCode as jest.Mock;
 const verifyOidcWithIdToken = _verifyOidcWithIdToken as jest.Mock;
@@ -37,7 +39,10 @@ describe("oidcSessionCallbackController", () => {
       },
     };
 
-    axiosAuthenticateOidcIdentity.mockResolvedValue({ identityId: "identityId" });
+    authenticateIdentity.mockResolvedValue(undefined);
+    resolveIdentity.mockImplementation(async (_, oidc) =>
+      createTestOidcSession({ ...oidc, identityId: "d50c332e-a6a7-48e5-b6c7-a6a2a14be51f" }),
+    );
     verifyOidcWithAccessToken.mockResolvedValue({ claims: true });
     verifyOidcWithCode.mockResolvedValue({ claims: true });
     verifyOidcWithIdToken.mockResolvedValue({ claims: true });
@@ -48,12 +53,12 @@ describe("oidcSessionCallbackController", () => {
       redirect: expect.any(URL),
     });
 
-    expect(axiosAuthenticateOidcIdentity).toHaveBeenCalled();
-    expect(axiosUpdateIdentityUserinfo).toHaveBeenCalled();
+    expect(authenticateIdentity).toHaveBeenCalled();
+    expect(updateIdentityUserinfo).toHaveBeenCalled();
 
     expect(ctx.cache.oidcSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        identityId: "identityId",
+        identityId: "d50c332e-a6a7-48e5-b6c7-a6a2a14be51f",
         verified: true,
       }),
     );
@@ -64,7 +69,7 @@ describe("oidcSessionCallbackController", () => {
 
     expect(url.host).toBe("authentication.test.lindorm.io");
     expect(url.pathname).toBe("/oidc/callback");
-    expect(url.searchParams.get("session_id")).toBe("72c66ab0-fba7-4efa-97b8-9359460aff04");
+    expect(url.searchParams.get("session")).toBe("72c66ab0-fba7-4efa-97b8-9359460aff04");
   });
 
   test("should resolve code", async () => {

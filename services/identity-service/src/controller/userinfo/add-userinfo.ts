@@ -1,18 +1,18 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_EMAIL, JOI_LOCALE, JOI_PHONE_NUMBER } from "../../common";
 import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
+import { JOI_EMAIL, JOI_LOCALE, JOI_PHONE_NUMBER } from "../../common";
 import { ServerKoaController } from "../../types";
-import { addAddressFromUserinfo, addIdentifierFromUserinfo } from "../../handler";
+import { addAddressFromUserinfo, addGenericIdentifier } from "../../handler";
 import {
   AddUserinfoRequestBody,
   AddUserinfoRequestParams,
-  IdentifierTypes,
+  IdentifierType,
 } from "@lindorm-io/common-types";
 
 type RequestData = AddUserinfoRequestParams & AddUserinfoRequestBody;
 
-export const putUserinfoSchema = Joi.object<RequestData>()
+export const addUserinfoSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
 
@@ -20,28 +20,28 @@ export const putUserinfoSchema = Joi.object<RequestData>()
     sub: Joi.string().required(),
     updatedAt: Joi.number().required(),
 
-    address: JOI_OPENID_ADDRESS.optional(),
-    birthDate: JOI_BIRTHDATE.optional(),
-    email: JOI_EMAIL.optional(),
-    emailVerified: Joi.boolean().optional(),
-    familyName: Joi.string().optional(),
-    gender: Joi.string().optional(),
-    givenName: Joi.string().optional(),
-    locale: JOI_LOCALE.optional(),
-    middleName: Joi.string().optional(),
-    nickname: Joi.string().optional(),
-    phoneNumber: JOI_PHONE_NUMBER.optional(),
-    phoneNumberVerified: Joi.boolean().optional(),
-    picture: Joi.string().uri().optional(),
-    preferredUsername: Joi.string().optional(),
-    profile: Joi.string().uri().optional(),
-    website: Joi.string().uri().optional(),
-    zoneInfo: JOI_ZONE_INFO.optional(),
+    address: JOI_OPENID_ADDRESS,
+    birthDate: JOI_BIRTHDATE,
+    email: JOI_EMAIL,
+    emailVerified: Joi.boolean(),
+    familyName: Joi.string(),
+    gender: Joi.string(),
+    givenName: Joi.string(),
+    locale: JOI_LOCALE,
+    middleName: Joi.string(),
+    nickname: Joi.string(),
+    phoneNumber: JOI_PHONE_NUMBER,
+    phoneNumberVerified: Joi.boolean(),
+    picture: Joi.string().uri(),
+    preferredUsername: Joi.string(),
+    profile: Joi.string().uri(),
+    website: Joi.string().uri(),
+    zoneInfo: JOI_ZONE_INFO,
   })
-  .unknown(true)
+  .options({ abortEarly: false, allowUnknown: true })
   .required();
 
-export const putUserinfoController: ServerKoaController<RequestData> = async (
+export const addUserinfoController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
@@ -49,6 +49,7 @@ export const putUserinfoController: ServerKoaController<RequestData> = async (
       address,
       birthDate,
       email,
+      emailVerified,
       familyName,
       gender,
       givenName,
@@ -56,6 +57,7 @@ export const putUserinfoController: ServerKoaController<RequestData> = async (
       middleName,
       nickname,
       phoneNumber,
+      phoneNumberVerified,
       picture,
       preferredUsername,
       profile,
@@ -77,34 +79,46 @@ export const putUserinfoController: ServerKoaController<RequestData> = async (
   identity.nickname = identity.nickname || nickname;
   identity.picture = identity.picture || picture;
   identity.profile = identity.profile || profile;
-  identity.preferredUsername = identity.preferredUsername || preferredUsername;
-  identity.username = identity.username || identity.preferredUsername;
   identity.website = identity.website || website;
   identity.zoneInfo = identity.zoneInfo || zoneInfo;
 
-  await identityRepository.update(identity);
+  const updated = await identityRepository.update(identity);
+
+  if (preferredUsername && !identity.preferredUsername && !identity.username) {
+    updated.preferredUsername = preferredUsername;
+    updated.username = preferredUsername;
+
+    try {
+      await identityRepository.update(updated);
+    } catch (_) {
+      /* ignored */
+    }
+  }
 
   if (address) {
     await addAddressFromUserinfo(ctx, identity, address);
   }
 
-  if (email) {
-    await addIdentifierFromUserinfo(ctx, identity, {
-      identifier: email,
-      type: IdentifierTypes.EMAIL,
+  if (email && emailVerified) {
+    await addGenericIdentifier(ctx, identity, {
+      type: IdentifierType.EMAIL,
+      value: email,
+      verified: false,
     });
   }
 
-  if (phoneNumber) {
-    await addIdentifierFromUserinfo(ctx, identity, {
-      identifier: phoneNumber,
-      type: IdentifierTypes.PHONE,
+  if (phoneNumber && phoneNumberVerified) {
+    await addGenericIdentifier(ctx, identity, {
+      type: IdentifierType.PHONE,
+      value: phoneNumber,
+      verified: false,
     });
   }
 
-  await addIdentifierFromUserinfo(ctx, identity, {
-    identifier: sub,
+  await addGenericIdentifier(ctx, identity, {
     provider,
-    type: IdentifierTypes.EXTERNAL,
+    type: IdentifierType.EXTERNAL,
+    value: sub,
+    verified: true,
   });
 };

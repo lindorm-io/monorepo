@@ -1,28 +1,28 @@
 import { Client, ClientAttributes } from "../../entity";
 import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
-import { ClientScopes } from "../../common";
 import {
-  LindormScopes,
-  OauthClientTypes,
-  OauthDisplayModes,
-  OauthGrantTypes,
-  OauthResponseModes,
-  OauthResponseTypes,
+  LindormScope,
+  OpenIdClientType,
+  OpenIdDisplayMode,
+  OpenIdGrantType,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  OpenIdScope,
 } from "@lindorm-io/common-types";
 
 export const createTestClient = (options: Partial<ClientAttributes> = {}): Client =>
   new Client({
     allowed: {
-      grantTypes: Object.values(OauthGrantTypes),
-      responseTypes: Object.values(OauthResponseTypes),
-      scopes: [...Object.values(LindormScopes), ...Object.values(ClientScopes)],
+      grantTypes: Object.values(OpenIdGrantType),
+      responseTypes: Object.values(OpenIdResponseType),
+      scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
       ...(options.allowed || {}),
     },
     defaults: {
       audiences: [],
-      displayMode: OauthDisplayModes.POPUP,
+      displayMode: OpenIdDisplayMode.POPUP,
       levelOfAssurance: 3,
-      responseMode: OauthResponseModes.QUERY,
+      responseMode: OpenIdResponseMode.QUERY,
       ...(options.defaults || {}),
     },
     expiry: {
@@ -34,18 +34,19 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
 
     active: true,
     backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
+    claimsUri: "https://test.client.lindorm.io/claims",
     description: "Client description",
     host: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",
     name: "ClientName",
     postLogoutUris: ["https://test.client.lindorm.io/logout"],
     redirectUris: ["https://test.client.lindorm.io/redirect"],
-    requiredScopes: [LindormScopes.OFFLINE_ACCESS, LindormScopes.OPENID],
+    requiredScopes: [OpenIdScope.OFFLINE_ACCESS, OpenIdScope.OPENID],
     rtbfUri: "https://test.client.lindorm.io/rtbf",
     scopeDescriptions: [SCOPE_OPENID, SCOPE_PROFILE],
     secret:
       "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
     tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
-    type: OauthClientTypes.CONFIDENTIAL,
+    type: OpenIdClientType.CONFIDENTIAL,
     ...options,
   });

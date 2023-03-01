@@ -40,20 +40,23 @@ describe("/callback", () => {
       scope: ["scope"],
     });
 
-  nock("https://identity.test.lindorm.io").post("/internal/authenticate").times(999).reply(200, {
+  nock("https://identity.test.lindorm.io").post("/admin/identifiers").times(999).reply(204);
+
+  nock("https://identity.test.lindorm.io").get("/admin/find").query(true).times(999).reply(200, {
     identity_id: "30340f34-6520-46a5-bc77-ee1346145903",
   });
 
   nock("https://identity.test.lindorm.io")
-    .put("/internal/userinfo/30340f34-6520-46a5-bc77-ee1346145903")
+    .put((uri) => uri.startsWith("/admin/userinfo/"))
     .times(999)
-    .reply(200);
+    .reply(204);
 
   test("GET / - code", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
-        provider: "apple",
+        identityId: null,
         nonce: randomString(16),
+        provider: "apple",
         state: randomString(48),
       }),
     );
@@ -73,7 +76,7 @@ describe("/callback", () => {
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oidc/callback");
-    expect(location.searchParams.get("session_id")).toBe(oidcSession.id);
+    expect(location.searchParams.get("session")).toBe(oidcSession.id);
 
     await expect(TEST_OIDC_SESSION_CACHE.find({ id: oidcSession.id })).resolves.toStrictEqual(
       expect.objectContaining({
@@ -86,8 +89,9 @@ describe("/callback", () => {
   test("GET / - id_token", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
-        provider: "google",
+        identityId: null,
         nonce: randomString(16),
+        provider: "google",
         state: randomString(48),
       }),
     );
@@ -107,7 +111,7 @@ describe("/callback", () => {
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oidc/callback");
-    expect(location.searchParams.get("session_id")).toBe(oidcSession.id);
+    expect(location.searchParams.get("session")).toBe(oidcSession.id);
 
     await expect(TEST_OIDC_SESSION_CACHE.find({ id: oidcSession.id })).resolves.toStrictEqual(
       expect.objectContaining({
@@ -120,8 +124,9 @@ describe("/callback", () => {
   test("GET / - token", async () => {
     const oidcSession = await TEST_OIDC_SESSION_CACHE.create(
       createTestOidcSession({
-        provider: "microsoft",
+        identityId: null,
         nonce: randomString(16),
+        provider: "microsoft",
         state: randomString(48),
       }),
     );
@@ -141,7 +146,7 @@ describe("/callback", () => {
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://authentication.test.lindorm.io");
     expect(location.pathname).toBe("/oidc/callback");
-    expect(location.searchParams.get("session_id")).toBe(oidcSession.id);
+    expect(location.searchParams.get("session")).toBe(oidcSession.id);
 
     await expect(TEST_OIDC_SESSION_CACHE.find({ id: oidcSession.id })).resolves.toStrictEqual(
       expect.objectContaining({

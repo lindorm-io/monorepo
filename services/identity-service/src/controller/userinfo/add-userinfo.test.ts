@@ -1,16 +1,16 @@
 import { Identity } from "../../entity";
-import { putUserinfoController } from "./add-userinfo";
-import { createMockLogger } from "@lindorm-io/winston";
+import { addUserinfoController } from "./add-userinfo";
 import { createMockRepository } from "@lindorm-io/mongo";
+import { createTestIdentity } from "../../fixtures/entity";
 import {
   addAddressFromUserinfo as _addAddressFromUserinfo,
-  addIdentifierFromUserinfo as _addIdentifierFromUserinfo,
+  addGenericIdentifier as _addGenericIdentifier,
 } from "../../handler";
 
 jest.mock("../../handler");
 
 const addAddressFromUserinfo = _addAddressFromUserinfo as jest.Mock;
-const addIdentifierFromUserinfo = _addIdentifierFromUserinfo as jest.Mock;
+const addGenericIdentifier = _addGenericIdentifier as jest.Mock;
 
 describe("addUserinfoController", () => {
   let ctx: any;
@@ -18,6 +18,10 @@ describe("addUserinfoController", () => {
   beforeEach(() => {
     ctx = {
       data: {
+        provider: "provider",
+        sub: "sub",
+        updatedAt: "updatedAt",
+
         address: {
           country: "country",
           locality: "locality",
@@ -25,69 +29,38 @@ describe("addUserinfoController", () => {
           region: "region",
           streetAddress: "streetAddress 1\nstreetAddress 2",
         },
-        birthDate: "birthDate",
-        email: "email",
-        familyName: "familyName",
-        gender: "gender",
-        givenName: "givenName",
-        locale: "locale",
-        middleName: "middleName",
-        nickname: "nickname",
-        phoneNumber: "phoneNumber",
-        picture: "picture",
-        preferredUsername: "preferredUsername",
-        profile: "profile",
-        provider: "provider",
-        sub: "sub",
-        updatedAt: "updatedAt",
-        website: "website",
-        zoneInfo: "zoneInfo",
+        birthDate: "added-birthDate",
+        email: "added-email",
+        emailVerified: true,
+        familyName: "added-familyName",
+        gender: "added-gender",
+        givenName: "added-givenName",
+        locale: "added-locale",
+        middleName: "added-middleName",
+        nickname: "added-nickname",
+        phoneNumber: "added-phoneNumber",
+        phoneNumberVerified: true,
+        picture: "added-picture",
+        preferredUsername: "added-preferredUsername",
+        profile: "added-profile",
+        website: "added-website",
+        zoneInfo: "added-zoneInfo",
       },
       entity: {
         identity: new Identity({}),
       },
-      logger: createMockLogger(),
       repository: {
-        identityRepository: createMockRepository(),
+        identityRepository: createMockRepository(createTestIdentity),
       },
     };
   });
 
   test("should update identity", async () => {
-    await expect(putUserinfoController(ctx)).resolves.toBeUndefined();
+    await expect(addUserinfoController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        active: true,
-        birthDate: "birthDate",
-        displayName: {
-          name: null,
-          number: null,
-        },
-        familyName: "familyName",
-        gender: "gender",
-        givenName: "givenName",
-        gravatarUri: null,
-        locale: "locale",
-        middleName: "middleName",
-        namingSystem: "given_family",
-        nationalIdentityNumber: null,
-        nationalIdentityNumberVerified: false,
-        nickname: "nickname",
-        picture: "picture",
-        preferredAccessibility: [],
-        preferredUsername: "preferredUsername",
-        profile: "profile",
-        pronouns: null,
-        socialSecurityNumber: null,
-        socialSecurityNumberVerified: false,
-        username: "preferredUsername",
-        website: "website",
-        zoneInfo: "zoneInfo",
-      }),
-    );
+    expect(ctx.repository.identityRepository.update).toHaveBeenCalledTimes(2);
 
     expect(addAddressFromUserinfo).toHaveBeenCalled();
-    expect(addIdentifierFromUserinfo).toHaveBeenCalledTimes(3);
+    expect(addGenericIdentifier).toHaveBeenCalledTimes(3);
   });
 });

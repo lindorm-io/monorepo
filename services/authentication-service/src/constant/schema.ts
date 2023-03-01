@@ -1,16 +1,10 @@
 import Joi from "joi";
-import {
-  AuthenticationMethods,
-  AuthenticationStrategies,
-  PKCEMethods,
-} from "@lindorm-io/common-types";
+import { AuthenticationMethod, AuthenticationStrategy, PKCEMethod } from "@lindorm-io/common-types";
 
-export const JOI_AUTHENTICATION_METHOD = Joi.string().valid(
-  ...Object.values(AuthenticationMethods),
-);
+export const JOI_AUTHENTICATION_METHOD = Joi.string().valid(...Object.values(AuthenticationMethod));
 
 export const JOI_AUTHENTICATION_STRATEGY = Joi.string().valid(
-  ...Object.values(AuthenticationStrategies),
+  ...Object.values(AuthenticationStrategy),
 );
 
-export const JOI_PKCE_METHOD = Joi.string().valid(...Object.values(PKCEMethods));
+export const JOI_PKCE_METHOD = Joi.string().valid(...Object.values(PKCEMethod));

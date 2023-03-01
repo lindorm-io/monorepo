@@ -17,7 +17,7 @@ describe("getIdentityUserinfo", () => {
   });
 
   test("should resolve", async () => {
-    await expect(getIdentityUserinfo(ctx, "accessToken")).resolves.toMatchSnapshot();
+    await expect(getIdentityUserinfo(ctx, "token")).resolves.toMatchSnapshot();
 
     expect(ctx.axios.identityClient.get).toHaveBeenCalled();
   });

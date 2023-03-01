@@ -1,22 +1,24 @@
 import {
   LevelOfAssurance,
-  OauthDisplayMode,
-  OauthGrantType,
-  OauthResponseMode,
-  OauthResponseType,
+  LindormScope,
+  OpenIdDisplayMode,
+  OpenIdGrantType,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  OpenIdScope,
 } from "@lindorm-io/common-types";
 
 export type ClientAllowed = {
-  grantTypes: Array<OauthGrantType>;
-  responseTypes: Array<OauthResponseType>;
-  scopes: Array<string>;
+  grantTypes: Array<OpenIdGrantType>;
+  responseTypes: Array<OpenIdResponseType>;
+  scopes: Array<OpenIdScope | LindormScope>;
 };
 
 export type ClientDefaults = {
   audiences: Array<string>;
-  displayMode: OauthDisplayMode;
+  displayMode: OpenIdDisplayMode;
   levelOfAssurance: LevelOfAssurance;
-  responseMode: OauthResponseMode;
+  responseMode: OpenIdResponseMode;
 };
 
 export type ClientExpiry = {

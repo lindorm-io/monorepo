@@ -1,7 +1,7 @@
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { getIdentityUserinfo } from "../../handler";
 import { LindormClaims } from "@lindorm-io/common-types";
+import { getIdentityUserinfo } from "../../handler";
 
 export const userinfoController: ServerKoaController = async (
   ctx,

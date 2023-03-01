@@ -1,6 +1,6 @@
 import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { SessionStatuses } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-types";
 import { getBrowserSessionCookies, setBrowserSessionCookies } from "../cookies";
 import { getUpdatedBrowserSession } from "../sessions";
 import { uniqArray } from "@lindorm-io/core";
@@ -19,7 +19,7 @@ export const handleOauthLoginVerification = async (
   setBrowserSessionCookies(ctx, uniqArray(cookies, browserSession.id));
 
   authorizationSession.browserSessionId = browserSession.id;
-  authorizationSession.status.login = SessionStatuses.VERIFIED;
+  authorizationSession.status.login = SessionStatus.VERIFIED;
 
   return await authorizationSessionCache.update(authorizationSession);
 };

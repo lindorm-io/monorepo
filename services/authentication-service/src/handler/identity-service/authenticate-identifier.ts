@@ -1,46 +1,47 @@
+import { AddIdentifierRequestBody } from "@lindorm-io/common-types";
 import { AuthenticationSession, StrategySession } from "../../entity";
+import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { removeEmptyFromObject } from "@lindorm-io/core";
-import { ClientScopes } from "../../common";
-import {
-  AuthenticateIdentifierRequestBody,
-  AuthenticateIdentifierResponse,
-  IdentifierTypes,
-} from "@lindorm-io/common-types";
+
+type Result = { identityId: string };
 
 export const authenticateIdentifier = async (
   ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
-): Promise<AuthenticateIdentifierResponse> => {
+): Promise<Result> => {
   const {
     axios: { identityClient, oauthClient },
   } = ctx;
 
   const { identityId } = authenticationSession;
-  const { email, nin, phoneNumber, username } = strategySession;
+  const { identifier, identifierType } = strategySession;
 
-  const body: AuthenticateIdentifierRequestBody = removeEmptyFromObject({
-    identifier: email || nin || phoneNumber || username,
-    identityId,
-    type: IdentifierTypes.EMAIL,
+  if (!identityId) {
+    throw new ServerError("Invalid authentication session", {
+      description: "Attribute is required",
+      debug: { identityId },
+    });
+  }
 
-    ...(email ? { type: IdentifierTypes.EMAIL } : {}),
-    ...(nin ? { type: IdentifierTypes.NIN } : {}),
-    ...(phoneNumber ? { type: IdentifierTypes.PHONE } : {}),
-    ...(username ? { type: IdentifierTypes.USERNAME } : {}),
+  if (!identifier || !identifierType) {
+    throw new ServerError("Invalid strategy session", {
+      description: "Attributes are required",
+      debug: { identifier, identifierType },
+    });
+  }
+
+  await identityClient.post<never, AddIdentifierRequestBody>("/admin/identifiers", {
+    body: {
+      identifier,
+      identityId,
+      label: null,
+      type: identifierType,
+      verified: true,
+    },
+    middleware: [clientCredentialsMiddleware(oauthClient)],
   });
 
-  const { data } = await identityClient.post<AuthenticateIdentifierResponse>(
-    "/internal/authenticate",
-    {
-      body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScopes.IDENTITY_IDENTIFIER_WRITE]),
-      ],
-    },
-  );
-
-  return data;
+  return { identityId };
 };

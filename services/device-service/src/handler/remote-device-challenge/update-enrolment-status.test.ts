@@ -1,5 +1,6 @@
 import { createTestEnrolmentSession, createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus } from "./update-enrolment-status";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 describe("updateEnrolmentStatus", () => {
   let ctx: any;
@@ -12,7 +13,7 @@ describe("updateEnrolmentStatus", () => {
           find: jest.fn().mockResolvedValue(
             createTestEnrolmentSession({
               id: "439d212a-e91e-4093-bf3b-020adc91cf4d",
-              status: "pending",
+              status: SessionStatus.PENDING,
             }),
           ),
           update: jest.fn(),
@@ -21,7 +22,7 @@ describe("updateEnrolmentStatus", () => {
     };
     rdc = createTestRdcSession({
       enrolmentSessionId: "439d212a-e91e-4093-bf3b-020adc91cf4d",
-      status: "confirmed",
+      status: SessionStatus.CONFIRMED,
     });
   });
 

@@ -16,10 +16,17 @@ describe("deleteDeviceLinkController", () => {
   beforeEach(async () => {
     ctx = {
       entity: {
-        deviceLink: createTestDeviceLink(),
+        deviceLink: createTestDeviceLink({
+          identityId: "b799b044-16db-495a-b7e1-2cf3175d4b54",
+        }),
       },
       repository: {
         deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      },
+      token: {
+        bearerToken: {
+          subject: "b799b044-16db-495a-b7e1-2cf3175d4b54",
+        },
       },
     };
 

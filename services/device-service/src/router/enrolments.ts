@@ -1,14 +1,14 @@
-import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { deviceHeadersSchema } from "../schema";
 import {
   confirmEnrolmentController,
   confirmEnrolmentSchema,
+  getEnrolmentStatusController,
+  getEnrolmentStatusSchema,
   initialiseEnrolmentController,
   initialiseEnrolmentSchema,
   rejectEnrolmentController,
   rejectEnrolmentSchema,
-  getEnrolmentStatusController,
-  getEnrolmentStatusSchema,
 } from "../controller";
 import {
   deviceIpRateLimit,
@@ -41,19 +41,6 @@ router.post(
   useSchema(deviceHeadersSchema, "headers"),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),
   enrolmentSessionEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.enrolmentSession.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.enrolmentSessionToken.sessionId",
-    },
-    hint: "sessionId",
-  }),
   useController(confirmEnrolmentController),
 );
 
@@ -66,19 +53,6 @@ router.post(
   useSchema(deviceHeadersSchema, "headers"),
   enrolmentSessionTokenMiddleware("data.enrolmentSessionToken"),
   enrolmentSessionEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.enrolmentSession.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.enrolmentSessionToken.sessionId",
-    },
-    hint: "sessionId",
-  }),
   useController(rejectEnrolmentController),
 );
 

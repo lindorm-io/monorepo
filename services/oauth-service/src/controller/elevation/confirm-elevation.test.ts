@@ -8,6 +8,7 @@ import {
   assertSessionPending as _assertSessionPending,
   createElevationVerifyUri as _createElevationVerifyUri,
 } from "../../util";
+import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,7 +28,7 @@ describe("confirmElevationController", () => {
       data: {
         identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
         levelOfAssurance: 3,
-        methods: ["email", "phone"],
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       },
       entity: {
         elevationSession: createTestElevationSession({
@@ -51,9 +52,9 @@ describe("confirmElevationController", () => {
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 3,
-          methods: ["email", "phone"],
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
         },
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
   });
@@ -71,9 +72,9 @@ describe("confirmElevationController", () => {
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 3,
-          methods: ["email", "phone"],
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
         },
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
   });

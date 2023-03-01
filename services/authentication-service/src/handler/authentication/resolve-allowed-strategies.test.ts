@@ -37,14 +37,11 @@ describe("resolveAllowedMethods", () => {
     await expect(
       resolveAllowedStrategies(ctx, authenticationSession, account),
     ).resolves.toStrictEqual([
-      "bank_id_se",
       "device_challenge",
-      "email_link",
+      "email_code",
       "email_otp",
       "password_browser_link",
-      "rdc_qr_code",
       "session_accept_with_code",
-      "webauthn",
     ]);
   });
 });

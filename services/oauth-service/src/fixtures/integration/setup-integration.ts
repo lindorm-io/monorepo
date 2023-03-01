@@ -4,19 +4,22 @@ import { argon, mongoConnection, redisConnection } from "../../instance";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
 import {
-  AuthorizationSessionCache,
-  ClientRepository,
   AccessSessionRepository,
+  AuthorizationCodeCache,
+  AuthorizationSessionCache,
   BrowserSessionRepository,
+  ClaimsSessionCache,
+  ClientRepository,
+  ElevationSessionCache,
   InvalidTokenCache,
   LogoutSessionCache,
   RefreshSessionRepository,
-  AuthorizationCodeCache,
-  ElevationSessionCache,
+  TenantRepository,
 } from "../../infrastructure";
 
 export let TEST_AUTHORIZATION_CODE_CACHE: AuthorizationCodeCache;
 export let TEST_AUTHORIZATION_SESSION_CACHE: AuthorizationSessionCache;
+export let TEST_CLAIMS_SESSION_CACHE: ClaimsSessionCache;
 export let TEST_ELEVATION_SESSION_CACHE: ElevationSessionCache;
 export let TEST_INVALID_TOKEN_CACHE: InvalidTokenCache;
 export let TEST_LOGOUT_SESSION_CACHE: LogoutSessionCache;
@@ -25,6 +28,7 @@ export let TEST_ACCESS_SESSION_REPOSITORY: AccessSessionRepository;
 export let TEST_BROWSER_SESSION_REPOSITORY: BrowserSessionRepository;
 export let TEST_CLIENT_REPOSITORY: ClientRepository;
 export let TEST_REFRESH_SESSION_REPOSITORY: RefreshSessionRepository;
+export let TEST_TENANT_REPOSITORY: TenantRepository;
 
 export let TEST_ARGON: CryptoArgon;
 
@@ -42,6 +46,7 @@ export const setupIntegration = async (): Promise<void> => {
     connection: redisConnection,
     logger,
   });
+  TEST_CLAIMS_SESSION_CACHE = new ClaimsSessionCache({ connection: redisConnection, logger });
   TEST_ELEVATION_SESSION_CACHE = new ElevationSessionCache({ connection: redisConnection, logger });
   TEST_INVALID_TOKEN_CACHE = new InvalidTokenCache({ connection: redisConnection, logger });
   TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
@@ -59,6 +64,7 @@ export const setupIntegration = async (): Promise<void> => {
     connection: mongoConnection,
     logger,
   });
+  TEST_TENANT_REPOSITORY = new TenantRepository({ connection: mongoConnection, logger });
 
   TEST_ARGON = argon;
 

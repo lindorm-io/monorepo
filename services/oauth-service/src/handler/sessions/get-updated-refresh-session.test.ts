@@ -7,6 +7,7 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,7 +25,7 @@ describe("getUpdatedRefreshSession", () => {
             identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
             latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
             levelOfAssurance: 2,
-            methods: ["email", "phone"],
+            methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
             scopes: ["openid", "profile"],
             ...opts,
           }),
@@ -35,13 +36,18 @@ describe("getUpdatedRefreshSession", () => {
     authorizationSession = createTestAuthorizationSession({
       confirmedConsent: {
         audiences: ["6c04e67f-7911-4692-ab3b-f7b3f3178a40", "968db71c-3ea5-446a-a38e-cf614ec3168c"],
-        scopes: ["openid", "profile"],
+        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
       },
       confirmedLogin: {
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
-        methods: ["email", "phone", "session_link"],
+        metadata: {},
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         remember: false,
         sso: false,
       },
@@ -119,8 +125,8 @@ describe("getUpdatedRefreshSession", () => {
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
         levelOfAssurance: 1,
-        methods: ["password"],
-        scopes: ["openid", "profile"],
+        methods: [AuthenticationMethod.PASSWORD],
+        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
       }),
     );
 
@@ -151,7 +157,7 @@ describe("getUpdatedRefreshSession", () => {
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["password"],
+        methods: [AuthenticationMethod.PASSWORD],
       }),
     );
 

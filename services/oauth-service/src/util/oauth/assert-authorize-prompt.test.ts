@@ -2,13 +2,14 @@ import { AuthorizationSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertAuthorizePrompt } from "./assert-authorize-prompt";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
+import { OpenIdPromptMode } from "@lindorm-io/common-types";
 
 describe("assertAuthorizePrompt", () => {
   let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: ["login", "consent"],
+      promptModes: [OpenIdPromptMode.LOGIN, OpenIdPromptMode.CONSENT],
     });
   });
 
@@ -54,7 +55,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should throw when login is required", () => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: ["none"],
+      promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>
@@ -68,7 +69,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should throw when consent is required", () => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: ["none"],
+      promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>
@@ -82,7 +83,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should throw when select is required", () => {
     authorizationSession = createTestAuthorizationSession({
-      promptModes: ["none"],
+      promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>

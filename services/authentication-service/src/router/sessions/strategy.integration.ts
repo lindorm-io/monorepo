@@ -1,8 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationStrategies } from "@lindorm-io/common-types";
-import { randomString } from "@lindorm-io/random";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import { server } from "../../server/server";
 import {
   createTestAccount,
@@ -36,7 +35,7 @@ describe("/sessions/strategy", () => {
     });
 
   nock("https://device.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/identities/") && uri.endsWith("/device-links"))
+    .get((uri) => uri.startsWith("/admin/identities/") && uri.endsWith("/device-links"))
     .times(999)
     .reply(200, {
       device_links: [
@@ -46,12 +45,25 @@ describe("/sessions/strategy", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/identities/") && uri.endsWith("/sessions"))
+    .get((uri) => uri.startsWith("/admin/identities/") && uri.endsWith("/sessions"))
     .times(999)
     .reply(200, {
       sessions: [
         {
           id: "2cfbed4b-734d-4bad-8d85-ef3e75c866ba",
+          client: {
+            logo_uri: "https://test.client.com/logo.png",
+            name: "Test Client",
+            tenant: "Test Tenant",
+            type: "public",
+          },
+          adjustedAccessLevel: 1,
+          latestAuthentication: "2020-01-01T01:00:00.000Z",
+          levelOfAssurance: 4,
+          metadata: {},
+          methods: ["email"],
+          scopes: ["openid", "email"],
+          type: "access",
           levelOfAuthentication: 3,
         },
       ],
@@ -76,7 +88,7 @@ describe("/sessions/strategy", () => {
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        allowedStrategies: [AuthenticationStrategies.DEVICE_CHALLENGE],
+        allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         identityId: account.id,
         remember: false,
         requiredLevel: 4,
@@ -86,26 +98,28 @@ describe("/sessions/strategy", () => {
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
       createTestStrategySession({
         authenticationSessionId: authenticationSession.id,
-        strategy: AuthenticationStrategies.DEVICE_CHALLENGE,
-        nonce: randomString(16),
+        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
       }),
     );
 
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
-      nonce: strategySession.nonce!,
+      nonce: strategySession.nonce,
       subject: account.id,
     });
 
     const strategySessionToken = getTestStrategySessionToken({
-      subject: strategySession.id,
+      session: strategySession.id,
     });
 
     await request(server.callback())
       .post(`/sessions/strategy/${strategySession.id}/confirm`)
       .send({
         challenge_confirmation_token: challengeConfirmationToken,
-        remember: true,
+
         strategy_session_token: strategySessionToken,
+
+        remember: true,
+        sso: true,
       })
       .expect(204);
 
@@ -113,14 +127,7 @@ describe("/sessions/strategy", () => {
       TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        allowedStrategies: [
-          "bank_id_se",
-          "email_link",
-          "email_otp",
-          "phone_otp",
-          "time_based_otp",
-          "webauthn",
-        ],
+        allowedStrategies: ["email_code", "email_otp", "phone_otp", "time_based_otp"],
         confirmedStrategies: ["device_challenge"],
         identityId: account.id,
         remember: true,
@@ -132,7 +139,7 @@ describe("/sessions/strategy", () => {
       TEST_STRATEGY_SESSION_CACHE.find({ id: strategySession.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
   });

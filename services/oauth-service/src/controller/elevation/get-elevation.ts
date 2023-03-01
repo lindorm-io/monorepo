@@ -5,7 +5,7 @@ import { expiryObject } from "@lindorm-io/expiry";
 import {
   GetElevationRequestParams,
   GetElevationResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = GetElevationRequestParams;
@@ -22,7 +22,7 @@ export const getElevationController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { client, elevationSession },
+    entity: { client, elevationSession, tenant },
   } = ctx;
 
   const { expires, expiresIn } = expiryObject(elevationSession.expires);
@@ -30,7 +30,9 @@ export const getElevationController: ServerKoaController<RequestData> = async (
   return {
     body: {
       elevation: {
-        isRequired: elevationSession.status === SessionStatuses.PENDING,
+        isRequired: elevationSession.status === SessionStatus.PENDING,
+        status: elevationSession.status,
+
         minimumLevel: elevationSession.requestedAuthentication.minimumLevel,
         recommendedLevel: elevationSession.requestedAuthentication.recommendedLevel,
         recommendedMethods: elevationSession.requestedAuthentication.recommendedMethods,
@@ -39,10 +41,10 @@ export const getElevationController: ServerKoaController<RequestData> = async (
       },
 
       client: {
-        description: client.description,
-        logoUri: client.logoUri,
         name: client.name,
+        logoUri: client.logoUri,
         type: client.type,
+        tenant: tenant.name,
       },
 
       elevationSession: {

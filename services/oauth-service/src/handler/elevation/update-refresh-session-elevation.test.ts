@@ -4,6 +4,7 @@ import { ServerError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestElevationSession, createTestRefreshSession } from "../../fixtures/entity";
 import { updateRefreshSessionElevation } from "./update-refresh-session-elevation";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,7 +31,7 @@ describe("verifyRefreshSessionElevation", () => {
       confirmedAuthentication: {
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["bank_id_se"],
+        methods: [AuthenticationMethod.BANK_ID_SE],
       },
 
       accessSessionId: null,
@@ -46,7 +47,7 @@ describe("verifyRefreshSessionElevation", () => {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T04:00:00.000Z"),
         levelOfAssurance: 2,
-        methods: ["email", "phone"],
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       }),
     );
 
@@ -56,7 +57,11 @@ describe("verifyRefreshSessionElevation", () => {
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["bank_id_se", "email", "phone"],
+        methods: [
+          AuthenticationMethod.BANK_ID_SE,
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+        ],
       }),
     );
   });

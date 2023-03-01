@@ -8,13 +8,13 @@ import { expiryObject } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import { sortedUniq } from "lodash";
 import {
-  ChallengeStrategies,
   ChallengeStrategy,
+  DeviceTokenType,
   InitialiseChallengeRequestBody,
   InitialiseChallengeResponse,
-  LindormTokenTypes,
-  SubjectHints,
+  SubjectHint,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = InitialiseChallengeRequestBody;
 
@@ -36,19 +36,40 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { challengeSessionCache },
-    data: { audiences, nonce, payload, scopes },
+    data: { audiences, identityId, nonce, payload, scopes },
     entity: { deviceLink },
     jwt,
+    metadata,
   } = ctx;
 
-  const strategies: Array<ChallengeStrategy> = [ChallengeStrategies.IMPLICIT];
+  if (!deviceLink.active) {
+    throw new ClientError("Inactive device");
+  }
+
+  if (!deviceLink.trusted) {
+    throw new ClientError("Untrusted device");
+  }
+
+  if (
+    deviceLink.id !== metadata.device.linkId ||
+    deviceLink.installationId !== metadata.device.installationId ||
+    deviceLink.uniqueId !== metadata.device.uniqueId
+  ) {
+    throw new ClientError("Invalid metadata");
+  }
+
+  if (deviceLink.identityId !== identityId) {
+    throw new ClientError("Invalid identity");
+  }
+
+  const strategies: Array<ChallengeStrategy> = [ChallengeStrategy.IMPLICIT];
 
   if (deviceLink.biometry) {
-    strategies.push(ChallengeStrategies.BIOMETRY);
+    strategies.push(ChallengeStrategy.BIOMETRY);
   }
 
   if (deviceLink.pincode) {
-    strategies.push(ChallengeStrategies.PINCODE);
+    strategies.push(ChallengeStrategy.PINCODE);
   }
 
   const certificateChallenge = randomString(128);
@@ -70,10 +91,11 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   const { token } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.challenge_session_expiry,
-    sessionId: session.id,
+    session: session.id,
+    sessionHint: "challenge",
     subject: deviceLink.identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.CHALLENGE_SESSION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.CHALLENGE_SESSION,
   });
 
   return {

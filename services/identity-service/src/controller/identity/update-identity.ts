@@ -1,67 +1,41 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_LOCALE } from "../../common";
-import { NamingSystem } from "../../enum";
-import { ServerKoaController, IdentityAddress } from "../../types";
-import { isUndefined } from "lodash";
+import { ServerKoaController } from "../../types";
+import { UpdateIdentityRequestBody, UpdateIdentityRequestParams } from "@lindorm-io/common-types";
 import { updateIdentityDisplayName } from "../../handler";
-import { LindormScopes } from "@lindorm-io/common-types";
 import {
   JOI_BIRTHDATE,
-  JOI_IDENTITY_ADDRESS,
-  JOI_IDENTITY_DISPLAY_NAME,
+  JOI_DISPLAY_NAME_STRING,
   JOI_NAMING_SYSTEM,
   JOI_ZONE_INFO,
 } from "../../constant";
 
-type RequestData = {
-  address: IdentityAddress;
-  birthDate: string;
-  displayName: string;
-  familyName: string;
-  gender: string;
-  givenName: string;
-  gravatarUri: string;
-  locale: string;
-  middleName: string;
-  namingSystem: NamingSystem;
-  nationalIdentityNumber: string;
-  nickname: string;
-  picture: string;
-  preferredAccessibility: Array<string>;
-  profile: string;
-  pronouns: string;
-  socialSecurityNumber: string;
-  takenName: string;
-  username: string;
-  website: string;
-  zoneInfo: string;
-};
+type RequestData = UpdateIdentityRequestParams & UpdateIdentityRequestBody;
 
 export const updateIdentitySchema = Joi.object<RequestData>()
   .keys({
-    address: JOI_IDENTITY_ADDRESS.optional(),
-    birthDate: JOI_BIRTHDATE.allow(null).optional(),
-    displayName: JOI_IDENTITY_DISPLAY_NAME.optional(),
-    familyName: Joi.string().allow(null).optional(),
-    gender: Joi.string().allow(null).optional(),
-    givenName: Joi.string().allow(null).optional(),
-    gravatarUri: Joi.string().uri().allow(null).optional(),
-    locale: JOI_LOCALE.allow(null).optional(),
-    middleName: Joi.string().allow(null).optional(),
-    namingSystem: JOI_NAMING_SYSTEM.optional(),
-    nationalIdentityNumber: Joi.string().allow(null).optional(),
-    nickname: Joi.string().allow(null).optional(),
-    picture: Joi.string().uri().allow(null).optional(),
-    preferredAccessibility: Joi.array().items(Joi.string()).optional(),
-    profile: Joi.string().uri().allow(null).optional(),
-    pronouns: Joi.string().allow(null).optional(),
-    socialSecurityNumber: Joi.string().allow(null).optional(),
-    takenName: Joi.string().allow(null).optional(),
-    username: Joi.string().lowercase().allow(null).optional(),
-    website: Joi.string().uri().allow(null).optional(),
-    zoneInfo: JOI_ZONE_INFO.allow(null).optional(),
+    id: Joi.string().guid().required(),
+    active: Joi.boolean(),
+    birthDate: JOI_BIRTHDATE.allow(null),
+    displayName: JOI_DISPLAY_NAME_STRING,
+    familyName: Joi.string().allow(null),
+    gender: Joi.string().allow(null),
+    givenName: Joi.string().allow(null),
+    avatarUri: Joi.string().uri().allow(null),
+    locale: JOI_LOCALE.allow(null),
+    middleName: Joi.string().allow(null),
+    namingSystem: JOI_NAMING_SYSTEM,
+    nickname: Joi.string().allow(null),
+    picture: Joi.string().uri().allow(null),
+    preferredAccessibility: Joi.array().items(Joi.string()),
+    profile: Joi.string().uri().allow(null),
+    pronouns: Joi.string().allow(null),
+    takenName: Joi.string().allow(null),
+    website: Joi.string().uri().allow(null),
+    zoneInfo: JOI_ZONE_INFO.allow(null),
   })
+  .options({ abortEarly: false })
   .required();
 
 export const updateIdentityController: ServerKoaController<RequestData> = async (
@@ -69,76 +43,103 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
 ): ControllerResponse => {
   const {
     data: {
+      active,
       birthDate,
       displayName,
       familyName,
       gender,
       givenName,
-      gravatarUri,
+      avatarUri,
       locale,
       middleName,
       namingSystem,
-      nationalIdentityNumber,
       nickname,
       picture,
       preferredAccessibility,
       profile,
       pronouns,
-      socialSecurityNumber,
       takenName,
-      username,
       website,
       zoneInfo,
     },
     entity: { identity },
     repository: { identityRepository },
-    token: {
-      bearerToken: { scopes },
-    },
   } = ctx;
 
-  if (scopes.includes(LindormScopes.ACCESSIBILITY) && !isUndefined(preferredAccessibility)) {
-    identity.preferredAccessibility = preferredAccessibility;
+  if (active !== undefined) {
+    identity.active = active;
+  }
+
+  if (birthDate !== undefined) {
+    identity.birthDate = birthDate;
   }
 
   if (
-    scopes.includes(LindormScopes.NATIONAL_IDENTITY_NUMBER) &&
-    !isUndefined(nationalIdentityNumber)
+    displayName !== undefined &&
+    displayName !== null &&
+    displayName !== identity.displayName.name
   ) {
-    identity.nationalIdentityNumber = nationalIdentityNumber;
+    await updateIdentityDisplayName(ctx, identity, displayName);
   }
 
-  if (scopes.includes(LindormScopes.PROFILE)) {
-    if (!isUndefined(birthDate)) identity.birthDate = birthDate;
-    if (!isUndefined(familyName)) identity.familyName = familyName;
-    if (!isUndefined(gender)) identity.gender = gender;
-    if (!isUndefined(givenName)) identity.givenName = givenName;
-    if (!isUndefined(locale)) identity.locale = locale;
-    if (!isUndefined(middleName)) identity.middleName = middleName;
-    if (!isUndefined(namingSystem)) identity.namingSystem = namingSystem;
-    if (!isUndefined(nickname)) identity.nickname = nickname;
-    if (!isUndefined(picture)) identity.picture = picture;
-    if (!isUndefined(profile)) identity.profile = profile;
-    if (!isUndefined(takenName)) identity.takenName = takenName;
-    if (!isUndefined(website)) identity.website = website;
-    if (!isUndefined(zoneInfo)) identity.zoneInfo = zoneInfo;
+  if (familyName !== undefined) {
+    identity.familyName = familyName;
   }
 
-  if (scopes.includes(LindormScopes.PUBLIC)) {
-    if (!isUndefined(displayName) && displayName !== identity.displayName.name) {
-      await updateIdentityDisplayName(ctx, identity, displayName);
-    }
-    if (!isUndefined(gravatarUri)) identity.gravatarUri = gravatarUri;
-    if (!isUndefined(pronouns)) identity.pronouns = pronouns;
+  if (gender !== undefined) {
+    identity.gender = gender;
   }
 
-  if (scopes.includes(LindormScopes.SOCIAL_SECURITY_NUMBER) && !isUndefined(socialSecurityNumber)) {
-    identity.socialSecurityNumber = socialSecurityNumber;
+  if (givenName !== undefined) {
+    identity.givenName = givenName;
   }
 
-  if (scopes.includes(LindormScopes.USERNAME) && !isUndefined(username)) {
-    identity.preferredUsername = username;
-    identity.username = username;
+  if (avatarUri !== undefined) {
+    identity.avatarUri = avatarUri;
+  }
+
+  if (locale !== undefined) {
+    identity.locale = locale;
+  }
+
+  if (middleName !== undefined) {
+    identity.middleName = middleName;
+  }
+
+  if (namingSystem !== undefined) {
+    identity.namingSystem = namingSystem;
+  }
+
+  if (nickname !== undefined) {
+    identity.nickname = nickname;
+  }
+
+  if (picture !== undefined) {
+    identity.picture = picture;
+  }
+
+  if (preferredAccessibility !== undefined) {
+    identity.preferredAccessibility = preferredAccessibility;
+  }
+
+  if (profile !== undefined) {
+    identity.profile = profile;
+  }
+
+  if (pronouns !== undefined) {
+    identity.pronouns = pronouns;
+  }
+
+  if (takenName !== undefined) {
+    identity.takenName = takenName;
+  }
+
+  if (website !== undefined) {
+    identity.website = website;
+  }
+
+  if (zoneInfo !== undefined) {
+    identity.zoneInfo = zoneInfo;
   }
 
   await identityRepository.update(identity);

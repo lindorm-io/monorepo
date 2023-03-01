@@ -1,33 +1,38 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
-import { ConfirmLogoutRequestParams, ConfirmLogoutResponse } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
+import { confirmOauthLogout } from "../../../handler";
+import {
+  ConfirmLogoutRequestBody,
+  ConfirmLogoutRequestParams,
+  ConfirmLogoutResponse,
+} from "@lindorm-io/common-types";
 
-type RequestData = ConfirmLogoutRequestParams;
+type RequestData = ConfirmLogoutRequestParams & ConfirmLogoutRequestBody;
+
+type ResponseBody = ConfirmLogoutResponse;
 
 export const confirmLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
+    accessSessionId: Joi.string().guid(),
+    browserSessionId: Joi.string().guid(),
+    refreshSessionId: Joi.string().guid(),
   })
   .required();
 
 export const confirmLogoutSessionController: ServerKoaController<RequestData> = async (
   ctx,
-): ControllerResponse => {
+): ControllerResponse<ResponseBody> => {
   const {
-    axios: { oauthClient },
-    data: { id },
+    data: { id, accessSessionId, browserSessionId, refreshSessionId },
   } = ctx;
 
-  const { data } = await oauthClient.post<ConfirmLogoutResponse>(
-    "/internal/sessions/logout/:id/confirm",
-    {
-      params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
-    },
-  );
+  const { redirectTo } = await confirmOauthLogout(ctx, id, {
+    accessSessionId,
+    browserSessionId,
+    refreshSessionId,
+  });
 
-  return { body: data };
+  return { body: { redirectTo } };
 };

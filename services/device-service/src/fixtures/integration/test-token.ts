@@ -2,11 +2,12 @@ import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
 import { ChallengeConfirmationTokenClaims } from "../../common";
+import { randomUUID } from "crypto";
 import {
-  ChallengeStrategies,
-  LindormTokenTypes,
-  PSD2Factors,
-  SubjectHints,
+  ChallengeStrategy,
+  DeviceTokenType,
+  PSD2Factor,
+  SubjectHint,
 } from "@lindorm-io/common-types";
 
 export const getTestChallengeConfirmationToken = (
@@ -15,20 +16,21 @@ export const getTestChallengeConfirmationToken = (
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
-    audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
+    audiences: [configuration.oauth.client_id],
     claims: {
       deviceLinkId: "id",
-      factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
-      strategy: ChallengeStrategies.PINCODE,
+      factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
+      strategy: ChallengeStrategy.PINCODE,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: randomString(16),
     payload: { generated: true },
     scopes: ["test"],
-    sessionId: "id",
-    subject: "subject",
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
+    session: randomUUID(),
+    sessionHint: "challenge",
+    subject: randomUUID(),
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
@@ -40,12 +42,13 @@ export const getTestChallengeSessionToken = (
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
-    audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
+    audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.challenge_session_expiry,
-    sessionId: "id",
-    subject: "subject",
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.CHALLENGE_SESSION,
+    session: randomUUID(),
+    sessionHint: "challenge",
+    subject: randomUUID(),
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.CHALLENGE_SESSION,
     ...options,
   });
   return token;
@@ -57,12 +60,13 @@ export const getTestEnrolmentSessionToken = (
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
-    audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
+    audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.enrolment_session_expiry,
-    sessionId: "id",
-    subject: "subject",
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.ENROLMENT_SESSION,
+    session: randomUUID(),
+    sessionHint: "enrolment",
+    subject: randomUUID(),
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.ENROLMENT_SESSION,
     ...options,
   });
   return token;
@@ -72,12 +76,13 @@ export const getTestRdcToken = (options: Partial<JwtSignOptions<any, any>> = {})
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
-    audiences: ["a3a90c66-c7b6-4ffe-ba04-c1f9de429f04"],
+    audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.remote_device_challenge_session_expiry,
-    sessionId: "id",
-    subject: "subject",
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.REMOTE_DEVICE_CHALLENGE_SESSION,
+    session: randomUUID(),
+    sessionHint: "rdc",
+    subject: randomUUID(),
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
     ...options,
   });
   return token;

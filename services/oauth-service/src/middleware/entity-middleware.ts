@@ -1,8 +1,16 @@
-import { AuthorizationSession, Client, ElevationSession, LogoutSession, Tenant } from "../entity";
 import { cacheEntityMiddleware } from "@lindorm-io/koa-redis";
 import { repositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
 import {
+  AuthorizationSession,
+  ClaimsSession,
+  Client,
+  ElevationSession,
+  LogoutSession,
+  Tenant,
+} from "../entity";
+import {
   AuthorizationSessionCache,
+  ClaimsSessionCache,
   ClientRepository,
   ElevationSessionCache,
   LogoutSessionCache,
@@ -12,6 +20,11 @@ import {
 export const authorizationSessionEntityMiddleware = cacheEntityMiddleware(
   AuthorizationSession,
   AuthorizationSessionCache,
+);
+
+export const claimsSessionEntityMiddleware = cacheEntityMiddleware(
+  ClaimsSession,
+  ClaimsSessionCache,
 );
 
 export const clientEntityMiddleware = repositoryEntityMiddleware(Client, ClientRepository);

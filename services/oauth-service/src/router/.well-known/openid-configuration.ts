@@ -1,7 +1,12 @@
 import { HttpStatus, Router } from "@lindorm-io/koa";
-import { LindormScopes, OauthGrantTypes, OauthResponseTypes } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
+import {
+  LindormScope,
+  OpenIdGrantType,
+  OpenIdResponseType,
+  OpenIdScope,
+} from "@lindorm-io/common-types";
 
 const router = new Router<any, any>();
 export default router;
@@ -13,11 +18,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     backchannelLogoutSupported: true,
     claimsParameterSupported: false,
     endSessionEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
-    grantTypesSupported: [
-      OauthGrantTypes.AUTHORIZATION_CODE,
-      OauthGrantTypes.CLIENT_CREDENTIALS,
-      OauthGrantTypes.REFRESH_TOKEN,
-    ],
+    grantTypesSupported: Object.values(OpenIdGrantType).sort(),
     idTokenEncryptionAlgValuesSupported: [],
     idTokenEncryptionEncValuesSupported: [],
     idTokenSigningAlgValuesSupported: ["ES512", "RS512"],
@@ -27,15 +28,15 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     requestParameterSupported: false,
     requestUriParameterSupported: true,
     responseTypesSupported: [
-      OauthResponseTypes.CODE,
-      OauthResponseTypes.ID_TOKEN,
-      OauthResponseTypes.TOKEN,
+      OpenIdResponseType.CODE,
+      OpenIdResponseType.ID_TOKEN,
+      OpenIdResponseType.TOKEN,
 
-      [OauthResponseTypes.CODE, OauthResponseTypes.ID_TOKEN].join(" "),
-      [OauthResponseTypes.CODE, OauthResponseTypes.TOKEN].join(" "),
-      [OauthResponseTypes.ID_TOKEN, OauthResponseTypes.TOKEN].join(" "),
+      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN].join(" "),
+      [OpenIdResponseType.CODE, OpenIdResponseType.TOKEN].join(" "),
+      [OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
 
-      [OauthResponseTypes.CODE, OauthResponseTypes.ID_TOKEN, OauthResponseTypes.TOKEN].join(" "),
+      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
     ],
     revokeEndpoint: new URL("/oauth2/sessions/revoke", configuration.server.host).toString(),
     claimsSupported: [
@@ -47,7 +48,6 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
       "auth_time",
       "azp",
       "birth_date",
-      "connected_providers",
       "display_name",
       "email",
       "email_verified",
@@ -56,7 +56,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
       "family_name",
       "gender",
       "given_name",
-      "gravatar_uri",
+      "avatar_uri",
       "iat",
       "iss",
       "jti",
@@ -90,22 +90,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
       "website",
       "zone_info",
     ],
-    scopesSupported: [
-      LindormScopes.OPENID,
-      LindormScopes.ADDRESS,
-      LindormScopes.EMAIL,
-      LindormScopes.PHONE,
-      LindormScopes.PROFILE,
-
-      LindormScopes.ACCESSIBILITY,
-      LindormScopes.CONNECTED_PROVIDERS,
-      LindormScopes.NATIONAL_IDENTITY_NUMBER,
-      LindormScopes.PUBLIC,
-      LindormScopes.SOCIAL_SECURITY_NUMBER,
-      LindormScopes.USERNAME,
-
-      LindormScopes.OFFLINE_ACCESS,
-    ],
+    scopesSupported: [...Object.values(OpenIdScope), ...Object.values(LindormScope)].sort(),
     subjectTypesSupported: ["identity", "client"],
     tokenEndpoint: new URL("/oauth2/token", configuration.server.host).toString(),
     tokenEndpointAuthMethodsSupported: ["client_secret_basic", "client_secret_post"],

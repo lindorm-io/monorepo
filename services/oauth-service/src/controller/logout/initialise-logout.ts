@@ -78,15 +78,15 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     });
   }
 
-  const accessSessions = await accessSessionRepository.findMany({
+  const accessSession = await accessSessionRepository.tryFind({
     browserSessionId: browserSession.id,
-  });
-  const refreshSessions = await refreshSessionRepository.findMany({
-    browserSessionId: browserSession.id,
+    clientId: client.id,
   });
 
-  const accessSession = accessSessions.find((x) => x.clientId === client.id);
-  const refreshSession = refreshSessions.find((x) => x.clientId === client.id);
+  const refreshSession = await refreshSessionRepository.tryFind({
+    browserSessionId: browserSession.id,
+    clientId: client.id,
+  });
 
   const expires = expiryDate(configuration.defaults.expiry.logout_session);
 
@@ -94,10 +94,8 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     new LogoutSession({
       requestedLogout: {
         accessSessionId: accessSession?.id || null,
-        accessSessions: accessSessions.map((x) => x.id),
         browserSessionId: browserSession.id,
         refreshSessionId: refreshSession?.id || null,
-        refreshSessions: refreshSessions.map((x) => x.id),
       },
 
       clientId: client.id,

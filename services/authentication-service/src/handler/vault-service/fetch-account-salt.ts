@@ -13,7 +13,7 @@ export const fetchAccountSalt = async (
   } = ctx;
 
   const response = await vaultClient.get<GetEncryptedRecordResponse<AccountSalt>>(
-    "/internal/vault/:id",
+    "/admin/vault/:id",
     {
       params: {
         id: account.id,

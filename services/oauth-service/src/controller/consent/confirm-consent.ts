@@ -8,7 +8,7 @@ import {
   ConfirmConsentRequestBody,
   ConfirmConsentRequestParams,
   ConfirmConsentResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmConsentRequestParams & ConfirmConsentRequestBody;
@@ -79,7 +79,7 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
   authorizationSession.confirmedConsent.audiences = audiences;
   authorizationSession.confirmedConsent.scopes = scopes;
 
-  authorizationSession.status.consent = SessionStatuses.CONFIRMED;
+  authorizationSession.status.consent = SessionStatus.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 

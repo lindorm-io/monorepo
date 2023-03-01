@@ -1,5 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
-import { ConnectSession, DisplayName, Identity, Identifier, Address } from "../entity";
+import { DisplayName, Identity, Identifier, Address } from "../entity";
 import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
 import {
@@ -12,24 +12,19 @@ import {
 } from "@lindorm-io/node-server";
 import {
   AddressRepository,
-  ConnectSessionCache,
   DisplayNameRepository,
   IdentifierRepository,
   IdentityRepository,
 } from "../infrastructure";
 
 type ServerAxios = LindormNodeServerAxios & {
-  communicationClient: Axios;
   oauthClient: Axios;
 };
 
-type ServerCache = LindormNodeServerCache & {
-  connectSessionCache: ConnectSessionCache;
-};
+type ServerCache = LindormNodeServerCache;
 
 type ServerEntity = {
   address: Address;
-  connectSession: ConnectSession;
   displayName: DisplayName;
   identifier: Identifier;
   identity: Identity;

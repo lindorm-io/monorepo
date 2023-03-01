@@ -5,16 +5,16 @@ import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { difference } from "lodash";
 import { ClientScopes } from "../../common";
+import { ClientError } from "@lindorm-io/errors";
 import {
   AcknowledgeRdcRequestParams,
   AcknowledgeRdcResponse,
+  DeviceTokenType,
   EmitSocketEventRequestBody,
-  LindormTokenTypes,
-  RdcSessionModes,
-  SessionStatuses,
-  SubjectHints,
+  RdcSessionMode,
+  SessionStatus,
+  SubjectHint,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = AcknowledgeRdcRequestParams;
 
@@ -34,19 +34,26 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     cache: { rdcSessionCache },
     entity: { rdcSession },
     jwt,
-    metadata: {
-      device: { linkId },
-    },
+    metadata,
+    token: { bearerToken },
   } = ctx;
 
-  if (!linkId) {
-    throw new ClientError("Bad Request", {
-      description: "Missing metadata",
-      data: { linkId },
+  if (rdcSession.status !== SessionStatus.PENDING) {
+    throw new ClientError("Invalid session status");
+  }
+
+  if (rdcSession.identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token");
+  }
+
+  if (!metadata.device.linkId) {
+    throw new ClientError("Invalid metadata", {
+      description: "Expected metadata is missing",
+      data: { linkId: metadata.device.linkId },
     });
   }
 
-  rdcSession.status = SessionStatuses.ACKNOWLEDGED;
+  rdcSession.status = SessionStatus.ACKNOWLEDGED;
 
   const {
     id,
@@ -66,24 +73,25 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
   const { token: rdcSessionToken, expiresIn } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: expires,
-    sessionId: id,
+    session: id,
+    sessionHint: "rdc",
     subject: identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.REMOTE_DEVICE_CHALLENGE_SESSION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
   });
 
   await rdcSessionCache.update(rdcSession);
 
-  const deviceLinks = difference<string>(rdcSession.deviceLinks, [linkId]);
+  const deviceLinks = difference<string>(rdcSession.deviceLinks, [metadata.device.linkId]);
 
-  if (mode === RdcSessionModes.PUSH_NOTIFICATION && deviceLinks.length) {
+  if (mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
     const body: EmitSocketEventRequestBody = {
       channels: { deviceLinks, identities: [identityId] },
       content: { id },
       event: "rdcSession:acknowledged",
     };
 
-    await communicationClient.post("/internal/socket/emit", {
+    await communicationClient.post("/admin/socket/emit", {
       body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT]),
@@ -108,7 +116,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
         status,
       },
       template: {
-        name: templateName,
+        name: templateName!,
         parameters: templateParameters,
       },
     },

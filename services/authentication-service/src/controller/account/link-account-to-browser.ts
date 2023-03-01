@@ -7,7 +7,7 @@ import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
 import { expiryDate } from "@lindorm-io/expiry";
 import { BrowserLink } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 
 interface RequestData {
   code: string;
@@ -73,6 +73,6 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     expires: expiryDate("99 years"),
     httpOnly: true,
     overwrite: true,
-    signed: ctx.server.environment !== Environments.TEST,
+    signed: ctx.server.environment !== Environment.TEST,
   });
 };

@@ -1,6 +1,6 @@
 import { AccessSession, AccessSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { AuthenticationMethods } from "@lindorm-io/common-types";
+import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
 
 export const createTestAccessSession = (
@@ -13,8 +13,9 @@ export const createTestAccessSession = (
     identityId: randomUUID(),
     latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
     levelOfAssurance: 2,
-    methods: [AuthenticationMethods.EMAIL, AuthenticationMethods.PHONE],
+    metadata: { ip: "192.168.0.1", platform: "iOS" },
+    methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     nonce: randomString(16),
-    scopes: ["openid", "profile"],
+    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
     ...options,
   });

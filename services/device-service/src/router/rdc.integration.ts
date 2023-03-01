@@ -12,7 +12,12 @@ import {
   TEST_DEVICE_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
 } from "../fixtures/integration";
-import { ChallengeStrategies, PSD2Factors, SessionStatuses } from "@lindorm-io/common-types";
+import {
+  ChallengeStrategy,
+  PSD2Factor,
+  SessionStatus,
+  SubjectHint,
+} from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -32,7 +37,7 @@ describe("/rdc", () => {
     });
 
   nock("https://communication.test.lindorm.io")
-    .post("/internal/socket/emit")
+    .post("/admin/socket/emit")
     .times(999)
     .reply(200, {});
 
@@ -80,7 +85,7 @@ describe("/rdc", () => {
         expires_in: 900,
         factors: 1,
         rdc_session_token: expect.any(String),
-        status: SessionStatuses.ACKNOWLEDGED,
+        status: SessionStatus.ACKNOWLEDGED,
       },
       template: {
         name: "template",
@@ -103,20 +108,23 @@ describe("/rdc", () => {
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
-      sessionId: session.id,
+      session: session.id,
       subject: session.identityId!,
     });
 
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
-        factors: [PSD2Factors.POSSESSION, PSD2Factors.KNOWLEDGE],
-        strategy: ChallengeStrategies.PINCODE,
+        factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
+        strategy: ChallengeStrategy.PINCODE,
       },
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
+      session: session.id,
+      sessionHint: "challenge",
       subject: session.identityId!,
+      subjectHint: SubjectHint.IDENTITY,
     });
 
     const accessToken = getTestAccessToken({
@@ -154,8 +162,10 @@ describe("/rdc", () => {
       nonce: session.nonce,
       payload: session.tokenPayload,
       scopes: session.scopes,
-      sessionId: session.id,
+      session: session.id,
+      sessionHint: "rdc",
       subject: session.identityId!,
+      subjectHint: SubjectHint.IDENTITY,
     });
 
     const accessToken = getTestAccessToken({
@@ -185,7 +195,7 @@ describe("/rdc", () => {
       createTestRdcSession({
         deviceLinks: [deviceLink.id],
         identityId: deviceLink.identityId,
-        status: SessionStatuses.PENDING,
+        status: SessionStatus.PENDING,
       }),
     );
 

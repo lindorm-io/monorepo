@@ -1,5 +1,5 @@
 import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
-import { OauthPromptModes, SessionStatuses } from "@lindorm-io/common-types";
+import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { isNewLoginRequired } from "./is-new-login-required";
 
@@ -16,13 +16,13 @@ export const isLoginRequired = (
   }
 
   if (
-    authorizationSession.status.login === SessionStatuses.CONFIRMED ||
-    authorizationSession.status.login === SessionStatuses.VERIFIED
+    authorizationSession.status.login === SessionStatus.CONFIRMED ||
+    authorizationSession.status.login === SessionStatus.VERIFIED
   ) {
     return false;
   }
 
-  if (authorizationSession.promptModes.includes(OauthPromptModes.LOGIN)) {
+  if (authorizationSession.promptModes.includes(OpenIdPromptMode.LOGIN)) {
     return true;
   }
 

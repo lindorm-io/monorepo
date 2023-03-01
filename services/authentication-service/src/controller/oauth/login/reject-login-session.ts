@@ -23,15 +23,12 @@ export const rejectLoginSessionController: ServerKoaController<RequestData> = as
     data: { id },
   } = ctx;
 
-  const { data } = await oauthClient.post<RejectLoginResponse>(
-    "/internal/sessions/login/:id/reject",
-    {
-      params: { id },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
-      ],
-    },
-  );
+  const { data } = await oauthClient.post<RejectLoginResponse>("/admin/sessions/login/:id/reject", {
+    params: { id },
+    middleware: [
+      clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
+    ],
+  });
 
   return { body: data };
 };

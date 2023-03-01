@@ -9,9 +9,9 @@ import { configuration } from "../../server/configuration";
 import { createTestAccount } from "../../fixtures/entity";
 import { server } from "../../server/server";
 import {
-  TEST_ACCOUNT_REPOSITORY,
   getTestAccessToken,
   setupIntegration,
+  TEST_ACCOUNT_REPOSITORY,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -42,7 +42,7 @@ describe("/account/password", () => {
     });
 
   nock("https://vault.test.lindorm.io")
-    .get((uri) => uri.includes("/internal/vault"))
+    .get((uri) => uri.includes("/admin/vault"))
     .times(999)
     .reply(200, {
       data: {

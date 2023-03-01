@@ -48,7 +48,7 @@ describe("assertCertificateChallenge", () => {
   });
 
   test("should verify a signed challenge for SHA256", async () => {
-    certificateMethod = "sha256";
+    certificateMethod = CertificateMethod.SHA256;
 
     expect(() =>
       assertCertificateChallenge({
@@ -61,7 +61,7 @@ describe("assertCertificateChallenge", () => {
   });
 
   test("should verify a signed challenge for SHA384", async () => {
-    certificateMethod = "sha384";
+    certificateMethod = CertificateMethod.SHA384;
 
     expect(() =>
       assertCertificateChallenge({
@@ -74,7 +74,7 @@ describe("assertCertificateChallenge", () => {
   });
 
   test("should verify a signed challenge for SHA512", async () => {
-    certificateMethod = "sha512";
+    certificateMethod = CertificateMethod.SHA512;
 
     expect(() =>
       assertCertificateChallenge({
@@ -87,7 +87,7 @@ describe("assertCertificateChallenge", () => {
   });
 
   test("should throw on invalid challenge", async () => {
-    certificateMethod = "sha256";
+    certificateMethod = CertificateMethod.SHA256;
 
     expect(() =>
       assertCertificateChallenge({
@@ -103,28 +103,28 @@ describe("assertCertificateChallenge", () => {
     expect(() =>
       assertCertificateChallenge({
         certificateChallenge,
-        certificateMethod: "sha384",
-        certificateVerifier: sign("sha256", certificateChallenge),
+        certificateMethod: CertificateMethod.SHA384,
+        certificateVerifier: sign(CertificateMethod.SHA256, certificateChallenge),
         publicKey,
       }),
     ).toThrow(ClientError);
   });
 
   test("should throw on invalid verifier method", async () => {
-    certificateMethod = "sha256";
+    certificateMethod = CertificateMethod.SHA256;
 
     expect(() =>
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign("sha384", certificateChallenge),
+        certificateVerifier: sign(CertificateMethod.SHA384, certificateChallenge),
         publicKey,
       }),
     ).toThrow(ClientError);
   });
 
   test("should throw on invalid verifier challenge", async () => {
-    certificateMethod = "sha256";
+    certificateMethod = CertificateMethod.SHA256;
 
     expect(() =>
       assertCertificateChallenge({
@@ -137,7 +137,7 @@ describe("assertCertificateChallenge", () => {
   });
 
   test("should throw on invalid public key", async () => {
-    certificateMethod = "sha256";
+    certificateMethod = CertificateMethod.SHA256;
 
     expect(() =>
       assertCertificateChallenge({

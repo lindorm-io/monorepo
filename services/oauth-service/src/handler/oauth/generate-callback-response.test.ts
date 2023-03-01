@@ -4,7 +4,7 @@ import { baseHash } from "@lindorm-io/core";
 import { createAccessToken as _createAccessToken, createIdToken as _createIdToken } from "../token";
 import { generateAuthorizationCode as _generateAuthorizationCode } from "./generate-authorization-code";
 import { generateCallbackResponse } from "./generate-callback-response";
-import { getIdentityUserinfo as _getIdentityUserinfo } from "../identity";
+import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   createTestAccessSession,
   createTestAuthorizationCode,
@@ -12,6 +12,7 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
 
 jest.mock("../identity");
 jest.mock("../token");
@@ -38,7 +39,7 @@ describe("generateCallbackResponse", () => {
 
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: ["token"],
+      responseTypes: [OpenIdResponseType.TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -91,7 +92,7 @@ describe("generateCallbackResponse", () => {
 
   test("should resolve state on form post", async () => {
     authorizationSession = createTestAuthorizationSession({
-      responseMode: "form_post",
+      responseMode: OpenIdResponseMode.FORM_POST,
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -111,7 +112,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri on fragment", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseMode: "fragment",
+      responseMode: OpenIdResponseMode.FRAGMENT,
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -126,7 +127,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri on query", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseMode: "query",
+      responseMode: OpenIdResponseMode.QUERY,
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
@@ -141,7 +142,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with code", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: ["code"],
+      responseTypes: [OpenIdResponseType.CODE],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -157,7 +158,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with access token", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: ["token"],
+      responseTypes: [OpenIdResponseType.TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -173,7 +174,7 @@ describe("generateCallbackResponse", () => {
   test("should resolve callback uri with id token", async () => {
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
-      responseTypes: ["id_token"],
+      responseTypes: [OpenIdResponseType.ID_TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
@@ -189,7 +190,7 @@ describe("generateCallbackResponse", () => {
       redirectData: baseHash(
         baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),
       ),
-      responseMode: "query",
+      responseMode: OpenIdResponseMode.QUERY,
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });

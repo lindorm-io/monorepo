@@ -17,7 +17,7 @@ export const getValidDeviceLinks = async (
 
   try {
     const { data } = await deviceClient.get<GetIdentityDeviceLinksResponse>(
-      "/internal/identities/:id/device-links",
+      "/admin/identities/:id/device-links",
       {
         params: { id: identityId },
         middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.DEVICE_IDENTITY_READ])],

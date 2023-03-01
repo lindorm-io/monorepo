@@ -20,7 +20,7 @@ describe("rejectElevationSessionController", () => {
     await expect(rejectElevationSessionController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/elevation/:id/reject",
+      "/admin/sessions/elevation/:id/reject",
       expect.any(Object),
     );
   });

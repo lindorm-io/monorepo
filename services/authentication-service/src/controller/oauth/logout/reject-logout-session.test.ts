@@ -20,7 +20,7 @@ describe("rejectLogoutSessionController", () => {
     await expect(rejectLogoutSessionController(ctx)).resolves.toStrictEqual({ body: "data" });
 
     expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/logout/:id/reject",
+      "/admin/sessions/logout/:id/reject",
       expect.any(Object),
     );
   });

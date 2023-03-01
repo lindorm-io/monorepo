@@ -4,13 +4,10 @@ import { createTestKeyPair } from "@lindorm-io/key-pair";
 import { mongoConnection, redisConnection } from "../../instance";
 import {
   AddressRepository,
-  ConnectSessionCache,
   DisplayNameRepository,
   IdentifierRepository,
   IdentityRepository,
 } from "../../infrastructure";
-
-export let TEST_CONNECT_SESSION_CACHE: ConnectSessionCache;
 
 export let TEST_ADDRESS_REPOSITORY: AddressRepository;
 export let TEST_DISPLAY_NAME_REPOSITORY: DisplayNameRepository;
@@ -22,8 +19,6 @@ export const setupIntegration = async (): Promise<void> => {
 
   await mongoConnection.connect();
   await redisConnection.connect();
-
-  TEST_CONNECT_SESSION_CACHE = new ConnectSessionCache({ connection: redisConnection, logger });
 
   TEST_ADDRESS_REPOSITORY = new AddressRepository({ connection: mongoConnection, logger });
   TEST_DISPLAY_NAME_REPOSITORY = new DisplayNameRepository({ connection: mongoConnection, logger });

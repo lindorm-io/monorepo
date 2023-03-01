@@ -46,7 +46,7 @@ describe("/userinfo", () => {
       family_name: "familyName",
       gender: "gender",
       given_name: "givenName",
-      gravatar_uri: "https://gravatar.url/",
+      avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
       middle_name: "middleName",
       name: "givenName familyName",

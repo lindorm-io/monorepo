@@ -1,11 +1,6 @@
 import { createMockRepository } from "@lindorm-io/mongo";
-import { createTestEmailIdentifier } from "../../fixtures/entity";
-import { setIdentifierAsPrimary as _setIdentifierAsPrimary } from "../../handler";
+import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { updateIdentifierController } from "./update-identifier";
-
-jest.mock("../../handler");
-
-const setIdentifierAsPrimary = _setIdentifierAsPrimary as jest.Mock;
 
 describe("updateIdentifierController", () => {
   let ctx: any;
@@ -14,6 +9,7 @@ describe("updateIdentifierController", () => {
     ctx = {
       data: {},
       entity: {
+        identity: createTestIdentity(),
         identifier: createTestEmailIdentifier(),
       },
       repository: {
@@ -40,8 +36,6 @@ describe("updateIdentifierController", () => {
     ctx.data.primary = true;
 
     await expect(updateIdentifierController(ctx)).resolves.toBeUndefined();
-
-    expect(setIdentifierAsPrimary).toHaveBeenCalled();
   });
 
   test("should resolve label and primary", async () => {
@@ -51,12 +45,5 @@ describe("updateIdentifierController", () => {
     await expect(updateIdentifierController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.repository.identifierRepository.update).toHaveBeenCalled();
-
-    expect(setIdentifierAsPrimary).toHaveBeenCalledWith(
-      expect.any(Object),
-      expect.objectContaining({
-        label: "new-label",
-      }),
-    );
   });
 });

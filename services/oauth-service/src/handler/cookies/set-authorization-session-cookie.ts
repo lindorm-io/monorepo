@@ -1,7 +1,7 @@
 import { ServerKoaContext } from "../../types";
 import { AuthorizationSession } from "../../entity";
 import { AUTHORIZATION_SESSION_COOKIE_NAME, BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 
 export const setAuthorizationSessionCookie = (
   ctx: ServerKoaContext,
@@ -18,7 +18,7 @@ export const setAuthorizationSessionCookie = (
     expires: authorizationSession.expires,
     httpOnly: true,
     overwrite: true,
-    signed: environment !== Environments.TEST,
+    signed: environment !== Environment.TEST,
   };
 
   logger.verbose("Setting cookie", {
@@ -31,6 +31,6 @@ export const setAuthorizationSessionCookie = (
     expires: authorizationSession.expires,
     httpOnly: true,
     overwrite: true,
-    signed: environment !== Environments.TEST,
+    signed: environment !== Environment.TEST,
   });
 };

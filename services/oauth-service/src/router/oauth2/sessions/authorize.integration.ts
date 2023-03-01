@@ -13,13 +13,19 @@ import {
   createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
+  setupIntegration,
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_REFRESH_SESSION_REPOSITORY,
-  setupIntegration,
 } from "../../../fixtures/integration";
+import {
+  AuthenticationMethod,
+  OpenIdResponseMode,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,9 +36,16 @@ describe("/oauth2/sessions/authorize", () => {
   beforeAll(setupIntegration);
 
   nock("https://identity.test.lindorm.io")
-    .get("/userinfo")
+    .get("/admin/claims")
+    .query(true)
     .times(999)
     .reply(200, TEST_GET_USERINFO_RESPONSE);
+
+  nock("https://test.client.lindorm.io")
+    .get("/claims")
+    .query(true)
+    .times(999)
+    .reply(200, { extraClientClaim: "extraClientClaim" });
 
   test("should resolve redirect with query", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
@@ -45,7 +58,12 @@ describe("/oauth2/sessions/authorize", () => {
         identityId: browserSession.identityId,
         latestAuthentication: new Date(),
         levelOfAssurance: 3,
-        scopes: ["openid", "offline_access", "email", "phone"],
+        scopes: [
+          OpenIdScope.OPENID,
+          OpenIdScope.OFFLINE_ACCESS,
+          OpenIdScope.EMAIL,
+          OpenIdScope.PHONE,
+        ],
       }),
     );
 
@@ -57,21 +75,22 @@ describe("/oauth2/sessions/authorize", () => {
         refreshSessionId: null,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: ["openid", "offline_access", "email"],
+          scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
           identityId: accessSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
-          methods: ["email", "phone"],
+          metadata: {},
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
           sso: true,
         },
-        responseMode: "query",
+        responseMode: OpenIdResponseMode.QUERY,
         status: {
-          login: "confirmed",
-          consent: "confirmed",
-          selectAccount: "skip",
+          login: SessionStatus.CONFIRMED,
+          consent: SessionStatus.CONFIRMED,
+          selectAccount: SessionStatus.SKIP,
         },
       }),
     );
@@ -125,7 +144,12 @@ describe("/oauth2/sessions/authorize", () => {
         identityId: browserSession.identityId,
         latestAuthentication: new Date(),
         levelOfAssurance: 3,
-        scopes: ["openid", "offline_access", "email", "phone"],
+        scopes: [
+          OpenIdScope.OPENID,
+          OpenIdScope.OFFLINE_ACCESS,
+          OpenIdScope.EMAIL,
+          OpenIdScope.PHONE,
+        ],
       }),
     );
 
@@ -137,21 +161,22 @@ describe("/oauth2/sessions/authorize", () => {
         refreshSessionId: refreshSession.id,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: ["openid", "offline_access", "email"],
+          scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
           identityId: refreshSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
-          methods: ["email", "phone"],
+          metadata: {},
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
           sso: true,
         },
-        responseMode: "form_post",
+        responseMode: OpenIdResponseMode.FORM_POST,
         status: {
-          login: "confirmed",
-          consent: "confirmed",
-          selectAccount: "skip",
+          login: SessionStatus.CONFIRMED,
+          consent: SessionStatus.CONFIRMED,
+          selectAccount: SessionStatus.SKIP,
         },
       }),
     );

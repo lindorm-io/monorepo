@@ -4,9 +4,8 @@ import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
-  OauthDisplayMode,
+  OpenIdDisplayMode,
   SessionStatus,
-  SessionStatuses,
 } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
@@ -48,7 +47,7 @@ export type ElevationSessionAttributes = EntityAttributes & {
   browserSessionId: string | null;
   clientId: string;
   country: string | null;
-  displayMode: OauthDisplayMode;
+  displayMode: OpenIdDisplayMode;
   expires: Date;
   idTokenHint: string | null;
   identityId: string;
@@ -127,7 +126,7 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
   public readonly browserSessionId: string | null;
   public readonly clientId: string;
   public readonly country: string | null;
-  public readonly displayMode: OauthDisplayMode;
+  public readonly displayMode: OpenIdDisplayMode;
   public readonly expires: Date;
   public readonly idTokenHint: string | null;
   public readonly identityId: string;
@@ -165,14 +164,14 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     this.authenticationHint = options.authenticationHint || [];
     this.clientId = options.clientId;
     this.country = options.country || null;
-    this.displayMode = options.displayMode || "page";
+    this.displayMode = options.displayMode || OpenIdDisplayMode.PAGE;
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
     this.identityId = options.identityId;
     this.nonce = options.nonce || randomString(16);
     this.redirectUri = options.redirectUri || null;
     this.state = options.state || null;
-    this.status = options.status || SessionStatuses.PENDING;
+    this.status = options.status || SessionStatus.PENDING;
     this.uiLocales = options.uiLocales || [];
   }
 

@@ -1,6 +1,6 @@
-import { OauthPromptModes, SessionStatuses } from "@lindorm-io/common-types";
 import { AuthorizationSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 
 export const isSelectAccountRequired = (authorizationSession: AuthorizationSession): boolean => {
   if (!authorizationSession) {
@@ -10,13 +10,13 @@ export const isSelectAccountRequired = (authorizationSession: AuthorizationSessi
   }
 
   if (
-    authorizationSession.status.selectAccount === SessionStatuses.CONFIRMED ||
-    authorizationSession.status.selectAccount === SessionStatuses.VERIFIED
+    authorizationSession.status.selectAccount === SessionStatus.CONFIRMED ||
+    authorizationSession.status.selectAccount === SessionStatus.VERIFIED
   ) {
     return false;
   }
 
-  if (authorizationSession.promptModes.includes(OauthPromptModes.SELECT_ACCOUNT)) {
+  if (authorizationSession.promptModes.includes(OpenIdPromptMode.SELECT_ACCOUNT)) {
     return true;
   }
 

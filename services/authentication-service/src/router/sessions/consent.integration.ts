@@ -3,6 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -22,38 +23,19 @@ describe("/sessions/consent", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get("/internal/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6")
+    .get((url) => url.startsWith("/admin/sessions/authorization/"))
     .times(999)
-    .reply(200, {
-      consent_status: "pending",
-      client: {
-        name: "name",
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-        required_scopes: ["openid", "profile"],
-        scope_descriptions: [
-          { name: "email", description: "email-description" },
-          { name: "openid", description: "openid-description" },
-          { name: "phone", description: "phone-description" },
-          { name: "profile", description: "profile-description" },
-        ],
-        type: "public",
-      },
-      requested: {
-        audiences: ["5e2eb662-15e4-4dd9-b283-f5e1c1f637f9"],
-        scopes: ["email", "openid", "phone", "profile"],
-      },
-    });
+    .reply(200, mockFetchOauthAuthorizationSession());
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6/confirm")
+    .post("/admin/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6/confirm")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6/reject")
+    .post("/admin/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6/reject")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-reject.url/",
@@ -65,23 +47,22 @@ describe("/sessions/consent", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      audiences: [expect.any(String)],
       client: {
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-        name: "name",
-        required_scopes: ["openid", "profile"],
-        scope_descriptions: [
-          { name: "email", description: "email-description" },
-          { name: "openid", description: "openid-description" },
-          { name: "phone", description: "phone-description" },
-          { name: "profile", description: "profile-description" },
-        ],
+        logo_uri: "https://test.client.com/logo.png",
+        name: "Test Client",
+        tenant: "Test Tenant",
         type: "public",
       },
-      requested: {
-        audiences: [expect.any(String)],
-        scopes: ["email", "openid", "phone", "profile"],
-      },
+      optional_scopes: [
+        "accessibility",
+        "national_identity_number",
+        "public",
+        "social_security_number",
+        "username",
+      ],
+      required_scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
+      scope_descriptions: [],
       status: "pending",
     });
   });

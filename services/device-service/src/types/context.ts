@@ -20,43 +20,43 @@ import {
   RdcSessionCache,
 } from "../infrastructure";
 
-type ServerAxios = LindormNodeServerAxios & {
+interface ServerAxios extends LindormNodeServerAxios {
   communicationClient: Axios;
   oauthClient: Axios;
   vaultClient: Axios;
-};
+}
 
-type ServerCache = LindormNodeServerCache & {
+interface ServerCache extends LindormNodeServerCache {
   challengeSessionCache: ChallengeSessionCache;
   rdcSessionCache: RdcSessionCache;
   enrolmentSessionCache: EnrolmentSessionCache;
-};
+}
 
-type ServerEntity = {
+interface ServerEntity {
   challengeSession: ChallengeSession;
   deviceLink: DeviceLink;
   rdcSession: RdcSession;
   enrolmentSession: EnrolmentSession;
-};
+}
 
-type ServerRepository = LindormNodeServerRepository & {
+interface ServerRepository extends LindormNodeServerRepository {
   deviceLinkRepository: DeviceLinkRepository;
-};
+}
 
-type ServerToken = LindormNodeServerToken & {
+interface ServerToken extends LindormNodeServerToken {
   challengeConfirmationToken: VerifiedChallengeConfirmationToken;
   challengeSessionToken: JwtDecodeData;
   rdcSessionToken: JwtDecodeData<Record<string, any>, Record<string, any>>;
   enrolmentSessionToken: JwtDecodeData;
-};
+}
 
-type Context = LindormNodeServerContext & {
+interface Context extends LindormNodeServerContext {
   axios: ServerAxios;
   cache: ServerCache;
   entity: ServerEntity;
   repository: ServerRepository;
   token: ServerToken;
-};
+}
 
 export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 

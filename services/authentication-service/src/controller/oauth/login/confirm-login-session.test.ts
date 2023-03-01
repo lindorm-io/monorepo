@@ -1,15 +1,15 @@
 import { confirmLoginSessionController } from "./confirm-login-session";
+import { confirmOauthLogin as _confirmOauthLogin } from "../../../handler";
+
+jest.mock("../../../handler");
+
+const confirmOauthLogin = _confirmOauthLogin as jest.Mock;
 
 describe("confirmLoginSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      axios: {
-        oauthClient: {
-          post: jest.fn().mockResolvedValue({ data: "data" }),
-        },
-      },
       token: {
         authenticationConfirmationToken: {
           authContextClass: "authContextClass",
@@ -19,28 +19,17 @@ describe("confirmLoginSessionController", () => {
           claims: {
             remember: "remember",
           },
-          sessionId: "sessionId",
+          session: "session",
         },
       },
     };
+
+    confirmOauthLogin.mockResolvedValue({ redirectTo: "confirmOauthLogin" });
   });
 
   test("should resolve", async () => {
-    await expect(confirmLoginSessionController(ctx)).resolves.toStrictEqual({ body: "data" });
-
-    expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/login/:id/confirm",
-      {
-        params: { id: "sessionId" },
-        body: {
-          acrValues: "authContextClass",
-          amrValues: "authMethodsReference",
-          identityId: "subject",
-          levelOfAssurance: "levelOfAssurance",
-          remember: "remember",
-        },
-        middleware: expect.any(Array),
-      },
-    );
+    await expect(confirmLoginSessionController(ctx)).resolves.toStrictEqual({
+      body: { redirectTo: "confirmOauthLogin" },
+    });
   });
 });

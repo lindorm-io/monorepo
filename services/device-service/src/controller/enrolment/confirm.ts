@@ -11,15 +11,16 @@ import { createDeviceLinkCallback } from "../../handler";
 import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import {
-  ChallengeStrategies,
+  ChallengeStrategy,
   ConfirmEnrolmentRequestBody,
   ConfirmEnrolmentRequestParams,
   ConfirmEnrolmentResponse,
-  LindormTokenTypes,
-  PSD2Factors,
-  SessionStatuses,
-  SubjectHints,
+  DeviceTokenType,
+  PSD2Factor,
+  SessionStatus,
+  SubjectHint,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = ConfirmEnrolmentRequestParams & ConfirmEnrolmentRequestBody;
 
@@ -44,7 +45,16 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     entity: { enrolmentSession },
     jwt,
     repository: { deviceLinkRepository },
+    token: { bearerToken, enrolmentSessionToken },
   } = ctx;
+
+  if (enrolmentSession.identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token");
+  }
+
+  if (enrolmentSession.id !== enrolmentSessionToken.session) {
+    throw new ClientError("Invalid enrolment token");
+  }
 
   await assertCertificateChallenge({
     certificateChallenge: enrolmentSession.certificateChallenge,
@@ -54,8 +64,8 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
   });
 
   const trusted =
-    enrolmentSession.status === SessionStatuses.CONFIRMED ||
-    enrolmentSession.status === SessionStatuses.SKIP;
+    enrolmentSession.status === SessionStatus.CONFIRMED ||
+    enrolmentSession.status === SessionStatus.SKIP;
 
   const salt: DeviceLinkSalt = {
     aes: randomString(128),
@@ -87,16 +97,17 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
-      factors: [PSD2Factors.POSSESSION],
-      strategy: ChallengeStrategies.IMPLICIT,
+      factors: [PSD2Factor.POSSESSION],
+      strategy: ChallengeStrategy.IMPLICIT,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: enrolmentSession.nonce,
     scopes: ["enrolment"],
-    sessionId: enrolmentSession.id,
+    session: enrolmentSession.id,
+    sessionHint: "enrolment",
     subject: deviceLink.identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
   });
 
   await enrolmentSessionCache.destroy(enrolmentSession);

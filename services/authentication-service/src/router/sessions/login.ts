@@ -3,8 +3,8 @@ import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/
 import {
   confirmLoginSessionController,
   confirmLoginSessionSchema,
-  getLoginSessionDataController,
-  getLoginSessionDataSchema,
+  getLoginSessionController,
+  getLoginSessionSchema,
   rejectLoginSessionController,
   rejectLoginSessionSchema,
 } from "../../controller";
@@ -15,8 +15,8 @@ export default router;
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getLoginSessionDataSchema),
-  useController(getLoginSessionDataController),
+  useSchema(getLoginSessionSchema),
+  useController(getLoginSessionController),
 );
 
 router.post(

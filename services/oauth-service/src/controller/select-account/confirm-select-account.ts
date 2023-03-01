@@ -15,7 +15,7 @@ import {
   ConfirmSelectAccountRequestParams,
   ConfirmSelectAccountResponse,
   LindormClaims,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmSelectAccountRequestParams & ConfirmSelectAccountRequestBody;
@@ -51,8 +51,8 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     authorizationSession.browserSessionId = null;
     authorizationSession.refreshSessionId = null;
 
-    authorizationSession.status.login = SessionStatuses.PENDING;
-    authorizationSession.status.consent = SessionStatuses.PENDING;
+    authorizationSession.status.login = SessionStatus.PENDING;
+    authorizationSession.status.consent = SessionStatus.PENDING;
   } else if (selectExisting) {
     if (
       !authorizationSession.requestedSelectAccount.browserSessions.find(
@@ -84,9 +84,7 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
       refreshSession,
     );
 
-    authorizationSession.status.login = loginRequired
-      ? SessionStatuses.PENDING
-      : SessionStatuses.SKIP;
+    authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
 
     const consentRequired = isConsentRequired(
       authorizationSession,
@@ -96,8 +94,8 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     );
 
     authorizationSession.status.consent = consentRequired
-      ? SessionStatuses.PENDING
-      : SessionStatuses.SKIP;
+      ? SessionStatus.PENDING
+      : SessionStatus.SKIP;
   } else {
     throw new ClientError("Invalid input", {
       description: "Use one of the inputs [ selectExisting | selectNew ]",
@@ -105,7 +103,7 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     });
   }
 
-  authorizationSession.status.selectAccount = SessionStatuses.CONFIRMED;
+  authorizationSession.status.selectAccount = SessionStatus.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 

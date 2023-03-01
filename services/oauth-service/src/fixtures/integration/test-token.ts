@@ -6,9 +6,10 @@ import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   LindormClaims,
-  LindormScopes,
-  LindormTokenTypes,
-  SubjectHints,
+  LindormScope,
+  OpenIdScope,
+  OpenIdTokenType,
+  SubjectHint,
 } from "@lindorm-io/common-types";
 
 export const getTestIdToken = (
@@ -26,13 +27,13 @@ export const getTestIdToken = (
     expiry: "10 seconds",
     levelOfAssurance: 3,
     nonce: randomString(16),
-    scopes: Object.values(LindormScopes),
+    scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
     session: randomUUID(),
     sessionHint: SessionHint.ACCESS,
     subject: randomUUID(),
-    subjectHint: SubjectHints.IDENTITY,
+    subjectHint: SubjectHint.IDENTITY,
     tenant: randomUUID(),
-    type: LindormTokenTypes.ID,
+    type: OpenIdTokenType.ID,
     ...options,
   });
 
@@ -49,9 +50,9 @@ export const getTestRefreshToken = (options: Partial<JwtSignOptions<any, any>> =
     session: randomUUID(),
     sessionHint: SessionHint.REFRESH,
     subject: randomUUID(),
-    subjectHint: SubjectHints.IDENTITY,
+    subjectHint: SubjectHint.IDENTITY,
     tenant: randomUUID(),
-    type: LindormTokenTypes.REFRESH,
+    type: OpenIdTokenType.REFRESH,
     ...options,
   });
 

@@ -8,6 +8,7 @@ import {
   createTestBrowserSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { AuthenticationMethod, OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -29,27 +30,27 @@ describe("isLoginRequired", () => {
         recommendedLevel: 2,
         recommendedMethods: [],
         requiredLevel: 3,
-        requiredMethods: ["email"],
+        requiredMethods: [AuthenticationMethod.EMAIL],
       },
       promptModes: [],
     });
 
     accessSession = createTestAccessSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
     });
 
     browserSession = createTestBrowserSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
     });
 
     refreshSession = createTestRefreshSession({
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
       levelOfAssurance: 4,
@@ -67,19 +68,19 @@ describe("isLoginRequired", () => {
   });
 
   test("should not require on confirmed", () => {
-    authorizationSession.status.login = "confirmed";
+    authorizationSession.status.login = SessionStatus.CONFIRMED;
 
     expect(isLoginRequired(authorizationSession)).toBe(false);
   });
 
   test("should not require on confirmed", () => {
-    authorizationSession.status.login = "verified";
+    authorizationSession.status.login = SessionStatus.VERIFIED;
 
     expect(isLoginRequired(authorizationSession)).toBe(false);
   });
 
   test("should require on prompt", () => {
-    authorizationSession.promptModes.push("login");
+    authorizationSession.promptModes.push(OpenIdPromptMode.LOGIN);
 
     expect(isLoginRequired(authorizationSession)).toBe(true);
   });

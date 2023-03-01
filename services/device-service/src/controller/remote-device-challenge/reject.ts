@@ -5,11 +5,12 @@ import { JOI_JWT } from "../../common";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { updateEnrolmentStatus } from "../../handler";
 import {
-  RdcSessionTypes,
+  RdcSessionType,
   RejectRdcRequestBody,
   RejectRdcRequestParams,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = RejectRdcRequestParams & RejectRdcRequestBody;
 
@@ -27,12 +28,31 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
     axios: { axiosClient, oauthClient },
     cache: { rdcSessionCache },
     entity: { rdcSession },
+    token: { bearerToken, rdcSessionToken },
   } = ctx;
 
-  rdcSession.status = SessionStatuses.REJECTED;
+  if (![SessionStatus.ACKNOWLEDGED, SessionStatus.PENDING].includes(rdcSession.status)) {
+    throw new ClientError("Invalid session status");
+  }
+
+  if (rdcSession.identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token", {
+      description: "Bearer token subject does not match RDC session subject",
+      debug: {
+        expect: rdcSession.identityId,
+        actual: bearerToken.subject,
+      },
+    });
+  }
+
+  if (rdcSession.id !== rdcSessionToken.session) {
+    throw new ClientError("Invalid session token");
+  }
+
+  rdcSession.status = SessionStatus.REJECTED;
 
   switch (rdcSession.type) {
-    case RdcSessionTypes.CALLBACK:
+    case RdcSessionType.CALLBACK:
       await axiosClient.request({
         body: {
           rdcSessionId: rdcSession.id,
@@ -41,11 +61,11 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
         },
         method: rdcSession.rejectMethod,
         middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
-        url: rdcSession.rejectUri,
+        url: rdcSession.rejectUri || undefined,
       });
       break;
 
-    case RdcSessionTypes.ENROLMENT:
+    case RdcSessionType.ENROLMENT:
       await updateEnrolmentStatus(ctx, rdcSession);
       break;
 

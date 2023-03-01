@@ -1,6 +1,6 @@
 import { AccessSession, Client, RefreshSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
-import { LindormTokenTypes, SubjectHints } from "@lindorm-io/common-types";
+import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { SessionHint } from "../../enum";
 import { configuration } from "../../server/configuration";
@@ -34,8 +34,8 @@ export const createAccessToken = (
     session: session.id,
     sessionHint: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
     subject: session.identityId,
-    subjectHint: SubjectHints.IDENTITY,
+    subjectHint: SubjectHint.IDENTITY,
     tenant: client.tenantId,
-    type: LindormTokenTypes.ACCESS,
+    type: OpenIdTokenType.ACCESS,
   });
 };

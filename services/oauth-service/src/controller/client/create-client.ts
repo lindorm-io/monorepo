@@ -5,19 +5,21 @@ import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
 import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import {
   LevelOfAssurance,
-  OauthClientTypes,
-  OauthDisplayModes,
-  OauthResponseModes,
+  OpenIdClientType,
+  OpenIdDisplayMode,
+  OpenIdGrantType,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  OpenIdScope,
 } from "@lindorm-io/common-types";
 
 type RequestData = {
   description: string;
   host: string;
   name: string;
-  postLogoutUris: Array<string>;
-  redirectUris: Array<string>;
   tenantId: string;
 };
 
@@ -31,8 +33,6 @@ export const createClientSchema = Joi.object<RequestData>()
     description: Joi.string().required(),
     host: Joi.string().uri().required(),
     name: Joi.string().required(),
-    postLogoutUris: Joi.array().items(Joi.string().uri()).required(),
-    redirectUris: Joi.array().items(Joi.string().uri()).required(),
     tenantId: Joi.string().guid().required(),
   })
   .required();
@@ -41,36 +41,50 @@ export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { description, host, name, postLogoutUris, redirectUris },
+    data: { description, host, name },
     entity: { tenant },
     repository: { clientRepository },
   } = ctx;
 
+  const id = randomUUID();
   const secret = randomString(128);
 
-  const client = await clientRepository.create(
+  await clientRepository.create(
     new Client({
+      id,
+      allowed: {
+        grantTypes: [
+          OpenIdGrantType.AUTHORIZATION_CODE,
+          OpenIdGrantType.CLIENT_CREDENTIALS,
+          OpenIdGrantType.REFRESH_TOKEN,
+        ],
+        responseTypes: [
+          OpenIdResponseType.CODE,
+          OpenIdResponseType.ID_TOKEN,
+          OpenIdResponseType.TOKEN,
+        ],
+        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE, OpenIdScope.OFFLINE_ACCESS],
+      },
+
       defaults: {
-        audiences: [],
-        displayMode: OauthDisplayModes.PAGE,
+        audiences: [id],
+        displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: configuration.defaults.clients.level_of_assurance as LevelOfAssurance,
-        responseMode: OauthResponseModes.QUERY,
+        responseMode: OpenIdResponseMode.QUERY,
       },
 
       active: configuration.defaults.clients.active_state,
       description,
       host,
       name,
-      postLogoutUris,
-      redirectUris,
       secret: await argon.encrypt(secret),
       tenantId: tenant.id,
-      type: OauthClientTypes.PUBLIC,
+      type: OpenIdClientType.PUBLIC,
     }),
   );
 
   return {
-    body: { id: client.id, secret },
+    body: { id, secret },
     status: HttpStatus.Success.CREATED,
   };
 };

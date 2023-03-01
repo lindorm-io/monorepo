@@ -3,6 +3,8 @@ import { confirmSelectAccountController } from "./confirm-select-account";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockRepository } from "@lindorm-io/mongo";
+import { randomUUID } from "crypto";
+import { ClientError } from "@lindorm-io/errors";
 import {
   tryFindAccessSession as _tryFindAccessSession,
   tryFindRefreshSession as _tryFindRefreshSession,
@@ -19,8 +21,6 @@ import {
   createTestClient,
   createTestRefreshSession,
 } from "../../fixtures/entity";
-import { randomUUID } from "crypto";
-import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

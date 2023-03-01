@@ -30,7 +30,5 @@ server:
   workers: false
 
 services:
-  communication_service:
-    host: https://communication.test.lindorm.io
   oauth_service:
     host: https://oauth.test.lindorm.io

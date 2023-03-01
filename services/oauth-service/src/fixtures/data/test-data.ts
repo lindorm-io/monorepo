@@ -1,7 +1,7 @@
-import { PKCEMethod } from "@lindorm-io/node-pkce";
 import { createHash } from "crypto";
 import { encodeBase64Url } from "@lindorm-io/core";
 import { randomString } from "@lindorm-io/random";
+import { PKCEMethod } from "@lindorm-io/common-types";
 
 type Result = {
   code: string;
@@ -15,7 +15,7 @@ type Result = {
 export const getTestData = (): Result => {
   const code = randomString(128);
   const codeVerifier = encodeBase64Url(randomString(64)).slice(0, 43);
-  const codeChallengeMethod = PKCEMethod.S256;
+  const codeChallengeMethod = PKCEMethod.SHA256;
   const codeChallenge = createHash("sha256").update(codeVerifier, "utf8").digest("base64url");
 
   const nonce = randomString(16);

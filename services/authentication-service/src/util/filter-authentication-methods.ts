@@ -1,8 +1,8 @@
-import { AuthenticationMethod, AuthenticationMethods } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
-export const filterAuthenticationMethods = (input?: string[]): AuthenticationMethod[] =>
+export const filterAuthenticationMethod = (input?: string[]): AuthenticationMethod[] =>
   Array.isArray(input)
     ? (input.filter((key) =>
-        Object.values(AuthenticationMethods).includes(key as AuthenticationMethod),
+        Object.values(AuthenticationMethod).includes(key as AuthenticationMethod),
       ) as Array<AuthenticationMethod>)
     : [];

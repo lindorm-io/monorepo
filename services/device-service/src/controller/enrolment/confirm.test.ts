@@ -4,6 +4,7 @@ import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../hand
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -36,7 +37,10 @@ describe("confirmEnrolmentController", () => {
         pincode: "pincode",
       },
       entity: {
-        enrolmentSession: createTestEnrolmentSession(),
+        enrolmentSession: createTestEnrolmentSession({
+          id: "a15c8ead-157a-4cd6-ab19-46c18b38f150",
+          identityId: "ec04fed7-7ecd-4f43-96b1-d23f193f1d07",
+        }),
       },
       jwt: {
         sign: jest.fn().mockImplementation(() => ({
@@ -54,7 +58,10 @@ describe("confirmEnrolmentController", () => {
       },
       token: {
         bearerToken: {
-          subject: "identityId",
+          subject: "ec04fed7-7ecd-4f43-96b1-d23f193f1d07",
+        },
+        enrolmentSessionToken: {
+          session: "a15c8ead-157a-4cd6-ab19-46c18b38f150",
         },
       },
     };
@@ -82,7 +89,9 @@ describe("confirmEnrolmentController", () => {
 
   test("should resolve enrolment session with trusted deviceLink", async () => {
     ctx.entity.enrolmentSession = createTestEnrolmentSession({
-      status: "confirmed",
+      id: "a15c8ead-157a-4cd6-ab19-46c18b38f150",
+      identityId: "ec04fed7-7ecd-4f43-96b1-d23f193f1d07",
+      status: SessionStatus.CONFIRMED,
     });
 
     await expect(confirmEnrolmentController(ctx)).resolves.toStrictEqual({
@@ -101,7 +110,9 @@ describe("confirmEnrolmentController", () => {
 
   test("should resolve enrolment session with non-trusted deviceLink", async () => {
     ctx.entity.enrolmentSession = createTestEnrolmentSession({
-      status: "pending",
+      id: "a15c8ead-157a-4cd6-ab19-46c18b38f150",
+      identityId: "ec04fed7-7ecd-4f43-96b1-d23f193f1d07",
+      status: SessionStatus.PENDING,
     });
 
     await expect(confirmEnrolmentController(ctx)).resolves.toStrictEqual({

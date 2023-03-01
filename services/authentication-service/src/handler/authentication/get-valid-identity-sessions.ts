@@ -17,7 +17,7 @@ export const getValidIdentitySessions = async (
 
   try {
     const { data } = await oauthClient.get<GetIdentitySessionsResponse>(
-      "/internal/identities/:id/sessions",
+      "/admin/identities/:id/sessions",
       {
         params: { id: identityId },
         middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_IDENTITY_READ])],

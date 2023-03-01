@@ -16,11 +16,9 @@ import {
 } from "@lindorm-io/entity";
 import {
   RdcSessionMethod,
-  RdcSessionMethods,
   RdcSessionMode,
   RdcSessionType,
   SessionStatus,
-  SessionStatuses,
 } from "@lindorm-io/common-types";
 
 export interface RdcSessionAttributes extends EntityAttributes {
@@ -120,7 +118,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     super(options);
 
     this.audiences = options.audiences || [];
-    this.confirmMethod = options.confirmMethod || RdcSessionMethods.POST;
+    this.confirmMethod = options.confirmMethod || RdcSessionMethod.POST;
     this.confirmPayload = options.confirmPayload || {};
     this.confirmUri = options.confirmUri || null;
     this.deviceLinks = options.deviceLinks;
@@ -130,11 +128,11 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     this.identityId = options.identityId || null;
     this.mode = options.mode;
     this.nonce = options.nonce;
-    this.rejectMethod = options.rejectMethod || RdcSessionMethods.POST;
+    this.rejectMethod = options.rejectMethod || RdcSessionMethod.POST;
     this.rejectPayload = options.confirmPayload || {};
     this.rejectUri = options.rejectUri || null;
     this.scopes = options.scopes || [];
-    this.status = options.status || SessionStatuses.PENDING;
+    this.status = options.status || SessionStatus.PENDING;
     this.templateName = options.templateName || null;
     this.templateParameters = options.templateParameters || {};
     this.tokenPayload = options.tokenPayload || {};

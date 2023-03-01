@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ClientScopes } from "../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { GetOidcSessionResponse, SessionStatuses } from "@lindorm-io/common-types";
+import { GetOidcSessionResponse, SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import { calculateAuthenticationStatus } from "../../util";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -11,12 +11,12 @@ import { createURL } from "@lindorm-io/url";
 import { resolveAllowedStrategies } from "../../handler";
 
 type RequestData = {
-  sessionId: string;
+  session: string;
 };
 
 export const confirmOidcSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: Joi.string().guid().required(),
+    session: Joi.string().guid().required(),
   })
   .required();
 
@@ -26,14 +26,14 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
   const {
     axios: { oauthClient, oidcClient },
     cache: { authenticationSessionCache },
-    data: { sessionId },
+    data: { session },
     repository: { accountRepository },
   } = ctx;
 
   const {
     data: { callbackId, identityId, levelOfAssurance, provider },
-  } = await oidcClient.get<GetOidcSessionResponse>("/internal/sessions/:id", {
-    params: { id: sessionId },
+  } = await oidcClient.get<GetOidcSessionResponse>("/admin/sessions/:id", {
+    params: { id: session },
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OIDC_SESSION_READ])],
   });
 
@@ -57,7 +57,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
 
   authenticationSession.status = calculateAuthenticationStatus(authenticationSession);
 
-  if (authenticationSession.status === SessionStatuses.PENDING) {
+  if (authenticationSession.status === SessionStatus.PENDING) {
     authenticationSession.allowedStrategies = await resolveAllowedStrategies(
       ctx,
       authenticationSession,
@@ -71,7 +71,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
     redirect: createURL(configuration.frontend.routes.oidc, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { sessionId: authenticationSession.id },
+      query: { session: authenticationSession.id },
     }),
   };
 };

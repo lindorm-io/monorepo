@@ -3,6 +3,7 @@ import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { expiryObject } from "@lindorm-io/expiry";
 import { GetLogoutRequestParams, GetLogoutResponse } from "@lindorm-io/common-types";
+import { ServerError } from "@lindorm-io/errors";
 
 type RequestData = GetLogoutRequestParams;
 
@@ -18,29 +19,61 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { client, logoutSession },
+    entity: { client, logoutSession, tenant },
+    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
   } = ctx;
 
   const { expires, expiresIn } = expiryObject(logoutSession.expires);
 
+  if (!logoutSession.requestedLogout.browserSessionId) {
+    throw new ServerError("Browser session not found");
+  }
+
+  const browserSession = await browserSessionRepository.find({
+    id: logoutSession.requestedLogout.browserSessionId,
+  });
+
+  const accessSessions = browserSession
+    ? await accessSessionRepository.findMany({
+        browserSessionId: browserSession.id,
+      })
+    : [];
+
+  const accessSession = logoutSession.requestedLogout.accessSessionId
+    ? accessSessions.find((x) => x.id === logoutSession.requestedLogout.accessSessionId)
+    : undefined;
+
+  const refreshSession = logoutSession.requestedLogout.refreshSessionId
+    ? await refreshSessionRepository.find({
+        id: logoutSession.requestedLogout.refreshSessionId,
+      })
+    : undefined;
+
   return {
     body: {
       logout: {
-        accessSessionId: logoutSession.requestedLogout.accessSessionId,
-        accessSessions: logoutSession.requestedLogout.accessSessions,
-        browserSessionId: logoutSession.requestedLogout.browserSessionId,
-        refreshSessionId: logoutSession.requestedLogout.refreshSessionId,
-        refreshSessions: logoutSession.requestedLogout.refreshSessions,
+        status: logoutSession.status,
+
+        accessSession: {
+          id: accessSession?.id || null,
+        },
+        browserSession: {
+          id: browserSession.id,
+          connectedSessions: accessSessions.filter((x) => x.id !== accessSession?.id).length,
+        },
+        refreshSession: {
+          id: refreshSession?.id || null,
+        },
       },
 
       client: {
-        description: client.description,
-        logoUri: client.logoUri,
         name: client.name,
+        logoUri: client.logoUri,
         type: client.type,
+        tenant: tenant.name,
       },
+
       logoutSession: {
-        clientId: logoutSession.clientId,
         expiresAt: expires.toISOString(),
         expiresIn,
         idTokenHint: logoutSession.idTokenHint,

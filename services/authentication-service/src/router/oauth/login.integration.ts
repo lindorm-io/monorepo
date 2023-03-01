@@ -1,13 +1,20 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
+import {
+  AuthenticationMethod,
+  OpenIdDisplayMode,
+  OpenIdPromptMode,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
 } from "../../fixtures/integration";
-import { SessionStatuses } from "@lindorm-io/common-types";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { randomUUID } from "crypto";
+import { randomString } from "@lindorm-io/random";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,14 +34,14 @@ describe("/oauth/login", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions/login/") && uri.endsWith("/redirect"))
+    .get((uri) => uri.startsWith("/admin/sessions/authorization/") && uri.endsWith("/redirect"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-verify.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post((uri) => uri.startsWith("/internal/sessions/login/") && uri.endsWith("/confirm"))
+    .post((uri) => uri.startsWith("/admin/sessions/login/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
@@ -42,46 +49,43 @@ describe("/oauth/login", () => {
 
   test("should redirect to front end", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, {
-        loginStatus: SessionStatuses.PENDING,
-        authorizationSession: {
-          authToken: null,
-        },
-      });
-
-    const url = createURL("/oauth/login", {
-      host: "https://rm.rm",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
-    });
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(200, mockFetchOauthAuthorizationSession());
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth/login")
+      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://frontend.url");
     expect(location.pathname).toBe("/api/login");
-    expect(location.searchParams.get("session_id")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
+    expect(location.searchParams.get("session")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
   test("should redirect to verify endpoint on unexpected status", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get(`/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
-      .reply(200, {
-        loginStatus: SessionStatuses.CONFIRMED,
-        authorizationSession: {
-          authToken: null,
-        },
-      });
+      .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
+      .reply(
+        200,
+        mockFetchOauthAuthorizationSession({
+          login: {
+            isRequired: false,
+            status: SessionStatus.CONFIRMED,
 
-    const url = createURL("/oauth/login", {
-      host: "https://rm.rm",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
-    });
+            identityId: randomUUID(),
+            minimumLevel: 2,
+            recommendedLevel: 2,
+            recommendedMethods: [AuthenticationMethod.EMAIL],
+            requiredLevel: 2,
+            requiredMethods: [AuthenticationMethod.EMAIL],
+          },
+        }),
+      );
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth/login")
+      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -89,24 +93,40 @@ describe("/oauth/login", () => {
   });
 
   test("should confirm on valid authentication confirmation token", async () => {
-    const authToken = getTestAuthenticationConfirmationToken();
-
-    nock("https://oauth.test.lindorm.io")
-      .get(`/internal/sessions/login/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
-      .reply(200, {
-        loginStatus: SessionStatuses.PENDING,
-        authorizationSession: {
-          authToken,
-        },
-      });
-
-    const url = createURL("/oauth/login", {
-      host: "https://rm.rm",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
+    const authToken = getTestAuthenticationConfirmationToken({
+      session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
     });
 
+    nock("https://oauth.test.lindorm.io")
+      .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
+      .reply(
+        200,
+        mockFetchOauthAuthorizationSession({
+          authorizationSession: {
+            authToken,
+            country: "se",
+            displayMode: OpenIdDisplayMode.PAGE,
+            expiresAt: "2022-01-01T04:00:00.000Z",
+            expiresIn: 1800,
+            idTokenHint: "id.jwt.jwt",
+            loginHint: ["test@lindorm.io"],
+            maxAge: 500,
+            nonce: randomString(16),
+            originalUri: "https://oauth.lindorm.io/oauth2/authorize?query=query",
+            promptModes: [
+              OpenIdPromptMode.CONSENT,
+              OpenIdPromptMode.LOGIN,
+              OpenIdPromptMode.SELECT_ACCOUNT,
+            ],
+            redirectUri: "https://test.client.com/redirect",
+            uiLocales: ["en-GB", "sv-SE"],
+          },
+        }),
+      );
+
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth/login")
+      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);

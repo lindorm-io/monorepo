@@ -6,7 +6,7 @@ import {
   ConfirmLogoutRequestBody,
   ConfirmLogoutRequestParams,
   ConfirmLogoutResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmLogoutRequestParams & ConfirmLogoutRequestBody;
@@ -40,7 +40,7 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
   logoutSession.confirmedLogout.browserSessionId = browserSessionId;
   logoutSession.confirmedLogout.refreshSessionId = refreshSessionId;
 
-  logoutSession.status = SessionStatuses.CONFIRMED;
+  logoutSession.status = SessionStatus.CONFIRMED;
 
   await logoutSessionCache.update(logoutSession);
 

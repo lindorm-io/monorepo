@@ -40,10 +40,15 @@ describe("confirmChallengeController", () => {
         strategy: "implicit",
       },
       entity: {
-        challengeSession: createTestChallengeSession(),
+        challengeSession: createTestChallengeSession({
+          id: "7af9ad76-cd7a-4738-8952-1fdc17259176",
+        }),
         deviceLink: createTestDeviceLink({
-          pincode: "pincode-signature",
+          id: "524e8022-864c-4fca-a6d0-38042f69e3a9",
           biometry: "biometry-signature",
+          installationId: "831a4227-db62-4160-97be-65c22023e367",
+          pincode: "pincode-signature",
+          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
         }),
       },
       jwt: {
@@ -54,11 +59,19 @@ describe("confirmChallengeController", () => {
       },
       metadata: {
         device: {
+          installationId: "831a4227-db62-4160-97be-65c22023e367",
+          linkId: "524e8022-864c-4fca-a6d0-38042f69e3a9",
           name: "Test DeviceLink Name",
+          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
         },
       },
       repository: {
         deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      },
+      token: {
+        challengeSessionToken: {
+          session: "7af9ad76-cd7a-4738-8952-1fdc17259176",
+        },
       },
     };
 

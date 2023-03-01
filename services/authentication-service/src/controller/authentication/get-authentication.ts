@@ -8,7 +8,7 @@ import { randomString } from "@lindorm-io/random";
 import {
   GetAuthenticationRequestParams,
   GetAuthenticationResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = GetAuthenticationRequestParams;
@@ -31,18 +31,18 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
   } = ctx;
 
   if (
-    authenticationSession.status !== SessionStatuses.CONFIRMED &&
-    authenticationSession.status !== SessionStatuses.PENDING &&
-    authenticationSession.status !== SessionStatuses.REJECTED
+    authenticationSession.status !== SessionStatus.CONFIRMED &&
+    authenticationSession.status !== SessionStatus.PENDING &&
+    authenticationSession.status !== SessionStatus.REJECTED
   ) {
     throw new ClientError("Invalid Session Status");
   }
 
-  if (authenticationSession.status === SessionStatuses.CONFIRMED) {
+  if (authenticationSession.status === SessionStatus.CONFIRMED) {
     const code = randomString(64);
 
     authenticationSession.code = await argon.encrypt(code);
-    authenticationSession.status = SessionStatuses.CODE;
+    authenticationSession.status = SessionStatus.CODE;
 
     await authenticationSessionCache.update(authenticationSession);
 

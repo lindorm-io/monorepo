@@ -27,6 +27,7 @@ interface Expiry {
   authorization_session:    string;
   browser_session:          string;
   browser_session_remember: string;
+  claims_session:           string;
   client_credentials:       string;
   code_session:             string;
   id_token:                 string;
@@ -76,11 +77,13 @@ interface Oauth {
 }
 
 interface Redirect {
-  consent: string;
-  elevate: string;
-  login:   string;
-  logout:  string;
-  select:  string;
+  claims:   string;
+  consent:  string;
+  elevate:  string;
+  login:    string;
+  logout:   string;
+  select:   string;
+  userinfo: string;
 }
 
 interface Server {

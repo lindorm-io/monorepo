@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { JOI_DISPLAY_NAME_STRING } from "../constant";
 import { LindormError, ServerError } from "@lindorm-io/errors";
 import { randomNumber } from "@lindorm-io/random";
 import { remove } from "lodash";
@@ -20,7 +21,7 @@ export type DisplayNameOptions = Optional<DisplayNameAttributes, EntityKeys | "n
 const schema = Joi.object<DisplayNameAttributes>({
   ...JOI_ENTITY_BASE,
 
-  name: Joi.string().required(),
+  name: JOI_DISPLAY_NAME_STRING.required(),
   numbers: Joi.array().items(Joi.number()).required(),
 });
 

@@ -49,6 +49,7 @@ const createAccessSession = async (
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
+      metadata: authorizationSession.confirmedLogin.metadata,
       methods: authorizationSession.confirmedLogin.methods,
       nonce: authorizationSession.nonce,
       scopes: authorizationSession.confirmedConsent.scopes,

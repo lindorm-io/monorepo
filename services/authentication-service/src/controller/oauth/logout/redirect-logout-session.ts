@@ -1,25 +1,18 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
-import { fetchOauthLogoutData } from "../../../handler";
-import { ClientScopes } from "../../../common";
-import {
-  ConfirmLogoutResponse,
-  OauthClientTypes,
-  RedirectLogoutResponse,
-  SessionStatuses,
-} from "@lindorm-io/common-types";
+import { getOauthLogoutRedirect, getOauthLogoutSession } from "../../../handler";
 
 interface RequestData {
-  sessionId: string;
+  session: string;
 }
 
 export const redirectLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: Joi.string().guid().required(),
+    session: Joi.string().guid().required(),
   })
   .required();
 
@@ -27,35 +20,18 @@ export const redirectLogoutSessionController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { oauthClient },
-    data: { sessionId },
+    data: { session },
     logger,
   } = ctx;
 
   const {
-    logoutStatus,
-    client: { type },
-  } = await fetchOauthLogoutData(ctx, sessionId);
+    logout: { status },
+  } = await getOauthLogoutSession(ctx, session);
 
-  if (logoutStatus !== SessionStatuses.PENDING) {
-    logger.warn("Invalid Session Status", { logoutStatus });
+  if (status !== SessionStatus.PENDING) {
+    logger.warn("Unexpected Session Status", { status });
 
-    const {
-      data: { redirectTo },
-    } = await oauthClient.get<RedirectLogoutResponse>("/internal/sessions/logout/:id/redirect", {
-      params: { id: sessionId },
-    });
-
-    return { redirect: redirectTo };
-  }
-
-  if (type === OauthClientTypes.CONFIDENTIAL) {
-    const {
-      data: { redirectTo },
-    } = await oauthClient.post<ConfirmLogoutResponse>("/internal/sessions/logout/:id/confirm", {
-      params: { id: sessionId },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
-    });
+    const { redirectTo } = await getOauthLogoutRedirect(ctx, session);
 
     return { redirect: redirectTo };
   }
@@ -64,7 +40,7 @@ export const redirectLogoutSessionController: ServerKoaController<RequestData> =
     redirect: createURL(configuration.frontend.routes.logout, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { sessionId },
+      query: { session },
     }),
   };
 };

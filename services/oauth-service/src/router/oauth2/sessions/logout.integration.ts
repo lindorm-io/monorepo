@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
+import { SessionStatus } from "@lindorm-io/common-types";
 import { configuration } from "../../../server/configuration";
-import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../../fixtures/data";
 import { server } from "../../../server/server";
 import {
@@ -13,13 +13,13 @@ import {
   createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
+  getTestIdToken,
+  setupIntegration,
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
-  getTestIdToken,
-  setupIntegration,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -52,20 +52,16 @@ describe("/oauth2/sessions/logout", () => {
       subject: accessSession.identityId,
     });
 
-    const url = createURL("/oauth2/sessions/logout", {
-      host: "https://rm.rm",
-      query: {
-        clientId: client.id,
-        idTokenHint: idToken,
-        logoutHint: "logout-hint",
-        postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
-        state,
-        uiLocales: "en-GB sv-SE",
-      },
-    }).toString();
-
     const response = await request(server.callback())
-      .get(url.replace("https://rm.rm", ""))
+      .get("/oauth2/sessions/logout")
+      .query({
+        client_id: client.id,
+        idToken_hint: idToken,
+        logout_hint: "logout-hint",
+        post_logout_redirect_uri: "https://test.client.lindorm.io/logout",
+        state,
+        ui_locales: "en-GB sv-SE",
+      })
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
@@ -92,14 +88,12 @@ describe("/oauth2/sessions/logout", () => {
         idTokenHint: idToken,
         identityId: accessSession.identityId,
         logoutHint: "logout-hint",
-        originalUri: url.replace("https://rm.rm", "https://oauth.test.lindorm.io"),
+        originalUri: expect.any(String),
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
           accessSessionId: accessSession.id,
-          accessSessions: [accessSession.id],
           browserSessionId: browserSession.id,
           refreshSessionId: null,
-          refreshSessions: [],
         },
         state: state,
         status: "pending",
@@ -128,23 +122,19 @@ describe("/oauth2/sessions/logout", () => {
       subject: refreshSession.identityId,
     });
 
-    const url = createURL("/oauth2/sessions/logout", {
-      host: "https://rm.rm",
-      query: {
-        clientId: client.id,
-        idTokenHint: idToken,
-        logoutHint: "logout-hint",
-        postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
-        state,
-        uiLocales: "en-GB sv-SE",
-      },
-    }).toString();
-
     const response = await request(server.callback())
-      .get(url.replace("https://rm.rm", ""))
+      .get("/oauth2/sessions/logout")
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
+      .query({
+        client_id: client.id,
+        id_token_hint: idToken,
+        logout_hint: "logout-hint",
+        post_logout_redirect_uri: "https://test.client.lindorm.io/logout",
+        state,
+        ui_locales: "en-GB sv-SE",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -168,14 +158,12 @@ describe("/oauth2/sessions/logout", () => {
         idTokenHint: idToken,
         identityId: refreshSession.identityId,
         logoutHint: "logout-hint",
-        originalUri: url.replace("https://rm.rm", "https://oauth.test.lindorm.io"),
+        originalUri: expect.any(String),
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
           accessSessionId: null,
-          accessSessions: [],
           browserSessionId: browserSession.id,
           refreshSessionId: refreshSession.id,
-          refreshSessions: [refreshSession.id],
         },
         state: state,
         status: "pending",
@@ -210,23 +198,19 @@ describe("/oauth2/sessions/logout", () => {
           refreshSessionId: refreshSession.id,
         },
         identityId: browserSession.identityId,
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
 
-    const url = createURL("/oauth2/sessions/logout/verify", {
-      host: "https://rm.rm",
-      query: {
-        postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
-        session: logoutSession.id,
-      },
-    });
-
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth2/sessions/logout/verify")
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
+      .query({
+        session: logoutSession.id,
+        post_logout_redirect_uri: "https://test.client.lindorm.io/logout",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);

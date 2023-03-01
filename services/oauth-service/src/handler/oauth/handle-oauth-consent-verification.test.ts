@@ -13,6 +13,7 @@ import {
   getUpdatedAccessSession as _getUpdatedAccessSession,
   getUpdatedRefreshSession as _getUpdatedRefreshSession,
 } from "../sessions";
+import { OpenIdScope } from "@lindorm-io/common-types";
 
 jest.mock("../sessions");
 
@@ -35,7 +36,7 @@ describe("handleOauthConsentVerification", () => {
     };
 
     authorizationSession = createTestAuthorizationSession();
-    authorizationSession.confirmedConsent.scopes = ["openid"];
+    authorizationSession.confirmedConsent.scopes = [OpenIdScope.OPENID];
 
     client = createTestClient();
 
@@ -60,7 +61,7 @@ describe("handleOauthConsentVerification", () => {
   });
 
   test("should resolve refresh session", async () => {
-    authorizationSession.confirmedConsent.scopes.push("offline_access");
+    authorizationSession.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
 
     await expect(
       handleOauthConsentVerification(ctx, authorizationSession, client),

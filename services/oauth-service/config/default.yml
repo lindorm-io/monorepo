@@ -7,6 +7,7 @@ defaults:
     authorization_session: 30 minutes
     browser_session: 20 hours
     browser_session_remember: 30 days
+    claims_session: 90 seconds
     client_credentials: 60 seconds
     code_session: 60 seconds
     id_token: 24 hours
@@ -42,11 +43,13 @@ oauth:
   client_id: id
 
 redirect:
+  claims: /admin/claims
   consent: /oauth/consent
   elevate: /oauth/elevate
   login: /oauth/login
   logout: /oauth/logout
   select: /oauth/select
+  userinfo: /userinfo
 
 redis:
   host: localhost

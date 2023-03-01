@@ -5,7 +5,7 @@ import { assertSessionPending, createLogoutRejectedUri } from "../../util";
 import {
   RejectLogoutRequestParams,
   RejectLogoutResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = RejectLogoutRequestParams;
@@ -31,7 +31,7 @@ export const rejectLogoutController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating logout session");
 
-  logoutSession.status = SessionStatuses.REJECTED;
+  logoutSession.status = SessionStatus.REJECTED;
 
   await logoutSessionCache.update(logoutSession);
 

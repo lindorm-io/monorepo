@@ -1,6 +1,6 @@
 import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { OauthPromptModes, SessionStatuses } from "@lindorm-io/common-types";
+import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 import { isNewConsentRequired } from "./is-new-consent-required";
 
 export const isConsentRequired = (
@@ -16,13 +16,13 @@ export const isConsentRequired = (
   }
 
   if (
-    authorizationSession.status.consent === SessionStatuses.CONFIRMED ||
-    authorizationSession.status.consent === SessionStatuses.VERIFIED
+    authorizationSession.status.consent === SessionStatus.CONFIRMED ||
+    authorizationSession.status.consent === SessionStatus.VERIFIED
   ) {
     return false;
   }
 
-  if (authorizationSession.promptModes.includes(OauthPromptModes.CONSENT)) {
+  if (authorizationSession.promptModes.includes(OpenIdPromptMode.CONSENT)) {
     return true;
   }
 

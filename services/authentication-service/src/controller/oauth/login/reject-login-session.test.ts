@@ -20,7 +20,7 @@ describe("rejectLoginSessionController", () => {
     await expect(rejectLoginSessionController(ctx)).resolves.toStrictEqual({ body: "data" });
 
     expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/login/:id/reject",
+      "/admin/sessions/login/:id/reject",
       expect.any(Object),
     );
   });

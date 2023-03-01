@@ -1,11 +1,11 @@
-import { Router, paramsMiddleware, useAssertion, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { deviceHeadersEnrolledSchema } from "../schema";
 import {
-  getDeviceLinkInfoController,
-  getDeviceLinkListController,
-  getDeviceLinkInfoSchema,
   deleteDeviceLinkController,
   deleteDeviceLinkSchema,
+  getDeviceLinkInfoController,
+  getDeviceLinkInfoSchema,
+  getDeviceLinkListController,
   updateDeviceLinkBiometryController,
   updateDeviceLinkBiometrySchema,
   updateDeviceLinkPincodeController,
@@ -31,12 +31,6 @@ router.get(
   paramsMiddleware,
   useSchema(getDeviceLinkInfoSchema),
   deviceLinkEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.deviceLink.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
   useController(getDeviceLinkInfoController),
 );
 
@@ -45,12 +39,6 @@ router.delete(
   paramsMiddleware,
   useSchema(deleteDeviceLinkSchema),
   deviceLinkEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.deviceLink.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
   useController(deleteDeviceLinkController),
 );
 
@@ -61,19 +49,6 @@ router.put(
   useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.deviceLink.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.challengeConfirmationToken.claims.deviceLinkId",
-    },
-    hint: "deviceLinkId",
-  }),
   useController(updateDeviceLinkBiometryController),
 );
 
@@ -84,19 +59,6 @@ router.put(
   useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.deviceLink.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
-  useAssertion({
-    fromPath: {
-      expect: "data.id",
-      actual: "token.challengeConfirmationToken.claims.deviceLinkId",
-    },
-    hint: "deviceLinkId",
-  }),
   useController(updateDeviceLinkPincodeController),
 );
 
@@ -107,18 +69,5 @@ router.put(
   useSchema(deviceHeadersEnrolledSchema, "headers"),
   challengeConfirmationTokenMiddleware("data.challengeConfirmationToken"),
   deviceLinkEntityMiddleware("data.id"),
-  useAssertion({
-    fromPath: {
-      expect: "entity.deviceLink.identityId",
-      actual: "token.bearerToken.subject",
-    },
-  }),
-  useAssertion({
-    expect: false,
-    fromPath: {
-      actual: "entity.deviceLink.trusted",
-    },
-    hint: "trusted",
-  }),
   useController(updateDeviceLinkTrustedController),
 );

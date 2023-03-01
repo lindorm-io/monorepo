@@ -7,9 +7,10 @@ import {
   GetPendingRdcRequestParams,
   GetPendingRdcResponse,
   PendingRdcSession,
-  RdcSessionModes,
-  SessionStatuses,
+  RdcSessionMode,
+  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = GetPendingRdcRequestParams;
 
@@ -27,12 +28,17 @@ export const getPendingRdcSessionsController: ServerKoaController<RequestData> =
   const {
     cache: { rdcSessionCache },
     data: { id: identityId },
+    token: { bearerToken },
   } = ctx;
+
+  if (identityId !== bearerToken.subject) {
+    throw new ClientError("Invalid bearer token");
+  }
 
   const result = await rdcSessionCache.findMany({ identityId });
   const filtered = filter(result, {
-    mode: RdcSessionModes.PUSH_NOTIFICATION,
-    status: SessionStatuses.PENDING,
+    mode: RdcSessionMode.PUSH_NOTIFICATION,
+    status: SessionStatus.PENDING,
   });
   const pending = orderBy(filtered, ["created"], ["desc"]);
   const sessions: Array<PendingRdcSession> = [];

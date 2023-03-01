@@ -1,6 +1,6 @@
-import { getName } from "./get-name";
 import { Identity } from "../entity";
-import { NamingSystem } from "../enum";
+import { NamingSystem } from "@lindorm-io/common-types";
+import { getName } from "./get-name";
 
 describe("getName", () => {
   test("should resolve GIVEN_FAMILY", () => {

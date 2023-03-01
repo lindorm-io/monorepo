@@ -2,7 +2,12 @@ import Joi from "joi";
 import { ClientAllowed, ClientDefaults, ClientExpiry, ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CLIENT_TYPE, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
-import { OauthClientType, ScopeDescription } from "@lindorm-io/common-types";
+import {
+  LindormScope,
+  OpenIdClientType,
+  OpenIdScope,
+  ScopeDescription,
+} from "@lindorm-io/common-types";
 import { isUndefined } from "lodash";
 import {
   JOI_DISPLAY_MODE,
@@ -16,7 +21,6 @@ type RequestData = {
   id: string;
   active: boolean;
   allowed: ClientAllowed;
-  audiences: Array<string>;
   backChannelLogoutUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
@@ -29,10 +33,10 @@ type RequestData = {
   name: string;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
-  requiredScopes: Array<string>;
+  requiredScopes: Array<OpenIdScope | LindormScope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
-  type: OauthClientType;
+  type: OpenIdClientType;
 };
 
 export const updateClientSchema = Joi.object<RequestData>()
@@ -57,7 +61,6 @@ export const updateClientSchema = Joi.object<RequestData>()
     }),
 
     active: Joi.boolean(),
-    audiences: Joi.array().items(Joi.string()),
     backChannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     enforceBasicAuth: Joi.boolean(),
@@ -82,7 +85,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     data: {
       active,
       allowed,
-      audiences,
       backChannelLogoutUri,
       defaults,
       description,
@@ -119,7 +121,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (!isUndefined(expiry?.refreshToken)) client.expiry.refreshToken = expiry.refreshToken;
 
   if (!isUndefined(active)) client.active = active;
-  if (!isUndefined(audiences)) client.audiences = audiences;
   if (!isUndefined(backChannelLogoutUri)) client.backChannelLogoutUri = backChannelLogoutUri;
   if (!isUndefined(description)) client.description = description;
   if (!isUndefined(enforceBasicAuth)) client.enforceBasicAuth = enforceBasicAuth;

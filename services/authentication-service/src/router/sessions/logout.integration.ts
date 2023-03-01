@@ -3,6 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
+import { mockFetchOauthLogoutSession } from "../../fixtures/axios";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -22,26 +23,19 @@ describe("/sessions/logout", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff")
+    .get((url) => url.startsWith("/admin/sessions/logout/"))
     .times(999)
-    .reply(200, {
-      logout_status: "pending",
-      client: {
-        name: "name",
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-      },
-    });
+    .reply(200, mockFetchOauthLogoutSession());
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/confirm")
+    .post("/admin/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/confirm")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post("/internal/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/reject")
+    .post("/admin/sessions/logout/1a0777b1-5074-4d1c-9958-2b231ba910ff/reject")
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-reject.url/",
@@ -53,10 +47,21 @@ describe("/sessions/logout", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      access_session: {
+        id: expect.any(String),
+      },
+      browser_session: {
+        connected_sessions: 3,
+        id: expect.any(String),
+      },
       client: {
-        description: "description",
-        logo_uri: "https://client.logo.uri/",
-        name: "name",
+        logo_uri: "https://test.client.com/logo.png",
+        name: "Test Client",
+        tenant: "Test Tenant",
+        type: "public",
+      },
+      refresh_session: {
+        id: null,
       },
       status: "pending",
     });

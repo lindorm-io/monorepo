@@ -9,13 +9,13 @@ import { createRdcSession, isRdcRequired } from "../../handler";
 import { expiryObject } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import {
+  DeviceTokenType,
   InitialiseEnrolmentRequestBody,
   InitialiseEnrolmentResponse,
-  LindormTokenTypes,
-  RdcSessionModes,
-  RdcSessionTypes,
-  SessionStatuses,
-  SubjectHints,
+  RdcSessionMode,
+  RdcSessionType,
+  SessionStatus,
+  SubjectHint,
 } from "@lindorm-io/common-types";
 
 type RequestData = InitialiseEnrolmentRequestBody;
@@ -69,8 +69,8 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   const nonce = randomString(16);
 
   if (!name || !installationId || !uniqueId) {
-    throw new ClientError("Bad Request", {
-      description: "Missing metadata",
+    throw new ClientError("Invalid metadata", {
+      description: "Metadata is required to continue enrolment",
       data: {
         name,
         installationId,
@@ -98,7 +98,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       installationId,
       nonce,
       publicKey,
-      status: externalChallengeRequired ? SessionStatuses.PENDING : SessionStatuses.SKIP,
+      status: externalChallengeRequired ? SessionStatus.PENDING : SessionStatus.SKIP,
       uniqueId,
     }),
   );
@@ -106,10 +106,11 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   const { token } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.enrolment_session_expiry,
-    sessionId: session.id,
+    session: session.id,
+    sessionHint: "enrolment",
     subject: identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.ENROLMENT_SESSION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.ENROLMENT_SESSION,
   });
 
   if (externalChallengeRequired) {
@@ -119,7 +120,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       expires,
       factors: 2,
       identityId,
-      mode: RdcSessionModes.QR_CODE,
+      mode: RdcSessionMode.QR_CODE,
       nonce,
       templateName: "enrolment",
       templateParameters: {
@@ -129,7 +130,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
         systemName,
         systemVersion,
       },
-      type: RdcSessionTypes.ENROLMENT,
+      type: RdcSessionType.ENROLMENT,
     });
   }
 

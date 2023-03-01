@@ -1,10 +1,11 @@
-import { AUTHENTICATION_STRATEGY_CONFIG, AuthenticationStrategyConfig } from "../constant";
+import { AuthMethodConfig } from "@lindorm-io/common-types";
 import { AuthenticationSession } from "../entity";
+import { AuthenticationStrategyConfig } from "../types";
+import { STRATEGY_CONFIG_LIST } from "../strategies";
 import { ServerError } from "@lindorm-io/errors";
 import { filter, find, orderBy, uniq } from "lodash";
-import { AuthMethodConfig } from "@lindorm-io/common-types";
 
-type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; requested: boolean };
+type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; required: boolean };
 
 export const generateClientConfig = (
   authenticationSession: AuthenticationSession,
@@ -15,7 +16,7 @@ export const generateClientConfig = (
     });
   }
 
-  const allowedConfig = AUTHENTICATION_STRATEGY_CONFIG.filter((config) =>
+  const allowedConfig = STRATEGY_CONFIG_LIST.filter((config) =>
     authenticationSession.allowedStrategies.includes(config.strategy),
   );
 
@@ -23,10 +24,10 @@ export const generateClientConfig = (
 
   for (const config of allowedConfig) {
     let recommended = false;
-    let requested = false;
+    let required = false;
     let weight = config.weight;
 
-    if (authenticationSession.requiredLevel === config.value) {
+    if (authenticationSession.requiredLevel === config.loa) {
       weight = weight * 5;
     }
     if (authenticationSession.recommendedMethods.includes(config.method)) {
@@ -34,11 +35,11 @@ export const generateClientConfig = (
       weight = weight * 25;
     }
     if (authenticationSession.requiredMethods.includes(config.method)) {
-      requested = true;
+      required = true;
       weight = weight * 100;
     }
 
-    adjustedConfig.push({ ...config, weight, recommended, requested });
+    adjustedConfig.push({ ...config, weight, recommended, required });
   }
 
   const orderedConfig = orderBy(
@@ -59,12 +60,12 @@ export const generateClientConfig = (
     const strategies = filter(orderedConfig, { method }).map((config) => config.strategy);
 
     clientConfig.push({
-      hint: config.hint,
-      initialiseKey: config.initialiseKey,
+      identifierHint: config.identifierHint,
+      identifierType: config.identifierType,
       method,
       rank,
       recommended: config.recommended,
-      requested: config.requested,
+      required: config.required,
       strategies,
     });
 

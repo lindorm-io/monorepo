@@ -1,10 +1,16 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createURL } from "@lindorm-io/url";
 import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
-import { OauthClientTypes, SessionStatuses } from "@lindorm-io/common-types";
+import {
+  LindormScope,
+  OpenIdClientType,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,14 +30,14 @@ describe("/oauth/consent", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/redirect"))
+    .get((uri) => uri.startsWith("/admin/sessions/authorization/") && uri.endsWith("/redirect"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-verify.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post((uri) => uri.startsWith("/internal/sessions/consent/") && uri.endsWith("/confirm"))
+    .post((uri) => uri.startsWith("/admin/sessions/consent/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
@@ -39,55 +45,42 @@ describe("/oauth/consent", () => {
 
   test("should redirect to front end", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, {
-        consentStatus: SessionStatuses.PENDING,
-        client: {
-          type: OauthClientTypes.PUBLIC,
-        },
-        requested: {
-          audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
-          scopes: ["openid", "profile"],
-        },
-      });
-
-    const url = createURL("/oauth/consent", {
-      host: "https://test.test",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
-    });
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(200, mockFetchOauthAuthorizationSession());
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
+      .get("/oauth/consent")
+      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
 
     expect(location.origin).toBe("https://frontend.url");
     expect(location.pathname).toBe("/api/consent");
-    expect(location.searchParams.get("session_id")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
+    expect(location.searchParams.get("session")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
   test("should redirect to verify endpoint on unexpected status", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, {
-        consentStatus: SessionStatuses.CONFIRMED,
-        client: {
-          type: OauthClientTypes.PUBLIC,
-        },
-        requested: {
-          audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
-          scopes: ["openid", "profile"],
-        },
-      });
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(
+        200,
+        mockFetchOauthAuthorizationSession({
+          consent: {
+            isRequired: false,
+            status: SessionStatus.CONFIRMED,
 
-    const url = createURL("/oauth/consent", {
-      host: "https://rm.rm",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
-    });
+            audiences: [randomUUID()],
+            optionalScopes: Object.values(LindormScope),
+            requiredScopes: Object.values(OpenIdScope),
+            scopeDescriptions: [],
+          },
+        }),
+      );
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth/consent")
+      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -98,25 +91,34 @@ describe("/oauth/consent", () => {
 
   test("should confirm confidential clients and redirect", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/internal/sessions/consent/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, {
-        consentStatus: SessionStatuses.PENDING,
-        client: {
-          type: OauthClientTypes.CONFIDENTIAL,
-        },
-        requested: {
-          audiences: ["fe016418-21e7-43d2-9855-a72fa382ed49"],
-          scopes: ["openid", "profile"],
-        },
-      });
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(
+        200,
+        mockFetchOauthAuthorizationSession({
+          consent: {
+            isRequired: false,
+            status: SessionStatus.PENDING,
 
-    const url = createURL("/oauth/consent", {
-      host: "https://test.test",
-      query: { sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" },
-    });
+            audiences: [randomUUID()],
+            optionalScopes: Object.values(LindormScope),
+            requiredScopes: Object.values(OpenIdScope),
+            scopeDescriptions: [],
+          },
+
+          client: {
+            logoUri: "https://test.client.com/logo.png",
+            name: "Test Client",
+            tenant: "Test Tenant",
+            type: OpenIdClientType.CONFIDENTIAL,
+          },
+        }),
+      );
 
     const response = await request(server.callback())
-      .get(url.toString().replace("https://test.test", ""))
+      .get("/oauth/consent")
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);

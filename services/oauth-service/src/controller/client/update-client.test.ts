@@ -66,7 +66,6 @@ describe("updateClientController", () => {
           responseTypes: ["code"],
           scopes: ["openid"],
         },
-        audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],
         backChannelLogoutUri: "https://backChannelLogoutUri",
         defaults: {
           audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],

@@ -1,7 +1,8 @@
 import Joi from "joi";
+import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
 import { JOI_AUTHENTICATION_STRATEGY } from "../constant";
-import { JOI_EMAIL, JOI_PHONE_NUMBER, JOI_SESSION_STATUS } from "../common";
-import { AuthenticationStrategy, SessionStatus, SessionStatuses } from "@lindorm-io/common-types";
+import { JOI_SESSION_STATUS } from "../common";
+import { randomString } from "@lindorm-io/random";
 import {
   EntityAttributes,
   EntityKeys,
@@ -12,21 +13,19 @@ import {
 
 export type StrategySessionAttributes = EntityAttributes & {
   authenticationSessionId: string;
-  code: string | null;
-  email: string | null;
   expires: Date;
-  strategy: AuthenticationStrategy;
-  nin: string | null;
+  identifier: string;
+  identifierType: IdentifierType;
   nonce: string | null;
-  otp: string | null;
-  phoneNumber: string | null;
+  secret: string | null;
   status: SessionStatus;
-  username: string | null;
+  strategy: AuthenticationStrategy;
+  visualHint: string | null;
 };
 
 export type StrategySessionOptions = Optional<
   StrategySessionAttributes,
-  EntityKeys | "code" | "email" | "nin" | "nonce" | "otp" | "phoneNumber" | "status" | "username"
+  EntityKeys | "nonce" | "secret" | "status" | "visualHint"
 >;
 
 const schema = Joi.object<StrategySessionAttributes>()
@@ -34,16 +33,16 @@ const schema = Joi.object<StrategySessionAttributes>()
     ...JOI_ENTITY_BASE,
 
     authenticationSessionId: Joi.string().guid().required(),
-    code: Joi.string().allow(null).required(),
-    email: JOI_EMAIL.allow(null).required(),
     expires: Joi.date().required(),
-    strategy: JOI_AUTHENTICATION_STRATEGY.required(),
-    nin: Joi.string().allow(null).required(),
-    nonce: Joi.string().allow(null).required(),
-    otp: Joi.string().allow(null).required(),
-    phoneNumber: JOI_PHONE_NUMBER.allow(null).required(),
+    identifier: Joi.string().required(),
+    identifierType: Joi.string()
+      .valid(...Object.values(IdentifierType))
+      .required(),
+    nonce: Joi.string().required(),
+    secret: Joi.string().allow(null).required(),
     status: JOI_SESSION_STATUS.required(),
-    username: Joi.string().allow(null).required(),
+    strategy: JOI_AUTHENTICATION_STRATEGY.required(),
+    visualHint: Joi.string().required(),
   })
   .required();
 
@@ -52,32 +51,28 @@ export class StrategySession
   implements StrategySessionAttributes
 {
   public readonly authenticationSessionId: string;
-  public readonly email: string | null;
   public readonly expires: Date;
+  public readonly identifier: string;
+  public readonly identifierType: IdentifierType;
+  public readonly nonce: string;
   public readonly strategy: AuthenticationStrategy;
-  public readonly nin: string | null;
-  public readonly phoneNumber: string | null;
-  public readonly username: string | null;
+  public readonly visualHint: string;
 
-  public code: string | null;
-  public nonce: string | null;
-  public otp: string | null;
+  public secret: string | null;
   public status: SessionStatus;
 
   public constructor(options: StrategySessionOptions) {
     super(options);
 
     this.authenticationSessionId = options.authenticationSessionId;
-    this.code = options.code || null;
-    this.email = options.email || null;
     this.expires = options.expires;
+    this.identifier = options.identifier;
+    this.identifierType = options.identifierType;
+    this.nonce = options.nonce || randomString(16);
+    this.secret = options.secret || null;
+    this.status = options.status || SessionStatus.PENDING;
     this.strategy = options.strategy;
-    this.nin = options.nin || null;
-    this.nonce = options.nonce || null;
-    this.otp = options.otp || null;
-    this.phoneNumber = options.phoneNumber || null;
-    this.status = options.status || SessionStatuses.PENDING;
-    this.username = options.username || null;
+    this.visualHint = options.visualHint || randomString(4).toUpperCase();
   }
 
   public create(): void {
@@ -93,16 +88,14 @@ export class StrategySession
       ...this.defaultJSON(),
 
       authenticationSessionId: this.authenticationSessionId,
-      code: this.code,
-      email: this.email,
       expires: this.expires,
-      strategy: this.strategy,
-      nin: this.nin,
+      identifier: this.identifier,
+      identifierType: this.identifierType,
       nonce: this.nonce,
-      otp: this.otp,
-      phoneNumber: this.phoneNumber,
+      secret: this.secret,
       status: this.status,
-      username: this.username,
+      strategy: this.strategy,
+      visualHint: this.visualHint,
     };
   }
 }

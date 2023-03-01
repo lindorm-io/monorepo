@@ -2,8 +2,8 @@ import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/
 import {
   confirmConsentSessionController,
   confirmConsentSessionSchema,
-  getConsentSessionDataController,
-  getConsentSessionDataSchema,
+  getConsentSessionController,
+  getConsentSessionSchema,
   rejectConsentSessionController,
   rejectConsentSessionSchema,
 } from "../../controller";
@@ -14,8 +14,8 @@ export default router;
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getConsentSessionDataSchema),
-  useController(getConsentSessionDataController),
+  useSchema(getConsentSessionSchema),
+  useController(getConsentSessionController),
 );
 
 router.post(

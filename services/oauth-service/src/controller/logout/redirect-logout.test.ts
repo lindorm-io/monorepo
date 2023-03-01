@@ -5,6 +5,7 @@ import {
   createLogoutPendingUri as _createLogoutPendingUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
 } from "../../util";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("../../util");
 
@@ -19,7 +20,7 @@ describe("redirectLogoutController", () => {
     ctx = {
       entity: {
         logoutSession: createTestLogoutSession({
-          status: "confirmed",
+          status: SessionStatus.CONFIRMED,
         }),
       },
     };

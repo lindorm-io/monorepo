@@ -1,5 +1,5 @@
 import { AuthenticationSession } from "../entity";
-import { findStrategyConfig } from "./find-strategy-config";
+import { getStrategyConfig } from "../strategies";
 
 export const canGenerateMfaCookie = (authenticationSession: AuthenticationSession): boolean => {
   if (authenticationSession.confirmedStrategies.length < 2) {
@@ -7,7 +7,7 @@ export const canGenerateMfaCookie = (authenticationSession: AuthenticationSessio
   }
 
   for (const strategy of authenticationSession.confirmedStrategies) {
-    if (findStrategyConfig(strategy).mfaCookie) {
+    if (getStrategyConfig(strategy).mfaCookie) {
       return true;
     }
   }

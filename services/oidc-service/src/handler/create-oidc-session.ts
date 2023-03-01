@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { OidcSession } from "../entity";
+import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../types";
 import { configuration } from "../server/configuration";
 import { createPKCE } from "@lindorm-io/node-pkce";
@@ -7,7 +8,6 @@ import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
 import { randomString } from "@lindorm-io/random";
 import { removeEmptyFromObject } from "@lindorm-io/core";
-import { OauthResponseModes, OauthResponseTypes } from "@lindorm-io/common-types";
 
 type Options = {
   callbackId: string;
@@ -62,7 +62,7 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
     host,
     query: removeEmptyFromObject({
       clientId,
-      ...(responseType === OauthResponseTypes.CODE
+      ...(responseType === OpenIdResponseType.CODE
         ? {
             codeChallenge,
             codeChallengeMethod,
@@ -71,7 +71,7 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
       loginHint,
       nonce: oidcSession.nonce,
       redirectUri: createURL("/callback", { host: configuration.server.host }).toString(),
-      responseMode: OauthResponseModes.QUERY,
+      responseMode: OpenIdResponseMode.QUERY,
       responseType,
       scope,
       state: oidcSession.state,

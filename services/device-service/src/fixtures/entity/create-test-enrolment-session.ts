@@ -1,7 +1,7 @@
 import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
-import { CertificateMethods, SessionStatuses } from "@lindorm-io/common-types";
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
 
 export const createTestEnrolmentSession = (
   options: Partial<EnrolmentSessionOptions> = {},
@@ -10,7 +10,7 @@ export const createTestEnrolmentSession = (
     audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902"],
     certificateChallenge:
       "fU8ob4kqvPCfVCd5FdaM0hpXvpRoBx3VlPEWGarUP8DvTMj4AcFgieq2HMeH3uXK7MggvmLnG5iGGhUVMqDRhd7fRzW1XVveJe3CI7Pf3HlQpzqIOmrHGxes3yjZY3Es",
-    certificateMethod: CertificateMethods.SHA512,
+    certificateMethod: CertificateMethod.SHA512,
     deviceMetadata: {
       brand: "Apple",
       buildId: "12A269",
@@ -30,7 +30,7 @@ export const createTestEnrolmentSession = (
       "zYHwnjvTEZ6gSqtxcpwT6EgBAgxFolqjeInOis2I+tcfxcShwcfMZ/E7kgktP15w\n" +
       "dsAFDTzmso9VtnBNgbt8afNea1nK25Fa+Zq+gztxkI5pkw1WFm4FAgMBAAE=\n" +
       "-----END RSA PUBLIC KEY-----\n",
-    status: SessionStatuses.CONFIRMED,
+    status: SessionStatus.CONFIRMED,
     uniqueId: randomUUID(),
     ...options,
   });

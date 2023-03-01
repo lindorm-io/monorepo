@@ -44,7 +44,7 @@ describe("userinfoController", () => {
         familyName: "familyName",
         gender: "gender",
         givenName: "givenName",
-        gravatarUri: "https://gravatar.url/",
+        avatarUri: "https://avatar.url/",
         locale: "sv-SE",
         middleName: "middleName",
         name: "givenName familyName",

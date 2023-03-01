@@ -5,7 +5,7 @@ import { assertSessionPending, createConsentRejectedUri } from "../../util";
 import {
   RejectConsentResponse,
   RejectConsentRequestParams,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = RejectConsentRequestParams;
@@ -31,7 +31,7 @@ export const rejectConsentController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.consent = SessionStatuses.REJECTED;
+  authorizationSession.status.consent = SessionStatus.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 

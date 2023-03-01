@@ -1,25 +1,22 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
-import { fetchOauthConsentData } from "../../../handler";
-import { ClientScopes } from "../../../common";
 import {
-  ConfirmConsentResponse,
-  OauthClientTypes,
-  RedirectConsentResponse,
-  SessionStatuses,
-} from "@lindorm-io/common-types";
+  confirmOauthConsent,
+  getOauthAuthorizationRedirect,
+  getOauthAuthorizationSession,
+} from "../../../handler";
 
 type RequestData = {
-  sessionId: string;
+  session: string;
 };
 
 export const redirectConsentSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: Joi.string().guid().required(),
+    session: Joi.string().guid().required(),
   })
   .required();
 
@@ -27,39 +24,27 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { oauthClient },
-    data: { sessionId },
+    data: { session },
     logger,
   } = ctx;
 
   const {
-    consentStatus,
+    consent: { status, audiences, optionalScopes, requiredScopes },
     client: { type },
-    requested: { audiences, scopes },
-  } = await fetchOauthConsentData(ctx, sessionId);
+  } = await getOauthAuthorizationSession(ctx, session);
 
-  if (consentStatus !== SessionStatuses.PENDING) {
-    logger.warn("Invalid Session Status", { consentStatus });
+  if (status !== SessionStatus.PENDING) {
+    logger.warn("Unexpected Session Status", { status });
 
-    const {
-      data: { redirectTo },
-    } = await oauthClient.get<RedirectConsentResponse>("/internal/sessions/consent/:id/redirect", {
-      params: { id: sessionId },
-    });
+    const { redirectTo } = await getOauthAuthorizationRedirect(ctx, session);
 
     return { redirect: redirectTo };
   }
 
-  if (type === OauthClientTypes.CONFIDENTIAL) {
-    const {
-      data: { redirectTo },
-    } = await oauthClient.post<ConfirmConsentResponse>("/internal/sessions/consent/:id/confirm", {
-      params: { id: sessionId },
-      body: {
-        audiences,
-        scopes,
-      },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
+  if (type === OpenIdClientType.CONFIDENTIAL) {
+    const { redirectTo } = await confirmOauthConsent(ctx, session, {
+      audiences,
+      scopes: [...optionalScopes, ...requiredScopes],
     });
 
     return { redirect: redirectTo };
@@ -69,7 +54,7 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
     redirect: createURL(configuration.frontend.routes.consent, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { sessionId },
+      query: { session },
     }),
   };
 };

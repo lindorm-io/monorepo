@@ -9,6 +9,7 @@ jest.mock("../../class", () => ({
       return { signature: "signature", uri: "uri" };
     }
   },
+  StrategyBase: class StrategyBase {},
 }));
 
 jest.mock("../../handler");

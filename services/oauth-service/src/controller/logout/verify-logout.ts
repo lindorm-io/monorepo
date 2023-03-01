@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { SessionStatuses, VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
+import { SessionStatus, VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
 import {
   createLogoutPendingUri,
   createLogoutRedirectUri,
@@ -36,13 +36,13 @@ export const verifyLogoutController: ServerKoaController<RequestData> = async (
   }
 
   switch (logoutSession.status) {
-    case SessionStatuses.CONFIRMED:
+    case SessionStatus.CONFIRMED:
       break;
 
-    case SessionStatuses.PENDING:
+    case SessionStatus.PENDING:
       return { redirect: createLogoutPendingUri(logoutSession) };
 
-    case SessionStatuses.REJECTED:
+    case SessionStatus.REJECTED:
       return { redirect: createLogoutRejectedUri(logoutSession) };
 
     default:

@@ -13,7 +13,7 @@ export const vaultGetSalt = async (
   } = ctx;
 
   const response = await vaultClient.get<GetEncryptedRecordResponse<DeviceLinkSalt>>(
-    "/internal/vault/:id",
+    "/admin/vault/:id",
     {
       params: {
         id: deviceLink.id,

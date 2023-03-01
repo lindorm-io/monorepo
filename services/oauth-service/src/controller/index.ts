@@ -1,4 +1,5 @@
 export * from "./authorization";
+export * from "./claims";
 export * from "./client";
 export * from "./consent";
 export * from "./elevation";

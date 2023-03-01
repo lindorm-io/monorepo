@@ -9,6 +9,7 @@ import {
   updateBrowserSessionElevation as _updateBrowserSessionElevation,
   updateRefreshSessionElevation as _updateRefreshSessionElevation,
 } from "../../handler";
+import { SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -32,7 +33,7 @@ describe("verifyElevationController", () => {
           accessSessionId: null,
           browserSessionId: null,
           refreshSessionId: null,
-          status: "confirmed",
+          status: SessionStatus.CONFIRMED,
         }),
       },
     };
@@ -53,7 +54,7 @@ describe("verifyElevationController", () => {
   test("should resolve without redirect", async () => {
     ctx.entity.elevationSession = createTestElevationSession({
       redirectUri: null,
-      status: "confirmed",
+      status: SessionStatus.CONFIRMED,
     });
 
     await expect(verifyElevationController(ctx)).resolves.toBeUndefined();
@@ -64,7 +65,7 @@ describe("verifyElevationController", () => {
       accessSessionId: randomUUID(),
       browserSessionId: null,
       refreshSessionId: null,
-      status: "confirmed",
+      status: SessionStatus.CONFIRMED,
     });
 
     await expect(verifyElevationController(ctx)).resolves.toBeTruthy();
@@ -77,7 +78,7 @@ describe("verifyElevationController", () => {
       accessSessionId: null,
       browserSessionId: randomUUID(),
       refreshSessionId: null,
-      status: "confirmed",
+      status: SessionStatus.CONFIRMED,
     });
 
     await expect(verifyElevationController(ctx)).resolves.toBeTruthy();
@@ -90,7 +91,7 @@ describe("verifyElevationController", () => {
       accessSessionId: null,
       browserSessionId: null,
       refreshSessionId: randomUUID(),
-      status: "confirmed",
+      status: SessionStatus.CONFIRMED,
     });
 
     await expect(verifyElevationController(ctx)).resolves.toBeTruthy();

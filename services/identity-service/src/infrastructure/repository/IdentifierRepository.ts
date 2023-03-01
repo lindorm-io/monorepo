@@ -12,11 +12,11 @@ export class IdentifierRepository extends LindormRepository<IdentifierAttributes
           options: { unique: false },
         },
         {
-          index: { identifier: 1, provider: 1, type: 1 },
+          index: { provider: 1, type: 1, value: 1 },
           options: { unique: false },
         },
         {
-          index: { identifier: 1, identityId: 1, provider: 1, type: 1 },
+          index: { identityId: 1, provider: 1, type: 1, value: 1 },
           options: { unique: true },
         },
         {

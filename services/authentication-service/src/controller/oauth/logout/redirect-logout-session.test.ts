@@ -1,34 +1,31 @@
-import { redirectLogoutSessionController } from "./redirect-logout-session";
-import { fetchOauthLogoutData as _fetchOauthLogoutInfo } from "../../../handler";
+import { SessionStatus } from "@lindorm-io/common-types";
 import { createMockLogger } from "@lindorm-io/winston";
+import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
+import { randomUUID } from "crypto";
+import { redirectLogoutSessionController } from "./redirect-logout-session";
+import {
+  getOauthLogoutRedirect as _getOauthLogoutRedirect,
+  getOauthLogoutSession as _getOauthLogoutSession,
+} from "../../../handler";
 
 jest.mock("../../../handler");
 
-const fetchOauthLogoutInfo = _fetchOauthLogoutInfo as jest.Mock;
+const getOauthLogoutRedirect = _getOauthLogoutRedirect as jest.Mock;
+const getOauthLogoutSession = _getOauthLogoutSession as jest.Mock;
 
 describe("redirectLogoutSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      axios: {
-        oauthClient: {
-          get: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectVerify" } }),
-          post: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectConfirm" } }),
-        },
-      },
       data: {
-        sessionId: "sessionId",
+        session: "e776b26e-8641-4f3f-809b-f717aefaca12",
       },
       logger: createMockLogger(),
     };
 
-    fetchOauthLogoutInfo.mockResolvedValue({
-      logoutStatus: "pending",
-      client: {
-        type: "public",
-      },
-    });
+    getOauthLogoutRedirect.mockResolvedValue({ redirectTo: "getOauthLogoutRedirect" });
+    getOauthLogoutSession.mockResolvedValue(mockFetchOauthLogoutSession());
   });
 
   test("should resolve", async () => {
@@ -37,33 +34,26 @@ describe("redirectLogoutSessionController", () => {
     });
   });
 
-  test("should resolve verify", async () => {
-    fetchOauthLogoutInfo.mockResolvedValue({
-      logoutStatus: "unexpected",
-      client: {
-        type: "public",
-      },
-      requested: {
-        audiences: ["audience"],
-        scopes: ["scope"],
-      },
-    });
+  test("should resolve redirect", async () => {
+    getOauthLogoutSession.mockResolvedValue({
+      logout: {
+        status: SessionStatus.CONFIRMED,
 
-    await expect(redirectLogoutSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectVerify",
-    });
-  });
-
-  test("should resolve confirm", async () => {
-    fetchOauthLogoutInfo.mockResolvedValue({
-      logoutStatus: "pending",
-      client: {
-        type: "confidential",
+        accessSession: {
+          id: randomUUID(),
+        },
+        browserSession: {
+          id: randomUUID(),
+          connectedSessions: 3,
+        },
+        refreshSession: {
+          id: null,
+        },
       },
     });
 
     await expect(redirectLogoutSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectConfirm",
+      redirect: "getOauthLogoutRedirect",
     });
   });
 });

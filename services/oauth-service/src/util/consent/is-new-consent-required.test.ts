@@ -5,6 +5,7 @@ import {
   createTestAuthorizationSession,
   createTestRefreshSession,
 } from "../../fixtures/entity";
+import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
 
 describe("isNewConsentRequired", () => {
   let authorizationSession: AuthorizationSession;
@@ -15,19 +16,19 @@ describe("isNewConsentRequired", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedConsent: {
         audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-        scopes: ["openid"],
+        scopes: [OpenIdScope.OPENID],
       },
       promptModes: [],
     });
 
     accessSession = createTestAccessSession({
       audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-      scopes: ["openid", "email", "profile"],
+      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
     });
 
     refreshSession = createTestRefreshSession({
       audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-      scopes: ["openid", "email", "profile"],
+      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
     });
   });
 
@@ -58,7 +59,7 @@ describe("isNewConsentRequired", () => {
   });
 
   test("should require for differing scopes", () => {
-    authorizationSession.requestedConsent.scopes = ["openid", "public"];
+    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID, LindormScope.PUBLIC];
 
     expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(true);
   });

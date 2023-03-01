@@ -2,7 +2,6 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { SessionHint } from "../../../enum";
 import { configuration } from "../../../server/configuration";
-import { createURL } from "@lindorm-io/url";
 import { getTestData } from "../../../fixtures/data";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../../server/server";
@@ -14,15 +13,16 @@ import {
   createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
+  getTestAccessToken,
+  getTestIdToken,
+  setupIntegration,
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
   TEST_REFRESH_SESSION_REPOSITORY,
-  getTestAccessToken,
-  getTestIdToken,
-  setupIntegration,
 } from "../../../fixtures/integration";
+import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -65,20 +65,16 @@ describe("/oauth2/sessions/elevate", () => {
       subject: accessSession.identityId,
     });
 
-    const url = createURL("/oauth2/sessions/elevate", {
-      host: "https://rm.rm",
-      query: {
-        clientId: client.id,
-        idTokenHint: idToken,
-        redirectUri: "https://test.client.lindorm.io/redirect",
+    const response = await request(server.callback())
+      .get("/oauth2/sessions/elevate")
+      .query({
+        client_id: client.id,
+        id_token_hint: idToken,
+        redirect_uri: "https://test.client.lindorm.io/redirect",
         state,
         methods: "password totp",
-        uiLocales: "sv-SE en-GB",
-      },
-    }).toString();
-
-    const response = await request(server.callback())
-      .get(url.replace("https://rm.rm", ""))
+        ui_locales: "sv-SE en-GB",
+      })
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
@@ -120,7 +116,7 @@ describe("/oauth2/sessions/elevate", () => {
           recommendedLevel: 3,
           recommendedMethods: ["email", "phone"],
           requiredLevel: 1,
-          requiredMethods: ["password", "totp"],
+          requiredMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.TIME_BASED_OTP],
         },
         state: state,
         status: "pending",
@@ -154,9 +150,8 @@ describe("/oauth2/sessions/elevate", () => {
         authentication_hint: ["email@lindorm.io"],
         client_id: client.id,
         country: "se",
-        display: "popup",
         level_of_assurance: 4,
-        methods: ["bank_id_se"],
+        methods: [AuthenticationMethod.BANK_ID_SE],
         nonce: "QxEQ4H21R-gslTwr",
         ui_locales: ["sv-SE"],
       })
@@ -180,7 +175,7 @@ describe("/oauth2/sessions/elevate", () => {
           methods: [],
         },
         country: "se",
-        displayMode: "popup",
+        displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: null,
         identityId: refreshSession.identityId,
@@ -192,7 +187,7 @@ describe("/oauth2/sessions/elevate", () => {
           recommendedLevel: 1,
           recommendedMethods: [],
           requiredLevel: 4,
-          requiredMethods: ["bank_id_se"],
+          requiredMethods: [AuthenticationMethod.BANK_ID_SE],
         },
         state: null,
         status: "pending",
@@ -217,14 +212,14 @@ describe("/oauth2/sessions/elevate", () => {
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 4,
-          methods: ["bank_id_se"],
+          methods: [AuthenticationMethod.BANK_ID_SE],
         },
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 2,
-          recommendedMethods: ["password"],
+          recommendedMethods: [AuthenticationMethod.PASSWORD],
           requiredLevel: 4,
-          requiredMethods: ["bank_id_se"],
+          requiredMethods: [AuthenticationMethod.BANK_ID_SE],
         },
 
         accessSessionId: accessSession.id,
@@ -234,7 +229,7 @@ describe("/oauth2/sessions/elevate", () => {
         identityId: accessSession.identityId,
         redirectUri: "https://test.client.lindorm.io/redirect",
         state: randomString(16),
-        status: "confirmed",
+        status: SessionStatus.CONFIRMED,
       }),
     );
 
@@ -245,19 +240,13 @@ describe("/oauth2/sessions/elevate", () => {
       subject: accessSession.identityId,
     });
 
-    const url = createURL("/oauth2/sessions/elevate/verify", {
-      host: "https://rm.rm",
-      query: {
-        session: elevationSession.id,
-      },
-    });
-
     const response = await request(server.callback())
-      .get(url.toString().replace("https://rm.rm", ""))
+      .get("/oauth2/sessions/elevate/verify")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
+      .query({ session: elevationSession.id })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -271,7 +260,7 @@ describe("/oauth2/sessions/elevate", () => {
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["bank_id_se", "email", "phone"],
+        methods: [AuthenticationMethod.BANK_ID_SE, "email", "phone"],
       }),
     );
   });

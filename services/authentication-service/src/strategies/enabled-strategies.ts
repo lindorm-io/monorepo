@@ -1,0 +1,36 @@
+import { StrategyHandler } from "../types";
+import {
+  DeviceChallengeStrategy,
+  EmailCodeStrategy,
+  EmailOtpStrategy,
+  MfaCookieStrategy,
+  PasswordBrowserLinkStrategy,
+  PasswordStrategy,
+  PhoneCodeStrategy,
+  PhoneOtpStrategy,
+  RdcPushNotificationStrategy,
+  RecoveryCodeStrategy,
+  SessionAcceptWithCodeStrategy,
+  SessionOtpStrategy,
+  TimeBasedOtpStrategy,
+} from "./implementations";
+
+export const ENABLED_STRATEGIES: Array<StrategyHandler> = [
+  // BankIdSeStrategy,
+  new DeviceChallengeStrategy(),
+  new EmailCodeStrategy(),
+  new EmailOtpStrategy(),
+  new MfaCookieStrategy(),
+  new PasswordBrowserLinkStrategy(),
+  new PasswordStrategy(),
+  new PhoneCodeStrategy(),
+  new PhoneOtpStrategy(),
+  new RdcPushNotificationStrategy(),
+  // RdcQrCodeStrategy,
+  new RecoveryCodeStrategy(),
+  new SessionAcceptWithCodeStrategy(),
+  new SessionOtpStrategy(),
+  // SessionQrCodeStrategy,
+  new TimeBasedOtpStrategy(),
+  // WebauthnStrategy,
+];

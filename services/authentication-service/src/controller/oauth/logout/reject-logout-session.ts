@@ -24,7 +24,7 @@ export const rejectLogoutSessionController: ServerKoaController<RequestData> = a
   } = ctx;
 
   const { data } = await oauthClient.post<RejectLogoutResponse>(
-    "/internal/sessions/logout/:id/reject",
+    "/admin/sessions/logout/:id/reject",
     {
       params: { id },
       middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],

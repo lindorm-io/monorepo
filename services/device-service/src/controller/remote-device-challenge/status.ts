@@ -5,7 +5,7 @@ import { ServerKoaController } from "../../types";
 import {
   GetRdcStatusRequestParams,
   GetRdcStatusResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = GetRdcStatusRequestParams;
@@ -35,6 +35,6 @@ export const getRdcSessionStatusController: ServerKoaController<RequestData> = a
       throw err;
     }
 
-    return { body: { status: SessionStatuses.EXPIRED } };
+    return { body: { status: SessionStatus.EXPIRED } };
   }
 };

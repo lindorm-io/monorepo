@@ -2,12 +2,12 @@ import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AccessSession, AuthorizationSession, Client, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { LindormScopes, OauthResponseModes, OauthResponseTypes } from "@lindorm-io/common-types";
+import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken } from "../token";
 import { createURL } from "@lindorm-io/url";
 import { generateAuthorizationCode } from "./generate-authorization-code";
-import { getIdentityUserinfo } from "../identity";
+import { getIdentityClaims } from "../identity";
 
 type CallbackData = {
   accessToken: string;
@@ -27,8 +27,7 @@ export const generateCallbackResponse = async (
 ): ControllerResponse => {
   const { redirectUri, responseMode, responseTypes, state } = authorizationSession;
 
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
-  const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, session);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -40,21 +39,23 @@ export const generateCallbackResponse = async (
 
   const data: Partial<CallbackData> = {};
 
-  if (responseTypes.includes(OauthResponseTypes.CODE)) {
+  if (responseTypes.includes(OpenIdResponseType.CODE)) {
     const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
 
     data.code = authorizationCode.code;
   }
 
-  if (responseTypes.includes(OauthResponseTypes.TOKEN)) {
+  if (responseTypes.includes(OpenIdResponseType.TOKEN)) {
+    const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
+
     data.accessToken = accessToken;
     data.expiresIn = expiresIn;
     data.tokenType = "Bearer";
   }
 
   if (
-    responseTypes.includes(OauthResponseTypes.ID_TOKEN) &&
-    session.scopes.includes(LindormScopes.OPENID)
+    responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
+    session.scopes.includes(OpenIdScope.OPENID)
   ) {
     const { token: idToken } = createIdToken(ctx, client, session, claims);
 
@@ -70,17 +71,17 @@ export const generateCallbackResponse = async (
   ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME);
 
   switch (responseMode) {
-    case OauthResponseModes.FORM_POST:
+    case OpenIdResponseMode.FORM_POST:
       return { redirect: redirectUri, body: data };
 
-    case OauthResponseModes.FRAGMENT:
+    case OpenIdResponseMode.FRAGMENT:
       return {
         redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" })
           .toString()
           .replace("?", "#"),
       };
 
-    case OauthResponseModes.QUERY:
+    case OpenIdResponseMode.QUERY:
       return {
         redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" }).toString(),
       };

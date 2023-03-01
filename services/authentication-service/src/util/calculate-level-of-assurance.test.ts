@@ -1,12 +1,17 @@
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { createTestAuthenticationSession } from "../fixtures/entity";
+import { AuthenticationStrategy } from "@lindorm-io/common-types";
 
 describe("calculateLevelOfAssurance", () => {
   test("should resolve with max value", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp", "phone_otp", "mfa_cookie"],
+          confirmedStrategies: [
+            AuthenticationStrategy.EMAIL_OTP,
+            AuthenticationStrategy.PHONE_OTP,
+            AuthenticationStrategy.MFA_COOKIE,
+          ],
         }),
       ),
     ).toStrictEqual({ level: 3, maximum: 3 });
@@ -16,20 +21,20 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: ["email_otp"],
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
         }),
       ),
     ).toStrictEqual({ level: 2, maximum: 2 });
   });
 
-  test("should resolve with value for BANK_ID_SE", () => {
+  test("should resolve with value for DEVICE_CHALLENGE", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: ["bank_id_se"],
+          confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         }),
       ),
-    ).toStrictEqual({ level: 4, maximum: 4 });
+    ).toStrictEqual({ level: 3, maximum: 3 });
   });
 
   test("should resolve with value for OIDC", () => {
@@ -47,7 +52,7 @@ describe("calculateLevelOfAssurance", () => {
     expect(
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
-          confirmedStrategies: ["mfa_cookie"],
+          confirmedStrategies: [AuthenticationStrategy.MFA_COOKIE],
           confirmedOidcLevel: 2,
         }),
       ),

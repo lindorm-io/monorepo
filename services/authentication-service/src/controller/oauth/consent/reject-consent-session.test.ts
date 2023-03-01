@@ -20,7 +20,7 @@ describe("rejectConsentSessionController", () => {
     await expect(rejectConsentSessionController(ctx)).resolves.toStrictEqual({ body: "data" });
 
     expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/consent/:id/reject",
+      "/admin/sessions/consent/:id/reject",
       expect.any(Object),
     );
   });

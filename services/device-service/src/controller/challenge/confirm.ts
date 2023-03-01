@@ -10,14 +10,13 @@ import { flatten } from "lodash";
 import { vaultGetSalt } from "../../handler";
 import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import {
-  ChallengeStrategies,
+  ChallengeStrategy,
   ConfirmChallengeRequestBody,
   ConfirmChallengeRequestParams,
   ConfirmChallengeResponse,
-  LindormTokenTypes,
+  DeviceTokenType,
   PSD2Factor,
-  PSD2Factors,
-  SubjectHints,
+  SubjectHint,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmChallengeRequestParams & ConfirmChallengeRequestBody;
@@ -28,14 +27,14 @@ export const confirmChallengeSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
     biometry: Joi.when("strategy", {
-      is: ChallengeStrategies.BIOMETRY,
+      is: ChallengeStrategy.BIOMETRY,
       then: JOI_BIOMETRY.required(),
       otherwise: Joi.forbidden(),
     }),
     certificateVerifier: Joi.string().base64().required(),
     challengeSessionToken: JOI_JWT.required(),
     pincode: Joi.when("strategy", {
-      is: ChallengeStrategies.PINCODE,
+      is: ChallengeStrategy.PINCODE,
       then: JOI_PINCODE.required(),
       otherwise: Joi.forbidden(),
     }),
@@ -51,11 +50,26 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     data: { certificateVerifier, pincode, biometry, strategy },
     entity: { challengeSession, deviceLink },
     jwt,
-    metadata: {
-      device: { name },
-    },
+    metadata,
     repository: { deviceLinkRepository },
+    token: { challengeSessionToken },
   } = ctx;
+
+  if (challengeSession.id !== challengeSessionToken.session) {
+    throw new ClientError("Invalid challenge session token");
+  }
+
+  if (!challengeSession.strategies.includes(strategy)) {
+    throw new ClientError("Invalid strategy");
+  }
+
+  if (
+    deviceLink.id !== metadata.device.linkId ||
+    deviceLink.installationId !== metadata.device.installationId ||
+    deviceLink.uniqueId !== metadata.device.uniqueId
+  ) {
+    throw new ClientError("Invalid metadata");
+  }
 
   await assertCertificateChallenge({
     certificateChallenge: challengeSession.certificateChallenge,
@@ -64,7 +78,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     publicKey: deviceLink.publicKey,
   });
 
-  const factors: Array<PSD2Factor> = [PSD2Factors.POSSESSION];
+  const factors: Array<PSD2Factor> = [PSD2Factor.POSSESSION];
 
   const salt = await vaultGetSalt(ctx, deviceLink);
   const crypto = new CryptoLayered({
@@ -73,17 +87,17 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
   });
 
   switch (strategy) {
-    case ChallengeStrategies.IMPLICIT:
+    case ChallengeStrategy.IMPLICIT:
       break;
 
-    case ChallengeStrategies.PINCODE:
-      await crypto.assert(pincode, deviceLink.pincode);
-      factors.push(PSD2Factors.KNOWLEDGE);
+    case ChallengeStrategy.PINCODE:
+      await crypto.assert(pincode, deviceLink.pincode!);
+      factors.push(PSD2Factor.KNOWLEDGE);
       break;
 
-    case ChallengeStrategies.BIOMETRY:
-      await crypto.assert(biometry, deviceLink.biometry);
-      factors.push(PSD2Factors.INHERENCE);
+    case ChallengeStrategy.BIOMETRY:
+      await crypto.assert(biometry, deviceLink.biometry!);
+      factors.push(PSD2Factor.INHERENCE);
       break;
 
     default:
@@ -92,8 +106,8 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
       });
   }
 
-  if (name && name !== deviceLink.name) {
-    deviceLink.name = name;
+  if (metadata.device.name && metadata.device.name !== deviceLink.name) {
+    deviceLink.name = metadata.device.name;
 
     await deviceLinkRepository.update(deviceLink);
   }
@@ -109,10 +123,11 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     nonce: challengeSession.nonce,
     payload: challengeSession.payload,
     scopes: challengeSession.scopes,
-    sessionId: challengeSession.id,
+    session: challengeSession.id,
+    sessionHint: "challenge",
     subject: deviceLink.identityId,
-    subjectHint: SubjectHints.IDENTITY,
-    type: LindormTokenTypes.CHALLENGE_CONFIRMATION,
+    subjectHint: SubjectHint.IDENTITY,
+    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
   });
 
   await challengeSessionCache.destroy(challengeSession);

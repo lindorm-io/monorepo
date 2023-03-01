@@ -1,5 +1,5 @@
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { ServerKoaController } from "../../types";
 import { flatten, uniq } from "lodash";
 import {
   AccessSessionAttributes,

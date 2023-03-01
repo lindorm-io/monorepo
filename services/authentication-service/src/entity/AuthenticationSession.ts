@@ -3,12 +3,10 @@ import { JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS } from "../common";
 import {
   AuthenticationMethod,
   AuthenticationMode,
-  AuthenticationModes,
   AuthenticationStrategy,
   LevelOfAssurance,
   PKCEMethod,
   SessionStatus,
-  SessionStatuses,
 } from "@lindorm-io/common-types";
 import {
   JOI_AUTHENTICATION_METHOD,
@@ -46,6 +44,7 @@ export type AuthenticationSessionAttributes = EntityAttributes & {
   remember: boolean;
   requiredLevel: LevelOfAssurance;
   requiredMethods: Array<AuthenticationMethod>;
+  sso: boolean;
   status: SessionStatus;
 };
 
@@ -69,6 +68,7 @@ export type AuthenticationSessionOptions = Optional<
   | "remember"
   | "requiredLevel"
   | "requiredMethods"
+  | "sso"
   | "status"
 >;
 
@@ -91,7 +91,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     identityId: Joi.string().guid().allow(null).required(),
     minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     mode: Joi.string()
-      .valid(AuthenticationModes.ELEVATE, AuthenticationModes.NONE, AuthenticationModes.OAUTH)
+      .valid(AuthenticationMode.ELEVATE, AuthenticationMode.NONE, AuthenticationMode.OAUTH)
       .required(),
     nonce: Joi.string().allow(null).required(),
     phoneHint: Joi.string().allow(null).required(),
@@ -100,6 +100,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     remember: Joi.boolean().required(),
     requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     requiredMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    sso: Joi.boolean().required(),
     status: JOI_SESSION_STATUS.required(),
   })
   .required();
@@ -131,6 +132,7 @@ export class AuthenticationSession
   public confirmedStrategies: Array<AuthenticationStrategy>;
   public identityId: string | null;
   public remember: boolean;
+  public sso: boolean;
   public status: SessionStatus;
 
   public constructor(options: AuthenticationSessionOptions) {
@@ -158,7 +160,8 @@ export class AuthenticationSession
     this.remember = options.remember === true;
     this.requiredLevel = options.requiredLevel || 1;
     this.requiredMethods = options.requiredMethods || [];
-    this.status = options.status || SessionStatuses.PENDING;
+    this.sso = options.sso === true;
+    this.status = options.status || SessionStatus.PENDING;
   }
 
   public create(): void {
@@ -195,6 +198,7 @@ export class AuthenticationSession
       remember: this.remember,
       requiredLevel: this.requiredLevel,
       requiredMethods: this.requiredMethods,
+      sso: this.sso,
       status: this.status,
     };
   }

@@ -2,6 +2,7 @@ export * from "./create-test-access-session";
 export * from "./create-test-authorization-code";
 export * from "./create-test-authorization-session";
 export * from "./create-test-browser-session";
+export * from "./create-test-claims-session";
 export * from "./create-test-client";
 export * from "./create-test-elevation-session";
 export * from "./create-test-invalid-token";

@@ -5,6 +5,7 @@ import { createTestBrowserSession, createTestElevationSession } from "../../fixt
 import { getBrowserSessionCookies as _getBrowserSessionCookies } from "../cookies";
 import { updateBrowserSessionElevation } from "./update-browser-session-elevation";
 import { ServerError } from "@lindorm-io/errors";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,7 +31,7 @@ describe("updateBrowserSessionElevation", () => {
       confirmedAuthentication: {
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["bank_id_se"],
+        methods: [AuthenticationMethod.BANK_ID_SE],
       },
 
       accessSessionId: null,
@@ -50,7 +51,7 @@ describe("updateBrowserSessionElevation", () => {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T04:00:00.000Z"),
         levelOfAssurance: 2,
-        methods: ["email", "phone"],
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       }),
     );
 
@@ -60,7 +61,11 @@ describe("updateBrowserSessionElevation", () => {
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["bank_id_se", "email", "phone"],
+        methods: [
+          AuthenticationMethod.BANK_ID_SE,
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+        ],
       }),
     );
   });

@@ -5,6 +5,7 @@ import { randomNumber, randomString } from "@lindorm-io/random";
 import { createTestEnrolmentSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
 import {
   getTestAccessToken,
   getTestEnrolmentSessionToken,
@@ -12,7 +13,6 @@ import {
   signTestChallenge,
   TEST_ENROLMENT_SESSION_CACHE,
 } from "../fixtures/integration";
-import { CertificateMethods, SessionStatuses } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,7 +31,7 @@ describe("/enrolments", () => {
       scope: ["scope"],
     });
 
-  nock("https://vault.test.lindorm.io").post("/internal/vault").times(999).reply(201);
+  nock("https://vault.test.lindorm.io").post("/admin/vault").times(999).reply(201);
 
   test("POST /", async () => {
     const accessToken = getTestAccessToken({
@@ -51,7 +51,7 @@ describe("/enrolments", () => {
         brand: "brand",
         build_id: "buildId",
         build_number: "buildNumber",
-        certificate_method: CertificateMethods.SHA384,
+        certificate_method: CertificateMethod.SHA384,
         mac_address: "4A:E2:BD:16:8F:5A",
         model: "model",
         public_key:
@@ -76,7 +76,7 @@ describe("/enrolments", () => {
   test("POST /:id/confirm", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
-        status: SessionStatuses.SKIP,
+        status: SessionStatus.SKIP,
       }),
     );
     const certificateVerifier = signTestChallenge(
@@ -84,7 +84,7 @@ describe("/enrolments", () => {
       session.certificateChallenge,
     );
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
-      sessionId: session.id,
+      session: session.id,
       subject: session.identityId,
     });
     const accessToken = getTestAccessToken({
@@ -119,7 +119,7 @@ describe("/enrolments", () => {
   test("POST /:id/reject", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(createTestEnrolmentSession());
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
-      sessionId: session.id,
+      session: session.id,
       subject: session.identityId,
     });
     const accessToken = getTestAccessToken({
@@ -144,7 +144,7 @@ describe("/enrolments", () => {
   test("GET /:id/status", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
-        status: SessionStatuses.PENDING,
+        status: SessionStatus.PENDING,
       }),
     );
     const accessToken = getTestAccessToken({

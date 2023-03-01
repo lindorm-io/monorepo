@@ -1,7 +1,8 @@
-import { AUTHENTICATION_STRATEGY_CONFIG, AuthenticationStrategyConfig } from "../constant";
 import { AuthenticationSession } from "../entity";
-import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategyConfig } from "../types";
+import { STRATEGY_CONFIG_LIST } from "../strategies";
+import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 
 const hasUnusedMethod =
   (authenticationSession: AuthenticationSession) =>
@@ -16,13 +17,13 @@ const hasUnusedStrategy =
 const hasAllowedAmrValues =
   (authenticationSession: AuthenticationSession) =>
   (config: AuthenticationStrategyConfig): boolean =>
-    authenticationSession.confirmedStrategies.length >= config.amrValuesMin &&
-    authenticationSession.confirmedStrategies.length <= config.amrValuesMax;
+    authenticationSession.confirmedStrategies.length >= config.methodsMin &&
+    authenticationSession.confirmedStrategies.length <= config.methodsMax;
 
 export const getAvailableStrategies = (
   authenticationSession: AuthenticationSession,
 ): Array<AuthenticationStrategy> =>
-  AUTHENTICATION_STRATEGY_CONFIG.filter(hasUnusedMethod(authenticationSession))
+  STRATEGY_CONFIG_LIST.filter(hasUnusedMethod(authenticationSession))
     .filter(hasUnusedStrategy(authenticationSession))
     .filter(hasAllowedAmrValues(authenticationSession))
     .map((item) => item.strategy);

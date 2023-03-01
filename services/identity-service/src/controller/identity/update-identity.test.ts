@@ -1,9 +1,8 @@
 import MockDate from "mockdate";
-import { createMockLogger } from "@lindorm-io/winston";
+import { createMockRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityController } from "./update-identity";
 import { updateIdentityDisplayName as _updateIdentityDisplayName } from "../../handler";
-import { createMockRepository } from "@lindorm-io/mongo";
 
 MockDate.set("2020-01-01T08:00:00.000");
 
@@ -17,59 +16,67 @@ describe("updateIdentityController", () => {
   beforeEach(() => {
     ctx = {
       data: {
+        active: false,
         birthDate: "new-birthDate",
         displayName: "new-displayName",
         familyName: "new-familyName",
         gender: "new-gender",
         givenName: "new-givenName",
-        gravatarUri: "new-gravatar",
+        avatarUri: "new-avatar",
         locale: "new-locale",
         middleName: "new-middleName",
         namingSystem: "new-namingSystem",
-        nationalIdentityNumber: "new-nationalIdentityNumber",
         nickname: "new-nickname",
         picture: "new-picture",
         preferredAccessibility: ["new-setting"],
-        preferredUsername: "new-preferredUsername",
         profile: "new-profile",
         pronouns: "new-pronouns",
-        socialSecurityNumber: "new-socialSecurityNumber",
         takenName: "new-takenName",
-        username: "new-username",
         website: "new-website",
         zoneInfo: "new-zoneInfo",
       },
       entity: {
-        identity: createTestIdentity({
-          id: "identityId",
-        }),
+        identity: createTestIdentity(),
       },
-      logger: createMockLogger(),
       repository: {
         identityRepository: createMockRepository(createTestIdentity),
       },
-      token: {
-        bearerToken: {
-          scopes: [
-            "accessibility",
-            "address",
-            "connected_providers",
-            "national_identity_number",
-            "profile",
-            "public",
-            "social_security_number",
-            "username",
-          ],
-          subject: "identityId",
-        },
-      },
     };
+
+    updateIdentityDisplayName.mockImplementation(async (_, identity, displayName) => {
+      identity.displayName.name = displayName;
+      identity.displayName.number = 9999;
+    });
   });
 
   test("should update identity", async () => {
     await expect(updateIdentityController(ctx)).resolves.toBeUndefined();
 
     expect(updateIdentityDisplayName).toHaveBeenCalled();
-    expect(ctx.repository.identityRepository.update.mock.calls).toMatchSnapshot();
+    expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        active: false,
+        birthDate: "new-birthDate",
+        displayName: {
+          name: "new-displayName",
+          number: 9999,
+        },
+        familyName: "new-familyName",
+        gender: "new-gender",
+        givenName: "new-givenName",
+        avatarUri: "new-avatar",
+        locale: "new-locale",
+        middleName: "new-middleName",
+        namingSystem: "new-namingSystem",
+        nickname: "new-nickname",
+        picture: "new-picture",
+        preferredAccessibility: ["new-setting"],
+        profile: "new-profile",
+        pronouns: "new-pronouns",
+        takenName: "new-takenName",
+        website: "new-website",
+        zoneInfo: "new-zoneInfo",
+      }),
+    );
   });
 });

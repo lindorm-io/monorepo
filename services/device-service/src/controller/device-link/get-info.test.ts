@@ -17,6 +17,11 @@ describe("getDeviceLinkController", () => {
           uniqueId: "27a10522a6994bbca0e1fc666804b350",
         }),
       },
+      token: {
+        bearerToken: {
+          subject: "b799b044-16db-495a-b7e1-2cf3175d4b54",
+        },
+      },
     };
   });
 

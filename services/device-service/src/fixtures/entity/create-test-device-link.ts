@@ -1,13 +1,13 @@
 import { DeviceLink, DeviceLinkOptions } from "../../entity";
 import { randomUUID } from "crypto";
 import { randomString } from "@lindorm-io/random";
-import { CertificateMethods } from "@lindorm-io/common-types";
+import { CertificateMethod } from "@lindorm-io/common-types";
 
 export const createTestDeviceLink = (options: Partial<DeviceLinkOptions> = {}): DeviceLink =>
   new DeviceLink({
     active: true,
     biometry: null,
-    certificateMethod: CertificateMethods.SHA512,
+    certificateMethod: CertificateMethod.SHA512,
     identityId: randomUUID(),
     installationId: randomUUID(),
     metadata: {

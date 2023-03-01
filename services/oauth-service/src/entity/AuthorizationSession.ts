@@ -3,15 +3,14 @@ import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
-  OauthDisplayMode,
-  OauthDisplayModes,
-  OauthPromptMode,
-  OauthResponseMode,
-  OauthResponseModes,
-  OauthResponseType,
+  LindormScope,
+  OpenIdDisplayMode,
+  OpenIdPromptMode,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  OpenIdScope,
   PKCEMethod,
   SessionStatus,
-  SessionStatuses,
 } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
@@ -50,13 +49,14 @@ type Code = {
 
 type ConfirmedConsent = {
   audiences: Array<string>;
-  scopes: Array<string>;
+  scopes: Array<OpenIdScope | LindormScope>;
 };
 
 type ConfirmedLogin = {
   identityId: string | null;
   latestAuthentication: Date | null;
   levelOfAssurance: LevelOfAssurance;
+  metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
   remember: boolean;
   sso: boolean;
@@ -64,7 +64,7 @@ type ConfirmedLogin = {
 
 type RequestedConsent = {
   audiences: Array<string>;
-  scopes: Array<string>;
+  scopes: Array<OpenIdScope | LindormScope>;
 };
 
 type RequestedLogin = {
@@ -100,19 +100,19 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   browserSessionId: string | null;
   clientId: string;
   country: string | null;
-  displayMode: OauthDisplayMode;
+  displayMode: OpenIdDisplayMode;
   expires: Date;
   idTokenHint: string | null;
   loginHint: Array<string>;
   maxAge: number | null;
   nonce: string;
   originalUri: string;
-  promptModes: Array<OauthPromptMode>;
+  promptModes: Array<OpenIdPromptMode>;
   redirectData: string | null;
   redirectUri: string;
   refreshSessionId: string | null;
-  responseMode: OauthResponseMode;
-  responseTypes: Array<OauthResponseType>;
+  responseMode: OpenIdResponseMode;
+  responseTypes: Array<OpenIdResponseType>;
   state: string;
   uiLocales: Array<string>;
 };
@@ -161,6 +161,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
         identityId: Joi.string().guid().allow(null).required(),
         latestAuthentication: Joi.date().allow(null).required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        metadata: Joi.object().required(),
         methods: Joi.array().items(Joi.string()).required(),
         remember: Joi.boolean().required(),
         sso: Joi.boolean().required(),
@@ -237,18 +238,18 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly authToken: string | null;
   public readonly clientId: string;
   public readonly country: string | null;
-  public readonly displayMode: OauthDisplayMode;
+  public readonly displayMode: OpenIdDisplayMode;
   public readonly expires: Date;
   public readonly idTokenHint: string | null;
   public readonly loginHint: Array<string>;
   public readonly maxAge: number | null;
   public readonly nonce: string;
   public readonly originalUri: string;
-  public readonly promptModes: Array<OauthPromptMode>;
+  public readonly promptModes: Array<OpenIdPromptMode>;
   public readonly redirectData: string | null;
   public readonly redirectUri: string;
-  public readonly responseMode: OauthResponseMode;
-  public readonly responseTypes: Array<OauthResponseType>;
+  public readonly responseMode: OpenIdResponseMode;
+  public readonly responseTypes: Array<OpenIdResponseType>;
   public readonly state: string;
   public readonly uiLocales: Array<string>;
 
@@ -271,6 +272,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       identityId: options.confirmedLogin?.identityId || null,
       latestAuthentication: options.confirmedLogin?.latestAuthentication || null,
       levelOfAssurance: options.confirmedLogin?.levelOfAssurance || 0,
+      metadata: options.confirmedLogin?.metadata || {},
       methods: options.confirmedLogin?.methods || [],
       remember: options.confirmedLogin?.remember === true,
       sso: options.confirmedLogin?.sso === true,
@@ -291,9 +293,9 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       browserSessions: options.requestedSelectAccount.browserSessions,
     };
     this.status = {
-      consent: options.status?.consent || SessionStatuses.PENDING,
-      login: options.status?.login || SessionStatuses.PENDING,
-      selectAccount: options.status?.selectAccount || SessionStatuses.PENDING,
+      consent: options.status?.consent || SessionStatus.PENDING,
+      login: options.status?.login || SessionStatus.PENDING,
+      selectAccount: options.status?.selectAccount || SessionStatus.PENDING,
     };
 
     this.accessSessionId = options.accessSessionId || null;
@@ -301,7 +303,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
     this.country = options.country || null;
-    this.displayMode = options.displayMode || OauthDisplayModes.PAGE;
+    this.displayMode = options.displayMode || OpenIdDisplayMode.PAGE;
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
     this.loginHint = options.loginHint || [];
@@ -312,7 +314,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.redirectData = options.redirectData || null;
     this.redirectUri = options.redirectUri;
     this.refreshSessionId = options.refreshSessionId || null;
-    this.responseMode = options.responseMode || OauthResponseModes.QUERY;
+    this.responseMode = options.responseMode || OpenIdResponseMode.QUERY;
     this.responseTypes = options.responseTypes;
     this.state = options.state;
     this.uiLocales = options.uiLocales || [];

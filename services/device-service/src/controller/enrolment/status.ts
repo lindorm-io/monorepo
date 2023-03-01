@@ -5,7 +5,7 @@ import { ServerKoaController } from "../../types";
 import {
   GetEnrolmentStatusRequestParams,
   GetEnrolmentStatusResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = GetEnrolmentStatusRequestParams;
@@ -35,6 +35,6 @@ export const getEnrolmentStatusController: ServerKoaController<RequestData> = as
       throw err;
     }
 
-    return { body: { status: SessionStatuses.EXPIRED } };
+    return { body: { status: SessionStatus.EXPIRED } };
   }
 };

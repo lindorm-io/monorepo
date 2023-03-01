@@ -5,6 +5,7 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 import { ClientError } from "@lindorm-io/errors";
+import { OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,7 +29,7 @@ describe("confirmConsentController", () => {
         authorizationSession: createTestAuthorizationSession({
           requestedConsent: {
             audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
-            scopes: ["address", "email", "offline_access", "openid", "phone", "private", "profile"],
+            scopes: Object.values(OpenIdScope),
           },
         }),
         client: createTestClient(),
@@ -58,9 +59,9 @@ describe("confirmConsentController", () => {
   test("should throw on invalid status", async () => {
     ctx.entity.authorizationSession = createTestAuthorizationSession({
       status: {
-        login: "confirmed",
-        consent: "rejected",
-        selectAccount: "pending",
+        login: SessionStatus.CONFIRMED,
+        consent: SessionStatus.REJECTED,
+        selectAccount: SessionStatus.PENDING,
       },
     });
 

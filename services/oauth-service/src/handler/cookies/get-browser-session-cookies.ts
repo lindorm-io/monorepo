@@ -1,6 +1,6 @@
 import { ServerKoaContext } from "../../types";
 import { BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { Environments } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-types";
 
 export const getBrowserSessionCookies = (ctx: ServerKoaContext): Array<string> => {
   const {
@@ -10,7 +10,7 @@ export const getBrowserSessionCookies = (ctx: ServerKoaContext): Array<string> =
   } = ctx;
 
   const cookie = cookies.get(BROWSER_SESSIONS_COOKIE_NAME, {
-    signed: environment !== Environments.TEST,
+    signed: environment !== Environment.TEST,
   });
 
   if (!cookie) {

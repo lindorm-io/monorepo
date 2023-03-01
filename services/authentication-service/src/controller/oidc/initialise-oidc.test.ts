@@ -34,7 +34,7 @@ describe("initialiseOidcController", () => {
   test("should resolve", async () => {
     await expect(initialiseOidcController(ctx)).resolves.toStrictEqual({ redirect: "redirectTo" });
 
-    expect(ctx.axios.oidcClient.post).toHaveBeenCalledWith("/internal/sessions", {
+    expect(ctx.axios.oidcClient.post).toHaveBeenCalledWith("/admin/sessions", {
       body: {
         callbackId: "048b2a65-3aeb-4839-a0a9-c647879bc2e3",
         callbackUri: "https://authentication.test.lindorm.io:3001/sessions/oidc/callback",

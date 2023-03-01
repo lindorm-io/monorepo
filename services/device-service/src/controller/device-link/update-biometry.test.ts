@@ -31,16 +31,32 @@ describe("updateDeviceLinkBiometryController", () => {
         biometry: "new-biometry",
       },
       entity: {
-        deviceLink: createTestDeviceLink(),
+        deviceLink: createTestDeviceLink({
+          id: "5bc0f501-e078-4778-85de-d969d6e71ff0",
+          identityId: "d890e6bb-531e-4b57-a80e-1f09e7b0832b",
+        }),
       },
       metadata: {
         agent: { os: null },
-        device: { name: null },
+        device: {
+          linkId: "5bc0f501-e078-4778-85de-d969d6e71ff0",
+          name: null,
+        },
       },
       repository: {
         deviceLinkRepository: createMockRepository(createTestDeviceLink),
       },
-      token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
+      token: {
+        bearerToken: {
+          subject: "d890e6bb-531e-4b57-a80e-1f09e7b0832b",
+        },
+        challengeConfirmationToken: {
+          claims: {
+            deviceLinkId: "5bc0f501-e078-4778-85de-d969d6e71ff0",
+          },
+          token: "jwt.jwt.jwt",
+        },
+      },
     };
 
     vaultGetSalt.mockResolvedValue({

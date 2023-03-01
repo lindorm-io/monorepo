@@ -4,8 +4,8 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import {
-  Environments,
-  SessionStatuses,
+  Environment,
+  SessionStatus,
   VerifyAuthorizationRequestQuery,
 } from "@lindorm-io/common-types";
 import {
@@ -47,7 +47,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   const cookieId = ctx.cookies.get(AUTHORIZATION_SESSION_COOKIE_NAME, {
-    signed: ctx.server.environment !== Environments.TEST,
+    signed: ctx.server.environment !== Environment.TEST,
   });
 
   if (cookieId !== authorizationSession.id) {
@@ -61,19 +61,19 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.selectAccount) {
-    case SessionStatuses.CONFIRMED:
+    case SessionStatus.CONFIRMED:
       break;
 
-    case SessionStatuses.PENDING:
+    case SessionStatus.PENDING:
       return { redirect: createSelectAccountPendingUri(authorizationSession) };
 
-    case SessionStatuses.REJECTED:
+    case SessionStatus.REJECTED:
       return { redirect: createSelectAccountRejectedUri(authorizationSession) };
 
-    case SessionStatuses.SKIP:
+    case SessionStatus.SKIP:
       break;
 
-    case SessionStatuses.VERIFIED:
+    case SessionStatus.VERIFIED:
       break;
 
     default:
@@ -83,20 +83,20 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.login) {
-    case SessionStatuses.CONFIRMED:
+    case SessionStatus.CONFIRMED:
       authorizationSession = await handleOauthLoginVerification(ctx, authorizationSession);
       break;
 
-    case SessionStatuses.PENDING:
+    case SessionStatus.PENDING:
       return { redirect: createLoginPendingUri(authorizationSession) };
 
-    case SessionStatuses.REJECTED:
+    case SessionStatus.REJECTED:
       return { redirect: createLoginRejectedUri(authorizationSession) };
 
-    case SessionStatuses.SKIP:
+    case SessionStatus.SKIP:
       break;
 
-    case SessionStatuses.VERIFIED:
+    case SessionStatus.VERIFIED:
       break;
 
     default:
@@ -106,7 +106,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.consent) {
-    case SessionStatuses.CONFIRMED:
+    case SessionStatus.CONFIRMED:
       authorizationSession = await handleOauthConsentVerification(
         ctx,
         authorizationSession,
@@ -114,16 +114,16 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       );
       break;
 
-    case SessionStatuses.PENDING:
+    case SessionStatus.PENDING:
       return { redirect: createConsentPendingUri(authorizationSession) };
 
-    case SessionStatuses.REJECTED:
+    case SessionStatus.REJECTED:
       return { redirect: createConsentRejectedUri(authorizationSession) };
 
-    case SessionStatuses.SKIP:
+    case SessionStatus.SKIP:
       break;
 
-    case SessionStatuses.VERIFIED:
+    case SessionStatus.VERIFIED:
       break;
 
     default:

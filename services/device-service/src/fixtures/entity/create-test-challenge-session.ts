@@ -1,6 +1,6 @@
 import { ChallengeSession, ChallengeSessionOptions } from "../../entity";
 import { randomString } from "@lindorm-io/random";
-import { ChallengeStrategies } from "@lindorm-io/common-types";
+import { ChallengeStrategy } from "@lindorm-io/common-types";
 
 export const createTestChallengeSession = (
   options: Partial<ChallengeSessionOptions> = {},
@@ -14,6 +14,6 @@ export const createTestChallengeSession = (
     nonce: randomString(16),
     payload: { test: true },
     scopes: ["test"],
-    strategies: Object.values(ChallengeStrategies),
+    strategies: Object.values(ChallengeStrategy),
     ...options,
   });

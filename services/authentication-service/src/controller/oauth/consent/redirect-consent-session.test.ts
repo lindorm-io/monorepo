@@ -1,77 +1,85 @@
-import { redirectConsentSessionController } from "./redirect-consent-session";
-import { fetchOauthConsentData as _fetchOauthConsentInfo } from "../../../handler";
 import { createMockLogger } from "@lindorm-io/winston";
+import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { redirectConsentSessionController } from "./redirect-consent-session";
+import { randomUUID } from "crypto";
+import {
+  confirmOauthConsent as _confirmOauthConsent,
+  getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
+  getOauthAuthorizationSession as _getOauthAuthorizationSession,
+} from "../../../handler";
+import {
+  LindormScope,
+  OpenIdClientType,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 
 jest.mock("../../../handler");
 
-const fetchOauthConsentInfo = _fetchOauthConsentInfo as jest.Mock;
+const confirmOauthConsent = _confirmOauthConsent as jest.Mock;
+const getOauthAuthorizationRedirect = _getOauthAuthorizationRedirect as jest.Mock;
+const getOauthAuthorizationSession = _getOauthAuthorizationSession as jest.Mock;
 
 describe("redirectConsentSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      axios: {
-        oauthClient: {
-          get: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectVerify" } }),
-          post: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectConfirm" } }),
-        },
-      },
       data: {
-        sessionId: "sessionId",
+        session: "f771592d-e4f6-418f-8faa-f5ea757062aa",
       },
       logger: createMockLogger(),
     };
 
-    fetchOauthConsentInfo.mockResolvedValue({
-      consentStatus: "pending",
-      client: {
-        type: "public",
-      },
-      requested: {
-        audiences: ["audience"],
-        scopes: ["scope"],
-      },
+    confirmOauthConsent.mockResolvedValue({
+      redirectTo: "confirmOauthConsent",
     });
+    getOauthAuthorizationRedirect.mockResolvedValue({
+      redirectTo: "getOauthAuthorizationRedirect",
+    });
+    getOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
   });
 
-  test("should resolve", async () => {
+  test("should resolve url", async () => {
     await expect(redirectConsentSessionController(ctx)).resolves.toStrictEqual({
       redirect: expect.any(URL),
     });
   });
 
-  test("should resolve verify", async () => {
-    fetchOauthConsentInfo.mockResolvedValue({
-      consentStatus: "unexpected",
-      client: {
-        type: "public",
-      },
-      requested: {
-        audiences: ["audience"],
-        scopes: ["scope"],
-      },
-    });
+  test("should resolve redirect", async () => {
+    getOauthAuthorizationSession.mockResolvedValue(
+      mockFetchOauthAuthorizationSession({
+        consent: {
+          isRequired: true,
+          status: SessionStatus.CONFIRMED,
+
+          audiences: [randomUUID()],
+          optionalScopes: Object.values(LindormScope),
+          requiredScopes: Object.values(OpenIdScope),
+          scopeDescriptions: [],
+        },
+      }),
+    );
 
     await expect(redirectConsentSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectVerify",
+      redirect: "getOauthAuthorizationRedirect",
     });
   });
 
   test("should resolve confirm", async () => {
-    fetchOauthConsentInfo.mockResolvedValue({
-      consentStatus: "pending",
-      client: {
-        type: "confidential",
-      },
-      requested: {
-        audiences: ["audience"],
-        scopes: ["scope"],
-      },
-    });
+    getOauthAuthorizationSession.mockResolvedValue(
+      mockFetchOauthAuthorizationSession({
+        client: {
+          logoUri: "https://test.client.com/logo.png",
+          name: "Test Client",
+          tenant: "Test Tenant",
+          type: OpenIdClientType.CONFIDENTIAL,
+        },
+      }),
+    );
 
     await expect(redirectConsentSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectConfirm",
+      redirect: "confirmOauthConsent",
     });
   });
 });

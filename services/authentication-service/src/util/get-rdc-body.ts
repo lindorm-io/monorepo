@@ -3,8 +3,8 @@ import { configuration } from "../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import {
   InitialiseRdcSessionRequestBody,
-  RdcSessionMethods,
-  RdcSessionModes,
+  RdcSessionMethod,
+  RdcSessionMode,
 } from "@lindorm-io/common-types";
 
 export const getRdcBody = (
@@ -16,8 +16,8 @@ export const getRdcBody = (
 
   return {
     audiences: [configuration.oauth.client_id],
-    confirmMethod: RdcSessionMethods.POST,
-    confirmPayload: { strategySessionToken },
+    confirmMethod: RdcSessionMethod.POST,
+    confirmPayload: { strategySessionToken, visualHint: strategySession.visualHint },
     confirmUri: createURL("/sessions/strategy/:id/confirm", {
       host: configuration.server.host,
       port: configuration.server.port,
@@ -25,9 +25,9 @@ export const getRdcBody = (
     }).toString(),
     expiresAt: authenticationSession.expires.toISOString(),
     factors: 2,
-    mode: RdcSessionModes.QR_CODE,
+    mode: RdcSessionMode.QR_CODE,
     nonce: strategySession.nonce,
-    rejectMethod: RdcSessionMethods.POST,
+    rejectMethod: RdcSessionMethod.POST,
     rejectUri: createURL("/sessions/strategy/:id/reject", {
       host: configuration.server.host,
       port: configuration.server.port,

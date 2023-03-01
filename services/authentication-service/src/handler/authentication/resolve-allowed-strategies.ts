@@ -4,7 +4,7 @@ import { ServerKoaContext } from "../../types";
 import { getAvailableStrategies } from "../../util";
 import { getValidDeviceLinks } from "./get-valid-device-links";
 import { getValidIdentitySessions } from "./get-valid-identity-sessions";
-import { AuthenticationStrategies, AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-types";
 
 export const resolveAllowedStrategies = async (
   ctx: ServerKoaContext,
@@ -26,97 +26,94 @@ export const resolveAllowedStrategies = async (
   // Bank ID SE
 
   if (
-    availableStrategies.includes(AuthenticationStrategies.BANK_ID_SE) &&
+    availableStrategies.includes(AuthenticationStrategy.BANK_ID_SE) &&
     authenticationSession.country === "se"
   ) {
-    strategies.push(AuthenticationStrategies.BANK_ID_SE);
+    strategies.push(AuthenticationStrategy.BANK_ID_SE);
   }
 
   // Device Link Challenge
 
-  if (
-    availableStrategies.includes(AuthenticationStrategies.DEVICE_CHALLENGE) &&
-    deviceLinks.length
-  ) {
-    strategies.push(AuthenticationStrategies.DEVICE_CHALLENGE);
+  if (availableStrategies.includes(AuthenticationStrategy.DEVICE_CHALLENGE) && deviceLinks.length) {
+    strategies.push(AuthenticationStrategy.DEVICE_CHALLENGE);
   }
 
   // Email
 
-  if (availableStrategies.includes(AuthenticationStrategies.EMAIL_LINK)) {
-    strategies.push(AuthenticationStrategies.EMAIL_LINK);
+  if (availableStrategies.includes(AuthenticationStrategy.EMAIL_CODE)) {
+    strategies.push(AuthenticationStrategy.EMAIL_CODE);
   }
 
-  if (availableStrategies.includes(AuthenticationStrategies.EMAIL_OTP)) {
-    strategies.push(AuthenticationStrategies.EMAIL_OTP);
+  if (availableStrategies.includes(AuthenticationStrategy.EMAIL_OTP)) {
+    strategies.push(AuthenticationStrategy.EMAIL_OTP);
   }
 
   // MFA Cookies
 
   if (
-    availableStrategies.includes(AuthenticationStrategies.MFA_COOKIE) &&
+    availableStrategies.includes(AuthenticationStrategy.MFA_COOKIE) &&
     ctx.cookies.get(MFA_COOKIE_NAME, { signed: true })
   ) {
-    strategies.push(AuthenticationStrategies.MFA_COOKIE);
+    strategies.push(AuthenticationStrategy.MFA_COOKIE);
   }
 
   // Password
 
   const browserLinkCookie = ctx.cookies.get(BROWSER_LINK_COOKIE_NAME, { signed: true });
 
-  if (availableStrategies.includes(AuthenticationStrategies.PASSWORD) && !browserLinkCookie) {
-    strategies.push(AuthenticationStrategies.PASSWORD);
+  if (availableStrategies.includes(AuthenticationStrategy.PASSWORD) && !browserLinkCookie) {
+    strategies.push(AuthenticationStrategy.PASSWORD);
   }
 
   if (
-    availableStrategies.includes(AuthenticationStrategies.PASSWORD_BROWSER_LINK) &&
+    availableStrategies.includes(AuthenticationStrategy.PASSWORD_BROWSER_LINK) &&
     browserLinkCookie
   ) {
-    strategies.push(AuthenticationStrategies.PASSWORD_BROWSER_LINK);
+    strategies.push(AuthenticationStrategy.PASSWORD_BROWSER_LINK);
   }
 
   // Phone OTP
 
-  if (availableStrategies.includes(AuthenticationStrategies.PHONE_OTP)) {
-    strategies.push(AuthenticationStrategies.PHONE_OTP);
+  if (availableStrategies.includes(AuthenticationStrategy.PHONE_OTP)) {
+    strategies.push(AuthenticationStrategy.PHONE_OTP);
   }
 
   // Remote Device Challenge
 
   if (
-    availableStrategies.includes(AuthenticationStrategies.RDC_PUSH_NOTIFICATION) &&
+    availableStrategies.includes(AuthenticationStrategy.RDC_PUSH_NOTIFICATION) &&
     deviceLinks.length
   ) {
-    strategies.push(AuthenticationStrategies.RDC_PUSH_NOTIFICATION);
+    strategies.push(AuthenticationStrategy.RDC_PUSH_NOTIFICATION);
   }
 
-  if (availableStrategies.includes(AuthenticationStrategies.RDC_QR_CODE)) {
-    strategies.push(AuthenticationStrategies.RDC_QR_CODE);
+  if (availableStrategies.includes(AuthenticationStrategy.RDC_QR_CODE)) {
+    strategies.push(AuthenticationStrategy.RDC_QR_CODE);
   }
 
   // Sessions
 
   if (
-    availableStrategies.includes(AuthenticationStrategies.SESSION_ACCEPT_WITH_CODE) &&
+    availableStrategies.includes(AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE) &&
     sessions.length
   ) {
-    strategies.push(AuthenticationStrategies.SESSION_ACCEPT_WITH_CODE);
+    strategies.push(AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE);
   }
 
-  if (availableStrategies.includes(AuthenticationStrategies.SESSION_OTP) && sessions.length) {
-    strategies.push(AuthenticationStrategies.SESSION_OTP);
+  if (availableStrategies.includes(AuthenticationStrategy.SESSION_OTP) && sessions.length) {
+    strategies.push(AuthenticationStrategy.SESSION_OTP);
   }
 
   // Time Based OTP
 
-  if (availableStrategies.includes(AuthenticationStrategies.TIME_BASED_OTP) && !!account?.totp) {
-    strategies.push(AuthenticationStrategies.TIME_BASED_OTP);
+  if (availableStrategies.includes(AuthenticationStrategy.TIME_BASED_OTP) && !!account?.totp) {
+    strategies.push(AuthenticationStrategy.TIME_BASED_OTP);
   }
 
   // WebAuthN
 
-  if (availableStrategies.includes(AuthenticationStrategies.WEBAUTHN)) {
-    strategies.push(AuthenticationStrategies.WEBAUTHN);
+  if (availableStrategies.includes(AuthenticationStrategy.WEBAUTHN)) {
+    strategies.push(AuthenticationStrategy.WEBAUTHN);
   }
 
   logger.debug("Resolved strategies", { strategies });

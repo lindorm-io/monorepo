@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { InvalidToken } from "../../../entity";
 import { JOI_JWT } from "../../../common";
 import { fromUnixTime } from "date-fns";
-import { LindormTokenTypes, RevokeTokenRequestBody } from "@lindorm-io/common-types";
+import { OpenIdTokenType, RevokeTokenRequestBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = RevokeTokenRequestBody;
@@ -28,7 +28,7 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   const { id, expires, session, type } = jwt.verify(data.token, {
-    types: [LindormTokenTypes.ACCESS, LindormTokenTypes.REFRESH],
+    types: [OpenIdTokenType.ACCESS, OpenIdTokenType.REFRESH],
   });
 
   if (!session) {
@@ -41,7 +41,7 @@ export const oauthRevokeController: ServerKoaController<RequestData> = async (
 
   await invalidTokenCache.create(new InvalidToken({ id, expires: fromUnixTime(expires) }));
 
-  if (type === LindormTokenTypes.REFRESH) {
+  if (type === OpenIdTokenType.REFRESH) {
     await refreshSessionRepository.deleteMany({ id: session });
   }
 };

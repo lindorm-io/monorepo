@@ -7,7 +7,7 @@ import {
   ConfirmLoginRequestBody,
   ConfirmLoginRequestParams,
   ConfirmLoginResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmLoginRequestParams & ConfirmLoginRequestBody;
@@ -19,6 +19,7 @@ export const confirmLoginSchema = Joi.object<RequestData>()
     id: Joi.string().guid().required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    metadata: Joi.object().required(),
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
     sso: Joi.boolean().required(),
@@ -30,7 +31,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { authorizationSessionCache },
-    data: { identityId, levelOfAssurance, methods, remember, sso },
+    data: { identityId, levelOfAssurance, metadata, methods, remember, sso },
     entity: { authorizationSession },
     logger,
   } = ctx;
@@ -42,11 +43,12 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
   authorizationSession.confirmedLogin.identityId = identityId;
   authorizationSession.confirmedLogin.latestAuthentication = new Date();
   authorizationSession.confirmedLogin.levelOfAssurance = levelOfAssurance;
+  authorizationSession.confirmedLogin.metadata = metadata;
   authorizationSession.confirmedLogin.methods = methods;
   authorizationSession.confirmedLogin.remember = remember;
   authorizationSession.confirmedLogin.sso = sso;
 
-  authorizationSession.status.login = SessionStatuses.CONFIRMED;
+  authorizationSession.status.login = SessionStatus.CONFIRMED;
 
   await authorizationSessionCache.update(authorizationSession);
 

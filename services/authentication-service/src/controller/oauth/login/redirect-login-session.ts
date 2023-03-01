@@ -1,27 +1,24 @@
 import Joi from "joi";
+import { AuthenticationConfirmationTokenClaims } from "../../../common";
+import { AuthenticationTokenType, SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
 import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
-import { fetchOauthLoginData } from "../../../handler";
-import { ClientScopes } from "../../../common";
 import {
-  AuthenticationMethod,
-  ConfirmLoginRequestBody,
-  ConfirmLoginResponse,
-  LindormTokenTypes,
-  RedirectLoginResponse,
-  SessionStatuses,
-} from "@lindorm-io/common-types";
+  confirmOauthLogin,
+  getOauthAuthorizationRedirect,
+  getOauthAuthorizationSession,
+} from "../../../handler";
 
 interface RequestData {
-  sessionId: string;
+  session: string;
 }
 
 export const redirectLoginSessionSchema = Joi.object<RequestData>()
   .keys({
-    sessionId: Joi.string().guid().required(),
+    session: Joi.string().guid().required(),
   })
   .required();
 
@@ -29,58 +26,49 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { oauthClient },
-    data: { sessionId },
+    data: { session },
     jwt,
     logger,
   } = ctx;
 
   const {
-    loginStatus,
+    login: { status },
     authorizationSession: { authToken },
-  } = await fetchOauthLoginData(ctx, sessionId);
+  } = await getOauthAuthorizationSession(ctx, session);
 
-  if (loginStatus !== SessionStatuses.PENDING) {
-    logger.warn("Invalid Session Status", { loginStatus });
+  if (status !== SessionStatus.PENDING) {
+    logger.warn("Unexpected Session Status", { status });
 
-    const {
-      data: { redirectTo },
-    } = await oauthClient.get<RedirectLoginResponse>("/internal/sessions/login/:id/redirect", {
-      params: { id: sessionId },
-    });
+    const { redirectTo } = await getOauthAuthorizationRedirect(ctx, session);
 
     return { redirect: redirectTo };
   }
 
   if (authToken) {
     try {
-      const authenticationConfirmationToken = jwt.verify(authToken, {
+      const authenticationConfirmationToken = jwt.verify<
+        never,
+        AuthenticationConfirmationTokenClaims
+      >(authToken, {
         issuer: configuration.server.issuer,
-        types: [LindormTokenTypes.AUTHENTICATION_CONFIRMATION],
+        types: [AuthenticationTokenType.AUTHENTICATION_CONFIRMATION],
       });
 
-      const body: ConfirmLoginRequestBody = {
-        acrValues: authenticationConfirmationToken.authContextClass,
-        amrValues:
-          authenticationConfirmationToken.authMethodsReference as Array<AuthenticationMethod>,
-        identityId: authenticationConfirmationToken.subject,
-        levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
-        remember: authenticationConfirmationToken.claims.remember,
-      };
+      if (session !== authenticationConfirmationToken.session) {
+        throw new ClientError("Invalid session identifier", {
+          debug: {
+            expect: session,
+            actual: authenticationConfirmationToken.session,
+          },
+          statusCode: ClientError.StatusCode.FORBIDDEN,
+        });
+      }
 
-      const {
-        data: { redirectTo },
-      } = await oauthClient.post<ConfirmLoginResponse>("/internal/sessions/login/:id/confirm", {
-        params: { id: sessionId },
-        body,
-        middleware: [
-          clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
-        ],
-      });
+      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
 
       return { redirect: redirectTo };
     } catch (err: any) {
-      /* ignored */
+      logger.warn("Invalid auth token", { authToken });
     }
   }
 
@@ -88,7 +76,7 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
     redirect: createURL(configuration.frontend.routes.login, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { sessionId },
+      query: { session },
     }),
   };
 };

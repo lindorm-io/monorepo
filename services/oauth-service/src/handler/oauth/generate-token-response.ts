@@ -1,9 +1,9 @@
-import { Client, AccessSession, RefreshSession } from "../../entity";
+import { AccessSession, Client, RefreshSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { LindormScopes } from "@lindorm-io/common-types";
+import { OpenIdScope } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { createAccessToken, createIdToken, createRefreshToken } from "../token";
-import { getIdentityUserinfo } from "../identity";
+import { getIdentityClaims } from "../identity";
 
 type ResponseBody = {
   accessToken: string;
@@ -21,8 +21,7 @@ export const generateTokenResponse = async (
 ): Promise<Partial<ResponseBody>> => {
   const body: Partial<ResponseBody> = {};
 
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
-  const { active, ...claims } = await getIdentityUserinfo(ctx, accessToken);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, session);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -32,17 +31,19 @@ export const generateTokenResponse = async (
     });
   }
 
+  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
+
   body.accessToken = accessToken;
   body.expiresIn = expiresIn;
   body.tokenType = "Bearer";
 
-  if (session.scopes.includes(LindormScopes.OPENID)) {
+  if (session.scopes.includes(OpenIdScope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, session, claims);
 
     body.idToken = idToken;
   }
 
-  if (session.scopes.includes(LindormScopes.OFFLINE_ACCESS)) {
+  if (session.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
     if (!(session instanceof RefreshSession)) {
       throw new ServerError("Unexpected session type");
     }

@@ -8,8 +8,8 @@ import { JOI_NONCE } from "../../common";
 import {
   InitialiseRdcSessionRequestBody,
   InitialiseRdcSessionResponse,
-  RdcSessionModes,
-  RdcSessionTypes,
+  RdcSessionMode,
+  RdcSessionType,
 } from "@lindorm-io/common-types";
 import {
   JOI_FACTORS,
@@ -31,9 +31,9 @@ export const initialiseRdcSchema = Joi.object<RequestData>()
     expiresAt: Joi.string(),
     factors: JOI_FACTORS,
     identityId: Joi.when("mode", {
-      is: RdcSessionModes.PUSH_NOTIFICATION,
+      is: RdcSessionMode.PUSH_NOTIFICATION,
       then: Joi.string().guid().required(),
-      otherwise: Joi.string().guid(),
+      otherwise: Joi.forbidden(),
     }),
     mode: JOI_RDC_MODE.required(),
     nonce: JOI_NONCE.required(),
@@ -90,7 +90,7 @@ export const initialiseRdcController: ServerKoaController<RequestData> = async (
     templateName,
     templateParameters,
     tokenPayload,
-    type: RdcSessionTypes.CALLBACK,
+    type: RdcSessionType.CALLBACK,
   });
 
   return { body: { id, expiresIn }, status: HttpStatus.Success.ACCEPTED };

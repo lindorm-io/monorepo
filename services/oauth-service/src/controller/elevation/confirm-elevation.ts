@@ -7,7 +7,7 @@ import { assertSessionPending, createElevationVerifyUri } from "../../util";
 import {
   ConfirmElevationRequestBody,
   ConfirmElevationRequestParams,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = ConfirmElevationRequestParams & ConfirmElevationRequestBody;
@@ -69,7 +69,7 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
   elevationSession.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
   elevationSession.confirmedAuthentication.methods = methods;
 
-  elevationSession.status = SessionStatuses.CONFIRMED;
+  elevationSession.status = SessionStatus.CONFIRMED;
 
   await elevationSessionCache.update(elevationSession);
 

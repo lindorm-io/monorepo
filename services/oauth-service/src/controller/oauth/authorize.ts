@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { AuthorizationSession } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import { ServerKoaController } from "../../types";
@@ -35,11 +36,12 @@ import {
 } from "../../util";
 import {
   AuthorizeRequestQuery,
-  OauthPromptMode,
-  OauthResponseType,
-  SessionStatuses,
+  LindormScope,
+  OpenIdPromptMode,
+  OpenIdResponseType,
+  OpenIdScope,
+  SessionStatus,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = AuthorizeRequestQuery;
 
@@ -66,6 +68,7 @@ export const oauthAuthorizeSchema = Joi.object<RequestData>()
     state: JOI_STATE.required(),
     uiLocales: Joi.string(),
   })
+  .options({ abortEarly: false })
   .required();
 
 export const oauthAuthorizeController: ServerKoaController<RequestData> = async (
@@ -105,9 +108,9 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     });
   }
 
-  const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OauthPromptMode>) : [];
-  const responseTypes = responseType.toLowerCase().split(" ") as Array<OauthResponseType>;
-  const scopes = scope.toLowerCase().split(" ");
+  const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OpenIdPromptMode>) : [];
+  const responseTypes = responseType.toLowerCase().split(" ") as Array<OpenIdResponseType>;
+  const scopes = scope.toLowerCase().split(" ") as Array<OpenIdScope | LindormScope>;
 
   assertRedirectUri(client, redirectUri);
 
@@ -189,8 +192,8 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const selectAccountRequired = isSelectAccountRequired(authorizationSession);
 
   authorizationSession.status.selectAccount = selectAccountRequired
-    ? SessionStatuses.PENDING
-    : SessionStatuses.SKIP;
+    ? SessionStatus.PENDING
+    : SessionStatus.SKIP;
 
   const loginRequired = isLoginRequired(
     authorizationSession,
@@ -199,9 +202,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     refreshSession,
   );
 
-  authorizationSession.status.login = loginRequired
-    ? SessionStatuses.PENDING
-    : SessionStatuses.SKIP;
+  authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
 
   const consentRequired = isConsentRequired(
     authorizationSession,
@@ -211,8 +212,8 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   );
 
   authorizationSession.status.consent = consentRequired
-    ? SessionStatuses.PENDING
-    : SessionStatuses.SKIP;
+    ? SessionStatus.PENDING
+    : SessionStatus.SKIP;
 
   assertAuthorizePrompt(authorizationSession, {
     consentRequired,
@@ -226,15 +227,15 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   setAuthorizationSessionCookie(ctx, authorizationSession);
 
-  if (authorizationSession.status.selectAccount === SessionStatuses.PENDING) {
+  if (authorizationSession.status.selectAccount === SessionStatus.PENDING) {
     return { redirect: createSelectAccountPendingUri(authorizationSession) };
   }
 
-  if (authorizationSession.status.login === SessionStatuses.PENDING) {
+  if (authorizationSession.status.login === SessionStatus.PENDING) {
     return { redirect: createLoginPendingUri(authorizationSession) };
   }
 
-  if (authorizationSession.status.consent === SessionStatuses.PENDING) {
+  if (authorizationSession.status.consent === SessionStatus.PENDING) {
     return { redirect: createConsentPendingUri(authorizationSession) };
   }
 

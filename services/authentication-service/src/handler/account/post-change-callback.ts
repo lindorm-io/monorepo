@@ -20,7 +20,7 @@ export const createAccountCallback =
       },
     };
 
-    await vaultClient.post("/internal/vault", {
+    await vaultClient.post("/admin/vault", {
       body,
       middleware: [
         clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_WRITE]),
@@ -35,7 +35,7 @@ export const destroyAccountCallback =
       axios: { oauthClient, vaultClient },
     } = ctx;
 
-    await vaultClient.delete("/internal/vault/:id", {
+    await vaultClient.delete("/admin/vault/:id", {
       params: {
         id: account.id,
       },

@@ -5,7 +5,7 @@ import { assertSessionPending, createLoginRejectedUri } from "../../util";
 import {
   RejectLoginRequestParams,
   RejectLoginResponse,
-  SessionStatuses,
+  SessionStatus,
 } from "@lindorm-io/common-types";
 
 type RequestData = RejectLoginRequestParams;
@@ -31,7 +31,7 @@ export const rejectLoginController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.login = SessionStatuses.REJECTED;
+  authorizationSession.status.login = SessionStatus.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 

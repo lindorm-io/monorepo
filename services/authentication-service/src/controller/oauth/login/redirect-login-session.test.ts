@@ -1,45 +1,47 @@
 import { redirectLoginSessionController } from "./redirect-login-session";
-import { fetchOauthLoginData as _fetchOauthLoginInfo } from "../../../handler";
 import { createMockLogger } from "@lindorm-io/winston";
+import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import {
+  confirmOauthLogin as _confirmOauthLogin,
+  getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
+  getOauthAuthorizationSession as _getOauthAuthorizationSession,
+} from "../../../handler";
+import {
+  AuthenticationMethod,
+  OpenIdDisplayMode,
+  OpenIdPromptMode,
+  SessionStatus,
+} from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
+import { randomString } from "@lindorm-io/random";
 
 jest.mock("../../../handler");
 
-const fetchOauthLoginInfo = _fetchOauthLoginInfo as jest.Mock;
+const confirmOauthLogin = _confirmOauthLogin as jest.Mock;
+const getOauthAuthorizationRedirect = _getOauthAuthorizationRedirect as jest.Mock;
+const getOauthAuthorizationSession = _getOauthAuthorizationSession as jest.Mock;
 
 describe("redirectLoginSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      axios: {
-        oauthClient: {
-          get: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectVerify" } }),
-          post: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectConfirm" } }),
-        },
-      },
       data: {
-        sessionId: "sessionId",
+        session: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
       },
       jwt: {
         verify: jest.fn().mockImplementation(() => ({
-          authContextClass: "authContextClass",
-          authMethodsReference: "authMethodsReference",
-          subject: "subject",
-          levelOfAssurance: "levelOfAssurance",
-          claims: {
-            remember: "remember",
-          },
+          session: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
         })),
       },
       logger: createMockLogger(),
     };
 
-    fetchOauthLoginInfo.mockResolvedValue({
-      loginStatus: "pending",
-      authorizationSession: {
-        authToken: null,
-      },
+    confirmOauthLogin.mockResolvedValue({ redirectTo: "confirmOauthLogin" });
+    getOauthAuthorizationRedirect.mockResolvedValue({
+      redirectTo: "getOauthAuthorizationRedirect",
     });
+    getOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
   });
 
   test("should resolve", async () => {
@@ -48,44 +50,55 @@ describe("redirectLoginSessionController", () => {
     });
   });
 
-  test("should resolve verify", async () => {
-    fetchOauthLoginInfo.mockResolvedValue({
-      loginStatus: "unexpected",
-      authorizationSession: {
-        authToken: null,
-      },
-    });
+  test("should resolve auth token", async () => {
+    getOauthAuthorizationSession.mockResolvedValue(
+      mockFetchOauthAuthorizationSession({
+        authorizationSession: {
+          authToken: "auth.jwt.jwt",
+          country: "se",
+          displayMode: OpenIdDisplayMode.PAGE,
+          expiresAt: "2022-01-01T04:00:00.000Z",
+          expiresIn: 1800,
+          idTokenHint: "id.jwt.jwt",
+          loginHint: ["test@lindorm.io"],
+          maxAge: 500,
+          nonce: randomString(16),
+          originalUri: "https://oauth.lindorm.io/oauth2/authorize?query=query",
+          promptModes: [
+            OpenIdPromptMode.CONSENT,
+            OpenIdPromptMode.LOGIN,
+            OpenIdPromptMode.SELECT_ACCOUNT,
+          ],
+          redirectUri: "https://test.client.com/redirect",
+          uiLocales: ["en-GB", "sv-SE"],
+        },
+      }),
+    );
 
     await expect(redirectLoginSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectVerify",
+      redirect: "confirmOauthLogin",
     });
   });
 
-  test("should resolve confirm", async () => {
-    fetchOauthLoginInfo.mockResolvedValue({
-      loginStatus: "pending",
-      authorizationSession: {
-        authToken: "jwt.jwt.jwt",
-      },
-    });
+  test("should resolve redirect", async () => {
+    getOauthAuthorizationSession.mockResolvedValue(
+      mockFetchOauthAuthorizationSession({
+        login: {
+          isRequired: true,
+          status: SessionStatus.CONFIRMED,
+
+          identityId: randomUUID(),
+          minimumLevel: 2,
+          recommendedLevel: 2,
+          recommendedMethods: [AuthenticationMethod.EMAIL],
+          requiredLevel: 2,
+          requiredMethods: [AuthenticationMethod.EMAIL],
+        },
+      }),
+    );
 
     await expect(redirectLoginSessionController(ctx)).resolves.toStrictEqual({
-      redirect: "redirectConfirm",
+      redirect: "getOauthAuthorizationRedirect",
     });
-
-    expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
-      "/internal/sessions/login/:id/confirm",
-      {
-        params: { id: "sessionId" },
-        body: {
-          acrValues: "authContextClass",
-          amrValues: "authMethodsReference",
-          identityId: "subject",
-          levelOfAssurance: "levelOfAssurance",
-          remember: "remember",
-        },
-        middleware: expect.any(Array),
-      },
-    );
   });
 });

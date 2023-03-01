@@ -2,6 +2,7 @@ import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { assertAuthorizeScope } from "./assert-authorize-scope";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
+import { OpenIdScope } from "@lindorm-io/common-types";
 
 describe("assertAuthorizeScope", () => {
   let authorizationSession: AuthorizationSession;
@@ -11,7 +12,7 @@ describe("assertAuthorizeScope", () => {
     authorizationSession = createTestAuthorizationSession({
       requestedConsent: {
         audiences: [],
-        scopes: ["scope1", "scope2"],
+        scopes: [OpenIdScope.EMAIL, OpenIdScope.PHONE],
       },
     });
 
@@ -19,7 +20,7 @@ describe("assertAuthorizeScope", () => {
 
     client.allowed = {
       ...client.allowed,
-      scopes: ["scope1", "scope2", "scope3"],
+      scopes: [OpenIdScope.EMAIL, OpenIdScope.PHONE, OpenIdScope.ADDRESS],
     };
   });
 
@@ -30,7 +31,7 @@ describe("assertAuthorizeScope", () => {
   test("should throw", () => {
     client.allowed = {
       ...client.allowed,
-      scopes: ["scope4"],
+      scopes: [OpenIdScope.OFFLINE_ACCESS],
     };
 
     expect(() => assertAuthorizeScope(authorizationSession, client)).toThrow(ClientError);

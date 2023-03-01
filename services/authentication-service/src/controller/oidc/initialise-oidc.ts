@@ -52,7 +52,7 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
 
   const {
     data: { redirectTo },
-  } = await oidcClient.post<InitialiseOidcSessionResponse>("/internal/sessions", {
+  } = await oidcClient.post<InitialiseOidcSessionResponse>("/admin/sessions", {
     body,
     middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OIDC_SESSION_WRITE])],
   });
