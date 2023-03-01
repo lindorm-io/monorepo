@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.31](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-basic-auth@0.2.30...@lindorm-io/koa-basic-auth@0.2.31) (2023-03-01)
+
+**Note:** Version bump only for package @lindorm-io/koa-basic-auth
+
 ## [0.2.30](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-basic-auth@0.2.29...@lindorm-io/koa-basic-auth@0.2.30) (2023-02-02)
 
 **Note:** Version bump only for package @lindorm-io/koa-basic-auth

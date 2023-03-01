@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.5...@lindorm-io/url@0.2.6) (2023-03-01)
+
+### Bug Fixes
+
+- add generics ([f74ac86](https://github.com/lindorm-io/monorepo/commit/f74ac8651e97f2f1ff18155bbfb0bd6a05e55c62))
+- add url utils ([fe734bc](https://github.com/lindorm-io/monorepo/commit/fe734bc63ac3d9435992d5bee82a9e84fd76bd23))
+- bug in url ([ebaed16](https://github.com/lindorm-io/monorepo/commit/ebaed16f5ecce60074a357d458364e2edca0761f))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+- reduce complexity ([bfff59f](https://github.com/lindorm-io/monorepo/commit/bfff59f896997349d86ed6e54640bb737b7b085d))
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.4...@lindorm-io/url@0.2.5) (2023-02-02)
 
 ### Bug Fixes

@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-keystore",
   "description": "Keystore middleware for @lindorm-io/koa applications",
-  "version": "0.9.22",
+  "version": "0.9.23",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,19 +24,19 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/axios": "^0.5.10",
-    "@lindorm-io/core": "^0.8.7",
-    "@lindorm-io/errors": "^0.1.15",
-    "@lindorm-io/expiry": "^0.1.1",
-    "@lindorm-io/key-pair": "^0.6.15",
-    "@lindorm-io/koa": "^0.15.11",
-    "@lindorm-io/mongo": "^0.11.13",
-    "@lindorm-io/redis": "^0.11.12",
-    "@lindorm-io/retry": "^0.1.1",
+    "@lindorm-io/axios": "^0.6.0",
+    "@lindorm-io/core": "^0.8.8",
+    "@lindorm-io/errors": "^0.1.16",
+    "@lindorm-io/expiry": "^0.1.2",
+    "@lindorm-io/key-pair": "^0.6.16",
+    "@lindorm-io/koa": "^0.15.12",
+    "@lindorm-io/mongo": "^0.11.14",
+    "@lindorm-io/redis": "^0.11.13",
+    "@lindorm-io/retry": "^0.1.2",
     "joi": "^17.7.0"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.2",
+    "@lindorm-io/core-logger": "^0.2.3",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^5.0.0",
     "@types/ioredis-mock": "^8.2.1",

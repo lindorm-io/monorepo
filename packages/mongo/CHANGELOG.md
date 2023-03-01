@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.13...@lindorm-io/mongo@0.11.14) (2023-03-01)
+
+### Bug Fixes
+
+- add silly logs to repository ([6c7aac4](https://github.com/lindorm-io/monorepo/commit/6c7aac4a67d542143f277ccb1060799d1b31c7c8))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+
 ## [0.11.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.12...@lindorm-io/mongo@0.11.13) (2023-02-02)
 
 **Note:** Version bump only for package @lindorm-io/mongo

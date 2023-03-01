@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-event-source@0.0.15...@lindorm-io/koa-event-source@0.0.16) (2023-03-01)
+
+### Bug Fixes
+
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+
 ## [0.0.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-event-source@0.0.14...@lindorm-io/koa-event-source@0.0.15) (2023-02-02)
 
 **Note:** Version bump only for package @lindorm-io/koa-event-source

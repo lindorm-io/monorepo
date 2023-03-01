@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.11...@lindorm-io/koa@0.15.12) (2023-03-01)
+
+### Bug Fixes
+
+- align with common types ([a2c4d0a](https://github.com/lindorm-io/monorepo/commit/a2c4d0a6708ce0d13fc5d533d380f56de3e31ae6))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+- enable strict tsconfig ([676e17c](https://github.com/lindorm-io/monorepo/commit/676e17ceb7e115103353ebbd8ad55c2fa9ef3e3b))
+
 ## [0.15.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.10...@lindorm-io/koa@0.15.11) (2023-02-02)
 
 ### Bug Fixes

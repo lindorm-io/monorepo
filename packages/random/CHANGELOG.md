@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.1.2...@lindorm-io/random@0.1.3) (2023-03-01)
+
+### Bug Fixes
+
+- add random utils ([fa8bf57](https://github.com/lindorm-io/monorepo/commit/fa8bf5742b99277e6e567bd1c07f6d3c4c228a32))
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.1.1...@lindorm-io/random@0.1.2) (2023-02-01)
 
 ### Bug Fixes

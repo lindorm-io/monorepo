@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/node-pkce",
   "description": "PKCE utilities for lindorm.io",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,7 +18,7 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/common-types": "^0.1.1",
-    "@lindorm-io/errors": "^0.1.15"
+    "@lindorm-io/common-types": "^0.1.2",
+    "@lindorm-io/errors": "^0.1.16"
   }
 }

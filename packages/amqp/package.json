@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/amqp",
   "description": "AMQP tools for lindorm.io",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,14 +24,14 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.8.7",
-    "@lindorm-io/core-connection": "^0.1.14",
-    "@lindorm-io/string-blob": "^0.0.23",
+    "@lindorm-io/core": "^0.8.8",
+    "@lindorm-io/core-connection": "^0.1.15",
+    "@lindorm-io/string-blob": "^0.0.24",
     "amqplib": "^0.10.3",
     "merge": "^2.1.1"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.2",
+    "@lindorm-io/core-logger": "^0.2.3",
     "@types/amqplib": "^0.10.1",
     "compd": "^4.1.1",
     "mock-amqplib": "^1.8.1"

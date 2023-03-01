@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.7...@lindorm-io/core@0.8.8) (2023-03-01)
+
+### Bug Fixes
+
+- add more equality verifiers ([41667d8](https://github.com/lindorm-io/monorepo/commit/41667d889f96528504130b1edfc2b501f504ef11))
+- add new utils ([ec9834c](https://github.com/lindorm-io/monorepo/commit/ec9834c48e27d187a8832e1fa1ec8f8183df4fd1))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+- improve utils ([38738ca](https://github.com/lindorm-io/monorepo/commit/38738caac7f0c6db8c4c1cf7b28328411c589bb3))
+
 ## [0.8.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/core@0.8.6...@lindorm-io/core@0.8.7) (2023-02-02)
 
 ### Bug Fixes

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.10...@lindorm-io/axios@0.6.0) (2023-03-01)
+
+### Bug Fixes
+
+- add generics ([f74ac86](https://github.com/lindorm-io/monorepo/commit/f74ac8651e97f2f1ff18155bbfb0bd6a05e55c62))
+- amend bug in axios constructor ([8e9b57c](https://github.com/lindorm-io/monorepo/commit/8e9b57c6c6ab6734aaf2a9faaef12aa80c53b699))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+
+### Features
+
+- rebuild client credentials middleware ([cfd6c51](https://github.com/lindorm-io/monorepo/commit/cfd6c5175cad924d6df803c78e391a3a45ff93ce))
+- reduce unnecessary complexity ([e742100](https://github.com/lindorm-io/monorepo/commit/e742100db77eafdb2b20c1c8cab8fa7555e1f5ca))
+
 ## [0.5.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.5.9...@lindorm-io/axios@0.5.10) (2023-02-02)
 
 ### Bug Fixes

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.22...@lindorm-io/jwt@0.8.23) (2023-03-01)
+
+### Bug Fixes
+
+- add tenant id to jwt ([ddf777a](https://github.com/lindorm-io/monorepo/commit/ddf777a502355dbda4088c79d5fbb86476d7eb48))
+- enable strict mode ([9868c0b](https://github.com/lindorm-io/monorepo/commit/9868c0b83c44479369f1318b5059ff7e7c85be76))
+- rename tenant and update verify options ([8c991fe](https://github.com/lindorm-io/monorepo/commit/8c991fe34482a92922134391c4e179623c8c57ce))
+- update names on jwts ([612092d](https://github.com/lindorm-io/monorepo/commit/612092d51ff9053a1b38a08b2c0827333985347b))
+
 ## [0.8.22](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.21...@lindorm-io/jwt@0.8.22) (2023-02-04)
 
 ### Bug Fixes
