@@ -6,6 +6,7 @@
     "experimentalDecorators": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "noEmit": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "preserveConstEnums": true,
@@ -28,6 +29,5 @@
     //    "strictFunctionTypes": true,
     //    "strictNullChecks": true,
     //    "strictPropertyInitialization": true,
-  },
-  "exclude": ["**/*.e2e.ts", "**/*.fixture.ts", "**/*.integration.ts", "**/*.test.ts"]
+  }
 }

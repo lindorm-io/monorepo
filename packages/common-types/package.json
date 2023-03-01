@@ -9,7 +9,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b ./tsconfig.build.json",
     "clean": "rimraf dist",
     "test": "tsc --noEmit",
     "test:update": "tsc --noEmit",

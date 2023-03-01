@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "noEmit": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "outDir": "dist",
@@ -16,11 +17,5 @@
     "target": "ESNEXT"
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "__mocks__/**/*",
-    "fixtures/**/*",
-    "**/*.fixture.ts",
-    "**/*.integration.ts",
-    "**/*.test.ts"
-  ]
+  "exclude": ["__mocks__/**/*"]
 }

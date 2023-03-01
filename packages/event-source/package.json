@@ -13,7 +13,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b ./tsconfig.build.json",
     "clean": "rimraf dist",
     "example": "compd --file docker-compose.yml ts-node example/app",
     "test": "yarn test:unit && compd --file docker-compose.yml yarn test:compd",

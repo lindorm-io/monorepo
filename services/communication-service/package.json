@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-or-later",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b -p ./tsconfig.build.json",
     "clean": "rimraf dist node_modules",
     "dev": "nodemon",
     "dev:bootstrap": "echo 'bootstrap'",
@@ -28,6 +28,7 @@
     "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/core": "^0.8.7",
     "@lindorm-io/errors": "^0.1.15",
     "@lindorm-io/koa": "^0.15.11",
@@ -39,7 +40,6 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/jwt": "^0.8.21",
     "@lindorm-io/winston": "^0.5.6",
     "@lindorm-io/yaml-typing": "^0.0.12",

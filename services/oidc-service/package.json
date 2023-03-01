@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-or-later",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b -p ./tsconfig.build.json",
     "clean": "rimraf dist node_modules",
     "dev": "nodemon",
     "dev:bootstrap": "echo 'bootstrap'",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.5.10",
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/core": "^0.8.7",
     "@lindorm-io/entity": "^0.3.7",
     "@lindorm-io/errors": "^0.1.15",
@@ -46,7 +47,6 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/jwt": "^0.8.21",
     "@lindorm-io/key-pair": "^0.6.15",
     "@lindorm-io/winston": "^0.5.6",

@@ -9,7 +9,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b ./tsconfig.build.json",
     "clean": "rimraf dist",
     "test": "jest",
     "test:update": "jest -u --",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.1.5",
+    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/core": "^0.8.7",
     "@lindorm-io/errors": "^0.1.15",
     "@lindorm-io/retry": "^0.1.1",
@@ -31,7 +32,6 @@
     "socket.io": "^4.5.4"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.1.1",
     "@lindorm-io/core-logger": "^0.2.2",
     "@lindorm-io/url": "^0.2.5",
     "@types/express-useragent": "^1.0.2",

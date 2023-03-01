@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false
+  },
+  "exclude": [
+    "__mocks__/**/*",
+    "fixtures/**/*",
+    "**/*.e2e.ts",
+    "**/*.fixture.ts",
+    "**/*.integration.ts",
+    "**/*.test.ts"
+  ]
+}
