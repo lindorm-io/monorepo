@@ -1,7 +1,15 @@
-import { AdjustedAccessLevel, AuthenticationMethod, LevelOfAssurance } from "../../../auth";
-import { OauthClientType, OauthDisplayMode, OauthPromptMode } from "../../../oauth";
+import { AdjustedAccessLevel, LevelOfAssurance } from "../../../auth";
+import { PublicClientInfo } from "../public-client-info";
 import { ScopeDescription } from "../../../global";
 import { StandardRequestParamsWithId } from "../../standard";
+import {
+  AuthenticationMethod,
+  LindormScope,
+  OpenIdDisplayMode,
+  OpenIdPromptMode,
+  OpenIdScope,
+  SessionStatus,
+} from "../../../../enums";
 
 export type SelectAccountSession = {
   selectId: string;
@@ -13,12 +21,18 @@ export type GetAuthorizationRequestParams = StandardRequestParamsWithId;
 export type GetAuthorizationResponse = {
   consent: {
     isRequired: boolean;
+    status: SessionStatus;
+
     audiences: Array<string>;
-    scopes: Array<string>;
+    optionalScopes: Array<OpenIdScope | LindormScope>;
+    requiredScopes: Array<OpenIdScope | LindormScope>;
+    scopeDescriptions: Array<ScopeDescription>;
   };
 
   login: {
     isRequired: boolean;
+    status: SessionStatus;
+
     identityId: string | null;
     minimumLevel: LevelOfAssurance;
     recommendedLevel: LevelOfAssurance;
@@ -29,6 +43,8 @@ export type GetAuthorizationResponse = {
 
   selectAccount: {
     isRequired: boolean;
+    status: SessionStatus;
+
     sessions: Array<SelectAccountSession>;
   };
 
@@ -36,16 +52,16 @@ export type GetAuthorizationResponse = {
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
     identityId: string | null;
-    latestAuthentication: Date | null;
+    latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
-    scopes: Array<string>;
+    scopes: Array<OpenIdScope | LindormScope>;
   };
 
   authorizationSession: {
     authToken: string | null;
     country: string | null;
-    displayMode: OauthDisplayMode;
+    displayMode: OpenIdDisplayMode;
     expiresAt: string;
     expiresIn: number;
     idTokenHint: string | null;
@@ -53,7 +69,7 @@ export type GetAuthorizationResponse = {
     maxAge: number | null;
     nonce: string;
     originalUri: string;
-    promptModes: Array<OauthPromptMode>;
+    promptModes: Array<OpenIdPromptMode>;
     redirectUri: string;
     uiLocales: Array<string>;
   };
@@ -61,29 +77,22 @@ export type GetAuthorizationResponse = {
   browserSession: {
     adjustedAccessLevel: AdjustedAccessLevel;
     identityId: string | null;
-    latestAuthentication: Date | null;
+    latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
     remember: boolean;
     sso: boolean;
   };
 
-  client: {
-    description: string | null;
-    logoUri: string | null;
-    name: string;
-    requiredScopes: Array<string>;
-    scopeDescriptions: Array<ScopeDescription>;
-    type: OauthClientType;
-  };
+  client: PublicClientInfo;
 
   refreshSession: {
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
     identityId: string | null;
-    latestAuthentication: Date | null;
+    latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
-    scopes: Array<string>;
+    scopes: Array<OpenIdScope | LindormScope>;
   };
 };

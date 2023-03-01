@@ -1,4 +1,4 @@
-import { CertificateMethod } from "../../device";
+import { CertificateMethod } from "../../../enums";
 
 export type InitialiseEnrolmentRequestBody = {
   audiences?: Array<string>;

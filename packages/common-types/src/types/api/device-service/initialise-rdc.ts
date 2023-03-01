@@ -1,4 +1,4 @@
-import { RdcSessionMethod, RdcSessionMode } from "../../device";
+import { RdcSessionMethod, RdcSessionMode } from "../../../enums";
 
 export type InitialiseRdcSessionRequestBody = {
   audiences: Array<string>;

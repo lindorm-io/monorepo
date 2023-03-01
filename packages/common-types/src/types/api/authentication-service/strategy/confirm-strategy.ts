@@ -7,9 +7,11 @@ export type ConfirmStrategyRequestBody = {
   code?: string;
   otp?: string;
   password?: string;
-  rdcSessionId?: never;
-  rdcSessionStatus?: never;
-  remember?: boolean;
-  strategySessionToken: string;
+  token?: string;
   totp?: string;
+
+  strategySessionToken: string;
+
+  remember?: boolean;
+  sso?: boolean;
 };

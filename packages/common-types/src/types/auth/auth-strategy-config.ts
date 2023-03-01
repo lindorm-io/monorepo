@@ -1,34 +1,14 @@
-export type AuthStrategyInputKey =
-  | "none"
-  | "challenge_confirmation_token"
-  | "code"
-  | "otp"
-  | "password"
-  | "totp";
+import { AuthenticationStrategyConfirmKey, AuthenticationStrategyConfirmMode } from "../../enums";
 
-export type AuthStrategyInputMode =
-  | "none"
-  | "decimal"
-  | "email"
-  | "numeric"
-  | "search"
-  | "tel"
-  | "text"
-  | "url";
-
-export type AuthStrategyDefaultConfig = {
+export type AuthStrategyConfig = {
   id: string;
-  expiresIn: number;
-  inputKey: AuthStrategyInputKey;
-  inputLength: number | null;
-  inputMode: AuthStrategyInputMode;
-  pollingRequired: boolean;
-  strategySessionToken: string | null;
-};
-
-export type AuthStrategyInitialisation = {
+  confirmKey: AuthenticationStrategyConfirmKey;
+  confirmLength: number | null;
+  confirmMode: AuthenticationStrategyConfirmMode;
   displayCode: string | null;
+  expiresIn: number;
+  pollingRequired: boolean;
   qrCode: string | null;
+  strategySessionToken: string | null;
+  visualHint: string | null;
 };
-
-export type AuthStrategyConfig = AuthStrategyDefaultConfig & AuthStrategyInitialisation;

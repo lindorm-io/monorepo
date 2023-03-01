@@ -1,5 +1,5 @@
-import { AuthenticationMode, AuthMethodConfig } from "../../../auth";
-import { SessionStatus } from "../../../global";
+import { AuthMethodConfig } from "../../../auth";
+import { AuthenticationMode, SessionStatus } from "../../../../enums";
 import { StandardRequestParamsWithId } from "../../standard";
 
 export type GetAuthenticationRequestParams = StandardRequestParamsWithId;

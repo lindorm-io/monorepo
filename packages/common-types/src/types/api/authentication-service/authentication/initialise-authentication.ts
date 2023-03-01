@@ -1,5 +1,5 @@
-import { AuthenticationMethod, LevelOfAssurance } from "../../../auth";
-import { PKCEMethod } from "../../../global";
+import { LevelOfAssurance } from "../../../auth";
+import { AuthenticationMethod, PKCEMethod } from "../../../../enums";
 
 export type InitialiseAuthenticationRequestBody = {
   clientId: string;

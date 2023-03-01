@@ -1,4 +1,4 @@
-import { SessionStatus } from "../../global";
+import { SessionStatus } from "../../../enums";
 
 export type GetEnrolmentStatusRequestParams = {
   id: string;

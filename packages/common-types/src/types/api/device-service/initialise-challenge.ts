@@ -1,4 +1,4 @@
-import { ChallengeStrategy } from "../../device";
+import { ChallengeStrategy } from "../../../enums";
 
 export type InitialiseChallengeRequestBody = {
   audiences?: Array<string>;

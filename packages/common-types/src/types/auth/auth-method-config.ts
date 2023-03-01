@@ -1,22 +1,13 @@
-import { AuthenticationMethod } from "./authentication-method";
-import { AuthenticationStrategy } from "./authentication-strategy";
+import { AuthenticationMethod, AuthenticationStrategy, IdentifierType } from "../../enums";
 
-export type AuthMethodInitialiseKey =
-  | "email"
-  | "nin"
-  | "nonce"
-  | "phone_number"
-  | "username"
-  | "none";
-
-export type AuthMethodConfirmHint = "email" | "phone" | "none";
+export type AuthMethodInitialiseHint = "email" | "phone" | "none";
 
 export type AuthMethodConfig = {
-  hint: AuthMethodConfirmHint;
-  initialiseKey: AuthMethodInitialiseKey;
+  identifierHint: AuthMethodInitialiseHint;
+  identifierType: IdentifierType | "none";
   method: AuthenticationMethod;
   rank: number;
   recommended: boolean;
-  requested: boolean;
+  required: boolean;
   strategies: Array<AuthenticationStrategy>;
 };

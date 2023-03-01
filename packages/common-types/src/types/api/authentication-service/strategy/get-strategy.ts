@@ -1,6 +1,5 @@
-import { StandardRequestParamsWithId, StandardResponseWithStatus } from "../../standard";
-import { AuthenticationStrategy } from "../../../auth";
-import { SessionStatus } from "../../../global";
+import { StandardRequestParamsWithId, StandardResponseWithSessionStatus } from "../../standard";
+import { AuthenticationStrategy, SessionStatus } from "../../../../enums";
 
 export type GetStrategyRequestParams = StandardRequestParamsWithId;
 
@@ -10,4 +9,4 @@ type ResponseWithData = {
   status: SessionStatus;
 };
 
-export type GetStrategyResponse = ResponseWithData | StandardResponseWithStatus;
+export type GetStrategyResponse = ResponseWithData | StandardResponseWithSessionStatus;

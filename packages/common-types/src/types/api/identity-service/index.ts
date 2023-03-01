@@ -1,3 +1,4 @@
-export * from "./authenticate-identifier";
-export * from "./add-userinfo";
-export * from "./get-userinfo";
+export * from "./address";
+export * from "./identifier";
+export * from "./identity";
+export * from "./userinfo";

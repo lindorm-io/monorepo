@@ -1,4 +1,4 @@
-import { OauthGrantType } from "../../../oauth";
+import { OpenIdGrantType } from "../../../../enums";
 
 export type TokenRequestBody = {
   // default
@@ -6,7 +6,7 @@ export type TokenRequestBody = {
   clientSecret?: string;
   code: string;
   codeVerifier: string;
-  grantType: OauthGrantType;
+  grantType: OpenIdGrantType;
   redirectUri: string;
   scope: string;
 

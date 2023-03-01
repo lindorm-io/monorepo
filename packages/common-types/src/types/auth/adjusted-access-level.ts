@@ -1,1 +1,3 @@
-export type AdjustedAccessLevel = 0 | 1 | 2 | 3 | 4;
+import { LevelOfAssurance } from "./level-of-assurance";
+
+export type AdjustedAccessLevel = LevelOfAssurance;

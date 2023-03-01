@@ -1,4 +1,4 @@
-import { SessionStatus } from "../global";
+import { SessionStatus } from "../../enums";
 
 export type StandardRequestParamsWithId = {
   id: string;
@@ -8,6 +8,6 @@ export type StandardResponseWithRedirectTo = {
   redirectTo: string;
 };
 
-export type StandardResponseWithStatus = {
+export type StandardResponseWithSessionStatus = {
   status: SessionStatus;
 };

@@ -1,5 +1,8 @@
+import { StandardRequestParamsWithId } from "../../standard";
+
+export type VerifyAuthenticationRequestParams = StandardRequestParamsWithId;
+
 export type VerifyAuthenticationRequestBody = {
-  id: string;
   code: string;
   codeVerifier: string;
 };

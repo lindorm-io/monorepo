@@ -1,5 +1,6 @@
-import { AuthenticationMethod, LevelOfAssurance } from "../../../auth";
-import { StandardRequestParamsWithId } from "../../standard";
+import { AuthenticationMethod } from "../../../../enums";
+import { LevelOfAssurance } from "../../../auth";
+import { StandardRequestParamsWithId, StandardResponseWithRedirectTo } from "../../standard";
 
 export type ConfirmElevationRequestParams = StandardRequestParamsWithId;
 
@@ -8,3 +9,5 @@ export type ConfirmElevationRequestBody = {
   levelOfAssurance: LevelOfAssurance;
   methods: Array<AuthenticationMethod>;
 };
+
+export type ConfirmElevationResponse = StandardResponseWithRedirectTo;

@@ -1,5 +1,5 @@
-import { OauthTokenClaims } from "../oauth";
-import { StandardTokenClaims } from "../token";
+import { OpenIdTokenClaims } from "../open-id";
+import { StandardJwtClaims } from "../jwt";
 
 type CustomClaims = {
   aal?: number; // adjusted access level
@@ -12,4 +12,4 @@ type CustomClaims = {
   tid?: string; // tenant id
 };
 
-export type LindormTokenClaims = StandardTokenClaims & OauthTokenClaims & CustomClaims;
+export type LindormTokenClaims = StandardJwtClaims & OpenIdTokenClaims & CustomClaims;

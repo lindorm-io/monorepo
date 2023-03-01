@@ -1,4 +1,5 @@
-import { OauthClientType } from "../../../oauth";
+import { PublicClientInfo } from "../public-client-info";
+import { SessionStatus } from "../../../../enums";
 
 export type GetLogoutRequestParams = {
   id: string;
@@ -6,22 +7,23 @@ export type GetLogoutRequestParams = {
 
 export type GetLogoutResponse = {
   logout: {
-    accessSessionId: string | null;
-    accessSessions: Array<string>;
-    browserSessionId: string;
-    refreshSessionId: string | null;
-    refreshSessions: Array<string>;
+    status: SessionStatus;
+
+    accessSession: {
+      id: string | null;
+    };
+    browserSession: {
+      id: string;
+      connectedSessions: number;
+    };
+    refreshSession: {
+      id: string | null;
+    };
   };
 
-  client: {
-    description: string | null;
-    logoUri: string | null;
-    name: string;
-    type: OauthClientType;
-  };
+  client: PublicClientInfo;
 
   logoutSession: {
-    clientId: string | null;
     expiresAt: string;
     expiresIn: number;
     idTokenHint: string | null;

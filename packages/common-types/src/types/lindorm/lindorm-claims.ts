@@ -8,9 +8,6 @@ type CustomClaims = {
   // address
   address: LindormAddress;
 
-  // connected_providers
-  connectedProviders: Array<string>;
-
   // national_identity_number
   nationalIdentityNumber: string | null;
   nationalIdentityNumberVerified: boolean;
@@ -18,7 +15,7 @@ type CustomClaims = {
   // public
   active: boolean;
   displayName: string | null;
-  gravatarUri: string | null;
+  avatarUri: string | null;
   pronouns: string | null;
 
   // private

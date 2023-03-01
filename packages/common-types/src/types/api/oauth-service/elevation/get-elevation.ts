@@ -1,12 +1,15 @@
-import { AuthenticationMethod, LevelOfAssurance } from "../../../auth";
-import { OauthClientType, OauthDisplayMode } from "../../../oauth";
+import { LevelOfAssurance } from "../../../auth";
+import { PublicClientInfo } from "../public-client-info";
 import { StandardRequestParamsWithId } from "../../standard";
+import { AuthenticationMethod, OpenIdDisplayMode, SessionStatus } from "../../../../enums";
 
 export type GetElevationRequestParams = StandardRequestParamsWithId;
 
 export type GetElevationResponse = {
   elevation: {
     isRequired: boolean;
+    status: SessionStatus;
+
     minimumLevel: LevelOfAssurance;
     recommendedLevel: LevelOfAssurance;
     recommendedMethods: Array<AuthenticationMethod>;
@@ -14,17 +17,12 @@ export type GetElevationResponse = {
     requiredMethods: Array<AuthenticationMethod>;
   };
 
-  client: {
-    description: string | null;
-    logoUri: string | null;
-    name: string;
-    type: OauthClientType;
-  };
+  client: PublicClientInfo;
 
   elevationSession: {
     authenticationHint: Array<string>;
     country: string | null;
-    displayMode: OauthDisplayMode;
+    displayMode: OpenIdDisplayMode;
     expiresAt: string;
     expiresIn: number;
     idTokenHint: string | null;

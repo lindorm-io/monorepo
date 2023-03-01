@@ -1,15 +1,14 @@
-import { AuthenticationStrategy, AuthStrategyConfig } from "../../../auth";
+import { AuthStrategyConfig } from "../../../auth";
+import { AuthenticationStrategy, IdentifierType } from "../../../../enums";
 import { StandardRequestParamsWithId } from "../../standard";
 
 export type InitialiseStrategyRequestParams = StandardRequestParamsWithId;
 
 export type InitialiseStrategyRequestBody = {
-  email?: string;
-  nin?: string;
+  identifier: string;
+  identifierType: IdentifierType;
   nonce?: string;
-  phoneNumber?: string;
   strategy: AuthenticationStrategy;
-  username?: string;
 };
 
 export type InitialiseStrategyResponse = AuthStrategyConfig;

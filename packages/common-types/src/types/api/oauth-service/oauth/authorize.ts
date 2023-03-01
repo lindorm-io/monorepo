@@ -1,5 +1,4 @@
-import { PKCEMethod } from "../../../global";
-import { OauthDisplayMode, OauthResponseMode } from "../../../oauth";
+import { OpenIdDisplayMode, OpenIdResponseMode, PKCEMethod } from "../../../../enums";
 
 export type AuthorizeRequestQuery = {
   acrValues?: string;
@@ -9,7 +8,7 @@ export type AuthorizeRequestQuery = {
   codeChallenge?: string;
   codeChallengeMethod?: PKCEMethod;
   country?: string; // lindorm.io
-  display?: OauthDisplayMode;
+  display?: OpenIdDisplayMode;
   idTokenHint?: string;
   loginHint?: string;
   maxAge?: string;
@@ -17,7 +16,7 @@ export type AuthorizeRequestQuery = {
   prompt?: string;
   redirectData?: string; // lindorm.io
   redirectUri: string;
-  responseMode?: OauthResponseMode;
+  responseMode?: OpenIdResponseMode;
   responseType: string;
   scope: string;
   state: string;
