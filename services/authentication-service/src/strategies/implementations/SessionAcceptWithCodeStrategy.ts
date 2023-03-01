@@ -1,11 +1,16 @@
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { randomString } from "@lindorm-io/random";
 import { argon } from "../../instance";
-import { getValidIdentitySessions } from "../../handler";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { createStrategySessionToken, getValidIdentitySessions } from "../../handler";
+import { expiresIn } from "@lindorm-io/expiry";
+import { randomString } from "@lindorm-io/random";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -15,21 +20,19 @@ import {
   EmitSocketEventRequestBody,
 } from "@lindorm-io/common-types";
 
-export class SessionAcceptWithCodeStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.SESSION_LINK,
-      methodsMax: 1,
-      methodsMin: 0,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
-      weight: 80,
-    };
-  }
+export class SessionAcceptWithCodeStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.SESSION_LINK,
+    methodsMax: 1,
+    methodsMin: 0,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
+    weight: 80,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -62,7 +65,7 @@ export class SessionAcceptWithCodeStrategy extends StrategyBase {
       });
     }
 
-    const strategySessionToken = this.sessionToken(ctx, strategySession);
+    const strategySessionToken = createStrategySessionToken(ctx, strategySession);
 
     const body: EmitSocketEventRequestBody = {
       channels: { sessions },
@@ -85,7 +88,7 @@ export class SessionAcceptWithCodeStrategy extends StrategyBase {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,

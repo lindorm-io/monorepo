@@ -1,7 +1,12 @@
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { expiresIn } from "@lindorm-io/expiry";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -10,21 +15,19 @@ import {
   AuthStrategyConfig,
 } from "@lindorm-io/common-types";
 
-export class SessionQrCodeStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.SESSION_LINK,
-      methodsMax: 9,
-      methodsMin: 0,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.SESSION_QR_CODE,
-      weight: 80,
-    };
-  }
+export class SessionQrCodeStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.SESSION_LINK,
+    methodsMax: 9,
+    methodsMin: 0,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.SESSION_QR_CODE,
+    weight: 80,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -37,7 +40,7 @@ export class SessionQrCodeStrategy extends StrategyBase {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: true,
       qrCode: "QR_CODE",
       strategySessionToken: null,

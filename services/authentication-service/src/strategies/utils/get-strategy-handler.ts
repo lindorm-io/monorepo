@@ -7,7 +7,7 @@ export const getStrategyHandler = (
   authenticationStrategy: AuthenticationStrategy,
 ): StrategyHandler => {
   const strategy = ENABLED_STRATEGIES.find(
-    (handler) => handler.config().strategy === authenticationStrategy,
+    (handler) => handler.config.strategy === authenticationStrategy,
   );
 
   if (!strategy) {

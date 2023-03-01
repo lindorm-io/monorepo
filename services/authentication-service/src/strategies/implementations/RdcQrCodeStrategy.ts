@@ -1,10 +1,15 @@
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { getRdcBody } from "../../util";
-import { clientCredentialsMiddleware } from "../../middleware";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
+import { expiresIn } from "@lindorm-io/expiry";
+import { getRdcBody } from "../../handler";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -16,21 +21,19 @@ import {
   RdcSessionMode,
 } from "@lindorm-io/common-types";
 
-export class RdcQrCodeStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 3,
-      loaMax: 3,
-      method: AuthenticationMethod.DEVICE_LINK,
-      methodsMax: 9,
-      methodsMin: 0,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.RDC_QR_CODE,
-      weight: 90,
-    };
-  }
+export class RdcQrCodeStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 3,
+    loaMax: 3,
+    method: AuthenticationMethod.DEVICE_LINK,
+    methodsMax: 9,
+    methodsMin: 0,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.RDC_QR_CODE,
+    weight: 90,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -42,11 +45,7 @@ export class RdcQrCodeStrategy extends StrategyBase {
     } = ctx;
 
     const body: InitialiseRdcSessionRequestBody = {
-      ...getRdcBody(
-        authenticationSession,
-        strategySession,
-        this.sessionToken(ctx, strategySession),
-      ),
+      ...getRdcBody(ctx, authenticationSession, strategySession),
       mode: RdcSessionMode.QR_CODE,
     };
 
@@ -57,11 +56,11 @@ export class RdcQrCodeStrategy extends StrategyBase {
 
     return {
       id: strategySession.id,
-      confirmKey: AuthenticationStrategyConfirmKey.TOKEN,
+      confirmKey: AuthenticationStrategyConfirmKey.CHALLENGE_CONFIRMATION_TOKEN,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: true,
       qrCode: "QR_CODE",
       strategySessionToken: null,

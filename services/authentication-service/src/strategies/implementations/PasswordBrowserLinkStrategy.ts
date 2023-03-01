@@ -1,10 +1,20 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
+
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
-import { authenticateIdentifier, fetchAccountSalt, resolveIdentity } from "../../handler";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
+import {
+  authenticateIdentifier,
+  createStrategySessionToken,
+  fetchAccountSalt,
+  resolveIdentity,
+} from "../../handler";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -13,22 +23,21 @@ import {
   AuthStrategyConfig,
   IdentifierType,
 } from "@lindorm-io/common-types";
+import { expiresIn } from "@lindorm-io/expiry";
 
-export class PasswordBrowserLinkStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: IdentifierType.USERNAME,
-      loa: 3,
-      loaMax: 3,
-      method: AuthenticationMethod.PASSWORD,
-      methodsMax: 0,
-      methodsMin: 0,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.PASSWORD_BROWSER_LINK,
-      weight: 20,
-    };
-  }
+export class PasswordBrowserLinkStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: IdentifierType.USERNAME,
+    loa: 3,
+    loaMax: 3,
+    method: AuthenticationMethod.PASSWORD,
+    methodsMax: 0,
+    methodsMin: 0,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.PASSWORD_BROWSER_LINK,
+    weight: 20,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -41,10 +50,10 @@ export class PasswordBrowserLinkStrategy extends StrategyBase {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

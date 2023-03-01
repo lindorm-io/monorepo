@@ -1,6 +1,16 @@
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { argon } from "../../instance";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { expiresIn } from "@lindorm-io/expiry";
+import { getValidIdentitySessions } from "../../handler";
+import { randomNumberAsync } from "../../util";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -9,27 +19,20 @@ import {
   AuthStrategyConfig,
   EmitSocketEventRequestBody,
 } from "@lindorm-io/common-types";
-import { ClientError, ServerError } from "@lindorm-io/errors";
-import { randomNumberAsync } from "../../util";
-import { argon } from "../../instance";
-import { getValidIdentitySessions } from "../../handler";
-import { clientCredentialsMiddleware } from "../../middleware";
 
-export class SessionOtpStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.SESSION_LINK,
-      methodsMax: 9,
-      methodsMin: 1,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.SESSION_OTP,
-      weight: 80,
-    };
-  }
+export class SessionOtpStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.SESSION_LINK,
+    methodsMax: 9,
+    methodsMin: 1,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.SESSION_OTP,
+    weight: 80,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -78,7 +81,7 @@ export class SessionOtpStrategy extends StrategyBase {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,

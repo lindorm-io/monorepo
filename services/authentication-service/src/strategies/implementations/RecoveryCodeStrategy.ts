@@ -1,9 +1,14 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { fetchAccountSalt } from "../../handler";
+import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
+import { expiresIn } from "@lindorm-io/expiry";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -13,21 +18,19 @@ import {
   IdentifierType,
 } from "@lindorm-io/common-types";
 
-export class RecoveryCodeStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: IdentifierType.USERNAME,
-      loa: 1,
-      loaMax: 3,
-      method: AuthenticationMethod.PASSWORD,
-      methodsMax: 9,
-      methodsMin: 0,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.RECOVERY_CODE,
-      weight: 0,
-    };
-  }
+export class RecoveryCodeStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: IdentifierType.USERNAME,
+    loa: 1,
+    loaMax: 3,
+    method: AuthenticationMethod.PASSWORD,
+    methodsMax: 9,
+    methodsMin: 0,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.RECOVERY_CODE,
+    weight: 0,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -40,10 +43,10 @@ export class RecoveryCodeStrategy extends StrategyBase {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

@@ -1,3 +1,4 @@
+export * from "./get-rdc-body";
 export * from "./get-valid-device-links";
 export * from "./get-valid-identity-sessions";
 export * from "./initialise-elevate-authentication-session";

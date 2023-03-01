@@ -1,6 +1,10 @@
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
 import { MFA_COOKIE_NAME } from "../../constant";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import {
@@ -10,22 +14,22 @@ import {
   AuthenticationStrategyConfirmMode,
   AuthStrategyConfig,
 } from "@lindorm-io/common-types";
+import { expiresIn } from "@lindorm-io/expiry";
+import { createStrategySessionToken } from "../../handler";
 
-export class MfaCookieStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.MFA_COOKIE,
-      methodsMax: 9,
-      methodsMin: 1,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.MFA_COOKIE,
-      weight: 999,
-    };
-  }
+export class MfaCookieStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.MFA_COOKIE,
+    methodsMax: 9,
+    methodsMin: 1,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.MFA_COOKIE,
+    weight: 999,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -38,10 +42,10 @@ export class MfaCookieStrategy extends StrategyBase {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

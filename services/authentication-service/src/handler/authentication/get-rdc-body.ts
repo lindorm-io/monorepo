@@ -1,5 +1,7 @@
-import { AuthenticationSession, StrategySession } from "../entity";
-import { configuration } from "../server/configuration";
+import { AuthenticationSession, StrategySession } from "../../entity";
+import { ServerKoaContext } from "../../types";
+import { configuration } from "../../server/configuration";
+import { createStrategySessionToken } from "../index";
 import { createURL } from "@lindorm-io/url";
 import {
   InitialiseRdcSessionRequestBody,
@@ -8,16 +10,19 @@ import {
 } from "@lindorm-io/common-types";
 
 export const getRdcBody = (
+  ctx: ServerKoaContext,
   authenticationSession: AuthenticationSession,
   strategySession: StrategySession,
-  strategySessionToken: string,
 ): InitialiseRdcSessionRequestBody => {
   if (!strategySession.nonce) throw new Error("Session initialised without nonce");
 
   return {
     audiences: [configuration.oauth.client_id],
     confirmMethod: RdcSessionMethod.POST,
-    confirmPayload: { strategySessionToken, visualHint: strategySession.visualHint },
+    confirmPayload: {
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
+      visualHint: strategySession.visualHint,
+    },
     confirmUri: createURL("/sessions/strategy/:id/confirm", {
       host: configuration.server.host,
       port: configuration.server.port,

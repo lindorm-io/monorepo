@@ -1,11 +1,20 @@
 import { Account, AuthenticationSession, StrategySession } from "../entity";
 import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { AuthenticationStrategyConfig } from "./config";
-import { ConfirmStrategyOptions } from "../class";
 import { ServerKoaContext } from "./context";
 
+export type ConfirmStrategyOptions = {
+  challengeConfirmationToken?: string;
+  code?: string;
+  otp?: string;
+  password?: string;
+  token?: string;
+  totp?: string;
+};
+
 export interface StrategyHandler {
-  config(): AuthenticationStrategyConfig;
+  config: AuthenticationStrategyConfig;
+
   initialise(
     ctx: ServerKoaContext,
     authenticationSession: AuthenticationSession,

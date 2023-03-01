@@ -1,8 +1,14 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
+import { expiresIn } from "@lindorm-io/expiry";
+import { createStrategySessionToken } from "../../handler";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -12,21 +18,19 @@ import {
   DeviceTokenType,
 } from "@lindorm-io/common-types";
 
-export class DeviceChallengeStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 3,
-      loaMax: 3,
-      method: AuthenticationMethod.DEVICE_LINK,
-      methodsMax: 0,
-      methodsMin: 0,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
-      weight: 90,
-    };
-  }
+export class DeviceChallengeStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 3,
+    loaMax: 3,
+    method: AuthenticationMethod.DEVICE_LINK,
+    methodsMax: 0,
+    methodsMin: 0,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
+    weight: 90,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -35,14 +39,14 @@ export class DeviceChallengeStrategy extends StrategyBase {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
-      confirmKey: AuthenticationStrategyConfirmKey.TOKEN,
+      confirmKey: AuthenticationStrategyConfirmKey.CHALLENGE_CONFIRMATION_TOKEN,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: true,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

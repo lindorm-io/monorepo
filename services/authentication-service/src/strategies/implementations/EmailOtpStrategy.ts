@@ -1,11 +1,21 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
 import { argon } from "../../instance";
-import { authenticateIdentifier, createAccountCallback, resolveIdentity } from "../../handler";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { randomNumberAsync } from "../../util";
+import { expiresIn } from "@lindorm-io/expiry";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
+import {
+  authenticateIdentifier,
+  createAccountCallback,
+  createStrategySessionToken,
+  resolveIdentity,
+} from "../../handler";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -16,21 +26,19 @@ import {
   SendOtpRequestBody,
 } from "@lindorm-io/common-types";
 
-export class EmailOtpStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "email",
-      identifierType: IdentifierType.EMAIL,
-      loa: 2,
-      loaMax: 2,
-      method: AuthenticationMethod.EMAIL,
-      methodsMax: 9,
-      methodsMin: 0,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.EMAIL_OTP,
-      weight: 30,
-    };
-  }
+export class EmailOtpStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "email",
+    identifierType: IdentifierType.EMAIL,
+    loa: 2,
+    loaMax: 2,
+    method: AuthenticationMethod.EMAIL,
+    methodsMax: 9,
+    methodsMin: 0,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.EMAIL_OTP,
+    weight: 30,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -79,10 +87,10 @@ export class EmailOtpStrategy extends StrategyBase {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: strategySession.visualHint,
     };
   }

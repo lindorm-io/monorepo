@@ -1,9 +1,19 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import { ClientError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
+
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { authenticateIdentifier, fetchAccountSalt, resolveIdentity } from "../../handler";
+import {
+  authenticateIdentifier,
+  createStrategySessionToken,
+  fetchAccountSalt,
+  resolveIdentity,
+} from "../../handler";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -12,22 +22,21 @@ import {
   AuthStrategyConfig,
   IdentifierType,
 } from "@lindorm-io/common-types";
+import { expiresIn } from "@lindorm-io/expiry";
 
-export class PasswordStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "email",
-      identifierType: IdentifierType.USERNAME,
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.PASSWORD,
-      methodsMax: 0,
-      methodsMin: 0,
-      mfaCookie: false,
-      strategy: AuthenticationStrategy.PASSWORD,
-      weight: 10,
-    };
-  }
+export class PasswordStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "email",
+    identifierType: IdentifierType.USERNAME,
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.PASSWORD,
+    methodsMax: 0,
+    methodsMin: 0,
+    mfaCookie: false,
+    strategy: AuthenticationStrategy.PASSWORD,
+    weight: 10,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -40,10 +49,10 @@ export class PasswordStrategy extends StrategyBase {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

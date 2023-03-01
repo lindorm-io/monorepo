@@ -1,9 +1,15 @@
-import { ConfirmStrategyOptions, StrategyBase, TOTPHandler } from "../../class";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { fetchAccountSalt } from "../../handler";
+import { TOTPHandler } from "../../class";
 import { configuration } from "../../server/configuration";
+import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
+import { expiresIn } from "@lindorm-io/expiry";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -12,21 +18,19 @@ import {
   AuthStrategyConfig,
 } from "@lindorm-io/common-types";
 
-export class TimeBasedOtpStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "none",
-      identifierType: "none",
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.TIME_BASED_OTP,
-      methodsMax: 9,
-      methodsMin: 1,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.TIME_BASED_OTP,
-      weight: 90,
-    };
-  }
+export class TimeBasedOtpStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "none",
+    identifierType: "none",
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.TIME_BASED_OTP,
+    methodsMax: 9,
+    methodsMin: 1,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.TIME_BASED_OTP,
+    weight: 90,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -39,10 +43,10 @@ export class TimeBasedOtpStrategy extends StrategyBase {
       confirmLength: 6,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
   }

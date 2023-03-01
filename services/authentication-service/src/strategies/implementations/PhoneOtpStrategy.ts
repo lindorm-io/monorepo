@@ -1,11 +1,20 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { AuthenticationStrategyConfig, ServerKoaContext } from "../../types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ConfirmStrategyOptions, StrategyBase } from "../../class";
 import { argon } from "../../instance";
-import { authenticateIdentifier, createAccountCallback, resolveIdentity } from "../../handler";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { randomNumberAsync } from "../../util";
+import {
+  AuthenticationStrategyConfig,
+  ConfirmStrategyOptions,
+  ServerKoaContext,
+  StrategyHandler,
+} from "../../types";
+import {
+  authenticateIdentifier,
+  createAccountCallback,
+  createStrategySessionToken,
+  resolveIdentity,
+} from "../../handler";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -15,22 +24,21 @@ import {
   IdentifierType,
   SendOtpRequestBody,
 } from "@lindorm-io/common-types";
+import { expiresIn } from "@lindorm-io/expiry";
 
-export class PhoneOtpStrategy extends StrategyBase {
-  public config(): AuthenticationStrategyConfig {
-    return {
-      identifierHint: "phone",
-      identifierType: IdentifierType.PHONE,
-      loa: 2,
-      loaMax: 3,
-      method: AuthenticationMethod.PHONE,
-      methodsMax: 9,
-      methodsMin: 1,
-      mfaCookie: true,
-      strategy: AuthenticationStrategy.PHONE_OTP,
-      weight: 10,
-    };
-  }
+export class PhoneOtpStrategy implements StrategyHandler {
+  public readonly config: AuthenticationStrategyConfig = {
+    identifierHint: "phone",
+    identifierType: IdentifierType.PHONE,
+    loa: 2,
+    loaMax: 3,
+    method: AuthenticationMethod.PHONE,
+    methodsMax: 9,
+    methodsMin: 1,
+    mfaCookie: true,
+    strategy: AuthenticationStrategy.PHONE_OTP,
+    weight: 10,
+  };
 
   public async initialise(
     ctx: ServerKoaContext,
@@ -79,10 +87,10 @@ export class PhoneOtpStrategy extends StrategyBase {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: this.expiresIn(strategySession),
+      expiresIn: expiresIn(strategySession.expires),
       pollingRequired: false,
       qrCode: null,
-      strategySessionToken: this.sessionToken(ctx, strategySession),
+      strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: strategySession.visualHint,
     };
   }

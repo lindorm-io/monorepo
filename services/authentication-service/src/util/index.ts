@@ -5,5 +5,4 @@ export * from "./filter-authentication-methods";
 export * from "./generate-client-config";
 export * from "./get-available-strategies";
 export * from "./get-methods-from-strategies";
-export * from "./get-rdc-body";
 export * from "./random-number";
