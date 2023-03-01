@@ -95,7 +95,7 @@ export const createURL = <Params = ParamsRecord, Query = QueryRecord>(
   }
 
   const url = createBaseUrl({
-    baseURL: options.baseURL,
+    base: options.baseURL,
     host: options.host,
     port: options.port,
   });

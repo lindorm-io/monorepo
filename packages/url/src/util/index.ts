@@ -1,5 +1,5 @@
 export * from "./create-base-url";
 export * from "./create-url";
-export * from "./extract-plain-url-string";
 export * from "./extract-search-params";
-export * from "./extract-valid-url";
+export * from "./get-plain-url";
+export * from "./get-valid-url";

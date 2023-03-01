@@ -1,32 +1,30 @@
+import { isUrl, isUrlLike } from "@lindorm-io/core";
+
 type Options = {
-  baseURL?: URL | string;
+  base?: URL | string;
   host?: URL | string;
   port?: number;
 };
 
-export const createBaseUrl = ({ baseURL, host, port }: Options): URL => {
-  if (host instanceof URL) {
-    return host;
+export const createBaseUrl = ({ base, host, port }: Options): URL => {
+  const origin = host || base;
+
+  if (!origin) {
+    throw new Error(`Invalid options [ base: ${base} | host: ${host} ]`);
   }
 
-  if (baseURL instanceof URL) {
-    return baseURL;
+  if (isUrl(origin)) {
+    return origin;
   }
 
-  if (host && port) {
-    return new URL(`${host}:${port}`);
+  const preferredHasPort = /:\d+/.test(origin);
+
+  if (origin && port && !preferredHasPort) {
+    return new URL(`${origin}:${port}`);
   }
 
-  if (host) {
-    return new URL(host);
-  }
-
-  if (baseURL && port) {
-    return new URL(`${baseURL}:${port}`);
-  }
-
-  if (baseURL) {
-    return new URL(baseURL);
+  if (isUrlLike(origin)) {
+    return new URL(origin);
   }
 
   throw new Error("Invalid options");
