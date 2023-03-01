@@ -4,12 +4,7 @@ import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 import { axiosRequestHandler } from "../middleware/private";
 import { defaultRetryCallback, validateStatus } from "../util/private";
-import {
-  createBaseUrl,
-  extractPlainUrlString,
-  extractSearchParams,
-  extractValidUrl,
-} from "@lindorm-io/url";
+import { createBaseUrl, getPlainUrl, extractSearchParams, getValidUrl } from "@lindorm-io/url";
 import { resolveMiddleware } from "@lindorm-io/middleware";
 import {
   AppContext,
@@ -43,7 +38,11 @@ export class Axios {
     };
 
     try {
-      this.baseURL = createBaseUrl(options);
+      this.baseURL = createBaseUrl({
+        base: options.baseURL,
+        host: options.host,
+        port: options.port,
+      });
     } catch (_) {
       /* ignored */
     }
@@ -214,14 +213,16 @@ export class Axios {
       middleware = [],
       params = {},
       query = {},
-      queryCaseTransform = this.queryCaseTransform,
+      queryCaseTransform,
       retry = {},
-      retryCallback = this.retryCallback,
+      retryCallback,
       timeout,
       withCredentials,
     } = options;
 
-    const url = extractValidUrl(pathOrUrl, this.baseURL);
+    const valid = getValidUrl(pathOrUrl, this.baseURL);
+    const searchParams = extractSearchParams<RequestQuery>(valid);
+    const url = getPlainUrl(valid).toString();
 
     const app: AppContext = {
       clientName: this.clientName,
@@ -245,11 +246,11 @@ export class Axios {
       headers: { ...this.headers, ...headers },
       body: body as RequestBody,
       params: params as RequestParams,
-      query: { ...extractSearchParams<RequestQuery>(url), ...query },
-      queryCaseTransform,
+      query: { ...searchParams, ...query },
+      queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
       retry: { ...retry, ...this.retry },
-      retryCallback,
-      url: extractPlainUrlString(url),
+      retryCallback: retryCallback || this.retryCallback,
+      url,
     };
 
     const context: Context<ResponseData, RequestBody, RequestParams, RequestQuery> = {
