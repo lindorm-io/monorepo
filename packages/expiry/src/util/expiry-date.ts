@@ -3,7 +3,7 @@ import { add, fromUnixTime } from "date-fns";
 import { assertExpiryDate, assertSeconds } from "./private";
 import { stringToDurationObject } from "./string-time";
 
-export const getExpiryDate = (expiry: Expiry): Date => {
+export const expiryDate = (expiry: Expiry): Date => {
   if (typeof expiry === "string") {
     return add(new Date(), stringToDurationObject(expiry));
   }
@@ -22,5 +22,3 @@ export const getExpiryDate = (expiry: Expiry): Date => {
 
   throw new Error("Invalid expiry: Expiry is not of type [ string | number | Date ]");
 };
-
-export const expiryDate = getExpiryDate;

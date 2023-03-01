@@ -1,5 +1,5 @@
 import { Expiry } from "../types";
-import { getExpiryDate } from "./get-expiry-date";
+import { expiryDate } from "./expiry-date";
 import { getUnixTime } from "date-fns";
 
 interface Result {
@@ -10,10 +10,10 @@ interface Result {
   nowUnix: number;
 }
 
-export const getExpiryObject = (expiry: Expiry): Result => {
+export const expiryObject = (expiry: Expiry): Result => {
   const now = new Date();
   const nowUnix = getUnixTime(now);
-  const expires = getExpiryDate(expiry);
+  const expires = expiryDate(expiry);
   const expiresUnix = getUnixTime(expires);
   const expiresIn = expiresUnix - nowUnix;
 
@@ -25,5 +25,3 @@ export const getExpiryObject = (expiry: Expiry): Result => {
     nowUnix,
   };
 };
-
-export const expiryObject = getExpiryObject;
