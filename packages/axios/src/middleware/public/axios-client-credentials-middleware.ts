@@ -1,17 +1,25 @@
 import { Axios } from "../../class";
+import { Logger } from "@lindorm-io/core-logger";
 import { MetadataHeader } from "../../enum";
 import { Middleware, OAuthTokenResponseData } from "../../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
+import { axiosRequestLoggerMiddleware } from "./axios-request-logger-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
 import { getUnixTime } from "../../util/private";
+import {
+  Environment,
+  OpenIdConfigurationResponse,
+  OpenIdGrantType,
+} from "@lindorm-io/common-types";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
-  clientEnvironment?: string;
+  host: string;
+  port?: number;
   clientId: string;
   clientSecret: string;
-  clientVersion?: string;
-  grantType?: string;
-  path?: string;
+  configurationPath?: string;
+  environment?: Environment;
+  logger: Logger;
   timeoutAdjustment?: number;
   useBasicAuth?: boolean;
 };
@@ -22,36 +30,47 @@ export const axiosClientCredentialsMiddleware = (
   options: AxiosClientCredentialsMiddlewareOptions,
 ) => {
   const {
-    clientEnvironment,
+    host,
+    port,
     clientId,
     clientSecret,
-    clientVersion,
-    grantType = "client_credentials",
-    path = "/oauth2/token",
+    configurationPath = "/.well-known/openid-configuration",
+    environment = Environment.DEVELOPMENT,
+    logger,
     timeoutAdjustment = 5,
     useBasicAuth = true,
   } = options;
 
-  const headers = {
-    ...(clientId ? { [MetadataHeader.CLIENT_ID]: clientId } : {}),
-    ...(clientEnvironment ? { [MetadataHeader.CLIENT_ENVIRONMENT]: clientEnvironment } : {}),
-    ...(clientVersion ? { [MetadataHeader.CLIENT_VERSION]: clientVersion } : {}),
-  };
-
-  const middleware = [
-    ...(useBasicAuth
-      ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
-      : []),
-    axiosTransformBodyCaseMiddleware("snake", "camel"),
-  ];
+  const oauthClient = new Axios({
+    host,
+    port,
+    headers: {
+      ...(clientId ? { [MetadataHeader.CLIENT_ID]: clientId } : {}),
+      ...(environment ? { [MetadataHeader.CLIENT_ENVIRONMENT]: environment } : {}),
+    },
+    middleware: [
+      axiosRequestLoggerMiddleware(logger),
+      axiosTransformBodyCaseMiddleware("snake", "camel"),
+      ...(useBasicAuth
+        ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
+        : []),
+    ],
+  });
 
   let bearerScopes: Array<string> = [];
   let bearerTimeout = 0;
-  let bearerToken: string | null = null;
+  let bearerToken: string;
+  let tokenEndpoint: string;
 
-  return (oauthClient: Axios, scopes: Array<string> = [], force = false): Middleware =>
+  return (scopes: Array<string> = [], force = false): Middleware =>
     async (ctx, next) => {
       const now = getUnixTime();
+
+      if (!tokenEndpoint) {
+        ({
+          data: { tokenEndpoint },
+        } = await oauthClient.get<OpenIdConfigurationResponse>(configurationPath));
+      }
 
       if (
         force ||
@@ -61,14 +80,12 @@ export const axiosClientCredentialsMiddleware = (
       ) {
         const {
           data: { accessToken, expiresIn, scope },
-        } = await oauthClient.post<OAuthTokenResponseData>(path, {
+        } = await oauthClient.post<OAuthTokenResponseData>(tokenEndpoint, {
           body: {
             ...(!useBasicAuth ? { clientId, clientSecret } : {}),
-            grantType,
+            grantType: OpenIdGrantType.CLIENT_CREDENTIALS,
             scope: [...new Set([bearerScopes, scopes].flat())].join(" "),
           },
-          headers,
-          middleware,
         });
 
         const array = isString(scope) ? scope.split(" ") : Array.isArray(scope) ? scope : [];
@@ -81,7 +98,6 @@ export const axiosClientCredentialsMiddleware = (
       ctx.req.headers = {
         ...ctx.req.headers,
         Authorization: `Bearer ${bearerToken}`,
-        ...headers,
       };
 
       await next();
