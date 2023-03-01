@@ -20,7 +20,7 @@ export const getOauthAuthorizationRedirect = async (
     RedirectAuthorizationRequestParams
   >("/admin/sessions/authorization/:id/redirect", {
     params: { id },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

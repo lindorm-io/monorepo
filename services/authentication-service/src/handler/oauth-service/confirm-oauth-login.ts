@@ -41,7 +41,7 @@ export const confirmOauthLogin = async (
   >("/admin/sessions/login/:id/confirm", {
     params: { id: authenticationConfirmationToken.session },
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

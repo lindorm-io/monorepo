@@ -12,7 +12,7 @@ export const authenticateIdentifier = async (
   strategySession: StrategySession,
 ): Promise<Result> => {
   const {
-    axios: { identityClient, oauthClient },
+    axios: { identityClient },
   } = ctx;
 
   const { identityId } = authenticationSession;
@@ -40,7 +40,7 @@ export const authenticateIdentifier = async (
       type: identifierType,
       verified: true,
     },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return { identityId };

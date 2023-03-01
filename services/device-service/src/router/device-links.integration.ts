@@ -25,6 +25,13 @@ describe("/device-links", () => {
     "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
 
   nock("https://oauth.test.lindorm.io")
+    .get("/.well-known/openid-configuration")
+    .times(999)
+    .reply(200, {
+      token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
+    });
+
+  nock("https://oauth.test.lindorm.io")
     .post("/oauth2/token")
     .times(999)
     .reply(200, {

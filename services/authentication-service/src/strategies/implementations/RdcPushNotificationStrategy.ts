@@ -38,7 +38,7 @@ export class RdcPushNotificationStrategy extends StrategyBase {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      axios: { deviceClient, oauthClient },
+      axios: { deviceClient },
       cache: { strategySessionCache },
     } = ctx;
 
@@ -61,7 +61,7 @@ export class RdcPushNotificationStrategy extends StrategyBase {
 
     await deviceClient.post("/admin/rdc", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

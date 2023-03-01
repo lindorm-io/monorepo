@@ -25,7 +25,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { axiosClient, oauthClient },
+    axios: { axiosClient },
     cache: { rdcSessionCache },
     entity: { rdcSession },
     token: { bearerToken, rdcSessionToken },
@@ -60,7 +60,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
           ...rdcSession.rejectPayload,
         },
         method: rdcSession.rejectMethod,
-        middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
+        middleware: [clientCredentialsMiddleware()],
         url: rdcSession.rejectUri || undefined,
       });
       break;

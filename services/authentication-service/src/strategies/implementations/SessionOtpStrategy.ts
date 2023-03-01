@@ -37,7 +37,7 @@ export class SessionOtpStrategy extends StrategyBase {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      axios: { communicationClient, oauthClient },
+      axios: { communicationClient },
       cache: { strategySessionCache },
     } = ctx;
 
@@ -69,7 +69,7 @@ export class SessionOtpStrategy extends StrategyBase {
 
     await communicationClient.post("/admin/socket/emit", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

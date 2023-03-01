@@ -4,7 +4,6 @@ import { ServerKoaController } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { difference } from "lodash";
-import { ClientScopes } from "../../common";
 import { ClientError } from "@lindorm-io/errors";
 import {
   AcknowledgeRdcRequestParams,
@@ -30,7 +29,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    axios: { communicationClient, oauthClient },
+    axios: { communicationClient },
     cache: { rdcSessionCache },
     entity: { rdcSession },
     jwt,
@@ -93,9 +92,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
 
     await communicationClient.post("/admin/socket/emit", {
       body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT]),
-      ],
+      middleware: [clientCredentialsMiddleware()],
     });
   }
 

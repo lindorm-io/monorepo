@@ -8,12 +8,12 @@ export const updateIdentityUserinfo = async (
   body: Partial<AddUserinfoRequestBody>,
 ): Promise<void> => {
   const {
-    axios: { identityClient, oauthClient },
+    axios: { identityClient },
   } = ctx;
 
   await identityClient.put("/admin/userinfo/:id", {
     body,
     params: { id: identityId },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 };

@@ -17,7 +17,7 @@ export const getOauthLogoutRedirect = async (
     RedirectLogoutRequestParams
   >("/admin/sessions/logout/:id/redirect", {
     params: { id },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

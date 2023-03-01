@@ -3,7 +3,6 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { RejectLoginResponse } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
 
 type RequestData = {
   id: string;
@@ -25,9 +24,7 @@ export const rejectLoginSessionController: ServerKoaController<RequestData> = as
 
   const { data } = await oauthClient.post<RejectLoginResponse>("/admin/sessions/login/:id/reject", {
     params: { id },
-    middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
-    ],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return { body: data };

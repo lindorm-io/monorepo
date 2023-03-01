@@ -1,14 +1,13 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { GetIdentityDeviceLinksResponse } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../common";
 
 export const getValidDeviceLinks = async (
   ctx: ServerKoaContext,
   identityId?: string,
 ): Promise<Array<string>> => {
   const {
-    axios: { deviceClient, oauthClient },
+    axios: { deviceClient },
   } = ctx;
 
   if (!identityId) {
@@ -20,7 +19,7 @@ export const getValidDeviceLinks = async (
       "/admin/identities/:id/device-links",
       {
         params: { id: identityId },
-        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.DEVICE_IDENTITY_READ])],
+        middleware: [clientCredentialsMiddleware()],
       },
     );
 

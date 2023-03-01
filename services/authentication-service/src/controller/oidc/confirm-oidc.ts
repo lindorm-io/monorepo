@@ -1,6 +1,5 @@
 import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
-import { ClientScopes } from "../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetOidcSessionResponse, SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
@@ -24,7 +23,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { oauthClient, oidcClient },
+    axios: { oidcClient },
     cache: { authenticationSessionCache },
     data: { session },
     repository: { accountRepository },
@@ -34,7 +33,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
     data: { callbackId, identityId, levelOfAssurance, provider },
   } = await oidcClient.get<GetOidcSessionResponse>("/admin/sessions/:id", {
     params: { id: session },
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OIDC_SESSION_READ])],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   const authenticationSession = await authenticationSessionCache.find({ id: callbackId });

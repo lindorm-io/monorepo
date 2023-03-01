@@ -37,7 +37,7 @@ export class SessionAcceptWithCodeStrategy extends StrategyBase {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      axios: { communicationClient, oauthClient },
+      axios: { communicationClient },
       cache: { strategySessionCache },
     } = ctx;
 
@@ -76,7 +76,7 @@ export class SessionAcceptWithCodeStrategy extends StrategyBase {
 
     await communicationClient.post("/admin/socket/emit", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

@@ -3,7 +3,6 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { RejectLogoutResponse } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
 
 type RequestData = {
   id: string;
@@ -27,7 +26,7 @@ export const rejectLogoutSessionController: ServerKoaController<RequestData> = a
     "/admin/sessions/logout/:id/reject",
     {
       params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_LOGOUT_WRITE])],
+      middleware: [clientCredentialsMiddleware()],
     },
   );
 

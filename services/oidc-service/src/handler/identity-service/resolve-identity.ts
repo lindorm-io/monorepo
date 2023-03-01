@@ -20,7 +20,7 @@ export const resolveIdentity = async (
   options: Options,
 ): Promise<OidcSession> => {
   const {
-    axios: { identityClient, oauthClient },
+    axios: { identityClient },
     cache: { oidcSessionCache },
   } = ctx;
 
@@ -44,7 +44,7 @@ export const resolveIdentity = async (
       external: subject,
       provider,
     }),
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   if (data.identityId) {
@@ -59,7 +59,7 @@ export const resolveIdentity = async (
 
   await identityClient.put<never, never, EnsureIdentityRequestParams>("/admin/identities/:id", {
     params: { id: identityId },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   oidcSession.identityId = identityId;

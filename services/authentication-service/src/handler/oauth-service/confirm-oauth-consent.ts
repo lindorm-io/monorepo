@@ -1,6 +1,5 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { ClientScopes } from "../../common";
 import {
   ConfirmConsentRequestBody,
   ConfirmConsentRequestParams,
@@ -24,7 +23,7 @@ export const confirmOauthConsent = async (
   >("/admin/sessions/consent/:id/confirm", {
     params: { id },
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

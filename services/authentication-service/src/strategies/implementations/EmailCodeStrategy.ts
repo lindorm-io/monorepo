@@ -41,7 +41,7 @@ export class EmailCodeStrategy extends StrategyBase {
   ): Promise<AuthStrategyConfig> {
     const {
       cache: { strategySessionCache },
-      axios: { communicationClient, oauthClient },
+      axios: { communicationClient },
     } = ctx;
 
     const { identifier, identifierType } = strategySession;
@@ -77,7 +77,7 @@ export class EmailCodeStrategy extends StrategyBase {
 
     await communicationClient.post("/admin/send/code", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

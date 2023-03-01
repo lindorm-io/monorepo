@@ -13,7 +13,6 @@ describe("initialiseOidcController", () => {
 
     ctx = {
       axios: {
-        oauthClient: {},
         oidcClient: {
           post: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectTo" } }),
         },

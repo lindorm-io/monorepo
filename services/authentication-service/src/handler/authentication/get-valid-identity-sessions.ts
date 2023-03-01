@@ -1,7 +1,6 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../common";
 
 export const getValidIdentitySessions = async (
   ctx: ServerKoaContext,
@@ -20,7 +19,7 @@ export const getValidIdentitySessions = async (
       "/admin/identities/:id/sessions",
       {
         params: { id: identityId },
-        middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_IDENTITY_READ])],
+        middleware: [clientCredentialsMiddleware()],
       },
     );
 

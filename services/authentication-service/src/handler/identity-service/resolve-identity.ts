@@ -17,7 +17,7 @@ export const resolveIdentity = async (
   strategySession: StrategySession,
 ): Promise<AuthenticationSession> => {
   const {
-    axios: { identityClient, oauthClient },
+    axios: { identityClient },
     cache: { authenticationSessionCache },
   } = ctx;
 
@@ -50,7 +50,7 @@ export const resolveIdentity = async (
       phone: identifierType === IdentifierType.PHONE ? identifier : undefined,
       username: identifierType === IdentifierType.USERNAME ? identifier : undefined,
     }),
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   if (data.identityId) {
@@ -65,7 +65,7 @@ export const resolveIdentity = async (
 
   await identityClient.put<never, never, EnsureIdentityRequestParams>("/admin/identities/:id", {
     params: { id: identityId },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   authenticationSession.identityId = identityId;

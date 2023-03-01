@@ -1,4 +1,3 @@
-import { ClientScopes } from "../../../common";
 import { DeviceLink } from "../../../entity";
 import { DeviceLinkSalt, ServerKoaContext } from "../../../types";
 import { GetEncryptedRecordResponse } from "@lindorm-io/common-types";
@@ -9,7 +8,7 @@ export const vaultGetSalt = async (
   deviceLink: DeviceLink,
 ): Promise<DeviceLinkSalt> => {
   const {
-    axios: { oauthClient, vaultClient },
+    axios: { vaultClient },
   } = ctx;
 
   const response = await vaultClient.get<GetEncryptedRecordResponse<DeviceLinkSalt>>(
@@ -18,9 +17,7 @@ export const vaultGetSalt = async (
       params: {
         id: deviceLink.id,
       },
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScopes.VAULT_ENCRYPTED_RECORD_READ]),
-      ],
+      middleware: [clientCredentialsMiddleware()],
     },
   );
 

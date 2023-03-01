@@ -1,5 +1,4 @@
 import { ClientError } from "@lindorm-io/errors";
-import { ClientScopes } from "../../common";
 import { EmitSocketEventRequestBody, RdcSessionMode } from "@lindorm-io/common-types";
 import { RdcSession, RdcSessionOptions } from "../../entity";
 import { ServerKoaContext } from "../../types";
@@ -18,7 +17,7 @@ export const createRdcSession = async (
   options: Options,
 ): Promise<Result> => {
   const {
-    axios: { communicationClient, oauthClient },
+    axios: { communicationClient },
     cache: { rdcSessionCache },
     repository: { deviceLinkRepository },
   } = ctx;
@@ -104,9 +103,7 @@ export const createRdcSession = async (
 
     await communicationClient.post("/admin/socket/emit", {
       body,
-      middleware: [
-        clientCredentialsMiddleware(oauthClient, [ClientScopes.COMMUNICATION_EVENT_EMIT]),
-      ],
+      middleware: [clientCredentialsMiddleware()],
     });
   }
 

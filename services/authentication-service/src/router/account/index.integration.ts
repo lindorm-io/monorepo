@@ -27,6 +27,13 @@ describe("/account", () => {
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
+    .get("/.well-known/openid-configuration")
+    .times(999)
+    .reply(200, {
+      token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
+    });
+
+  nock("https://oauth.test.lindorm.io")
     .post("/oauth2/token")
     .times(999)
     .reply(200, {

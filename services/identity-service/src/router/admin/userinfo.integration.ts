@@ -7,11 +7,11 @@ import { find } from "lodash";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
+  getTestClientCredentials,
+  setupIntegration,
   TEST_ADDRESS_REPOSITORY,
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
-  getTestClientCredentials,
-  setupIntegration,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -21,6 +21,13 @@ jest.unmock("@lindorm-io/redis");
 
 describe("/admin/userinfo", () => {
   beforeAll(setupIntegration);
+
+  nock("https://oauth.test.lindorm.io")
+    .get("/.well-known/openid-configuration")
+    .times(999)
+    .reply(200, {
+      token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
+    });
 
   nock("https://oauth.test.lindorm.io")
     .post("/oauth2/token")

@@ -17,7 +17,7 @@ export const getOauthElevationSession = async (
     GetElevationRequestParams
   >("/admin/sessions/elevation/:id", {
     params: { id },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

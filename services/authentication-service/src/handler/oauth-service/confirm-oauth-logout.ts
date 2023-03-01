@@ -1,6 +1,5 @@
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { ClientScopes } from "../../common";
 import {
   ConfirmLogoutRequestBody,
   ConfirmLogoutRequestParams,
@@ -24,7 +23,7 @@ export const confirmOauthLogout = async (
   >("/admin/sessions/logout/:id/confirm", {
     params: { id },
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

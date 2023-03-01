@@ -14,7 +14,7 @@ export const getOauthLogoutSession = async (
     "/admin/sessions/logout/:id",
     {
       params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     },
   );
 

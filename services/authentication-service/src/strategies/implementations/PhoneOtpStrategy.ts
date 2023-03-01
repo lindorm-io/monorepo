@@ -39,7 +39,7 @@ export class PhoneOtpStrategy extends StrategyBase {
   ): Promise<AuthStrategyConfig> {
     const {
       cache: { strategySessionCache },
-      axios: { communicationClient, oauthClient },
+      axios: { communicationClient },
     } = ctx;
 
     const { identifier, identifierType } = strategySession;
@@ -70,7 +70,7 @@ export class PhoneOtpStrategy extends StrategyBase {
 
     await communicationClient.post("/admin/send/otp", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

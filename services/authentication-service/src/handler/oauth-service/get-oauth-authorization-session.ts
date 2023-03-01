@@ -17,7 +17,7 @@ export const getOauthAuthorizationSession = async (
     GetAuthorizationRequestParams
   >("/admin/sessions/authorization/:id", {
     params: { id },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

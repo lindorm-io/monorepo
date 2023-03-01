@@ -17,7 +17,7 @@ export const getOauthClaimsSession = async (
     GetClaimsSessionRequestParams
   >("/admin/sessions/claims/:id", {
     params: { id },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return data;

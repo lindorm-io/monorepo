@@ -3,7 +3,6 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { RejectElevationRequestParams } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
 
 type RequestData = RejectElevationRequestParams;
 
@@ -23,8 +22,6 @@ export const rejectElevationSessionController: ServerKoaController<RequestData> 
 
   await oauthClient.post("/admin/sessions/elevation/:id/reject", {
     params: { id },
-    middleware: [
-      clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_AUTHENTICATION_WRITE]),
-    ],
+    middleware: [clientCredentialsMiddleware()],
   });
 };

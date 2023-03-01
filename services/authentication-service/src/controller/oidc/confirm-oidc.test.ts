@@ -25,7 +25,6 @@ describe("confirmOidcController", () => {
 
     ctx = {
       axios: {
-        oauthClient: {},
         oidcClient: {
           get: jest.fn().mockResolvedValue({
             data: {

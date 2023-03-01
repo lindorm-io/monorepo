@@ -38,7 +38,7 @@ export class RdcQrCodeStrategy extends StrategyBase {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      axios: { deviceClient, oauthClient },
+      axios: { deviceClient },
     } = ctx;
 
     const body: InitialiseRdcSessionRequestBody = {
@@ -52,7 +52,7 @@ export class RdcQrCodeStrategy extends StrategyBase {
 
     await deviceClient.post("/admin/rdc", {
       body,
-      middleware: [clientCredentialsMiddleware(oauthClient)],
+      middleware: [clientCredentialsMiddleware()],
     });
 
     return {

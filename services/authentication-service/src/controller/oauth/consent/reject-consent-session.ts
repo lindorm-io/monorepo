@@ -3,7 +3,6 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { RejectConsentRequestParams, RejectConsentResponse } from "@lindorm-io/common-types";
-import { ClientScopes } from "../../../common";
 
 type RequestData = RejectConsentRequestParams;
 
@@ -25,7 +24,7 @@ export const rejectConsentSessionController: ServerKoaController<RequestData> = 
     "/admin/sessions/consent/:id/reject",
     {
       params: { id },
-      middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OAUTH_CONSENT_WRITE])],
+      middleware: [clientCredentialsMiddleware()],
     },
   );
 

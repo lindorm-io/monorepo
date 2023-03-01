@@ -27,7 +27,7 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { axiosClient, oauthClient },
+    axios: { axiosClient },
     cache: { rdcSessionCache },
     entity: { rdcSession },
     token: { bearerToken, challengeConfirmationToken, rdcSessionToken },
@@ -79,7 +79,7 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
           ...rdcSession.confirmPayload,
         },
         method: rdcSession.confirmMethod,
-        middleware: [clientCredentialsMiddleware(oauthClient, ["unknown"])],
+        middleware: [clientCredentialsMiddleware()],
         url: rdcSession.confirmUri || undefined,
       });
       break;

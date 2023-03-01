@@ -17,7 +17,7 @@ export const authenticateIdentity = async (
   options: Options,
 ): Promise<Result> => {
   const {
-    axios: { identityClient, oauthClient },
+    axios: { identityClient },
   } = ctx;
 
   const { identityId } = oidcSession;
@@ -39,7 +39,7 @@ export const authenticateIdentity = async (
       type: IdentifierType.EXTERNAL,
       verified: true,
     },
-    middleware: [clientCredentialsMiddleware(oauthClient)],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return { identityId };

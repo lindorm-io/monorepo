@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { ClientScopes } from "../../common";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
@@ -28,7 +27,7 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse => {
   const {
-    axios: { oauthClient, oidcClient },
+    axios: { oidcClient },
     cache: { authenticationSessionCache },
     data: { provider, remember },
     entity: { authenticationSession },
@@ -54,7 +53,7 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
     data: { redirectTo },
   } = await oidcClient.post<InitialiseOidcSessionResponse>("/admin/sessions", {
     body,
-    middleware: [clientCredentialsMiddleware(oauthClient, [ClientScopes.OIDC_SESSION_WRITE])],
+    middleware: [clientCredentialsMiddleware()],
   });
 
   return { redirect: redirectTo };
