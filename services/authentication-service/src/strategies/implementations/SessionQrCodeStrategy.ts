@@ -1,7 +1,6 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { argon } from "../../instance";
-import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -41,7 +40,7 @@ export class SessionQrCodeStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: "QR_CODE",
       strategySessionToken: null,

@@ -20,7 +20,7 @@ describe("getStrategyInfoController", () => {
   test("should resolve", async () => {
     await expect(getStrategyController(ctx)).resolves.toStrictEqual({
       body: {
-        expires: new Date("2022-01-01T08:00:00.000Z"),
+        expires: "2022-01-01T08:00:00.000Z",
         strategy: "email_otp",
         status: "pending",
       },

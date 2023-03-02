@@ -2,7 +2,6 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetAuthorizationRequestParams, GetAuthorizationResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
-import { expiryObject } from "@lindorm-io/expiry";
 import {
   getAdjustedAccessLevel,
   isConsentRequired,
@@ -27,8 +26,6 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
     entity: { authorizationSession, client, tenant },
     repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
   } = ctx;
-
-  const { expires, expiresIn } = expiryObject(authorizationSession.expires);
 
   const accessSession = authorizationSession.accessSessionId
     ? await accessSessionRepository.tryFind({ id: authorizationSession.accessSessionId })
@@ -108,8 +105,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         authToken: authorizationSession.authToken,
         country: authorizationSession.country,
         displayMode: authorizationSession.displayMode,
-        expiresAt: expires.toISOString(),
-        expiresIn,
+        expires: authorizationSession.expires.toISOString(),
         idTokenHint: authorizationSession.idTokenHint,
         loginHint: authorizationSession.loginHint,
         nonce: authorizationSession.nonce,

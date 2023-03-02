@@ -11,12 +11,12 @@ import {
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
-  TEST_CLIENT_REPOSITORY,
-  TEST_LOGOUT_SESSION_CACHE,
   getTestClientCredentials,
   setupIntegration,
   TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
+  TEST_CLIENT_REPOSITORY,
+  TEST_LOGOUT_SESSION_CACHE,
   TEST_TENANT_REPOSITORY,
 } from "../../../fixtures/integration";
 
@@ -85,8 +85,7 @@ describe("/admin/sessions/logout", () => {
       },
 
       logout_session: {
-        expires_at: "2021-01-02T08:00:00.000Z",
-        expires_in: 86400,
+        expires: "2021-01-02T08:00:00.000Z",
         id_token_hint: "jwt.jwt.jwt",
         identity_id: logoutSession.identityId,
         logout_hint: "logout-hint",

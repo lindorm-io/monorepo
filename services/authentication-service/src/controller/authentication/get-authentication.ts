@@ -69,7 +69,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
     body: {
       config: clientConfig,
       emailHint: authenticationSession.emailHint,
-      expires: authenticationSession.expires,
+      expires: authenticationSession.expires.toISOString(),
       mode: authenticationSession.mode,
       oidcProviders,
       phoneHint: authenticationSession.phoneHint,

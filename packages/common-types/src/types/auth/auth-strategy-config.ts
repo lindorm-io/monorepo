@@ -6,7 +6,7 @@ export type AuthStrategyConfig = {
   confirmLength: number | null;
   confirmMode: AuthenticationStrategyConfirmMode;
   displayCode: string | null;
-  expiresIn: number;
+  expires: string;
   pollingRequired: boolean;
   qrCode: string | null;
   strategySessionToken: string | null;

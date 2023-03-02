@@ -1,12 +1,12 @@
 import MockDate from "mockdate";
 import request from "supertest";
+import { server } from "../../server/server";
+import { createTestOidcSession } from "../../fixtures/entity";
 import {
   getTestClientCredentials,
   setupIntegration,
   TEST_OIDC_SESSION_CACHE,
 } from "../../fixtures/integration";
-import { server } from "../../server/server";
-import { createTestOidcSession } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -25,7 +25,7 @@ describe("/admin/sessions", () => {
       .send({
         callback_id: "3ada5d06-23d0-41ac-9344-b91a18b22f19",
         callback_uri: "https://test.lindorm.io/callback",
-        expires_at: "2021-01-02T08:00:00.000+05:00",
+        expires: "2021-01-02T08:00:00.000+05:00",
         identity_id: "f60ad331-710e-4833-b77a-d7ce3c2e4fdb",
         login_hint: "test@lindorm.io",
         provider: "microsoft",

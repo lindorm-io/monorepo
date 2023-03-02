@@ -4,5 +4,5 @@ export type GetEncryptedRecordRequestParams = {
 
 export type GetEncryptedRecordResponse<Data = Record<string, string>> = {
   data: Data;
-  expires: Date | null;
+  expires: string | null;
 };

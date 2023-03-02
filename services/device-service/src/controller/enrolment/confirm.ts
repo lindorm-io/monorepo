@@ -10,6 +10,7 @@ import { configuration } from "../../server/configuration";
 import { createDeviceLinkCallback } from "../../handler";
 import { flatten } from "lodash";
 import { randomString } from "@lindorm-io/random";
+import { ClientError } from "@lindorm-io/errors";
 import {
   ChallengeStrategy,
   ConfirmEnrolmentRequestBody,
@@ -20,7 +21,6 @@ import {
   SessionStatus,
   SubjectHint,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = ConfirmEnrolmentRequestParams & ConfirmEnrolmentRequestBody;
 

@@ -16,6 +16,6 @@ export type InitialiseEnrolmentResponse = {
   certificateChallenge: string;
   enrolmentSessionId: string;
   enrolmentSessionToken: string;
-  expiresIn: number;
+  expires: string;
   externalChallengeRequired: boolean;
 };

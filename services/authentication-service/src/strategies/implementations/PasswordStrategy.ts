@@ -1,13 +1,12 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
+import { CryptoLayered } from "@lindorm-io/crypto";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import { ClientError } from "@lindorm-io/errors";
-
-import { CryptoLayered } from "@lindorm-io/crypto";
 import {
   authenticateIdentifier,
   createStrategySessionToken,
@@ -22,7 +21,6 @@ import {
   AuthStrategyConfig,
   IdentifierType,
 } from "@lindorm-io/common-types";
-import { expiresIn } from "@lindorm-io/expiry";
 
 export class PasswordStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
@@ -49,7 +47,7 @@ export class PasswordStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

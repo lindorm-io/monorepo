@@ -1,10 +1,11 @@
 import Joi from "joi";
 import { ChallengeSession } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_NONCE } from "../../common";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
-import { expiryObject } from "@lindorm-io/expiry";
+import { expiryDate } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import { sortedUniq } from "lodash";
 import {
@@ -14,7 +15,6 @@ import {
   InitialiseChallengeResponse,
   SubjectHint,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = InitialiseChallengeRequestBody;
 
@@ -73,14 +73,13 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   }
 
   const certificateChallenge = randomString(128);
-  const { expires, expiresIn } = expiryObject(configuration.defaults.challenge_session_expiry);
 
-  const session = await challengeSessionCache.create(
+  const challengeSession = await challengeSessionCache.create(
     new ChallengeSession({
       certificateChallenge,
       audiences,
       deviceLinkId: deviceLink.id,
-      expires,
+      expires: expiryDate(configuration.defaults.challenge_session_expiry),
       nonce,
       payload,
       scopes,
@@ -91,7 +90,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   const { token } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.challenge_session_expiry,
-    session: session.id,
+    session: challengeSession.id,
     sessionHint: "challenge",
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,
@@ -101,9 +100,9 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   return {
     body: {
       certificateChallenge,
-      challengeSessionId: session.id,
+      challengeSessionId: challengeSession.id,
       challengeSessionToken: token,
-      expiresIn,
+      expires: challengeSession.expires.toISOString(),
       strategies: sortedUniq(strategies),
     },
   };

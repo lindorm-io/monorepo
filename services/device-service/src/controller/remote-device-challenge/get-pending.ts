@@ -1,16 +1,14 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { filter, orderBy } from "lodash";
-import { expiryObject } from "@lindorm-io/expiry";
+import { ServerKoaController } from "../../types";
+import { orderBy } from "lodash";
 import {
   GetPendingRdcRequestParams,
   GetPendingRdcResponse,
-  PendingRdcSession,
   RdcSessionMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = GetPendingRdcRequestParams;
 
@@ -36,21 +34,17 @@ export const getPendingRdcSessionsController: ServerKoaController<RequestData> =
   }
 
   const result = await rdcSessionCache.findMany({ identityId });
-  const filtered = filter(result, {
-    mode: RdcSessionMode.PUSH_NOTIFICATION,
-    status: SessionStatus.PENDING,
-  });
+  const filtered = result.filter(
+    (x) => x.mode === RdcSessionMode.PUSH_NOTIFICATION && x.status === SessionStatus.PENDING,
+  );
   const pending = orderBy(filtered, ["created"], ["desc"]);
-  const sessions: Array<PendingRdcSession> = [];
 
-  for (const item of pending) {
-    const { expiresIn } = expiryObject(item.expires);
-
-    sessions.push({
-      id: item.id,
-      expiresIn,
-    });
-  }
-
-  return { body: { sessions } };
+  return {
+    body: {
+      sessions: pending.map((x) => ({
+        id: x.id,
+        expires: x.expires.toISOString(),
+      })),
+    },
+  };
 };

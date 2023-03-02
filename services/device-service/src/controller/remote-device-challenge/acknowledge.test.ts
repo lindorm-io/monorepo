@@ -58,7 +58,7 @@ describe("acknowledgeRdcController", () => {
           scopes: ["scope"],
         },
         session: {
-          expiresIn: 1234,
+          expires: "2021-01-10T08:00:00.000Z",
           factors: 1,
           rdcSessionToken: "jwt.jwt.jwt",
           status: "acknowledged",

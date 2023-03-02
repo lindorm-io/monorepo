@@ -1,12 +1,13 @@
 import { MFA_COOKIE_NAME } from "../../constant";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { createStrategySessionToken } from "../../handler";
+import { ClientError } from "@lindorm-io/errors";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -14,8 +15,6 @@ import {
   AuthenticationStrategyConfirmMode,
   AuthStrategyConfig,
 } from "@lindorm-io/common-types";
-import { expiresIn } from "@lindorm-io/expiry";
-import { createStrategySessionToken } from "../../handler";
 
 export class MfaCookieStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
@@ -42,7 +41,7 @@ export class MfaCookieStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

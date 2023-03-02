@@ -12,7 +12,7 @@ type CodeResponseBody = {
 type PendingResponseBody = {
   config: Array<AuthMethodConfig>;
   emailHint: string | null;
-  expires: Date;
+  expires: string;
   mode: AuthenticationMode;
   oidcProviders: Array<string>;
   phoneHint: string | null;

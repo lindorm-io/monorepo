@@ -44,7 +44,7 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
       host: configuration.server.host,
       port: configuration.server.port,
     }).toString(),
-    expiresAt: authenticationSession.expires.toISOString(),
+    expires: authenticationSession.expires.toISOString(),
     identityId: authenticationSession.identityId || undefined,
     provider,
   };

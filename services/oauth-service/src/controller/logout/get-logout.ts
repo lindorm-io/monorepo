@@ -1,7 +1,6 @@
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { expiryObject } from "@lindorm-io/expiry";
 import { GetLogoutRequestParams, GetLogoutResponse } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 
@@ -22,8 +21,6 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
     entity: { client, logoutSession, tenant },
     repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
   } = ctx;
-
-  const { expires, expiresIn } = expiryObject(logoutSession.expires);
 
   if (!logoutSession.requestedLogout.browserSessionId) {
     throw new ServerError("Browser session not found");
@@ -74,8 +71,7 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
       },
 
       logoutSession: {
-        expiresAt: expires.toISOString(),
-        expiresIn,
+        expires: logoutSession.expires.toISOString(),
         idTokenHint: logoutSession.idTokenHint,
         identityId: logoutSession.identityId,
         logoutHint: logoutSession.logoutHint,

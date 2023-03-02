@@ -52,7 +52,7 @@ describe("/rdc", () => {
 
   nock("https://callback.lindorm.io").delete("/reject").times(999).reply(200, {});
 
-  test("POST /:id/acknowledge", async () => {
+  test("should acknowledge rdc session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
@@ -89,7 +89,7 @@ describe("/rdc", () => {
         scopes: [],
       },
       session: {
-        expires_in: 900,
+        expires: "2021-01-01T08:15:00.000Z",
         factors: 1,
         rdc_session_token: expect.any(String),
         status: SessionStatus.ACKNOWLEDGED,
@@ -101,7 +101,7 @@ describe("/rdc", () => {
     });
   });
 
-  test("POST /:id/confirm", async () => {
+  test("should confirm rdc session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
@@ -155,7 +155,7 @@ describe("/rdc", () => {
       .expect(204);
   });
 
-  test("POST /:id/reject", async () => {
+  test("should reject rdc session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
@@ -195,7 +195,7 @@ describe("/rdc", () => {
       .expect(204);
   });
 
-  test("GET /:id/status", async () => {
+  test("should resolve rdc session status", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(

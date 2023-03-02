@@ -24,7 +24,6 @@ import {
   IdentifierType,
   SendOtpRequestBody,
 } from "@lindorm-io/common-types";
-import { expiresIn } from "@lindorm-io/expiry";
 
 export class PhoneOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
@@ -87,7 +86,7 @@ export class PhoneOtpStrategy implements StrategyHandler {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

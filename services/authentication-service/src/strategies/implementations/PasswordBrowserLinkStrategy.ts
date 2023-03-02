@@ -1,7 +1,6 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
 import { ClientError } from "@lindorm-io/errors";
-
 import { CryptoLayered } from "@lindorm-io/crypto";
 import {
   AuthenticationStrategyConfig,
@@ -23,7 +22,6 @@ import {
   AuthStrategyConfig,
   IdentifierType,
 } from "@lindorm-io/common-types";
-import { expiresIn } from "@lindorm-io/expiry";
 
 export class PasswordBrowserLinkStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
@@ -50,7 +48,7 @@ export class PasswordBrowserLinkStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

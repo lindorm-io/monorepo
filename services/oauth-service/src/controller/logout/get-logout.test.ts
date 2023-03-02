@@ -72,8 +72,7 @@ describe("getLogoutController", () => {
           type: "confidential",
         },
         logoutSession: {
-          expiresAt: "2021-01-02T08:00:00.000Z",
-          expiresIn: 86400,
+          expires: "2021-01-02T08:00:00.000Z",
           idTokenHint: "jwt.jwt.jwt",
           identityId: "41da1da6-cf20-4744-893d-2b1615b222ad",
           logoutHint: "logout-hint",

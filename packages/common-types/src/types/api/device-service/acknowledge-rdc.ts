@@ -14,7 +14,7 @@ export type AcknowledgeRdcResponse = {
     scopes: Array<string>;
   };
   session: {
-    expiresIn: number;
+    expires: string;
     factors: number;
     rdcSessionToken: string;
     status: SessionStatus;

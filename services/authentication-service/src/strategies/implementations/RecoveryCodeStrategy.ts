@@ -2,7 +2,6 @@ import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
-import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -43,7 +42,7 @@ export class RecoveryCodeStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

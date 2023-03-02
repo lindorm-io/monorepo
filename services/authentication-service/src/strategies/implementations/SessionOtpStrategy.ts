@@ -2,7 +2,6 @@ import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { expiresIn } from "@lindorm-io/expiry";
 import { getValidIdentitySessions } from "../../handler";
 import { randomNumberAsync } from "../../util";
 import {
@@ -81,7 +80,7 @@ export class SessionOtpStrategy implements StrategyHandler {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,

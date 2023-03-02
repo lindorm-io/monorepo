@@ -57,7 +57,7 @@ describe("initialiseChallengeController", () => {
         certificateChallenge: "random-value",
         challengeSessionId: expect.any(String),
         challengeSessionToken: "jwt.jwt.jwt",
-        expiresIn: 300,
+        expires: "2021-01-01T08:05:00.000Z",
         strategies: ["implicit", "biometry", "pincode"],
       },
     });

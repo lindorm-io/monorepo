@@ -6,7 +6,7 @@ import { JOI_CERTIFICATE_METHOD } from "../../constant";
 import { ServerKoaController } from "../../types";
 import { configuration } from "../../server/configuration";
 import { createRdcSession, isRdcRequired } from "../../handler";
-import { expiryObject } from "@lindorm-io/expiry";
+import { expiryDate } from "@lindorm-io/expiry";
 import { randomString } from "@lindorm-io/random";
 import {
   DeviceTokenType,
@@ -63,8 +63,6 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const certificateChallenge = randomString(128);
 
-  const { expires, expiresIn } = expiryObject(configuration.defaults.enrolment_session_expiry);
-
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
   const nonce = randomString(16);
 
@@ -79,7 +77,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     });
   }
 
-  const session = await enrolmentSessionCache.create(
+  const enrolmentSession = await enrolmentSessionCache.create(
     new EnrolmentSession({
       audiences,
       certificateChallenge,
@@ -93,7 +91,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
         systemName,
       },
       name,
-      expires,
+      expires: expiryDate(configuration.defaults.enrolment_session_expiry),
       identityId,
       installationId,
       nonce,
@@ -106,7 +104,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   const { token } = jwt.sign({
     audiences: [configuration.oauth.client_id],
     expiry: configuration.defaults.enrolment_session_expiry,
-    session: session.id,
+    session: enrolmentSession.id,
     sessionHint: "enrolment",
     subject: identityId,
     subjectHint: SubjectHint.IDENTITY,
@@ -116,8 +114,8 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   if (externalChallengeRequired) {
     await createRdcSession(ctx, {
       audiences,
-      enrolmentSessionId: session.id,
-      expires,
+      enrolmentSessionId: enrolmentSession.id,
+      expires: enrolmentSession.expires,
       factors: 2,
       identityId,
       mode: RdcSessionMode.QR_CODE,
@@ -137,9 +135,9 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   return {
     body: {
       certificateChallenge,
-      enrolmentSessionId: session.id,
+      enrolmentSessionId: enrolmentSession.id,
       enrolmentSessionToken: token,
-      expiresIn,
+      expires: enrolmentSession.expires.toISOString(),
       externalChallengeRequired,
     },
   };

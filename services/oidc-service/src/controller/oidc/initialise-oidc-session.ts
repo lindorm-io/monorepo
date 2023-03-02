@@ -16,7 +16,7 @@ export const initialiseOidcSessionSchema = Joi.object<RequestData>()
   .keys({
     callbackId: Joi.string().guid().required(),
     callbackUri: Joi.string().uri().required(),
-    expiresAt: Joi.string().required(),
+    expires: Joi.string().required(),
     identityId: Joi.string().guid().optional(),
     loginHint: Joi.string().optional(),
     provider: Joi.string().required(),
@@ -27,7 +27,7 @@ export const initialiseOidcSessionController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { callbackId, callbackUri, expiresAt, identityId, loginHint, provider },
+    data: { callbackId, callbackUri, expires, identityId, loginHint, provider },
   } = ctx;
 
   findOidcConfiguration(provider);
@@ -35,7 +35,7 @@ export const initialiseOidcSessionController: ServerKoaController<RequestData> =
   const url = await createOidcSession(ctx, {
     callbackId,
     callbackUri,
-    expires: new Date(expiresAt),
+    expires: new Date(expires),
     identityId,
     loginHint,
     provider,

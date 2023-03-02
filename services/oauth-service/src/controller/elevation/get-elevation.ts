@@ -1,7 +1,6 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { expiryObject } from "@lindorm-io/expiry";
 import {
   GetElevationRequestParams,
   GetElevationResponse,
@@ -24,8 +23,6 @@ export const getElevationController: ServerKoaController<RequestData> = async (
   const {
     entity: { client, elevationSession, tenant },
   } = ctx;
-
-  const { expires, expiresIn } = expiryObject(elevationSession.expires);
 
   return {
     body: {
@@ -51,8 +48,7 @@ export const getElevationController: ServerKoaController<RequestData> = async (
         authenticationHint: elevationSession.authenticationHint,
         country: elevationSession.country,
         displayMode: elevationSession.displayMode,
-        expiresAt: expires.toISOString(),
-        expiresIn,
+        expires: elevationSession.expires.toISOString(),
         idTokenHint: elevationSession.idTokenHint,
         identityId: elevationSession.identityId,
         nonce: elevationSession.nonce,

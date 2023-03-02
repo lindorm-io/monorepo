@@ -38,7 +38,7 @@ export const initialiseOauthAuthenticationSession = async (
       requiredLevel,
       requiredMethods,
     },
-    authorizationSession: { country, expiresAt, loginHint, nonce },
+    authorizationSession: { country, expires, loginHint, nonce },
   } = await getOauthAuthorizationSession(ctx, oauthSessionId);
 
   const emailHint = loginHint?.find((item: string) => REGEX_EMAIL.test(item));
@@ -51,7 +51,7 @@ export const initialiseOauthAuthenticationSession = async (
     codeChallengeMethod,
     country,
     emailHint,
-    expires: new Date(expiresAt),
+    expires: new Date(expires),
     identityId,
     minimumLevel,
     mode: AuthenticationMode.OAUTH,

@@ -37,7 +37,7 @@ export const initialiseElevateAuthenticationSession = async (
       requiredLevel,
       requiredMethods,
     },
-    elevationSession: { authenticationHint, country, expiresAt, identityId, nonce },
+    elevationSession: { authenticationHint, country, expires, identityId, nonce },
   } = await getOauthElevationSession(ctx, elevationSessionId);
 
   const emailHint = authenticationHint?.find((item: string) => REGEX_EMAIL.test(item));
@@ -50,7 +50,7 @@ export const initialiseElevateAuthenticationSession = async (
     codeChallengeMethod,
     country,
     emailHint,
-    expires: new Date(expiresAt),
+    expires: new Date(expires),
     identityId,
     minimumLevel,
     mode: AuthenticationMode.OAUTH,

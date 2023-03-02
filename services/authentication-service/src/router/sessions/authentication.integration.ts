@@ -9,13 +9,13 @@ import { randomString } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import { createURL } from "@lindorm-io/url";
 import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { StrategySession } from "../../entity";
 import {
   setupIntegration,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
-import { StrategySession } from "../../entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -221,7 +221,7 @@ describe("/sessions/authentication", () => {
       confirm_length: 6,
       confirm_mode: "numeric",
       display_code: null,
-      expires_in: 31536000,
+      expires: "2022-01-01T08:00:00.000Z",
       polling_required: false,
       qr_code: null,
       strategy_session_token: expect.any(String),

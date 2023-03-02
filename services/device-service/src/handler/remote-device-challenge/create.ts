@@ -3,19 +3,13 @@ import { EmitSocketEventRequestBody, RdcSessionMode } from "@lindorm-io/common-t
 import { RdcSession, RdcSessionOptions } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { expiryObject } from "@lindorm-io/expiry";
-
-type Result = {
-  id: string;
-  expiresIn: number;
-};
 
 type Options = Omit<RdcSessionOptions, "deviceLinks">;
 
 export const createRdcSession = async (
   ctx: ServerKoaContext,
   options: Options,
-): Promise<Result> => {
+): Promise<RdcSession> => {
   const {
     axios: { communicationClient },
     cache: { rdcSessionCache },
@@ -89,25 +83,19 @@ export const createRdcSession = async (
     }),
   );
 
-  const { id } = rdcSession;
-
   if (mode === RdcSessionMode.PUSH_NOTIFICATION) {
-    const body: EmitSocketEventRequestBody = {
-      channels: {
-        deviceLinks,
-        ...(identityId ? { identities: [identityId] } : {}),
+    await communicationClient.post<never, EmitSocketEventRequestBody>("/admin/socket/emit", {
+      body: {
+        channels: {
+          deviceLinks,
+          ...(identityId ? { identities: [identityId] } : {}),
+        },
+        content: { id: rdcSession.id },
+        event: "rdc_session:created",
       },
-      content: { id },
-      event: "rdcSession:created",
-    };
-
-    await communicationClient.post("/admin/socket/emit", {
-      body,
       middleware: [clientCredentialsMiddleware()],
     });
   }
 
-  const { expiresIn } = expiryObject(expires);
-
-  return { id, expiresIn };
+  return rdcSession;
 };

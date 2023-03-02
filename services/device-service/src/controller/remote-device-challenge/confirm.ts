@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_JWT } from "../../common";
 import { ServerKoaController } from "../../types";
@@ -11,7 +12,6 @@ import {
   RdcSessionType,
   SessionStatus,
 } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 type RequestData = ConfirmRdcRequestParams & ConfirmRdcRequestBody;
 

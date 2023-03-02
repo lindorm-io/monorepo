@@ -1,6 +1,8 @@
 import { redirectLoginSessionController } from "./redirect-login-session";
 import { createMockLogger } from "@lindorm-io/winston";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { randomUUID } from "crypto";
+import { randomString } from "@lindorm-io/random";
 import {
   confirmOauthLogin as _confirmOauthLogin,
   getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
@@ -12,8 +14,6 @@ import {
   OpenIdPromptMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
-import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
 
 jest.mock("../../../handler");
 
@@ -57,8 +57,7 @@ describe("redirectLoginSessionController", () => {
           authToken: "auth.jwt.jwt",
           country: "se",
           displayMode: OpenIdDisplayMode.PAGE,
-          expiresAt: "2022-01-01T04:00:00.000Z",
-          expiresIn: 1800,
+          expires: "2022-01-01T04:00:00.000Z",
           idTokenHint: "id.jwt.jwt",
           loginHint: ["test@lindorm.io"],
           maxAge: 500,

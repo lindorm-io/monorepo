@@ -31,7 +31,7 @@ export const getStrategyController: ServerKoaController<RequestData> = async (
 
     return {
       body: {
-        expires: session.expires,
+        expires: session.expires.toISOString(),
         strategy: session.strategy,
         status: session.status,
       },

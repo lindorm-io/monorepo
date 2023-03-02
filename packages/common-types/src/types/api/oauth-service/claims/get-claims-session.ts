@@ -8,8 +8,7 @@ export type GetClaimsSessionRequestParams = StandardRequestParamsWithId;
 export type GetClaimsSessionResponse = {
   adjustedAccessLevel: AdjustedAccessLevel;
   audiences: Array<string>;
-  expiresAt: string;
-  expiresIn: number;
+  expires: string;
   identityId: string;
   latestAuthentication: string;
   levelOfAssurance: LevelOfAssurance;

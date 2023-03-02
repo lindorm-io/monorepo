@@ -86,7 +86,7 @@ describe("initialiseEnrolmentController", () => {
         certificateChallenge: "random-value",
         enrolmentSessionId: expect.any(String),
         enrolmentSessionToken: "jwt.jwt.jwt",
-        expiresIn: 900,
+        expires: "2021-01-01T08:15:00.000Z",
         externalChallengeRequired: false,
       },
     });

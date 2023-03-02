@@ -71,7 +71,7 @@ export const initialiseRdcController: ServerKoaController<RequestData> = async (
     },
   } = ctx;
 
-  const { id, expiresIn } = await createRdcSession(ctx, {
+  const rdcSession = await createRdcSession(ctx, {
     audiences,
     confirmMethod,
     confirmPayload,
@@ -93,5 +93,11 @@ export const initialiseRdcController: ServerKoaController<RequestData> = async (
     type: RdcSessionType.CALLBACK,
   });
 
-  return { body: { id, expiresIn }, status: HttpStatus.Success.ACCEPTED };
+  return {
+    body: {
+      id: rdcSession.id,
+      expires: rdcSession.expires.toISOString(),
+    },
+    status: HttpStatus.Success.ACCEPTED,
+  };
 };

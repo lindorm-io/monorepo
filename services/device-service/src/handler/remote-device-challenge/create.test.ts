@@ -1,7 +1,9 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createRdcSession } from "./create";
-import { createTestDeviceLink } from "../../fixtures/entity";
+import { createTestDeviceLink, createTestRdcSession } from "../../fixtures/entity";
+import { RdcSession } from "../../entity";
+import { createMockCache } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -20,11 +22,7 @@ describe("createRdcSession", () => {
         oauthClient: {},
       },
       cache: {
-        rdcSessionCache: {
-          create: jest.fn().mockResolvedValue({
-            id: "b21c85bc-a184-4c75-a93e-ac2d762b8ff8",
-          }),
-        },
+        rdcSessionCache: createMockCache(createTestRdcSession),
       },
       repository: {
         deviceLinkRepository: {
@@ -55,10 +53,7 @@ describe("createRdcSession", () => {
   });
 
   test("should resolve with a created push_notification session", async () => {
-    await expect(createRdcSession(ctx, options)).resolves.toStrictEqual({
-      expiresIn: 900,
-      id: "b21c85bc-a184-4c75-a93e-ac2d762b8ff8",
-    });
+    await expect(createRdcSession(ctx, options)).resolves.toStrictEqual(expect.any(RdcSession));
 
     expect(ctx.cache.rdcSessionCache.create).toHaveBeenCalled();
     expect(ctx.repository.deviceLinkRepository.findMany).toHaveBeenCalled();
@@ -68,10 +63,7 @@ describe("createRdcSession", () => {
   test("should resolve with a created qr_code session", async () => {
     options.mode = "qr_code";
 
-    await expect(createRdcSession(ctx, options)).resolves.toStrictEqual({
-      expiresIn: 900,
-      id: "b21c85bc-a184-4c75-a93e-ac2d762b8ff8",
-    });
+    await expect(createRdcSession(ctx, options)).resolves.toStrictEqual(expect.any(RdcSession));
 
     expect(ctx.cache.rdcSessionCache.create).toHaveBeenCalled();
     expect(ctx.repository.deviceLinkRepository.findMany).not.toHaveBeenCalled();

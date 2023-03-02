@@ -4,7 +4,7 @@ export type GetPendingRdcRequestParams = {
 
 export type PendingRdcSession = {
   id: string;
-  expiresIn: number;
+  expires: string;
 };
 
 export type GetPendingRdcResponse = {

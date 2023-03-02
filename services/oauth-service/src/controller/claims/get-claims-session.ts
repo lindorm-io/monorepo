@@ -2,7 +2,6 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetClaimsSessionRequestParams, GetClaimsSessionResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
-import { expiryObject } from "@lindorm-io/expiry";
 import { getAdjustedAccessLevel } from "../../util";
 
 type RequestData = GetClaimsSessionRequestParams;
@@ -22,14 +21,11 @@ export const getClaimsSessionController: ServerKoaController<RequestData> = asyn
     entity: { claimsSession, client, tenant },
   } = ctx;
 
-  const { expires, expiresIn } = expiryObject(claimsSession.expires);
-
   return {
     body: {
       adjustedAccessLevel: getAdjustedAccessLevel(claimsSession),
       audiences: claimsSession.audiences,
-      expiresAt: expires.toISOString(),
-      expiresIn,
+      expires: claimsSession.expires.toISOString(),
       identityId: claimsSession.identityId,
       latestAuthentication: claimsSession.latestAuthentication.toISOString(),
       levelOfAssurance: claimsSession.levelOfAssurance,

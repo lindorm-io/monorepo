@@ -8,5 +8,5 @@ export type UnlockProtectedRecordRequestBody = {
 
 export type UnlockProtectedRecordResponse<Data = Record<string, string>> = {
   data: Data;
-  expires: Date | null;
+  expires: string | null;
 };

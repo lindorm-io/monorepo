@@ -3,7 +3,6 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { TOTPHandler } from "../../class";
 import { configuration } from "../../server/configuration";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
-import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -43,7 +42,7 @@ export class TimeBasedOtpStrategy implements StrategyHandler {
       confirmLength: 6,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

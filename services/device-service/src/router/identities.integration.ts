@@ -4,10 +4,10 @@ import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
 import { server } from "../server/server";
 import { randomUUID } from "crypto";
 import {
-  TEST_DEVICE_REPOSITORY,
-  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
   getTestAccessToken,
   setupIntegration,
+  TEST_DEVICE_REPOSITORY,
+  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
 } from "../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -18,7 +18,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/identities", () => {
   beforeAll(setupIntegration);
 
-  test("POST /:id/rdc/pending", async () => {
+  test("should resolve pending sessions", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
     const session1 = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
       createTestRdcSession({
@@ -51,11 +51,11 @@ describe("/identities", () => {
       sessions: [
         {
           id: session2.id,
-          expires_in: 1200,
+          expires: "2021-01-01T08:20:00.000Z",
         },
         {
           id: session1.id,
-          expires_in: 900,
+          expires: "2021-01-01T08:15:00.000Z",
         },
       ],
     });

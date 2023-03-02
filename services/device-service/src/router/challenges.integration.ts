@@ -57,7 +57,7 @@ describe("/challenges", () => {
 
   beforeAll(setupIntegration);
 
-  test("POST /", async () => {
+  test("should initialise challenge session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
@@ -88,12 +88,12 @@ describe("/challenges", () => {
       certificate_challenge: expect.any(String),
       challenge_session_id: expect.any(String),
       challenge_session_token: expect.any(String),
-      expires_in: 300,
+      expires: "2021-01-01T08:05:00.000Z",
       strategies: ["implicit", "biometry", "pincode"],
     });
   });
 
-  test("POST /:id/confirm [ IMPLICIT ]", async () => {
+  test("should confirm challenge session [ IMPLICIT ]", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({
         biometry: await crypto.encrypt("secret"),
@@ -136,7 +136,7 @@ describe("/challenges", () => {
     });
   });
 
-  test("POST /:id/confirm [ BIOMETRY ]", async () => {
+  test("should confirm challenge session [ BIOMETRY ]", async () => {
     const biometry = randomString(128);
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
@@ -185,7 +185,7 @@ describe("/challenges", () => {
     });
   });
 
-  test("POST /:id/confirm [ PINCODE ]", async () => {
+  test("should confirm challenge session [ PINCODE ]", async () => {
     const pincode = randomNumber(6).toString().padStart(6, "0");
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
@@ -234,7 +234,7 @@ describe("/challenges", () => {
     });
   });
 
-  test("POST /:id/reject", async () => {
+  test("should reject challenge session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
 
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(

@@ -4,11 +4,11 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateMfaCookie as _generateMfaCookie } from "../../handler";
 import { verifyAuthenticationController } from "./verify-authentication";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import {
   calculateLevelOfAssurance as _calculateLevelOfAssurance,
   canGenerateMfaCookie as _canGenerateMfaCookie,
 } from "../../util";
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("@lindorm-io/node-pkce", () => ({
   ...jest.requireActual("@lindorm-io/node-pkce"),

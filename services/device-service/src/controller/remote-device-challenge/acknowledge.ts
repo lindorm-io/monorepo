@@ -31,17 +31,20 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
   const {
     axios: { communicationClient },
     cache: { rdcSessionCache },
-    entity: { rdcSession },
     jwt,
     metadata,
     token: { bearerToken },
+  } = ctx;
+
+  let {
+    entity: { rdcSession },
   } = ctx;
 
   if (rdcSession.status !== SessionStatus.PENDING) {
     throw new ClientError("Invalid session status");
   }
 
-  if (rdcSession.identityId !== bearerToken.subject) {
+  if (rdcSession.identityId && rdcSession.identityId !== bearerToken.subject) {
     throw new ClientError("Invalid bearer token");
   }
 
@@ -52,69 +55,53 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     });
   }
 
+  rdcSession.identityId = bearerToken.subject;
   rdcSession.status = SessionStatus.ACKNOWLEDGED;
 
-  const {
-    id,
-    audiences,
-    expires,
-    factors,
-    identityId,
-    mode,
-    nonce,
-    scopes,
-    status,
-    templateName,
-    templateParameters,
-    tokenPayload,
-  } = rdcSession;
+  rdcSession = await rdcSessionCache.update(rdcSession);
 
-  const { token: rdcSessionToken, expiresIn } = jwt.sign({
+  const { token: rdcSessionToken } = jwt.sign({
     audiences: [configuration.oauth.client_id],
-    expiry: expires,
-    session: id,
+    expiry: rdcSession.expires,
+    session: rdcSession.id,
     sessionHint: "rdc",
-    subject: identityId,
+    subject: bearerToken.subject,
     subjectHint: SubjectHint.IDENTITY,
     type: DeviceTokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
   });
 
-  await rdcSessionCache.update(rdcSession);
-
   const deviceLinks = difference<string>(rdcSession.deviceLinks, [metadata.device.linkId]);
 
-  if (mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
-    const body: EmitSocketEventRequestBody = {
-      channels: { deviceLinks, identities: [identityId] },
-      content: { id },
-      event: "rdcSession:acknowledged",
-    };
-
-    await communicationClient.post("/admin/socket/emit", {
-      body,
+  if (rdcSession.mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
+    await communicationClient.post<never, EmitSocketEventRequestBody>("/admin/socket/emit", {
+      body: {
+        channels: { deviceLinks, identities: [bearerToken.subject] },
+        content: { id: rdcSession.id },
+        event: "rdc_session:acknowledged",
+      },
       middleware: [clientCredentialsMiddleware()],
     });
   }
 
   return {
     body: {
-      id,
+      id: rdcSession.id,
       challenge: {
-        audiences,
-        identityId,
-        nonce,
-        payload: tokenPayload,
-        scopes,
+        audiences: rdcSession.audiences,
+        identityId: bearerToken.subject,
+        nonce: rdcSession.nonce,
+        payload: rdcSession.tokenPayload,
+        scopes: rdcSession.scopes,
       },
       session: {
-        expiresIn,
-        factors,
+        expires: rdcSession.expires.toISOString(),
+        factors: rdcSession.factors,
         rdcSessionToken,
-        status,
+        status: rdcSession.status,
       },
       template: {
-        name: templateName!,
-        parameters: templateParameters,
+        name: rdcSession.templateName,
+        parameters: rdcSession.templateParameters,
       },
     },
   };

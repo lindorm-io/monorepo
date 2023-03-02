@@ -5,7 +5,6 @@ import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { randomString } from "@lindorm-io/random";
-import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -94,7 +93,7 @@ export class PhoneCodeStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,

@@ -3,7 +3,6 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { randomNumberAsync } from "../../util";
-import { expiresIn } from "@lindorm-io/expiry";
 import {
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -87,7 +86,7 @@ export class EmailOtpStrategy implements StrategyHandler {
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),

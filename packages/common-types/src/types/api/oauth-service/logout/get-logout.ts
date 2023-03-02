@@ -24,8 +24,7 @@ export type GetLogoutResponse = {
   client: PublicClientInfo;
 
   logoutSession: {
-    expiresAt: string;
-    expiresIn: number;
+    expires: string;
     idTokenHint: string | null;
     identityId: string;
     logoutHint: string | null;

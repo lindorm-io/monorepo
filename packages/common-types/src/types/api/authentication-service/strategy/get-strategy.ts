@@ -4,7 +4,7 @@ import { AuthenticationStrategy, SessionStatus } from "../../../../enums";
 export type GetStrategyRequestParams = StandardRequestParamsWithId;
 
 type ResponseWithData = {
-  expires: Date | string;
+  expires: string;
   strategy: AuthenticationStrategy;
   status: SessionStatus;
 };

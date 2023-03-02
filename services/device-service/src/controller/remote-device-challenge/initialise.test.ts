@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import { createRdcSession as _createRdcSession } from "../../handler";
 import { initialiseRdcController } from "./initialise";
+import { createTestRdcSession } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -23,17 +24,19 @@ describe("initialiseRdcController", () => {
       },
     };
 
-    createRdcSession.mockResolvedValue({
-      id: "rdcSessionId",
-      expiresIn: 1234,
-    });
+    createRdcSession.mockResolvedValue(
+      createTestRdcSession({
+        id: "rdcSessionId",
+        expires: new Date("2021-01-10T08:00:00.000Z"),
+      }),
+    );
   });
 
   test("should resolve with rdc session", async () => {
     await expect(initialiseRdcController(ctx)).resolves.toStrictEqual({
       body: {
         id: "rdcSessionId",
-        expiresIn: 1234,
+        expires: "2021-01-10T08:00:00.000Z",
       },
       status: 202,
     });

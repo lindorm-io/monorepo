@@ -62,8 +62,7 @@ export type GetAuthorizationResponse = {
     authToken: string | null;
     country: string | null;
     displayMode: OpenIdDisplayMode;
-    expiresAt: string;
-    expiresIn: number;
+    expires: string;
     idTokenHint: string | null;
     loginHint: Array<string>;
     maxAge: number | null;

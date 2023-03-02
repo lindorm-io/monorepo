@@ -21,5 +21,5 @@ export type InitialiseRdcSessionRequestBody = {
 
 export type InitialiseRdcSessionResponse = {
   id: string;
-  expiresIn: number;
+  expires: string;
 };

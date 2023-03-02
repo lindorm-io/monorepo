@@ -2,7 +2,6 @@ import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
-import { expiresIn } from "@lindorm-io/expiry";
 import { getRdcBody } from "../../handler";
 import {
   AuthenticationStrategyConfig,
@@ -58,7 +57,7 @@ export class RdcQrCodeStrategy implements StrategyHandler {
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
       displayCode: null,
-      expiresIn: expiresIn(strategySession.expires),
+      expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: "QR_CODE",
       strategySessionToken: null,

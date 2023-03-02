@@ -23,8 +23,7 @@ export type GetElevationResponse = {
     authenticationHint: Array<string>;
     country: string | null;
     displayMode: OpenIdDisplayMode;
-    expiresAt: string;
-    expiresIn: number;
+    expires: string;
     idTokenHint: string | null;
     identityId: string;
     nonce: string;

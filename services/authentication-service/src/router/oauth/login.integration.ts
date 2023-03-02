@@ -2,6 +2,9 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { server } from "../../server/server";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { randomUUID } from "crypto";
+import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   OpenIdDisplayMode,
@@ -12,9 +15,6 @@ import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
 } from "../../fixtures/integration";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
-import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -113,8 +113,7 @@ describe("/oauth/login", () => {
             authToken,
             country: "se",
             displayMode: OpenIdDisplayMode.PAGE,
-            expiresAt: "2022-01-01T04:00:00.000Z",
-            expiresIn: 1800,
+            expires: "2022-01-01T04:00:00.000Z",
             idTokenHint: "id.jwt.jwt",
             loginHint: ["test@lindorm.io"],
             maxAge: 500,

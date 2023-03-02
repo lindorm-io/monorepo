@@ -40,7 +40,7 @@ describe("/enrolments", () => {
 
   nock("https://vault.test.lindorm.io").post("/admin/vault").times(999).reply(201);
 
-  test("POST /", async () => {
+  test("should initialise enrolment session", async () => {
     const accessToken = getTestAccessToken({
       subject: randomUUID(),
     });
@@ -75,12 +75,12 @@ describe("/enrolments", () => {
       certificate_challenge: expect.any(String),
       enrolment_session_id: expect.any(String),
       enrolment_session_token: expect.any(String),
-      expires_in: 900,
+      expires: "2021-01-01T08:15:00.000Z",
       external_challenge_required: false,
     });
   });
 
-  test("POST /:id/confirm", async () => {
+  test("should confirm enrolment session", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(
       createTestEnrolmentSession({
         status: SessionStatus.SKIP,
@@ -123,7 +123,7 @@ describe("/enrolments", () => {
     });
   });
 
-  test("POST /:id/reject", async () => {
+  test("should reject enrolment session", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(createTestEnrolmentSession());
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
       session: session.id,

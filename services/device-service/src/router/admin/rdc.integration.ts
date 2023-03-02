@@ -40,7 +40,7 @@ describe("/admin/rdc", () => {
     .times(999)
     .reply(200, {});
 
-  test("POST /", async () => {
+  test("should initialise rdc session", async () => {
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(await createTestDeviceLink());
 
     await TEST_DEVICE_REPOSITORY.create(
@@ -77,7 +77,7 @@ describe("/admin/rdc", () => {
 
     expect(response.body).toStrictEqual({
       id: expect.any(String),
-      expires_in: 900,
+      expires: "2021-01-01T08:15:00.000Z",
     });
   });
 });

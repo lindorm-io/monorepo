@@ -13,6 +13,6 @@ export type InitialiseChallengeResponse = {
   certificateChallenge: string;
   challengeSessionId: string;
   challengeSessionToken: string;
-  expiresIn: number;
+  expires: string;
   strategies: Array<ChallengeStrategy>;
 };

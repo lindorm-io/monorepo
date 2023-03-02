@@ -83,7 +83,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     });
   }
 
-  const { expiresIn, token: authenticationConfirmationToken } = jwt.sign<
+  const { token: authenticationConfirmationToken, expiresIn } = jwt.sign<
     never,
     AuthenticationConfirmationTokenClaims
   >({
