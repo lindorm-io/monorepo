@@ -112,7 +112,10 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     await deviceLinkRepository.update(deviceLink);
   }
 
-  const { expiresIn, token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
+  const { token: challengeConfirmationToken, expiresIn } = jwt.sign<
+    Record<string, unknown>,
+    ChallengeConfirmationTokenClaims
+  >({
     audiences: flatten([configuration.oauth.client_id, challengeSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
@@ -132,5 +135,5 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
 
   await challengeSessionCache.destroy(challengeSession);
 
-  return { body: { challengeConfirmationToken: token, expiresIn } };
+  return { body: { challengeConfirmationToken, expiresIn } };
 };

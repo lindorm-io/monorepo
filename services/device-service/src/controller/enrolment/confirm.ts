@@ -93,7 +93,10 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     createDeviceLinkCallback(ctx, salt),
   );
 
-  const { expiresIn, token } = jwt.sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
+  const { token: challengeConfirmationToken, expiresIn } = jwt.sign<
+    Record<string, unknown>,
+    ChallengeConfirmationTokenClaims
+  >({
     audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
     claims: {
       deviceLinkId: deviceLink.id,
@@ -114,7 +117,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
 
   return {
     body: {
-      challengeConfirmationToken: token,
+      challengeConfirmationToken,
       deviceLinkId: deviceLink.id,
       expiresIn,
       trusted,
