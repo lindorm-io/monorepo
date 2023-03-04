@@ -37,10 +37,11 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authenticationSessionCache },
+    cache: { authenticationSessionCache, strategySessionCache },
     data: { code, codeVerifier },
     entity: { authenticationSession },
     jwt,
+    logger,
   } = ctx;
 
   if (authenticationSession.status !== SessionStatus.CODE) {
@@ -88,7 +89,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     AuthenticationConfirmationTokenClaims
   >({
     audiences: [authenticationSession.clientId],
-    authContextClass: [`loa_${level}`],
+    authContextClass: `loa_${level}`,
     authMethodsReference,
     authTime: getUnixTime(new Date()),
     claims: {
@@ -112,7 +113,12 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     await generateMfaCookie(ctx, authenticationSession);
   }
 
-  await authenticationSessionCache.destroy(authenticationSession);
+  try {
+    await authenticationSessionCache.destroy(authenticationSession);
+    await strategySessionCache.deleteMany({ authenticationSessionId: authenticationSession.id });
+  } catch (err: any) {
+    logger.warn("Failed to destroy sessions", err);
+  }
 
   return { body: { authenticationConfirmationToken, expiresIn } };
 };

@@ -9,6 +9,7 @@ import {
   calculateLevelOfAssurance as _calculateLevelOfAssurance,
   canGenerateMfaCookie as _canGenerateMfaCookie,
 } from "../../util";
+import { createMockLogger } from "@lindorm-io/core-logger";
 
 jest.mock("@lindorm-io/node-pkce", () => ({
   ...jest.requireActual("@lindorm-io/node-pkce"),
@@ -57,6 +58,7 @@ describe("verifyAuthenticationController", () => {
           token: "jwt.jwt.jwt",
         })),
       },
+      logger: createMockLogger(),
     };
 
     calculateLevelOfAssurance.mockImplementation(() => ({
