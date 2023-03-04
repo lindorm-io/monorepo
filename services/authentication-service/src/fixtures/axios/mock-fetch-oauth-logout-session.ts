@@ -7,15 +7,12 @@ export const mockFetchOauthLogoutSession = (
   logout: {
     status: SessionStatus.PENDING,
 
-    accessSession: {
-      id: randomUUID(),
-    },
     browserSession: {
       id: randomUUID(),
       connectedSessions: 3,
     },
-    refreshSession: {
-      id: null,
+    clientSession: {
+      id: randomUUID(),
     },
   },
 

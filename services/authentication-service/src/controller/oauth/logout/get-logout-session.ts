@@ -10,14 +10,11 @@ type RequestData = {
 
 type ResponseBody = {
   status: SessionStatus;
-  accessSession: {
-    id: string | null;
-  };
   browserSession: {
     id: string;
     connectedSessions: number;
   };
-  refreshSession: {
+  clientSession: {
     id: string | null;
   };
   client: PublicClientInfo;
@@ -37,16 +34,15 @@ export const getLogoutSessionController: ServerKoaController<RequestData> = asyn
   } = ctx;
 
   const {
-    logout: { status, accessSession, browserSession, refreshSession },
+    logout: { status, browserSession, clientSession },
     client,
   } = await getOauthLogoutSession(ctx, id);
 
   return {
     body: {
       status,
-      accessSession,
       browserSession,
-      refreshSession,
+      clientSession,
       client,
     },
   };

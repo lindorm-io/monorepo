@@ -43,16 +43,6 @@ export const mockFetchOauthAuthorizationSession = (
     sessions: [{ selectId: randomUUID(), identityId: randomUUID() }],
   },
 
-  accessSession: {
-    adjustedAccessLevel: 3,
-    audiences: [randomUUID()],
-    identityId: randomUUID(),
-    latestAuthentication: new Date().toISOString(),
-    levelOfAssurance: 2,
-    methods: [AuthenticationMethod.EMAIL],
-    scopes: Object.values(OpenIdScope),
-  },
-
   authorizationSession: {
     authToken: null,
     country: "se",
@@ -89,7 +79,7 @@ export const mockFetchOauthAuthorizationSession = (
     type: OpenIdClientType.PUBLIC,
   },
 
-  refreshSession: {
+  clientSession: {
     adjustedAccessLevel: 3,
     audiences: [randomUUID()],
     identityId: randomUUID(),

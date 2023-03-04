@@ -20,9 +20,6 @@ describe("getLogoutSessionDataController", () => {
   test("should resolve", async () => {
     await expect(getLogoutSessionController(ctx)).resolves.toStrictEqual({
       body: {
-        accessSession: {
-          id: expect.any(String),
-        },
         browserSession: {
           connectedSessions: 3,
           id: expect.any(String),
@@ -33,8 +30,8 @@ describe("getLogoutSessionDataController", () => {
           tenant: "Test Tenant",
           type: "public",
         },
-        refreshSession: {
-          id: null,
+        clientSession: {
+          id: expect.any(String),
         },
         status: "pending",
       },

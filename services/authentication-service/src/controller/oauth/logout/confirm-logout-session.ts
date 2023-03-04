@@ -15,9 +15,8 @@ type ResponseBody = ConfirmLogoutResponse;
 export const confirmLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    accessSessionId: Joi.string().guid(),
     browserSessionId: Joi.string().guid(),
-    refreshSessionId: Joi.string().guid(),
+    clientSessionId: Joi.string().guid(),
   })
   .required();
 
@@ -25,13 +24,12 @@ export const confirmLogoutSessionController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { id, accessSessionId, browserSessionId, refreshSessionId },
+    data: { id, browserSessionId, clientSessionId },
   } = ctx;
 
   const { redirectTo } = await confirmOauthLogout(ctx, id, {
-    accessSessionId,
     browserSessionId,
-    refreshSessionId,
+    clientSessionId,
   });
 
   return { body: { redirectTo } };

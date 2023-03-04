@@ -70,15 +70,12 @@ describe("/oauth/logout", () => {
           logout: {
             status: SessionStatus.CONFIRMED,
 
-            accessSession: {
-              id: randomUUID(),
-            },
             browserSession: {
               id: randomUUID(),
               connectedSessions: 3,
             },
-            refreshSession: {
-              id: null,
+            clientSession: {
+              id: randomUUID(),
             },
           },
         }),

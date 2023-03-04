@@ -54,9 +54,6 @@ describe("/sessions/logout", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      access_session: {
-        id: expect.any(String),
-      },
       browser_session: {
         connected_sessions: 3,
         id: expect.any(String),
@@ -67,8 +64,8 @@ describe("/sessions/logout", () => {
         tenant: "Test Tenant",
         type: "public",
       },
-      refresh_session: {
-        id: null,
+      client_session: {
+        id: expect.any(String),
       },
       status: "pending",
     });

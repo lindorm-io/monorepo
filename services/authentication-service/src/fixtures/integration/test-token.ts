@@ -37,7 +37,7 @@ export const getTestAuthenticationConfirmationToken = (
     issuer: configuration.server.issuer,
   }).sign({
     audiences: [configuration.oauth.client_id],
-    authContextClass: ["loa_3"],
+    authContextClass: "loa_3",
     authMethodsReference: ["email_otp", "device_challenge"],
     authTime: getUnixTime(new Date()),
     claims: {
