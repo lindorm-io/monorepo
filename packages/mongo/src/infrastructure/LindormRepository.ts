@@ -215,8 +215,10 @@ export abstract class LindormRepository<
       return this.createEntity(result as unknown as Interface);
     } catch (err: any) {
       this.logger.silly("Mongo error", err);
+
       throw new EntityNotFoundError("Unable to find entity", {
         error: err,
+        debug: { filter, options },
       });
     }
   }
