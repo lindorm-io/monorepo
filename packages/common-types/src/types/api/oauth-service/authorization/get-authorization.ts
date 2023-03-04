@@ -48,16 +48,6 @@ export type GetAuthorizationResponse = {
     sessions: Array<SelectAccountSession>;
   };
 
-  accessSession: {
-    adjustedAccessLevel: AdjustedAccessLevel;
-    audiences: Array<string>;
-    identityId: string | null;
-    latestAuthentication: string | null;
-    levelOfAssurance: LevelOfAssurance;
-    methods: Array<AuthenticationMethod>;
-    scopes: Array<OpenIdScope | LindormScope>;
-  };
-
   authorizationSession: {
     authToken: string | null;
     country: string | null;
@@ -85,7 +75,7 @@ export type GetAuthorizationResponse = {
 
   client: PublicClientInfo;
 
-  refreshSession: {
+  clientSession: {
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
     identityId: string | null;

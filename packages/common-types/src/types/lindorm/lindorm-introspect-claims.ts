@@ -1,0 +1,13 @@
+import { AdjustedAccessLevel, LevelOfAssurance } from "../auth";
+import { OpenIdIntrospectResponseBody } from "../open-id";
+
+export type LindormIntrospectResponseBody = OpenIdIntrospectResponseBody & {
+  aal: AdjustedAccessLevel;
+  acr: string | null;
+  amr: Array<string>;
+  authTime: number | null;
+  azp: string | null;
+  loa: LevelOfAssurance;
+  sid: string | null;
+  tid: string | null;
+};

@@ -9,14 +9,11 @@ export type GetLogoutResponse = {
   logout: {
     status: SessionStatus;
 
-    accessSession: {
-      id: string | null;
-    };
     browserSession: {
       id: string;
       connectedSessions: number;
     };
-    refreshSession: {
+    clientSession: {
       id: string | null;
     };
   };
