@@ -48,7 +48,7 @@ export class JWT {
   ): JwtSignData {
     const id = options.id || randomUUID();
 
-    const { expires, expiresIn, expiresUnix, now, nowUnix } = expiryObject(options.expiry);
+    const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
 
     this.logger.debug("sign token", {
       options,
@@ -58,7 +58,7 @@ export class JWT {
       // required claims
       aud: options.audiences,
       exp: expiresUnix,
-      iat: nowUnix,
+      iat: getUnixTime(options.issuedAt || now),
       iss: this.issuer,
       jti: id,
       nbf: getUnixTime(options.notBefore || now),
@@ -247,7 +247,7 @@ export class JWT {
       active: iat <= now && nbf <= now && exp >= now,
       adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
       audiences: aud,
-      authContextClass: acr || [],
+      authContextClass: acr || null,
       authMethodsReference: amr || [],
       authTime: auth_time || null,
       authorizedParty: azp || null,

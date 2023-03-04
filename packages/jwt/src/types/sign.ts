@@ -6,13 +6,14 @@ export type JwtSignOptions<Payload = never, Claims = never> = {
   id?: string;
   adjustedAccessLevel?: AdjustedAccessLevel;
   audiences: Array<string>;
-  authContextClass?: Array<string>;
+  authContextClass?: string;
   authMethodsReference?: Array<string>;
   authTime?: number;
   authorizedParty?: string;
   claims?: Claims;
   client?: string;
   expiry: Expiry;
+  issuedAt?: Date;
   keyType?: KeyType;
   levelOfAssurance?: LevelOfAssurance;
   nonce?: string;

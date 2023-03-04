@@ -5,7 +5,7 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   active: boolean;
   adjustedAccessLevel: AdjustedAccessLevel;
   audiences: Array<string>;
-  authContextClass: Array<string>;
+  authContextClass: string | null;
   authMethodsReference: Array<string>;
   authTime: number | null;
   authorizedParty: string | null;
