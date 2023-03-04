@@ -3,23 +3,21 @@ import request from "supertest";
 import { configuration } from "../../server/configuration";
 import { randomUUID } from "crypto";
 import { server } from "../../server/server";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
   createTestTenant,
 } from "../../fixtures/entity";
 import {
   getTestClientCredentials,
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
   TEST_TENANT_REPOSITORY,
 } from "../../fixtures/integration";
-import { OpenIdClientType } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -65,26 +63,8 @@ describe("/admin/identities", () => {
       }),
     );
 
-    const access1 = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
-        clientId: client1.id,
-        browserSessionId: browser1.id,
-        identityId,
-        levelOfAssurance: 3,
-      }),
-    );
-
-    const access2 = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
-        clientId: client2.id,
-        browserSessionId: browser1.id,
-        identityId,
-        levelOfAssurance: 4,
-      }),
-    );
-
-    const refresh1 = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const refresh1 = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client1.id,
         browserSessionId: browser1.id,
         identityId,
@@ -92,8 +72,8 @@ describe("/admin/identities", () => {
       }),
     );
 
-    const refresh2 = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const refresh2 = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client2.id,
         browserSessionId: browser2.id,
         identityId,
@@ -145,44 +125,6 @@ describe("/admin/identities", () => {
           metadata: {
             device_name: "Test Device",
             ip: "10.0.0.1",
-            platform: "iOS",
-          },
-        },
-        {
-          adjusted_access_level: 3,
-          id: access1.id,
-          latest_authentication: "2021-01-01T07:59:00.000Z",
-          level_of_assurance: 3,
-          methods: ["email", "phone"],
-          scopes: ["openid", "profile"],
-          type: "access",
-          client: {
-            logo_uri: "https://logo.uri/logo",
-            name: "ClientName",
-            tenant: "TenantName",
-            type: "confidential",
-          },
-          metadata: {
-            ip: "192.168.0.1",
-            platform: "iOS",
-          },
-        },
-        {
-          adjusted_access_level: 4,
-          id: access2.id,
-          latest_authentication: "2021-01-01T07:59:00.000Z",
-          level_of_assurance: 4,
-          methods: ["email", "phone"],
-          scopes: ["openid", "profile"],
-          type: "access",
-          client: {
-            logo_uri: "https://logo.uri/logo",
-            name: "ClientName",
-            tenant: "TenantName",
-            type: "public",
-          },
-          metadata: {
-            ip: "192.168.0.1",
             platform: "iOS",
           },
         },

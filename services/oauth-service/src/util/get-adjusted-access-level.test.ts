@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getAdjustedAccessLevel } from "./get-adjusted-access-level";
-import { createTestRefreshSession } from "../fixtures/entity";
+import { createTestClientSession } from "../fixtures/entity";
 
 describe("getAdjustedAccessLevel", () => {
   test("should not adjust", () => {
@@ -8,7 +8,7 @@ describe("getAdjustedAccessLevel", () => {
 
     expect(
       getAdjustedAccessLevel(
-        createTestRefreshSession({
+        createTestClientSession({
           levelOfAssurance: 4,
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         }),
@@ -21,7 +21,7 @@ describe("getAdjustedAccessLevel", () => {
 
     expect(
       getAdjustedAccessLevel(
-        createTestRefreshSession({
+        createTestClientSession({
           levelOfAssurance: 4,
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         }),
@@ -34,7 +34,7 @@ describe("getAdjustedAccessLevel", () => {
 
     expect(
       getAdjustedAccessLevel(
-        createTestRefreshSession({
+        createTestClientSession({
           levelOfAssurance: 4,
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         }),
@@ -47,7 +47,7 @@ describe("getAdjustedAccessLevel", () => {
 
     expect(
       getAdjustedAccessLevel(
-        createTestRefreshSession({
+        createTestClientSession({
           levelOfAssurance: 4,
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         }),
@@ -60,7 +60,7 @@ describe("getAdjustedAccessLevel", () => {
 
     expect(
       getAdjustedAccessLevel(
-        createTestRefreshSession({
+        createTestClientSession({
           levelOfAssurance: 4,
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         }),

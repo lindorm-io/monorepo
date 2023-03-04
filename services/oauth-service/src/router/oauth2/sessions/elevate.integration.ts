@@ -1,28 +1,27 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { SessionHint } from "../../../enum";
 import { configuration } from "../../../server/configuration";
 import { getTestData } from "../../../fixtures/data";
 import { randomString } from "@lindorm-io/random";
 import { server } from "../../../server/server";
+import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
+import { ClientSessionType } from "../../../enum";
 import {
-  createTestAccessSession,
+  createTestAccessToken,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestElevationSession,
-  createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
-  getTestAccessToken,
   getTestIdToken,
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
-  TEST_REFRESH_SESSION_REPOSITORY,
+  TEST_OPAQUE_TOKEN_CACHE,
 } from "../../../fixtures/integration";
-import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -32,25 +31,24 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/sessions/elevate", () => {
   beforeAll(setupIntegration);
 
-  test("should resolve initialised elevation with id token for browser session", async () => {
+  test("should resolve initialised elevation with redirect", async () => {
     const { state } = getTestData();
 
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client.id,
         browserSessionId: browserSession.id,
         identityId: browserSession.identityId,
       }),
     );
 
-    const accessToken = getTestAccessToken({
-      client: client.id,
-      session: accessSession.id,
-      sessionHint: SessionHint.ACCESS,
-      subject: accessSession.identityId,
-    });
+    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+      createTestAccessToken({
+        clientSessionId: clientSession.id,
+      }),
+    );
 
     const idToken = getTestIdToken({
       audiences: [configuration.oauth.client_id],
@@ -60,9 +58,9 @@ describe("/oauth2/sessions/elevate", () => {
         username: "identity_username",
       },
       client: client.id,
-      session: accessSession.id,
-      sessionHint: SessionHint.ACCESS,
-      subject: accessSession.identityId,
+      session: clientSession.id,
+      sessionHint: ClientSessionType.EPHEMERAL,
+      subject: clientSession.identityId,
     });
 
     const response = await request(server.callback())
@@ -75,7 +73,7 @@ describe("/oauth2/sessions/elevate", () => {
         methods: "password totp",
         ui_locales: "sv-SE en-GB",
       })
-      .set("Authorization", `Bearer ${accessToken}`)
+      .set("Authorization", `Bearer ${accessToken.token}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
@@ -94,10 +92,10 @@ describe("/oauth2/sessions/elevate", () => {
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        accessSessionId: accessSession.id,
         authenticationHint: ["+46705498721", "email@lindorm.io", "identity_username"],
         browserSessionId: browserSession.id,
         clientId: client.id,
+        clientSessionId: clientSession.id,
         confirmedAuthentication: {
           latestAuthentication: null,
           levelOfAssurance: 0,
@@ -107,10 +105,9 @@ describe("/oauth2/sessions/elevate", () => {
         displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: idToken,
-        identityId: accessSession.identityId,
+        identityId: clientSession.identityId,
         nonce: expect.any(String),
         redirectUri: "https://test.client.lindorm.io/redirect",
-        refreshSessionId: null,
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 3,
@@ -125,27 +122,26 @@ describe("/oauth2/sessions/elevate", () => {
     );
   });
 
-  test("should resolve initialised elevation with request body for refresh session", async () => {
+  test("should resolve initialised elevation with body", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId: browserSession.identityId,
       }),
     );
 
-    const accessToken = getTestAccessToken({
-      client: client.id,
-      session: refreshSession.id,
-      sessionHint: SessionHint.REFRESH,
-      subject: refreshSession.identityId,
-    });
+    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+      createTestAccessToken({
+        clientSessionId: clientSession.id,
+      }),
+    );
 
     const response = await request(server.callback())
       .post("/oauth2/sessions/elevate")
-      .set("Authorization", `Bearer ${accessToken}`)
+      .set("Authorization", `Bearer ${accessToken.token}`)
       .send({
         authentication_hint: ["email@lindorm.io"],
         client_id: client.id,
@@ -165,10 +161,10 @@ describe("/oauth2/sessions/elevate", () => {
       TEST_ELEVATION_SESSION_CACHE.find({ id: response.body.elevation_session_id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        accessSessionId: null,
         authenticationHint: ["email@lindorm.io"],
-        browserSessionId: null,
+        browserSessionId: browserSession.id,
         clientId: client.id,
+        clientSessionId: clientSession.id,
         confirmedAuthentication: {
           latestAuthentication: null,
           levelOfAssurance: 0,
@@ -178,10 +174,9 @@ describe("/oauth2/sessions/elevate", () => {
         displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: null,
-        identityId: refreshSession.identityId,
+        identityId: clientSession.identityId,
         nonce: "QxEQ4H21R-gslTwr",
         redirectUri: null,
-        refreshSessionId: refreshSession.id,
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 1,
@@ -199,11 +194,17 @@ describe("/oauth2/sessions/elevate", () => {
   test("should resolve verified elevation session", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client.id,
         browserSessionId: browserSession.id,
         identityId: browserSession.identityId,
+      }),
+    );
+
+    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+      createTestAccessToken({
+        clientSessionId: clientSession.id,
       }),
     );
 
@@ -222,27 +223,19 @@ describe("/oauth2/sessions/elevate", () => {
           requiredMethods: [AuthenticationMethod.BANK_ID_SE],
         },
 
-        accessSessionId: accessSession.id,
         browserSessionId: browserSession.id,
-        refreshSessionId: null,
+        clientSessionId: clientSession.id,
 
-        identityId: accessSession.identityId,
+        identityId: clientSession.identityId,
         redirectUri: "https://test.client.lindorm.io/redirect",
         state: randomString(16),
         status: SessionStatus.CONFIRMED,
       }),
     );
 
-    const accessToken = getTestAccessToken({
-      client: client.id,
-      session: accessSession.id,
-      sessionHint: SessionHint.REFRESH,
-      subject: accessSession.identityId,
-    });
-
     const response = await request(server.callback())
       .get("/oauth2/sessions/elevate/verify")
-      .set("Authorization", `Bearer ${accessToken}`)
+      .set("Authorization", `Bearer ${accessToken.token}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])

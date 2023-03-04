@@ -9,11 +9,10 @@ import {
   createLogoutPendingUri as _createLogoutPendingUri,
 } from "../../util";
 import {
-  createTestClient,
   createTestBrowserSession,
+  createTestClient,
+  createTestClientSession,
   createTestLogoutSession,
-  createTestAccessSession,
-  createTestRefreshSession,
 } from "../../fixtures/entity";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
@@ -42,9 +41,8 @@ describe("oauthLogoutController", () => {
         state: "76d3d90c16bee315",
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
         clientRepository: createMockRepository(createTestClient),
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
       },
       request: {
         originalUrl: "/oauth2/sessions/logout?query=query",
@@ -67,15 +65,8 @@ describe("oauthLogoutController", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.accessSessionRepository.tryFind.mockResolvedValue(
-      createTestAccessSession({
-        id: "946b598c-6873-4a95-b987-230380afa3ff",
-        clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
-        browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
-      }),
-    );
-    ctx.repository.refreshSessionRepository.tryFind.mockResolvedValue(
-      createTestRefreshSession({
+    ctx.repository.clientSessionRepository.tryFind.mockResolvedValue(
+      createTestClientSession({
         id: "078de016-11e5-4d65-9976-4c0f3aa1125b",
         clientId: "04878ee1-7617-4290-a3b4-c4fed4b1a836",
         browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
@@ -91,9 +82,8 @@ describe("oauthLogoutController", () => {
       expect.objectContaining({
         clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
         confirmedLogout: {
-          accessSessionId: null,
           browserSessionId: null,
-          refreshSessionId: null,
+          clientSessionId: null,
         },
         created: expect.any(Date),
         expires: new Date("2022-01-01T08:01:00.000Z"),
@@ -103,9 +93,8 @@ describe("oauthLogoutController", () => {
         originalUri: "https://oauth.test.lindorm.io/oauth2/sessions/logout?query=query",
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
-          accessSessionId: "946b598c-6873-4a95-b987-230380afa3ff",
           browserSessionId: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",
-          refreshSessionId: "078de016-11e5-4d65-9976-4c0f3aa1125b",
+          clientSessionId: "078de016-11e5-4d65-9976-4c0f3aa1125b",
         },
         state: "76d3d90c16bee315",
         status: "pending",

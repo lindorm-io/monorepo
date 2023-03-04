@@ -4,11 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { SessionStatus, VerifyElevationRequestQuery } from "@lindorm-io/common-types";
 import { createURL } from "@lindorm-io/url";
-import {
-  updateAccessSessionElevation,
-  updateBrowserSessionElevation,
-  updateRefreshSessionElevation,
-} from "../../handler";
+import { updateBrowserSessionElevation, updateClientSessionElevation } from "../../handler";
 
 type RequestData = VerifyElevationRequestQuery;
 
@@ -36,17 +32,8 @@ export const verifyElevationController: ServerKoaController<RequestData> = async
     });
   }
 
-  if (elevationSession.accessSessionId) {
-    await updateAccessSessionElevation(ctx, elevationSession);
-  }
-
-  if (elevationSession.browserSessionId) {
-    await updateBrowserSessionElevation(ctx, elevationSession);
-  }
-
-  if (elevationSession.refreshSessionId) {
-    await updateRefreshSessionElevation(ctx, elevationSession);
-  }
+  await updateBrowserSessionElevation(ctx, elevationSession);
+  await updateClientSessionElevation(ctx, elevationSession);
 
   await elevationSessionCache.destroy(elevationSession);
 

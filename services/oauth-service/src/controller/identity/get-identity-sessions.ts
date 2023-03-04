@@ -1,12 +1,9 @@
 import Joi from "joi";
-import { AccessSession, RefreshSession } from "../../entity";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
-import { SessionHint } from "../../enum";
-import { flatten, orderBy } from "lodash";
+import { orderBy } from "lodash";
 import { getAdjustedAccessLevel } from "../../util";
-import { isAfter } from "date-fns";
 
 type RequestData = {
   id: string;
@@ -25,24 +22,15 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { id: identityId },
-    repository: {
-      accessSessionRepository,
-      clientRepository,
-      refreshSessionRepository,
-      tenantRepository,
-    },
+    repository: { clientRepository, clientSessionRepository, tenantRepository },
   } = ctx;
 
   const sessions: Array<IdentitySessionItem> = [];
 
-  const accessSessions = await accessSessionRepository.findMany({ identityId });
-  const refreshSessions = await refreshSessionRepository.findMany({ identityId });
+  const clientSessions = await clientSessionRepository.findMany({ identityId });
 
-  const array = flatten<AccessSession | RefreshSession>([accessSessions, refreshSessions]);
-
-  for (const session of array) {
+  for (const session of clientSessions) {
     if (session.levelOfAssurance === 0) continue;
-    if (session instanceof RefreshSession && isAfter(new Date(), session.expires)) continue;
 
     const client = await clientRepository.find({ id: session.clientId });
     const tenant = await tenantRepository.find({ id: client.tenantId });
@@ -61,7 +49,7 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
       metadata: session.metadata,
       methods: session.methods,
       scopes: session.scopes,
-      type: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
+      type: session.type,
     });
   }
 

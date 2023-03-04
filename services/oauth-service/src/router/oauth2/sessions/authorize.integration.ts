@@ -6,19 +6,17 @@ import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { server } from "../../../server/server";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../../fixtures/entity";
 import {
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 import {
   AuthenticationMethod,
@@ -50,8 +48,8 @@ describe("/oauth2/sessions/authorize", () => {
   test("should resolve redirect with query", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         audiences: [configuration.oauth.client_id, client.id],
         browserSessionId: browserSession.id,
         clientId: client.id,
@@ -70,15 +68,14 @@ describe("/oauth2/sessions/authorize", () => {
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
         clientId: client.id,
-        accessSessionId: accessSession.id,
+        clientSessionId: clientSession.id,
         browserSessionId: browserSession.id,
-        refreshSessionId: null,
         confirmedConsent: {
           audiences: [client.id],
           scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
-          identityId: accessSession.identityId,
+          identityId: clientSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
           metadata: {},
@@ -136,8 +133,8 @@ describe("/oauth2/sessions/authorize", () => {
   test("should resolve redirect with form post", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         audiences: [configuration.oauth.client_id, client.id],
         browserSessionId: browserSession.id,
         clientId: client.id,
@@ -156,15 +153,14 @@ describe("/oauth2/sessions/authorize", () => {
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
         clientId: client.id,
-        accessSessionId: null,
         browserSessionId: browserSession.id,
-        refreshSessionId: refreshSession.id,
+        clientSessionId: clientSession.id,
         confirmedConsent: {
           audiences: [client.id],
           scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
-          identityId: refreshSession.identityId,
+          identityId: clientSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
           metadata: {},

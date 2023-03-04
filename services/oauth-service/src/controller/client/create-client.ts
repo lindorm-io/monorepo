@@ -77,6 +77,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
       description,
       host,
       name,
+      opaque: false,
       secret: await argon.encrypt(secret),
       tenantId: tenant.id,
       type: OpenIdClientType.PUBLIC,

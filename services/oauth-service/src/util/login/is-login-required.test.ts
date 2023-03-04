@@ -1,14 +1,13 @@
 import MockDate from "mockdate";
-import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { isLoginRequired } from "./is-login-required";
 import { isNewLoginRequired as _isNewLoginRequired } from "./is-new-login-required";
+import { AuthenticationMethod, OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../fixtures/entity";
-import { AuthenticationMethod, OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,9 +17,8 @@ const isNewLoginRequired = _isNewLoginRequired as jest.Mock;
 
 describe("isLoginRequired", () => {
   let authorizationSession: AuthorizationSession;
-  let accessSession: AccessSession;
   let browserSession: BrowserSession;
-  let refreshSession: RefreshSession;
+  let clientSession: ClientSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
@@ -35,13 +33,6 @@ describe("isLoginRequired", () => {
       promptModes: [],
     });
 
-    accessSession = createTestAccessSession({
-      methods: [AuthenticationMethod.EMAIL],
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 4,
-    });
-
     browserSession = createTestBrowserSession({
       methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -49,7 +40,7 @@ describe("isLoginRequired", () => {
       levelOfAssurance: 4,
     });
 
-    refreshSession = createTestRefreshSession({
+    clientSession = createTestClientSession({
       methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
@@ -62,9 +53,7 @@ describe("isLoginRequired", () => {
   afterEach(jest.resetAllMocks);
 
   test("should not require", () => {
-    expect(
-      isLoginRequired(authorizationSession, browserSession, accessSession, refreshSession),
-    ).toBe(false);
+    expect(isLoginRequired(authorizationSession, browserSession, clientSession)).toBe(false);
   });
 
   test("should not require on confirmed", () => {
@@ -92,10 +81,7 @@ describe("isLoginRequired", () => {
   });
 
   test("should require on sso not enabled", () => {
-    isNewLoginRequired
-      .mockImplementationOnce(() => true)
-      .mockImplementationOnce(() => false)
-      .mockImplementationOnce(() => true);
+    isNewLoginRequired.mockImplementationOnce(() => false).mockImplementationOnce(() => true);
 
     browserSession.sso = false;
 

@@ -2,24 +2,22 @@ import { ClientError } from "@lindorm-io/errors";
 import { createTestClient, createTestLogoutSession } from "../../fixtures/entity";
 import { randomUUID } from "crypto";
 import { verifyLogoutController } from "./verify-logout";
+import { SessionStatus } from "@lindorm-io/common-types";
 import {
-  handleAccessSessionLogout as _handleAccessSessionLogout,
   handleBrowserSessionLogout as _handleBrowserSessionLogout,
-  handleRefreshSessionLogout as _handleRefreshSessionLogout,
+  handleClientSessionLogout as _handleClientSessionLogout,
 } from "../../handler";
 import {
   createLogoutPendingUri as _createLogoutPendingUri,
   createLogoutRedirectUri as _createLogoutRedirectUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
 } from "../../util";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("../../handler");
 jest.mock("../../util");
 
-const handleAccessSessionLogout = _handleAccessSessionLogout as jest.Mock;
 const handleBrowserSessionLogout = _handleBrowserSessionLogout as jest.Mock;
-const handleRefreshSessionLogout = _handleRefreshSessionLogout as jest.Mock;
+const handleClientSessionLogout = _handleClientSessionLogout as jest.Mock;
 
 const createLogoutPendingUri = _createLogoutPendingUri as jest.Mock;
 const createLogoutRedirectUri = _createLogoutRedirectUri as jest.Mock;
@@ -37,8 +35,7 @@ describe("oauthVerifyLogoutController", () => {
         client: createTestClient(),
         logoutSession: createTestLogoutSession({
           confirmedLogout: {
-            accessSessionId: randomUUID(),
-            refreshSessionId: randomUUID(),
+            clientSessionId: randomUUID(),
             browserSessionId: randomUUID(),
           },
           status: SessionStatus.CONFIRMED,
@@ -49,9 +46,8 @@ describe("oauthVerifyLogoutController", () => {
       },
     };
 
-    handleAccessSessionLogout.mockResolvedValue(undefined);
     handleBrowserSessionLogout.mockResolvedValue(undefined);
-    handleRefreshSessionLogout.mockResolvedValue(undefined);
+    handleClientSessionLogout.mockResolvedValue(undefined);
 
     createLogoutPendingUri.mockImplementation(() => "createLogoutPendingUri");
     createLogoutRedirectUri.mockImplementation(() => "createLogoutRedirectUri");
@@ -65,9 +61,8 @@ describe("oauthVerifyLogoutController", () => {
       redirect: "createLogoutRedirectUri",
     });
 
-    expect(handleAccessSessionLogout).toHaveBeenCalled();
     expect(handleBrowserSessionLogout).toHaveBeenCalled();
-    expect(handleRefreshSessionLogout).toHaveBeenCalled();
+    expect(handleClientSessionLogout).toHaveBeenCalled();
   });
 
   test("should resolve pending logout redirect", async () => {

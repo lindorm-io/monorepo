@@ -6,20 +6,18 @@ import { configuration } from "../../../server/configuration";
 import { getTestData } from "../../../fixtures/data";
 import { server } from "../../../server/server";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestLogoutSession,
-  createTestRefreshSession,
 } from "../../../fixtures/entity";
 import {
   getTestIdToken,
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
-  TEST_REFRESH_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -37,8 +35,8 @@ describe("/oauth2/sessions/logout", () => {
 
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId: browserSession.identityId,
@@ -48,8 +46,8 @@ describe("/oauth2/sessions/logout", () => {
     const idToken = getTestIdToken({
       audiences: [configuration.oauth.client_id, client.id],
       client: client.id,
-      session: accessSession.id,
-      subject: accessSession.identityId,
+      session: clientSession.id,
+      subject: clientSession.identityId,
     });
 
     const response = await request(server.callback())
@@ -80,20 +78,18 @@ describe("/oauth2/sessions/logout", () => {
       expect.objectContaining({
         clientId: client.id,
         confirmedLogout: {
-          accessSessionId: null,
           browserSessionId: null,
-          refreshSessionId: null,
+          clientSessionId: null,
         },
         expires: new Date("2021-01-01T08:01:00.000Z"),
         idTokenHint: idToken,
-        identityId: accessSession.identityId,
+        identityId: clientSession.identityId,
         logoutHint: "logout-hint",
         originalUri: expect.any(String),
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
-          accessSessionId: accessSession.id,
           browserSessionId: browserSession.id,
-          refreshSessionId: null,
+          clientSessionId: clientSession.id,
         },
         state: state,
         status: "pending",
@@ -102,13 +98,13 @@ describe("/oauth2/sessions/logout", () => {
     );
   });
 
-  test("should create logout session for refresh", async () => {
+  test("should create logout session for client", async () => {
     const { state } = getTestData();
 
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId: browserSession.identityId,
@@ -118,8 +114,8 @@ describe("/oauth2/sessions/logout", () => {
     const idToken = getTestIdToken({
       audiences: [configuration.oauth.client_id, client.id],
       client: client.id,
-      session: refreshSession.id,
-      subject: refreshSession.identityId,
+      session: clientSession.id,
+      subject: clientSession.identityId,
     });
 
     const response = await request(server.callback())
@@ -150,20 +146,18 @@ describe("/oauth2/sessions/logout", () => {
       expect.objectContaining({
         clientId: client.id,
         confirmedLogout: {
-          accessSessionId: null,
           browserSessionId: null,
-          refreshSessionId: null,
+          clientSessionId: null,
         },
         expires: new Date("2021-01-01T08:01:00.000Z"),
         idTokenHint: idToken,
-        identityId: refreshSession.identityId,
+        identityId: clientSession.identityId,
         logoutHint: "logout-hint",
         originalUri: expect.any(String),
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
         requestedLogout: {
-          accessSessionId: null,
           browserSessionId: browserSession.id,
-          refreshSessionId: refreshSession.id,
+          clientSessionId: clientSession.id,
         },
         state: state,
         status: "pending",
@@ -172,18 +166,11 @@ describe("/oauth2/sessions/logout", () => {
     );
   });
 
-  test("should logout refresh session", async () => {
+  test("should logout client session", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
-        browserSessionId: browserSession.id,
-        clientId: client.id,
-        identityId: browserSession.identityId,
-      }),
-    );
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         identityId: browserSession.identityId,
@@ -193,9 +180,8 @@ describe("/oauth2/sessions/logout", () => {
       createTestLogoutSession({
         clientId: client.id,
         confirmedLogout: {
-          accessSessionId: accessSession.id,
           browserSessionId: browserSession.id,
-          refreshSessionId: refreshSession.id,
+          clientSessionId: clientSession.id,
         },
         identityId: browserSession.identityId,
         status: SessionStatus.CONFIRMED,

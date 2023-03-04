@@ -24,36 +24,20 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { authorizationSession, client, tenant },
-    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
+    repository: { browserSessionRepository, clientSessionRepository },
   } = ctx;
-
-  const accessSession = authorizationSession.accessSessionId
-    ? await accessSessionRepository.tryFind({ id: authorizationSession.accessSessionId })
-    : undefined;
 
   const browserSession = authorizationSession.browserSessionId
     ? await browserSessionRepository.tryFind({ id: authorizationSession.browserSessionId })
     : undefined;
 
-  const refreshSession = authorizationSession.refreshSessionId
-    ? await refreshSessionRepository.tryFind({ id: authorizationSession.refreshSessionId })
+  const clientSession = authorizationSession.clientSessionId
+    ? await clientSessionRepository.tryFind({ id: authorizationSession.clientSessionId })
     : undefined;
 
-  const consentRequired = isConsentRequired(
-    authorizationSession,
-    browserSession,
-    accessSession,
-    refreshSession,
-  );
-
-  const loginRequired = isLoginRequired(
-    authorizationSession,
-    browserSession,
-    accessSession,
-    refreshSession,
-  );
-
   const selectAccountRequired = isSelectAccountRequired(authorizationSession);
+  const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
+  const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
 
   return {
     body: {
@@ -91,16 +75,6 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         })),
       },
 
-      accessSession: {
-        methods: accessSession?.methods || [],
-        adjustedAccessLevel: accessSession ? getAdjustedAccessLevel(accessSession) : 0,
-        audiences: accessSession?.audiences || [],
-        identityId: accessSession?.identityId || null,
-        latestAuthentication: accessSession?.latestAuthentication.toISOString() || null,
-        levelOfAssurance: accessSession?.levelOfAssurance || 0,
-        scopes: accessSession?.scopes || [],
-      },
-
       authorizationSession: {
         authToken: authorizationSession.authToken,
         country: authorizationSession.country,
@@ -133,14 +107,14 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         tenant: tenant.name,
       },
 
-      refreshSession: {
-        adjustedAccessLevel: refreshSession ? getAdjustedAccessLevel(refreshSession) : 0,
-        audiences: refreshSession?.audiences || [],
-        identityId: refreshSession?.identityId || null,
-        latestAuthentication: refreshSession?.latestAuthentication.toISOString() || null,
-        levelOfAssurance: refreshSession?.levelOfAssurance || 0,
-        methods: refreshSession?.methods || [],
-        scopes: refreshSession?.scopes || [],
+      clientSession: {
+        adjustedAccessLevel: clientSession ? getAdjustedAccessLevel(clientSession) : 0,
+        audiences: clientSession?.audiences || [],
+        identityId: clientSession?.identityId || null,
+        latestAuthentication: clientSession?.latestAuthentication.toISOString() || null,
+        levelOfAssurance: clientSession?.levelOfAssurance || 0,
+        methods: clientSession?.methods || [],
+        scopes: clientSession?.scopes || [],
       },
     },
   };

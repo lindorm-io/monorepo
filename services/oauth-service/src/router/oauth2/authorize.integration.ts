@@ -77,10 +77,10 @@ describe("/oauth2/authorize", () => {
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        accessSessionId: null,
         authToken: "auth.jwt.jwt",
         browserSessionId: null,
         clientId: client.id,
+        clientSessionId: null,
         code: {
           codeChallenge: codeChallenge,
           codeChallengeMethod: "S256",
@@ -109,7 +109,6 @@ describe("/oauth2/authorize", () => {
         promptModes: ["login", "consent"],
         redirectData: "eyJzdHJpbmciOiJzdHJpbmciLCJudW1iZXIiOjEyMywiYm9vbGVhbiI6dHJ1ZX0=",
         redirectUri: "https://test.client.lindorm.io/redirect",
-        refreshSessionId: null,
         requestedConsent: {
           audiences: expect.arrayContaining([configuration.oauth.client_id, client.id]),
           scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
@@ -127,7 +126,6 @@ describe("/oauth2/authorize", () => {
         },
         responseMode: "fragment",
         responseTypes: ["code", "token"],
-        revision: 0,
         state: state,
         status: {
           consent: "pending",

@@ -17,7 +17,7 @@ describe("/.well-known/openid-configuration", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      authorization_endpoint: "https://oauth.test.lindorm.io/oauth2/authorize",
+      authorization_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/authorize",
       backchannel_logout_session_supported: true,
       backchannel_logout_supported: true,
       claims_parameter_supported: false,
@@ -72,14 +72,16 @@ describe("/.well-known/openid-configuration", () => {
         "website",
         "zone_info",
       ],
-      end_session_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/logout",
+      end_session_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/sessions/logout",
+      exchange_endpoint: "https://oauth.test.lindorm.io:3005/exchange",
       grant_types_supported: ["authorization_code", "client_credentials", "refresh_token"],
       id_token_encryption_alg_values_supported: [],
       id_token_encryption_enc_values_supported: [],
       id_token_signing_alg_values_supported: ["ES512", "RS512"],
+      introspect_endpoint: "https://oauth.test.lindorm.io:3005/introspect",
       issuer: "https://oauth.test.lindorm.io",
-      jwks_uri: "https://oauth.test.lindorm.io/.well-known/jwks.json",
-      logout_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/logout",
+      jwks_uri: "https://oauth.test.lindorm.io:3005/.well-known/jwks.json",
+      logout_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/sessions/logout",
       request_parameter_supported: false,
       request_uri_parameter_supported: true,
       response_types_supported: [
@@ -91,7 +93,8 @@ describe("/.well-known/openid-configuration", () => {
         "id_token token",
         "code id_token token",
       ],
-      revoke_endpoint: "https://oauth.test.lindorm.io/oauth2/sessions/revoke",
+      revoke_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/sessions/revoke",
+      right_to_be_forgotten_endpoint: "https://oauth.test.lindorm.io:3005/rtbf",
       scopes_supported: [
         "accessibility",
         "address",
@@ -106,11 +109,11 @@ describe("/.well-known/openid-configuration", () => {
         "username",
       ],
       subject_types_supported: ["identity", "client"],
-      token_endpoint: "https://oauth.test.lindorm.io/oauth2/token",
+      token_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/token",
       token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"],
       token_endpoint_auth_signing_alg_values_supported: ["ES512", "RS512"],
-      tokeninfo_endpoint: "https://oauth.test.lindorm.io/tokeninfo",
-      userinfo_endpoint: "https://oauth.test.lindorm.io/userinfo",
+      token_header_types_supported: ["JWT", "OPAQUE"],
+      userinfo_endpoint: "https://oauth.test.lindorm.io:3005/userinfo",
     });
   });
 });

@@ -1,8 +1,7 @@
-import { Client, AccessSession, RefreshSession } from "../../entity";
+import { Client, ClientSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { LindormClaims, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
-import { SessionHint } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { getUnixTime } from "date-fns";
 import { uniqArray } from "@lindorm-io/core";
@@ -10,7 +9,7 @@ import { uniqArray } from "@lindorm-io/core";
 export const createIdToken = (
   ctx: ServerKoaContext,
   client: Client,
-  session: AccessSession | RefreshSession,
+  clientSession: ClientSession,
   claims: Partial<LindormClaims>,
 ): JwtSignData => {
   const { jwt } = ctx;
@@ -19,23 +18,24 @@ export const createIdToken = (
   return jwt.sign({
     audiences: uniqArray(
       client.id,
-      session.audiences,
+      clientSession.audiences,
       configuration.oauth.client_id,
       configuration.services.authentication_service.client_id,
       configuration.services.identity_service.client_id,
     ),
-    authContextClass: [`loa_${session.levelOfAssurance}`],
-    authMethodsReference: session.methods,
-    authTime: getUnixTime(session.latestAuthentication),
+    authContextClass: `loa_${clientSession.levelOfAssurance}`,
+    authMethodsReference: clientSession.methods,
+    authTime: getUnixTime(clientSession.latestAuthentication),
+    authorizedParty: client.id,
     claims: rest,
     client: client.id,
     expiry: client.expiry.idToken || configuration.defaults.expiry.id_token,
-    levelOfAssurance: session.levelOfAssurance,
-    nonce: session.nonce,
-    scopes: session.scopes,
-    session: session.id,
-    sessionHint: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
-    subject: session.identityId,
+    levelOfAssurance: clientSession.levelOfAssurance,
+    nonce: clientSession.nonce,
+    scopes: clientSession.scopes,
+    session: clientSession.id,
+    sessionHint: clientSession.type,
+    subject: clientSession.identityId,
     subjectHint: SubjectHint.IDENTITY,
     tenant: client.tenantId,
     type: OpenIdTokenType.ID,

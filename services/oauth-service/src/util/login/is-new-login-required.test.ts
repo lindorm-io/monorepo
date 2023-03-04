@@ -1,16 +1,15 @@
-import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isBrowserSessionExpired as _isBrowserSessionExpired } from "./is-browser-session-expired";
 import { isLoginRequiredByMaxAge as _isLoginRequiredByMaxAge } from "./is-login-required-by-max-age";
 import { isNewLoginRequired } from "./is-new-login-required";
 import { randomUUID } from "crypto";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../fixtures/entity";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 jest.mock("../get-adjusted-access-level");
 jest.mock("./is-browser-session-expired");
@@ -22,9 +21,8 @@ const isLoginRequiredByMaxAge = _isLoginRequiredByMaxAge as jest.Mock;
 
 describe("isNewLoginRequired", () => {
   let authorizationSession: AuthorizationSession;
-  let accessSession: AccessSession;
   let browserSession: BrowserSession;
-  let refreshSession: RefreshSession;
+  let clientSession: ClientSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
@@ -39,13 +37,6 @@ describe("isNewLoginRequired", () => {
       promptModes: [],
     });
 
-    accessSession = createTestAccessSession({
-      methods: [AuthenticationMethod.EMAIL],
-      identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
-      latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
-      levelOfAssurance: 4,
-    });
-
     browserSession = createTestBrowserSession({
       methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
@@ -53,7 +44,7 @@ describe("isNewLoginRequired", () => {
       levelOfAssurance: 4,
     });
 
-    refreshSession = createTestRefreshSession({
+    clientSession = createTestClientSession({
       methods: [AuthenticationMethod.EMAIL],
       identityId: "3bca3d94-d2c6-478a-aa74-0796e1d94b9c",
       latestAuthentication: new Date("2021-01-01T05:00:00.000Z"),
@@ -67,16 +58,12 @@ describe("isNewLoginRequired", () => {
 
   afterEach(jest.resetAllMocks);
 
-  test("should not require for access session", () => {
-    expect(isNewLoginRequired(authorizationSession, accessSession)).toBe(false);
-  });
-
   test("should not require for browser session", () => {
     expect(isNewLoginRequired(authorizationSession, browserSession)).toBe(false);
   });
 
   test("should not require for refresh session", () => {
-    expect(isNewLoginRequired(authorizationSession, refreshSession)).toBe(false);
+    expect(isNewLoginRequired(authorizationSession, clientSession)).toBe(false);
   });
 
   test("should require when identity is different", () => {
@@ -128,6 +115,6 @@ describe("isNewLoginRequired", () => {
   test("should ignore browser session specific method", () => {
     isBrowserSessionExpired.mockImplementation(() => true);
 
-    expect(isNewLoginRequired(authorizationSession, accessSession)).toBe(false);
+    expect(isNewLoginRequired(authorizationSession, clientSession)).toBe(false);
   });
 });

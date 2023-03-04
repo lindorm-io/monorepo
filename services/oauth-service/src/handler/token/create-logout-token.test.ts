@@ -1,9 +1,6 @@
 import { createLogoutToken } from "./create-logout-token";
-import {
-  createTestAccessSession,
-  createTestClient,
-  createTestRefreshSession,
-} from "../../fixtures/entity";
+import { createTestClient, createTestClientSession } from "../../fixtures/entity";
+import { ClientSessionType } from "../../enum";
 
 describe("createLogoutToken", () => {
   let ctx: any;
@@ -17,17 +14,23 @@ describe("createLogoutToken", () => {
   });
 
   test("should create logout token", () => {
-    expect(createLogoutToken(ctx, createTestClient(), createTestAccessSession())).toBe("signed");
+    expect(
+      createLogoutToken(
+        ctx,
+        createTestClient(),
+        createTestClientSession({ type: ClientSessionType.EPHEMERAL }),
+      ),
+    ).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
-        sessionHint: "access",
+        sessionHint: "ephemeral",
       }),
     );
   });
 
   test("should create logout token", () => {
-    expect(createLogoutToken(ctx, createTestClient(), createTestRefreshSession())).toBe("signed");
+    expect(createLogoutToken(ctx, createTestClient(), createTestClientSession())).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({

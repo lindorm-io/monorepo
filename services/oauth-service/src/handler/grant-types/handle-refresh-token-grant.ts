@@ -1,73 +1,63 @@
 import { ClientError } from "@lindorm-io/errors";
-import { OpenIdTokenType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { ClientSessionType, OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { generateTokenResponse } from "../oauth";
 import { isAfter } from "date-fns";
-import { randomUUID } from "crypto";
+import { resolveTokenSession } from "../token";
 
 export const handleRefreshTokenGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<Partial<TokenResponse>> => {
   const {
-    data: { refreshToken },
+    cache: { opaqueTokenCache },
+    data: { refreshToken: token },
     entity: { client },
-    jwt,
-    repository: { refreshSessionRepository },
+    repository: { clientSessionRepository },
   } = ctx;
 
-  const { id, session } = jwt.verify(refreshToken, {
-    audience: client.id,
-    types: [OpenIdTokenType.REFRESH],
-  });
+  const opaqueToken = await resolveTokenSession(ctx, token);
 
-  if (!session) {
+  if (!opaqueToken || opaqueToken.type !== OpaqueTokenType.REFRESH) {
     throw new ClientError("Invalid Refresh Token", {
       code: "invalid_refresh_token",
-      description: "Token claim is missing",
-      data: { session },
-    });
-  }
-
-  let refreshSession = await refreshSessionRepository.find({
-    id: session,
-    clientId: client.id,
-  });
-
-  if (id !== refreshSession.refreshTokenId) {
-    throw new ClientError("Invalid Session", {
-      code: "invalid_request",
-      description: "Session has been consumed",
-      debug: {
-        expect: refreshSession.refreshTokenId,
-        actual: id,
-      },
+      data: { token },
       statusCode: ClientError.StatusCode.UNAUTHORIZED,
     });
   }
 
-  if (isAfter(new Date(), refreshSession.expires)) {
-    await refreshSessionRepository.destroy(refreshSession);
+  if (isAfter(new Date(), opaqueToken.expires)) {
+    await opaqueTokenCache.destroy(opaqueToken);
 
     throw new ClientError("Invalid Session", {
       code: "invalid_request",
       description: "Session is expired",
       debug: {
         expect: new Date(),
-        actual: refreshSession.expires,
+        actual: opaqueToken.expires,
       },
       statusCode: ClientError.StatusCode.UNAUTHORIZED,
     });
   }
 
-  refreshSession.expires = expiryDate(
-    client.expiry.refreshToken || configuration.defaults.expiry.refresh_session,
-  );
+  const clientSession = await clientSessionRepository.find({
+    id: opaqueToken.clientSessionId,
+    clientId: client.id,
+  });
 
-  refreshSession.refreshTokenId = randomUUID();
+  if (clientSession.type !== ClientSessionType.REFRESH) {
+    throw new ClientError("Invalid Session", {
+      code: "invalid_request",
+      description: "Session is ephemeral",
+      debug: {
+        expect: ClientSessionType.REFRESH,
+        actual: clientSession.type,
+      },
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
 
-  refreshSession = await refreshSessionRepository.update(refreshSession);
+  await opaqueTokenCache.destroy(opaqueToken);
 
-  return generateTokenResponse(ctx, client, refreshSession);
+  return generateTokenResponse(ctx, client, clientSession);
 };

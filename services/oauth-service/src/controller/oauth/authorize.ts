@@ -9,9 +9,8 @@ import { expiryDate } from "@lindorm-io/expiry";
 import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import {
   setAuthorizationSessionCookie,
-  tryFindAccessSession,
   tryFindBrowserSessions,
-  tryFindRefreshSession,
+  tryFindClientSession,
 } from "../../handler";
 import {
   JOI_DISPLAY_MODE,
@@ -122,15 +121,13 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   });
 
   const { levelOfAssurance: recommendedLevel, methods: recommendedMethods } = filterAcrValues({
-    acrArray: idToken?.authContextClass,
+    acrArray: idToken?.authContextClass ? [idToken.authContextClass] : [],
     amrArray: idToken?.authMethodsReference,
   });
 
   const browserSessions = await tryFindBrowserSessions(ctx, idToken);
   const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
-
-  const accessSession = await tryFindAccessSession(ctx, client, browserSession);
-  const refreshSession = await tryFindRefreshSession(ctx, client, browserSession, idToken);
+  const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
 
   const audiences = idToken
     ? uniqArray(idToken.audiences, client.id, client.defaults.audiences)
@@ -163,7 +160,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     authToken,
     browserSessionId: browserSession?.id || null,
     clientId: client.id,
-    accessSessionId: accessSession?.id || null,
+    clientSessionId: clientSession?.id || null,
     country,
     displayMode: display || client.defaults.displayMode,
     expires,
@@ -182,7 +179,6 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     promptModes: prompts,
     redirectData,
     redirectUri,
-    refreshSessionId: refreshSession?.id || null,
     responseMode: responseMode || client.defaults.responseMode,
     responseTypes,
     state,
@@ -190,27 +186,14 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   });
 
   const selectAccountRequired = isSelectAccountRequired(authorizationSession);
-
   authorizationSession.status.selectAccount = selectAccountRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;
 
-  const loginRequired = isLoginRequired(
-    authorizationSession,
-    browserSession,
-    accessSession,
-    refreshSession,
-  );
-
+  const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
   authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
 
-  const consentRequired = isConsentRequired(
-    authorizationSession,
-    browserSession,
-    accessSession,
-    refreshSession,
-  );
-
+  const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
   authorizationSession.status.consent = consentRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;

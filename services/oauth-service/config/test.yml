@@ -32,6 +32,8 @@ server:
 
 services:
   authentication_service:
+    client_id: f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f
     host: https://authentication.test.lindorm.io
   identity_service:
+    client_id: 9993fa84-bedf-4a93-a421-1f63719cd9d3
     host: https://identity.test.lindorm.io

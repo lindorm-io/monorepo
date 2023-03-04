@@ -34,9 +34,8 @@ describe("updateBrowserSessionElevation", () => {
         methods: [AuthenticationMethod.BANK_ID_SE],
       },
 
-      accessSessionId: null,
       browserSessionId: "06715391-bea3-47db-acf4-ffa1f500bcc8",
-      refreshSessionId: null,
+      clientSessionId: null,
 
       identityId: "7a658184-a059-478d-a003-9a50c411ef64",
     });

@@ -3,6 +3,12 @@ import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { verifyAuthorizationController } from "./verify-authorization";
 import {
+  createTestAuthorizationSession,
+  createTestClient,
+  createTestClientSession,
+} from "../../fixtures/entity";
+import { SessionStatus } from "@lindorm-io/common-types";
+import {
   generateCallbackResponse as _generateCallbackResponse,
   handleOauthConsentVerification as _handleOauthConsentVerification,
   handleOauthLoginVerification as _handleOauthLoginVerification,
@@ -15,13 +21,6 @@ import {
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
   createSelectAccountRejectedUri as _createSelectAccountRejectedUri,
 } from "../../util";
-import {
-  createTestAccessSession,
-  createTestAuthorizationSession,
-  createTestClient,
-  createTestRefreshSession,
-} from "../../fixtures/entity";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -59,8 +58,7 @@ describe("oauthVerifyController", () => {
         client: createTestClient(),
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
       },
 
       server: {

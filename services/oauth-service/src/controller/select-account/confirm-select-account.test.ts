@@ -5,21 +5,17 @@ import { createMockLogger } from "@lindorm-io/core-logger";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
 import { ClientError } from "@lindorm-io/errors";
-import {
-  tryFindAccessSession as _tryFindAccessSession,
-  tryFindRefreshSession as _tryFindRefreshSession,
-} from "../../handler";
+import { tryFindClientSession as _tryFindClientSession } from "../../handler";
 import {
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
   isConsentRequired as _isConsentRequired,
   isLoginRequired as _isLoginRequired,
 } from "../../util";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -27,8 +23,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.mock("../../handler");
 jest.mock("../../util");
 
-const tryFindAccessSession = _tryFindAccessSession as jest.Mock;
-const tryFindRefreshSession = _tryFindRefreshSession as jest.Mock;
+const tryFindClientSession = _tryFindClientSession as jest.Mock;
 const createAuthorizationVerifyUri = _createAuthorizationVerifyUri as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
@@ -47,9 +42,8 @@ describe("confirmSelectAccountController", () => {
       },
       entity: {
         authorizationSession: createTestAuthorizationSession({
-          accessSessionId: null,
           browserSessionId: null,
-          refreshSessionId: null,
+          clientSessionId: null,
           requestedSelectAccount: {
             browserSessions: [
               {
@@ -72,11 +66,8 @@ describe("confirmSelectAccountController", () => {
       },
     };
 
-    tryFindAccessSession.mockResolvedValue(
-      createTestAccessSession({ id: "2b8cca54-11ef-45f8-9c40-7afa60853fee" }),
-    );
-    tryFindRefreshSession.mockResolvedValue(
-      createTestRefreshSession({ id: "250cdbef-41d1-4b10-8e57-71698ff98519" }),
+    tryFindClientSession.mockResolvedValue(
+      createTestClientSession({ id: "250cdbef-41d1-4b10-8e57-71698ff98519" }),
     );
     createAuthorizationVerifyUri.mockImplementation(() => "createAuthorizationVerifyUri");
     isConsentRequired.mockImplementation(() => true);
@@ -90,9 +81,8 @@ describe("confirmSelectAccountController", () => {
 
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: "2b8cca54-11ef-45f8-9c40-7afa60853fee",
         browserSessionId: "abdd7aba-5c2d-474d-a965-4eb9a261a929",
-        refreshSessionId: "250cdbef-41d1-4b10-8e57-71698ff98519",
+        clientSessionId: "250cdbef-41d1-4b10-8e57-71698ff98519",
         status: {
           consent: "pending",
           login: "pending",
@@ -111,9 +101,8 @@ describe("confirmSelectAccountController", () => {
 
     expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: null,
         browserSessionId: null,
-        refreshSessionId: null,
+        clientSessionId: null,
         status: {
           consent: "pending",
           login: "pending",

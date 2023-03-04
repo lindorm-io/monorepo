@@ -1,9 +1,13 @@
 import Joi from "joi";
-import { ClientAllowed, ClientDefaults, ClientExpiry } from "../types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import {
+  LevelOfAssurance,
   LindormScope,
   OpenIdClientType,
+  OpenIdDisplayMode,
+  OpenIdGrantType,
+  OpenIdResponseMode,
+  OpenIdResponseType,
   OpenIdScope,
   Optional,
   ScopeDescription,
@@ -22,6 +26,25 @@ import {
   JOI_SCOPE_DESCRIPTION,
 } from "../common";
 
+export type ClientAllowed = {
+  grantTypes: Array<OpenIdGrantType>;
+  responseTypes: Array<OpenIdResponseType>;
+  scopes: Array<OpenIdScope | LindormScope>;
+};
+
+export type ClientDefaults = {
+  audiences: Array<string>;
+  displayMode: OpenIdDisplayMode;
+  levelOfAssurance: LevelOfAssurance;
+  responseMode: OpenIdResponseMode;
+};
+
+export type ClientExpiry = {
+  accessToken: string | null;
+  idToken: string | null;
+  refreshToken: string | null;
+};
+
 export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
@@ -36,6 +59,7 @@ export type ClientAttributes = EntityAttributes & {
   host: string;
   logoUri: string | null;
   name: string;
+  opaque: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -57,6 +81,7 @@ export type ClientOptions = Optional<
   | "expiry"
   | "frontChannelLogoutUri"
   | "logoUri"
+  | "opaque"
   | "postLogoutUris"
   | "redirectUris"
   | "requiredScopes"
@@ -101,6 +126,7 @@ const schema = Joi.object<ClientAttributes>()
     host: Joi.string().uri().required(),
     logoUri: Joi.string().uri().allow(null).required(),
     name: Joi.string().required(),
+    opaque: Joi.boolean().required(),
     postLogoutUris: Joi.array().items(Joi.string().uri()).required(),
     redirectUris: Joi.array().items(Joi.string().uri()).required(),
     requiredScopes: Joi.array().items(Joi.string()).required(),
@@ -126,6 +152,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public host: string;
   public logoUri: string | null;
   public name: string;
+  public opaque: boolean;
   public postLogoutUris: Array<string>;
   public redirectUris: Array<string>;
   public requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -144,7 +171,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       refreshToken: options.expiry?.refreshToken || null,
     };
 
-    this.active = options.active === true;
+    this.active = options.active;
     this.allowed = options.allowed;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
     this.claimsUri = options.claimsUri || null;
@@ -156,6 +183,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.host = options.host;
     this.logoUri = options.logoUri || null;
     this.name = options.name;
+    this.opaque = options.opaque !== false;
     this.postLogoutUris = options.postLogoutUris || [];
     this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
@@ -187,6 +215,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       host: this.host,
       logoUri: this.logoUri,
       name: this.name,
+      opaque: this.opaque,
       postLogoutUris: this.postLogoutUris,
       redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,

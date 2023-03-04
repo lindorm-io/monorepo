@@ -15,17 +15,16 @@ export const createTestElevationSession = (
       requiredMethods: [AuthenticationMethod.EMAIL],
     },
 
-    accessSessionId: randomUUID(),
     authenticationHint: ["test@lindorm.io"],
     browserSessionId: randomUUID(),
     clientId: randomUUID(),
+    clientSessionId: randomUUID(),
     country: "se",
     expires: new Date("2021-01-02T08:00:00.000Z"),
     idTokenHint: "id.jwt.jwt",
     identityId: randomUUID(),
     nonce: randomString(16),
     redirectUri: "https://test.client.lindorm.io/redirect",
-    refreshSessionId: randomUUID(),
     state: randomString(16),
     uiLocales: ["sv-SE", "en-GB"],
 

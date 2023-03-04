@@ -95,10 +95,10 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   requestedSelectAccount: RequestedSelectAccount;
   status: Status;
 
-  accessSessionId: string | null;
   authToken: string | null;
   browserSessionId: string | null;
   clientId: string;
+  clientSessionId: string | null;
   country: string | null;
   displayMode: OpenIdDisplayMode;
   expires: Date;
@@ -110,7 +110,6 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   promptModes: Array<OpenIdPromptMode>;
   redirectData: string | null;
   redirectUri: string;
-  refreshSessionId: string | null;
   responseMode: OpenIdResponseMode;
   responseTypes: Array<OpenIdResponseType>;
   state: string;
@@ -120,9 +119,9 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
 export type AuthorizationSessionOptions = Optional<
   AuthorizationSessionAttributes,
   | EntityKeys
-  | "accessSessionId"
   | "authToken"
   | "browserSessionId"
+  | "clientSessionId"
   | "code"
   | "confirmedConsent"
   | "confirmedLogin"
@@ -134,7 +133,6 @@ export type AuthorizationSessionOptions = Optional<
   | "nonce"
   | "promptModes"
   | "redirectData"
-  | "refreshSessionId"
   | "responseMode"
   | "status"
   | "uiLocales"
@@ -203,10 +201,10 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       })
       .required(),
 
-    accessSessionId: Joi.string().guid().allow(null).required(),
     authToken: JOI_JWT.allow(null).required(),
     browserSessionId: Joi.string().guid().allow(null).required(),
     clientId: Joi.string().guid().required(),
+    clientSessionId: Joi.string().guid().allow(null).required(),
     country: JOI_COUNTRY_CODE.allow(null).required(),
     displayMode: JOI_DISPLAY_MODE.required(),
     expires: Joi.date().required(),
@@ -218,7 +216,6 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
     promptModes: Joi.array().items(JOI_PROMPT_MODE).required(),
     redirectData: Joi.string().base64().allow(null).required(),
     redirectUri: Joi.string().uri().required(),
-    refreshSessionId: Joi.string().guid().allow(null).required(),
     responseMode: JOI_RESPONSE_MODE.required(),
     responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).required(),
     state: JOI_STATE.required(),
@@ -253,9 +250,8 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly state: string;
   public readonly uiLocales: Array<string>;
 
-  public accessSessionId: string | null;
   public browserSessionId: string | null;
-  public refreshSessionId: string | null;
+  public clientSessionId: string | null;
 
   public constructor(options: AuthorizationSessionOptions) {
     super(options);
@@ -298,10 +294,10 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       selectAccount: options.status?.selectAccount || SessionStatus.PENDING,
     };
 
-    this.accessSessionId = options.accessSessionId || null;
     this.authToken = options.authToken || null;
     this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
+    this.clientSessionId = options.clientSessionId || null;
     this.country = options.country || null;
     this.displayMode = options.displayMode || OpenIdDisplayMode.PAGE;
     this.expires = options.expires;
@@ -313,7 +309,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;
     this.redirectUri = options.redirectUri;
-    this.refreshSessionId = options.refreshSessionId || null;
     this.responseMode = options.responseMode || OpenIdResponseMode.QUERY;
     this.responseTypes = options.responseTypes;
     this.state = options.state;
@@ -328,10 +323,10 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     return {
       ...this.defaultJSON(),
 
-      accessSessionId: this.accessSessionId,
       authToken: this.authToken,
       browserSessionId: this.browserSessionId,
       clientId: this.clientId,
+      clientSessionId: this.clientSessionId,
       code: this.code,
       confirmedConsent: this.confirmedConsent,
       confirmedLogin: this.confirmedLogin,
@@ -346,7 +341,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       promptModes: this.promptModes,
       redirectData: this.redirectData,
       redirectUri: this.redirectUri,
-      refreshSessionId: this.refreshSessionId,
       requestedConsent: this.requestedConsent,
       requestedLogin: this.requestedLogin,
       requestedSelectAccount: this.requestedSelectAccount,

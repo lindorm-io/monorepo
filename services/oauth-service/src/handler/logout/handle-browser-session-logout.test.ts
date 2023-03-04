@@ -5,9 +5,9 @@ import { handleBrowserSessionLogout } from "./handle-browser-session-logout";
 import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../sessions";
 import { setBrowserSessionCookies as _setBrowserSessionCookies } from "../cookies";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestLogoutSession,
 } from "../../fixtures/entity";
 
@@ -31,7 +31,7 @@ describe("handleBrowserSessionLogout", () => {
         },
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
         clientRepository: createMockRepository(createTestClient),
       },
@@ -39,9 +39,8 @@ describe("handleBrowserSessionLogout", () => {
 
     logoutSession = createTestLogoutSession({
       confirmedLogout: {
-        accessSessionId: null,
+        clientSessionId: null,
         browserSessionId: "44c2d3db-befd-4a16-9abc-894e4203c99b",
-        refreshSessionId: null,
       },
     });
 
@@ -54,10 +53,10 @@ describe("handleBrowserSessionLogout", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.accessSessionRepository.findMany.mockResolvedValue([
-      createTestAccessSession(),
-      createTestAccessSession(),
-      createTestAccessSession(),
+    ctx.repository.clientSessionRepository.findMany.mockResolvedValue([
+      createTestClientSession(),
+      createTestClientSession(),
+      createTestClientSession(),
     ]);
 
     await expect(handleBrowserSessionLogout(ctx, logoutSession)).resolves.toBeUndefined();

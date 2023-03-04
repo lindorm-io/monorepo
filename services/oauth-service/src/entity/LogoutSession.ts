@@ -10,15 +10,13 @@ import {
 } from "@lindorm-io/entity";
 
 type ConfirmedLogout = {
-  accessSessionId: string | null;
-  refreshSessionId: string | null;
   browserSessionId: string | null;
+  clientSessionId: string | null;
 };
 
 type RequestedLogout = {
-  accessSessionId: string | null;
   browserSessionId: string;
-  refreshSessionId: string | null;
+  clientSessionId: string | null;
 };
 
 export type LogoutSessionAttributes = EntityAttributes & {
@@ -54,16 +52,14 @@ const schema = Joi.object<LogoutSessionAttributes>()
 
     confirmedLogout: Joi.object<ConfirmedLogout>()
       .keys({
-        accessSessionId: Joi.string().guid().allow(null).required(),
         browserSessionId: Joi.string().guid().allow(null).required(),
-        refreshSessionId: Joi.string().guid().allow(null).required(),
+        clientSessionId: Joi.string().guid().allow(null).required(),
       })
       .required(),
     requestedLogout: Joi.object<RequestedLogout>()
       .keys({
-        accessSessionId: Joi.string().guid().allow(null).required(),
         browserSessionId: Joi.string().guid().required(),
-        refreshSessionId: Joi.string().guid().allow(null).required(),
+        clientSessionId: Joi.string().guid().allow(null).required(),
       })
       .required(),
 
@@ -99,14 +95,12 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
     super(options);
 
     this.confirmedLogout = {
-      accessSessionId: options.confirmedLogout?.accessSessionId || null,
       browserSessionId: options.confirmedLogout?.browserSessionId || null,
-      refreshSessionId: options.confirmedLogout?.refreshSessionId || null,
+      clientSessionId: options.confirmedLogout?.clientSessionId || null,
     };
     this.requestedLogout = {
-      accessSessionId: options.requestedLogout.accessSessionId,
       browserSessionId: options.requestedLogout.browserSessionId,
-      refreshSessionId: options.requestedLogout.refreshSessionId,
+      clientSessionId: options.requestedLogout.clientSessionId,
     };
 
     this.clientId = options.clientId || null;

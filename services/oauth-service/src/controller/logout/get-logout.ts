@@ -19,7 +19,7 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { client, logoutSession, tenant },
-    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
+    repository: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
   if (!logoutSession.requestedLogout.browserSessionId) {
@@ -30,19 +30,15 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
     id: logoutSession.requestedLogout.browserSessionId,
   });
 
-  const accessSessions = browserSession
-    ? await accessSessionRepository.findMany({
+  const clientSessions = browserSession
+    ? await clientSessionRepository.findMany({
         browserSessionId: browserSession.id,
       })
     : [];
 
-  const accessSession = logoutSession.requestedLogout.accessSessionId
-    ? accessSessions.find((x) => x.id === logoutSession.requestedLogout.accessSessionId)
-    : undefined;
-
-  const refreshSession = logoutSession.requestedLogout.refreshSessionId
-    ? await refreshSessionRepository.find({
-        id: logoutSession.requestedLogout.refreshSessionId,
+  const clientSession = logoutSession.requestedLogout.clientSessionId
+    ? await clientSessionRepository.find({
+        id: logoutSession.requestedLogout.clientSessionId,
       })
     : undefined;
 
@@ -51,15 +47,12 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
       logout: {
         status: logoutSession.status,
 
-        accessSession: {
-          id: accessSession?.id || null,
-        },
         browserSession: {
           id: browserSession.id,
-          connectedSessions: accessSessions.filter((x) => x.id !== accessSession?.id).length,
+          connectedSessions: clientSessions.filter((x) => x.id !== clientSession?.id).length,
         },
-        refreshSession: {
-          id: refreshSession?.id || null,
+        clientSession: {
+          id: clientSession?.id || null,
         },
       },
 

@@ -2,7 +2,6 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
-import { JOI_JWT } from "../../common";
 import { OpenIdGrantType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
 import {
@@ -23,7 +22,7 @@ export const oauthTokenSchema = Joi.object<RequestData>()
     codeVerifier: Joi.string(),
     grantType: JOI_GRANT_TYPE.required(),
     redirectUri: Joi.string().uri(),
-    refreshToken: JOI_JWT,
+    refreshToken: Joi.string(),
     scope: Joi.string(),
   })
   .required();

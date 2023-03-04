@@ -26,8 +26,8 @@ type RequestData = VerifyAuthorizationRequestQuery;
 
 export const verifyAuthorizationSchema = Joi.object<RequestData>()
   .keys({
-    redirectUri: Joi.string().uri().required(),
     session: Joi.string().guid().required(),
+    redirectUri: Joi.string().uri().required(),
   })
   .required();
 
@@ -37,7 +37,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   const {
     data: { redirectUri },
     entity: { client },
-    repository: { accessSessionRepository, refreshSessionRepository },
+    repository: { clientSessionRepository },
   } = ctx;
 
   let authorizationSession = ctx.entity.authorizationSession;
@@ -132,23 +132,18 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       });
   }
 
-  if (authorizationSession.refreshSessionId) {
-    const refreshSession = await refreshSessionRepository.find({
-      id: authorizationSession.refreshSessionId,
-    });
-
-    return await generateCallbackResponse(ctx, authorizationSession, client, refreshSession);
-  }
-
-  if (!authorizationSession.accessSessionId) {
+  if (!authorizationSession.browserSessionId || !authorizationSession.clientSessionId) {
     throw new ServerError("Invalid session state", {
-      debug: { accessSessionId: authorizationSession.accessSessionId },
+      debug: {
+        browserSessionId: authorizationSession.browserSessionId,
+        clientSessionId: authorizationSession.clientSessionId,
+      },
     });
   }
 
-  const accessSession = await accessSessionRepository.find({
-    id: authorizationSession.accessSessionId,
+  const clientSession = await clientSessionRepository.find({
+    id: authorizationSession.clientSessionId,
   });
 
-  return await generateCallbackResponse(ctx, authorizationSession, client, accessSession);
+  return await generateCallbackResponse(ctx, authorizationSession, client, clientSession);
 };

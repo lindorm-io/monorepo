@@ -1,13 +1,12 @@
-import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
-import { ServerError } from "@lindorm-io/errors";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
+import { ServerError } from "@lindorm-io/errors";
 import { isNewConsentRequired } from "./is-new-consent-required";
 
 export const isConsentRequired = (
   authorizationSession: AuthorizationSession,
   browserSession?: BrowserSession,
-  accessSession?: AccessSession,
-  refreshSession?: RefreshSession,
+  clientSession?: ClientSession,
 ): boolean => {
   if (!authorizationSession) {
     throw new ServerError("Session not found", {
@@ -30,12 +29,8 @@ export const isConsentRequired = (
     return true;
   }
 
-  if (accessSession) {
-    return isNewConsentRequired(authorizationSession, accessSession);
-  }
-
-  if (refreshSession) {
-    return isNewConsentRequired(authorizationSession, refreshSession);
+  if (clientSession) {
+    return isNewConsentRequired(authorizationSession, clientSession);
   }
 
   return true;

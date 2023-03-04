@@ -2,8 +2,8 @@ import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
 import { useController, useSchema } from "@lindorm-io/koa";
 import {
   clientEntityMiddleware,
+  customIdentityAuthMiddleware,
   elevationSessionEntityMiddleware,
-  identityAuthMiddleware,
   idTokenMiddleware,
 } from "../../../middleware";
 import {
@@ -18,7 +18,7 @@ import {
 const router = new Router<any, any>();
 export default router;
 
-router.use(identityAuthMiddleware());
+router.use(customIdentityAuthMiddleware);
 
 router.get(
   "/",

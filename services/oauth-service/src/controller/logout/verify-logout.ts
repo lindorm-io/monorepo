@@ -3,16 +3,12 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { SessionStatus, VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
+import { handleBrowserSessionLogout, handleClientSessionLogout } from "../../handler";
 import {
   createLogoutPendingUri,
   createLogoutRedirectUri,
   createLogoutRejectedUri,
 } from "../../util";
-import {
-  handleAccessSessionLogout,
-  handleBrowserSessionLogout,
-  handleRefreshSessionLogout,
-} from "../../handler";
 
 type RequestData = VerifyLogoutRequestQuery;
 
@@ -49,16 +45,12 @@ export const verifyLogoutController: ServerKoaController<RequestData> = async (
       throw new ClientError("Unexpected session status");
   }
 
-  if (logoutSession.confirmedLogout.accessSessionId) {
-    await handleAccessSessionLogout(ctx, logoutSession, client);
-  }
-
-  if (logoutSession.confirmedLogout.refreshSessionId) {
-    await handleRefreshSessionLogout(ctx, logoutSession, client);
-  }
-
   if (logoutSession.confirmedLogout.browserSessionId) {
     await handleBrowserSessionLogout(ctx, logoutSession);
+  }
+
+  if (logoutSession.confirmedLogout.clientSessionId) {
+    await handleClientSessionLogout(ctx, logoutSession, client);
   }
 
   return { redirect: createLogoutRedirectUri(logoutSession) };

@@ -1,9 +1,5 @@
 import { createIdToken } from "./create-id-token";
-import {
-  createTestClient,
-  createTestAccessSession,
-  createTestRefreshSession,
-} from "../../fixtures/entity";
+import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 
 describe("createIdToken", () => {
   let ctx: any;
@@ -16,24 +12,9 @@ describe("createIdToken", () => {
     };
   });
 
-  test("should create id token for access session", async () => {
+  test("should create id token for client session", async () => {
     await expect(
-      createIdToken(ctx, createTestClient(), createTestAccessSession(), {
-        email: "test@lindorm.io",
-      }),
-    ).toBe("signed");
-
-    expect(ctx.jwt.sign).toHaveBeenCalledWith(
-      expect.objectContaining({
-        claims: { email: "test@lindorm.io" },
-        sessionHint: "access",
-      }),
-    );
-  });
-
-  test("should create id token for refresh session", async () => {
-    await expect(
-      createIdToken(ctx, createTestClient(), createTestRefreshSession(), {
+      createIdToken(ctx, createTestClient(), createTestClientSession(), {
         email: "test@lindorm.io",
       }),
     ).toBe("signed");

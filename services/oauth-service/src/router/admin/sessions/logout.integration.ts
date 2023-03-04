@@ -4,18 +4,18 @@ import { configuration } from "../../../server/configuration";
 import { randomUUID } from "crypto";
 import { server } from "../../../server/server";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestLogoutSession,
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
   getTestClientCredentials,
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   TEST_TENANT_REPOSITORY,
 } from "../../../fixtures/integration";
@@ -38,8 +38,8 @@ describe("/admin/sessions/logout", () => {
     });
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
       }),
@@ -48,9 +48,8 @@ describe("/admin/sessions/logout", () => {
     const logoutSession = await TEST_LOGOUT_SESSION_CACHE.create(
       createTestLogoutSession({
         requestedLogout: {
-          accessSessionId: accessSession.id,
           browserSessionId: browserSession.id,
-          refreshSessionId: null,
+          clientSessionId: clientSession.id,
         },
         clientId: client.id,
       }),
@@ -65,15 +64,12 @@ describe("/admin/sessions/logout", () => {
       logout: {
         status: "pending",
 
-        access_session: {
-          id: accessSession.id,
-        },
         browser_session: {
           id: browserSession.id,
           connected_sessions: 0,
         },
-        refresh_session: {
-          id: null,
+        client_session: {
+          id: clientSession.id,
         },
       },
 
@@ -111,9 +107,8 @@ describe("/admin/sessions/logout", () => {
       .post(`/admin/sessions/logout/${logoutSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        access_session_id: randomUUID(),
         browser_session_id: randomUUID(),
-        refresh_session_id: randomUUID(),
+        client_session_id: randomUUID(),
       })
       .expect(200);
 

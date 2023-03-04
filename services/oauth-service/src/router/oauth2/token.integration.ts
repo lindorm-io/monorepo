@@ -1,28 +1,28 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { SessionHint } from "../../enum";
-import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
+import { ClientSessionType } from "../../enum";
 import { baseHash } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
-import { randomUUID } from "crypto";
+import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import { server } from "../../server/server";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
+  createTestRefreshToken,
 } from "../../fixtures/entity";
 import {
-  getTestRefreshToken,
   setupIntegration,
   TEST_ARGON,
   TEST_AUTHORIZATION_CODE_CACHE,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
+  TEST_OPAQUE_TOKEN_CACHE,
 } from "../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -56,8 +56,8 @@ describe("/oauth2/token", () => {
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
 
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         audiences: [configuration.oauth.client_id, client.id],
         browserSessionId: browserSession.id,
         identityId: browserSession.identityId,
@@ -68,15 +68,14 @@ describe("/oauth2/token", () => {
 
     const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
       createTestAuthorizationSession({
-        accessSessionId: null,
         browserSessionId: browserSession.id,
         clientId: client.id,
+        clientSessionId: clientSession.id,
         code: {
           codeChallenge,
           codeChallengeMethod,
         },
         nonce,
-        refreshSessionId: refreshSession.id,
         state,
       }),
     );
@@ -105,7 +104,7 @@ describe("/oauth2/token", () => {
       expires_in: 99,
       id_token: expect.any(String),
       refresh_token: expect.any(String),
-      scope: refreshSession.scopes,
+      scope: clientSession.scopes,
       token_type: "Bearer",
     });
   });
@@ -143,33 +142,29 @@ describe("/oauth2/token", () => {
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
 
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client.id,
         browserSessionId: browserSession.id,
         identityId: browserSession.identityId,
-        refreshTokenId: randomUUID(),
         audiences: [configuration.oauth.client_id, client.id],
         scopes: client.allowed.scopes,
+        type: ClientSessionType.REFRESH,
       }),
     );
 
-    const refreshToken = getTestRefreshToken({
-      id: refreshSession.refreshTokenId,
-      audiences: [configuration.oauth.client_id, client.id],
-      client: client.id,
-      session: refreshSession.id,
-      sessionHint: SessionHint.REFRESH,
-      subject: browserSession.identityId,
-      tenant: client.tenantId,
-    });
+    const refreshToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+      createTestRefreshToken({
+        clientSessionId: clientSession.id,
+      }),
+    );
 
     const response = await request(server.callback())
       .post("/oauth2/token")
       .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
         grant_type: "refresh_token",
-        refresh_token: refreshToken,
+        refresh_token: refreshToken.token,
       })
       .expect(200);
 

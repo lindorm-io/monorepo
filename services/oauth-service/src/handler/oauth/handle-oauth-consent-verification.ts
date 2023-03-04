@@ -1,7 +1,7 @@
 import { AuthorizationSession, Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
-import { getUpdatedAccessSession, getUpdatedRefreshSession } from "../sessions";
+import { SessionStatus } from "@lindorm-io/common-types";
+import { getUpdatedClientSession } from "../sessions";
 
 export const handleOauthConsentVerification = async (
   ctx: ServerKoaContext,
@@ -12,18 +12,9 @@ export const handleOauthConsentVerification = async (
     cache: { authorizationSessionCache },
   } = ctx;
 
-  if (authorizationSession.confirmedConsent.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
-    const refreshSession = await getUpdatedRefreshSession(ctx, authorizationSession, client);
+  const clientSession = await getUpdatedClientSession(ctx, authorizationSession, client);
 
-    authorizationSession.accessSessionId = null;
-    authorizationSession.refreshSessionId = refreshSession.id;
-  } else {
-    const accessSession = await getUpdatedAccessSession(ctx, authorizationSession);
-
-    authorizationSession.accessSessionId = accessSession.id;
-    authorizationSession.refreshSessionId = null;
-  }
-
+  authorizationSession.clientSessionId = clientSession.id;
   authorizationSession.status.consent = SessionStatus.VERIFIED;
 
   return await authorizationSessionCache.update(authorizationSession);

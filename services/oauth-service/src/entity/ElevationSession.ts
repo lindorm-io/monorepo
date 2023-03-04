@@ -42,7 +42,6 @@ export type ElevationSessionAttributes = EntityAttributes & {
   confirmedAuthentication: ConfirmedAuthentication;
   requestedAuthentication: RequestedAuthentication;
 
-  accessSessionId: string | null;
   authenticationHint: Array<string>;
   browserSessionId: string | null;
   clientId: string;
@@ -53,7 +52,7 @@ export type ElevationSessionAttributes = EntityAttributes & {
   identityId: string;
   nonce: string;
   redirectUri: string | null;
-  refreshSessionId: string | null;
+  clientSessionId: string | null;
   state: string | null;
   status: SessionStatus;
   uiLocales: Array<string>;
@@ -62,7 +61,6 @@ export type ElevationSessionAttributes = EntityAttributes & {
 export type ElevationSessionOptions = Optional<
   ElevationSessionAttributes,
   | EntityKeys
-  | "accessSessionId"
   | "authenticationHint"
   | "browserSessionId"
   | "confirmedAuthentication"
@@ -71,7 +69,7 @@ export type ElevationSessionOptions = Optional<
   | "idTokenHint"
   | "nonce"
   | "redirectUri"
-  | "refreshSessionId"
+  | "clientSessionId"
   | "requestedAuthentication"
   | "state"
   | "status"
@@ -99,7 +97,6 @@ const schema = Joi.object<ElevationSessionAttributes>()
       })
       .required(),
 
-    accessSessionId: Joi.string().guid().allow(null).required(),
     authenticationHint: Joi.array().items(Joi.string()).required(),
     browserSessionId: Joi.string().guid().allow(null).required(),
     clientId: Joi.string().guid().required(),
@@ -110,7 +107,7 @@ const schema = Joi.object<ElevationSessionAttributes>()
     identityId: Joi.string().guid().required(),
     nonce: JOI_NONCE.required(),
     redirectUri: Joi.string().uri().allow(null).required(),
-    refreshSessionId: Joi.string().guid().allow(null).required(),
+    clientSessionId: Joi.string().guid().allow(null).required(),
     state: JOI_STATE.allow(null).required(),
     status: JOI_SESSION_STATUS.required(),
     uiLocales: Joi.array().items(JOI_LOCALE).required(),
@@ -121,7 +118,6 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
   public readonly confirmedAuthentication: ConfirmedAuthentication;
   public readonly requestedAuthentication: RequestedAuthentication;
 
-  public readonly accessSessionId: string | null;
   public readonly authenticationHint: Array<string>;
   public readonly browserSessionId: string | null;
   public readonly clientId: string;
@@ -132,7 +128,7 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
   public readonly identityId: string;
   public readonly nonce: string;
   public readonly redirectUri: string | null;
-  public readonly refreshSessionId: string | null;
+  public readonly clientSessionId: string | null;
   public readonly state: string | null;
   public readonly uiLocales: Array<string>;
 
@@ -158,9 +154,8 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
       requiredMethods: options.requestedAuthentication?.requiredMethods || [],
     };
 
-    this.accessSessionId = options.accessSessionId || null;
     this.browserSessionId = options.browserSessionId || null;
-    this.refreshSessionId = options.refreshSessionId || null;
+    this.clientSessionId = options.clientSessionId || null;
     this.authenticationHint = options.authenticationHint || [];
     this.clientId = options.clientId;
     this.country = options.country || null;
@@ -183,7 +178,6 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     return {
       ...this.defaultJSON(),
 
-      accessSessionId: this.accessSessionId,
       authenticationHint: this.authenticationHint,
       browserSessionId: this.browserSessionId,
       clientId: this.clientId,
@@ -195,7 +189,7 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
       identityId: this.identityId,
       nonce: this.nonce,
       redirectUri: this.redirectUri,
-      refreshSessionId: this.refreshSessionId,
+      clientSessionId: this.clientSessionId,
       requestedAuthentication: this.requestedAuthentication,
       state: this.state,
       status: this.status,

@@ -29,7 +29,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
   const {
     cache: { logoutSessionCache },
     data: { clientId, idTokenHint, logoutHint, postLogoutRedirectUri, state, uiLocales },
-    repository: { accessSessionRepository, clientRepository, refreshSessionRepository },
+    repository: { clientRepository, clientSessionRepository },
     request: { originalUrl },
     token: { idToken },
   } = ctx;
@@ -78,12 +78,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     });
   }
 
-  const accessSession = await accessSessionRepository.tryFind({
-    browserSessionId: browserSession.id,
-    clientId: client.id,
-  });
-
-  const refreshSession = await refreshSessionRepository.tryFind({
+  const clientSession = await clientSessionRepository.tryFind({
     browserSessionId: browserSession.id,
     clientId: client.id,
   });
@@ -93,9 +88,8 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
   const logoutSession = await logoutSessionCache.create(
     new LogoutSession({
       requestedLogout: {
-        accessSessionId: accessSession?.id || null,
         browserSessionId: browserSession.id,
-        refreshSessionId: refreshSession?.id || null,
+        clientSessionId: clientSession?.id || null,
       },
 
       clientId: client.id,

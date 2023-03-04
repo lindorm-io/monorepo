@@ -8,10 +8,8 @@ export const createTestLogoutSession = (
 ): LogoutSession =>
   new LogoutSession({
     requestedLogout: {
-      accessSessionId: randomUUID(),
       browserSessionId: randomUUID(),
-      refreshSessionId: null,
-      ...(options.requestedLogout || {}),
+      clientSessionId: randomUUID(),
     },
 
     clientId: randomUUID(),

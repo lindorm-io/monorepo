@@ -1,9 +1,9 @@
-import { SessionHint } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getUnixTime } from "date-fns";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { ClientSessionType } from "../../enum";
 import {
   LindormClaims,
   LindormScope,
@@ -19,7 +19,7 @@ export const getTestIdToken = (
     issuer: configuration.server.issuer,
   }).sign({
     audiences: [randomUUID()],
-    authContextClass: ["loa_3"],
+    authContextClass: "loa_3",
     authMethodsReference: ["email", "phone"],
     authTime: getUnixTime(new Date()),
     claims: {},
@@ -29,30 +29,11 @@ export const getTestIdToken = (
     nonce: randomString(16),
     scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
     session: randomUUID(),
-    sessionHint: SessionHint.ACCESS,
+    sessionHint: ClientSessionType.EPHEMERAL,
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
     tenant: randomUUID(),
     type: OpenIdTokenType.ID,
-    ...options,
-  });
-
-  return token;
-};
-
-export const getTestRefreshToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
-  const { token } = createTestJwt({
-    issuer: configuration.server.issuer,
-  }).sign({
-    audiences: [randomUUID()],
-    client: randomUUID(),
-    expiry: "10 seconds",
-    session: randomUUID(),
-    sessionHint: SessionHint.REFRESH,
-    subject: randomUUID(),
-    subjectHint: SubjectHint.IDENTITY,
-    tenant: randomUUID(),
-    type: OpenIdTokenType.REFRESH,
     ...options,
   });
 

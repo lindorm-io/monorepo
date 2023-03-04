@@ -3,7 +3,7 @@ import { BrowserSessionLike } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { tryFindAccessSession, tryFindRefreshSession } from "../../handler";
+import { tryFindClientSession } from "../../handler";
 import {
   assertSessionPending,
   createAuthorizationVerifyUri,
@@ -47,10 +47,8 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
   logger.debug("Updating authorization session");
 
   if (selectNew) {
-    authorizationSession.accessSessionId = null;
     authorizationSession.browserSessionId = null;
-    authorizationSession.refreshSessionId = null;
-
+    authorizationSession.clientSessionId = null;
     authorizationSession.status.login = SessionStatus.PENDING;
     authorizationSession.status.consent = SessionStatus.PENDING;
   } else if (selectExisting) {
@@ -71,28 +69,13 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
       ? jwt.verify<never, LindormClaims>(authorizationSession.idTokenHint)
       : undefined;
 
-    const accessSession = await tryFindAccessSession(ctx, client, browserSession, idToken);
-    authorizationSession.accessSessionId = accessSession?.id || null;
+    const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
+    const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
+    const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
 
-    const refreshSession = await tryFindRefreshSession(ctx, client, browserSession, idToken);
-    authorizationSession.refreshSessionId = refreshSession?.id || null;
-
-    const loginRequired = isLoginRequired(
-      authorizationSession,
-      browserSession,
-      accessSession,
-      refreshSession,
-    );
+    authorizationSession.clientSessionId = clientSession?.id || null;
 
     authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
-
-    const consentRequired = isConsentRequired(
-      authorizationSession,
-      browserSession,
-      accessSession,
-      refreshSession,
-    );
-
     authorizationSession.status.consent = consentRequired
       ? SessionStatus.PENDING
       : SessionStatus.SKIP;

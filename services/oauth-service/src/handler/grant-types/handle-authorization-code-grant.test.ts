@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
-import { AccessSession, Client, RefreshSession } from "../../entity";
+import { Client, ClientSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
+import { OpenIdScope } from "@lindorm-io/common-types";
 import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
@@ -8,14 +9,12 @@ import { generateTokenResponse as _generateTokenResponse } from "../oauth";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 import { randomUUID } from "crypto";
 import {
-  createTestAccessSession,
   createTestAuthorizationCode,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../fixtures/entity";
-import { OpenIdScope } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -43,45 +42,24 @@ describe("handleAuthorizationCodeGrant", () => {
         redirectUri: "https://test.client.lindorm.io/redirect",
       },
       entity: {
-        client: createTestClient(),
+        client: createTestClient({
+          id: "26176fc1-8e86-41f4-a649-9375c3814f47",
+        }),
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
       },
     };
 
     generateTokenResponse.mockImplementation(() => "generateTokenResponse");
   });
 
-  test("should resolve access session", async () => {
+  test("should resolve", async () => {
     ctx.cache.authorizationSessionCache.find.mockResolvedValue(
       createTestAuthorizationSession({
-        clientId: ctx.entity.client.id,
-        refreshSessionId: null,
-        requestedConsent: {
-          audiences: [randomUUID()],
-          scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
-        },
-      }),
-    );
-
-    await expect(handleAuthorizationCodeGrant(ctx)).resolves.toBe("generateTokenResponse");
-
-    expect(assertCodeChallenge).toHaveBeenCalled();
-    expect(generateTokenResponse).toHaveBeenCalledWith(
-      ctx,
-      expect.any(Client),
-      expect.any(AccessSession),
-    );
-  });
-
-  test("should resolve refresh session", async () => {
-    ctx.cache.authorizationSessionCache.find.mockResolvedValue(
-      createTestAuthorizationSession({
-        accessSessionId: null,
-        clientId: ctx.entity.client.id,
+        clientSessionId: "f3a194da-1233-4ada-a25f-ffacbc4fc0bf",
+        clientId: "26176fc1-8e86-41f4-a649-9375c3814f47",
         requestedConsent: {
           audiences: [randomUUID()],
           scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.OFFLINE_ACCESS],
@@ -95,7 +73,7 @@ describe("handleAuthorizationCodeGrant", () => {
     expect(generateTokenResponse).toHaveBeenCalledWith(
       ctx,
       expect.any(Client),
-      expect.any(RefreshSession),
+      expect.any(ClientSession),
     );
   });
 

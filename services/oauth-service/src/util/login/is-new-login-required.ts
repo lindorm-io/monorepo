@@ -1,4 +1,4 @@
-import { AccessSession, AuthorizationSession, BrowserSession, RefreshSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { difference } from "lodash";
 import { getAdjustedAccessLevel } from "../get-adjusted-access-level";
 import { isBrowserSessionExpired } from "./is-browser-session-expired";
@@ -6,7 +6,7 @@ import { isLoginRequiredByMaxAge } from "./is-login-required-by-max-age";
 
 export const isNewLoginRequired = (
   authorizationSession: AuthorizationSession,
-  session?: AccessSession | BrowserSession | RefreshSession,
+  session?: BrowserSession | ClientSession,
 ): boolean => {
   if (!session) return true;
 

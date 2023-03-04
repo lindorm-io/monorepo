@@ -16,9 +16,8 @@ type ResponseBody = ConfirmLogoutResponse;
 export const confirmLogoutSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
-    accessSessionId: Joi.string().guid().allow(null).required(),
     browserSessionId: Joi.string().guid().allow(null).required(),
-    refreshSessionId: Joi.string().guid().allow(null).required(),
+    clientSessionId: Joi.string().guid().allow(null).required(),
   })
   .required();
 
@@ -27,7 +26,7 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     cache: { logoutSessionCache },
-    data: { accessSessionId, browserSessionId, refreshSessionId },
+    data: { browserSessionId, clientSessionId },
     entity: { logoutSession },
     logger,
   } = ctx;
@@ -36,9 +35,8 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating logout session");
 
-  logoutSession.confirmedLogout.accessSessionId = accessSessionId;
   logoutSession.confirmedLogout.browserSessionId = browserSessionId;
-  logoutSession.confirmedLogout.refreshSessionId = refreshSessionId;
+  logoutSession.confirmedLogout.clientSessionId = clientSessionId;
 
   logoutSession.status = SessionStatus.CONFIRMED;
 

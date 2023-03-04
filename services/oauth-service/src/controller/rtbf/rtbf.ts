@@ -5,14 +5,9 @@ import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     axios: { axiosClient },
-    repository: {
-      accessSessionRepository,
-      browserSessionRepository,
-      clientRepository,
-      refreshSessionRepository,
-    },
+    repository: { browserSessionRepository, clientRepository, clientSessionRepository },
     token: {
-      bearerToken: { subject, token: accessToken },
+      bearerToken: { token: accessToken, subject: identityId },
     },
   } = ctx;
 
@@ -26,7 +21,6 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
     });
   }
 
-  await accessSessionRepository.deleteMany({ identityId: subject });
-  await browserSessionRepository.deleteMany({ identityId: subject });
-  await refreshSessionRepository.deleteMany({ identityId: subject });
+  await browserSessionRepository.deleteMany({ identityId });
+  await clientSessionRepository.deleteMany({ identityId });
 };

@@ -1,14 +1,13 @@
 import MockDate from "mockdate";
 import { getLogoutController } from "./get-logout";
+import { createMockRepository } from "@lindorm-io/mongo";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestLogoutSession,
-  createTestRefreshSession,
   createTestTenant,
 } from "../../fixtures/entity";
-import { createMockRepository } from "@lindorm-io/mongo";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -25,43 +24,38 @@ describe("getLogoutController", () => {
           clientId: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
           identityId: "41da1da6-cf20-4744-893d-2b1615b222ad",
           requestedLogout: {
-            accessSessionId: "bb37db7e-264b-4206-96f6-4b340d0113d5",
+            clientSessionId: "bb37db7e-264b-4206-96f6-4b340d0113d5",
             browserSessionId: "94500db2-657a-46f6-b8b6-fe8b6dd7603d",
-            refreshSessionId: null,
           },
         }),
         tenant: createTestTenant(),
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
       },
     };
   });
 
   test("should resolve", async () => {
-    ctx.repository.accessSessionRepository.findMany.mockResolvedValue([
-      createTestAccessSession({
+    ctx.repository.clientSessionRepository.findMany.mockResolvedValue([
+      createTestClientSession({
         id: "bb37db7e-264b-4206-96f6-4b340d0113d5",
       }),
-      createTestAccessSession(),
-      createTestAccessSession(),
+      createTestClientSession(),
+      createTestClientSession(),
     ]);
     await expect(getLogoutController(ctx)).resolves.toStrictEqual({
       body: {
         logout: {
           status: "pending",
 
-          accessSession: {
-            id: "bb37db7e-264b-4206-96f6-4b340d0113d5",
-          },
           browserSession: {
             id: "94500db2-657a-46f6-b8b6-fe8b6dd7603d",
             connectedSessions: 2,
           },
-          refreshSession: {
-            id: null,
+          clientSession: {
+            id: "bb37db7e-264b-4206-96f6-4b340d0113d5",
           },
         },
 

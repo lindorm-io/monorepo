@@ -12,7 +12,7 @@ export const handleAuthorizationCodeGrant = async (
     cache: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
-    repository: { accessSessionRepository, browserSessionRepository, refreshSessionRepository },
+    repository: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
   let authorizationCode: AuthorizationCode;
@@ -88,24 +88,16 @@ export const handleAuthorizationCodeGrant = async (
   await authorizationCodeCache.destroy(authorizationCode);
   await authorizationSessionCache.destroy(authorizationSession);
 
-  if (authorizationSession.refreshSessionId) {
-    const refreshSession = await refreshSessionRepository.find({
-      id: authorizationSession.refreshSessionId,
-    });
-
-    return generateTokenResponse(ctx, client, refreshSession);
-  }
-
-  if (!authorizationSession.accessSessionId) {
+  if (!authorizationSession.clientSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
-      data: { accessSessionId: authorizationSession.accessSessionId },
+      data: { clientSessionId: authorizationSession.clientSessionId },
     });
   }
 
-  const accessSession = await accessSessionRepository.find({
-    id: authorizationSession.accessSessionId,
+  const clientSession = await clientSessionRepository.find({
+    id: authorizationSession.clientSessionId,
   });
 
-  return generateTokenResponse(ctx, client, accessSession);
+  return generateTokenResponse(ctx, client, clientSession);
 };

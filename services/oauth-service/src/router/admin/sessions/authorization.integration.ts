@@ -4,21 +4,19 @@ import { configuration } from "../../../server/configuration";
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import { server } from "../../../server/server";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
   getTestClientCredentials,
   setupIntegration,
-  TEST_ACCESS_SESSION_REPOSITORY,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
+  TEST_CLIENT_SESSION_REPOSITORY,
   TEST_TENANT_REPOSITORY,
 } from "../../../fixtures/integration";
 
@@ -34,15 +32,8 @@ describe("/admin/sessions/authorization", () => {
     const tenant = await TEST_TENANT_REPOSITORY.create(createTestTenant());
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient({ tenantId: tenant.id }));
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
-    const accessSession = await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
-        audiences: ["6f49f573-1949-4173-aa0b-52cb6431e20c"],
-        clientId: client.id,
-        identityId: browserSession.identityId,
-      }),
-    );
-    const refreshSession = await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         audiences: ["4b697e26-2bcf-48ee-9949-c973eb59f552"],
         clientId: client.id,
         identityId: browserSession.identityId,
@@ -72,12 +63,11 @@ describe("/admin/sessions/authorization", () => {
           ],
         },
 
-        accessSessionId: accessSession.id,
         authToken: "auth.jwt.jwt",
         browserSessionId: browserSession.id,
         clientId: client.id,
+        clientSessionId: clientSession.id,
         nonce: "fQUsgtHGmWCwmCCZ",
-        refreshSessionId: refreshSession.id,
       }),
     );
 
@@ -129,16 +119,6 @@ describe("/admin/sessions/authorization", () => {
         ],
       },
 
-      access_session: {
-        adjusted_access_level: 2,
-        audiences: ["6f49f573-1949-4173-aa0b-52cb6431e20c"],
-        identity_id: accessSession.identityId,
-        latest_authentication: "2021-01-01T07:59:00.000Z",
-        level_of_assurance: 2,
-        methods: ["email", "phone"],
-        scopes: ["openid", "profile"],
-      },
-
       authorization_session: {
         auth_token: "auth.jwt.jwt",
         country: "se",
@@ -171,10 +151,10 @@ describe("/admin/sessions/authorization", () => {
         type: "confidential",
       },
 
-      refresh_session: {
+      client_session: {
         adjusted_access_level: 2,
         audiences: ["4b697e26-2bcf-48ee-9949-c973eb59f552"],
-        identity_id: refreshSession.identityId,
+        identity_id: clientSession.identityId,
         latest_authentication: "2021-01-01T07:59:00.000Z",
         level_of_assurance: 2,
         methods: ["email", "phone"],

@@ -1,16 +1,11 @@
-import { AccessSession, AuthorizationSession, RefreshSession } from "../../entity";
-import { isNewConsentRequired } from "./is-new-consent-required";
-import {
-  createTestAccessSession,
-  createTestAuthorizationSession,
-  createTestRefreshSession,
-} from "../../fixtures/entity";
+import { AuthorizationSession, ClientSession } from "../../entity";
 import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
+import { createTestAuthorizationSession, createTestClientSession } from "../../fixtures/entity";
+import { isNewConsentRequired } from "./is-new-consent-required";
 
 describe("isNewConsentRequired", () => {
   let authorizationSession: AuthorizationSession;
-  let accessSession: AccessSession;
-  let refreshSession: RefreshSession;
+  let clientSession: ClientSession;
 
   beforeEach(() => {
     authorizationSession = createTestAuthorizationSession({
@@ -21,46 +16,37 @@ describe("isNewConsentRequired", () => {
       promptModes: [],
     });
 
-    accessSession = createTestAccessSession({
-      audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
-      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
-    });
-
-    refreshSession = createTestRefreshSession({
+    clientSession = createTestClientSession({
       audiences: ["689fe3c9-ac1a-4025-a328-218ada7a4922"],
       scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.PROFILE],
     });
   });
 
-  test("should not require for access session", () => {
-    expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(false);
-  });
-
-  test("should not require for refresh session", () => {
-    expect(isNewConsentRequired(authorizationSession, refreshSession)).toBe(false);
+  test("should not require for client session", () => {
+    expect(isNewConsentRequired(authorizationSession, clientSession)).toBe(false);
   });
 
   test("should require for empty audience", () => {
-    accessSession.audiences = [];
+    clientSession.audiences = [];
 
-    expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(true);
+    expect(isNewConsentRequired(authorizationSession, clientSession)).toBe(true);
   });
 
   test("should require for empty audience", () => {
-    accessSession.scopes = [];
+    clientSession.scopes = [];
 
-    expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(true);
+    expect(isNewConsentRequired(authorizationSession, clientSession)).toBe(true);
   });
 
   test("should require for differing audience", () => {
     authorizationSession.requestedConsent.audiences = ["678d1aec-f0ae-49e1-bd47-120006f02485"];
 
-    expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(true);
+    expect(isNewConsentRequired(authorizationSession, clientSession)).toBe(true);
   });
 
   test("should require for differing scopes", () => {
     authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID, LindormScope.PUBLIC];
 
-    expect(isNewConsentRequired(authorizationSession, accessSession)).toBe(true);
+    expect(isNewConsentRequired(authorizationSession, clientSession)).toBe(true);
   });
 });

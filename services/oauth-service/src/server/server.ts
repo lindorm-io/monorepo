@@ -9,26 +9,25 @@ import { middleware } from "./middleware";
 import { mongoConnection, redisConnection } from "../instance";
 import { workers } from "./workers";
 import {
-  AccessSessionRepository,
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
   ClaimsSessionCache,
   ClientRepository,
+  ClientSessionRepository,
   ElevationSessionCache,
-  InvalidTokenCache,
   LogoutSessionCache,
-  RefreshSessionRepository,
+  OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
   caches: [
+    OpaqueTokenCache,
     AuthorizationCodeCache,
     AuthorizationSessionCache,
     ClaimsSessionCache,
     ElevationSessionCache,
-    InvalidTokenCache,
     KeyPairCache,
     LogoutSessionCache,
   ],
@@ -48,11 +47,10 @@ export const server = createNodeServer<ServerKoaContext>({
   port: configuration.server.port,
   redisConnection,
   repositories: [
-    AccessSessionRepository,
     BrowserSessionRepository,
     ClientRepository,
+    ClientSessionRepository,
     KeyPairRepository,
-    RefreshSessionRepository,
     TenantRepository,
   ],
   routerDirectory: join(__dirname, "..", "router"),

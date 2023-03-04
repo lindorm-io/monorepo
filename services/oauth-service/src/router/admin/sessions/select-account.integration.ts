@@ -3,20 +3,18 @@ import request from "supertest";
 import { configuration } from "../../../server/configuration";
 import { server } from "../../../server/server";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../../fixtures/entity";
 import {
-  TEST_ACCESS_SESSION_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
-  TEST_REFRESH_SESSION_REPOSITORY,
-  getTestClientCredentials,
-  setupIntegration,
+  TEST_CLIENT_SESSION_REPOSITORY,
 } from "../../../fixtures/integration";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -62,15 +60,8 @@ describe("/admin/sessions/select-account", () => {
 
     const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
 
-    await TEST_ACCESS_SESSION_REPOSITORY.create(
-      createTestAccessSession({
-        clientId: client.id,
-        browserSessionId: browserSession.id,
-      }),
-    );
-
-    await TEST_REFRESH_SESSION_REPOSITORY.create(
-      createTestRefreshSession({
+    await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
         clientId: client.id,
         browserSessionId: browserSession.id,
       }),

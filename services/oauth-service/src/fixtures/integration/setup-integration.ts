@@ -4,30 +4,28 @@ import { argon, mongoConnection, redisConnection } from "../../instance";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
 import {
-  AccessSessionRepository,
   AuthorizationCodeCache,
   AuthorizationSessionCache,
   BrowserSessionRepository,
   ClaimsSessionCache,
   ClientRepository,
+  ClientSessionRepository,
   ElevationSessionCache,
-  InvalidTokenCache,
   LogoutSessionCache,
-  RefreshSessionRepository,
+  OpaqueTokenCache,
   TenantRepository,
 } from "../../infrastructure";
 
+export let TEST_OPAQUE_TOKEN_CACHE: OpaqueTokenCache;
 export let TEST_AUTHORIZATION_CODE_CACHE: AuthorizationCodeCache;
 export let TEST_AUTHORIZATION_SESSION_CACHE: AuthorizationSessionCache;
 export let TEST_CLAIMS_SESSION_CACHE: ClaimsSessionCache;
 export let TEST_ELEVATION_SESSION_CACHE: ElevationSessionCache;
-export let TEST_INVALID_TOKEN_CACHE: InvalidTokenCache;
 export let TEST_LOGOUT_SESSION_CACHE: LogoutSessionCache;
 
-export let TEST_ACCESS_SESSION_REPOSITORY: AccessSessionRepository;
 export let TEST_BROWSER_SESSION_REPOSITORY: BrowserSessionRepository;
 export let TEST_CLIENT_REPOSITORY: ClientRepository;
-export let TEST_REFRESH_SESSION_REPOSITORY: RefreshSessionRepository;
+export let TEST_CLIENT_SESSION_REPOSITORY: ClientSessionRepository;
 export let TEST_TENANT_REPOSITORY: TenantRepository;
 
 export let TEST_ARGON: CryptoArgon;
@@ -38,6 +36,7 @@ export const setupIntegration = async (): Promise<void> => {
   await mongoConnection.connect();
   await redisConnection.connect();
 
+  TEST_OPAQUE_TOKEN_CACHE = new OpaqueTokenCache({ connection: redisConnection, logger });
   TEST_AUTHORIZATION_CODE_CACHE = new AuthorizationCodeCache({
     connection: redisConnection,
     logger,
@@ -48,19 +47,14 @@ export const setupIntegration = async (): Promise<void> => {
   });
   TEST_CLAIMS_SESSION_CACHE = new ClaimsSessionCache({ connection: redisConnection, logger });
   TEST_ELEVATION_SESSION_CACHE = new ElevationSessionCache({ connection: redisConnection, logger });
-  TEST_INVALID_TOKEN_CACHE = new InvalidTokenCache({ connection: redisConnection, logger });
   TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
 
-  TEST_ACCESS_SESSION_REPOSITORY = new AccessSessionRepository({
-    connection: mongoConnection,
-    logger,
-  });
   TEST_BROWSER_SESSION_REPOSITORY = new BrowserSessionRepository({
     connection: mongoConnection,
     logger,
   });
   TEST_CLIENT_REPOSITORY = new ClientRepository({ connection: mongoConnection, logger });
-  TEST_REFRESH_SESSION_REPOSITORY = new RefreshSessionRepository({
+  TEST_CLIENT_SESSION_REPOSITORY = new ClientSessionRepository({
     connection: mongoConnection,
     logger,
   });

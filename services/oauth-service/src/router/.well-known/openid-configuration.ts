@@ -1,6 +1,7 @@
 import { HttpStatus, Router } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
+import { createBaseUrl } from "@lindorm-io/url";
 import {
   LindormScope,
   OpenIdGrantType,
@@ -12,33 +13,20 @@ const router = new Router<any, any>();
 export default router;
 
 router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
+  const createURL = (path: string): string =>
+    new URL(
+      path,
+      createBaseUrl({
+        host: configuration.server.host,
+        port: configuration.server.port,
+      }),
+    ).toString();
+
   ctx.body = {
-    authorizationEndpoint: new URL("/oauth2/authorize", configuration.server.host).toString(),
+    authorizationEndpoint: createURL("/oauth2/authorize"),
     backchannelLogoutSessionSupported: true,
     backchannelLogoutSupported: true,
     claimsParameterSupported: false,
-    endSessionEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
-    grantTypesSupported: Object.values(OpenIdGrantType).sort(),
-    idTokenEncryptionAlgValuesSupported: [],
-    idTokenEncryptionEncValuesSupported: [],
-    idTokenSigningAlgValuesSupported: ["ES512", "RS512"],
-    issuer: configuration.server.issuer,
-    jwksUri: new URL("/.well-known/jwks.json", configuration.server.host).toString(),
-    logoutEndpoint: new URL("/oauth2/sessions/logout", configuration.server.host).toString(),
-    requestParameterSupported: false,
-    requestUriParameterSupported: true,
-    responseTypesSupported: [
-      OpenIdResponseType.CODE,
-      OpenIdResponseType.ID_TOKEN,
-      OpenIdResponseType.TOKEN,
-
-      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN].join(" "),
-      [OpenIdResponseType.CODE, OpenIdResponseType.TOKEN].join(" "),
-      [OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
-
-      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
-    ],
-    revokeEndpoint: new URL("/oauth2/sessions/revoke", configuration.server.host).toString(),
     claimsSupported: [
       "aal",
       "acr",
@@ -90,13 +78,38 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
       "website",
       "zone_info",
     ],
+    endSessionEndpoint: createURL("/oauth2/sessions/logout"),
+    exchangeEndpoint: createURL("/exchange"),
+    grantTypesSupported: Object.values(OpenIdGrantType).sort(),
+    idTokenEncryptionAlgValuesSupported: [],
+    idTokenEncryptionEncValuesSupported: [],
+    idTokenSigningAlgValuesSupported: ["ES512", "RS512"],
+    introspectEndpoint: createURL("/introspect"),
+    issuer: configuration.server.issuer,
+    jwksUri: createURL("/.well-known/jwks.json"),
+    logoutEndpoint: createURL("/oauth2/sessions/logout"),
+    requestParameterSupported: false,
+    requestUriParameterSupported: true,
+    responseTypesSupported: [
+      OpenIdResponseType.CODE,
+      OpenIdResponseType.ID_TOKEN,
+      OpenIdResponseType.TOKEN,
+
+      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN].join(" "),
+      [OpenIdResponseType.CODE, OpenIdResponseType.TOKEN].join(" "),
+      [OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
+
+      [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN].join(" "),
+    ],
+    revokeEndpoint: createURL("/oauth2/sessions/revoke"),
+    rightToBeForgottenEndpoint: createURL("/rtbf"),
     scopesSupported: [...Object.values(OpenIdScope), ...Object.values(LindormScope)].sort(),
     subjectTypesSupported: ["identity", "client"],
-    tokenEndpoint: new URL("/oauth2/token", configuration.server.host).toString(),
+    tokenEndpoint: createURL("/oauth2/token"),
     tokenEndpointAuthMethodsSupported: ["client_secret_basic", "client_secret_post"],
     tokenEndpointAuthSigningAlgValuesSupported: ["ES512", "RS512"],
-    tokeninfoEndpoint: new URL("/tokeninfo", configuration.server.host).toString(),
-    userinfoEndpoint: new URL("/userinfo", configuration.server.host).toString(),
+    tokenHeaderTypesSupported: ["JWT", "OPAQUE"],
+    userinfoEndpoint: createURL("/userinfo"),
   };
   ctx.status = HttpStatus.Success.OK;
 });

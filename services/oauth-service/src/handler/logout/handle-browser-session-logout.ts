@@ -1,3 +1,4 @@
+import { ClientSessionType } from "../../enum";
 import { LogoutSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
@@ -11,7 +12,7 @@ export const handleBrowserSessionLogout = async (
 ): Promise<void> => {
   const {
     axios: { axiosClient },
-    repository: { accessSessionRepository, browserSessionRepository, clientRepository },
+    repository: { browserSessionRepository, clientRepository, clientSessionRepository },
   } = ctx;
 
   if (!logoutSession.confirmedLogout.browserSessionId) {
@@ -34,15 +35,16 @@ export const handleBrowserSessionLogout = async (
     throw new ServerError("Session not found");
   }
 
-  const accessSessions = await accessSessionRepository.findMany({
+  const clientSessions = await clientSessionRepository.findMany({
     browserSessionId: browserSession.id,
+    type: ClientSessionType.EPHEMERAL,
   });
 
-  for (const accessSession of accessSessions) {
-    const client = await clientRepository.find({ id: accessSession.clientId });
+  for (const clientSession of clientSessions) {
+    const client = await clientRepository.find({ id: clientSession.clientId });
 
     if (client.backChannelLogoutUri) {
-      const { token } = createLogoutToken(ctx, client, accessSession);
+      const { token } = createLogoutToken(ctx, client, clientSession);
 
       await axiosClient.post(client.backChannelLogoutUri, {
         body: { logoutToken: token },
@@ -52,6 +54,6 @@ export const handleBrowserSessionLogout = async (
 
   setBrowserSessionCookies(ctx, cookies);
 
-  await accessSessionRepository.destroyMany(accessSessions);
+  await clientSessionRepository.destroyMany(clientSessions);
   await browserSessionRepository.destroy(browserSession);
 };

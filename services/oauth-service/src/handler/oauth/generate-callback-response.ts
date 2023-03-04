@@ -1,11 +1,12 @@
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { AccessSession, AuthorizationSession, Client, RefreshSession } from "../../entity";
+import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
-import { createAccessToken, createIdToken } from "../token";
+import { convertOpaqueTokenToJwt, createIdToken, generateAccessToken } from "../token";
 import { createURL } from "@lindorm-io/url";
+import { expiresIn } from "@lindorm-io/expiry";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 import { getIdentityClaims } from "../identity";
 
@@ -23,11 +24,11 @@ export const generateCallbackResponse = async (
   ctx: ServerKoaContext,
   authorizationSession: AuthorizationSession,
   client: Client,
-  session: AccessSession | RefreshSession,
+  clientSession: ClientSession,
 ): ControllerResponse => {
-  const { redirectUri, responseMode, responseTypes, state } = authorizationSession;
+  const data: Partial<CallbackData> = {};
 
-  const { active, ...claims } = await getIdentityClaims(ctx, client, session);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, clientSession);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -37,32 +38,33 @@ export const generateCallbackResponse = async (
     });
   }
 
-  const data: Partial<CallbackData> = {};
-
-  if (responseTypes.includes(OpenIdResponseType.CODE)) {
+  if (authorizationSession.responseTypes.includes(OpenIdResponseType.CODE)) {
     const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
 
     data.code = authorizationCode.code;
   }
 
-  if (responseTypes.includes(OpenIdResponseType.TOKEN)) {
-    const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
+  if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
+    const accessToken = await generateAccessToken(ctx, client, clientSession);
+    const accessJwt = client.opaque
+      ? undefined
+      : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
-    data.accessToken = accessToken;
-    data.expiresIn = expiresIn;
+    data.accessToken = accessJwt?.token || accessToken.token;
+    data.expiresIn = expiresIn(accessToken.expires);
     data.tokenType = "Bearer";
   }
 
   if (
-    responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
-    session.scopes.includes(OpenIdScope.OPENID)
+    authorizationSession.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
+    clientSession.scopes.includes(OpenIdScope.OPENID)
   ) {
-    const { token: idToken } = createIdToken(ctx, client, session, claims);
+    const { token: idToken } = createIdToken(ctx, client, clientSession, claims);
 
     data.idToken = idToken;
   }
 
-  data.state = state;
+  data.state = authorizationSession.state;
 
   if (authorizationSession.redirectData) {
     data.redirectData = authorizationSession.redirectData;
@@ -70,20 +72,29 @@ export const generateCallbackResponse = async (
 
   ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME);
 
-  switch (responseMode) {
+  switch (authorizationSession.responseMode) {
     case OpenIdResponseMode.FORM_POST:
-      return { redirect: redirectUri, body: data };
+      return {
+        redirect: authorizationSession.redirectUri,
+        body: data,
+      };
 
     case OpenIdResponseMode.FRAGMENT:
       return {
-        redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" })
+        redirect: createURL(authorizationSession.redirectUri, {
+          query: data,
+          queryCaseTransform: "snake",
+        })
           .toString()
           .replace("?", "#"),
       };
 
     case OpenIdResponseMode.QUERY:
       return {
-        redirect: createURL(redirectUri, { query: data, queryCaseTransform: "snake" }).toString(),
+        redirect: createURL(authorizationSession.redirectUri, {
+          query: data,
+          queryCaseTransform: "snake",
+        }).toString(),
       };
 
     default:

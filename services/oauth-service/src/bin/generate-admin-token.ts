@@ -12,7 +12,7 @@ const main = async (): Promise<void> => {
 
   const { token } = jwt.sign({
     audiences: clients.map((item) => item.id),
-    authContextClass: ["loa_4"],
+    authContextClass: "loa_4",
     authMethodsReference: ["generate_admin_token"],
     expiry: "15 minutes",
     levelOfAssurance: 4,

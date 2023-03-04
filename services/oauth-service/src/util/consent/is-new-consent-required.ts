@@ -1,19 +1,19 @@
-import { AccessSession, AuthorizationSession, RefreshSession } from "../../entity";
+import { AuthorizationSession, ClientSession } from "../../entity";
 import { difference } from "lodash";
 
 export const isNewConsentRequired = (
   authorizationSession: AuthorizationSession,
-  session?: AccessSession | RefreshSession,
+  clientSession?: ClientSession,
 ): boolean => {
-  if (!session) return true;
+  if (!clientSession) return true;
 
-  if (!session.audiences.length || !session.scopes.length) {
+  if (!clientSession.audiences.length || !clientSession.scopes.length) {
     return true;
   }
 
-  if (difference(authorizationSession.requestedConsent.audiences, session.audiences).length) {
+  if (difference(authorizationSession.requestedConsent.audiences, clientSession.audiences).length) {
     return true;
   }
 
-  return !!difference(authorizationSession.requestedConsent.scopes, session.scopes).length;
+  return !!difference(authorizationSession.requestedConsent.scopes, clientSession.scopes).length;
 };

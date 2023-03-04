@@ -17,7 +17,7 @@ export const createTestAuthorizationSession = (
 ): AuthorizationSession =>
   new AuthorizationSession({
     code: {
-      codeChallenge: randomString(64),
+      codeChallenge: randomString(43),
       codeChallengeMethod: PKCEMethod.SHA256,
       ...(options.code || {}),
     },
@@ -47,10 +47,10 @@ export const createTestAuthorizationSession = (
       ...(options.requestedSelectAccount || {}),
     },
 
-    accessSessionId: randomUUID(),
     authToken: "auth.jwt.jwt",
     browserSessionId: randomUUID(),
     clientId: randomUUID(),
+    clientSessionId: randomUUID(),
     country: "se",
     displayMode: OpenIdDisplayMode.POPUP,
     expires: new Date("2021-01-02T08:00:00.000Z"),
@@ -68,7 +68,6 @@ export const createTestAuthorizationSession = (
       baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),
     ),
     redirectUri: "https://test.client.lindorm.io/redirect",
-    refreshSessionId: randomUUID(),
     responseMode: OpenIdResponseMode.QUERY,
     responseTypes: [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN],
     state: randomString(16),

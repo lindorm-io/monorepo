@@ -1,15 +1,15 @@
-import { AccessSession, ClaimsSession, Client, RefreshSession } from "../../entity";
+import { ClaimsSession, Client, ClientSession } from "../../entity";
 import { GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
-import { generateServerCredentialsToken } from "../token";
+import { generateServerCredentialsJwt } from "../token";
 
 export const getIdentityClaims = async (
   ctx: ServerKoaContext,
   client: Client,
-  session: AccessSession | RefreshSession,
+  clientSession: ClientSession,
 ): Promise<GetClaimsResponse> => {
   const {
     axios: { axiosClient, identityClient },
@@ -18,22 +18,22 @@ export const getIdentityClaims = async (
 
   const claimsSession = await claimsSessionCache.create(
     new ClaimsSession({
-      audiences: session.audiences,
-      clientId: session.clientId,
+      audiences: clientSession.audiences,
+      clientId: clientSession.clientId,
       expires: expiryDate(configuration.defaults.expiry.claims_session),
-      identityId: session.identityId,
-      latestAuthentication: session.latestAuthentication,
-      levelOfAssurance: session.levelOfAssurance,
-      metadata: session.metadata,
-      methods: session.methods,
-      scopes: session.scopes,
+      identityId: clientSession.identityId,
+      latestAuthentication: clientSession.latestAuthentication,
+      levelOfAssurance: clientSession.levelOfAssurance,
+      metadata: clientSession.metadata,
+      methods: clientSession.methods,
+      scopes: clientSession.scopes,
     }),
   );
 
   const query = { session: claimsSession.id };
   const middleware = [
     axiosBearerAuthMiddleware(
-      generateServerCredentialsToken(ctx, [configuration.services.identity_service.client_id]),
+      generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
     ),
   ];
 

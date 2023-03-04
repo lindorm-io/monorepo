@@ -1,13 +1,12 @@
-import { AccessSession, Client, RefreshSession } from "../../entity";
+import { Client, ClientSession } from "../../entity";
 import { JwtSignData } from "@lindorm-io/jwt";
 import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
-import { SessionHint } from "../../enum";
 
 export const createLogoutToken = (
   ctx: ServerKoaContext,
   client: Client,
-  session: AccessSession | RefreshSession,
+  clientSession: ClientSession,
 ): JwtSignData => {
   const { jwt } = ctx;
 
@@ -20,9 +19,9 @@ export const createLogoutToken = (
     },
     client: client.id,
     expiry: "60 seconds",
-    session: session.id,
-    sessionHint: session instanceof AccessSession ? SessionHint.ACCESS : SessionHint.REFRESH,
-    subject: session.identityId,
+    session: clientSession.id,
+    sessionHint: clientSession.type,
+    subject: clientSession.identityId,
     subjectHint: SubjectHint.IDENTITY,
     tenant: client.tenantId,
     type: OpenIdTokenType.LOGOUT,

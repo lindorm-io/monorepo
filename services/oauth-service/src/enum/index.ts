@@ -1,1 +1,2 @@
-export * from "./SessionHint";
+export * from "./ClientSessionType";
+export * from "./OpaqueTokenType";

@@ -1,14 +1,14 @@
 import Joi from "joi";
-import { ClientAllowed, ClientDefaults, ClientExpiry, ServerKoaController } from "../../types";
+import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CLIENT_TYPE, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
+import { ClientAllowed, ClientDefaults, ClientExpiry } from "../../entity";
 import {
   LindormScope,
   OpenIdClientType,
   OpenIdScope,
   ScopeDescription,
 } from "@lindorm-io/common-types";
-import { isUndefined } from "lodash";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -31,6 +31,7 @@ type RequestData = {
   host: string;
   logoUri: string | null;
   name: string;
+  opaque: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -69,6 +70,7 @@ export const updateClientSchema = Joi.object<RequestData>()
     host: Joi.string().uri(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
+    opaque: Joi.boolean(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
     redirectUris: Joi.array().items(Joi.string().uri()),
     requiredScopes: Joi.array().items(Joi.string()),
@@ -95,6 +97,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       host,
       logoUri,
       name,
+      opaque,
       postLogoutUris,
       redirectUris,
       requiredScopes,
@@ -106,35 +109,35 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     repository: { clientRepository },
   } = ctx;
 
-  if (!isUndefined(allowed?.grantTypes)) client.allowed.grantTypes = allowed.grantTypes;
-  if (!isUndefined(allowed?.responseTypes)) client.allowed.responseTypes = allowed.responseTypes;
-  if (!isUndefined(allowed?.scopes)) client.allowed.scopes = allowed.scopes;
+  if (allowed?.grantTypes !== undefined) client.allowed.grantTypes = allowed.grantTypes;
+  if (allowed?.responseTypes !== undefined) client.allowed.responseTypes = allowed.responseTypes;
+  if (allowed?.scopes !== undefined) client.allowed.scopes = allowed.scopes;
 
-  if (!isUndefined(defaults?.audiences)) client.defaults.audiences = defaults.audiences;
-  if (!isUndefined(defaults?.displayMode)) client.defaults.displayMode = defaults.displayMode;
-  if (!isUndefined(defaults?.levelOfAssurance))
-    client.defaults.levelOfAssurance = defaults.levelOfAssurance;
-  if (!isUndefined(defaults?.responseMode)) client.defaults.responseMode = defaults.responseMode;
+  if (defaults?.audiences !== undefined) client.defaults.audiences = defaults.audiences;
+  if (defaults?.displayMode !== undefined) client.defaults.displayMode = defaults.displayMode;
+  if (defaults?.levelOfAssurance) client.defaults.levelOfAssurance = defaults.levelOfAssurance;
+  if (defaults?.responseMode !== undefined) client.defaults.responseMode = defaults.responseMode;
 
-  if (!isUndefined(expiry?.accessToken)) client.expiry.accessToken = expiry.accessToken;
-  if (!isUndefined(expiry?.idToken)) client.expiry.idToken = expiry.idToken;
-  if (!isUndefined(expiry?.refreshToken)) client.expiry.refreshToken = expiry.refreshToken;
+  if (expiry?.accessToken !== undefined) client.expiry.accessToken = expiry.accessToken;
+  if (expiry?.idToken !== undefined) client.expiry.idToken = expiry.idToken;
+  if (expiry?.refreshToken !== undefined) client.expiry.refreshToken = expiry.refreshToken;
 
-  if (!isUndefined(active)) client.active = active;
-  if (!isUndefined(backChannelLogoutUri)) client.backChannelLogoutUri = backChannelLogoutUri;
-  if (!isUndefined(description)) client.description = description;
-  if (!isUndefined(enforceBasicAuth)) client.enforceBasicAuth = enforceBasicAuth;
-  if (!isUndefined(enforceSecret)) client.enforceSecret = enforceSecret;
-  if (!isUndefined(frontChannelLogoutUri)) client.frontChannelLogoutUri = frontChannelLogoutUri;
-  if (!isUndefined(host)) client.host = host;
-  if (!isUndefined(logoUri)) client.logoUri = logoUri;
-  if (!isUndefined(name)) client.name = name;
-  if (!isUndefined(postLogoutUris)) client.postLogoutUris = postLogoutUris;
-  if (!isUndefined(redirectUris)) client.redirectUris = redirectUris;
-  if (!isUndefined(requiredScopes)) client.requiredScopes = requiredScopes;
-  if (!isUndefined(rtbfUri)) client.rtbfUri = rtbfUri;
-  if (!isUndefined(scopeDescriptions)) client.scopeDescriptions = scopeDescriptions;
-  if (!isUndefined(type)) client.type = type;
+  if (active !== undefined) client.active = active;
+  if (backChannelLogoutUri !== undefined) client.backChannelLogoutUri = backChannelLogoutUri;
+  if (description !== undefined) client.description = description;
+  if (enforceBasicAuth !== undefined) client.enforceBasicAuth = enforceBasicAuth;
+  if (enforceSecret !== undefined) client.enforceSecret = enforceSecret;
+  if (frontChannelLogoutUri !== undefined) client.frontChannelLogoutUri = frontChannelLogoutUri;
+  if (host !== undefined) client.host = host;
+  if (logoUri !== undefined) client.logoUri = logoUri;
+  if (name !== undefined) client.name = name;
+  if (opaque !== undefined) client.opaque = opaque;
+  if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
+  if (redirectUris !== undefined) client.redirectUris = redirectUris;
+  if (requiredScopes !== undefined) client.requiredScopes = requiredScopes;
+  if (rtbfUri !== undefined) client.rtbfUri = rtbfUri;
+  if (scopeDescriptions !== undefined) client.scopeDescriptions = scopeDescriptions;
+  if (type !== undefined) client.type = type;
 
   await clientRepository.update(client);
 };

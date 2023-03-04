@@ -3,17 +3,15 @@ import { createMockCache } from "@lindorm-io/redis";
 import { oauthAuthorizeController } from "./authorize";
 import { randomString as _randomString } from "@lindorm-io/random";
 import {
-  createTestAccessSession,
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
-  createTestRefreshSession,
+  createTestClientSession,
 } from "../../fixtures/entity";
 import {
   setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
-  tryFindAccessSession as _tryFindAccessSession,
   tryFindBrowserSessions as _tryFindBrowserSessions,
-  tryFindRefreshSession as _tryFindRefreshSession,
+  tryFindClientSession as _tryFindClientSession,
 } from "../../handler";
 import {
   assertAuthorizePrompt as _assertAuthorizePrompt,
@@ -50,9 +48,8 @@ const isLoginRequired = _isLoginRequired as jest.Mock;
 const isSelectAccountRequired = _isSelectAccountRequired as jest.Mock;
 const randomString = _randomString as jest.Mock;
 const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
-const tryFindAccessSession = _tryFindAccessSession as jest.Mock;
 const tryFindBrowserSessions = _tryFindBrowserSessions as jest.Mock;
-const tryFindRefreshSession = _tryFindRefreshSession as jest.Mock;
+const tryFindClientSession = _tryFindClientSession as jest.Mock;
 
 describe("oauthAuthorizeController", () => {
   let ctx: any;
@@ -114,14 +111,11 @@ describe("oauthAuthorizeController", () => {
       },
     };
 
-    tryFindAccessSession.mockResolvedValue(
-      createTestAccessSession({ id: "89a009bf-b221-49fd-b56d-c1664c9fb2a1" }),
-    );
     tryFindBrowserSessions.mockResolvedValue([
       createTestBrowserSession({ id: "b60ca053-4fcb-4f86-a453-05f46cb56040" }),
     ]);
-    tryFindRefreshSession.mockResolvedValue(
-      createTestRefreshSession({ id: "8326d16e-0eb7-4992-994a-2322bfb87019" }),
+    tryFindClientSession.mockResolvedValue(
+      createTestClientSession({ id: "8326d16e-0eb7-4992-994a-2322bfb87019" }),
     );
 
     assertAuthorizePrompt.mockImplementation();
@@ -152,7 +146,6 @@ describe("oauthAuthorizeController", () => {
 
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: "89a009bf-b221-49fd-b56d-c1664c9fb2a1",
         authToken: "auth.jwt.jwt",
         browserSessionId: "b60ca053-4fcb-4f86-a453-05f46cb56040",
         clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
@@ -184,7 +177,7 @@ describe("oauthAuthorizeController", () => {
         promptModes: ["login", "consent"],
         redirectData: null,
         redirectUri: "https://test.lindorm.io/redirect",
-        refreshSessionId: "8326d16e-0eb7-4992-994a-2322bfb87019",
+        clientSessionId: "8326d16e-0eb7-4992-994a-2322bfb87019",
         requestedConsent: {
           audiences: [
             "090fd104-7be0-41d1-b877-1c0851318492",
@@ -224,8 +217,7 @@ describe("oauthAuthorizeController", () => {
 
   test("should resolve for minimum values", async () => {
     tryFindBrowserSessions.mockResolvedValue([]);
-    tryFindAccessSession.mockResolvedValue(undefined);
-    tryFindRefreshSession.mockResolvedValue(undefined);
+    tryFindClientSession.mockResolvedValue(undefined);
 
     filterAcrValues.mockImplementation(() => ({
       requiredMethods: [],
@@ -247,7 +239,6 @@ describe("oauthAuthorizeController", () => {
 
     expect(ctx.cache.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: null,
         authToken: null,
         browserSessionId: null,
         clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
@@ -279,7 +270,7 @@ describe("oauthAuthorizeController", () => {
         promptModes: [],
         redirectData: null,
         redirectUri: "https://test.lindorm.io/redirect",
-        refreshSessionId: null,
+        clientSessionId: null,
         requestedConsent: {
           audiences: ["0930e3aa-a00c-4cd1-9d29-57b90e20cd95"],
           scopes: ["openid", "offline_access"],

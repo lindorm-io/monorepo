@@ -1,9 +1,15 @@
-import { AccessSession, Client, RefreshSession } from "../../entity";
-import { ClientError, ServerError } from "@lindorm-io/errors";
+import { Client, ClientSession } from "../../entity";
+import { ClientError } from "@lindorm-io/errors";
 import { OpenIdScope } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
-import { createAccessToken, createIdToken, createRefreshToken } from "../token";
+import { expiresIn } from "@lindorm-io/expiry";
 import { getIdentityClaims } from "../identity";
+import {
+  convertOpaqueTokenToJwt,
+  createIdToken,
+  generateAccessToken,
+  generateRefreshToken,
+} from "../token";
 
 type ResponseBody = {
   accessToken: string;
@@ -17,11 +23,11 @@ type ResponseBody = {
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
   client: Client,
-  session: AccessSession | RefreshSession,
+  clientSession: ClientSession,
 ): Promise<Partial<ResponseBody>> => {
   const body: Partial<ResponseBody> = {};
 
-  const { active, ...claims } = await getIdentityClaims(ctx, client, session);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, clientSession);
 
   if (!active) {
     throw new ClientError("Invalid identity", {
@@ -31,29 +37,31 @@ export const generateTokenResponse = async (
     });
   }
 
-  const { token: accessToken, expiresIn } = createAccessToken(ctx, client, session);
+  const accessToken = await generateAccessToken(ctx, client, clientSession);
+  const accessJwt = client.opaque
+    ? undefined
+    : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
-  body.accessToken = accessToken;
-  body.expiresIn = expiresIn;
+  body.accessToken = accessJwt?.token || accessToken.token;
+  body.expiresIn = expiresIn(accessToken.expires);
   body.tokenType = "Bearer";
 
-  if (session.scopes.includes(OpenIdScope.OPENID)) {
-    const { token: idToken } = createIdToken(ctx, client, session, claims);
+  if (clientSession.scopes.includes(OpenIdScope.OPENID)) {
+    const { token: idToken } = createIdToken(ctx, client, clientSession, claims);
 
     body.idToken = idToken;
   }
 
-  if (session.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
-    if (!(session instanceof RefreshSession)) {
-      throw new ServerError("Unexpected session type");
-    }
+  if (clientSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
+    const refreshToken = await generateRefreshToken(ctx, client, clientSession);
+    const refreshJwt = client.opaque
+      ? undefined
+      : convertOpaqueTokenToJwt(ctx, clientSession, refreshToken);
 
-    const { token: refreshToken } = createRefreshToken(ctx, client, session);
-
-    body.refreshToken = refreshToken;
+    body.refreshToken = refreshJwt?.token || refreshToken.token;
   }
 
-  body.scope = session.scopes;
+  body.scope = clientSession.scopes;
 
   return body;
 };

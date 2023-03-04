@@ -1,44 +1,51 @@
 import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
 import { createMockRepository } from "@lindorm-io/mongo";
-import { createTestClient, createTestRefreshSession } from "../../fixtures/entity";
 import { generateTokenResponse as _generateTokenResponse } from "../oauth";
 import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
+import { ClientSessionType } from "../../enum";
+import { createMockCache } from "@lindorm-io/redis";
+import { resolveTokenSession as _resolveTokenSession } from "../token";
+import {
+  createTestClient,
+  createTestClientSession,
+  createTestRefreshToken,
+} from "../../fixtures/entity";
+import { ClientError } from "@lindorm-io/errors";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../oauth");
+jest.mock("../token");
 
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
+const resolveTokenSession = _resolveTokenSession as jest.Mock;
 
 describe("handleAuthorizationCodeGrant", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
+      cache: {
+        opaqueTokenCache: createMockCache(createTestRefreshToken),
+      },
       data: { refreshToken: "jwt.jwt.jwt" },
       entity: {
         client: createTestClient(),
       },
-      jwt: {
-        verify: jest.fn().mockImplementation(() => ({
-          id: "e7d6e7a0-cc25-4a4b-b9aa-6a2019e75d56",
-          session: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
-        })),
-      },
       repository: {
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
+        clientSessionRepository: createMockRepository(createTestClientSession),
       },
     };
 
     generateTokenResponse.mockResolvedValue("generateTokenResponse");
+    resolveTokenSession.mockResolvedValue(createTestRefreshToken());
   });
 
   test("should resolve", async () => {
-    ctx.repository.refreshSessionRepository.find.mockResolvedValue(
-      createTestRefreshSession({
+    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+      createTestClientSession({
         id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
-        refreshTokenId: "e7d6e7a0-cc25-4a4b-b9aa-6a2019e75d56",
+        type: ClientSessionType.REFRESH,
       }),
     );
 
@@ -47,21 +54,20 @@ describe("handleAuthorizationCodeGrant", () => {
     expect(generateTokenResponse).toHaveBeenCalled();
   });
 
-  test("should reject on consumed session", async () => {
-    ctx.repository.refreshSessionRepository.find.mockResolvedValue(
-      createTestRefreshSession({
-        id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
+  test("should throw on expired session", async () => {
+    resolveTokenSession.mockResolvedValue(
+      createTestRefreshToken({
+        expires: new Date("1999-01-01T01:00:00.000Z"),
       }),
     );
 
     await expect(handleRefreshTokenGrant(ctx)).rejects.toThrow(ClientError);
   });
 
-  test("should reject on expired session", async () => {
-    ctx.repository.refreshSessionRepository.find.mockResolvedValue(
-      createTestRefreshSession({
-        id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
-        expires: new Date("1999-01-01T08:00:00.000Z"),
+  test("should throw on expired session", async () => {
+    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+      createTestClientSession({
+        type: ClientSessionType.EPHEMERAL,
       }),
     );
 

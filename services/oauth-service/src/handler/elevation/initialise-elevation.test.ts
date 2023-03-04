@@ -3,23 +3,21 @@ import { ElevationSession } from "../../entity";
 import { createMockCache } from "@lindorm-io/redis";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
-import { getBrowserSessionCookies as _getBrowserSessionCookies } from "../cookies";
-import { getUnixTime } from "date-fns";
 import { initialiseElevation } from "./initialise-elevation";
 import {
-  createTestAccessSession,
   createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestElevationSession,
-  createTestRefreshSession,
 } from "../../fixtures/entity";
+import { ClientError } from "@lindorm-io/errors";
+import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../cookies");
 jest.mock("../../util");
 
-const getBrowserSessionCookies = _getBrowserSessionCookies as jest.Mock;
 const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
 
 describe("initialiseElevation", () => {
@@ -35,21 +33,16 @@ describe("initialiseElevation", () => {
         client: createTestClient({
           id: "be55601a-8034-4dde-a039-e8a42e8280d9",
         }),
+        clientSession: createTestClientSession({
+          id: "e9c91056-01e8-4396-bc60-e231ad743688",
+          browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
+          identityId: "87ab1777-f01a-468f-a68f-1c5737064811",
+        }),
       },
       repository: {
-        accessSessionRepository: createMockRepository(createTestAccessSession),
         browserSessionRepository: createMockRepository(createTestBrowserSession),
-        refreshSessionRepository: createMockRepository(createTestRefreshSession),
       },
       token: {
-        bearerToken: {
-          authTime: getUnixTime(new Date("2021-01-01T04:00:00.000Z")),
-          client: "be55601a-8034-4dde-a039-e8a42e8280d9",
-          levelOfAssurance: 1,
-          session: "e9c91056-01e8-4396-bc60-e231ad743688",
-          sessionHint: "access",
-          subject: "87ab1777-f01a-468f-a68f-1c5737064811",
-        },
         idToken: {
           authMethodsReference: ["email"],
           client: "be55601a-8034-4dde-a039-e8a42e8280d9",
@@ -80,44 +73,31 @@ describe("initialiseElevation", () => {
     };
 
     getAdjustedAccessLevel.mockImplementation(() => 2);
-    getBrowserSessionCookies.mockImplementation(() => []);
   });
 
-  test("should resolve access session for all values", async () => {
-    ctx.repository.accessSessionRepository.find.mockResolvedValue(
-      createTestAccessSession({
-        browserSessionId: "b66cde9c-4f14-4f1a-af08-a53ccf684cd8",
-      }),
-    );
-
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
-      createTestBrowserSession({ id: "b66cde9c-4f14-4f1a-af08-a53ccf684cd8" }),
-    );
-
-    getBrowserSessionCookies.mockImplementation(() => ["b66cde9c-4f14-4f1a-af08-a53ccf684cd8"]);
-
+  test("should resolve client session for all values", async () => {
     await expect(initialiseElevation(ctx, options)).resolves.toStrictEqual(
       expect.any(ElevationSession),
     );
 
     expect(ctx.cache.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: expect.any(String),
         authenticationHint: ["+4520123456", "0701234567", "test@email.com", "username"],
-        browserSessionId: "b66cde9c-4f14-4f1a-af08-a53ccf684cd8",
+        browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
         clientId: "be55601a-8034-4dde-a039-e8a42e8280d9",
+        clientSessionId: "e9c91056-01e8-4396-bc60-e231ad743688",
         confirmedAuthentication: {
           latestAuthentication: null,
           levelOfAssurance: 0,
           methods: [],
         },
         country: "dk",
+        displayMode: "popup",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: "id.jwt.jwt",
         identityId: "87ab1777-f01a-468f-a68f-1c5737064811",
         nonce: "QxEQ4H21R-gslTwr",
         redirectUri: "https://test.client.lindorm.io/redirect",
-        refreshSessionId: null,
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 2,
@@ -132,9 +112,8 @@ describe("initialiseElevation", () => {
     );
   });
 
-  test("should resolve refresh session for minimum values", async () => {
+  test("should resolve client session for minimum values", async () => {
     options = {};
-    ctx.token.bearerToken.sessionHint = "refresh";
     ctx.token.idToken = undefined;
 
     await expect(initialiseElevation(ctx, options)).resolves.toStrictEqual(
@@ -143,9 +122,8 @@ describe("initialiseElevation", () => {
 
     expect(ctx.cache.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        accessSessionId: null,
         authenticationHint: [],
-        browserSessionId: null,
+        browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
         clientId: "be55601a-8034-4dde-a039-e8a42e8280d9",
         confirmedAuthentication: {
           latestAuthentication: null,
@@ -153,12 +131,13 @@ describe("initialiseElevation", () => {
           methods: [],
         },
         country: null,
+        displayMode: "page",
         expires: new Date("2021-01-01T08:30:00.000Z"),
         idTokenHint: null,
         identityId: "87ab1777-f01a-468f-a68f-1c5737064811",
         nonce: expect.any(String),
         redirectUri: null,
-        refreshSessionId: expect.any(String),
+        clientSessionId: "e9c91056-01e8-4396-bc60-e231ad743688",
         requestedAuthentication: {
           minimumLevel: 1,
           recommendedLevel: 1,
@@ -171,5 +150,11 @@ describe("initialiseElevation", () => {
         uiLocales: [],
       }),
     );
+  });
+
+  test("should throw on id token mismatch", async () => {
+    ctx.token.idToken.session = randomUUID();
+
+    await expect(initialiseElevation(ctx, options)).rejects.toThrow(ClientError);
   });
 });
