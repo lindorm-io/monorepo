@@ -1,6 +1,6 @@
 import { Client, ClientSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { OpenIdScope, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
 import { expiresIn } from "@lindorm-io/expiry";
 import { getIdentityClaims } from "../identity";
@@ -11,21 +11,12 @@ import {
   generateRefreshToken,
 } from "../token";
 
-type ResponseBody = {
-  accessToken: string;
-  expiresIn: number;
-  idToken: string;
-  refreshToken: string;
-  scope: Array<string>;
-  tokenType: string;
-};
-
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
   client: Client,
   clientSession: ClientSession,
-): Promise<Partial<ResponseBody>> => {
-  const body: Partial<ResponseBody> = {};
+): Promise<Partial<OpenIdTokenResponseBody>> => {
+  const body: Partial<OpenIdTokenResponseBody> = {};
 
   const { active, ...claims } = await getIdentityClaims(ctx, client, clientSession);
 
@@ -61,7 +52,9 @@ export const generateTokenResponse = async (
     body.refreshToken = refreshJwt?.token || refreshToken.token;
   }
 
-  body.scope = clientSession.scopes;
+  if (clientSession.scopes.length) {
+    body.scope = clientSession.scopes.join(" ");
+  }
 
   return body;
 };

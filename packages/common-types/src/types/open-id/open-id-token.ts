@@ -152,7 +152,7 @@ export type OpenIdTokenRequestBody = {
    * semantics of scope are service specific and expected
    * to be described in the relevant service documentation.
    */
-  scope?: Array<string>;
+  scope?: string;
 
   /**
    * OPTIONAL
@@ -207,7 +207,7 @@ export type OpenIdTokenResponseBody = {
    * otherwise, REQUIRED.  The scope of the access token
    * as described by Section 3.3.
    */
-  scope?: Array<string>;
+  scope?: string;
 
   /**
    * The type of the token issued as described in

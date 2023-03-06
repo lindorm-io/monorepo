@@ -1,13 +1,13 @@
 import { AuthorizationCode } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { assertCodeChallenge } from "../../util";
 import { generateTokenResponse } from "../oauth";
 
 export const handleAuthorizationCodeGrant = async (
-  ctx: ServerKoaContext<TokenRequestBody>,
-): Promise<Partial<TokenResponse>> => {
+  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
+): Promise<Partial<OpenIdTokenResponseBody>> => {
   const {
     cache: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
@@ -37,7 +37,14 @@ export const handleAuthorizationCodeGrant = async (
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
       description: "Session data is missing",
-      data: { codeChallenge, codeChallengeMethod },
+      debug: { codeChallenge, codeChallengeMethod },
+    });
+  }
+
+  if (!codeVerifier) {
+    throw new ClientError("Invalid Request", {
+      code: "invalid_request",
+      data: { codeVerifier },
     });
   }
 

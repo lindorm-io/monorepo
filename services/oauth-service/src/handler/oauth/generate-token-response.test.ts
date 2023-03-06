@@ -68,7 +68,6 @@ describe("generateTokenResponse", () => {
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
       accessToken: "access_token.token.jwt",
       expiresIn: 86400,
-      scope: [],
       tokenType: "Bearer",
     });
   });
@@ -79,7 +78,7 @@ describe("generateTokenResponse", () => {
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual(
       expect.objectContaining({
         idToken: "id.token.jwt",
-        scope: ["openid"],
+        scope: "openid",
       }),
     );
   });
@@ -91,7 +90,7 @@ describe("generateTokenResponse", () => {
       accessToken: "access_token.token.jwt",
       expiresIn: 86400,
       refreshToken: "refresh_token.token.jwt",
-      scope: ["offline_access"],
+      scope: "offline_access",
       tokenType: "Bearer",
     });
   });
@@ -104,7 +103,7 @@ describe("generateTokenResponse", () => {
       accessToken: "opaque_access_token",
       expiresIn: 86400,
       refreshToken: "opaque_refresh_token",
-      scope: ["offline_access"],
+      scope: "offline_access",
       tokenType: "Bearer",
     });
   });

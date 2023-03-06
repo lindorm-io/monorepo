@@ -2,17 +2,21 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
-import { OpenIdGrantType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../types";
+import {
+  OpenIdGrantType,
+  OpenIdTokenRequestBody,
+  OpenIdTokenResponseBody,
+} from "@lindorm-io/common-types";
 import {
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,
   handleRefreshTokenGrant,
 } from "../../handler";
 
-type RequestData = TokenRequestBody;
+type RequestData = OpenIdTokenRequestBody;
 
-type ResponseBody = TokenResponse;
+type ResponseBody = OpenIdTokenResponseBody;
 
 export const oauthTokenSchema = Joi.object<RequestData>()
   .keys({
@@ -35,7 +39,7 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
     entity: { client },
   } = ctx;
 
-  if (!client.allowed.grantTypes.includes(grantType)) {
+  if (!client.allowed.grantTypes.includes(grantType as OpenIdGrantType)) {
     throw new ClientError("Invalid Grant Type", {
       code: "invalid_request",
       debug: {

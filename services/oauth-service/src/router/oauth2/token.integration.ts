@@ -104,7 +104,8 @@ describe("/oauth2/token", () => {
       expires_in: 99,
       id_token: expect.any(String),
       refresh_token: expect.any(String),
-      scope: clientSession.scopes,
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
       token_type: "Bearer",
     });
   });
@@ -128,7 +129,8 @@ describe("/oauth2/token", () => {
     expect(response.body).toStrictEqual({
       access_token: expect.any(String),
       expires_in: 60,
-      scope: client.allowed.scopes,
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
       token_type: "Bearer",
     });
   });
@@ -173,7 +175,8 @@ describe("/oauth2/token", () => {
       expires_in: 99,
       id_token: expect.any(String),
       refresh_token: expect.any(String),
-      scope: client.allowed.scopes,
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
       token_type: "Bearer",
     });
   });

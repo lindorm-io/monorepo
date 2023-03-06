@@ -140,7 +140,7 @@ describe("JWT", () => {
         loa: 4,
         nbf: 1609488000,
         nonce: "bed190d568a5456bb15a39cf71d72022",
-        scp: ["openid"],
+        scope: "openid",
         sid: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         sih: "refresh",
         sub: "c3e1b21a-0556-4b61-8805-60627028536f",

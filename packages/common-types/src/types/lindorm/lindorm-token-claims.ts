@@ -5,7 +5,7 @@ type CustomClaims = {
   aal?: number; // adjusted access level
   cid?: string; // client id
   loa?: number; // level of assurance
-  scp?: Array<string>; // scope
+  scope?: string;
   sid?: string; // session id
   sih?: string; // session hint
   suh?: string; // subject hint

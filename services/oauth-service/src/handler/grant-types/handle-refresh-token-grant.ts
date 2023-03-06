@@ -1,20 +1,28 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ClientSessionType, OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { generateTokenResponse } from "../oauth";
 import { isAfter } from "date-fns";
 import { resolveTokenSession } from "../token";
 
 export const handleRefreshTokenGrant = async (
-  ctx: ServerKoaContext<TokenRequestBody>,
-): Promise<Partial<TokenResponse>> => {
+  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
+): Promise<Partial<OpenIdTokenResponseBody>> => {
   const {
     cache: { opaqueTokenCache },
     data: { refreshToken: token },
     entity: { client },
     repository: { clientSessionRepository },
   } = ctx;
+
+  if (!token) {
+    throw new ClientError("Invalid Refresh Token", {
+      code: "invalid_refresh_token",
+      data: { token },
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
 
   const opaqueToken = await resolveTokenSession(ctx, token);
 

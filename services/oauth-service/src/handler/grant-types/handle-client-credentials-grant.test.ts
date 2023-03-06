@@ -32,7 +32,7 @@ describe("handleAuthorizationCodeGrant", () => {
     await expect(handleClientCredentialsGrant(ctx)).resolves.toStrictEqual({
       accessToken: "jwt.jwt.jwt",
       expiresIn: 999,
-      scope: ["address", "email", "offline_access", "openid", "phone", "profile"],
+      scope: "address email offline_access openid phone profile",
       tokenType: "Bearer",
     });
   });

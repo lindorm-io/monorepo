@@ -1,19 +1,12 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ServerKoaContext } from "../../types";
-import { TokenRequestBody } from "@lindorm-io/common-types";
+import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { createClientCredentialsToken } from "../token";
 import { difference } from "lodash";
 
-type ResponseBody = {
-  accessToken: string;
-  expiresIn: number;
-  scope: Array<string>;
-  tokenType: string;
-};
-
 export const handleClientCredentialsGrant = async (
-  ctx: ServerKoaContext<TokenRequestBody>,
-): Promise<ResponseBody> => {
+  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
+): Promise<OpenIdTokenResponseBody> => {
   const {
     data: { scope },
     entity: { client },
@@ -27,7 +20,7 @@ export const handleClientCredentialsGrant = async (
     });
   }
 
-  const scopes = scope.split(" ");
+  const scopes = scope ? scope.split(" ") : [];
   const diff = difference(scopes, client.allowed.scopes);
 
   if (diff.length) {
@@ -48,7 +41,7 @@ export const handleClientCredentialsGrant = async (
   return {
     accessToken,
     expiresIn,
-    scope: scopes,
+    scope: scopes.join(" "),
     tokenType: "Bearer",
   };
 };
