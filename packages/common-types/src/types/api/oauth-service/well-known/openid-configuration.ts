@@ -5,11 +5,14 @@ export type OpenIdConfigurationResponse = {
   backchannelLogoutSessionSupported: boolean;
   backchannelLogoutSupported: boolean;
   claimsParameterSupported: boolean;
+  claimsSupported: Array<string>;
   endSessionEndpoint: string;
+  exchangeEndpoint: string;
   grantTypesSupported: Array<OpenIdGrantType>;
   idTokenEncryptionAlgValuesSupported: Array<string>;
   idTokenEncryptionEncValuesSupported: Array<string>;
   idTokenSigningAlgValuesSupported: Array<string>;
+  introspectEndpoint: string;
   issuer: string;
   jwksUri: string;
   logoutEndpoint: string;
@@ -17,7 +20,6 @@ export type OpenIdConfigurationResponse = {
   requestUriParameterSupported: boolean;
   responseTypesSupported: Array<string>;
   revokeEndpoint: string;
-  claimsSupported: Array<string>;
   scopesSupported: Array<string>;
   subjectTypesSupported: Array<string>;
   tokenEndpoint: string;

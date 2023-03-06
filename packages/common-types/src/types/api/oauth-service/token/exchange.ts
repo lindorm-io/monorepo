@@ -3,6 +3,6 @@ export type TokenExchangeRequestBody = {
 };
 
 export type TokenExchangeResponseBody = {
-  token: string;
+  jwt: string;
   expiresIn: number;
 };
