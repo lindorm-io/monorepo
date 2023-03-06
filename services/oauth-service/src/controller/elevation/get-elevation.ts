@@ -37,14 +37,8 @@ export const getElevationController: ServerKoaController<RequestData> = async (
         requiredMethods: elevationSession.requestedAuthentication.requiredMethods,
       },
 
-      client: {
-        name: client.name,
-        logoUri: client.logoUri,
-        type: client.type,
-        tenant: tenant.name,
-      },
-
       elevationSession: {
+        id: elevationSession.id,
         authenticationHint: elevationSession.authenticationHint,
         country: elevationSession.country,
         displayMode: elevationSession.displayMode,
@@ -53,6 +47,18 @@ export const getElevationController: ServerKoaController<RequestData> = async (
         identityId: elevationSession.identityId,
         nonce: elevationSession.nonce,
         uiLocales: elevationSession.uiLocales,
+      },
+
+      client: {
+        id: client.id,
+        name: client.name,
+        logoUri: client.logoUri,
+        type: client.type,
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
       },
     },
   };

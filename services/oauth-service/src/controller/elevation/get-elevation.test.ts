@@ -1,10 +1,10 @@
 import MockDate from "mockdate";
+import { getElevationController } from "./get-elevation";
 import {
   createTestClient,
   createTestElevationSession,
   createTestTenant,
 } from "../../fixtures/entity";
-import { getElevationController } from "./get-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -14,12 +14,17 @@ describe("getElevationDataController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        client: createTestClient(),
+        client: createTestClient({
+          id: "729ede7e-e3ac-4c26-a5e2-c6f0be03c3c9",
+        }),
         elevationSession: createTestElevationSession({
+          id: "b3fde7ae-8d2a-4ac0-bf7c-95aabc96a267",
           identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
           nonce: "QxEQ4H21R-gslTwr",
         }),
-        tenant: createTestTenant(),
+        tenant: createTestTenant({
+          id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
+        }),
       },
     };
   });
@@ -27,12 +32,6 @@ describe("getElevationDataController", () => {
   test("should resolve", async () => {
     await expect(getElevationController(ctx)).resolves.toStrictEqual({
       body: {
-        client: {
-          name: "ClientName",
-          tenant: "TenantName",
-          logoUri: "https://logo.uri/logo",
-          type: "confidential",
-        },
         elevation: {
           isRequired: true,
           status: "pending",
@@ -43,7 +42,9 @@ describe("getElevationDataController", () => {
           requiredLevel: 2,
           requiredMethods: ["email"],
         },
+
         elevationSession: {
+          id: "b3fde7ae-8d2a-4ac0-bf7c-95aabc96a267",
           authenticationHint: ["test@lindorm.io"],
           country: "se",
           displayMode: "page",
@@ -52,6 +53,18 @@ describe("getElevationDataController", () => {
           identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
           nonce: "QxEQ4H21R-gslTwr",
           uiLocales: ["sv-SE", "en-GB"],
+        },
+
+        client: {
+          id: "729ede7e-e3ac-4c26-a5e2-c6f0be03c3c9",
+          name: "ClientName",
+          logoUri: "https://logo.uri/logo",
+          type: "confidential",
+        },
+
+        tenant: {
+          id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
+          name: "TenantName",
         },
       },
     });

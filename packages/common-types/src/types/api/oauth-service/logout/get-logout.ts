@@ -1,5 +1,6 @@
 import { PublicClientInfo } from "../public-client-info";
 import { SessionStatus } from "../../../../enums";
+import { PublicTenantInfo } from "../public-tenant-info";
 
 export type GetLogoutRequestParams = {
   id: string;
@@ -18,9 +19,8 @@ export type GetLogoutResponse = {
     };
   };
 
-  client: PublicClientInfo;
-
   logoutSession: {
+    id: string;
     expires: string;
     idTokenHint: string | null;
     identityId: string;
@@ -28,4 +28,7 @@ export type GetLogoutResponse = {
     originalUri: string;
     uiLocales: Array<string>;
   };
+
+  client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };

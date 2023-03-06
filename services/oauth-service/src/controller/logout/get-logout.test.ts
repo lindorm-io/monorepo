@@ -21,6 +21,7 @@ describe("getLogoutController", () => {
           id: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
         }),
         logoutSession: createTestLogoutSession({
+          id: "63624e5c-e23d-49e9-892a-0274a6f6781f",
           clientId: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
           identityId: "41da1da6-cf20-4744-893d-2b1615b222ad",
           requestedLogout: {
@@ -28,7 +29,9 @@ describe("getLogoutController", () => {
             browserSessionId: "94500db2-657a-46f6-b8b6-fe8b6dd7603d",
           },
         }),
-        tenant: createTestTenant(),
+        tenant: createTestTenant({
+          id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
+        }),
       },
       repository: {
         browserSessionRepository: createMockRepository(createTestBrowserSession),
@@ -45,6 +48,7 @@ describe("getLogoutController", () => {
       createTestClientSession(),
       createTestClientSession(),
     ]);
+
     await expect(getLogoutController(ctx)).resolves.toStrictEqual({
       body: {
         logout: {
@@ -59,19 +63,26 @@ describe("getLogoutController", () => {
           },
         },
 
-        client: {
-          tenant: "TenantName",
-          logoUri: "https://logo.uri/logo",
-          name: "ClientName",
-          type: "confidential",
-        },
         logoutSession: {
+          id: "63624e5c-e23d-49e9-892a-0274a6f6781f",
           expires: "2021-01-02T08:00:00.000Z",
           idTokenHint: "jwt.jwt.jwt",
           identityId: "41da1da6-cf20-4744-893d-2b1615b222ad",
           logoutHint: "logout-hint",
           originalUri: "https://localhost/oauth2/sessions/logout?query=query",
           uiLocales: ["en-GB"],
+        },
+
+        client: {
+          id: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
+          logoUri: "https://logo.uri/logo",
+          name: "ClientName",
+          type: "confidential",
+        },
+
+        tenant: {
+          id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
+          name: "TenantName",
         },
       },
     });

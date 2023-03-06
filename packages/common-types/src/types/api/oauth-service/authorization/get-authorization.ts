@@ -10,6 +10,7 @@ import {
   OpenIdScope,
   SessionStatus,
 } from "../../../../enums";
+import { PublicTenantInfo } from "../public-tenant-info";
 
 export type SelectAccountSession = {
   selectId: string;
@@ -49,6 +50,7 @@ export type GetAuthorizationResponse = {
   };
 
   authorizationSession: {
+    id: string;
     authToken: string | null;
     country: string | null;
     displayMode: OpenIdDisplayMode;
@@ -64,6 +66,7 @@ export type GetAuthorizationResponse = {
   };
 
   browserSession: {
+    id: string | null;
     adjustedAccessLevel: AdjustedAccessLevel;
     identityId: string | null;
     latestAuthentication: string | null;
@@ -73,9 +76,8 @@ export type GetAuthorizationResponse = {
     sso: boolean;
   };
 
-  client: PublicClientInfo;
-
   clientSession: {
+    id: string | null;
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
     identityId: string | null;
@@ -84,4 +86,7 @@ export type GetAuthorizationResponse = {
     methods: Array<AuthenticationMethod>;
     scopes: Array<OpenIdScope | LindormScope>;
   };
+
+  client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };

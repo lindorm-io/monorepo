@@ -96,16 +96,22 @@ describe("/admin/identities", () => {
           methods: ["email", "phone"],
           scopes: ["openid", "profile"],
           type: "refresh",
-          client: {
-            logo_uri: "https://logo.uri/logo",
-            name: "ClientName",
-            tenant: "TenantName",
-            type: "confidential",
-          },
           metadata: {
             device_name: "Test Device",
             ip: "10.0.0.1",
             platform: "iOS",
+          },
+
+          client: {
+            id: client1.id,
+            logo_uri: "https://logo.uri/logo",
+            name: "ClientName",
+            type: "confidential",
+          },
+
+          tenant: {
+            id: tenant.id,
+            name: "TenantName",
           },
         },
         {
@@ -116,16 +122,22 @@ describe("/admin/identities", () => {
           methods: ["email", "phone"],
           scopes: ["openid", "profile"],
           type: "refresh",
-          client: {
-            logo_uri: "https://logo.uri/logo",
-            name: "ClientName",
-            tenant: "TenantName",
-            type: "public",
-          },
           metadata: {
             device_name: "Test Device",
             ip: "10.0.0.1",
             platform: "iOS",
+          },
+
+          client: {
+            id: client2.id,
+            logo_uri: "https://logo.uri/logo",
+            name: "ClientName",
+            type: "public",
+          },
+
+          tenant: {
+            id: tenant.id,
+            name: "TenantName",
           },
         },
       ],

@@ -120,6 +120,7 @@ describe("/admin/sessions/authorization", () => {
       },
 
       authorization_session: {
+        id: authorizationSession.id,
         auth_token: "auth.jwt.jwt",
         country: "se",
         display_mode: "popup",
@@ -135,6 +136,7 @@ describe("/admin/sessions/authorization", () => {
       },
 
       browser_session: {
+        id: browserSession.id,
         adjusted_access_level: 2,
         identity_id: browserSession.identityId,
         latest_authentication: "2021-01-01T07:59:00.000Z",
@@ -144,14 +146,8 @@ describe("/admin/sessions/authorization", () => {
         sso: true,
       },
 
-      client: {
-        name: "ClientName",
-        logo_uri: "https://logo.uri/logo",
-        tenant: "TenantName",
-        type: "confidential",
-      },
-
       client_session: {
+        id: clientSession.id,
         adjusted_access_level: 2,
         audiences: ["4b697e26-2bcf-48ee-9949-c973eb59f552"],
         identity_id: clientSession.identityId,
@@ -159,6 +155,18 @@ describe("/admin/sessions/authorization", () => {
         level_of_assurance: 2,
         methods: ["email", "phone"],
         scopes: ["openid", "profile"],
+      },
+
+      client: {
+        id: client.id,
+        name: "ClientName",
+        logo_uri: "https://logo.uri/logo",
+        type: "confidential",
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: "TenantName",
       },
     });
   });

@@ -37,12 +37,6 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
 
     sessions.push({
       id: session.id,
-      client: {
-        name: client.name,
-        logoUri: client.logoUri,
-        tenant: tenant.name,
-        type: client.type,
-      },
       adjustedAccessLevel: getAdjustedAccessLevel(session),
       latestAuthentication: session.latestAuthentication.toISOString(),
       levelOfAssurance: session.levelOfAssurance,
@@ -50,6 +44,18 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
       methods: session.methods,
       scopes: session.scopes,
       type: session.type,
+
+      client: {
+        id: client.id,
+        name: client.name,
+        logoUri: client.logoUri,
+        type: client.type,
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+      },
     });
   }
 

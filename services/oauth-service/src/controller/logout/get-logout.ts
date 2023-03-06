@@ -56,20 +56,26 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
         },
       },
 
-      client: {
-        name: client.name,
-        logoUri: client.logoUri,
-        type: client.type,
-        tenant: tenant.name,
-      },
-
       logoutSession: {
+        id: logoutSession.id,
         expires: logoutSession.expires.toISOString(),
         idTokenHint: logoutSession.idTokenHint,
         identityId: logoutSession.identityId,
         logoutHint: logoutSession.logoutHint,
         originalUri: logoutSession.originalUri,
         uiLocales: logoutSession.uiLocales,
+      },
+
+      client: {
+        id: client.id,
+        name: client.name,
+        logoUri: client.logoUri,
+        type: client.type,
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
       },
     },
   };

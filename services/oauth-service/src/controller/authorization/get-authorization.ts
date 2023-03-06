@@ -76,6 +76,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
       },
 
       authorizationSession: {
+        id: authorizationSession.id,
         authToken: authorizationSession.authToken,
         country: authorizationSession.country,
         displayMode: authorizationSession.displayMode,
@@ -91,6 +92,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
       },
 
       browserSession: {
+        id: browserSession?.id || null,
         adjustedAccessLevel: browserSession ? getAdjustedAccessLevel(browserSession) : 0,
         identityId: browserSession?.identityId || null,
         latestAuthentication: browserSession?.latestAuthentication.toISOString() || null,
@@ -100,14 +102,8 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         sso: browserSession?.sso || false,
       },
 
-      client: {
-        name: client.name,
-        logoUri: client.logoUri,
-        type: client.type,
-        tenant: tenant.name,
-      },
-
       clientSession: {
+        id: clientSession?.id || null,
         adjustedAccessLevel: clientSession ? getAdjustedAccessLevel(clientSession) : 0,
         audiences: clientSession?.audiences || [],
         identityId: clientSession?.identityId || null,
@@ -115,6 +111,18 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         levelOfAssurance: clientSession?.levelOfAssurance || 0,
         methods: clientSession?.methods || [],
         scopes: clientSession?.scopes || [],
+      },
+
+      client: {
+        id: client.id,
+        name: client.name,
+        logoUri: client.logoUri,
+        type: client.type,
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
       },
     },
   };

@@ -79,13 +79,8 @@ describe("/admin/sessions/elevation", () => {
         required_methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       },
 
-      client: {
-        name: "ClientName",
-        logo_uri: "https://logo.uri/logo",
-        tenant: "TenantName",
-        type: "confidential",
-      },
       elevation_session: {
+        id: elevationSession.id,
         authentication_hint: ["test@lindorm.io"],
         country: "se",
         display_mode: "page",
@@ -94,6 +89,18 @@ describe("/admin/sessions/elevation", () => {
         identity_id: elevationSession.identityId,
         nonce: "fQUsgtHGmWCwmCCZ",
         ui_locales: ["sv-SE", "en-GB"],
+      },
+
+      client: {
+        id: client.id,
+        name: "ClientName",
+        logo_uri: "https://logo.uri/logo",
+        type: "confidential",
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: "TenantName",
       },
     });
   });

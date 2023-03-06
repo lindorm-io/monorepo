@@ -1,10 +1,10 @@
 import { AdjustedAccessLevel, LevelOfAssurance } from "../../auth";
 import { AuthenticationMethod, LindormScope, OpenIdScope } from "../../../enums";
 import { PublicClientInfo } from "./public-client-info";
+import { PublicTenantInfo } from "./public-tenant-info";
 
 export type IdentitySessionItem = {
   id: string;
-  client: PublicClientInfo;
   adjustedAccessLevel: AdjustedAccessLevel;
   latestAuthentication: string;
   levelOfAssurance: LevelOfAssurance;
@@ -12,6 +12,9 @@ export type IdentitySessionItem = {
   methods: Array<AuthenticationMethod>;
   scopes: Array<OpenIdScope | LindormScope>;
   type: string;
+
+  client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };
 
 export type GetIdentitySessionsResponse = {

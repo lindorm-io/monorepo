@@ -11,3 +11,4 @@ export * from "./well-known";
 
 export * from "./identity-sessions";
 export * from "./public-client-info";
+export * from "./public-tenant-info";

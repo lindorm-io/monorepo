@@ -73,20 +73,26 @@ describe("/admin/sessions/logout", () => {
         },
       },
 
-      client: {
-        name: "ClientName",
-        logo_uri: "https://logo.uri/logo",
-        tenant: "TenantName",
-        type: "confidential",
-      },
-
       logout_session: {
+        id: logoutSession.id,
         expires: "2021-01-02T08:00:00.000Z",
         id_token_hint: "jwt.jwt.jwt",
         identity_id: logoutSession.identityId,
         logout_hint: "logout-hint",
         original_uri: "https://localhost/oauth2/sessions/logout?query=query",
         ui_locales: ["en-GB"],
+      },
+
+      client: {
+        id: client.id,
+        name: "ClientName",
+        logo_uri: "https://logo.uri/logo",
+        type: "confidential",
+      },
+
+      tenant: {
+        id: tenant.id,
+        name: "TenantName",
       },
     });
   });
