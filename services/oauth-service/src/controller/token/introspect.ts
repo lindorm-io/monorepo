@@ -3,9 +3,9 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { TokenIntrospectRequestBody, TokenIntrospectResponseBody } from "@lindorm-io/common-types";
 import { configuration } from "../../server/configuration";
+import { convertOpaqueTokenToJwt, resolveTokenSession } from "../../handler";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";
-import { resolveTokenSession } from "../../handler";
 import { uniqArray } from "@lindorm-io/core";
 
 type RequestData = TokenIntrospectRequestBody;
@@ -32,9 +32,15 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
     const clientSession = await clientSessionRepository.find({ id: opaqueToken.clientSessionId });
     const client = await clientRepository.find({ id: clientSession.clientId });
 
+    const { token: jwt } = convertOpaqueTokenToJwt(ctx, clientSession, opaqueToken);
+
+    const exp = getUnixTime(opaqueToken.expires);
+    const iat = getUnixTime(opaqueToken.created);
+    const now = getUnixTime(new Date());
+
     return {
       body: {
-        active: true,
+        active: exp - now > 0 && now - iat >= 0,
         aal: getAdjustedAccessLevel(clientSession),
         acr: `loa_${clientSession.levelOfAssurance}`,
         amr: clientSession.methods,
@@ -48,15 +54,18 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
         authTime: getUnixTime(clientSession.latestAuthentication),
         azp: client.id,
         clientId: client.id,
-        exp: getUnixTime(opaqueToken.expires),
-        iat: getUnixTime(opaqueToken.created),
+        exp,
+        iat,
         iss: configuration.server.issuer,
         jti: opaqueToken.id,
+        jwt,
         loa: clientSession.levelOfAssurance,
-        nbf: getUnixTime(opaqueToken.created),
+        nbf: iat,
         scope: clientSession.scopes.join(" "),
         sid: clientSession.id,
+        sih: "client_session",
         sub: clientSession.identityId,
+        suh: "identity",
         tid: client.tenantId,
         tokenType: opaqueToken.type,
         username: clientSession.identityId,
@@ -77,11 +86,14 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
         iat: 0,
         iss: null,
         jti: null,
+        jwt: null,
         loa: 0,
         nbf: 0,
         scope: null,
         sid: null,
+        sih: null,
         sub: null,
+        suh: null,
         tid: null,
         tokenType: null,
         username: null,

@@ -38,7 +38,7 @@ describe("introspectController", () => {
 
   test("should resolve token info", async () => {
     await expect(tokenExchangeController(ctx)).resolves.toStrictEqual({
-      body: { token: "jwt.jwt.jwt", expiresIn: 999 },
+      body: { jwt: "jwt.jwt.jwt", expiresIn: 999 },
     });
   });
 });

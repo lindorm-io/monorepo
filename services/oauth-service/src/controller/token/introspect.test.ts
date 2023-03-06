@@ -1,8 +1,11 @@
 import MockDate from "mockdate";
 import { createMockRepository } from "@lindorm-io/mongo";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
-import { resolveTokenSession as _resolveTokenSession } from "../../handler";
 import { tokenIntrospectController } from "./introspect";
+import {
+  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
+  resolveTokenSession as _resolveTokenSession,
+} from "../../handler";
 import {
   createTestAccessToken,
   createTestClient,
@@ -16,6 +19,7 @@ jest.mock("../../util");
 
 const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
 const resolveTokenSession = _resolveTokenSession as jest.Mock;
+const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 
 describe("introspectController", () => {
   let ctx: any;
@@ -32,6 +36,7 @@ describe("introspectController", () => {
     };
 
     getAdjustedAccessLevel.mockImplementation(() => 1);
+    convertOpaqueTokenToJwt.mockImplementation(() => ({ token: "jwt.jwt.jwt", expiresIn: 999 }));
     resolveTokenSession.mockResolvedValue(
       createTestAccessToken({
         id: "b82a1243-e25d-47f3-9fbd-35c15de54cd0",
@@ -74,11 +79,14 @@ describe("introspectController", () => {
         iat: 1609488000,
         iss: "https://oauth.test.lindorm.io",
         jti: "b82a1243-e25d-47f3-9fbd-35c15de54cd0",
+        jwt: "jwt.jwt.jwt",
         loa: 2,
         nbf: 1609488000,
         scope: "openid profile",
         sid: "261b653d-2849-4a8a-a6d4-9a2b716b179f",
+        sih: "client_session",
         sub: "158a4f7c-8e62-4bfd-94a3-be34f88a4fe6",
+        suh: "identity",
         tid: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
         tokenType: "access_token",
         username: "158a4f7c-8e62-4bfd-94a3-be34f88a4fe6",
@@ -103,11 +111,14 @@ describe("introspectController", () => {
         iat: 0,
         iss: null,
         jti: null,
+        jwt: null,
         loa: 0,
         nbf: 0,
         scope: null,
         sid: null,
+        sih: null,
         sub: null,
+        suh: null,
         tid: null,
         tokenType: null,
         username: null,

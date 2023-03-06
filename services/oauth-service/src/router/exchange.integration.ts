@@ -54,7 +54,7 @@ describe("/exchange", () => {
 
     expect(response.body).toStrictEqual({
       expires_in: 86400,
-      token: expect.any(String),
+      jwt: expect.any(String),
     });
   });
 
@@ -88,7 +88,7 @@ describe("/exchange", () => {
 
     expect(response.body).toStrictEqual({
       expires_in: 86400,
-      token: expect.any(String),
+      jwt: expect.any(String),
     });
   });
 });
