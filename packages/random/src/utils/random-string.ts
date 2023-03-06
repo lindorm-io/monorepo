@@ -1,6 +1,5 @@
 import { DEFAULT_SYMBOLS } from "../constants";
 import { RandomStringAmount, RandomStringOptions } from "../types";
-import { isNumber, isString } from "@lindorm-io/core";
 import { randomInteger } from "./random-integer";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -8,13 +7,13 @@ const NUMBERS = "0123456789";
 
 const randomSort = () => 0.5 - Math.random();
 
-const calculateAmount = (length: number, amount: RandomStringAmount): number => {
-  if (isNumber(amount)) {
+const calculateAmount = (length: number, amount?: RandomStringAmount): number => {
+  if (typeof amount === "number") {
     return amount;
   }
 
-  if (!isString(amount)) {
-    return amount;
+  if (typeof amount !== "string") {
+    throw new Error("Invalid amount");
   }
 
   if (amount === "random") {
