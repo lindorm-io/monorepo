@@ -57,13 +57,17 @@ describe("/sessions/elevation", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      status: "pending",
       client: {
+        id: expect.any(String),
         logo_uri: "https://test.client.com/logo.png",
         name: "Test Client",
-        tenant: "Test Tenant",
         type: "public",
       },
-      status: "pending",
+      tenant: {
+        id: expect.any(String),
+        name: "Test Tenant",
+      },
     });
   });
 

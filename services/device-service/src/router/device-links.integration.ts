@@ -164,6 +164,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
+        ext: {},
         factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
@@ -206,6 +207,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
+        ext: {},
         factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
@@ -247,6 +249,7 @@ describe("/device-links", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
+        ext: {},
         factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },

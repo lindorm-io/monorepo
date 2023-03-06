@@ -93,25 +93,24 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     createDeviceLinkCallback(ctx, salt),
   );
 
-  const { token: challengeConfirmationToken, expiresIn } = jwt.sign<
-    Record<string, unknown>,
-    ChallengeConfirmationTokenClaims
-  >({
-    audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
-    claims: {
-      deviceLinkId: deviceLink.id,
-      factors: [PSD2Factor.POSSESSION],
-      strategy: ChallengeStrategy.IMPLICIT,
-    },
-    expiry: configuration.defaults.challenge_confirmation_token_expiry,
-    nonce: enrolmentSession.nonce,
-    scopes: ["enrolment"],
-    session: enrolmentSession.id,
-    sessionHint: "enrolment",
-    subject: deviceLink.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
-  });
+  const { token: challengeConfirmationToken, expiresIn } =
+    jwt.sign<ChallengeConfirmationTokenClaims>({
+      audiences: flatten([configuration.oauth.client_id, enrolmentSession.audiences]),
+      claims: {
+        deviceLinkId: deviceLink.id,
+        ext: {},
+        factors: [PSD2Factor.POSSESSION],
+        strategy: ChallengeStrategy.IMPLICIT,
+      },
+      expiry: configuration.defaults.challenge_confirmation_token_expiry,
+      nonce: enrolmentSession.nonce,
+      scopes: ["enrolment"],
+      session: enrolmentSession.id,
+      sessionHint: "enrolment",
+      subject: deviceLink.identityId,
+      subjectHint: SubjectHint.IDENTITY,
+      type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+    });
 
   await enrolmentSessionCache.destroy(enrolmentSession);
 

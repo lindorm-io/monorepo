@@ -113,7 +113,7 @@ describe("/rdc", () => {
 
     const rdcSessionToken = getTestRdcToken({
       nonce: session.nonce,
-      payload: session.tokenPayload,
+      claims: { ext: session.tokenPayload },
       scopes: session.scopes,
       session: session.id,
       subject: session.identityId!,
@@ -122,11 +122,11 @@ describe("/rdc", () => {
     const challengeConfirmationToken = getTestChallengeConfirmationToken({
       claims: {
         deviceLinkId: deviceLink.id,
+        ext: session.tokenPayload,
         factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
         strategy: ChallengeStrategy.PINCODE,
       },
       nonce: session.nonce,
-      payload: session.tokenPayload,
       scopes: session.scopes,
       session: session.id,
       sessionHint: "challenge",
@@ -167,7 +167,9 @@ describe("/rdc", () => {
 
     const rdcSessionToken = getTestRdcToken({
       nonce: session.nonce,
-      payload: session.tokenPayload,
+      claims: {
+        ext: session.tokenPayload,
+      },
       scopes: session.scopes,
       session: session.id,
       sessionHint: "rdc",

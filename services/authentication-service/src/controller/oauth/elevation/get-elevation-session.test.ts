@@ -1,6 +1,7 @@
 import { getElevationSessionController } from "./get-elevation-session";
 import { getOauthElevationSession as _getOauthElevationSession } from "../../../handler";
 import { mockFetchOauthElevationSession } from "../../../fixtures/axios";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 
 jest.mock("../../../handler");
 
@@ -20,13 +21,17 @@ describe("getElevationSessionDataController", () => {
   test("should resolve", async () => {
     await expect(getElevationSessionController(ctx)).resolves.toStrictEqual({
       body: {
+        status: "pending",
         client: {
+          id: expect.any(String),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
-          tenant: "Test Tenant",
-          type: "public",
+          type: OpenIdClientType.PUBLIC,
         },
-        status: "pending",
+        tenant: {
+          id: expect.any(String),
+          name: "Test Tenant",
+        },
       },
     });
   });

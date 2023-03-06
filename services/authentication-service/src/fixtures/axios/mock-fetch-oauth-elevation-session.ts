@@ -22,14 +22,8 @@ export const mockFetchOauthElevationSession = (
     requiredMethods: [AuthenticationMethod.EMAIL],
   },
 
-  client: {
-    logoUri: "https://test.client.com/logo.png",
-    name: "Test Client",
-    tenant: "Test Tenant",
-    type: OpenIdClientType.PUBLIC,
-  },
-
   elevationSession: {
+    id: randomUUID(),
     authenticationHint: ["test@lindorm.io"],
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,
@@ -40,5 +34,16 @@ export const mockFetchOauthElevationSession = (
     uiLocales: ["en-GB", "sv-SE"],
   },
 
+  client: {
+    id: randomUUID(),
+    logoUri: "https://test.client.com/logo.png",
+    name: "Test Client",
+    type: OpenIdClientType.PUBLIC,
+  },
+
+  tenant: {
+    id: randomUUID(),
+    name: "Test Tenant",
+  },
   ...options,
 });

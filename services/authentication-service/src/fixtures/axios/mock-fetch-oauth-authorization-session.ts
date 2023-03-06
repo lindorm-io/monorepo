@@ -44,6 +44,7 @@ export const mockFetchOauthAuthorizationSession = (
   },
 
   authorizationSession: {
+    id: randomUUID(),
     authToken: null,
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,
@@ -63,6 +64,7 @@ export const mockFetchOauthAuthorizationSession = (
   },
 
   browserSession: {
+    id: randomUUID(),
     adjustedAccessLevel: 3,
     identityId: randomUUID(),
     latestAuthentication: new Date().toISOString(),
@@ -72,14 +74,8 @@ export const mockFetchOauthAuthorizationSession = (
     sso: true,
   },
 
-  client: {
-    logoUri: "https://test.client.com/logo.png",
-    name: "Test Client",
-    tenant: "Test Tenant",
-    type: OpenIdClientType.PUBLIC,
-  },
-
   clientSession: {
+    id: randomUUID(),
     adjustedAccessLevel: 3,
     audiences: [randomUUID()],
     identityId: randomUUID(),
@@ -87,6 +83,18 @@ export const mockFetchOauthAuthorizationSession = (
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL],
     scopes: Object.values(OpenIdScope),
+  },
+
+  client: {
+    id: randomUUID(),
+    logoUri: "https://test.client.com/logo.png",
+    name: "Test Client",
+    type: OpenIdClientType.PUBLIC,
+  },
+
+  tenant: {
+    id: randomUUID(),
+    name: "Test Tenant",
   },
 
   ...options,

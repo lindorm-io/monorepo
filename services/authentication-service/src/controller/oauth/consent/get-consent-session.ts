@@ -6,6 +6,7 @@ import {
   LindormScope,
   OpenIdScope,
   PublicClientInfo,
+  PublicTenantInfo,
   ScopeDescription,
   SessionStatus,
 } from "@lindorm-io/common-types";
@@ -15,12 +16,14 @@ type RequestData = {
 };
 
 type ResponseBody = {
-  status: SessionStatus;
   audiences: Array<string>;
   optionalScopes: Array<OpenIdScope | LindormScope>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
   scopeDescriptions: Array<ScopeDescription>;
+  status: SessionStatus;
+
   client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };
 
 export const getConsentSessionSchema = Joi.object<RequestData>()
@@ -39,6 +42,7 @@ export const getConsentSessionController: ServerKoaController = async (
   const {
     consent: { status, audiences, optionalScopes, requiredScopes, scopeDescriptions },
     client,
+    tenant,
   } = await getOauthAuthorizationSession(ctx, id);
 
   return {
@@ -49,6 +53,7 @@ export const getConsentSessionController: ServerKoaController = async (
       requiredScopes,
       scopeDescriptions,
       client,
+      tenant,
     },
   };
 };

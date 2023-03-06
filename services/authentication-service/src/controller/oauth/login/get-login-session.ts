@@ -2,15 +2,17 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../../types";
 import { getOauthAuthorizationSession } from "../../../handler";
-import { PublicClientInfo, SessionStatus } from "@lindorm-io/common-types";
+import { PublicClientInfo, PublicTenantInfo, SessionStatus } from "@lindorm-io/common-types";
 
 type RequestData = {
   id: string;
 };
 
 type ResponseBody = {
-  client: PublicClientInfo;
   status: SessionStatus;
+
+  client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };
 
 export const getLoginSessionSchema = Joi.object<RequestData>()
@@ -29,12 +31,8 @@ export const getLoginSessionController: ServerKoaController<RequestData> = async
   const {
     login: { status },
     client,
+    tenant,
   } = await getOauthAuthorizationSession(ctx, id);
 
-  return {
-    body: {
-      status,
-      client,
-    },
-  };
+  return { body: { status, client, tenant } };
 };

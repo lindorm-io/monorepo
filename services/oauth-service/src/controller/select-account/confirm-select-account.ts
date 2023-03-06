@@ -66,7 +66,7 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     authorizationSession.browserSessionId = browserSession.id;
 
     const idToken = authorizationSession.idTokenHint
-      ? jwt.verify<never, LindormClaims>(authorizationSession.idTokenHint)
+      ? jwt.verify<LindormClaims>(authorizationSession.idTokenHint)
       : undefined;
 
     const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);

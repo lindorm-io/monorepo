@@ -55,12 +55,6 @@ describe("/sessions/consent", () => {
 
     expect(response.body).toStrictEqual({
       audiences: [expect.any(String)],
-      client: {
-        logo_uri: "https://test.client.com/logo.png",
-        name: "Test Client",
-        tenant: "Test Tenant",
-        type: "public",
-      },
       optional_scopes: [
         "accessibility",
         "national_identity_number",
@@ -71,6 +65,16 @@ describe("/sessions/consent", () => {
       required_scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
       scope_descriptions: [],
       status: "pending",
+      client: {
+        id: expect.any(String),
+        logo_uri: "https://test.client.com/logo.png",
+        name: "Test Client",
+        type: "public",
+      },
+      tenant: {
+        id: expect.any(String),
+        name: "Test Tenant",
+      },
     });
   });
 

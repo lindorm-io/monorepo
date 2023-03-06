@@ -54,6 +54,7 @@ describe("redirectLoginSessionController", () => {
     getOauthAuthorizationSession.mockResolvedValue(
       mockFetchOauthAuthorizationSession({
         authorizationSession: {
+          id: randomUUID(),
           authToken: "auth.jwt.jwt",
           country: "se",
           displayMode: OpenIdDisplayMode.PAGE,

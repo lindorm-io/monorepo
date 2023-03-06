@@ -13,7 +13,7 @@ export const joinDeviceChannel = (socket: ServerSocket): ServerSocket =>
       });
     }
 
-    const verified = jwt.verify<Record<string, any>, ChallengeConfirmationTokenClaims>(token, {
+    const verified = jwt.verify<ChallengeConfirmationTokenClaims>(token, {
       issuer: configuration.services.device_service.issuer,
     });
 

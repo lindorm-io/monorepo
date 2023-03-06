@@ -70,9 +70,9 @@ describe("redirectConsentSessionController", () => {
     getOauthAuthorizationSession.mockResolvedValue(
       mockFetchOauthAuthorizationSession({
         client: {
+          id: randomUUID(),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
-          tenant: "Test Tenant",
           type: OpenIdClientType.CONFIDENTIAL,
         },
       }),

@@ -1,6 +1,7 @@
 import { getLoginSessionController } from "./get-login-session";
 import { getOauthAuthorizationSession as _fetchOauthAuthorizationSession } from "../../../handler";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 
 jest.mock("../../../handler");
 
@@ -20,13 +21,17 @@ describe("getLoginSessionDataController", () => {
   test("should resolve", async () => {
     await expect(getLoginSessionController(ctx)).resolves.toStrictEqual({
       body: {
+        status: "pending",
         client: {
+          id: expect.any(String),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
-          tenant: "Test Tenant",
-          type: "public",
+          type: OpenIdClientType.PUBLIC,
         },
-        status: "pending",
+        tenant: {
+          id: expect.any(String),
+          name: "Test Tenant",
+        },
       },
     });
   });

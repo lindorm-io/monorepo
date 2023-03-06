@@ -1,6 +1,7 @@
 import { getLogoutSessionController } from "./get-logout-session";
 import { getOauthLogoutSession as _fetchOauthLogoutSession } from "../../../handler";
 import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 
 jest.mock("../../../handler");
 
@@ -24,16 +25,20 @@ describe("getLogoutSessionDataController", () => {
           connectedSessions: 3,
           id: expect.any(String),
         },
-        client: {
-          logoUri: "https://test.client.com/logo.png",
-          name: "Test Client",
-          tenant: "Test Tenant",
-          type: "public",
-        },
         clientSession: {
           id: expect.any(String),
         },
         status: "pending",
+        client: {
+          id: expect.any(String),
+          logoUri: "https://test.client.com/logo.png",
+          name: "Test Client",
+          type: OpenIdClientType.PUBLIC,
+        },
+        tenant: {
+          id: expect.any(String),
+          name: "Test Tenant",
+        },
       },
     });
   });

@@ -1,6 +1,6 @@
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 
-export const getTestGoogleIdToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
+export const getTestGoogleIdToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: "https://jwt.google.com",
   }).sign({

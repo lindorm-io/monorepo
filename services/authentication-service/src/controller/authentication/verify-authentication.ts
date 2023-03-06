@@ -84,30 +84,28 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     });
   }
 
-  const { token: authenticationConfirmationToken, expiresIn } = jwt.sign<
-    never,
-    AuthenticationConfirmationTokenClaims
-  >({
-    audiences: [authenticationSession.clientId],
-    authContextClass: `loa_${level}`,
-    authMethodsReference,
-    authTime: getUnixTime(new Date()),
-    claims: {
-      country: authenticationSession.country,
-      maximumLoa: maximum,
-      remember: authenticationSession.remember,
-      sso: authenticationSession.sso,
-      verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
-    },
-    expiry: "60 seconds",
-    levelOfAssurance: level,
-    nonce: authenticationSession.nonce,
-    scopes: ["authentication"],
-    session: authenticationSession.id,
-    subject: authenticationSession.identityId,
-    subjectHint: SubjectHint.IDENTITY,
-    type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
-  });
+  const { token: authenticationConfirmationToken, expiresIn } =
+    jwt.sign<AuthenticationConfirmationTokenClaims>({
+      audiences: [authenticationSession.clientId],
+      authContextClass: `loa_${level}`,
+      authMethodsReference,
+      authTime: getUnixTime(new Date()),
+      claims: {
+        country: authenticationSession.country,
+        maximumLoa: maximum,
+        remember: authenticationSession.remember,
+        sso: authenticationSession.sso,
+        verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
+      },
+      expiry: "60 seconds",
+      levelOfAssurance: level,
+      nonce: authenticationSession.nonce,
+      scopes: ["authentication"],
+      session: authenticationSession.id,
+      subject: authenticationSession.identityId,
+      subjectHint: SubjectHint.IDENTITY,
+      type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
+    });
 
   if (canGenerateMfaCookie(authenticationSession)) {
     await generateMfaCookie(ctx, authenticationSession);

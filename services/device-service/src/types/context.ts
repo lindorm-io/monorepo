@@ -46,7 +46,7 @@ interface ServerRepository extends LindormNodeServerRepository {
 interface ServerToken extends LindormNodeServerToken {
   challengeConfirmationToken: VerifiedChallengeConfirmationToken;
   challengeSessionToken: JwtDecodeData;
-  rdcSessionToken: JwtDecodeData<Record<string, any>, Record<string, any>>;
+  rdcSessionToken: JwtDecodeData<Record<string, any>>;
   enrolmentSessionToken: JwtDecodeData;
 }
 

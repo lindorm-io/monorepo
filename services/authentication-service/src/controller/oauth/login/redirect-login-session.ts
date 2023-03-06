@@ -46,13 +46,13 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 
   if (authToken) {
     try {
-      const authenticationConfirmationToken = jwt.verify<
-        never,
-        AuthenticationConfirmationTokenClaims
-      >(authToken, {
-        issuer: configuration.server.issuer,
-        types: [AuthenticationTokenType.AUTHENTICATION_CONFIRMATION],
-      });
+      const authenticationConfirmationToken = jwt.verify<AuthenticationConfirmationTokenClaims>(
+        authToken,
+        {
+          issuer: configuration.server.issuer,
+          types: [AuthenticationTokenType.AUTHENTICATION_CONFIRMATION],
+        },
+      );
 
       if (session !== authenticationConfirmationToken.session) {
         throw new ClientError("Invalid session identifier", {

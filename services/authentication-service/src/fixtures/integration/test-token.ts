@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
 import { AuthenticationTokenType, DeviceTokenType, SubjectHint } from "@lindorm-io/common-types";
 
 export const getTestChallengeConfirmationToken = (
-  options: Partial<JwtSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.device_service.issuer,
@@ -19,7 +19,6 @@ export const getTestChallengeConfirmationToken = (
     },
     expiry: "10 seconds",
     nonce: randomString(16),
-    payload: {},
     scopes: ["authentication"],
     session: randomUUID(),
     subject: randomUUID(),
@@ -31,7 +30,7 @@ export const getTestChallengeConfirmationToken = (
 };
 
 export const getTestAuthenticationConfirmationToken = (
-  options: Partial<JwtSignOptions<any, any>> = {},
+  options: Partial<JwtSignOptions> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
@@ -59,9 +58,7 @@ export const getTestAuthenticationConfirmationToken = (
   return token;
 };
 
-export const getTestStrategySessionToken = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
+export const getTestStrategySessionToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({

@@ -5,7 +5,7 @@ import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
 import { LindormScope, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
 
-export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
+export const getTestAccessToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
   }).sign({
@@ -26,9 +26,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
   return token;
 };
 
-export const getTestClientCredentials = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
+export const getTestClientCredentials = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.services.oauth_service.issuer,
   }).sign({

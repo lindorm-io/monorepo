@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { PublicClientInfo, SessionStatus } from "@lindorm-io/common-types";
+import { PublicClientInfo, PublicTenantInfo, SessionStatus } from "@lindorm-io/common-types";
 import { ServerKoaController } from "../../../types";
 import { getOauthLogoutSession } from "../../../handler";
 
@@ -18,6 +18,7 @@ type ResponseBody = {
     id: string | null;
   };
   client: PublicClientInfo;
+  tenant: PublicTenantInfo;
 };
 
 export const getLogoutSessionSchema = Joi.object<RequestData>()
@@ -36,6 +37,7 @@ export const getLogoutSessionController: ServerKoaController<RequestData> = asyn
   const {
     logout: { status, browserSession, clientSession },
     client,
+    tenant,
   } = await getOauthLogoutSession(ctx, id);
 
   return {
@@ -44,6 +46,7 @@ export const getLogoutSessionController: ServerKoaController<RequestData> = asyn
       browserSession,
       clientSession,
       client,
+      tenant,
     },
   };
 };

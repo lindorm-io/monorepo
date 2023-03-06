@@ -16,20 +16,26 @@ export const mockFetchOauthLogoutSession = (
     },
   },
 
-  client: {
-    logoUri: "https://test.client.com/logo.png",
-    name: "Test Client",
-    tenant: "Test Tenant",
-    type: OpenIdClientType.PUBLIC,
-  },
-
   logoutSession: {
+    id: randomUUID(),
     expires: "2022-01-01T04:00:00.000Z",
     idTokenHint: "id.jwt.jwt",
     identityId: randomUUID(),
     logoutHint: "test@lindorm.io",
     originalUri: "https://oauth.lindorm.io/oauth2/logout?query=query",
     uiLocales: ["en-GB", "sv-SE"],
+  },
+
+  client: {
+    id: randomUUID(),
+    logoUri: "https://test.client.com/logo.png",
+    name: "Test Client",
+    type: OpenIdClientType.PUBLIC,
+  },
+
+  tenant: {
+    id: randomUUID(),
+    name: "Test Tenant",
   },
 
   ...options,

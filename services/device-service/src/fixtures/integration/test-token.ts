@@ -1,7 +1,7 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
-import { ChallengeConfirmationTokenClaims } from "../../common";
+import { ChallengeConfirmationTokenClaims, RdcSessionTokenClaims } from "../../common";
 import { randomUUID } from "crypto";
 import {
   ChallengeStrategy,
@@ -11,20 +11,20 @@ import {
 } from "@lindorm-io/common-types";
 
 export const getTestChallengeConfirmationToken = (
-  options: Partial<JwtSignOptions<Record<string, unknown>, ChallengeConfirmationTokenClaims>> = {},
+  options: Partial<JwtSignOptions<ChallengeConfirmationTokenClaims>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
-  }).sign<Record<string, unknown>, ChallengeConfirmationTokenClaims>({
+  }).sign<ChallengeConfirmationTokenClaims>({
     audiences: [configuration.oauth.client_id],
     claims: {
       deviceLinkId: "id",
+      ext: { generated: true },
       factors: [PSD2Factor.POSSESSION, PSD2Factor.KNOWLEDGE],
       strategy: ChallengeStrategy.PINCODE,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
     nonce: randomString(16),
-    payload: { generated: true },
     scopes: ["test"],
     session: randomUUID(),
     sessionHint: "challenge",
@@ -36,9 +36,7 @@ export const getTestChallengeConfirmationToken = (
   return token;
 };
 
-export const getTestChallengeSessionToken = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
+export const getTestChallengeSessionToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
@@ -54,9 +52,7 @@ export const getTestChallengeSessionToken = (
   return token;
 };
 
-export const getTestEnrolmentSessionToken = (
-  options: Partial<JwtSignOptions<any, any>> = {},
-): string => {
+export const getTestEnrolmentSessionToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
   }).sign({
@@ -72,11 +68,16 @@ export const getTestEnrolmentSessionToken = (
   return token;
 };
 
-export const getTestRdcToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
+export const getTestRdcToken = (
+  options: Partial<JwtSignOptions<RdcSessionTokenClaims>> = {},
+): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
-  }).sign({
+  }).sign<RdcSessionTokenClaims>({
     audiences: [configuration.oauth.client_id],
+    claims: {
+      ext: {},
+    },
     expiry: configuration.defaults.remote_device_challenge_session_expiry,
     session: randomUUID(),
     sessionHint: "rdc",

@@ -1,28 +1,30 @@
-import { ChallengeStrategy, LindormClaims, PSD2Factor } from "@lindorm-io/common-types";
+import { ChallengeStrategy, Dict, LindormClaims, PSD2Factor } from "@lindorm-io/common-types";
 import { JwtDecodeData } from "@lindorm-io/jwt";
 
-export type AuthenticationConfirmationTokenClaims = {
+export interface AuthenticationConfirmationTokenClaims {
   country: string | null;
   maximumLoa: number;
   remember: boolean;
   sso: boolean;
   verifiedIdentifiers: Array<string>;
-};
+}
 
-export type VerifiedAuthenticationConfirmationToken = JwtDecodeData<
-  never,
-  AuthenticationConfirmationTokenClaims
->;
-
-export type ChallengeConfirmationTokenClaims = {
+export interface ChallengeConfirmationTokenClaims {
   deviceLinkId: string;
+  ext: Dict;
   factors: Array<PSD2Factor>;
   strategy: ChallengeStrategy;
-};
+}
 
-export type VerifiedChallengeConfirmationToken = JwtDecodeData<
-  Record<string, any>,
-  ChallengeConfirmationTokenClaims
->;
+export interface RdcSessionTokenClaims {
+  ext: Dict;
+}
 
-export type VerifiedIdentityToken = JwtDecodeData<never, LindormClaims>;
+export type VerifiedAuthenticationConfirmationToken =
+  JwtDecodeData<AuthenticationConfirmationTokenClaims>;
+
+export type VerifiedChallengeConfirmationToken = JwtDecodeData<ChallengeConfirmationTokenClaims>;
+
+export type VerifiedRdcSessionToken = JwtDecodeData<RdcSessionTokenClaims>;
+
+export type VerifiedIdentityToken = JwtDecodeData<LindormClaims>;

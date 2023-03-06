@@ -110,6 +110,7 @@ describe("/oauth/login", () => {
         200,
         mockFetchOauthAuthorizationSession({
           authorizationSession: {
+            id: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
             authToken,
             country: "se",
             displayMode: OpenIdDisplayMode.PAGE,

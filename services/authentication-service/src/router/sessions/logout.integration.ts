@@ -58,16 +58,20 @@ describe("/sessions/logout", () => {
         connected_sessions: 3,
         id: expect.any(String),
       },
-      client: {
-        logo_uri: "https://test.client.com/logo.png",
-        name: "Test Client",
-        tenant: "Test Tenant",
-        type: "public",
-      },
       client_session: {
         id: expect.any(String),
       },
       status: "pending",
+      client: {
+        id: expect.any(String),
+        logo_uri: "https://test.client.com/logo.png",
+        name: "Test Client",
+        type: "public",
+      },
+      tenant: {
+        id: expect.any(String),
+        name: "Test Tenant",
+      },
     });
   });
 

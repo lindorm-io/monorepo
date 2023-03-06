@@ -1,6 +1,7 @@
 import { getConsentSessionController } from "./get-consent-session";
 import { getOauthAuthorizationSession as _fetchOauthAuthorizationSession } from "../../../handler";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 
 jest.mock("../../../handler");
 
@@ -21,12 +22,6 @@ describe("getConsentSessionController", () => {
     await expect(getConsentSessionController(ctx)).resolves.toStrictEqual({
       body: {
         audiences: [expect.any(String)],
-        client: {
-          logoUri: "https://test.client.com/logo.png",
-          name: "Test Client",
-          tenant: "Test Tenant",
-          type: "public",
-        },
         optionalScopes: [
           "accessibility",
           "national_identity_number",
@@ -37,6 +32,16 @@ describe("getConsentSessionController", () => {
         requiredScopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
         scopeDescriptions: [],
         status: "pending",
+        client: {
+          id: expect.any(String),
+          logoUri: "https://test.client.com/logo.png",
+          name: "Test Client",
+          type: OpenIdClientType.PUBLIC,
+        },
+        tenant: {
+          id: expect.any(String),
+          name: "Test Tenant",
+        },
       },
     });
   });

@@ -13,7 +13,7 @@ import {
 } from "@lindorm-io/common-types";
 
 export const getTestIdToken = (
-  options: Partial<JwtSignOptions<any, Partial<LindormClaims>>> = {},
+  options: Partial<JwtSignOptions<Partial<LindormClaims>>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,
