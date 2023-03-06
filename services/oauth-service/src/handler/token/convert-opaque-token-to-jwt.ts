@@ -5,7 +5,7 @@ import { SubjectHint } from "@lindorm-io/common-types";
 import { configuration } from "../../server/configuration";
 import { getAdjustedAccessLevel } from "../../util";
 import { getUnixTime } from "date-fns";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { uniqArray } from "@lindorm-io/core";
 
 export const convertOpaqueTokenToJwt = (
@@ -32,7 +32,7 @@ export const convertOpaqueTokenToJwt = (
     client: clientSession.clientId,
     expiry: opaqueToken.expires,
     levelOfAssurance: clientSession.levelOfAssurance,
-    nonce: clientSession.nonce || randomString(16),
+    nonce: clientSession.nonce || randomUnreserved(16),
     notBefore: opaqueToken.created,
     scopes: clientSession.scopes,
     session: clientSession.id,

@@ -5,7 +5,7 @@ import { generateClientSecretController } from "./generate-client-secret";
 jest.mock("@lindorm-io/random", () => ({
   ...(jest.requireActual("@lindorm-io/random") as object),
 
-  randomString: jest.fn().mockImplementation(() => "random-string"),
+  randomUnreserved: jest.fn().mockImplementation(() => "random-string"),
 }));
 
 jest.mock("../../instance", () => ({

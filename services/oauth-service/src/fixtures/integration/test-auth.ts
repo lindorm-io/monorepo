@@ -2,7 +2,7 @@ import { LindormScope, OpenIdScope, OpenIdTokenType, SubjectHint } from "@lindor
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getUnixTime } from "date-fns";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = {}): string => {
@@ -15,7 +15,7 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions<any, any>> = 
     client: randomUUID(),
     expiry: "10 seconds",
     levelOfAssurance: 4,
-    nonce: randomString(16),
+    nonce: randomUnreserved(16),
     scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
     session: randomUUID(),
     sessionHint: "access",

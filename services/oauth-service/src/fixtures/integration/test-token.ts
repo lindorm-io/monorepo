@@ -1,7 +1,7 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
 import { getUnixTime } from "date-fns";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { ClientSessionType } from "../../enum";
 import {
@@ -26,7 +26,7 @@ export const getTestIdToken = (
     client: randomUUID(),
     expiry: "10 seconds",
     levelOfAssurance: 3,
-    nonce: randomString(16),
+    nonce: randomUnreserved(16),
     scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
     session: randomUUID(),
     sessionHint: ClientSessionType.EPHEMERAL,

@@ -1,7 +1,7 @@
 import { OpaqueToken } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { createMockCache } from "@lindorm-io/redis";
-import { createOpaqueTokenString } from "../../util";
+import { createOpaqueToken } from "../../util";
 import { createTestAccessToken } from "../../fixtures/entity";
 import { createTestJwt } from "@lindorm-io/jwt";
 import { getTestAccessToken } from "../../fixtures/integration";
@@ -20,7 +20,7 @@ describe("resolveTokenSession", () => {
   });
 
   test("should resolve from opaque token", async () => {
-    await expect(resolveTokenSession(ctx, createOpaqueTokenString())).resolves.toStrictEqual(
+    await expect(resolveTokenSession(ctx, createOpaqueToken())).resolves.toStrictEqual(
       expect.any(OpaqueToken),
     );
   });

@@ -2,7 +2,7 @@ import Joi from "joi";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 
 type RequestData = {
   id: string;
@@ -26,7 +26,7 @@ export const generateClientSecretController: ServerKoaController<RequestData> = 
     repository: { clientRepository },
   } = ctx;
 
-  const secret = randomString(128);
+  const secret = randomUnreserved(128);
 
   client.secret = await argon.encrypt(secret);
 

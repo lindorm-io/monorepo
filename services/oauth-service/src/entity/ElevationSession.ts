@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { JOI_DISPLAY_MODE } from "../constant";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
@@ -163,7 +163,7 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
     this.identityId = options.identityId;
-    this.nonce = options.nonce || randomString(16);
+    this.nonce = options.nonce || randomUnreserved(16);
     this.redirectUri = options.redirectUri || null;
     this.state = options.state || null;
     this.status = options.status || SessionStatus.PENDING;

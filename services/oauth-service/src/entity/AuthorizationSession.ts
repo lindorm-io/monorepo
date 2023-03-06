@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
@@ -304,7 +304,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.idTokenHint = options.idTokenHint || null;
     this.loginHint = options.loginHint || [];
     this.maxAge = options.maxAge || null;
-    this.nonce = options.nonce || randomString(16);
+    this.nonce = options.nonce || randomUnreserved(16);
     this.originalUri = options.originalUri;
     this.promptModes = options.promptModes || [];
     this.redirectData = options.redirectData || null;

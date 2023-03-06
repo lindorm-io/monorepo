@@ -1,5 +1,5 @@
 import { AuthorizationCode, AuthorizationCodeOptions } from "../../entity";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
 export const createTestAuthorizationCode = (
@@ -7,7 +7,7 @@ export const createTestAuthorizationCode = (
 ): AuthorizationCode =>
   new AuthorizationCode({
     authorizationSessionId: randomUUID(),
-    code: randomString(128),
+    code: randomUnreserved(128),
     expires: new Date("2021-01-02T08:00:00.000Z"),
 
     ...options,

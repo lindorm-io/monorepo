@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE, JOI_NONCE } from "../common";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { ClientSessionType } from "../enum";
 import {
   AuthenticationMethod,
@@ -80,7 +80,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     this.levelOfAssurance = options.levelOfAssurance;
     this.metadata = options.metadata || {};
     this.methods = options.methods;
-    this.nonce = options.nonce || randomString(16);
+    this.nonce = options.nonce || randomUnreserved(16);
     this.scopes = options.scopes || [];
     this.tenantId = options.tenantId;
     this.type = options.type;

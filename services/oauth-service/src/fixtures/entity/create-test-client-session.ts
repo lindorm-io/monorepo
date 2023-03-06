@@ -1,7 +1,7 @@
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import { ClientSession, ClientSessionOptions } from "../../entity";
 import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { ClientSessionType } from "../../enum";
 
 export const createTestClientSession = (
@@ -16,7 +16,7 @@ export const createTestClientSession = (
     levelOfAssurance: 2,
     metadata: { ip: "10.0.0.1", deviceName: "Test Device", platform: "iOS" },
     methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-    nonce: randomString(16),
+    nonce: randomUnreserved(16),
     scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
     tenantId: randomUUID(),
     type: ClientSessionType.REFRESH,

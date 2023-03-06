@@ -3,8 +3,8 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createConsentRejectedUri } from "../../util";
 import {
-  RejectConsentResponse,
   RejectConsentRequestParams,
+  RejectConsentResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
 

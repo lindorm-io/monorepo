@@ -2,7 +2,7 @@ import MockDate from "mockdate";
 import request from "supertest";
 import { configuration } from "../../../server/configuration";
 import { getTestData } from "../../../fixtures/data";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { server } from "../../../server/server";
 import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 import { ClientSessionType } from "../../../enum";
@@ -228,7 +228,7 @@ describe("/oauth2/sessions/elevate", () => {
 
         identityId: clientSession.identityId,
         redirectUri: "https://test.client.lindorm.io/redirect",
-        state: randomString(16),
+        state: randomUnreserved(16),
         status: SessionStatus.CONFIRMED,
       }),
     );

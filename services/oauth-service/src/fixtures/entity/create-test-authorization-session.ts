@@ -1,6 +1,6 @@
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
 import { baseHash } from "@lindorm-io/core";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   AuthenticationMethod,
@@ -17,7 +17,7 @@ export const createTestAuthorizationSession = (
 ): AuthorizationSession =>
   new AuthorizationSession({
     code: {
-      codeChallenge: randomString(43),
+      codeChallenge: randomUnreserved(43),
       codeChallengeMethod: PKCEMethod.SHA256,
       ...(options.code || {}),
     },
@@ -57,7 +57,7 @@ export const createTestAuthorizationSession = (
     idTokenHint: "id.jwt.jwt",
     loginHint: ["test@lindorm.io"],
     maxAge: 999,
-    nonce: randomString(16),
+    nonce: randomUnreserved(16),
     originalUri: "https://localhost/oauth2/authorize?query=query",
     promptModes: [
       OpenIdPromptMode.LOGIN,
@@ -70,7 +70,7 @@ export const createTestAuthorizationSession = (
     redirectUri: "https://test.client.lindorm.io/redirect",
     responseMode: OpenIdResponseMode.QUERY,
     responseTypes: [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN],
-    state: randomString(16),
+    state: randomUnreserved(16),
     uiLocales: ["sv-SE", "en-GB"],
 
     ...options,

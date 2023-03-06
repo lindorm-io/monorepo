@@ -13,7 +13,6 @@ import {
 } from "../token";
 import {
   createTestAccessToken,
-  createTestAuthorizationCode,
   createTestAuthorizationSession,
   createTestClient,
   createTestClientSession,
@@ -70,9 +69,7 @@ describe("generateCallbackResponse", () => {
     getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
 
     generateAuthorizationCode.mockResolvedValue(
-      createTestAuthorizationCode({
-        code: "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
-      }),
+      "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
     );
   });
 

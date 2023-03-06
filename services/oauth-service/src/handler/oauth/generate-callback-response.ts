@@ -39,9 +39,7 @@ export const generateCallbackResponse = async (
   }
 
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.CODE)) {
-    const authorizationCode = await generateAuthorizationCode(ctx, authorizationSession);
-
-    data.code = authorizationCode.code;
+    data.code = await generateAuthorizationCode(ctx, authorizationSession);
   }
 
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {

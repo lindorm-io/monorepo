@@ -23,7 +23,7 @@ const schema = Joi.object<OpaqueTokenAttributes>()
 
     clientSessionId: Joi.string().guid().required(),
     expires: Joi.date().required(),
-    token: Joi.string().length(184).required(),
+    token: Joi.string().length(215).required(),
     type: Joi.string()
       .valid(...Object.values(OpaqueTokenType))
       .required(),

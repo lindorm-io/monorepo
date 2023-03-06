@@ -4,7 +4,7 @@ import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
-import { randomString } from "@lindorm-io/random";
+import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   LevelOfAssurance,
@@ -47,7 +47,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   const id = randomUUID();
-  const secret = randomString(128);
+  const secret = randomUnreserved(128);
 
   await clientRepository.create(
     new Client({

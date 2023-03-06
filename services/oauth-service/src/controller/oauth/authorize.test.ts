@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { createMockCache } from "@lindorm-io/redis";
 import { oauthAuthorizeController } from "./authorize";
-import { randomString as _randomString } from "@lindorm-io/random";
+import { randomUnreserved as _randomUnreserved } from "@lindorm-io/random";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -46,7 +46,7 @@ const filterAcrValues = _filterAcrValues as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
 const isSelectAccountRequired = _isSelectAccountRequired as jest.Mock;
-const randomString = _randomString as jest.Mock;
+const randomUnreserved = _randomUnreserved as jest.Mock;
 const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
 const tryFindBrowserSessions = _tryFindBrowserSessions as jest.Mock;
 const tryFindClientSession = _tryFindClientSession as jest.Mock;
@@ -133,7 +133,7 @@ describe("oauthAuthorizeController", () => {
     isConsentRequired.mockImplementation(() => false);
     isLoginRequired.mockImplementation(() => false);
     isSelectAccountRequired.mockImplementation(() => false);
-    randomString.mockImplementation(() => "WuaUxGcvKAkxJJUF");
+    randomUnreserved.mockImplementation(() => "WuaUxGcvKAkxJJUF");
     setAuthorizationSessionCookie.mockImplementation();
   });
 

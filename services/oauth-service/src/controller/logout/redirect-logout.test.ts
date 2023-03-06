@@ -1,9 +1,9 @@
 import { createTestLogoutSession } from "../../fixtures/entity";
 import { redirectLogoutController } from "./redirect-logout";
 import {
-  createLogoutVerifyUri as _createLogoutVerifyUri,
   createLogoutPendingUri as _createLogoutPendingUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
+  createLogoutVerifyUri as _createLogoutVerifyUri,
 } from "../../util";
 import { SessionStatus } from "@lindorm-io/common-types";
 

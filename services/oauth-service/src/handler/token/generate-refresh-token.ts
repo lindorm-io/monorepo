@@ -1,9 +1,9 @@
 import { Client, ClientSession, OpaqueToken } from "../../entity";
+import { OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
+import { createOpaqueToken } from "../../util";
 import { expiryDate } from "@lindorm-io/expiry";
-import { createOpaqueTokenString } from "../../util";
-import { OpaqueTokenType } from "../../enum";
 
 export const generateRefreshToken = async (
   ctx: ServerKoaContext,
@@ -20,7 +20,7 @@ export const generateRefreshToken = async (
       expires: expiryDate(
         client.expiry.refreshToken || configuration.defaults.expiry.refresh_session,
       ),
-      token: createOpaqueTokenString(),
+      token: createOpaqueToken(),
       type: OpaqueTokenType.REFRESH,
     }),
   );

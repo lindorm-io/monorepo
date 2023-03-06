@@ -22,10 +22,7 @@ describe("setAuthorizationCode", () => {
 
   test("should resolve update authorization session with code", async () => {
     await expect(generateAuthorizationCode(ctx, authorizationSession)).resolves.toStrictEqual(
-      expect.objectContaining({
-        code: expect.any(String),
-        expires: new Date("2021-01-01T08:01:00.000Z"),
-      }),
+      expect.any(String),
     );
 
     expect(ctx.cache.authorizationCodeCache.create).toHaveBeenCalledWith(
