@@ -1,29 +1,32 @@
-import { randomInteger } from "./random-integer";
+import { DEFAULT_SYMBOLS } from "../constants";
 import { RandomStringAmount, RandomStringOptions } from "../types";
+import { isNumber, isString } from "@lindorm-io/core";
+import { randomInteger } from "./random-integer";
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const NUMBERS = "0123456789";
-const SYMBOLS = "!()-.,/?[]_~;:!@#$%^&*+=<>{}";
 
 const randomSort = () => 0.5 - Math.random();
 
 const calculateAmount = (length: number, amount: RandomStringAmount): number => {
-  switch (amount) {
-    case "random":
-      return randomInteger(length / 3);
-    case "1/2":
-      return Math.round(length / 2);
-    case "1/3":
-      return Math.round(length / 3);
-    case "1/4":
-      return Math.round(length / 4);
-    case "1/5":
-      return Math.round(length / 5);
-    case "1/6":
-      return Math.round(length / 6);
-    default:
-      return amount;
+  if (isNumber(amount)) {
+    return amount;
   }
+
+  if (!isString(amount)) {
+    return amount;
+  }
+
+  if (amount === "random") {
+    return randomInteger(length / 3);
+  }
+
+  if (amount.endsWith("%")) {
+    const percent = parseFloat(`0.${amount.replace("%", "")}`);
+    return Math.round(length * percent);
+  }
+
+  throw new Error("Invalid amount");
 };
 
 export const randomString = (length: number, options: RandomStringOptions = {}): string => {
@@ -35,7 +38,11 @@ export const randomString = (length: number, options: RandomStringOptions = {}):
 
   const result: string[] = [];
 
-  const { chars = CHARS, numbers = NUMBERS, symbols = SYMBOLS } = options.custom || {};
+  const {
+    chars = CHARS,
+    numbers = NUMBERS,
+    symbols = DEFAULT_SYMBOLS.join(""),
+  } = options.custom || {};
 
   for (let i = 0; i < numbersAmount; i++) {
     result.push(numbers.charAt(Math.floor(Math.random() * numbers.length)));
