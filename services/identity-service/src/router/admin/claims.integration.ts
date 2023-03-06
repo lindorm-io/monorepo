@@ -48,8 +48,10 @@ describe("/admin/claims", () => {
     .get("/admin/sessions/claims/37c81a2f-88d3-4af9-a1c1-8636e2ab0435")
     .times(999)
     .reply(200, {
-      identity_id: "e13c1038-ed23-44f9-ad7e-e8c91c523ae1",
-      scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+      claims_session: {
+        identity_id: "e13c1038-ed23-44f9-ad7e-e8c91c523ae1",
+        scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+      },
     });
 
   test("GET /", async () => {
@@ -128,6 +130,7 @@ describe("/admin/claims", () => {
       given_name: "Oliver",
       avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
+      marital_status: "Single",
       middle_name: "Rio",
       name: "Olivia Torsson",
       national_identity_number: nin.value,

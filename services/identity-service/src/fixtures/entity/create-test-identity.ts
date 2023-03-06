@@ -14,6 +14,7 @@ export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Iden
     givenName: "Oliver",
     avatarUri: "https://avatar.url/",
     locale: "sv-SE",
+    maritalStatus: "Single",
     middleName: "Rio",
     namingSystem: NamingSystem.GIVEN_FAMILY,
     nickname: "Wheat",

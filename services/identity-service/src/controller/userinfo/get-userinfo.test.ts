@@ -119,6 +119,7 @@ describe("getUserinfoController", () => {
         gender: "Female",
         givenName: "Oliver",
         locale: "sv-SE",
+        maritalStatus: "Single",
         middleName: "Rio",
         name: "getName",
         nickname: "Wheat",

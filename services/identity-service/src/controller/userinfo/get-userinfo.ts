@@ -62,6 +62,7 @@ export const getUserinfoController: ServerKoaController = async (
         claims.gender = identity.gender;
         claims.givenName = identity.givenName;
         claims.locale = identity.locale;
+        claims.maritalStatus = identity.maritalStatus;
         claims.middleName = identity.middleName;
         claims.name = getName(identity);
         claims.nickname = identity.nickname;

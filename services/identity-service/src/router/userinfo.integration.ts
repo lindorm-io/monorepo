@@ -117,6 +117,7 @@ describe("/userinfo", () => {
       given_name: "Oliver",
       avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
+      marital_status: "Single",
       middle_name: "Rio",
       name: "Olivia Torsson",
       national_identity_number: nin.value,

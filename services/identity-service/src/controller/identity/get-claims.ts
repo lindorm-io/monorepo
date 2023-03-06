@@ -28,7 +28,9 @@ export const getClaimsController: ServerKoaController = async (
     repository: { addressRepository, identityRepository },
   } = ctx;
 
-  const { identityId, scopes } = await getOauthClaimsSession(ctx, session);
+  const {
+    claimsSession: { identityId, scopes },
+  } = await getOauthClaimsSession(ctx, session);
 
   const identity = await identityRepository.find({ id: identityId });
 
@@ -71,6 +73,7 @@ export const getClaimsController: ServerKoaController = async (
         claims.gender = identity.gender;
         claims.givenName = identity.givenName;
         claims.locale = identity.locale;
+        claims.maritalStatus = identity.maritalStatus;
         claims.middleName = identity.middleName;
         claims.name = getName(identity);
         claims.nickname = identity.nickname;

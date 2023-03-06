@@ -29,6 +29,7 @@ export type IdentityAttributes = EntityAttributes & {
   gender: string | null;
   givenName: string | null;
   locale: string | null;
+  maritalStatus: string | null;
   middleName: string | null;
   namingSystem: NamingSystem;
   nickname: string | null;
@@ -54,6 +55,7 @@ export type IdentityOptions = Optional<
   | "gender"
   | "givenName"
   | "locale"
+  | "maritalStatus"
   | "middleName"
   | "namingSystem"
   | "nickname"
@@ -80,6 +82,7 @@ const schema = Joi.object<IdentityAttributes>()
     gender: Joi.string().allow(null).required(),
     givenName: Joi.string().allow(null).required(),
     locale: JOI_LOCALE.allow(null).required(),
+    maritalStatus: Joi.string().allow(null).required(),
     middleName: Joi.string().allow(null).required(),
     namingSystem: JOI_NAMING_SYSTEM.required(),
     nickname: Joi.string().allow(null).required(),
@@ -104,6 +107,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public gender: string | null;
   public givenName: string | null;
   public locale: string | null;
+  public maritalStatus: string | null;
   public middleName: string | null;
   public namingSystem: NamingSystem;
   public nickname: string | null;
@@ -131,6 +135,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.gender = options.gender || null;
     this.givenName = options.givenName || null;
     this.locale = options.locale || null;
+    this.maritalStatus = options.maritalStatus || null;
     this.middleName = options.middleName || null;
     this.namingSystem = options.namingSystem || NamingSystem.GIVEN_FAMILY;
     this.nickname = options.nickname || null;
@@ -161,6 +166,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       gender: this.gender,
       givenName: this.givenName,
       locale: this.locale,
+      maritalStatus: this.maritalStatus,
       middleName: this.middleName,
       namingSystem: this.namingSystem,
       nickname: this.nickname,

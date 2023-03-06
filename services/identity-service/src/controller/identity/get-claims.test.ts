@@ -52,8 +52,10 @@ describe("getClaimsController", () => {
     });
     getName.mockImplementation(() => "getName");
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID],
+      },
     });
   });
 
@@ -69,8 +71,10 @@ describe("getClaimsController", () => {
 
   test("should resolve ADDRESS", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, OpenIdScope.ADDRESS],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, OpenIdScope.ADDRESS],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -85,8 +89,10 @@ describe("getClaimsController", () => {
 
   test("should resolve EMAIL", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -102,8 +108,10 @@ describe("getClaimsController", () => {
 
   test("should resolve PHONE", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -119,8 +127,10 @@ describe("getClaimsController", () => {
 
   test("should resolve PROFILE", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -131,6 +141,7 @@ describe("getClaimsController", () => {
         gender: "Female",
         givenName: "Oliver",
         locale: "sv-SE",
+        maritalStatus: "Single",
         middleName: "Rio",
         name: "getName",
         nickname: "Wheat",
@@ -148,8 +159,10 @@ describe("getClaimsController", () => {
 
   test("should resolve ACCESSIBILITY", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, LindormScope.ACCESSIBILITY],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, LindormScope.ACCESSIBILITY],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -164,8 +177,10 @@ describe("getClaimsController", () => {
 
   test("should resolve NATIONAL_IDENTITY_NUMBER", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, LindormScope.NATIONAL_IDENTITY_NUMBER],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, LindormScope.NATIONAL_IDENTITY_NUMBER],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -181,8 +196,10 @@ describe("getClaimsController", () => {
 
   test("should resolve PUBLIC", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, LindormScope.PUBLIC],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, LindormScope.PUBLIC],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -199,8 +216,10 @@ describe("getClaimsController", () => {
 
   test("should resolve SOCIAL_SECURITY_NUMBER", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, LindormScope.SOCIAL_SECURITY_NUMBER],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, LindormScope.SOCIAL_SECURITY_NUMBER],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
@@ -216,8 +235,10 @@ describe("getClaimsController", () => {
 
   test("should resolve USERNAME", async () => {
     getOauthClaimsSession.mockResolvedValue({
-      identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-      scopes: [OpenIdScope.OPENID, LindormScope.USERNAME],
+      claimsSession: {
+        identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
+        scopes: [OpenIdScope.OPENID, LindormScope.USERNAME],
+      },
     });
 
     await expect(getClaimsController(ctx)).resolves.toStrictEqual({
