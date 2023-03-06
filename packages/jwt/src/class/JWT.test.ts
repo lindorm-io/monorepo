@@ -17,8 +17,8 @@ const parseTokenData = (token: string): any => JSON.parse(baseParse(token.split(
 
 describe("JWT", () => {
   let jwt: JWT;
-  let optionsMin: JwtSignOptions<any, any>;
-  let optionsFull: JwtSignOptions<any, any>;
+  let optionsMin: JwtSignOptions<any>;
+  let optionsFull: JwtSignOptions<any>;
 
   beforeEach(() => {
     optionsMin = {
@@ -41,7 +41,6 @@ describe("JWT", () => {
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: new Date(),
-      payload: { payloadKey: "payloadValue" },
       scopes: ["openid"],
       session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "refresh",
@@ -127,7 +126,7 @@ describe("JWT", () => {
       },
       payload: {
         aal: 3,
-        acr: ["loa_4"],
+        acr: "loa_4",
         amr: ["email"],
         aud: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         auth_time: 1609488000,
@@ -135,9 +134,6 @@ describe("JWT", () => {
         cid: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
         claims_key: "claimValue",
         exp: 1609488010,
-        ext: {
-          payload_key: "payloadValue",
-        },
         iat: 1609488000,
         iss: "https://test.lindorm.io",
         jti: id,
@@ -203,7 +199,6 @@ describe("JWT", () => {
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: 1609488000,
       now: 1609488000,
-      payload: { payloadKey: "payloadValue" },
       scopes: ["openid"],
       session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "refresh",
@@ -369,7 +364,6 @@ describe("JWT", () => {
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: 1609488000,
       now: 1609488000,
-      payload: { payloadKey: "payloadValue" },
       scopes: ["openid"],
       session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "refresh",
@@ -405,7 +399,6 @@ describe("JWT", () => {
       nonce: null,
       notBefore: 1609488000,
       now: 1609488000,
-      payload: {},
       scopes: [],
       session: null,
       sessionHint: null,
@@ -443,43 +436,6 @@ describe("JWT", () => {
     expect(jwt.verify(token)).toStrictEqual(
       expect.objectContaining({
         claims: {
-          caseFive: true,
-          caseFour: ["array", "data"],
-          caseOne: 1,
-          caseThree: { nestedOne: "one", nestedTwo: 2 },
-          caseTwo: "two",
-        },
-      }),
-    );
-  });
-
-  test("should store token payload in snake_case and decode to camelCase", () => {
-    const { token } = jwt.sign({
-      ...optionsMin,
-      payload: {
-        caseOne: 1,
-        caseTwo: "two",
-        caseThree: { nestedOne: "one", nested_two: 2 },
-        case_four: ["array", "data"],
-        caseFive: true,
-      },
-    });
-
-    expect(parseTokenData(token)).toStrictEqual(
-      expect.objectContaining({
-        ext: {
-          case_five: true,
-          case_four: ["array", "data"],
-          case_one: 1,
-          case_three: { nested_one: "one", nested_two: 2 },
-          case_two: "two",
-        },
-      }),
-    );
-
-    expect(jwt.verify(token)).toStrictEqual(
-      expect.objectContaining({
-        payload: {
           caseFive: true,
           caseFour: ["array", "data"],
           caseOne: 1,

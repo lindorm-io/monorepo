@@ -1,6 +1,6 @@
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 
-export type JwtDecodedClaims<Payload = never, Claims = never> = {
+export type JwtDecodedClaims<Claims = never> = {
   id: string;
   active: boolean;
   adjustedAccessLevel: AdjustedAccessLevel;
@@ -20,7 +20,6 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   nonce: string | null;
   notBefore: number;
   now: number;
-  payload: Payload;
   scopes: Array<string>;
   session: string | null;
   sessionHint: string | null;
@@ -32,7 +31,7 @@ export type JwtDecodedClaims<Payload = never, Claims = never> = {
   username: string | null;
 };
 
-export type JwtDecodeData<Payload = never, Claims = never> = JwtDecodedClaims<Payload, Claims> & {
+export type JwtDecodeData<Claims = never> = JwtDecodedClaims<Claims> & {
   active: boolean;
   expires: number;
   expiresIn: number;

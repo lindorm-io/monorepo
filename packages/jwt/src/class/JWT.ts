@@ -43,9 +43,7 @@ export class JWT {
     this.keystore = keystore;
   }
 
-  public sign<Payload = Record<string, any>, Claims = Record<string, any>>(
-    options: JwtSignOptions<Payload, Claims>,
-  ): JwtSignData {
+  public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSignData {
     const id = options.id || randomUUID();
 
     const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
@@ -83,8 +81,7 @@ export class JWT {
       tid: options.tenant,
       usr: options.username,
 
-      // payload & claims
-      ...(options.payload ? { ext: snakeCase(options.payload) } : {}),
+      // remaining claims
       ...(options.claims ? snakeCase(options.claims) : {}),
     };
 
@@ -108,13 +105,13 @@ export class JWT {
     };
   }
 
-  public verify<Payload = Record<string, any>, Claims = Record<string, any>>(
+  public verify<Claims = Record<string, any>>(
     token: string,
     options: JwtVerifyOptions = {},
-  ): JwtDecodedClaims<Payload, Claims> {
+  ): JwtDecodedClaims<Claims> {
     this.logger.debug("verify token", { token, options });
 
-    const claims = JWT.decodeFormatted<Payload, Claims>(token);
+    const claims = JWT.decodeFormatted<Claims>(token);
     const { algorithms, publicKey } = this.keystore.getKey(claims.keyId);
     const {
       adjustedAccessLevel,
@@ -202,9 +199,9 @@ export class JWT {
     return decode(token, { complete: true });
   }
 
-  public static decodeFormatted<Payload = Record<string, any>, Claims = Record<string, any>>(
+  public static decodeFormatted<Claims = Record<string, any>>(
     token: string,
-  ): JwtDecodeData<Payload, Claims> {
+  ): JwtDecodeData<Claims> {
     const {
       header: { kid: keyId },
       payload: object,
@@ -262,7 +259,6 @@ export class JWT {
       nonce: nonce || null,
       notBefore: nbf,
       now,
-      payload: ext ? camelCase<Payload>(ext) : ({} as Payload),
       scopes: scp || [],
       session: sid || null,
       sessionHint: sih || null,

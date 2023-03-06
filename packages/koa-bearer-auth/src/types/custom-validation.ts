@@ -3,4 +3,5 @@ import { JwtDecodeData } from "@lindorm-io/jwt";
 
 export type BearerTokenCustomValidation<
   Context extends DefaultLindormKoaContext = DefaultLindormKoaContext,
-> = (ctx: Context, verifyData: JwtDecodeData<any, any>) => Promise<void>;
+  Claims = any,
+> = (ctx: Context, verifyData: JwtDecodeData<Claims>) => Promise<void>;

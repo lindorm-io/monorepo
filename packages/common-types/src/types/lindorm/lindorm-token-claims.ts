@@ -4,7 +4,6 @@ import { StandardJwtClaims } from "../jwt";
 type CustomClaims = {
   aal?: number; // adjusted access level
   cid?: string; // client id
-  ext?: Record<string, any>; // payload
   loa?: number; // level of assurance
   scp?: Array<string>; // scope
   sid?: string; // session id
