@@ -11,7 +11,7 @@ export enum AuthenticationStrategy {
   RDC_PUSH_NOTIFICATION = "rdc_push_notification",
   RDC_QR_CODE = "rdc_qr_code",
   RECOVERY_CODE = "recovery_code",
-  SESSION_ACCEPT_WITH_CODE = "session_accept_with_code",
+  SESSION_DISPLAY_CODE = "session_display_code",
   SESSION_OTP = "session_otp",
   SESSION_QR_CODE = "session_qr_code",
   TIME_BASED_OTP = "time_based_otp",
