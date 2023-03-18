@@ -1,5 +1,6 @@
-import { ConsoleLogger, LogLevel } from "../src";
+import { ConsoleLogger } from "../src";
 import { LindormError } from "@lindorm-io/errors";
+import { LogLevel } from "@lindorm-io/core-logger";
 
 const logger = new ConsoleLogger();
 
@@ -19,7 +20,6 @@ logger.warn("this will be displayed as a warning");
 logger.error("this is a simple error message", new Error("simple error message"));
 
 logger.error(
-  "this is an error with data",
   new LindormError("lindorm error message", {
     code: "error_code",
     data: { publicData: true },

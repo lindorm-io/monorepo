@@ -62,7 +62,7 @@ describe("LoggerBase", () => {
     });
   });
 
-  test("should log error", () => {
+  test("should log error string", () => {
     logger.error("message");
 
     expect(log).toHaveBeenCalledWith({
@@ -70,6 +70,19 @@ describe("LoggerBase", () => {
       details: null,
       level: "error",
       message: "message",
+      session: {},
+      time: expect.any(Date),
+    });
+  });
+
+  test("should log error object", () => {
+    logger.error(new Error("error message"));
+
+    expect(log).toHaveBeenCalledWith({
+      context: [],
+      details: null,
+      level: "error",
+      message: "error message",
       session: {},
       time: expect.any(Date),
     });

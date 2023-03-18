@@ -2,10 +2,10 @@ import {
   ConsoleOptions,
   FilterCallback,
   FilterRecord,
-  LogDetails,
   Level,
-  LogSession,
   LogContext,
+  LogDetails,
+  LogSession,
 } from "./types";
 
 export type LoggerMessage = {
@@ -25,7 +25,7 @@ export type LoggerOptions = {
 };
 
 export interface Logger {
-  error(message: string, details?: LogDetails): void;
+  error(messageOrError: Error | string, details?: LogDetails): void;
   warn(message: string, details?: LogDetails): void;
   info(message: string, details?: LogDetails): void;
   verbose(message: string, details?: LogDetails): void;

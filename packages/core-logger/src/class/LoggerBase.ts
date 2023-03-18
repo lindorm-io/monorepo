@@ -12,10 +12,10 @@ import {
   Level,
   LogContext,
   LogDetails,
-  LogSession,
   Logger,
   LoggerMessage,
   LoggerOptions,
+  LogSession,
 } from "../types";
 
 export abstract class LoggerBase implements Logger {
@@ -75,11 +75,13 @@ export abstract class LoggerBase implements Logger {
 
   // public logger
 
-  public error(message: string, details?: LogDetails): void {
+  public error(messageOrError: Error | string, details?: LogDetails): void {
+    const isError = messageOrError instanceof Error;
+
     this.handleLog({
       level: LogLevel.ERROR,
-      message,
-      details: details || null,
+      message: isError ? messageOrError.message : messageOrError,
+      details: isError ? messageOrError : details ? details : null,
       context: this._context,
       session: this._session || {},
       time: new Date(),

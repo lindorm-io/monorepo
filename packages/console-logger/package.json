@@ -11,6 +11,7 @@
   "scripts": {
     "build": "tsc -b ./tsconfig.build.json",
     "clean": "rimraf dist",
+    "example": "ts-node example/logger",
     "test": "jest",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
