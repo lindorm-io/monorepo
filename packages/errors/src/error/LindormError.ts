@@ -2,28 +2,28 @@ import clone from "clone";
 import { ExtendableError } from "./ExtendableError";
 import { v4 as uuid } from "uuid";
 
-export interface ILindormError {
+export type LindormErrorAttributes = {
   id: string;
   code: string | null;
-  data: Record<string, any>;
-  debug: Record<string, any>;
+  data?: Record<string, any>;
+  debug?: Record<string, any>;
   description: string | null;
-  errors: Array<Error>;
   message: string;
   name: string;
+  parents: Array<Partial<LindormErrorAttributes>>;
   stack?: any;
   title: string | null;
   trace: Array<string>;
-}
+};
 
-export interface LindormErrorOptions {
-  code?: string;
+export type LindormErrorOptions = {
+  code?: string | null;
   data?: Record<string, any>;
   debug?: Record<string, any>;
-  description?: string;
+  description?: string | null;
   error?: Error;
-  title?: string;
-}
+  title?: string | null;
+};
 
 export class LindormError extends ExtendableError {
   public readonly id: string;
@@ -31,48 +31,79 @@ export class LindormError extends ExtendableError {
   public readonly data: Record<string, any>;
   public readonly debug: Record<string, any>;
   public readonly description: string | null;
-  public readonly errors: Array<Error>;
+  public readonly parents: Array<Partial<LindormErrorAttributes>>;
   public readonly title: string | null;
   public readonly trace: Array<string>;
 
   public constructor(message: string, options: LindormErrorOptions = {}) {
     super(message);
 
-    const inherited: ILindormError | null =
-      options.error && options.error instanceof LindormError ? clone(options.error.toJSON()) : null;
+    const { code, data = {}, debug = {}, description, title } = options;
+    const error = LindormError.destruct(options.error);
 
-    this.id = inherited?.id || uuid();
-    this.code = options.code || inherited?.code || null;
-    this.data = options.data || inherited?.data || {};
-    this.debug = options.debug || inherited?.debug || {};
-    this.description = options.description || inherited?.description || null;
-    this.errors = inherited?.errors || [];
-    this.title = options.title || inherited?.title || null;
-    this.trace = inherited?.trace || [];
+    this.id = error.id || uuid();
+    this.code = code || error?.code || null;
+    this.data = { ...data, ...(error.data || {}) };
+    this.debug = { ...debug, ...(error.debug || {}) };
+    this.description = description || error?.description || null;
+    this.parents = error.parents || [];
+    this.title = title || error?.title || null;
+    this.trace = error.trace || [];
 
-    if (options.error instanceof Error) {
-      const prefix = options.error.constructor?.name
-        ? `${options.error.constructor?.name}: `
-        : "Error";
-
-      this.errors.push(options.error);
-      this.trace.push(`${prefix}${options.error.message}`);
+    if (error.name && error.message) {
+      const { id, parents, trace, ...rest } = error;
+      this.parents.push(clone(rest));
+      this.trace.push(`${error.name}: ${error.message}`);
     }
   }
 
-  public toJSON(): ILindormError {
+  private static destruct(error?: any): any {
+    if (!error) return {};
+
+    const {
+      id,
+      code,
+      data,
+      debug,
+      description,
+      message,
+      name,
+      parents,
+      stack,
+      title,
+      trace,
+      ...rest
+    } = error;
+
     return {
+      id: typeof id === "string" ? id : undefined,
+      code: typeof code === "string" ? code : undefined,
+      data: typeof data === "object" && !Array.isArray(data) ? data : undefined,
+      debug: typeof debug === "object" && !Array.isArray(debug) ? debug : undefined,
+      description: typeof description === "string" ? description : undefined,
+      message: message || undefined,
+      name: error.constructor?.name || undefined,
+      parents: Array.isArray(parents) ? [...parents] : undefined,
+      title: typeof title === "string" ? title : undefined,
+      trace: Array.isArray(trace) ? [...trace] : undefined,
+
+      ...rest,
+    };
+  }
+
+  public toJSON(): LindormErrorAttributes {
+    return clone({
       id: this.id,
       code: this.code,
       data: this.data,
       debug: this.debug,
       description: this.description,
-      errors: this.errors,
       message: this.message,
       name: this.name,
+      parents: this.parents,
       stack: this.stack,
       title: this.title,
       trace: this.trace,
-    };
+    });
   }
 }

@@ -1,6 +1,16 @@
 import { ExtendableError } from "./ExtendableError";
 import { LindormError } from "./LindormError";
 
+class ExternalError extends Error {
+  constructor(
+    public readonly code: string,
+    public readonly something: string,
+    public readonly config: any,
+  ) {
+    super("external error message");
+  }
+}
+
 describe("LindormError", () => {
   describe("instanceOf", () => {
     test("should be an Error", () => {
@@ -40,7 +50,13 @@ describe("LindormError", () => {
 
   describe("inheritance", () => {
     const error = new Error("error");
-    const lindormError = new LindormError("lindormError", {
+
+    const externalError = new ExternalError("external code", "something fun", {
+      configuration: 1,
+      string: "string",
+    });
+
+    const extendsError = new LindormError("lindormError", {
       error,
       code: "code",
       data: { value: "data" },
@@ -52,29 +68,53 @@ describe("LindormError", () => {
     test("should store normal error on context", () => {
       expect(new LindormError("message", { error })).toStrictEqual(
         expect.objectContaining({
-          errors: [error],
           trace: ["Error: error"],
         }),
       );
     });
 
-    test("should store lindormError error on context", () => {
-      expect(new LindormError("message", { error: lindormError })).toStrictEqual(
-        expect.objectContaining({
-          errors: [error, lindormError],
-          trace: ["Error: error", "LindormError: lindormError"],
-        }),
-      );
-    });
-
-    test("should inherit values from extendable errors", () => {
-      expect(new LindormError("message", { error: lindormError })).toStrictEqual(
+    test("should inherit values from lindorm errors", () => {
+      expect(new LindormError("message", { error: extendsError })).toStrictEqual(
         expect.objectContaining({
           code: "code",
           data: { value: "data" },
           debug: { value: "debug" },
           description: "description",
+          parents: [
+            { message: "error", name: "Error" },
+            {
+              code: "code",
+              data: { value: "data" },
+              debug: { value: "debug" },
+              description: "description",
+              message: "lindormError",
+              name: "LindormError",
+              title: "title",
+            },
+          ],
           title: "title",
+          trace: ["Error: error", "LindormError: lindormError"],
+        }),
+      );
+    });
+
+    test("should inherit values from any errors", () => {
+      expect(new LindormError("message", { error: externalError })).toStrictEqual(
+        expect.objectContaining({
+          code: "external code",
+          parents: [
+            {
+              code: "external code",
+              message: "external error message",
+              name: "ExternalError",
+              something: "something fun",
+              config: {
+                configuration: 1,
+                string: "string",
+              },
+            },
+          ],
+          trace: ["ExternalError: external error message"],
         }),
       );
     });
