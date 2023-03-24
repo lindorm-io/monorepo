@@ -1,12 +1,12 @@
 import { ILindormEntity, TestEntity } from "@lindorm-io/entity";
-import { ICache } from "../types";
+import { MemoryCache } from "../types";
 
 type CreateEntityCallback = (options?: any) => ILindormEntity<any>;
 
-export const createMockCache = (
+export const createMockMemoryCache = (
   createEntityCallback: CreateEntityCallback = (options): ILindormEntity<any> =>
     new TestEntity(options),
-): ICache<any, any> => ({
+): MemoryCache<any, any> => ({
   create: jest.fn().mockImplementation(async (entity) => entity),
   createMany: jest.fn().mockImplementation(async (entities) => entities),
   deleteMany: jest.fn(),
@@ -19,4 +19,5 @@ export const createMockCache = (
   ttl: jest.fn().mockImplementation(async () => 1),
   update: jest.fn().mockImplementation(async (entity) => entity),
   updateMany: jest.fn().mockImplementation(async (entities) => entities),
+  upsert: jest.fn().mockImplementation(async (entity) => entity),
 });

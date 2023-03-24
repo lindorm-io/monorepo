@@ -18,8 +18,10 @@
     "typecheck:watch": "tsc --noEmit --watch"
   },
   "dependencies": {
+    "@lindorm-io/entity": "^0.3.8",
     "@lindorm-io/errors": "^0.1.16",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.29.3",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.3"
