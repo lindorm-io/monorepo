@@ -9,7 +9,7 @@ export const addUsernameIdentifier = async (
 ): Promise<void> => {
   const {
     logger,
-    repository: { identityRepository },
+    mongo: { identityRepository },
   } = ctx;
 
   const existing = await identityRepository.tryFind({ username });

@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAccessToken } from "../../fixtures/entity";
 import { revokeTokenController } from "./revoke";
 import { resolveTokenSession as _resolveTokenSession } from "../../handler";
@@ -12,8 +12,8 @@ describe("oauthRevokeController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        opaqueTokenCache: createMockCache(createTestAccessToken),
+      redis: {
+        opaqueTokenCache: createMockRedisRepository(createTestAccessToken),
       },
       data: {
         token: "jwt.jwt.jwt",
@@ -26,6 +26,6 @@ describe("oauthRevokeController", () => {
   test("should resolve", async () => {
     await expect(revokeTokenController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.opaqueTokenCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.opaqueTokenCache.destroy).toHaveBeenCalled();
   });
 });

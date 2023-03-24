@@ -18,7 +18,7 @@ export const deleteBrowserLinkController: ServerKoaController<RequestData> = asy
 ): ControllerResponse => {
   const {
     entity: { browserLink },
-    repository: { browserLinkRepository },
+    mongo: { browserLinkRepository },
     token: {
       bearerToken: { subject: accountId },
     },

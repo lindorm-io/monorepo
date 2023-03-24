@@ -33,6 +33,7 @@ router.get(
   identityAuthMiddleware(),
   useSchema(acknowledgeStrategySchema),
   strategySessionEntityMiddleware("data.id"),
+  authenticationSessionEntityMiddleware("entity.strategySession.authenticationSessionId"),
   useController(acknowledgeStrategyController),
 );
 

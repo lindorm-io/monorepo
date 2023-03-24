@@ -33,8 +33,8 @@ const secrets = {
 };
 
 const repositories = {
-  client: new ClientRepository({ connection: mongoConnection, logger }),
-  tenant: new TenantRepository({ connection: mongoConnection, logger }),
+  client: new ClientRepository(mongoConnection, logger),
+  tenant: new TenantRepository(mongoConnection, logger),
 };
 
 const main = async (): Promise<void> => {

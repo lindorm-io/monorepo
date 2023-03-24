@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
 import { rejectRdcController } from "./reject";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
@@ -19,8 +19,8 @@ describe("rejectRdcController", () => {
         },
         oauthClient: {},
       },
-      cache: {
-        rdcSessionCache: createMockCache(createTestRdcSession),
+      redis: {
+        rdcSessionCache: createMockRedisRepository(createTestRdcSession),
       },
       entity: {
         rdcSession: createTestRdcSession({

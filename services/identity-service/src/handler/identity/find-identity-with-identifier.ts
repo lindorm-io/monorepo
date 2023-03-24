@@ -9,7 +9,7 @@ export const findIdentityWithIdentifier = async (
   options: Options,
 ): Promise<Identity | undefined> => {
   const {
-    repository: { identifierRepository, identityRepository },
+    mongo: { identifierRepository, identityRepository },
   } = ctx;
 
   const { provider, type, value } = options;

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { Client, ClientSession, OpaqueToken } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { generateRefreshToken } from "./generate-refresh-token";
 import {
   createTestClient,
@@ -17,8 +17,8 @@ describe("generateRefreshToken", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        opaqueTokenCache: createMockCache(createTestRefreshToken),
+      redis: {
+        opaqueTokenCache: createMockRedisRepository(createTestRefreshToken),
       },
     };
 
@@ -38,6 +38,6 @@ describe("generateRefreshToken", () => {
       }),
     );
 
-    expect(ctx.cache.opaqueTokenCache.create).toHaveBeenCalledWith(expect.any(OpaqueToken));
+    expect(ctx.redis.opaqueTokenCache.create).toHaveBeenCalledWith(expect.any(OpaqueToken));
   });
 });

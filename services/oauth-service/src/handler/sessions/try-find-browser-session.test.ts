@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestBrowserSession } from "../../fixtures/entity";
 import { getBrowserSessionCookies as _getBrowserSessionCookies } from "../cookies";
 import { tryFindBrowserSessions } from "./try-find-browser-sessions";
@@ -13,8 +13,8 @@ describe("tryFindBrowserSessions", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
@@ -36,11 +36,11 @@ describe("tryFindBrowserSessions", () => {
       expect.objectContaining({ id: "e1bd6912-8ed9-499b-8a98-48873fc53b1b" }),
     ]);
 
-    expect(ctx.repository.browserSessionRepository.tryFind).toHaveBeenCalled();
+    expect(ctx.mongo.browserSessionRepository.tryFind).toHaveBeenCalled();
   });
 
   test("should resolve filtered browser sessions", async () => {
-    ctx.repository.browserSessionRepository.tryFind.mockResolvedValueOnce(
+    ctx.mongo.browserSessionRepository.tryFind.mockResolvedValueOnce(
       createTestBrowserSession({
         id: "bd3d4afc-73bb-4839-b78c-6132cbb932b0",
         identityId: "7a5e8320-2c42-4803-8a4d-231d75d62e02",
@@ -54,7 +54,7 @@ describe("tryFindBrowserSessions", () => {
       }),
     ]);
 
-    expect(ctx.repository.browserSessionRepository.tryFind).toHaveBeenCalled();
+    expect(ctx.mongo.browserSessionRepository.tryFind).toHaveBeenCalled();
   });
 
   test("should resolve empty array", async () => {
@@ -62,6 +62,6 @@ describe("tryFindBrowserSessions", () => {
 
     await expect(tryFindBrowserSessions(ctx)).resolves.toStrictEqual([]);
 
-    expect(ctx.repository.browserSessionRepository.tryFind).not.toHaveBeenCalled();
+    expect(ctx.mongo.browserSessionRepository.tryFind).not.toHaveBeenCalled();
   });
 });

@@ -43,7 +43,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
   const {
     data: { description, host, name },
     entity: { tenant },
-    repository: { clientRepository },
+    mongo: { clientRepository },
   } = ctx;
 
   const id = randomUUID();

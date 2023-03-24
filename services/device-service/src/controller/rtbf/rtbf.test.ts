@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { rtbfController } from "./rtbf";
@@ -12,8 +12,8 @@ describe("rtbfController", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -28,6 +28,6 @@ describe("rtbfController", () => {
   test("should resolve", async () => {
     await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.destroyMany).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.destroyMany).toHaveBeenCalled();
   });
 });

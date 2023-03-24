@@ -22,7 +22,7 @@ export const getEnrolmentStatusController: ServerKoaController<RequestData> = as
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { enrolmentSessionCache },
+    redis: { enrolmentSessionCache },
     data: { id },
   } = ctx;
 

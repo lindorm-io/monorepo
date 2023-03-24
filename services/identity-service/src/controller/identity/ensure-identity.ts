@@ -21,7 +21,7 @@ export const ensureIdentityController: ServerKoaController<RequestData> = async 
 ): ControllerResponse<ResponseData> => {
   const {
     data: { id },
-    repository: { identityRepository },
+    mongo: { identityRepository },
   } = ctx;
 
   let identity = await identityRepository.tryFind({ id });

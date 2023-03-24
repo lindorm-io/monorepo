@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestElevationSession } from "../../fixtures/entity";
 import { randomUUID } from "crypto";
 import { verifyElevationController } from "./verify-elevation";
@@ -22,8 +22,8 @@ describe("verifyElevationController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        elevationSessionCache: createMockCache(createTestElevationSession),
+      redis: {
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       data: {},
       entity: {

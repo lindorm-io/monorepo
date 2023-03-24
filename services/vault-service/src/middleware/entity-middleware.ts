@@ -1,13 +1,13 @@
 import { EncryptedRecord, ProtectedRecord } from "../entity";
 import { EncryptedRecordRepository, ProtectedRecordRepository } from "../infrastructure";
-import { repositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
+import { mongoRepositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
 
-export const encryptedRecordEntityMiddleware = repositoryEntityMiddleware(
+export const encryptedRecordEntityMiddleware = mongoRepositoryEntityMiddleware(
   EncryptedRecord,
   EncryptedRecordRepository,
 );
 
-export const protectedRecordEntityMiddleware = repositoryEntityMiddleware(
+export const protectedRecordEntityMiddleware = mongoRepositoryEntityMiddleware(
   ProtectedRecord,
   ProtectedRecordRepository,
 );

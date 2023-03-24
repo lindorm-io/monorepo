@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { baseHash } from "@lindorm-io/core";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { generateRecoveryCodeController } from "./generate-recovery-code";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
@@ -37,8 +37,8 @@ describe("generateRecoveryCodeController", () => {
           recoveryCode: null,
         }),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -50,7 +50,7 @@ describe("generateRecoveryCodeController", () => {
       body: { code: "123456-123456-123456-123456" },
     });
 
-    expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         recoveryCode: "MTIzNDU2LTEyMzQ1Ni0xMjM0NTYtMTIzNDU2",
       }),

@@ -5,7 +5,7 @@ import { resolveTokenSession } from "../../handler";
 
 export const customIdentityAuthMiddleware: ServerKoaMiddleware = async (ctx, next) => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   const metric = ctx.getMetric("auth");

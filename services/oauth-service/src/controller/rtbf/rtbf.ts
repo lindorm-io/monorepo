@@ -5,7 +5,7 @@ import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     axios: { axiosClient },
-    repository: { browserSessionRepository, clientRepository, clientSessionRepository },
+    mongo: { browserSessionRepository, clientRepository, clientSessionRepository },
     token: {
       bearerToken: { token: accessToken, subject: identityId },
     },

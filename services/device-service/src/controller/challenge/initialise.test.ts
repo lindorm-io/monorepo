@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
 import { initialiseChallengeController } from "./initialise";
 
@@ -16,8 +16,8 @@ describe("initialiseChallengeController", () => {
 
   beforeEach(async () => {
     ctx = {
-      cache: {
-        challengeSessionCache: createMockCache(createTestChallengeSession),
+      redis: {
+        challengeSessionCache: createMockRedisRepository(createTestChallengeSession),
       },
       data: {
         audiences: ["bcfcc919-b9af-4d4e-a9db-d35059994f22"],
@@ -64,6 +64,6 @@ describe("initialiseChallengeController", () => {
 
     expect(ctx.jwt.sign).toHaveBeenCalled();
 
-    expect(ctx.cache.challengeSessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.challengeSessionCache.create).toHaveBeenCalled();
   });
 });

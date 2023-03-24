@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getIdentifierClaims } from "./get-identifier-claims";
 import {
   createTestEmailIdentifier,
@@ -18,8 +18,8 @@ describe("getIdentifierClaims", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      repository: {
-        identifierRepository: createMockRepository(createTestEmailIdentifier),
+      mongo: {
+        identifierRepository: createMockMongoRepository(createTestEmailIdentifier),
       },
     };
 
@@ -27,7 +27,7 @@ describe("getIdentifierClaims", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.identifierRepository.findMany.mockResolvedValue([
+    ctx.mongo.identifierRepository.findMany.mockResolvedValue([
       createTestEmailIdentifier({
         value: "one@lindorm.io",
         primary: false,
@@ -81,7 +81,7 @@ describe("getIdentifierClaims", () => {
   });
 
   test("should resolve data on empty array", async () => {
-    ctx.repository.identifierRepository.findMany.mockResolvedValue([]);
+    ctx.mongo.identifierRepository.findMany.mockResolvedValue([]);
 
     await expect(getIdentifierClaims(ctx, identity)).resolves.toStrictEqual({
       email: null,
@@ -96,7 +96,7 @@ describe("getIdentifierClaims", () => {
   });
 
   test("should resolve data on caught error", async () => {
-    ctx.repository.identifierRepository.findMany.mockRejectedValue(new Error("message"));
+    ctx.mongo.identifierRepository.findMany.mockRejectedValue(new Error("message"));
 
     await expect(getIdentifierClaims(ctx, identity)).resolves.toStrictEqual({
       email: null,

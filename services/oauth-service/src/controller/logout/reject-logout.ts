@@ -22,7 +22,7 @@ export const rejectLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { logoutSessionCache },
+    redis: { logoutSessionCache },
     entity: { logoutSession },
     logger,
   } = ctx;

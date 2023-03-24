@@ -1,7 +1,7 @@
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { mongoConnection, redisConnection } from "../../instance";
+import { memoryDatabase, mongoConnection } from "../../instance";
 import {
   AddressRepository,
   DisplayNameRepository,
@@ -18,16 +18,12 @@ export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
   await mongoConnection.connect();
-  await redisConnection.connect();
 
-  TEST_ADDRESS_REPOSITORY = new AddressRepository({ connection: mongoConnection, logger });
-  TEST_DISPLAY_NAME_REPOSITORY = new DisplayNameRepository({ connection: mongoConnection, logger });
-  TEST_IDENTIFIER_REPOSITORY = new IdentifierRepository({ connection: mongoConnection, logger });
-  TEST_IDENTITY_REPOSITORY = new IdentityRepository({ connection: mongoConnection, logger });
+  TEST_ADDRESS_REPOSITORY = new AddressRepository(mongoConnection, logger);
+  TEST_DISPLAY_NAME_REPOSITORY = new DisplayNameRepository(mongoConnection, logger);
+  TEST_IDENTIFIER_REPOSITORY = new IdentifierRepository(mongoConnection, logger);
+  TEST_IDENTITY_REPOSITORY = new IdentityRepository(mongoConnection, logger);
 
-  const keyPairCache = new KeyPairCache({
-    connection: redisConnection,
-    logger,
-  });
+  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
   await keyPairCache.create(createTestKeyPair());
 };

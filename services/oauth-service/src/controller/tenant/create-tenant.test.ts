@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTenantController } from "./create-tenant";
 import { createTestTenant } from "../../fixtures/entity";
 
@@ -12,8 +12,8 @@ describe("createTenantController", () => {
         owner: "66112712-c17b-4ba1-8e01-132d3e322bad",
         subdomain: "subdomain",
       },
-      repository: {
-        tenantRepository: createMockRepository(createTestTenant),
+      mongo: {
+        tenantRepository: createMockMongoRepository(createTestTenant),
       },
     };
   });
@@ -24,6 +24,6 @@ describe("createTenantController", () => {
       status: 201,
     });
 
-    expect(ctx.repository.tenantRepository.create).toHaveBeenCalled();
+    expect(ctx.mongo.tenantRepository.create).toHaveBeenCalled();
   });
 });

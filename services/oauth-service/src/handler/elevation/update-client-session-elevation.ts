@@ -8,7 +8,7 @@ export const updateClientSessionElevation = async (
   elevationSession: ElevationSession,
 ) => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (!elevationSession.clientSessionId) {

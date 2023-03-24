@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { deleteProtectedRecordController } from "./delete-protected-record";
 import { createTestProtectedRecord } from "../../fixtures/entity";
 
@@ -27,8 +27,8 @@ describe("deleteProtectedRecordController", () => {
       entity: {
         protectedRecord: createTestProtectedRecord(),
       },
-      repository: {
-        protectedRecordRepository: createMockRepository(),
+      mongo: {
+        protectedRecordRepository: createMockMongoRepository(),
       },
       token: {
         bearerToken: {
@@ -42,7 +42,7 @@ describe("deleteProtectedRecordController", () => {
   test("should resolve", async () => {
     await expect(deleteProtectedRecordController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.protectedRecordRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.protectedRecordRepository.destroy).toHaveBeenCalled();
   });
 
   test("should throw on forbidden subject", async () => {

@@ -8,7 +8,7 @@ const createBrowserSession = async (
   authorizationSession: AuthorizationSession,
 ): Promise<BrowserSession> => {
   const {
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   if (
@@ -44,7 +44,7 @@ const updateBrowserSession = async (
   browserSession: BrowserSession,
 ): Promise<BrowserSession> => {
   const {
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   if (
@@ -89,7 +89,7 @@ export const getUpdatedBrowserSession = async (
   authorizationSession: AuthorizationSession,
 ): Promise<BrowserSession> => {
   const {
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   if (!authorizationSession.browserSessionId) {

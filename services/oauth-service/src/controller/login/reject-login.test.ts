@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectLoginController } from "./reject-login";
@@ -12,8 +12,8 @@ describe("rejectLoginController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       entity: {
         authorizationSession: createTestAuthorizationSession({
@@ -31,7 +31,7 @@ describe("rejectLoginController", () => {
       },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({ login: "rejected" }),
       }),

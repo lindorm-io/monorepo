@@ -11,7 +11,7 @@ export const generateRefreshToken = async (
   clientSession: ClientSession,
 ): Promise<OpaqueToken> => {
   const {
-    cache: { opaqueTokenCache },
+    redis: { opaqueTokenCache },
   } = ctx;
 
   return await opaqueTokenCache.create(

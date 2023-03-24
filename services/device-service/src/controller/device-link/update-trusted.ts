@@ -21,7 +21,7 @@ export const updateDeviceLinkTrustedController: ServerKoaController<RequestData>
 ): ControllerResponse => {
   const {
     entity: { deviceLink },
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { challengeConfirmationToken },
   } = ctx;
 

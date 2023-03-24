@@ -11,7 +11,7 @@ const createClientSession = async (
   client: Client,
 ): Promise<ClientSession> => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (!authorizationSession.browserSessionId) {
@@ -70,7 +70,7 @@ const updateClientSession = async (
   clientSession: ClientSession,
 ): Promise<ClientSession> => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (!authorizationSession.browserSessionId) {
@@ -144,7 +144,7 @@ export const getUpdatedClientSession = async (
   client: Client,
 ): Promise<ClientSession> => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (!authorizationSession.clientSessionId) {

@@ -18,7 +18,7 @@ export const deleteIdentifierController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse => {
   const {
     entity: { identifier },
-    repository: { identifierRepository },
+    mongo: { identifierRepository },
   } = ctx;
 
   if (identifier.primary) {

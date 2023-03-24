@@ -1,17 +1,6 @@
 version: "3.8"
 
 services:
-  mongo:
-    image: mongo
-    container_name: mongo_test
-    labels:
-      - mongo
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
-
   redis:
     image: redis
     container_name: redis_test

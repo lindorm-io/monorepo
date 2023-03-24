@@ -63,7 +63,7 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
       zoneInfo,
     },
     entity: { identity },
-    repository: { identityRepository },
+    mongo: { identityRepository },
   } = ctx;
 
   if (active !== undefined) {

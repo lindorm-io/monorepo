@@ -9,7 +9,7 @@ export const tryFindClientSession = async (
   idToken?: VerifiedIdentityToken,
 ): Promise<ClientSession | undefined> => {
   const {
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (idToken?.session) {

@@ -125,7 +125,11 @@ describe("/sessions/authentication", () => {
           rank: 1,
           recommended: true,
           required: false,
-          strategies: ["email_otp", "email_code"],
+          strategies: [
+            { strategy: "email_otp", weight: 750 },
+            { strategy: "email_code", weight: 250 },
+          ],
+          weight: 750,
         },
         {
           identifier_hint: "phone",
@@ -134,7 +138,11 @@ describe("/sessions/authentication", () => {
           rank: 2,
           recommended: true,
           required: false,
-          strategies: ["phone_otp", "phone_otp"],
+          strategies: [
+            { strategy: "phone_otp", weight: 500 },
+            { strategy: "phone_code", weight: 250 },
+          ],
+          weight: 500,
         },
         {
           identifier_hint: "none",
@@ -143,7 +151,8 @@ describe("/sessions/authentication", () => {
           rank: 3,
           recommended: false,
           required: false,
-          strategies: ["device_challenge"],
+          strategies: [{ strategy: "device_challenge", weight: 90 }],
+          weight: 90,
         },
       ],
       email_hint: "test@lindorm.io",
@@ -217,10 +226,10 @@ describe("/sessions/authentication", () => {
 
     expect(response.body).toStrictEqual({
       id: expect.any(String),
+      acknowledge_code: null,
       confirm_key: "otp",
       confirm_length: 6,
       confirm_mode: "numeric",
-      display_code: null,
       expires: "2022-01-01T08:00:00.000Z",
       polling_required: false,
       qr_code: null,

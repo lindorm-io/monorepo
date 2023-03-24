@@ -67,20 +67,20 @@ export const addUserinfoController: ServerKoaController<RequestData> = async (
       zoneInfo,
     },
     entity: { identity },
-    repository: { identityRepository },
+    mongo: { identityRepository },
   } = ctx;
 
-  identity.birthDate = identity.birthDate || birthDate;
-  identity.familyName = identity.familyName || familyName;
-  identity.gender = identity.gender || gender;
-  identity.givenName = identity.givenName || givenName;
-  identity.locale = identity.locale || locale;
-  identity.middleName = identity.middleName || middleName;
-  identity.nickname = identity.nickname || nickname;
-  identity.picture = identity.picture || picture;
-  identity.profile = identity.profile || profile;
-  identity.website = identity.website || website;
-  identity.zoneInfo = identity.zoneInfo || zoneInfo;
+  identity.birthDate = identity.birthDate || birthDate || null;
+  identity.familyName = identity.familyName || familyName || null;
+  identity.gender = identity.gender || gender || null;
+  identity.givenName = identity.givenName || givenName || null;
+  identity.locale = identity.locale || locale || null;
+  identity.middleName = identity.middleName || middleName || null;
+  identity.nickname = identity.nickname || nickname || null;
+  identity.picture = identity.picture || picture || null;
+  identity.profile = identity.profile || profile || null;
+  identity.website = identity.website || website || null;
+  identity.zoneInfo = identity.zoneInfo || zoneInfo || null;
 
   const updated = await identityRepository.update(identity);
 

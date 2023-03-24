@@ -19,7 +19,7 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { token },
-    repository: { clientRepository, clientSessionRepository },
+    mongo: { clientRepository, clientSessionRepository },
   } = ctx;
 
   const opaqueToken = await resolveTokenSession(ctx, token);

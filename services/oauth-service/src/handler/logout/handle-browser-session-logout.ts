@@ -12,7 +12,7 @@ export const handleBrowserSessionLogout = async (
 ): Promise<void> => {
   const {
     axios: { axiosClient },
-    repository: { browserSessionRepository, clientRepository, clientSessionRepository },
+    mongo: { browserSessionRepository, clientRepository, clientSessionRepository },
   } = ctx;
 
   if (!logoutSession.confirmedLogout.browserSessionId) {

@@ -1,5 +1,5 @@
 import { initialiseOidcController } from "./initialise-oidc";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 
 describe("initialiseOidcController", () => {
@@ -17,8 +17,8 @@ describe("initialiseOidcController", () => {
           post: jest.fn().mockResolvedValue({ data: { redirectTo: "redirectTo" } }),
         },
       },
-      cache: {
-        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(createTestAuthenticationSession),
       },
       data: {
         provider: "provider",
@@ -50,6 +50,6 @@ describe("initialiseOidcController", () => {
 
     await expect(initialiseOidcController(ctx)).resolves.toBeTruthy();
 
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalled();
+    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalled();
   });
 });

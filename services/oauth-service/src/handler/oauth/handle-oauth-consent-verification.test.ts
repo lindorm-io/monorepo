@@ -1,6 +1,6 @@
 import { AuthorizationSession, Client } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { handleOauthConsentVerification } from "./handle-oauth-consent-verification";
 import { getUpdatedClientSession as _getUpdatedClientSession } from "../sessions";
 import { OpenIdScope } from "@lindorm-io/common-types";
@@ -22,11 +22,11 @@ describe("handleOauthConsentVerification", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
@@ -45,7 +45,7 @@ describe("handleOauthConsentVerification", () => {
       handleOauthConsentVerification(ctx, authorizationSession, client),
     ).resolves.toStrictEqual(expect.any(AuthorizationSession));
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({
           consent: "verified",
@@ -63,7 +63,7 @@ describe("handleOauthConsentVerification", () => {
 
     expect(getUpdatedClientSession).toHaveBeenCalled();
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         clientSessionId: expect.any(String),
       }),

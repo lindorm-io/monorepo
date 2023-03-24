@@ -6,39 +6,45 @@ import { OidcSession } from "../entity";
 import { OidcSessionCache } from "../infrastructure";
 import {
   LindormNodeServerAxios,
-  LindormNodeServerCache,
   LindormNodeServerContext,
   LindormNodeServerKoaContext,
   LindormNodeServerKoaMiddleware,
+  LindormNodeServerMemory,
+  LindormNodeServerMongo,
+  LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 
-type ServerAxios = LindormNodeServerAxios & {
+interface ServerAxios extends LindormNodeServerAxios {
   identityClient: Axios;
   oauthClient: Axios;
-};
+}
 
-type ServerCache = LindormNodeServerCache & {
-  oidcSessionCache: OidcSessionCache;
-};
-
-type ServerEntity = {
+interface ServerEntity {
   oidcSession: OidcSession;
-};
+}
 
-type ServerToken = LindormNodeServerToken & {
+interface ServerRedis extends LindormNodeServerRedis {
+  oidcSessionCache: OidcSessionCache;
+}
+
+interface ServerToken extends LindormNodeServerToken {
   oidcSessionToken: JwtDecodeData;
-};
+}
 
-type Context = LindormNodeServerContext & {
+interface Context extends LindormNodeServerContext {
   axios: ServerAxios;
-  cache: ServerCache;
   entity: ServerEntity;
+  memory: LindormNodeServerMemory;
+  mongo: LindormNodeServerMongo;
+  redis: ServerRedis;
   token: ServerToken;
-};
+}
 
-export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
+export interface ServerKoaContext<D extends Dict = Dict>
+  extends LindormNodeServerKoaContext<Context, D> {}
 
-export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
+export interface ServerKoaController<D extends Dict = Dict>
+  extends Controller<ServerKoaContext<D>> {}
 
-export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;
+export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}

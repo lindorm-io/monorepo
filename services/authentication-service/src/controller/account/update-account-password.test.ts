@@ -1,5 +1,5 @@
 import { baseHash } from "@lindorm-io/core";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { updateAccountPasswordController } from "./update-account-password";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
@@ -33,8 +33,8 @@ describe("updateAccountPasswordController", () => {
           password: "password",
         }),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -44,7 +44,7 @@ describe("updateAccountPasswordController", () => {
   test("should resolve", async () => {
     await expect(updateAccountPasswordController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         password: "bmV3LXBhc3N3b3Jk",
       }),

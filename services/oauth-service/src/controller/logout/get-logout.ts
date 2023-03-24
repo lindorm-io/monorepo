@@ -19,7 +19,7 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { client, logoutSession, tenant },
-    repository: { browserSessionRepository, clientSessionRepository },
+    mongo: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
   if (!logoutSession.requestedLogout.browserSessionId) {

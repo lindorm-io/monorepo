@@ -10,11 +10,7 @@ const time = stringToMilliseconds("60 minutes");
 export const clientSessionCleanupWorker = new IntervalWorker(
   {
     callback: async (): Promise<void> => {
-      const repository = new ClientSessionRepository({
-        connection: mongoConnection,
-        logger,
-      });
-
+      const repository = new ClientSessionRepository(mongoConnection, logger);
       await repository.deleteMany({ expires: { $lt: new Date() } });
     },
     time: time,

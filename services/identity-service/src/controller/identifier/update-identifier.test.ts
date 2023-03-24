@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { updateIdentifierController } from "./update-identifier";
 
@@ -12,8 +12,8 @@ describe("updateIdentifierController", () => {
         identity: createTestIdentity(),
         identifier: createTestEmailIdentifier(),
       },
-      repository: {
-        identifierRepository: createMockRepository(createTestEmailIdentifier),
+      mongo: {
+        identifierRepository: createMockMongoRepository(createTestEmailIdentifier),
       },
     };
   });
@@ -25,7 +25,7 @@ describe("updateIdentifierController", () => {
 
     await expect(updateIdentifierController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.identifierRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.identifierRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         label: "new-label",
       }),
@@ -44,6 +44,6 @@ describe("updateIdentifierController", () => {
 
     await expect(updateIdentifierController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.identifierRepository.update).toHaveBeenCalled();
+    expect(ctx.mongo.identifierRepository.update).toHaveBeenCalled();
   });
 });

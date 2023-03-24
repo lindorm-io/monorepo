@@ -24,7 +24,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { authorizationSession, client, tenant },
-    repository: { browserSessionRepository, clientSessionRepository },
+    mongo: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
   const browserSession = authorizationSession.browserSessionId

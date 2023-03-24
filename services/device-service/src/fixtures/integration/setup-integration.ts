@@ -1,7 +1,7 @@
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { mongoConnection, redisConnection } from "../../instance";
+import { memoryDatabase, mongoConnection, redisConnection } from "../../instance";
 import {
   ChallengeSessionCache,
   DeviceLinkRepository,
@@ -21,18 +21,12 @@ export const setupIntegration = async (): Promise<void> => {
   await mongoConnection.connect();
   await redisConnection.connect();
 
-  TEST_CHALLENGE_SESSION_CACHE = new ChallengeSessionCache({ connection: redisConnection, logger });
-  TEST_ENROLMENT_SESSION_CACHE = new EnrolmentSessionCache({ connection: redisConnection, logger });
-  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE = new RdcSessionCache({
-    connection: redisConnection,
-    logger,
-  });
+  TEST_CHALLENGE_SESSION_CACHE = new ChallengeSessionCache(redisConnection, logger);
+  TEST_ENROLMENT_SESSION_CACHE = new EnrolmentSessionCache(redisConnection, logger);
+  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE = new RdcSessionCache(redisConnection, logger);
 
-  TEST_DEVICE_REPOSITORY = new DeviceLinkRepository({ connection: mongoConnection, logger });
+  TEST_DEVICE_REPOSITORY = new DeviceLinkRepository(mongoConnection, logger);
 
-  const keyPairCache = new KeyPairCache({
-    connection: redisConnection,
-    logger,
-  });
+  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
   await keyPairCache.create(createTestKeyPair());
 };

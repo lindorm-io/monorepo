@@ -31,7 +31,7 @@ export const getIdentifierClaims = async (
 ): Promise<Result> => {
   const {
     logger,
-    repository: { identifierRepository },
+    mongo: { identifierRepository },
   } = ctx;
 
   const data: Result = {

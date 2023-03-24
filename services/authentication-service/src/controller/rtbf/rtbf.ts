@@ -5,7 +5,7 @@ import { destroyAccountCallback } from "../../handler";
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     entity: { account },
-    repository: { accountRepository, browserLinkRepository },
+    mongo: { accountRepository, browserLinkRepository },
   } = ctx;
 
   await accountRepository.destroy(account, destroyAccountCallback(ctx));

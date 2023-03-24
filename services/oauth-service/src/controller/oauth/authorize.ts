@@ -74,7 +74,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     data: {
       acrValues,
       amrValues,

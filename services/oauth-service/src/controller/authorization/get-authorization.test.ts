@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { AuthenticationMethod, OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getAuthorizationController } from "./get-authorization";
 import {
   getAdjustedAccessLevel as _getAdjustedAccessLevel,
@@ -77,14 +77,14 @@ describe("getAuthorizationController", () => {
           id: "9e3d1333-efa1-4160-bbcc-ad8fe550f442",
         }),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(() =>
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(() =>
           createTestBrowserSession({
             id: "ea1be311-26b3-4a75-8911-2ca1451bfee0",
             identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
           }),
         ),
-        clientSessionRepository: createMockRepository(() =>
+        clientSessionRepository: createMockMongoRepository(() =>
           createTestClientSession({
             id: "f37c5ac7-c8da-42e3-ac3b-35e9dc523d9b",
             audiences: ["d47d233e-9d77-4538-be99-379207440889"],

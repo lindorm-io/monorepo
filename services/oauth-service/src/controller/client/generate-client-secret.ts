@@ -23,7 +23,7 @@ export const generateClientSecretController: ServerKoaController<RequestData> = 
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { client },
-    repository: { clientRepository },
+    mongo: { clientRepository },
   } = ctx;
 
   const secret = randomUnreserved(128);

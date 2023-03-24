@@ -1,2 +1,2 @@
-export * from "./key-pair-jwks-cache-worker";
-export * from "./key-pair-providers-cache-worker";
+export * from "./key-pair-oauth-jwks-memory-worker";
+export * from "./key-pair-providers-jwks-memory-workers";

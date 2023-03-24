@@ -18,7 +18,7 @@ export const getBrowserLinksController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    repository: { browserLinkRepository },
+    mongo: { browserLinkRepository },
     token: {
       bearerToken: { subject: accountId },
     },

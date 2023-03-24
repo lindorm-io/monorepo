@@ -8,7 +8,7 @@ export const getIdentityResponse = async (
   identity: Identity,
 ): Promise<GetIdentityResponse> => {
   const {
-    repository: { addressRepository, identifierRepository },
+    mongo: { addressRepository, identifierRepository },
   } = ctx;
 
   const addresses = await addressRepository.findMany({ identityId: identity.id });

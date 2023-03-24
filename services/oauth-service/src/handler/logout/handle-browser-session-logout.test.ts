@@ -1,6 +1,6 @@
 import { LogoutSession } from "../../entity";
 import { createLogoutToken as _createLogoutToken } from "../token";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { handleBrowserSessionLogout } from "./handle-browser-session-logout";
 import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../sessions";
 import { setBrowserSessionCookies as _setBrowserSessionCookies } from "../cookies";
@@ -30,10 +30,10 @@ describe("handleBrowserSessionLogout", () => {
           post: jest.fn(),
         },
       },
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
+        clientRepository: createMockMongoRepository(createTestClient),
       },
     };
 
@@ -53,7 +53,7 @@ describe("handleBrowserSessionLogout", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.clientSessionRepository.findMany.mockResolvedValue([
+    ctx.mongo.clientSessionRepository.findMany.mockResolvedValue([
       createTestClientSession(),
       createTestClientSession(),
       createTestClientSession(),

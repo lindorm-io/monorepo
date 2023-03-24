@@ -4,7 +4,7 @@ import { destroyDeviceLinkCallback } from "../../handler";
 
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: {
       bearerToken: { subject: identityId },
     },

@@ -1,5 +1,5 @@
 import { Identity } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
 import { addUsernameIdentifier } from "./add-username-identifier";
 import { ClientError } from "@lindorm-io/errors";
@@ -10,8 +10,8 @@ describe("addUsernameIdentifier", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        identityRepository: createMockRepository(createTestIdentity),
+      mongo: {
+        identityRepository: createMockMongoRepository(createTestIdentity),
       },
     };
 
@@ -19,11 +19,11 @@ describe("addUsernameIdentifier", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.identityRepository.tryFind.mockResolvedValue(undefined);
+    ctx.mongo.identityRepository.tryFind.mockResolvedValue(undefined);
 
     await expect(addUsernameIdentifier(ctx, identity, "username")).resolves.not.toThrow();
 
-    expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         preferredUsername: "username",
         username: "username",

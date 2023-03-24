@@ -12,9 +12,10 @@ export type AuthenticationStrategyConfig = {
   loa: LevelOfAssurance;
   loaMax: LevelOfAssurance;
   method: AuthenticationMethod;
-  methodsMax: number;
-  methodsMin: number;
   mfaCookie: boolean;
+  primary: boolean;
+  requiresIdentity: boolean;
+  secondary: boolean;
   strategy: AuthenticationStrategy;
   weight: number;
 };

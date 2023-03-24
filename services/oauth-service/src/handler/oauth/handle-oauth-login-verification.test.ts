@@ -1,6 +1,6 @@
 import { AuthorizationSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { getUpdatedBrowserSession as _getUpdatedBrowserSession } from "../sessions";
 import { handleOauthLoginVerification } from "./handle-oauth-login-verification";
@@ -22,11 +22,11 @@ describe("handleOauthLoginVerification", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
@@ -51,7 +51,7 @@ describe("handleOauthLoginVerification", () => {
       "c27d4370-b1bf-4f34-91c4-54314a01228e",
     ]);
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "65c04ad2-6b10-4eb4-ac8e-6df5911968ec",
         status: expect.objectContaining({

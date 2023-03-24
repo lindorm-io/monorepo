@@ -1,7 +1,7 @@
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { rtbfController } from "./rtbf";
 import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 
 jest.mock("../../handler");
 
@@ -15,9 +15,9 @@ describe("rtbfController", () => {
       entity: {
         account: createTestAccount(),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
-        browserLinkRepository: createMockRepository(createTestBrowserLink),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
+        browserLinkRepository: createMockMongoRepository(createTestBrowserLink),
       },
     };
 
@@ -27,7 +27,7 @@ describe("rtbfController", () => {
   test("should resolve", async () => {
     await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.accountRepository.destroy).toHaveBeenCalled();
-    expect(ctx.repository.browserLinkRepository.deleteMany).toHaveBeenCalled();
+    expect(ctx.mongo.accountRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.browserLinkRepository.deleteMany).toHaveBeenCalled();
   });
 });

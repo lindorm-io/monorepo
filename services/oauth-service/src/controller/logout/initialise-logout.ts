@@ -27,9 +27,9 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { logoutSessionCache },
+    redis: { logoutSessionCache },
     data: { clientId, idTokenHint, logoutHint, postLogoutRedirectUri, state, uiLocales },
-    repository: { clientRepository, clientSessionRepository },
+    mongo: { clientRepository, clientSessionRepository },
     request: { originalUrl },
     token: { idToken },
   } = ctx;

@@ -18,7 +18,7 @@ describe("initialiseEnrolmentController", () => {
           fingerprint: "fingerprint",
         },
       },
-      repository: {
+      mongo: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
             {
@@ -35,11 +35,11 @@ describe("initialiseEnrolmentController", () => {
   test("should resolve false", async () => {
     await expect(isRdcRequired(ctx, "identityId")).resolves.toBe(false);
 
-    expect(ctx.repository.deviceLinkRepository.findMany).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.findMany).toHaveBeenCalled();
   });
 
   test("should resolve true", async () => {
-    ctx.repository.deviceLinkRepository.findMany.mockResolvedValue([
+    ctx.mongo.deviceLinkRepository.findMany.mockResolvedValue([
       {
         fingerprint: "fingerprint",
         installationId: "installationId",

@@ -17,7 +17,7 @@ export const deleteTenantController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     entity: { tenant },
-    repository: { clientRepository, tenantRepository },
+    mongo: { clientRepository, tenantRepository },
   } = ctx;
 
   await Promise.all([

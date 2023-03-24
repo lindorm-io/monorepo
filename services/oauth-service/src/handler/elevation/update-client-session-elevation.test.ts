@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ElevationSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClientSession, createTestElevationSession } from "../../fixtures/entity";
 import { updateClientSessionElevation } from "./update-client-session-elevation";
 import { AuthenticationMethod } from "@lindorm-io/common-types";
@@ -16,8 +16,8 @@ describe("verifyClientSessionElevation", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
       server: {
         environment: "development",
@@ -41,7 +41,7 @@ describe("verifyClientSessionElevation", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValue(
       createTestClientSession({
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T04:00:00.000Z"),
@@ -52,7 +52,7 @@ describe("verifyClientSessionElevation", () => {
 
     await expect(updateClientSessionElevation(ctx, elevationSession)).resolves.toBeUndefined();
 
-    expect(ctx.repository.clientSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
@@ -66,7 +66,7 @@ describe("verifyClientSessionElevation", () => {
   });
 
   test("should throw on invalid identity", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValue(createTestClientSession());
+    ctx.mongo.clientSessionRepository.find.mockResolvedValue(createTestClientSession());
 
     await expect(updateClientSessionElevation(ctx, elevationSession)).rejects.toThrow(ServerError);
   });

@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession, createTestMfaCookieSession } from "../../fixtures/entity";
 import { generateMfaCookie } from "./generate-mfa-cookie";
 
@@ -10,8 +10,8 @@ describe("generateMfaCookie", () => {
       cookies: {
         set: jest.fn(),
       },
-      cache: {
-        mfaCookieSessionCache: createMockCache(createTestMfaCookieSession),
+      redis: {
+        mfaCookieSessionCache: createMockRedisRepository(createTestMfaCookieSession),
       },
       server: {
         environment: "development",
@@ -24,7 +24,7 @@ describe("generateMfaCookie", () => {
       generateMfaCookie(ctx, createTestAuthenticationSession()),
     ).resolves.toBeUndefined();
 
-    expect(ctx.cache.mfaCookieSessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.mfaCookieSessionCache.create).toHaveBeenCalled();
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       "lindorm_io_authentication_mfa",
       expect.any(String),

@@ -1,79 +1,13 @@
+import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 import { generateClientConfig } from "./generate-client-config";
-import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
 
 describe("calculateMethodsAndStrategies", () => {
-  test("should calculate first factor values", () => {
+  test("should resolve client config", () => {
     expect(
       generateClientConfig(
         createTestAuthenticationSession({
-          allowedStrategies: [
-            AuthenticationStrategy.DEVICE_CHALLENGE,
-            AuthenticationStrategy.EMAIL_CODE,
-            AuthenticationStrategy.EMAIL_OTP,
-            AuthenticationStrategy.PASSWORD,
-            AuthenticationStrategy.PASSWORD_BROWSER_LINK,
-            AuthenticationStrategy.RDC_QR_CODE,
-            AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE,
-            AuthenticationStrategy.WEBAUTHN,
-          ],
-          recommendedMethods: [],
-          requiredLevel: 1,
-          requiredMethods: [],
-        }),
-      ),
-    ).toStrictEqual([
-      {
-        identifierHint: "none",
-        identifierType: "none",
-        method: "device_link",
-        rank: 1,
-        recommended: false,
-        required: false,
-        strategies: ["device_challenge"],
-      },
-      {
-        identifierHint: "none",
-        identifierType: "none",
-        method: "session_link",
-        rank: 2,
-        recommended: false,
-        required: false,
-        strategies: ["session_accept_with_code"],
-      },
-      {
-        identifierHint: "email",
-        identifierType: "email",
-        method: "email",
-        rank: 3,
-        recommended: false,
-        required: false,
-        strategies: ["email_otp", "email_code"],
-      },
-      {
-        identifierHint: "none",
-        identifierType: "username",
-        method: "password",
-        rank: 4,
-        recommended: false,
-        required: false,
-        strategies: ["password_browser_link", "password"],
-      },
-    ]);
-  });
-
-  test("should calculate second factor values", () => {
-    expect(
-      generateClientConfig(
-        createTestAuthenticationSession({
-          allowedStrategies: [
-            AuthenticationStrategy.MFA_COOKIE,
-            AuthenticationStrategy.PHONE_CODE,
-            AuthenticationStrategy.PHONE_OTP,
-            AuthenticationStrategy.RDC_PUSH_NOTIFICATION,
-            AuthenticationStrategy.SESSION_OTP,
-            AuthenticationStrategy.TIME_BASED_OTP,
-          ],
+          allowedStrategies: Object.values(AuthenticationStrategy),
           recommendedMethods: [],
           requiredLevel: 1,
           requiredMethods: [],
@@ -87,7 +21,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 1,
         recommended: false,
         required: false,
-        strategies: ["mfa_cookie"],
+        strategies: [{ strategy: "mfa_cookie", weight: 999 }],
+        weight: 999,
       },
       {
         identifierHint: "none",
@@ -96,7 +31,12 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 2,
         recommended: false,
         required: false,
-        strategies: ["rdc_push_notification"],
+        strategies: [
+          { strategy: "rdc_push_notification", weight: 90 },
+          { strategy: "rdc_qr_code", weight: 90 },
+          { strategy: "device_challenge", weight: 90 },
+        ],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -105,7 +45,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 3,
         recommended: false,
         required: false,
-        strategies: ["time_based_otp"],
+        strategies: [{ strategy: "time_based_otp", weight: 90 }],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -114,16 +55,61 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 4,
         recommended: false,
         required: false,
-        strategies: ["session_otp"],
+        strategies: [
+          { strategy: "session_otp", weight: 80 },
+          { strategy: "session_qr_code", weight: 80 },
+          { strategy: "session_display_code", weight: 80 },
+        ],
+        weight: 80,
+      },
+      {
+        identifierHint: "email",
+        identifierType: "email",
+        method: "email",
+        rank: 5,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "email_otp", weight: 30 },
+          { strategy: "email_code", weight: 10 },
+        ],
+        weight: 30,
+      },
+      {
+        identifierHint: "none",
+        identifierType: "username",
+        method: "password",
+        rank: 6,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "password_browser_link", weight: 20 },
+          { strategy: "password", weight: 10 },
+        ],
+        weight: 20,
       },
       {
         identifierHint: "phone",
         identifierType: "phone",
         method: "phone",
-        rank: 5,
+        rank: 7,
         recommended: false,
         required: false,
-        strategies: ["phone_otp", "phone_otp"],
+        strategies: [
+          { strategy: "phone_otp", weight: 20 },
+          { strategy: "phone_code", weight: 10 },
+        ],
+        weight: 20,
+      },
+      {
+        identifierHint: "none",
+        identifierType: "none",
+        method: "recovery",
+        rank: 8,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "recovery_code", weight: 0 }],
+        weight: 0,
       },
     ]);
   });
@@ -146,7 +132,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 1,
         recommended: false,
         required: false,
-        strategies: ["mfa_cookie"],
+        strategies: [{ strategy: "mfa_cookie", weight: 999 }],
+        weight: 999,
       },
       {
         identifierHint: "email",
@@ -155,7 +142,11 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 2,
         recommended: true,
         required: false,
-        strategies: ["email_otp", "email_code"],
+        strategies: [
+          { strategy: "email_otp", weight: 750 },
+          { strategy: "email_code", weight: 250 },
+        ],
+        weight: 750,
       },
       {
         identifierHint: "none",
@@ -164,7 +155,11 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 3,
         recommended: true,
         required: false,
-        strategies: ["password_browser_link", "password", "recovery_code"],
+        strategies: [
+          { strategy: "password_browser_link", weight: 500 },
+          { strategy: "password", weight: 250 },
+        ],
+        weight: 500,
       },
       {
         identifierHint: "none",
@@ -173,7 +168,12 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 4,
         recommended: false,
         required: false,
-        strategies: ["rdc_push_notification", "device_challenge"],
+        strategies: [
+          { strategy: "rdc_push_notification", weight: 90 },
+          { strategy: "rdc_qr_code", weight: 90 },
+          { strategy: "device_challenge", weight: 90 },
+        ],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -182,7 +182,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 5,
         recommended: false,
         required: false,
-        strategies: ["time_based_otp"],
+        strategies: [{ strategy: "time_based_otp", weight: 90 }],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -191,7 +192,12 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 6,
         recommended: false,
         required: false,
-        strategies: ["session_otp", "session_qr_code", "session_accept_with_code"],
+        strategies: [
+          { strategy: "session_otp", weight: 80 },
+          { strategy: "session_qr_code", weight: 80 },
+          { strategy: "session_display_code", weight: 80 },
+        ],
+        weight: 80,
       },
       {
         identifierHint: "phone",
@@ -200,7 +206,21 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 7,
         recommended: false,
         required: false,
-        strategies: ["phone_otp", "phone_otp"],
+        strategies: [
+          { strategy: "phone_otp", weight: 20 },
+          { strategy: "phone_code", weight: 10 },
+        ],
+        weight: 20,
+      },
+      {
+        identifierHint: "none",
+        identifierType: "none",
+        method: "recovery",
+        rank: 8,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "recovery_code", weight: 0 }],
+        weight: 0,
       },
     ]);
   });
@@ -223,7 +243,11 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 1,
         recommended: false,
         required: true,
-        strategies: ["email_otp", "email_code"],
+        strategies: [
+          { strategy: "email_otp", weight: 3000 },
+          { strategy: "email_code", weight: 1000 },
+        ],
+        weight: 3000,
       },
       {
         identifierHint: "none",
@@ -232,7 +256,11 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 2,
         recommended: false,
         required: true,
-        strategies: ["password_browser_link", "password", "recovery_code"],
+        strategies: [
+          { strategy: "password_browser_link", weight: 2000 },
+          { strategy: "password", weight: 1000 },
+        ],
+        weight: 2000,
       },
       {
         identifierHint: "none",
@@ -241,7 +269,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 3,
         recommended: false,
         required: false,
-        strategies: ["mfa_cookie"],
+        strategies: [{ strategy: "mfa_cookie", weight: 999 }],
+        weight: 999,
       },
       {
         identifierHint: "none",
@@ -250,7 +279,12 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 4,
         recommended: false,
         required: false,
-        strategies: ["rdc_push_notification", "device_challenge"],
+        strategies: [
+          { strategy: "rdc_push_notification", weight: 90 },
+          { strategy: "rdc_qr_code", weight: 90 },
+          { strategy: "device_challenge", weight: 90 },
+        ],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -259,7 +293,8 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 5,
         recommended: false,
         required: false,
-        strategies: ["time_based_otp"],
+        strategies: [{ strategy: "time_based_otp", weight: 90 }],
+        weight: 90,
       },
       {
         identifierHint: "none",
@@ -268,7 +303,12 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 6,
         recommended: false,
         required: false,
-        strategies: ["session_otp", "session_qr_code", "session_accept_with_code"],
+        strategies: [
+          { strategy: "session_otp", weight: 80 },
+          { strategy: "session_qr_code", weight: 80 },
+          { strategy: "session_display_code", weight: 80 },
+        ],
+        weight: 80,
       },
       {
         identifierHint: "phone",
@@ -277,7 +317,21 @@ describe("calculateMethodsAndStrategies", () => {
         rank: 7,
         recommended: false,
         required: false,
-        strategies: ["phone_otp", "phone_otp"],
+        strategies: [
+          { strategy: "phone_otp", weight: 20 },
+          { strategy: "phone_code", weight: 10 },
+        ],
+        weight: 20,
+      },
+      {
+        identifierHint: "none",
+        identifierType: "none",
+        method: "recovery",
+        rank: 8,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "recovery_code", weight: 0 }],
+        weight: 0,
       },
     ]);
   });

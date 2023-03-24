@@ -10,7 +10,7 @@ export const resolveTokenSession = async (
   token: string,
 ): Promise<OpaqueToken> => {
   const {
-    cache: { opaqueTokenCache },
+    redis: { opaqueTokenCache },
     jwt,
   } = ctx;
 

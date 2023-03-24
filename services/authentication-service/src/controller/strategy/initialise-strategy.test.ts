@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
 import { initialiseStrategyController } from "./initialise-strategy";
@@ -16,8 +16,8 @@ describe("initialiseStrategyController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        strategySessionCache: createMockCache(createTestStrategySession),
+      redis: {
+        strategySessionCache: createMockRedisRepository(createTestStrategySession),
       },
       data: {
         email: "email",
@@ -47,6 +47,6 @@ describe("initialiseStrategyController", () => {
       body: "initialise_result",
     });
 
-    expect(ctx.cache.strategySessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.strategySessionCache.create).toHaveBeenCalled();
   });
 });

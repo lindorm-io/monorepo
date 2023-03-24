@@ -7,7 +7,7 @@ export const updateIdentityDisplayName = async (
   displayName: string,
 ): Promise<void> => {
   const {
-    repository: { displayNameRepository },
+    mongo: { displayNameRepository },
   } = ctx;
 
   if (identity.displayName.name && identity.displayName.number) {

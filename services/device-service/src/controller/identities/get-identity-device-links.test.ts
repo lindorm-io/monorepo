@@ -9,7 +9,7 @@ describe("getIdentityDeviceLinksController", () => {
       data: {
         id: "adc4242d-c836-4d0f-a87a-5c98859d8c0e",
       },
-      repository: {
+      mongo: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
             createTestDeviceLink({

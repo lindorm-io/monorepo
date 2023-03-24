@@ -1,5 +1,5 @@
 import { addAddressController } from "./add-address";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 
 describe("addAddressController", () => {
@@ -19,8 +19,8 @@ describe("addAddressController", () => {
       entity: {
         identity: createTestIdentity(),
       },
-      repository: {
-        addressRepository: createMockRepository(createTestAddress),
+      mongo: {
+        addressRepository: createMockMongoRepository(createTestAddress),
       },
     };
   });
@@ -28,6 +28,6 @@ describe("addAddressController", () => {
   test("should resolve", async () => {
     await expect(addAddressController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.addressRepository.create).toHaveBeenCalled();
+    expect(ctx.mongo.addressRepository.create).toHaveBeenCalled();
   });
 });

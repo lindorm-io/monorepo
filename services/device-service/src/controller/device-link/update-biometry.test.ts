@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkBiometryController } from "./update-biometry";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
@@ -43,8 +43,8 @@ describe("updateDeviceLinkBiometryController", () => {
           name: null,
         },
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -68,7 +68,7 @@ describe("updateDeviceLinkBiometryController", () => {
   test("should resolve and update deviceLink biometry", async () => {
     await expect(updateDeviceLinkBiometryController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         biometry: "new-biometry-signature",
       }),
@@ -80,7 +80,7 @@ describe("updateDeviceLinkBiometryController", () => {
 
     await expect(updateDeviceLinkBiometryController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "name",
       }),

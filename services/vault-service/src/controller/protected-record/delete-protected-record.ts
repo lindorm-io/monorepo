@@ -23,7 +23,7 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
   const {
     data: { key },
     entity: { protectedRecord },
-    repository: { protectedRecordRepository },
+    mongo: { protectedRecordRepository },
     token: {
       bearerToken: { subject, subjectHint },
     },

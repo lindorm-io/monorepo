@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import { getClaimsController } from "./get-claims";
 import {
@@ -32,9 +32,9 @@ describe("getClaimsController", () => {
       data: {
         session: "bda47dd1-c5a8-4434-aa51-1ed1ae337685",
       },
-      repository: {
-        addressRepository: createMockRepository(createTestAddress),
-        identityRepository: createMockRepository(createTestIdentity),
+      mongo: {
+        addressRepository: createMockMongoRepository(createTestAddress),
+        identityRepository: createMockMongoRepository(createTestIdentity),
       },
     };
 

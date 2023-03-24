@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestEnrolmentSession } from "../../fixtures/entity";
 import { rejectEnrolmentController } from "./reject";
 
@@ -7,8 +7,8 @@ describe("rejectEnrolmentController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        enrolmentSessionCache: createMockCache(createTestEnrolmentSession),
+      redis: {
+        enrolmentSessionCache: createMockRedisRepository(createTestEnrolmentSession),
       },
       entity: {
         enrolmentSession: createTestEnrolmentSession({
@@ -30,6 +30,6 @@ describe("rejectEnrolmentController", () => {
   test("should resolve with removed session", async () => {
     await expect(rejectEnrolmentController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.enrolmentSessionCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.enrolmentSessionCache.destroy).toHaveBeenCalled();
   });
 });

@@ -10,7 +10,7 @@ export const getDeviceLinkListController: ServerKoaController = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: {
       bearerToken: { subject: identityId },
     },

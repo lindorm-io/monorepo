@@ -1,7 +1,7 @@
 import { createTestIdentity } from "../../fixtures/entity";
 import { removeIdentityDisplayName as _removeIdentityDisplayName } from "../../handler";
 import { rtbfController } from "./rtbf";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 
 jest.mock("../../handler");
 
@@ -20,10 +20,10 @@ describe("rtbfController", () => {
           },
         }),
       },
-      repository: {
-        addressRepository: createMockRepository(),
-        identifierRepository: createMockRepository(),
-        identityRepository: createMockRepository(),
+      mongo: {
+        addressRepository: createMockMongoRepository(),
+        identifierRepository: createMockMongoRepository(),
+        identityRepository: createMockMongoRepository(),
       },
     };
 
@@ -34,8 +34,8 @@ describe("rtbfController", () => {
     await expect(rtbfController(ctx)).resolves.toBeUndefined();
 
     expect(removeIdentityDisplayName).toHaveBeenCalled();
-    expect(ctx.repository.addressRepository.deleteMany).toHaveBeenCalled();
-    expect(ctx.repository.identifierRepository.deleteMany).toHaveBeenCalled();
-    expect(ctx.repository.identityRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.addressRepository.deleteMany).toHaveBeenCalled();
+    expect(ctx.mongo.identifierRepository.deleteMany).toHaveBeenCalled();
+    expect(ctx.mongo.identityRepository.destroy).toHaveBeenCalled();
   });
 });

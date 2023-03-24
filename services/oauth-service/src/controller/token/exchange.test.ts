@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { tokenExchangeController } from "./exchange";
 import {
   convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
@@ -26,9 +26,9 @@ describe("introspectController", () => {
       data: {
         token: "token",
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 

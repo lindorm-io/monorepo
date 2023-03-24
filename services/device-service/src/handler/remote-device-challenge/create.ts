@@ -12,8 +12,8 @@ export const createRdcSession = async (
 ): Promise<RdcSession> => {
   const {
     axios: { communicationClient },
-    cache: { rdcSessionCache },
-    repository: { deviceLinkRepository },
+    redis: { rdcSessionCache },
+    mongo: { deviceLinkRepository },
   } = ctx;
 
   const {

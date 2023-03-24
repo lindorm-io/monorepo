@@ -10,10 +10,10 @@ export const handleRefreshTokenGrant = async (
   ctx: ServerKoaContext<OpenIdTokenRequestBody>,
 ): Promise<Partial<OpenIdTokenResponseBody>> => {
   const {
-    cache: { opaqueTokenCache },
+    redis: { opaqueTokenCache },
     data: { refreshToken: token },
     entity: { client },
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   if (!token) {

@@ -22,7 +22,7 @@ export const rejectSelectAccountController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     entity: { authorizationSession },
     logger,
   } = ctx;

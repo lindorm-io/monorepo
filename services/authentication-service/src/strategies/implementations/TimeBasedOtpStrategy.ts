@@ -4,6 +4,8 @@ import { TOTPHandler } from "../../class";
 import { configuration } from "../../server/configuration";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -24,9 +26,10 @@ export class TimeBasedOtpStrategy implements StrategyHandler {
     loa: 2,
     loaMax: 3,
     method: AuthenticationMethod.TIME_BASED_OTP,
-    methodsMax: 9,
-    methodsMin: 1,
     mfaCookie: true,
+    primary: false,
+    requiresIdentity: true,
+    secondary: true,
     strategy: AuthenticationStrategy.TIME_BASED_OTP,
     weight: 90,
   };
@@ -38,16 +41,25 @@ export class TimeBasedOtpStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.TOTP,
       confirmLength: 6,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -58,7 +70,7 @@ export class TimeBasedOtpStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { totp } = options;

@@ -2,8 +2,10 @@ import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { randomNumberAsync } from "../../util";
+import { createOtp } from "../../util";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -32,9 +34,10 @@ export class EmailOtpStrategy implements StrategyHandler {
     loa: 2,
     loaMax: 2,
     method: AuthenticationMethod.EMAIL,
-    methodsMax: 9,
-    methodsMin: 0,
     mfaCookie: true,
+    primary: true,
+    requiresIdentity: false,
+    secondary: true,
     strategy: AuthenticationStrategy.EMAIL_OTP,
     weight: 30,
   };
@@ -45,7 +48,7 @@ export class EmailOtpStrategy implements StrategyHandler {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      cache: { strategySessionCache },
+      redis: { strategySessionCache },
       axios: { communicationClient },
     } = ctx;
 
@@ -58,40 +61,47 @@ export class EmailOtpStrategy implements StrategyHandler {
     }
 
     const confirmLength = 6;
-    const otp = (await randomNumberAsync(confirmLength)).toString().padStart(confirmLength, "0");
+    const otp = (await createOtp(confirmLength)).toString().padStart(confirmLength, "0");
 
     strategySession.secret = await argon.encrypt(otp);
 
     await strategySessionCache.update(strategySession);
 
-    const body: SendOtpRequestBody = {
-      content: {
-        expires: strategySession.expires,
-        otp,
-        visualHint: strategySession.visualHint,
+    await communicationClient.post<never, SendOtpRequestBody>("/admin/send/otp", {
+      body: {
+        content: {
+          expires: strategySession.expires,
+          otp,
+          visualHint: strategySession.visualHint,
+        },
+        template: "authentication-email-otp",
+        to: identifier,
+        type: identifierType,
       },
-      template: "authentication-email-otp",
-      to: identifier,
-      type: identifierType,
-    };
-
-    await communicationClient.post("/admin/send/otp", {
-      body,
       middleware: [clientCredentialsMiddleware()],
     });
 
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.OTP,
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: strategySession.visualHint,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -102,7 +112,7 @@ export class EmailOtpStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { otp } = options;

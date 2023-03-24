@@ -1,5 +1,5 @@
 import { generateTotpController } from "./generate-totp";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
@@ -25,8 +25,8 @@ describe("generateTotpController", () => {
           totp: null,
         }),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -36,7 +36,7 @@ describe("generateTotpController", () => {
   test("should resolve", async () => {
     await expect(generateTotpController(ctx)).resolves.toStrictEqual({ body: { uri: "uri" } });
 
-    expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         totp: "signature",
       }),

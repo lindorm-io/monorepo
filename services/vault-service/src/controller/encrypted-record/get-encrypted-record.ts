@@ -26,7 +26,7 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { encryptedRecord },
-    repository: { encryptedRecordRepository },
+    mongo: { encryptedRecordRepository },
   } = ctx;
 
   if (encryptedRecord.expires && isAfter(new Date(), encryptedRecord.expires)) {
@@ -50,5 +50,10 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
     });
   }
 
-  return { body: { data: parseBlob(blob), expires: encryptedRecord.expires } };
+  return {
+    body: {
+      data: parseBlob(blob),
+      expires: encryptedRecord.expires ? encryptedRecord.expires.toISOString() : null,
+    },
+  };
 };

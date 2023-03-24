@@ -8,7 +8,7 @@ export const addAddressFromUserinfo = async (
   openIDAddress: OpenIdAddress,
 ): Promise<Address> => {
   const {
-    repository: { addressRepository },
+    mongo: { addressRepository },
   } = ctx;
 
   const country = openIDAddress.country?.trim();

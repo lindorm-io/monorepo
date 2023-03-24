@@ -9,7 +9,7 @@ export const isRdcRequired = async (
     metadata: {
       device: { installationId, uniqueId },
     },
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
   } = ctx;
 
   const deviceLinks = await deviceLinkRepository.findMany({

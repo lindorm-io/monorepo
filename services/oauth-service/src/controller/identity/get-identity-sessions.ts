@@ -22,7 +22,7 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { id: identityId },
-    repository: { clientRepository, clientSessionRepository, tenantRepository },
+    mongo: { clientRepository, clientSessionRepository, tenantRepository },
   } = ctx;
 
   const sessions: Array<IdentitySessionItem> = [];

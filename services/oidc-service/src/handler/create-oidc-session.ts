@@ -20,7 +20,7 @@ type Options = {
 
 export const createOidcSession = async (ctx: ServerKoaContext, options: Options): Promise<URL> => {
   const {
-    cache: { oidcSessionCache },
+    redis: { oidcSessionCache },
   } = ctx;
 
   const { callbackId, callbackUri, expires, identityId, loginHint, provider } = options;

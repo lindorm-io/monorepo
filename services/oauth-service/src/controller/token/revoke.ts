@@ -19,7 +19,7 @@ export const revokeTokenController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { opaqueTokenCache },
+    redis: { opaqueTokenCache },
     data: { token },
   } = ctx;
 

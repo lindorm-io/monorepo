@@ -46,12 +46,12 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { challengeSessionCache },
+    redis: { challengeSessionCache },
     data: { certificateVerifier, pincode, biometry, strategy },
     entity: { challengeSession, deviceLink },
     jwt,
     metadata,
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { challengeSessionToken },
   } = ctx;
 

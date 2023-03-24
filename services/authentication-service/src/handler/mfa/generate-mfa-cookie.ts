@@ -11,12 +11,12 @@ export const generateMfaCookie = async (
   authenticationSession: AuthenticationSession,
 ): Promise<void> => {
   const {
-    cache: { mfaCookieSessionCache },
+    redis: { mfaCookieSessionCache },
   } = ctx;
 
   const expires = expiryDate(configuration.defaults.mfa_cookie_expiry);
   const { level } = calculateLevelOfAssurance(authenticationSession);
-  const methods = getMethodsFromStrategies(authenticationSession.confirmedStrategies);
+  const methods = getMethodsFromStrategies(authenticationSession);
 
   if (!authenticationSession.identityId) {
     throw new Error("Identity ID not found");

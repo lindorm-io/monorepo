@@ -32,7 +32,7 @@ export const findIdentityController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { email, external, provider, nin, phone, ssn, username },
-    repository: { identityRepository },
+    mongo: { identityRepository },
   } = ctx;
 
   const filtered = removeEmptyFromArray([email, external, nin, phone, ssn, username]);

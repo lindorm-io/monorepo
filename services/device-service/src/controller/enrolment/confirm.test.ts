@@ -1,8 +1,8 @@
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
 import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
 import { SessionStatus } from "@lindorm-io/common-types";
 
@@ -28,8 +28,8 @@ describe("confirmEnrolmentController", () => {
 
   beforeEach(async () => {
     ctx = {
-      cache: {
-        enrolmentSessionCache: createMockCache(createTestEnrolmentSession),
+      redis: {
+        enrolmentSessionCache: createMockRedisRepository(createTestEnrolmentSession),
       },
       data: {
         biometry: "biometry",
@@ -53,8 +53,8 @@ describe("confirmEnrolmentController", () => {
           id: "clientId",
         },
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -82,9 +82,9 @@ describe("confirmEnrolmentController", () => {
     });
 
     expect(assertCertificateChallenge).toHaveBeenCalled();
-    expect(ctx.repository.deviceLinkRepository.create).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.create).toHaveBeenCalled();
     expect(ctx.jwt.sign).toHaveBeenCalled();
-    expect(ctx.cache.enrolmentSessionCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.enrolmentSessionCache.destroy).toHaveBeenCalled();
   });
 
   test("should resolve enrolment session with trusted deviceLink", async () => {
@@ -100,7 +100,7 @@ describe("confirmEnrolmentController", () => {
       }),
     });
 
-    expect(ctx.repository.deviceLinkRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         trusted: true,
       }),
@@ -121,7 +121,7 @@ describe("confirmEnrolmentController", () => {
       }),
     });
 
-    expect(ctx.repository.deviceLinkRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         trusted: false,
       }),

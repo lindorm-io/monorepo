@@ -22,12 +22,13 @@ interface Frontend {
 }
 
 interface Routes {
-  code_callback: string;
-  consent:       string;
-  error:         string;
-  login:         string;
-  logout:        string;
-  oidc:          string;
+  code_callback:  string;
+  consent:        string;
+  error:          string;
+  login:          string;
+  logout:         string;
+  oidc:           string;
+  select_account: string;
 }
 
 interface Logger {

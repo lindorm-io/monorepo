@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
 import { assertPKCE as _assertPKCE } from "@lindorm-io/node-pkce";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateMfaCookie as _generateMfaCookie } from "../../handler";
 import { verifyAuthenticationController } from "./verify-authentication";
@@ -36,8 +36,8 @@ describe("verifyAuthenticationController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(createTestAuthenticationSession),
       },
       entity: {
         authenticationSession: createTestAuthenticationSession({
@@ -78,7 +78,7 @@ describe("verifyAuthenticationController", () => {
     });
 
     expect(assertPKCE).toHaveBeenCalled();
-    expect(ctx.cache.authenticationSessionCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.authenticationSessionCache.destroy).toHaveBeenCalled();
   });
 
   test("should resolve with generated mfa cookie", async () => {

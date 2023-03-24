@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { AuthenticationSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import { resolveAllowedStrategies as _resolveAllowedStrategies } from "./resolve-allowed-strategies";
@@ -18,11 +18,11 @@ describe("handleAuthenticationInitialisation", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(createTestAuthenticationSession),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -46,6 +46,6 @@ describe("handleAuthenticationInitialisation", () => {
       expect.any(AuthenticationSession),
     );
 
-    expect(ctx.cache.authenticationSessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.authenticationSessionCache.create).toHaveBeenCalled();
   });
 });

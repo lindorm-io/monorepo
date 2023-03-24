@@ -21,7 +21,7 @@ export const resolveIdentity = async (
 ): Promise<OidcSession> => {
   const {
     axios: { identityClient },
-    cache: { oidcSessionCache },
+    redis: { oidcSessionCache },
   } = ctx;
 
   // Identity already resolved

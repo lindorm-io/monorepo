@@ -10,7 +10,7 @@ export const handleOauthLoginVerification = async (
   authorizationSession: AuthorizationSession,
 ): Promise<AuthorizationSession> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
   } = ctx;
 
   const browserSession = await getUpdatedBrowserSession(ctx, authorizationSession);

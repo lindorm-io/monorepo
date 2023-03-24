@@ -9,7 +9,7 @@ export const generateAuthorizationCode = async (
   authorizationSession: AuthorizationSession,
 ): Promise<string> => {
   const {
-    cache: { authorizationCodeCache },
+    redis: { authorizationCodeCache },
   } = ctx;
 
   const code = randomUnreserved(128);

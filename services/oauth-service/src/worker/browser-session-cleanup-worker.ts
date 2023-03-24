@@ -11,11 +11,7 @@ const time = stringToMilliseconds("60 minutes");
 export const browserSessionCleanupWorker = new IntervalWorker(
   {
     callback: async (): Promise<void> => {
-      const repository = new BrowserSessionRepository({
-        connection: mongoConnection,
-        logger,
-      });
-
+      const repository = new BrowserSessionRepository(mongoConnection, logger);
       await repository.deleteMany({
         latestAuthentication: { $lt: sub(new Date(), stringToDurationObject("1 years")) },
       });

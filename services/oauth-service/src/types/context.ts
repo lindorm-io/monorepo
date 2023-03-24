@@ -5,11 +5,12 @@ import { JwtDecodeData } from "@lindorm-io/jwt";
 import { VerifiedAuthenticationConfirmationToken, VerifiedIdentityToken } from "../common";
 import {
   LindormNodeServerAxios,
-  LindormNodeServerCache,
   LindormNodeServerContext,
   LindormNodeServerKoaContext,
   LindormNodeServerKoaMiddleware,
-  LindormNodeServerRepository,
+  LindormNodeServerMemory,
+  LindormNodeServerMongo,
+  LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 import {
@@ -39,31 +40,31 @@ interface ServerAxios extends LindormNodeServerAxios {
   identityClient: Axios;
 }
 
-interface ServerCache extends LindormNodeServerCache {
-  opaqueTokenCache: OpaqueTokenCache;
-  authorizationCodeCache: AuthorizationCodeCache;
-  authorizationSessionCache: AuthorizationSessionCache;
-  claimsSessionCache: ClaimsSessionCache;
-  elevationSessionCache: ElevationSessionCache;
-  logoutSessionCache: LogoutSessionCache;
-}
-
 interface ServerEntity {
-  opaqueToken: OpaqueToken;
   authorizationSession: AuthorizationSession;
   claimsSession: ClaimsSession;
   client: Client;
   clientSession: ClientSession;
   elevationSession: ElevationSession;
   logoutSession: LogoutSession;
+  opaqueToken: OpaqueToken;
   tenant: Tenant;
 }
 
-interface ServerRepository extends LindormNodeServerRepository {
+interface ServerMongo extends LindormNodeServerMongo {
   browserSessionRepository: BrowserSessionRepository;
   clientRepository: ClientRepository;
   clientSessionRepository: ClientSessionRepository;
   tenantRepository: TenantRepository;
+}
+
+interface ServerRedis extends LindormNodeServerRedis {
+  authorizationCodeCache: AuthorizationCodeCache;
+  authorizationSessionCache: AuthorizationSessionCache;
+  claimsSessionCache: ClaimsSessionCache;
+  elevationSessionCache: ElevationSessionCache;
+  logoutSessionCache: LogoutSessionCache;
+  opaqueTokenCache: OpaqueTokenCache;
 }
 
 interface ServerToken extends LindormNodeServerToken {
@@ -74,14 +75,17 @@ interface ServerToken extends LindormNodeServerToken {
 
 interface Context extends LindormNodeServerContext {
   axios: ServerAxios;
-  cache: ServerCache;
   entity: ServerEntity;
-  repository: ServerRepository;
+  memory: LindormNodeServerMemory;
+  mongo: ServerMongo;
+  redis: ServerRedis;
   token: ServerToken;
 }
 
-export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
+export interface ServerKoaContext<D extends Dict = Dict>
+  extends LindormNodeServerKoaContext<Context, D> {}
 
-export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
+export interface ServerKoaController<D extends Dict = Dict>
+  extends Controller<ServerKoaContext<D>> {}
 
-export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;
+export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}

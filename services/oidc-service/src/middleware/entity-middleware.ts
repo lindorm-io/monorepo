@@ -1,5 +1,8 @@
 import { OidcSession } from "../entity";
 import { OidcSessionCache } from "../infrastructure";
-import { cacheEntityMiddleware } from "@lindorm-io/koa-redis";
+import { redisRepositoryEntityMiddleware } from "@lindorm-io/koa-redis";
 
-export const oidcSessionEntityMiddleware = cacheEntityMiddleware(OidcSession, OidcSessionCache);
+export const oidcSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  OidcSession,
+  OidcSessionCache,
+);

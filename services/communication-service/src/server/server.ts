@@ -5,7 +5,7 @@ import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { logger } from "./logger";
 import { middleware } from "./middleware";
-import { redisConnection } from "../instance";
+import { memoryDatabase, redisConnection } from "../instance";
 import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { socketListeners } from "./socket";
 import { workers } from "./workers";
@@ -18,9 +18,10 @@ export const server = createNodeServer<ServerKoaContext>({
   keys: configuration.server.keys,
   keystore: {
     exposePublic: true,
-    keyPairCache: true,
+    keyPairMemory: true,
   },
   logger,
+  memoryDatabase,
   middleware,
   port: configuration.server.port,
   redisConnection,

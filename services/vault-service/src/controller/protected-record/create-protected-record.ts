@@ -28,7 +28,7 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { id, data, expires },
-    repository: { protectedRecordRepository },
+    mongo: { protectedRecordRepository },
     token: {
       bearerToken: { subject, subjectHint },
     },

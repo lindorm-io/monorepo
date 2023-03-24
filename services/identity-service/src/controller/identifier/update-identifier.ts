@@ -23,7 +23,7 @@ export const updateIdentifierController: ServerKoaController<RequestData> = asyn
   const {
     data: { label, primary },
     entity: { identity, identifier },
-    repository: { identifierRepository },
+    mongo: { identifierRepository },
   } = ctx;
 
   if (label !== undefined) {

@@ -18,7 +18,7 @@ export const resolveIdentity = async (
 ): Promise<AuthenticationSession> => {
   const {
     axios: { identityClient },
-    cache: { authenticationSessionCache },
+    redis: { authenticationSessionCache },
   } = ctx;
 
   // Identity already resolved

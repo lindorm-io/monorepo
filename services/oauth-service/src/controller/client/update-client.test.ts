@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { SCOPE_OPENID } from "../../constant";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient } from "../../fixtures/entity";
 import { updateClientController } from "./update-client";
 
@@ -49,8 +49,8 @@ describe("updateClientController", () => {
       entity: {
         client: createTestClient({ id: "be664120-2430-4050-b56c-fd4176b652d9" }),
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
       },
     };
   });
@@ -58,7 +58,7 @@ describe("updateClientController", () => {
   test("should resolve updated client", async () => {
     await expect(updateClientController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.clientRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: false,
         allowed: {

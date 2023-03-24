@@ -13,7 +13,7 @@ export const generateRecoveryCodeController: ServerKoaController = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { account },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);

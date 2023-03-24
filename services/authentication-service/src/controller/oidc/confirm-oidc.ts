@@ -24,9 +24,9 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     axios: { oidcClient },
-    cache: { authenticationSessionCache },
+    redis: { authenticationSessionCache },
     data: { session },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   const {
@@ -54,7 +54,7 @@ export const confirmOidcController: ServerKoaController<RequestData> = async (
   authenticationSession.confirmedOidcLevel = levelOfAssurance;
   authenticationSession.confirmedOidcProvider = provider;
 
-  authenticationSession.status = calculateAuthenticationStatus(authenticationSession);
+  authenticationSession.status = calculateAuthenticationStatus(authenticationSession, account);
 
   if (authenticationSession.status === SessionStatus.PENDING) {
     authenticationSession.allowedStrategies = await resolveAllowedStrategies(

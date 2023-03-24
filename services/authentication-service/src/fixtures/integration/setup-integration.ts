@@ -1,7 +1,8 @@
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { CryptoArgon } from "@lindorm-io/crypto";
+import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
+import { argon, memoryDatabase, mongoConnection, redisConnection } from "../../instance";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { mongoConnection, redisConnection } from "../../instance";
 import {
   AccountRepository,
   AuthenticationSessionCache,
@@ -16,27 +17,22 @@ export let TEST_BROWSER_LINK_REPOSITORY: BrowserLinkRepository;
 export let TEST_MFA_COOKIE_SESSION_CACHE: MfaCookieSessionCache;
 export let TEST_STRATEGY_SESSION_CACHE: StrategySessionCache;
 
+export let TEST_ARGON: CryptoArgon;
+
 export const setupIntegration = async (): Promise<void> => {
   const logger = createMockLogger();
 
   await mongoConnection.connect();
   await redisConnection.connect();
 
-  TEST_ACCOUNT_REPOSITORY = new AccountRepository({ connection: mongoConnection, logger });
-  TEST_AUTHENTICATION_SESSION_CACHE = new AuthenticationSessionCache({
-    connection: redisConnection,
-    logger,
-  });
-  TEST_BROWSER_LINK_REPOSITORY = new BrowserLinkRepository({ connection: mongoConnection, logger });
-  TEST_MFA_COOKIE_SESSION_CACHE = new MfaCookieSessionCache({
-    connection: redisConnection,
-    logger,
-  });
-  TEST_STRATEGY_SESSION_CACHE = new StrategySessionCache({
-    connection: redisConnection,
-    logger,
-  });
+  TEST_ACCOUNT_REPOSITORY = new AccountRepository(mongoConnection, logger);
+  TEST_AUTHENTICATION_SESSION_CACHE = new AuthenticationSessionCache(redisConnection, logger);
+  TEST_BROWSER_LINK_REPOSITORY = new BrowserLinkRepository(mongoConnection, logger);
+  TEST_MFA_COOKIE_SESSION_CACHE = new MfaCookieSessionCache(redisConnection, logger);
+  TEST_STRATEGY_SESSION_CACHE = new StrategySessionCache(redisConnection, logger);
 
-  const keyPairCache = new KeyPairCache({ connection: redisConnection, logger });
+  TEST_ARGON = argon;
+
+  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
   await keyPairCache.create(createTestKeyPair());
 };

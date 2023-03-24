@@ -13,7 +13,7 @@ export const getIdentityClaims = async (
 ): Promise<GetClaimsResponse> => {
   const {
     axios: { axiosClient, identityClient },
-    cache: { claimsSessionCache },
+    redis: { claimsSessionCache },
   } = ctx;
 
   const claimsSession = await claimsSessionCache.create(

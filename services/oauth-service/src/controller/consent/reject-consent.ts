@@ -22,7 +22,7 @@ export const rejectConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     entity: { authorizationSession },
     logger,
   } = ctx;

@@ -41,7 +41,9 @@ describe("resolveAllowedMethods", () => {
       "email_code",
       "email_otp",
       "password_browser_link",
-      "session_accept_with_code",
+      "phone_otp",
+      "rdc_qr_code",
+      "session_display_code",
     ]);
   });
 });

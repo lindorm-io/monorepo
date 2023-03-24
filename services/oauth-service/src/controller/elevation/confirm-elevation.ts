@@ -25,7 +25,7 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { elevationSessionCache },
+    redis: { elevationSessionCache },
     data: { identityId, levelOfAssurance, methods },
     entity: { elevationSession },
     logger,

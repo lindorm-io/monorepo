@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestElevationSession } from "../../fixtures/entity";
 import { rejectElevationController } from "./reject-elevation";
@@ -20,8 +20,8 @@ describe("rejectElevationController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        elevationSessionCache: createMockCache(createTestElevationSession),
+      redis: {
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       entity: {
         elevationSession: createTestElevationSession(),
@@ -38,7 +38,7 @@ describe("rejectElevationController", () => {
       body: { redirectTo: "createElevationRejectedUri" },
     });
 
-    expect(ctx.cache.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),
@@ -50,7 +50,7 @@ describe("rejectElevationController", () => {
 
     await expect(rejectElevationController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),

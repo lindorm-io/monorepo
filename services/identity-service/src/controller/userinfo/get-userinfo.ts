@@ -17,7 +17,7 @@ export const getUserinfoController: ServerKoaController = async (
 ): ControllerResponse<ResponseData> => {
   const {
     entity: { identity },
-    repository: { addressRepository },
+    mongo: { addressRepository },
     token: {
       bearerToken: { scopes },
     },

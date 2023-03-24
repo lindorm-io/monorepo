@@ -3,6 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import { server } from "../../server/server";
+import { randomUUID } from "crypto";
 import {
   createTestAccount,
   createTestAuthenticationSession,
@@ -14,10 +15,10 @@ import {
   getTestStrategySessionToken,
   setupIntegration,
   TEST_ACCOUNT_REPOSITORY,
+  TEST_ARGON,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
 } from "../../fixtures/integration";
-import { randomUUID } from "crypto";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -93,8 +94,13 @@ describe("/sessions/strategy", () => {
   });
 
   test("should acknowledge strategy session", async () => {
+    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
+      createTestAuthenticationSession(),
+    );
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
       createTestStrategySession({
+        authenticationSessionId: authenticationSession.id,
+        secret: await TEST_ARGON.encrypt("secret"),
         strategy: AuthenticationStrategy.SESSION_QR_CODE,
       }),
     );
@@ -104,6 +110,7 @@ describe("/sessions/strategy", () => {
 
     const response = await request(server.callback())
       .get(`/sessions/strategy/${strategySession.id}/acknowledge`)
+      .query({ acknowledge_code: "secret" })
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
 
@@ -155,9 +162,7 @@ describe("/sessions/strategy", () => {
       .post(`/sessions/strategy/${strategySession.id}/confirm`)
       .send({
         challenge_confirmation_token: challengeConfirmationToken,
-
         strategy_session_token: strategySessionToken,
-
         remember: true,
         sso: true,
       })

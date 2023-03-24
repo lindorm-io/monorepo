@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectConsentController } from "./reject-consent";
@@ -12,8 +12,8 @@ describe("rejectConsentController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       entity: {
         authorizationSession: createTestAuthorizationSession({
@@ -32,7 +32,7 @@ describe("rejectConsentController", () => {
       },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({
           consent: "rejected",

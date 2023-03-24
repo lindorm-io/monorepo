@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier } from "../../fixtures/entity";
 import { deleteIdentifierController } from "./delete-identifier";
 
@@ -18,8 +18,8 @@ describe("deleteIdentifierController", () => {
           primary: false,
         }),
       },
-      repository: {
-        identifierRepository: createMockRepository(createTestEmailIdentifier),
+      mongo: {
+        identifierRepository: createMockMongoRepository(createTestEmailIdentifier),
       },
     };
   });
@@ -27,7 +27,7 @@ describe("deleteIdentifierController", () => {
   test("should resolve", async () => {
     await expect(deleteIdentifierController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.identifierRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.identifierRepository.destroy).toHaveBeenCalled();
   });
 
   test("should throw on primary identifier", async () => {

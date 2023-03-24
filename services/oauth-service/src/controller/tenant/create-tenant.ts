@@ -27,7 +27,7 @@ export const createTenantController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { name, owner, subdomain },
-    repository: { tenantRepository },
+    mongo: { tenantRepository },
   } = ctx;
 
   const tenant = await tenantRepository.create(

@@ -9,7 +9,7 @@ describe("getDeviceLinkListController", () => {
 
   beforeEach(async () => {
     ctx = {
-      repository: {
+      mongo: {
         deviceLinkRepository: {
           findMany: async () => [
             await createTestDeviceLink({ id: "ded67066-ba3a-4898-b537-de12d4b7f86d" }),

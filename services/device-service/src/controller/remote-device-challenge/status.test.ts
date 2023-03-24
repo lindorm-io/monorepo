@@ -1,5 +1,5 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { getRdcSessionStatusController } from "./status";
 import { createTestRdcSession } from "../../fixtures/entity";
 
@@ -8,8 +8,8 @@ describe("getRdcSessionStatusController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        rdcSessionCache: createMockCache(createTestRdcSession),
+      redis: {
+        rdcSessionCache: createMockRedisRepository(createTestRdcSession),
       },
       data: {
         id: "id",
@@ -26,7 +26,7 @@ describe("getRdcSessionStatusController", () => {
   });
 
   test("should default to expired", async () => {
-    ctx.cache.rdcSessionCache.find.mockRejectedValue(new EntityNotFoundError("message"));
+    ctx.redis.rdcSessionCache.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(getRdcSessionStatusController(ctx)).resolves.toStrictEqual({
       body: {

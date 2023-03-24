@@ -23,7 +23,7 @@ export const updateAccountPasswordController: ServerKoaController<RequestData> =
   const {
     data: { password, newPassword },
     entity: { account },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);

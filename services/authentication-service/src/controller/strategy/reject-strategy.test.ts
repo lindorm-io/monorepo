@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestStrategySession } from "../../fixtures/entity";
 import { rejectStrategyController } from "./reject-strategy";
 
@@ -7,8 +7,8 @@ describe("rejectStrategyController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        strategySessionCache: createMockCache(createTestStrategySession),
+      redis: {
+        strategySessionCache: createMockRedisRepository(createTestStrategySession),
       },
       entity: {
         strategySession: createTestStrategySession(),
@@ -19,7 +19,7 @@ describe("rejectStrategyController", () => {
   test("should resolve", async () => {
     await expect(rejectStrategyController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.strategySessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.strategySessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),

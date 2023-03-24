@@ -22,7 +22,7 @@ export const getStrategyController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<Partial<ResponseBody>> => {
   const {
-    cache: { strategySessionCache },
+    redis: { strategySessionCache },
     data: { id },
   } = ctx;
 

@@ -40,7 +40,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { enrolmentSessionCache },
+    redis: { enrolmentSessionCache },
     data: {
       audiences,
       brand,

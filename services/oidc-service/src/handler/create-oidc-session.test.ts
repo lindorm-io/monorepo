@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createOidcSession } from "./create-oidc-session";
 import { createTestOidcSession } from "../fixtures/entity";
 
@@ -11,8 +11,8 @@ describe("createOidcSession", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        oidcSessionCache: createMockCache(createTestOidcSession),
+      redis: {
+        oidcSessionCache: createMockRedisRepository(createTestOidcSession),
       },
     };
 

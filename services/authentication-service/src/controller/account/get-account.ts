@@ -11,6 +11,7 @@ export const getAccountController: ServerKoaController = async (ctx): Controller
       browserLinkCode: !!account.browserLinkCode,
       password: !!account.password,
       recoveryCode: !!account.recoveryCode,
+      requireMfa: account.requireMfa,
       totp: !!account.totp,
     },
   };

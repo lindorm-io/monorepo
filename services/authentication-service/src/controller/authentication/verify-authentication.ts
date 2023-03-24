@@ -37,7 +37,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authenticationSessionCache, strategySessionCache },
+    redis: { authenticationSessionCache, strategySessionCache },
     data: { code, codeVerifier },
     entity: { authenticationSession },
     jwt,
@@ -63,10 +63,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
   await argon.assert(code, authenticationSession.code);
 
   const { level, maximum } = calculateLevelOfAssurance(authenticationSession);
-
-  const authMethodsReference: Array<string> = getMethodsFromStrategies(
-    authenticationSession.confirmedStrategies,
-  );
+  const authMethodsReference: Array<string> = getMethodsFromStrategies(authenticationSession);
 
   if (authenticationSession.confirmedOidcProvider) {
     authMethodsReference.push("oidc");

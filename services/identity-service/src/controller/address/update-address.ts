@@ -25,7 +25,7 @@ export const updateAddressController: ServerKoaController<RequestData> = async (
   const {
     data: { careOf, country, label, locality, postalCode, region, streetAddress },
     entity: { address },
-    repository: { addressRepository },
+    mongo: { addressRepository },
   } = ctx;
 
   address.careOf = careOf;

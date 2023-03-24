@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkTrustedController } from "./update-trusted";
 
@@ -12,8 +12,8 @@ describe("updateDeviceLinkTrustedController", () => {
       entity: {
         deviceLink: createTestDeviceLink(),
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: { challengeConfirmationToken: { token: "jwt.jwt.jwt" } },
     };
@@ -22,7 +22,7 @@ describe("updateDeviceLinkTrustedController", () => {
   test("should resolve and update deviceLink trusted", async () => {
     await expect(updateDeviceLinkTrustedController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         trusted: true,
       }),

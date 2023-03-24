@@ -1,12 +1,11 @@
 import { Environment } from "@lindorm-io/common-types";
-import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { logger } from "./logger";
 import { middleware } from "./middleware";
-import { mongoConnection, redisConnection } from "../instance";
+import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import { workers } from "./workers";
 import {
   AuthorizationCodeCache,
@@ -22,15 +21,6 @@ import {
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [
-    OpaqueTokenCache,
-    AuthorizationCodeCache,
-    AuthorizationSessionCache,
-    ClaimsSessionCache,
-    ElevationSessionCache,
-    KeyPairCache,
-    LogoutSessionCache,
-  ],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
@@ -38,21 +28,23 @@ export const server = createNodeServer<ServerKoaContext>({
   keys: configuration.server.keys,
   keystore: {
     exposePublic: true,
-    keyPairCache: true,
-    keyPairRepository: true,
+    keyPairMemory: true,
   },
   logger,
+  memoryDatabase,
   middleware,
+  mongo: [BrowserSessionRepository, ClientRepository, ClientSessionRepository, TenantRepository],
   mongoConnection,
   port: configuration.server.port,
-  redisConnection,
-  repositories: [
-    BrowserSessionRepository,
-    ClientRepository,
-    ClientSessionRepository,
-    KeyPairRepository,
-    TenantRepository,
+  redis: [
+    OpaqueTokenCache,
+    AuthorizationCodeCache,
+    AuthorizationSessionCache,
+    ClaimsSessionCache,
+    ElevationSessionCache,
+    LogoutSessionCache,
   ],
+  redisConnection,
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({
     name: service.client_name,

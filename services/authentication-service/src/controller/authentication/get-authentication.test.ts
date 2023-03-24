@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateClientConfig as _generateClientConfig } from "../../util";
 import { getAuthenticationController } from "./get-authentication";
@@ -27,8 +27,8 @@ describe("getAuthenticationController", () => {
           }),
         },
       },
-      cache: {
-        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(createTestAuthenticationSession),
       },
       entity: {
         authenticationSession,
@@ -82,7 +82,7 @@ describe("getAuthenticationController", () => {
       },
     });
 
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         code: expect.any(String),
         status: "code",

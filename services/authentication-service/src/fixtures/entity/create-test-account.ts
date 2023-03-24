@@ -6,6 +6,7 @@ export const createTestAccount = (options: Partial<AccountOptions> = {}): Accoun
     browserLinkCode: baseHash("browserLinkCode"),
     password: baseHash("password"),
     recoveryCode: baseHash("recoveryCode"),
+    requireMfa: true,
     totp: baseHash("totp"),
     ...options,
   });

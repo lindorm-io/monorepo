@@ -1,10 +1,10 @@
 import { Account, AuthenticationSession } from "../../entity";
+import { AuthenticationStrategy } from "@lindorm-io/common-types";
 import { BROWSER_LINK_COOKIE_NAME, MFA_COOKIE_NAME } from "../../constant";
 import { ServerKoaContext } from "../../types";
 import { getAvailableStrategies } from "../../util";
 import { getValidDeviceLinks } from "./get-valid-device-links";
 import { getValidIdentitySessions } from "./get-valid-identity-sessions";
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
 
 export const resolveAllowedStrategies = async (
   ctx: ServerKoaContext,
@@ -94,10 +94,10 @@ export const resolveAllowedStrategies = async (
   // Sessions
 
   if (
-    availableStrategies.includes(AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE) &&
+    availableStrategies.includes(AuthenticationStrategy.SESSION_DISPLAY_CODE) &&
     sessions.length
   ) {
-    strategies.push(AuthenticationStrategy.SESSION_ACCEPT_WITH_CODE);
+    strategies.push(AuthenticationStrategy.SESSION_DISPLAY_CODE);
   }
 
   if (availableStrategies.includes(AuthenticationStrategy.SESSION_OTP) && sessions.length) {

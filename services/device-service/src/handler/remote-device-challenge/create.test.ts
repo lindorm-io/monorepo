@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createRdcSession } from "./create";
 import { createTestDeviceLink, createTestRdcSession } from "../../fixtures/entity";
 import { RdcSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -21,10 +21,10 @@ describe("createRdcSession", () => {
         },
         oauthClient: {},
       },
-      cache: {
-        rdcSessionCache: createMockCache(createTestRdcSession),
+      redis: {
+        rdcSessionCache: createMockRedisRepository(createTestRdcSession),
       },
-      repository: {
+      mongo: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
             await createTestDeviceLink({
@@ -55,8 +55,8 @@ describe("createRdcSession", () => {
   test("should resolve with a created push_notification session", async () => {
     await expect(createRdcSession(ctx, options)).resolves.toStrictEqual(expect.any(RdcSession));
 
-    expect(ctx.cache.rdcSessionCache.create).toHaveBeenCalled();
-    expect(ctx.repository.deviceLinkRepository.findMany).toHaveBeenCalled();
+    expect(ctx.redis.rdcSessionCache.create).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.findMany).toHaveBeenCalled();
     expect(ctx.axios.communicationClient.post).toHaveBeenCalled();
   });
 
@@ -65,8 +65,8 @@ describe("createRdcSession", () => {
 
     await expect(createRdcSession(ctx, options)).resolves.toStrictEqual(expect.any(RdcSession));
 
-    expect(ctx.cache.rdcSessionCache.create).toHaveBeenCalled();
-    expect(ctx.repository.deviceLinkRepository.findMany).not.toHaveBeenCalled();
+    expect(ctx.redis.rdcSessionCache.create).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.findMany).not.toHaveBeenCalled();
     expect(ctx.axios.communicationClient.post).not.toHaveBeenCalled();
   });
 

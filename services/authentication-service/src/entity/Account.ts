@@ -11,12 +11,13 @@ export type AccountAttributes = EntityAttributes & {
   browserLinkCode: string | null;
   password: string | null;
   recoveryCode: string | null;
+  requireMfa: boolean;
   totp: string | null;
 };
 
 export type AccountOptions = Optional<
   AccountAttributes,
-  EntityKeys | "browserLinkCode" | "password" | "recoveryCode" | "totp"
+  EntityKeys | "browserLinkCode" | "password" | "recoveryCode" | "requireMfa" | "totp"
 >;
 
 const schema = Joi.object<AccountAttributes>({
@@ -25,6 +26,7 @@ const schema = Joi.object<AccountAttributes>({
   browserLinkCode: Joi.string().base64().allow(null).required(),
   password: Joi.string().base64().allow(null).required(),
   recoveryCode: Joi.string().base64().allow(null).required(),
+  requireMfa: Joi.boolean().required(),
   totp: Joi.string().base64().allow(null).required(),
 });
 
@@ -32,6 +34,7 @@ export class Account extends LindormEntity<AccountAttributes> implements Account
   public browserLinkCode: string | null;
   public password: string | null;
   public recoveryCode: string | null;
+  public requireMfa: boolean;
   public totp: string | null;
 
   public constructor(options: AccountOptions) {
@@ -40,6 +43,7 @@ export class Account extends LindormEntity<AccountAttributes> implements Account
     this.browserLinkCode = options.browserLinkCode || null;
     this.password = options.password || null;
     this.recoveryCode = options.recoveryCode || null;
+    this.requireMfa = options.requireMfa === true;
     this.totp = options.totp || null;
   }
 
@@ -58,6 +62,7 @@ export class Account extends LindormEntity<AccountAttributes> implements Account
       browserLinkCode: this.browserLinkCode,
       password: this.password,
       recoveryCode: this.recoveryCode,
+      requireMfa: this.requireMfa,
       totp: this.totp,
     };
   }

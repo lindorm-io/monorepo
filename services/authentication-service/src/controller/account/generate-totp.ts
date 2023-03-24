@@ -14,7 +14,7 @@ export const generateTotpController: ServerKoaController = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     entity: { account },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   if (account.totp) {

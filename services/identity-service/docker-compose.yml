@@ -11,11 +11,3 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=example
-
-  redis:
-    image: redis
-    container_name: redis_test
-    labels:
-      - redis
-    ports:
-      - "6379:6379"

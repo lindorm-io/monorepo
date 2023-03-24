@@ -18,6 +18,7 @@ describe("getAccountController", () => {
         browserLinkCode: true,
         password: true,
         recoveryCode: true,
+        requireMfa: true,
         totp: true,
       },
     });

@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestDeviceLink } from "../../fixtures/entity";
 import { updateDeviceLinkPincodeController } from "./update-pincode";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
@@ -43,8 +43,8 @@ describe("updateDeviceLinkPincodeController", () => {
           name: null,
         },
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -68,7 +68,7 @@ describe("updateDeviceLinkPincodeController", () => {
   test("should resolve and update deviceLink pincode", async () => {
     await expect(updateDeviceLinkPincodeController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         pincode: "new-pincode-signature",
       }),
@@ -80,7 +80,7 @@ describe("updateDeviceLinkPincodeController", () => {
 
     await expect(updateDeviceLinkPincodeController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "name",
       }),

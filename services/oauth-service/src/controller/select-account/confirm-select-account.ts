@@ -34,12 +34,12 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     data: { selectExisting, selectNew },
     entity: { authorizationSession, client },
     jwt,
     logger,
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   assertSessionPending(authorizationSession.status.selectAccount);

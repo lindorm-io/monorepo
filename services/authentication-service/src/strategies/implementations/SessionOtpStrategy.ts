@@ -3,8 +3,10 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { getValidIdentitySessions } from "../../handler";
-import { randomNumberAsync } from "../../util";
+import { createOtp } from "../../util";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -26,9 +28,10 @@ export class SessionOtpStrategy implements StrategyHandler {
     loa: 2,
     loaMax: 3,
     method: AuthenticationMethod.SESSION_LINK,
-    methodsMax: 9,
-    methodsMin: 1,
     mfaCookie: true,
+    primary: false,
+    requiresIdentity: true,
+    secondary: true,
     strategy: AuthenticationStrategy.SESSION_OTP,
     weight: 80,
   };
@@ -40,7 +43,7 @@ export class SessionOtpStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     const {
       axios: { communicationClient },
-      cache: { strategySessionCache },
+      redis: { strategySessionCache },
     } = ctx;
 
     if (!authenticationSession.identityId) {
@@ -50,7 +53,7 @@ export class SessionOtpStrategy implements StrategyHandler {
     }
 
     const confirmLength = 6;
-    const otp = (await randomNumberAsync(confirmLength)).toString().padStart(confirmLength, "0");
+    const otp = (await createOtp(confirmLength)).toString().padStart(confirmLength, "0");
 
     strategySession.secret = await argon.encrypt(otp);
     await strategySessionCache.update(strategySession);
@@ -63,29 +66,36 @@ export class SessionOtpStrategy implements StrategyHandler {
       });
     }
 
-    const body: EmitSocketEventRequestBody = {
-      channels: { sessions },
-      content: { otp, visualHint: strategySession.visualHint },
-      event: "authentication-service:session-otp-flow",
-    };
-
-    await communicationClient.post("/admin/socket/emit", {
-      body,
+    await communicationClient.post<never, EmitSocketEventRequestBody>("/admin/socket/emit", {
+      body: {
+        channels: { sessions },
+        content: { otp, visualHint: strategySession.visualHint },
+        event: "authentication-service:session-otp-flow",
+      },
       middleware: [clientCredentialsMiddleware()],
     });
 
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.OTP,
       confirmLength,
       confirmMode: AuthenticationStrategyConfirmMode.NUMERIC,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,
       visualHint: strategySession.visualHint,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -96,7 +106,7 @@ export class SessionOtpStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { otp } = options;

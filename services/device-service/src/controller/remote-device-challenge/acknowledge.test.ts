@@ -1,5 +1,5 @@
 import { acknowledgeRdcController } from "./acknowledge";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
 
 jest.mock("../../middleware");
@@ -15,8 +15,8 @@ describe("acknowledgeRdcController", () => {
         },
         oauthClient: {},
       },
-      cache: {
-        rdcSessionCache: createMockCache(createTestRdcSession),
+      redis: {
+        rdcSessionCache: createMockRedisRepository(createTestRdcSession),
       },
       entity: {
         rdcSession: createTestRdcSession({
@@ -71,7 +71,7 @@ describe("acknowledgeRdcController", () => {
     });
 
     expect(ctx.jwt.sign).toHaveBeenCalled();
-    expect(ctx.cache.rdcSessionCache.update).toHaveBeenCalled();
+    expect(ctx.redis.rdcSessionCache.update).toHaveBeenCalled();
     expect(ctx.axios.communicationClient.post).not.toHaveBeenCalled();
   });
 

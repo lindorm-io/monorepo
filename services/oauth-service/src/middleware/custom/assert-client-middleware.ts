@@ -7,7 +7,7 @@ import { getCredentials } from "@lindorm-io/koa-basic-auth";
 export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Promise<void> => {
   const {
     data,
-    repository: { clientRepository },
+    mongo: { clientRepository },
   } = ctx;
 
   let clientId = data.clientId;

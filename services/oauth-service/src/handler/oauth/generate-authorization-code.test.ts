@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { AuthorizationCode, AuthorizationSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthorizationCode, createTestAuthorizationSession } from "../../fixtures/entity";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 
@@ -12,8 +12,8 @@ describe("setAuthorizationCode", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationCodeCache: createMockCache(createTestAuthorizationCode),
+      redis: {
+        authorizationCodeCache: createMockRedisRepository(createTestAuthorizationCode),
       },
     };
 
@@ -25,7 +25,7 @@ describe("setAuthorizationCode", () => {
       expect.any(String),
     );
 
-    expect(ctx.cache.authorizationCodeCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationCodeCache.create).toHaveBeenCalledWith(
       expect.any(AuthorizationCode),
     );
   });

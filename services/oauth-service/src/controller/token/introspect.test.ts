@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 import { tokenIntrospectController } from "./introspect";
 import {
@@ -29,9 +29,9 @@ describe("introspectController", () => {
       data: {
         token: "token",
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 
@@ -45,13 +45,13 @@ describe("introspectController", () => {
   });
 
   test("should resolve token info", async () => {
-    ctx.repository.clientRepository.find.mockResolvedValue(
+    ctx.mongo.clientRepository.find.mockResolvedValue(
       createTestClient({
         id: "85719f0b-2f8b-478a-86c1-6586843c490b",
         tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
       }),
     );
-    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValue(
       createTestClientSession({
         id: "261b653d-2849-4a8a-a6d4-9a2b716b179f",
         audiences: ["d32b8874-d32f-4280-94e5-d7df74c446ae"],
@@ -95,7 +95,7 @@ describe("introspectController", () => {
   });
 
   test("should resolve empty info on error", async () => {
-    ctx.repository.clientSessionRepository.find.mockRejectedValue(new Error("message"));
+    ctx.mongo.clientSessionRepository.find.mockRejectedValue(new Error("message"));
 
     await expect(tokenIntrospectController(ctx)).resolves.toStrictEqual({
       body: {

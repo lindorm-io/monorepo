@@ -106,7 +106,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       type,
     },
     entity: { client },
-    repository: { clientRepository },
+    mongo: { clientRepository },
   } = ctx;
 
   if (allowed?.grantTypes !== undefined) client.allowed.grantTypes = allowed.grantTypes;

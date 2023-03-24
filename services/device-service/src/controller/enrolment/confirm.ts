@@ -40,11 +40,11 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { enrolmentSessionCache },
+    redis: { enrolmentSessionCache },
     data: { biometry, certificateVerifier, pincode },
     entity: { enrolmentSession },
     jwt,
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { bearerToken, enrolmentSessionToken },
   } = ctx;
 

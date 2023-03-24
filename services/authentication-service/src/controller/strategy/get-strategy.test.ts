@@ -1,5 +1,5 @@
 import { getStrategyController } from "./get-strategy";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestStrategySession } from "../../fixtures/entity";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 
@@ -8,8 +8,8 @@ describe("getStrategyInfoController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        strategySessionCache: createMockCache(createTestStrategySession),
+      redis: {
+        strategySessionCache: createMockRedisRepository(createTestStrategySession),
       },
       data: {
         id: "30132ebf-d960-477f-92b0-e9060ad2fe0f",
@@ -28,7 +28,7 @@ describe("getStrategyInfoController", () => {
   });
 
   test("should resolve expired", async () => {
-    ctx.cache.strategySessionCache.find.mockRejectedValue(new EntityNotFoundError("message"));
+    ctx.redis.strategySessionCache.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(getStrategyController(ctx)).resolves.toStrictEqual({
       body: {

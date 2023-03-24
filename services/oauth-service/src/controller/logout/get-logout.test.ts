@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { getLogoutController } from "./get-logout";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -33,15 +33,15 @@ describe("getLogoutController", () => {
           id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
         }),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
   });
 
   test("should resolve", async () => {
-    ctx.repository.clientSessionRepository.findMany.mockResolvedValue([
+    ctx.mongo.clientSessionRepository.findMany.mockResolvedValue([
       createTestClientSession({
         id: "bb37db7e-264b-4206-96f6-4b340d0113d5",
       }),

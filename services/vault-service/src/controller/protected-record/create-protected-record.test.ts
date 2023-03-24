@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createProtectedRecordController } from "./create-protected-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -23,8 +23,8 @@ describe("createProtectedRecordController", () => {
         data: { secret: "secret", item: "item" },
         expires: "2021-02-01T08:00:00.000+02:00",
       },
-      repository: {
-        protectedRecordRepository: createMockRepository(),
+      mongo: {
+        protectedRecordRepository: createMockMongoRepository(),
       },
       token: {
         bearerToken: {
@@ -41,7 +41,7 @@ describe("createProtectedRecordController", () => {
       status: 201,
     });
 
-    expect(ctx.repository.protectedRecordRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.protectedRecordRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "id",
         protectedData: "encrypted-string",

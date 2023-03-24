@@ -1,8 +1,10 @@
 import { MFA_COOKIE_NAME } from "../../constant";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken } from "../../handler";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -23,9 +25,10 @@ export class MfaCookieStrategy implements StrategyHandler {
     loa: 2,
     loaMax: 3,
     method: AuthenticationMethod.MFA_COOKIE,
-    methodsMax: 9,
-    methodsMin: 1,
     mfaCookie: false,
+    primary: false,
+    requiresIdentity: true,
+    secondary: true,
     strategy: AuthenticationStrategy.MFA_COOKIE,
     weight: 999,
   };
@@ -37,16 +40,25 @@ export class MfaCookieStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.NONE,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -56,9 +68,9 @@ export class MfaCookieStrategy implements StrategyHandler {
     options: ConfirmStrategyOptions = {},
   ): Promise<Account> {
     const {
-      cache: { mfaCookieSessionCache },
+      redis: { mfaCookieSessionCache },
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     logger.debug("Verifying Cookie");

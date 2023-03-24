@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { confirmLogoutController } from "./confirm-logout";
 import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestLogoutSession } from "../../fixtures/entity";
 
@@ -17,8 +17,8 @@ describe("confirmLogoutController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        logoutSessionCache: createMockCache(createTestLogoutSession),
+      redis: {
+        logoutSessionCache: createMockRedisRepository(createTestLogoutSession),
       },
       data: {
         accessSessionId: "23de470a-b05a-4408-89cf-a7153de5a00b",
@@ -39,7 +39,7 @@ describe("confirmLogoutController", () => {
       body: { redirectTo: "createLogoutVerifyRedirectUri" },
     });
 
-    expect(ctx.cache.logoutSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.logoutSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "confirmed",
       }),

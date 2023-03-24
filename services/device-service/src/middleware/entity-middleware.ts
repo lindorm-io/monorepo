@@ -1,6 +1,6 @@
-import { cacheEntityMiddleware } from "@lindorm-io/koa-redis";
-import { repositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
 import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
+import { mongoRepositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
+import { redisRepositoryEntityMiddleware } from "@lindorm-io/koa-redis";
 import {
   ChallengeSessionCache,
   DeviceLinkRepository,
@@ -8,19 +8,22 @@ import {
   RdcSessionCache,
 } from "../infrastructure";
 
-export const challengeSessionEntityMiddleware = cacheEntityMiddleware(
+export const challengeSessionEntityMiddleware = redisRepositoryEntityMiddleware(
   ChallengeSession,
   ChallengeSessionCache,
 );
 
-export const deviceLinkEntityMiddleware = repositoryEntityMiddleware(
+export const deviceLinkEntityMiddleware = mongoRepositoryEntityMiddleware(
   DeviceLink,
   DeviceLinkRepository,
 );
 
-export const enrolmentSessionEntityMiddleware = cacheEntityMiddleware(
+export const enrolmentSessionEntityMiddleware = redisRepositoryEntityMiddleware(
   EnrolmentSession,
   EnrolmentSessionCache,
 );
 
-export const rdcSessionEntityMiddleware = cacheEntityMiddleware(RdcSession, RdcSessionCache);
+export const rdcSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  RdcSession,
+  RdcSessionCache,
+);

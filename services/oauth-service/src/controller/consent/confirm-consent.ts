@@ -27,7 +27,7 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     data: { audiences, scopes },
     entity: { authorizationSession, client },
     logger,

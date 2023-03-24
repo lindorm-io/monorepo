@@ -1,55 +1,51 @@
-import { createStrategySessionToken as _createStrategySessionToken } from "../../handler";
-import { createMockCache } from "@lindorm-io/redis";
-import { createTestStrategySession } from "../../fixtures/entity";
+import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { acknowledgeStrategyController } from "./acknowledge-strategy";
 import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
 
-jest.mock("../../handler");
+jest.mock("../../strategies");
 
-const createStrategySessionToken = _createStrategySessionToken as jest.Mock;
+const getStrategyHandler = _getStrategyHandler as jest.Mock;
 
 describe("confirmStrategyController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        strategySessionCache: createMockCache(createTestStrategySession),
+      data: {
+        acknowledgeCode: "X812OER1",
       },
       entity: {
+        authenticationSession: createTestAuthenticationSession(),
         strategySession: createTestStrategySession({
           strategy: AuthenticationStrategy.SESSION_QR_CODE,
         }),
       },
       token: {
-        bearerToken: { subject: "" },
+        bearerToken: { subject: "70701081-9e0b-4c76-a675-058c03f9e002" },
       },
     };
 
-    createStrategySessionToken.mockImplementation(() => "createStrategySessionToken");
+    getStrategyHandler.mockImplementation(() => ({
+      acknowledge: async () => ({ code: "code", strategySessionToken: "jwt.jwt.jwt" }),
+    }));
   });
 
   test("should resolve", async () => {
     await expect(acknowledgeStrategyController(ctx)).resolves.toStrictEqual({
       body: {
-        code: expect.any(String),
-        strategySessionToken: "createStrategySessionToken",
+        code: "code",
+        strategySessionToken: "jwt.jwt.jwt",
       },
     });
+
+    expect(getStrategyHandler).toHaveBeenCalled();
   });
 
   test("should throw on invalid status", async () => {
     ctx.entity.strategySession = createTestStrategySession({
       status: SessionStatus.ACKNOWLEDGED,
-    });
-
-    await expect(acknowledgeStrategyController(ctx)).rejects.toThrow(ClientError);
-  });
-
-  test("should throw on invalid strategy", async () => {
-    ctx.entity.strategySession = createTestStrategySession({
-      strategy: AuthenticationStrategy.EMAIL_CODE,
     });
 
     await expect(acknowledgeStrategyController(ctx)).rejects.toThrow(ClientError);

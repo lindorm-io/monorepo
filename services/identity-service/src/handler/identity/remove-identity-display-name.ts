@@ -6,7 +6,7 @@ export const removeIdentityDisplayName = async (
   identity: Identity,
 ): Promise<void> => {
   const {
-    repository: { displayNameRepository },
+    mongo: { displayNameRepository },
   } = ctx;
 
   if (!identity.displayName.name || !identity.displayName.number) {

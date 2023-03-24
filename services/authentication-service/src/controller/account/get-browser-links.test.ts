@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestBrowserLink } from "../../fixtures/entity";
 import { getBrowserLinksController } from "./get-browser-links";
 
@@ -16,8 +16,8 @@ describe("getBrowserLinksController", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        browserLinkRepository: createMockRepository(createTestBrowserLink),
+      mongo: {
+        browserLinkRepository: createMockMongoRepository(createTestBrowserLink),
       },
       token: {
         bearerToken: { subject: "accountId" },

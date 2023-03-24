@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { AuthorizationSession, BrowserSession } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { getUpdatedBrowserSession } from "./get-updated-browser-session";
 import { AuthenticationMethod } from "@lindorm-io/common-types";
@@ -13,8 +13,8 @@ describe("getUpdatedBrowserSession", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
@@ -43,7 +43,7 @@ describe("getUpdatedBrowserSession", () => {
       expect.any(BrowserSession),
     );
 
-    expect(ctx.repository.browserSessionRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.browserSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
@@ -56,7 +56,7 @@ describe("getUpdatedBrowserSession", () => {
   });
 
   test("should resolve created browser session on mismatched identity", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
         identityId: "be83d954-ae47-49e4-90a3-b3fedc5f8bff",
       }),
@@ -66,7 +66,7 @@ describe("getUpdatedBrowserSession", () => {
       expect.any(BrowserSession),
     );
 
-    expect(ctx.repository.browserSessionRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.browserSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
       }),
@@ -74,7 +74,7 @@ describe("getUpdatedBrowserSession", () => {
   });
 
   test("should resolve updated browser session", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
@@ -89,7 +89,7 @@ describe("getUpdatedBrowserSession", () => {
       expect.any(BrowserSession),
     );
 
-    expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
@@ -105,7 +105,7 @@ describe("getUpdatedBrowserSession", () => {
     authorizationSession.confirmedLogin.remember = false;
     authorizationSession.confirmedLogin.sso = false;
 
-    ctx.repository.browserSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
@@ -120,7 +120,7 @@ describe("getUpdatedBrowserSession", () => {
       expect.any(BrowserSession),
     );
 
-    expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,

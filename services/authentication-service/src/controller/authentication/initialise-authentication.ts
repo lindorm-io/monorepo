@@ -72,7 +72,5 @@ export const initialiseAuthenticationController: ServerKoaController<RequestData
     });
   }
 
-  return {
-    body: { id: authenticationSession.id },
-  };
+  return { body: { id: authenticationSession.id } };
 };

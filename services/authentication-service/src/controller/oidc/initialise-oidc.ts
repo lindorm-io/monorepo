@@ -28,7 +28,7 @@ export const initialiseOidcController: ServerKoaController<RequestData> = async 
 ): ControllerResponse => {
   const {
     axios: { oidcClient },
-    cache: { authenticationSessionCache },
+    redis: { authenticationSessionCache },
     data: { provider, remember },
     entity: { authenticationSession },
   } = ctx;

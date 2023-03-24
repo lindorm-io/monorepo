@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { deleteClientController } from "./delete-client";
 import { createTestClient } from "../../fixtures/entity";
 
@@ -10,8 +10,8 @@ describe("deleteClientController", () => {
       entity: {
         client: createTestClient(),
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
       },
     };
   });
@@ -19,6 +19,6 @@ describe("deleteClientController", () => {
   test("should resolve destroyed client", async () => {
     await expect(deleteClientController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.clientRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.clientRepository.destroy).toHaveBeenCalled();
   });
 });

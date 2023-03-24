@@ -16,7 +16,7 @@ export const rejectElevationController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { elevationSessionCache },
+    redis: { elevationSessionCache },
     entity: { elevationSession },
     logger,
   } = ctx;

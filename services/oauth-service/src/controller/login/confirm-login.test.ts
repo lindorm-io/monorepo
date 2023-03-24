@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { confirmLoginController } from "./confirm-login";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 
@@ -19,8 +19,8 @@ describe("confirmLoginController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
@@ -44,7 +44,7 @@ describe("confirmLoginController", () => {
       body: { redirectTo: "redirect-uri" },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedLogin: {
           identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",

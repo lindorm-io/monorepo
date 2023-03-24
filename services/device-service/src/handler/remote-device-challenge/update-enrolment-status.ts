@@ -7,7 +7,7 @@ export const updateEnrolmentStatus = async (
   rdcSession: RdcSession,
 ): Promise<void> => {
   const {
-    cache: { enrolmentSessionCache },
+    redis: { enrolmentSessionCache },
   } = ctx;
 
   if (!rdcSession.enrolmentSessionId) {

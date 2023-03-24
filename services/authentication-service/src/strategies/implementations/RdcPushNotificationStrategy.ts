@@ -4,6 +4,8 @@ import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { getRdcBody } from "../../handler";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -27,9 +29,10 @@ export class RdcPushNotificationStrategy implements StrategyHandler {
     loa: 3,
     loaMax: 3,
     method: AuthenticationMethod.DEVICE_LINK,
-    methodsMax: 9,
-    methodsMin: 1,
     mfaCookie: true,
+    primary: false,
+    requiresIdentity: true,
+    secondary: true,
     strategy: AuthenticationStrategy.RDC_PUSH_NOTIFICATION,
     weight: 90,
   };
@@ -59,16 +62,25 @@ export class RdcPushNotificationStrategy implements StrategyHandler {
 
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.CHALLENGE_CONFIRMATION_TOKEN,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,
       visualHint: strategySession.visualHint,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -80,7 +92,7 @@ export class RdcPushNotificationStrategy implements StrategyHandler {
     const {
       jwt,
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { challengeConfirmationToken } = options;

@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
 import { confirmSelectAccountController } from "./confirm-select-account";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { tryFindClientSession as _tryFindClientSession } from "../../handler";
@@ -33,8 +33,8 @@ describe("confirmSelectAccountController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         selectNew: false,
@@ -61,8 +61,8 @@ describe("confirmSelectAccountController", () => {
         verify: jest.fn().mockImplementation(() => "idToken"),
       },
       logger: createMockLogger(),
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
@@ -79,7 +79,7 @@ describe("confirmSelectAccountController", () => {
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "abdd7aba-5c2d-474d-a965-4eb9a261a929",
         clientSessionId: "250cdbef-41d1-4b10-8e57-71698ff98519",
@@ -99,7 +99,7 @@ describe("confirmSelectAccountController", () => {
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: null,
         clientSessionId: null,

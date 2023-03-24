@@ -6,7 +6,7 @@ import { mongoConnection } from "../instance";
 import { CertificateMethod } from "@lindorm-io/common-types";
 
 const repositories = {
-  deviceLink: new DeviceLinkRepository({ connection: mongoConnection, logger }),
+  deviceLink: new DeviceLinkRepository(mongoConnection, logger),
 };
 
 const main = async (): Promise<void> => {

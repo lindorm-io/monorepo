@@ -1,9 +1,9 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "../oauth";
 import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 import { ClientSessionType } from "../../enum";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { resolveTokenSession as _resolveTokenSession } from "../token";
 import {
   createTestClient,
@@ -25,15 +25,15 @@ describe("handleAuthorizationCodeGrant", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        opaqueTokenCache: createMockCache(createTestRefreshToken),
+      redis: {
+        opaqueTokenCache: createMockRedisRepository(createTestRefreshToken),
       },
       data: { refreshToken: "jwt.jwt.jwt" },
       entity: {
         client: createTestClient(),
       },
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 
@@ -42,7 +42,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValue(
       createTestClientSession({
         id: "5a43fe88-9a27-4e00-a0ec-f10b1464e949",
         type: ClientSessionType.REFRESH,
@@ -65,7 +65,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on expired session", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValue(
       createTestClientSession({
         type: ClientSessionType.EPHEMERAL,
       }),

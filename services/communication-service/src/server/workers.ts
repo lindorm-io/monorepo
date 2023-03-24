@@ -1,10 +1,12 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { keyPairDeviceJwksWorker, keyPairOauthJwksWorker } from "../worker";
+import { keyPairDeviceJwksMemoryWorker, keyPairOauthJwksMemoryWorker } from "../worker";
 import { configuration } from "./configuration";
 
-export const workers: Array<IntervalWorker> = [];
+export const workers: Array<IntervalWorker> = [
+  keyPairDeviceJwksMemoryWorker,
+  keyPairOauthJwksMemoryWorker,
+];
 
 if (configuration.server.workers) {
-  workers.push(keyPairDeviceJwksWorker);
-  workers.push(keyPairOauthJwksWorker);
+  /* skeleton */
 }

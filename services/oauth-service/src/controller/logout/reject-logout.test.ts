@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestLogoutSession } from "../../fixtures/entity";
 import { rejectLogoutController } from "./reject-logout";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -12,8 +12,8 @@ describe("rejectLogoutController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        logoutSessionCache: createMockCache(createTestLogoutSession),
+      redis: {
+        logoutSessionCache: createMockRedisRepository(createTestLogoutSession),
       },
       entity: {
         logoutSession: createTestLogoutSession({
@@ -32,7 +32,7 @@ describe("rejectLogoutController", () => {
       },
     });
 
-    expect(ctx.cache.logoutSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.logoutSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),

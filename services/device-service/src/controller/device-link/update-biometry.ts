@@ -29,7 +29,7 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
     data: { biometry },
     entity: { deviceLink },
     metadata,
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { bearerToken, challengeConfirmationToken },
   } = ctx;
 

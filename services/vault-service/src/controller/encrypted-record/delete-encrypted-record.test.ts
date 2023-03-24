@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { deleteEncryptedRecordController } from "./delete-encrypted-record";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
 import { createTestEncryptedRecord } from "../../fixtures/entity";
@@ -28,8 +28,8 @@ describe("deleteEncryptedRecordController", () => {
       entity: {
         encryptedRecord: createTestEncryptedRecord(),
       },
-      repository: {
-        encryptedRecordRepository: createMockRepository(createTestEncryptedRecord),
+      mongo: {
+        encryptedRecordRepository: createMockMongoRepository(createTestEncryptedRecord),
       },
     };
 
@@ -39,7 +39,7 @@ describe("deleteEncryptedRecordController", () => {
   test("should resolve", async () => {
     await expect(deleteEncryptedRecordController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.encryptedRecordRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.encryptedRecordRepository.destroy).toHaveBeenCalled();
   });
 
   test("should throw on forbidden encryption key", async () => {

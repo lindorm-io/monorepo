@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmChallengeController } from "./confirm";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
 
@@ -30,8 +30,8 @@ describe("confirmChallengeController", () => {
 
   beforeEach(async () => {
     ctx = {
-      cache: {
-        challengeSessionCache: createMockCache(createTestChallengeSession),
+      redis: {
+        challengeSessionCache: createMockRedisRepository(createTestChallengeSession),
       },
       data: {
         certificateVerifier: "certificateVerifier",
@@ -65,8 +65,8 @@ describe("confirmChallengeController", () => {
           uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
         },
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         challengeSessionToken: {
@@ -94,7 +94,7 @@ describe("confirmChallengeController", () => {
     expect(assertCertificateChallenge).toHaveBeenCalled();
     expect(cryptoAssert).not.toHaveBeenCalled();
     expect(ctx.jwt.sign).toHaveBeenCalled();
-    expect(ctx.cache.challengeSessionCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.challengeSessionCache.destroy).toHaveBeenCalled();
   });
 
   test("should resolve challenge session with PINCODE", async () => {

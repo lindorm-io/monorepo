@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ElevationSession } from "../../entity";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 import { initialiseElevation } from "./initialise-elevation";
 import {
@@ -26,8 +26,8 @@ describe("initialiseElevation", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        elevationSessionCache: createMockCache(createTestElevationSession),
+      redis: {
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       entity: {
         client: createTestClient({
@@ -39,8 +39,8 @@ describe("initialiseElevation", () => {
           identityId: "87ab1777-f01a-468f-a68f-1c5737064811",
         }),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
       token: {
         idToken: {
@@ -80,7 +80,7 @@ describe("initialiseElevation", () => {
       expect.any(ElevationSession),
     );
 
-    expect(ctx.cache.elevationSessionCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         authenticationHint: ["+4520123456", "0701234567", "test@email.com", "username"],
         browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
@@ -120,7 +120,7 @@ describe("initialiseElevation", () => {
       expect.any(ElevationSession),
     );
 
-    expect(ctx.cache.elevationSessionCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         authenticationHint: [],
         browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",

@@ -1,5 +1,5 @@
 import { IdentifierType } from "@lindorm-io/common-types";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
 import { findIdentityController } from "./find-identity";
 import { findIdentityWithIdentifier as _findIdentityWithIdentifier } from "../../handler";
@@ -23,8 +23,8 @@ describe("findIdentityController", () => {
         ssn: undefined,
         username: undefined,
       },
-      repository: {
-        identityRepository: createMockRepository((opts) =>
+      mongo: {
+        identityRepository: createMockMongoRepository((opts) =>
           createTestIdentity({ ...opts, id: "7e55ab40-8341-40f2-98d3-66a9f9d0389f" }),
         ),
       },
@@ -133,7 +133,7 @@ describe("findIdentityController", () => {
       },
     });
 
-    expect(ctx.repository.identityRepository.tryFind).toHaveBeenCalledWith({
+    expect(ctx.mongo.identityRepository.tryFind).toHaveBeenCalledWith({
       username: "username",
     });
   });

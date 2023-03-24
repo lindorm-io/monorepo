@@ -28,9 +28,9 @@ export const initialiseElevation = async (
   options: Options,
 ): Promise<ElevationSession> => {
   const {
-    cache: { elevationSessionCache },
+    redis: { elevationSessionCache },
     entity: { client, clientSession },
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
     token: { idToken },
   } = ctx;
 

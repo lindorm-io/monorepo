@@ -9,10 +9,10 @@ export const handleAuthorizationCodeGrant = async (
   ctx: ServerKoaContext<OpenIdTokenRequestBody>,
 ): Promise<Partial<OpenIdTokenResponseBody>> => {
   const {
-    cache: { authorizationCodeCache, authorizationSessionCache },
+    redis: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
-    repository: { browserSessionRepository, clientSessionRepository },
+    mongo: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
   let authorizationCode: AuthorizationCode;

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { confirmConsentController } from "./confirm-consent";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 import { ClientError } from "@lindorm-io/errors";
@@ -18,8 +18,8 @@ describe("confirmConsentController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
@@ -45,7 +45,7 @@ describe("confirmConsentController", () => {
       body: { redirectTo: "redirect-uri" },
     });
 
-    expect(ctx.cache.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedConsent: {
           audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],

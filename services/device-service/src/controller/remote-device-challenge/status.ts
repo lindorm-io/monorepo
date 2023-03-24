@@ -22,7 +22,7 @@ export const getRdcSessionStatusController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { rdcSessionCache },
+    redis: { rdcSessionCache },
     data: { id },
   } = ctx;
 

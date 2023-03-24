@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { initialiseEnrolmentController } from "./initialise";
 import {
   createRdcSession as _createRdcSession,
@@ -28,8 +28,8 @@ describe("initialiseEnrolmentController", () => {
 
   beforeEach(async () => {
     ctx = {
-      cache: {
-        enrolmentSessionCache: createMockCache(createTestEnrolmentSession),
+      redis: {
+        enrolmentSessionCache: createMockRedisRepository(createTestEnrolmentSession),
       },
       data: {
         brand: "brand",
@@ -59,7 +59,7 @@ describe("initialiseEnrolmentController", () => {
           fingerprint: "fingerprint",
         },
       },
-      repository: {
+      mongo: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
             {
@@ -91,7 +91,7 @@ describe("initialiseEnrolmentController", () => {
       },
     });
 
-    expect(ctx.cache.enrolmentSessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.enrolmentSessionCache.create).toHaveBeenCalled();
     expect(ctx.jwt.sign).toHaveBeenCalled();
   });
 
@@ -104,7 +104,7 @@ describe("initialiseEnrolmentController", () => {
       }),
     });
 
-    expect(ctx.cache.enrolmentSessionCache.create).toHaveBeenCalled();
+    expect(ctx.redis.enrolmentSessionCache.create).toHaveBeenCalled();
     expect(createRdcSession).toHaveBeenCalled();
   });
 });

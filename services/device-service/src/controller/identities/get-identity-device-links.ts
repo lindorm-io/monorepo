@@ -19,7 +19,7 @@ export const getIdentityDeviceLinksController: ServerKoaController = async (
 ): ControllerResponse<GetIdentityDeviceLinksResponse> => {
   const {
     data: { id },
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
   } = ctx;
 
   const list = await deviceLinkRepository.findMany({ identityId: id });

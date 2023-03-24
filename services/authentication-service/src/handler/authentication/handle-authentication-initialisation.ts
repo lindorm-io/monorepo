@@ -7,8 +7,8 @@ export const handleAuthenticationInitialisation = async (
   options: AuthenticationSessionOptions,
 ): Promise<AuthenticationSession> => {
   const {
-    cache: { authenticationSessionCache },
-    repository: { accountRepository },
+    redis: { authenticationSessionCache },
+    mongo: { accountRepository },
   } = ctx;
 
   const authenticationSession = new AuthenticationSession(options);

@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient } from "../../fixtures/entity";
 import { generateClientSecretController } from "./generate-client-secret";
 
@@ -22,8 +22,8 @@ describe("generateClientSecretController", () => {
       entity: {
         client: createTestClient(),
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
       },
     };
   });
@@ -35,6 +35,6 @@ describe("generateClientSecretController", () => {
       },
     });
 
-    expect(ctx.repository.clientRepository.update).toHaveBeenCalled();
+    expect(ctx.mongo.clientRepository.update).toHaveBeenCalled();
   });
 });

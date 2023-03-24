@@ -37,7 +37,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   const {
     data: { redirectUri },
     entity: { client },
-    repository: { clientSessionRepository },
+    mongo: { clientSessionRepository },
   } = ctx;
 
   let authorizationSession = ctx.entity.authorizationSession;

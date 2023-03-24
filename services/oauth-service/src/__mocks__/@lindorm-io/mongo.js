@@ -1,4 +1,4 @@
-const { createMockRepository } = require("@lindorm-io/mongo");
+const { createMockMongoRepository } = require("@lindorm-io/mongo");
 const mongo = jest.createMockFromModule("@lindorm-io/mongo");
 
-module.exports = { ...mongo, createMockRepository };
+module.exports = { ...mongo, createMockMongoRepository };

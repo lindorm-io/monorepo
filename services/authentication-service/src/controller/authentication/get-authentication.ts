@@ -26,7 +26,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
 ): ControllerResponse<ResponseBody> => {
   const {
     axios: { oidcClient },
-    cache: { authenticationSessionCache },
+    redis: { authenticationSessionCache },
     entity: { authenticationSession },
   } = ctx;
 

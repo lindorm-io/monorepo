@@ -10,7 +10,7 @@ export * from "./PhoneOtpStrategy";
 export * from "./RdcPushNotificationStrategy";
 export * from "./RdcQrCodeStrategy";
 export * from "./RecoveryCodeStrategy";
-export * from "./SessionAcceptWithCodeStrategy";
+export * from "./SessionDisplayCodeStrategy";
 export * from "./SessionOtpStrategy";
 export * from "./SessionQrCodeStrategy";
 export * from "./TimeBasedOtpStrategy";

@@ -28,7 +28,7 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
   const {
     data: { key },
     entity: { protectedRecord },
-    repository: { protectedRecordRepository },
+    mongo: { protectedRecordRepository },
     token: {
       bearerToken: { subject, subjectHint },
     },
@@ -63,5 +63,10 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  return { body: { data: parseBlob(blob), expires: protectedRecord.expires } };
+  return {
+    body: {
+      data: parseBlob(blob),
+      expires: protectedRecord.expires ? protectedRecord.expires.toISOString() : null,
+    },
+  };
 };

@@ -13,7 +13,7 @@ export const addGenericIdentifier = async (
 ): Promise<void> => {
   const {
     logger,
-    repository: { identifierRepository },
+    mongo: { identifierRepository },
   } = ctx;
 
   const { label, provider, type, value, verified } = options;

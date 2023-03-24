@@ -24,7 +24,7 @@ export const getPendingRdcSessionsController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { rdcSessionCache },
+    redis: { rdcSessionCache },
     data: { id: identityId },
     token: { bearerToken },
   } = ctx;

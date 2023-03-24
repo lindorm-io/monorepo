@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { deleteDeviceLinkController } from "./delete-device-link";
 import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
 import { createTestDeviceLink } from "../../fixtures/entity";
@@ -20,8 +20,8 @@ describe("deleteDeviceLinkController", () => {
           identityId: "b799b044-16db-495a-b7e1-2cf3175d4b54",
         }),
       },
-      repository: {
-        deviceLinkRepository: createMockRepository(createTestDeviceLink),
+      mongo: {
+        deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
       },
       token: {
         bearerToken: {
@@ -36,6 +36,6 @@ describe("deleteDeviceLinkController", () => {
   test("should resolve and remove deviceLink", async () => {
     await expect(deleteDeviceLinkController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.deviceLinkRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.deviceLinkRepository.destroy).toHaveBeenCalled();
   });
 });

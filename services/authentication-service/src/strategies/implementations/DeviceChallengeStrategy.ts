@@ -3,6 +3,8 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { configuration } from "../../server/configuration";
 import { createStrategySessionToken } from "../../handler";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -24,9 +26,10 @@ export class DeviceChallengeStrategy implements StrategyHandler {
     loa: 3,
     loaMax: 3,
     method: AuthenticationMethod.DEVICE_LINK,
-    methodsMax: 0,
-    methodsMin: 0,
     mfaCookie: false,
+    primary: true,
+    requiresIdentity: false,
+    secondary: false,
     strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
     weight: 90,
   };
@@ -38,16 +41,25 @@ export class DeviceChallengeStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.CHALLENGE_CONFIRMATION_TOKEN,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -59,7 +71,7 @@ export class DeviceChallengeStrategy implements StrategyHandler {
     const {
       jwt,
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { challengeConfirmationToken } = options;

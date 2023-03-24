@@ -1,7 +1,7 @@
 import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
 import { confirmOidcController } from "./confirm-oidc";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { resolveAllowedStrategies as _resolveAllowedStrategies } from "../../handler";
 import { randomUUID } from "crypto";
@@ -36,14 +36,14 @@ describe("confirmOidcController", () => {
           }),
         },
       },
-      cache: {
-        authenticationSessionCache: createMockCache(() => authenticationSession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(() => authenticationSession),
       },
       data: {
         session: "session",
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -54,7 +54,7 @@ describe("confirmOidcController", () => {
   test("should resolve", async () => {
     await expect(confirmOidcController(ctx)).resolves.toStrictEqual({ redirect: expect.any(URL) });
 
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: expect.any(String),
         confirmedOidcLevel: 5,
@@ -70,7 +70,7 @@ describe("confirmOidcController", () => {
 
     await expect(confirmOidcController(ctx)).resolves.toStrictEqual({ redirect: expect.any(URL) });
 
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: expect.any(String),
         confirmedOidcLevel: 5,
@@ -82,7 +82,7 @@ describe("confirmOidcController", () => {
   });
 
   test("should throw on invalid identityId", async () => {
-    ctx.cache.authenticationSessionCache.find.mockResolvedValue(
+    ctx.redis.authenticationSessionCache.find.mockResolvedValue(
       createTestAuthenticationSession({
         identityId: randomUUID(),
       }),

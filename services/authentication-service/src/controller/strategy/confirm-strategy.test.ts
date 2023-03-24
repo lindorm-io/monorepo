@@ -2,7 +2,7 @@ import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-
 import { ClientError } from "@lindorm-io/errors";
 import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
 import { confirmStrategyController } from "./confirm-strategy";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
 import { resolveAllowedStrategies as _resolveAllowedMethods } from "../../handler";
 import {
@@ -24,9 +24,9 @@ describe("confirmStrategyController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authenticationSessionCache: createMockCache(createTestAuthenticationSession),
-        strategySessionCache: createMockCache(createTestStrategySession),
+      redis: {
+        authenticationSessionCache: createMockRedisRepository(createTestAuthenticationSession),
+        strategySessionCache: createMockRedisRepository(createTestStrategySession),
       },
       data: {
         challengeConfirmationToken: "jwt.jwt.jwt",
@@ -75,7 +75,7 @@ describe("confirmStrategyController", () => {
   test("should resolve", async () => {
     await expect(confirmStrategyController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.authenticationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         allowedStrategies: ["device_challenge"],
         confirmedIdentifiers: ["test@lindorm.io", "username"],
@@ -86,7 +86,7 @@ describe("confirmStrategyController", () => {
       }),
     );
 
-    expect(ctx.cache.strategySessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.strategySessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: SessionStatus.CONFIRMED,
       }),

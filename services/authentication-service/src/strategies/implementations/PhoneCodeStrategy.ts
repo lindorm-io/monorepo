@@ -6,6 +6,8 @@ import { configuration } from "../../server/configuration";
 import { createURL } from "@lindorm-io/url";
 import { randomString } from "@lindorm-io/random";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -34,10 +36,11 @@ export class PhoneCodeStrategy implements StrategyHandler {
     loa: 2,
     loaMax: 3,
     method: AuthenticationMethod.PHONE,
-    methodsMax: 9,
-    methodsMin: 1,
     mfaCookie: true,
-    strategy: AuthenticationStrategy.PHONE_OTP,
+    primary: true,
+    requiresIdentity: false,
+    secondary: true,
+    strategy: AuthenticationStrategy.PHONE_CODE,
     weight: 10,
   };
 
@@ -47,7 +50,7 @@ export class PhoneCodeStrategy implements StrategyHandler {
     strategySession: StrategySession,
   ): Promise<AuthStrategyConfig> {
     const {
-      cache: { strategySessionCache },
+      redis: { strategySessionCache },
       axios: { communicationClient },
     } = ctx;
 
@@ -72,33 +75,40 @@ export class PhoneCodeStrategy implements StrategyHandler {
       query: { strategySessionToken, code },
     });
 
-    const body: SendCodeRequestBody = {
-      content: {
-        expires: strategySession.expires,
-        url: url.toString(),
+    await communicationClient.post<never, SendCodeRequestBody>("/admin/send/code", {
+      body: {
+        content: {
+          expires: strategySession.expires,
+          url: url.toString(),
+        },
+        template: "authentication-phone-code",
+        to: identifier,
+        type: identifierType,
       },
-      template: "authentication-phone-code",
-      to: identifier,
-      type: identifierType,
-    };
-
-    await communicationClient.post("/admin/send/code", {
-      body,
       middleware: [clientCredentialsMiddleware()],
     });
 
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.CODE,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.NONE,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: true,
       qrCode: null,
       strategySessionToken: null,
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -109,7 +119,7 @@ export class PhoneCodeStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { code } = options;

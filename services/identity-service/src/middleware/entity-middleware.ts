@@ -1,12 +1,15 @@
 import { Address, Identifier, Identity } from "../entity";
 import { AddressRepository, IdentifierRepository, IdentityRepository } from "../infrastructure";
-import { repositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
+import { mongoRepositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
 
-export const addressEntityMiddleware = repositoryEntityMiddleware(Address, AddressRepository);
+export const addressEntityMiddleware = mongoRepositoryEntityMiddleware(Address, AddressRepository);
 
-export const identifierEntityMiddleware = repositoryEntityMiddleware(
+export const identifierEntityMiddleware = mongoRepositoryEntityMiddleware(
   Identifier,
   IdentifierRepository,
 );
 
-export const identityEntityMiddleware = repositoryEntityMiddleware(Identity, IdentityRepository);
+export const identityEntityMiddleware = mongoRepositoryEntityMiddleware(
+  Identity,
+  IdentityRepository,
+);

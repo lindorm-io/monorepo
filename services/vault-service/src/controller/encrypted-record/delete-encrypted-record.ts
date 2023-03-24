@@ -19,7 +19,7 @@ export const deleteEncryptedRecordController: ServerKoaController<RequestData> =
 ): ControllerResponse => {
   const {
     entity: { encryptedRecord },
-    repository: { encryptedRecordRepository },
+    mongo: { encryptedRecordRepository },
   } = ctx;
 
   const crypto = new CryptoAES({ secret: getEncryptionKey(ctx) });

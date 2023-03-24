@@ -39,7 +39,7 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { authenticationSessionCache, strategySessionCache },
+    redis: { authenticationSessionCache, strategySessionCache },
     data: { challengeConfirmationToken, code, otp, password, token, totp, remember, sso },
     entity: { authenticationSession, strategySession },
     token: { strategySessionToken },
@@ -87,7 +87,7 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
 
   authenticationSession.remember = remember === true;
   authenticationSession.sso = sso === true;
-  authenticationSession.status = calculateAuthenticationStatus(authenticationSession);
+  authenticationSession.status = calculateAuthenticationStatus(authenticationSession, account);
 
   if (authenticationSession.status === SessionStatus.PENDING) {
     authenticationSession.allowedStrategies = await resolveAllowedStrategies(

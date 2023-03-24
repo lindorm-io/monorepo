@@ -39,7 +39,7 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { oidcSessionCache },
+    redis: { oidcSessionCache },
     data: { code, idToken, token },
   } = ctx;
 
@@ -84,6 +84,10 @@ export const oidcSessionCallbackController: ServerKoaController<RequestData> = a
   };
 
   oidcSession = await resolveIdentity(ctx, oidcSession, options);
+
+  if (!oidcSession.identityId) {
+    throw new ServerError("Invalid session");
+  }
 
   await authenticateIdentity(ctx, oidcSession, options);
 

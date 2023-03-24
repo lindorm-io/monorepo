@@ -30,7 +30,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
     data: { identityId, levelOfAssurance, metadata, methods, remember, sso },
     entity: { authorizationSession },
     logger,

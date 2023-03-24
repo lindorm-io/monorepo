@@ -22,7 +22,7 @@ export const deleteTotpController: ServerKoaController<RequestData> = async (
   const {
     data: { totp },
     entity: { account },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);

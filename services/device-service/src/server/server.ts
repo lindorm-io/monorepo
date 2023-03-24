@@ -4,7 +4,7 @@ import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { middleware } from "./middleware";
-import { mongoConnection, redisConnection } from "../instance";
+import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./logger";
 import { workers } from "./workers";
 import {
@@ -15,22 +15,22 @@ import {
 } from "../infrastructure";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [ChallengeSessionCache, EnrolmentSessionCache, RdcSessionCache],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
   issuer: configuration.server.issuer,
   keystore: {
     exposePublic: true,
-    keyPairCache: true,
-    keyPairRepository: true,
+    keyPairMemory: true,
   },
   logger,
+  memoryDatabase,
   middleware,
+  mongo: [DeviceLinkRepository],
   mongoConnection,
   port: configuration.server.port,
+  redis: [ChallengeSessionCache, EnrolmentSessionCache, RdcSessionCache],
   redisConnection,
-  repositories: [DeviceLinkRepository],
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({
     name: service.client_name,

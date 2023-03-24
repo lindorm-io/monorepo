@@ -15,7 +15,7 @@ describe("updateIdentityDisplayName", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      repository: {
+      mongo: {
         displayNameRepository: {
           find: jest.fn().mockImplementation(async (options) =>
             createTestDisplayName({
@@ -44,14 +44,14 @@ describe("updateIdentityDisplayName", () => {
   test("should update display name entity", async () => {
     await expect(updateIdentityDisplayName(ctx, identity, "newName")).resolves.toBeUndefined();
 
-    expect(ctx.repository.displayNameRepository.update.mock.calls[0][0]).toStrictEqual(
+    expect(ctx.mongo.displayNameRepository.update.mock.calls[0][0]).toStrictEqual(
       expect.objectContaining({
         name: "oldName",
         numbers: [2345, 3456, 4567, 5678, 6789],
       }),
     );
 
-    expect(ctx.repository.displayNameRepository.update.mock.calls[1][0]).toStrictEqual(
+    expect(ctx.mongo.displayNameRepository.update.mock.calls[1][0]).toStrictEqual(
       expect.objectContaining({
         name: "newName",
         numbers: expect.arrayContaining([4444]),

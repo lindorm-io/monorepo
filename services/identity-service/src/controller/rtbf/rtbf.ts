@@ -5,7 +5,7 @@ import { removeIdentityDisplayName } from "../../handler";
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     entity: { identity },
-    repository: { addressRepository, identifierRepository, identityRepository },
+    mongo: { addressRepository, identifierRepository, identityRepository },
   } = ctx;
 
   if (identity.displayName.name) {

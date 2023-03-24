@@ -35,7 +35,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { challengeSessionCache },
+    redis: { challengeSessionCache },
     data: { audiences, identityId, nonce, payload, scopes },
     entity: { deviceLink },
     jwt,

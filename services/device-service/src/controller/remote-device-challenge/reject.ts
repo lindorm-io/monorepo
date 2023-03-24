@@ -26,7 +26,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     axios: { axiosClient },
-    cache: { rdcSessionCache },
+    redis: { rdcSessionCache },
     entity: { rdcSession },
     token: { bearerToken, rdcSessionToken },
   } = ctx;

@@ -5,4 +5,4 @@ export * from "./filter-authentication-methods";
 export * from "./generate-client-config";
 export * from "./get-available-strategies";
 export * from "./get-methods-from-strategies";
-export * from "./random-number";
+export * from "./create-otp";

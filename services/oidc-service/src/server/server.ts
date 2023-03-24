@@ -5,23 +5,25 @@ import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { middleware } from "./middleware";
-import { redisConnection } from "../instance";
+import { memoryDatabase, redisConnection } from "../instance";
 import { logger } from "./logger";
 import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
-  caches: [OidcSessionCache],
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    keyPairCache: true,
+    exposePublic: true,
+    keyPairMemory: true,
   },
   logger,
+  memoryDatabase,
   middleware,
   port: configuration.server.port,
+  redis: [OidcSessionCache],
   redisConnection,
   routerDirectory: join(__dirname, "..", "router"),
   services: Object.values(configuration.services).map((service) => ({

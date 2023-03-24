@@ -17,7 +17,7 @@ export const deleteClientController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     entity: { client },
-    repository: { clientRepository },
+    mongo: { clientRepository },
   } = ctx;
 
   await clientRepository.destroy(client);

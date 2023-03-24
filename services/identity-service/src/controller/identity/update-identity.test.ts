@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityController } from "./update-identity";
 import { updateIdentityDisplayName as _updateIdentityDisplayName } from "../../handler";
@@ -38,8 +38,8 @@ describe("updateIdentityController", () => {
       entity: {
         identity: createTestIdentity(),
       },
-      repository: {
-        identityRepository: createMockRepository(createTestIdentity),
+      mongo: {
+        identityRepository: createMockMongoRepository(createTestIdentity),
       },
     };
 
@@ -53,7 +53,7 @@ describe("updateIdentityController", () => {
     await expect(updateIdentityController(ctx)).resolves.toBeUndefined();
 
     expect(updateIdentityDisplayName).toHaveBeenCalled();
-    expect(ctx.repository.identityRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: false,
         birthDate: "new-birthDate",

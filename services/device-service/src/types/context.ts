@@ -6,11 +6,12 @@ import { JwtDecodeData } from "@lindorm-io/jwt";
 import { VerifiedChallengeConfirmationToken } from "../common";
 import {
   LindormNodeServerAxios,
-  LindormNodeServerCache,
   LindormNodeServerContext,
   LindormNodeServerKoaContext,
   LindormNodeServerKoaMiddleware,
-  LindormNodeServerRepository,
+  LindormNodeServerMemory,
+  LindormNodeServerMongo,
+  LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 import {
@@ -26,12 +27,6 @@ interface ServerAxios extends LindormNodeServerAxios {
   vaultClient: Axios;
 }
 
-interface ServerCache extends LindormNodeServerCache {
-  challengeSessionCache: ChallengeSessionCache;
-  rdcSessionCache: RdcSessionCache;
-  enrolmentSessionCache: EnrolmentSessionCache;
-}
-
 interface ServerEntity {
   challengeSession: ChallengeSession;
   deviceLink: DeviceLink;
@@ -39,8 +34,14 @@ interface ServerEntity {
   enrolmentSession: EnrolmentSession;
 }
 
-interface ServerRepository extends LindormNodeServerRepository {
+interface ServerMongo extends LindormNodeServerMongo {
   deviceLinkRepository: DeviceLinkRepository;
+}
+
+interface ServerRedis extends LindormNodeServerRedis {
+  challengeSessionCache: ChallengeSessionCache;
+  rdcSessionCache: RdcSessionCache;
+  enrolmentSessionCache: EnrolmentSessionCache;
 }
 
 interface ServerToken extends LindormNodeServerToken {
@@ -52,14 +53,17 @@ interface ServerToken extends LindormNodeServerToken {
 
 interface Context extends LindormNodeServerContext {
   axios: ServerAxios;
-  cache: ServerCache;
   entity: ServerEntity;
-  repository: ServerRepository;
+  memory: LindormNodeServerMemory;
+  mongo: ServerMongo;
+  redis: ServerRedis;
   token: ServerToken;
 }
 
-export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
+export interface ServerKoaContext<D extends Dict = Dict>
+  extends LindormNodeServerKoaContext<Context, D> {}
 
-export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
+export interface ServerKoaController<D extends Dict = Dict>
+  extends Controller<ServerKoaContext<D>> {}
 
-export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;
+export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}

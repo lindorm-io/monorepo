@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getUpdatedClientSession } from "./get-updated-client-session";
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import {
@@ -18,8 +18,8 @@ describe("getUpdatedClientSession", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        clientSessionRepository: createMockRepository((opts) =>
+      mongo: {
+        clientSessionRepository: createMockMongoRepository((opts) =>
           createTestClientSession({
             audiences: ["0711b0ea-dd30-457c-b73c-92283762ef55"],
             identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
@@ -69,7 +69,7 @@ describe("getUpdatedClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         audiences: ["6c04e67f-7911-4692-ab3b-f7b3f3178a40", "968db71c-3ea5-446a-a38e-cf614ec3168c"],
         browserSessionId: "52f23e8f-68c5-4c17-b6cf-05b17d3de8f5",
@@ -95,7 +95,7 @@ describe("getUpdatedClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "refresh",
       }),
@@ -103,7 +103,7 @@ describe("getUpdatedClientSession", () => {
   });
 
   test("should resolve created client session on mismatched identity", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
         identityId: "be83d954-ae47-49e4-90a3-b3fedc5f8bff",
       }),
@@ -113,7 +113,7 @@ describe("getUpdatedClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
       }),
@@ -121,7 +121,7 @@ describe("getUpdatedClientSession", () => {
   });
 
   test("should resolve updated client session", async () => {
-    ctx.repository.clientSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
         audiences: ["0711b0ea-dd30-457c-b73c-92283762ef55"],
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
@@ -136,7 +136,7 @@ describe("getUpdatedClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         audiences: [
           "0711b0ea-dd30-457c-b73c-92283762ef55",
@@ -153,7 +153,7 @@ describe("getUpdatedClientSession", () => {
   test("should keep immutable values once set", async () => {
     authorizationSession.confirmedLogin.levelOfAssurance = 1;
 
-    ctx.repository.clientSessionRepository.find.mockResolvedValueOnce(
+    ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
@@ -166,7 +166,7 @@ describe("getUpdatedClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.clientSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,

@@ -9,7 +9,7 @@ export const handleOauthConsentVerification = async (
   client: Client,
 ): Promise<AuthorizationSession> => {
   const {
-    cache: { authorizationSessionCache },
+    redis: { authorizationSessionCache },
   } = ctx;
 
   const clientSession = await getUpdatedClientSession(ctx, authorizationSession, client);

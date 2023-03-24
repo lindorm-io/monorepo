@@ -5,7 +5,7 @@ import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import { ServerKoaContext } from "../../types";
 import { configuration } from "../../server/configuration";
 import { expiryDate } from "@lindorm-io/expiry";
-import { filterAuthenticationMethod } from "../../util";
+import { filterAuthenticationMethods } from "../../util";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import {
   JOI_AUTHENTICATION_METHOD,
@@ -75,6 +75,6 @@ export const initialiseStandardAuthenticationSession = async (
     mode: AuthenticationMode.NONE,
     phoneHint,
     requiredLevel: levelOfAssurance,
-    requiredMethods: filterAuthenticationMethod(methods),
+    requiredMethods: filterAuthenticationMethods(methods),
   });
 };

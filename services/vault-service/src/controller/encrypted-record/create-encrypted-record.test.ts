@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { createEncryptedRecordController } from "./create-encrypted-record";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -27,8 +27,8 @@ describe("createEncryptedRecordController", () => {
         data: { secret: "secret", item: "item" },
         expires: "2021-02-01T08:00:00.000+02:00",
       },
-      repository: {
-        encryptedRecordRepository: createMockRepository(),
+      mongo: {
+        encryptedRecordRepository: createMockMongoRepository(),
       },
     };
 
@@ -38,7 +38,7 @@ describe("createEncryptedRecordController", () => {
   test("should resolve", async () => {
     await expect(createEncryptedRecordController(ctx)).resolves.toStrictEqual({ status: 201 });
 
-    expect(ctx.repository.encryptedRecordRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.encryptedRecordRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "id",
         encryptedData: "encrypted-string",

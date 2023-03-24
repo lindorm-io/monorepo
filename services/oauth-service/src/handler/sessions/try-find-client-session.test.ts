@@ -1,5 +1,5 @@
 import { BrowserSession, Client, ClientSession } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { tryFindClientSession } from "./try-find-client-session";
 import {
   createTestBrowserSession,
@@ -15,8 +15,8 @@ describe("tryFindClientSession", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 
@@ -38,7 +38,7 @@ describe("tryFindClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.tryFind).toHaveBeenCalledWith({
+    expect(ctx.mongo.clientSessionRepository.tryFind).toHaveBeenCalledWith({
       id: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
     });
   });
@@ -48,7 +48,7 @@ describe("tryFindClientSession", () => {
       expect.any(ClientSession),
     );
 
-    expect(ctx.repository.clientSessionRepository.tryFind).toHaveBeenCalledWith({
+    expect(ctx.mongo.clientSessionRepository.tryFind).toHaveBeenCalledWith({
       browserSessionId: "3cda020f-0b63-4570-99da-a3bce76b7771",
       clientId: "df535455-a926-4541-9fcf-ccf75fc5bf0d",
     });
@@ -57,6 +57,6 @@ describe("tryFindClientSession", () => {
   test("should resolve undefined", async () => {
     await expect(tryFindClientSession(ctx, client)).resolves.toBeUndefined();
 
-    expect(ctx.repository.clientSessionRepository.tryFind).not.toHaveBeenCalled();
+    expect(ctx.mongo.clientSessionRepository.tryFind).not.toHaveBeenCalled();
   });
 });

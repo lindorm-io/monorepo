@@ -1,8 +1,10 @@
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
-import { ClientError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -30,9 +32,10 @@ export class PasswordBrowserLinkStrategy implements StrategyHandler {
     loa: 3,
     loaMax: 3,
     method: AuthenticationMethod.PASSWORD,
-    methodsMax: 0,
-    methodsMin: 0,
     mfaCookie: false,
+    primary: true,
+    requiresIdentity: false,
+    secondary: false,
     strategy: AuthenticationStrategy.PASSWORD_BROWSER_LINK,
     weight: 20,
   };
@@ -44,16 +47,25 @@ export class PasswordBrowserLinkStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.PASSWORD,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -64,7 +76,7 @@ export class PasswordBrowserLinkStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository, browserLinkRepository },
+      mongo: { accountRepository, browserLinkRepository },
     } = ctx;
 
     const { password } = options;

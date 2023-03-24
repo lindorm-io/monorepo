@@ -2,6 +2,7 @@ export * from "./confirm-oauth-consent";
 export * from "./confirm-oauth-elevation";
 export * from "./confirm-oauth-login";
 export * from "./confirm-oauth-logout";
+export * from "./confirm-oauth-select-account";
 export * from "./get-oauth-authorization-redirect";
 export * from "./get-oauth-authorization-session";
 export * from "./get-oauth-elevation-session";

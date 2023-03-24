@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { getIdentitySessionsController } from "./get-identity-sessions";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient, createTestClientSession, createTestTenant } from "../../fixtures/entity";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -18,8 +18,8 @@ describe("getIdentitySessions", () => {
       data: {
         id: "identityId",
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
         clientSessionRepository: {
           findMany: jest.fn().mockResolvedValue([
             createTestClientSession({
@@ -40,7 +40,7 @@ describe("getIdentitySessions", () => {
             }),
           ]),
         },
-        tenantRepository: createMockRepository(createTestTenant),
+        tenantRepository: createMockMongoRepository(createTestTenant),
       },
     };
 

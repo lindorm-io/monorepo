@@ -22,7 +22,7 @@ export const createEncryptedRecordController: ServerKoaController<RequestData> =
 ): ControllerResponse => {
   const {
     data: { id, data, expires },
-    repository: { encryptedRecordRepository },
+    mongo: { encryptedRecordRepository },
   } = ctx;
 
   const crypto = new CryptoAES({ secret: getEncryptionKey(ctx) });

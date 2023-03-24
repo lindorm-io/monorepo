@@ -12,6 +12,7 @@ frontend:
     login: /api/login
     logout: /api/logout
     oidc: /api/oidc
+    select_account: /api/select-account
 
 logger:
   level: info

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ElevationSession } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestBrowserSession, createTestElevationSession } from "../../fixtures/entity";
 import { getBrowserSessionCookies as _getBrowserSessionCookies } from "../cookies";
 import { updateBrowserSessionElevation } from "./update-browser-session-elevation";
@@ -19,8 +19,8 @@ describe("updateBrowserSessionElevation", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
       server: {
         environment: "development",
@@ -44,7 +44,7 @@ describe("updateBrowserSessionElevation", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
         id: "06715391-bea3-47db-acf4-ffa1f500bcc8",
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
@@ -56,7 +56,7 @@ describe("updateBrowserSessionElevation", () => {
 
     await expect(updateBrowserSessionElevation(ctx, elevationSession)).resolves.toBeUndefined();
 
-    expect(ctx.repository.browserSessionRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
@@ -70,13 +70,13 @@ describe("updateBrowserSessionElevation", () => {
   });
 
   test("should throw on invalid session id", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(createTestBrowserSession());
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(createTestBrowserSession());
 
     await expect(updateBrowserSessionElevation(ctx, elevationSession)).rejects.toThrow(ServerError);
   });
 
   test("should throw on invalid identity", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({ id: "06715391-bea3-47db-acf4-ffa1f500bcc8" }),
     );
 

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { oauthLogoutController } from "./initialise-logout";
 import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../../handler";
 import {
@@ -29,8 +29,8 @@ describe("oauthLogoutController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        logoutSessionCache: createMockCache(createTestLogoutSession),
+      redis: {
+        logoutSessionCache: createMockRedisRepository(createTestLogoutSession),
       },
       data: {
         clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
@@ -40,9 +40,9 @@ describe("oauthLogoutController", () => {
         uiLocales: "en-GB sv-SE",
         state: "76d3d90c16bee315",
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
       request: {
         originalUrl: "/oauth2/sessions/logout?query=query",
@@ -65,7 +65,7 @@ describe("oauthLogoutController", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.clientSessionRepository.tryFind.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.tryFind.mockResolvedValue(
       createTestClientSession({
         id: "078de016-11e5-4d65-9976-4c0f3aa1125b",
         clientId: "04878ee1-7617-4290-a3b4-c4fed4b1a836",
@@ -78,7 +78,7 @@ describe("oauthLogoutController", () => {
     });
 
     expect(assertPostLogoutRedirectUri).toHaveBeenCalled();
-    expect(ctx.cache.logoutSessionCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.logoutSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
         confirmedLogout: {
@@ -118,7 +118,7 @@ describe("oauthLogoutController", () => {
   });
 
   test("should throw on inactive client", async () => {
-    ctx.repository.clientRepository.find.mockResolvedValue(
+    ctx.mongo.clientRepository.find.mockResolvedValue(
       createTestClient({
         active: false,
       }),

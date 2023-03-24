@@ -1,5 +1,5 @@
 import { createClientController } from "./create-client";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient, createTestTenant } from "../../fixtures/entity";
 
 jest.mock("@lindorm-io/random", () => ({
@@ -29,8 +29,8 @@ describe("createClientController", () => {
       entity: {
         tenant: createTestTenant(),
       },
-      repository: {
-        clientRepository: createMockRepository(createTestClient),
+      mongo: {
+        clientRepository: createMockMongoRepository(createTestClient),
       },
     };
   });
@@ -44,6 +44,6 @@ describe("createClientController", () => {
       status: 201,
     });
 
-    expect(ctx.repository.clientRepository.create).toHaveBeenCalled();
+    expect(ctx.mongo.clientRepository.create).toHaveBeenCalled();
   });
 });

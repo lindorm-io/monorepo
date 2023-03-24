@@ -1,6 +1,6 @@
 import { Account, AuthenticationSession, BrowserLink, StrategySession } from "../entity";
-import { cacheEntityMiddleware } from "@lindorm-io/koa-redis";
-import { repositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
+import { mongoRepositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
+import { redisRepositoryEntityMiddleware } from "@lindorm-io/koa-redis";
 import {
   AccountRepository,
   AuthenticationSessionCache,
@@ -8,19 +8,19 @@ import {
   StrategySessionCache,
 } from "../infrastructure";
 
-export const accountEntityMiddleware = repositoryEntityMiddleware(Account, AccountRepository);
+export const accountEntityMiddleware = mongoRepositoryEntityMiddleware(Account, AccountRepository);
 
-export const authenticationSessionEntityMiddleware = cacheEntityMiddleware(
+export const authenticationSessionEntityMiddleware = redisRepositoryEntityMiddleware(
   AuthenticationSession,
   AuthenticationSessionCache,
 );
 
-export const browserLinkEntityMiddleware = repositoryEntityMiddleware(
+export const browserLinkEntityMiddleware = mongoRepositoryEntityMiddleware(
   BrowserLink,
   BrowserLinkRepository,
 );
 
-export const strategySessionEntityMiddleware = cacheEntityMiddleware(
+export const strategySessionEntityMiddleware = redisRepositoryEntityMiddleware(
   StrategySession,
   StrategySessionCache,
 );

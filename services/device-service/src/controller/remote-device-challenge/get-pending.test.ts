@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { getPendingRdcSessionsController } from "./get-pending";
 import { createTestRdcSession } from "../../fixtures/entity";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { RdcSessionMode, SessionStatus } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -11,8 +11,8 @@ describe("getPendingRdcSessionsController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        rdcSessionCache: createMockCache(createTestRdcSession),
+      redis: {
+        rdcSessionCache: createMockRedisRepository(createTestRdcSession),
       },
       data: {
         id: "ac0257af-9f8a-4731-bda1-dd7416e945bf",
@@ -26,7 +26,7 @@ describe("getPendingRdcSessionsController", () => {
   });
 
   test("should resolve with pending sessions", async () => {
-    ctx.cache.rdcSessionCache.findMany.mockResolvedValue([
+    ctx.redis.rdcSessionCache.findMany.mockResolvedValue([
       createTestRdcSession({
         id: "1dcea497-ced2-419b-83d4-eeb388f5ba9d",
         expires: new Date("2021-01-01T08:15:00.000Z"),

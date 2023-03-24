@@ -1,5 +1,5 @@
 import { calculateAuthenticationStatus } from "./calculate-authentication-status";
-import { createTestAuthenticationSession } from "../fixtures/entity";
+import { createTestAccount, createTestAuthenticationSession } from "../fixtures/entity";
 import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
 
 describe("calculateAuthenticationStatus", () => {
@@ -8,6 +8,19 @@ describe("calculateAuthenticationStatus", () => {
       calculateAuthenticationStatus(
         createTestAuthenticationSession({
           identityId: null,
+          minimumLevel: 1,
+          recommendedLevel: 4,
+          requiredLevel: 1,
+        }),
+        createTestAccount({ requireMfa: false }),
+      ),
+    );
+  });
+
+  test("should resolve pending on account", () => {
+    expect(
+      calculateAuthenticationStatus(
+        createTestAuthenticationSession({
           minimumLevel: 1,
           recommendedLevel: 4,
           requiredLevel: 1,
@@ -26,6 +39,7 @@ describe("calculateAuthenticationStatus", () => {
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
+        createTestAccount({ requireMfa: false }),
       ),
     ).toBe("pending");
   });
@@ -40,6 +54,7 @@ describe("calculateAuthenticationStatus", () => {
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
+        createTestAccount({ requireMfa: false }),
       ),
     ).toBe("pending");
   });
@@ -54,6 +69,22 @@ describe("calculateAuthenticationStatus", () => {
           recommendedLevel: 4,
           requiredLevel: 4,
         }),
+        createTestAccount({ requireMfa: false }),
+      ),
+    ).toBe("pending");
+  });
+
+  test("should resolve pending on account mfa", () => {
+    expect(
+      calculateAuthenticationStatus(
+        createTestAuthenticationSession({
+          confirmedStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          requiredMethods: [],
+          minimumLevel: 1,
+          recommendedLevel: 4,
+          requiredLevel: 1,
+        }),
+        createTestAccount({ requireMfa: true }),
       ),
     ).toBe("pending");
   });
@@ -68,6 +99,7 @@ describe("calculateAuthenticationStatus", () => {
           recommendedLevel: 4,
           requiredLevel: 1,
         }),
+        createTestAccount({ requireMfa: false }),
       ),
     ).toBe("confirmed");
   });
@@ -82,6 +114,7 @@ describe("calculateAuthenticationStatus", () => {
           recommendedLevel: 2,
           requiredLevel: 2,
         }),
+        createTestAccount({ requireMfa: false }),
       ),
     ).toBe("confirmed");
   });

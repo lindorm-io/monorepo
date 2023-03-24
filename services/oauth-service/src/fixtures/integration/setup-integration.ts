@@ -1,6 +1,6 @@
 import { CryptoArgon } from "@lindorm-io/crypto";
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
-import { argon, mongoConnection, redisConnection } from "../../instance";
+import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
+import { argon, memoryDatabase, mongoConnection, redisConnection } from "../../instance";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestKeyPair } from "@lindorm-io/key-pair";
 import {
@@ -36,35 +36,20 @@ export const setupIntegration = async (): Promise<void> => {
   await mongoConnection.connect();
   await redisConnection.connect();
 
-  TEST_OPAQUE_TOKEN_CACHE = new OpaqueTokenCache({ connection: redisConnection, logger });
-  TEST_AUTHORIZATION_CODE_CACHE = new AuthorizationCodeCache({
-    connection: redisConnection,
-    logger,
-  });
-  TEST_AUTHORIZATION_SESSION_CACHE = new AuthorizationSessionCache({
-    connection: redisConnection,
-    logger,
-  });
-  TEST_CLAIMS_SESSION_CACHE = new ClaimsSessionCache({ connection: redisConnection, logger });
-  TEST_ELEVATION_SESSION_CACHE = new ElevationSessionCache({ connection: redisConnection, logger });
-  TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache({ connection: redisConnection, logger });
+  TEST_OPAQUE_TOKEN_CACHE = new OpaqueTokenCache(redisConnection, logger);
+  TEST_AUTHORIZATION_CODE_CACHE = new AuthorizationCodeCache(redisConnection, logger);
+  TEST_AUTHORIZATION_SESSION_CACHE = new AuthorizationSessionCache(redisConnection, logger);
+  TEST_CLAIMS_SESSION_CACHE = new ClaimsSessionCache(redisConnection, logger);
+  TEST_ELEVATION_SESSION_CACHE = new ElevationSessionCache(redisConnection, logger);
+  TEST_LOGOUT_SESSION_CACHE = new LogoutSessionCache(redisConnection, logger);
 
-  TEST_BROWSER_SESSION_REPOSITORY = new BrowserSessionRepository({
-    connection: mongoConnection,
-    logger,
-  });
-  TEST_CLIENT_REPOSITORY = new ClientRepository({ connection: mongoConnection, logger });
-  TEST_CLIENT_SESSION_REPOSITORY = new ClientSessionRepository({
-    connection: mongoConnection,
-    logger,
-  });
-  TEST_TENANT_REPOSITORY = new TenantRepository({ connection: mongoConnection, logger });
+  TEST_BROWSER_SESSION_REPOSITORY = new BrowserSessionRepository(mongoConnection, logger);
+  TEST_CLIENT_REPOSITORY = new ClientRepository(mongoConnection, logger);
+  TEST_CLIENT_SESSION_REPOSITORY = new ClientSessionRepository(mongoConnection, logger);
+  TEST_TENANT_REPOSITORY = new TenantRepository(mongoConnection, logger);
 
   TEST_ARGON = argon;
 
-  const keyPairCache = new KeyPairCache({
-    connection: redisConnection,
-    logger,
-  });
+  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
   await keyPairCache.create(createTestKeyPair());
 };

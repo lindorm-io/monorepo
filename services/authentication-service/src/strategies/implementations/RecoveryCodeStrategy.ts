@@ -3,6 +3,8 @@ import { ClientError, ServerError } from "@lindorm-io/errors";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
 import {
+  AcknowledgeStrategyOptions,
+  AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
   ServerKoaContext,
@@ -14,19 +16,19 @@ import {
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
   AuthStrategyConfig,
-  IdentifierType,
 } from "@lindorm-io/common-types";
 
 export class RecoveryCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
     identifierHint: "none",
-    identifierType: IdentifierType.USERNAME,
+    identifierType: "none",
     loa: 1,
     loaMax: 3,
-    method: AuthenticationMethod.PASSWORD,
-    methodsMax: 9,
-    methodsMin: 0,
+    method: AuthenticationMethod.RECOVERY,
     mfaCookie: false,
+    primary: false,
+    requiresIdentity: false,
+    secondary: true,
     strategy: AuthenticationStrategy.RECOVERY_CODE,
     weight: 0,
   };
@@ -38,16 +40,25 @@ export class RecoveryCodeStrategy implements StrategyHandler {
   ): Promise<AuthStrategyConfig> {
     return {
       id: strategySession.id,
+      acknowledgeCode: null,
       confirmKey: AuthenticationStrategyConfirmKey.CODE,
       confirmLength: null,
       confirmMode: AuthenticationStrategyConfirmMode.TEXT,
-      displayCode: null,
       expires: strategySession.expires.toISOString(),
       pollingRequired: false,
       qrCode: null,
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: null,
     };
+  }
+
+  public async acknowledge(
+    ctx: ServerKoaContext,
+    authenticationSession: AuthenticationSession,
+    strategySession: StrategySession,
+    options: AcknowledgeStrategyOptions,
+  ): Promise<AcknowledgeStrategyResult> {
+    throw new ServerError("Strategy does not support this method");
   }
 
   public async confirm(
@@ -58,7 +69,7 @@ export class RecoveryCodeStrategy implements StrategyHandler {
   ): Promise<Account> {
     const {
       logger,
-      repository: { accountRepository },
+      mongo: { accountRepository },
     } = ctx;
 
     const { code } = options;

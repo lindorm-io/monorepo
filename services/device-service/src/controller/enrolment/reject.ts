@@ -18,7 +18,7 @@ export const rejectEnrolmentController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { enrolmentSessionCache },
+    redis: { enrolmentSessionCache },
     entity: { enrolmentSession },
     token: { bearerToken, enrolmentSessionToken },
   } = ctx;

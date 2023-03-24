@@ -28,6 +28,10 @@ export const getOidcSessionController: ServerKoaController<RequestData> = async 
 
   const { callbackId, identityId, provider, verified } = oidcSession;
 
+  if (!identityId) {
+    throw new ClientError("Session not completed");
+  }
+
   if (!verified) {
     throw new ClientError("Session not verified");
   }

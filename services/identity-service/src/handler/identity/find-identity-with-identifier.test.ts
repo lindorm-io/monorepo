@@ -1,4 +1,4 @@
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { findIdentityWithIdentifier } from "./find-identity-with-identifier";
 import { Identity } from "../../entity";
@@ -10,9 +10,9 @@ describe("findIdentityWithIdentifier", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        identifierRepository: createMockRepository(createTestEmailIdentifier),
-        identityRepository: createMockRepository(createTestIdentity),
+      mongo: {
+        identifierRepository: createMockMongoRepository(createTestEmailIdentifier),
+        identityRepository: createMockMongoRepository(createTestIdentity),
       },
     };
 
@@ -28,7 +28,7 @@ describe("findIdentityWithIdentifier", () => {
       expect.any(Identity),
     );
 
-    expect(ctx.repository.identifierRepository.tryFind).toHaveBeenCalledWith({
+    expect(ctx.mongo.identifierRepository.tryFind).toHaveBeenCalledWith({
       provider: "provider",
       type: IdentifierType.NIN,
       value: "198701028844",
@@ -37,7 +37,7 @@ describe("findIdentityWithIdentifier", () => {
   });
 
   test("should resolve undefined", async () => {
-    ctx.repository.identifierRepository.tryFind.mockResolvedValue(undefined);
+    ctx.mongo.identifierRepository.tryFind.mockResolvedValue(undefined);
 
     await expect(findIdentityWithIdentifier(ctx, options)).resolves.toBeUndefined();
   });

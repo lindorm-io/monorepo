@@ -9,7 +9,7 @@ export const updateBrowserSessionElevation = async (
   elevationSession: ElevationSession,
 ): Promise<void> => {
   const {
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   if (!elevationSession.browserSessionId) {

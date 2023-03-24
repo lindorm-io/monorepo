@@ -1,5 +1,5 @@
 import { deleteTotpController } from "./delete-totp";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
 
@@ -24,8 +24,8 @@ describe("deleteTotpController", () => {
       entity: {
         account: createTestAccount(),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -35,7 +35,7 @@ describe("deleteTotpController", () => {
   test("should resolve", async () => {
     await expect(deleteTotpController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         totp: null,
       }),

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getEncryptedRecordController } from "./get-encrypted-record";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
 import { createTestEncryptedRecord } from "../../fixtures/entity";
@@ -34,8 +34,8 @@ describe("getEncryptedRecordController", () => {
       entity: {
         encryptedRecord: createTestEncryptedRecord(),
       },
-      repository: {
-        encryptedRecordRepository: createMockRepository(createTestEncryptedRecord),
+      mongo: {
+        encryptedRecordRepository: createMockMongoRepository(createTestEncryptedRecord),
       },
     };
 
@@ -49,7 +49,7 @@ describe("getEncryptedRecordController", () => {
     await expect(getEncryptedRecordController(ctx)).resolves.toStrictEqual({
       body: {
         data: "parsed-blob",
-        expires: new Date("2023-01-01T08:00:00.000Z"),
+        expires: "2023-01-01T08:00:00.000Z",
       },
     });
   });
@@ -59,7 +59,7 @@ describe("getEncryptedRecordController", () => {
 
     await expect(getEncryptedRecordController(ctx)).rejects.toThrow(ClientError);
 
-    expect(ctx.repository.encryptedRecordRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.encryptedRecordRepository.destroy).toHaveBeenCalled();
   });
 
   test("should throw on forbidden encryption key", async () => {

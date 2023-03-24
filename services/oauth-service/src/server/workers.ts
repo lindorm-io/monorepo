@@ -4,16 +4,15 @@ import {
   browserSessionCleanupWorker,
   clientSessionCleanupWorker,
   keyPairCleanupWorker,
-  keyPairMongoCacheWorker,
+  keyPairMongoMemoryWorker,
   keyPairRotationWorker,
 } from "../worker";
 
-export const workers: Array<IntervalWorker> = [];
+export const workers: Array<IntervalWorker> = [keyPairMongoMemoryWorker];
 
 if (configuration.server.workers) {
   workers.push(browserSessionCleanupWorker);
-  workers.push(keyPairCleanupWorker);
-  workers.push(keyPairMongoCacheWorker);
-  workers.push(keyPairRotationWorker);
   workers.push(clientSessionCleanupWorker);
+  workers.push(keyPairCleanupWorker);
+  workers.push(keyPairRotationWorker);
 }

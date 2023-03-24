@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import { getIdentifierClaims as _getIdentifierClaims } from "../../handler";
 import { getUserinfoController } from "./get-userinfo";
@@ -32,8 +32,8 @@ describe("getUserinfoController", () => {
           username: "bFp3ihd84Ps8Ocjf",
         }),
       },
-      repository: {
-        addressRepository: createMockRepository(createTestAddress),
+      mongo: {
+        addressRepository: createMockMongoRepository(createTestAddress),
       },
       token: {
         bearerToken: {

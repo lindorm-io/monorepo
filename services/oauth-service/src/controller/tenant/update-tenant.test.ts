@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestTenant } from "../../fixtures/entity";
 import { updateTenantController } from "./update-tenant";
 
@@ -11,8 +11,8 @@ describe("updateTenantController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        tenantCache: createMockCache(createTestTenant),
+      redis: {
+        tenantCache: createMockRedisRepository(createTestTenant),
       },
       data: {
         active: false,
@@ -23,8 +23,8 @@ describe("updateTenantController", () => {
       entity: {
         tenant: createTestTenant({ id: "612edde0-2679-47b1-8fad-d01c8a7570b6" }),
       },
-      repository: {
-        tenantRepository: createMockRepository(createTestTenant),
+      mongo: {
+        tenantRepository: createMockMongoRepository(createTestTenant),
       },
     };
   });
@@ -32,7 +32,7 @@ describe("updateTenantController", () => {
   test("should resolve updated tenant", async () => {
     await expect(updateTenantController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.tenantRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.tenantRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: false,
         name: "updated name",

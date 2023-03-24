@@ -8,7 +8,7 @@ describe("removeIdentityDisplayName", () => {
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      repository: {
+      mongo: {
         displayNameRepository: {
           find: jest.fn().mockResolvedValue(
             createTestDisplayName({
@@ -35,7 +35,7 @@ describe("removeIdentityDisplayName", () => {
       ),
     ).resolves.toBeUndefined();
 
-    expect(ctx.repository.displayNameRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.displayNameRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         name: "displayName",
         numbers: [],

@@ -25,7 +25,7 @@ export const confirmLogoutController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { logoutSessionCache },
+    redis: { logoutSessionCache },
     data: { browserSessionId, clientSessionId },
     entity: { logoutSession },
     logger,

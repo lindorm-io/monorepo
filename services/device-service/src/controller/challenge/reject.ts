@@ -18,7 +18,7 @@ export const rejectChallengeController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { challengeSessionCache },
+    redis: { challengeSessionCache },
     entity: { challengeSession },
     token: { challengeSessionToken },
   } = ctx;

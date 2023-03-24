@@ -1,8 +1,11 @@
 import { uniq } from "lodash";
-import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { getStrategyConfig } from "../strategies";
+import { AuthenticationSession } from "../entity";
 
 export const getMethodsFromStrategies = (
-  strategies: Array<AuthenticationStrategy>,
+  authenticationSession: AuthenticationSession,
 ): Array<AuthenticationMethod> =>
-  uniq(strategies.map((strategy) => getStrategyConfig(strategy).method));
+  uniq(
+    authenticationSession.confirmedStrategies.map((strategy) => getStrategyConfig(strategy).method),
+  );

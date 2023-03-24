@@ -30,7 +30,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
 ): ControllerResponse<ResponseBody> => {
   const {
     axios: { communicationClient },
-    cache: { rdcSessionCache },
+    redis: { rdcSessionCache },
     jwt,
     metadata,
     token: { bearerToken },

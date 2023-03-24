@@ -1,6 +1,6 @@
 import { OpaqueToken } from "../../entity";
 import { configuration } from "../../server/configuration";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createOpaqueToken } from "../../util";
 import { createTestAccessToken } from "../../fixtures/entity";
 import { createTestJwt } from "@lindorm-io/jwt";
@@ -12,8 +12,8 @@ describe("resolveTokenSession", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        opaqueTokenCache: createMockCache(createTestAccessToken),
+      redis: {
+        opaqueTokenCache: createMockRedisRepository(createTestAccessToken),
       },
       jwt: createTestJwt({ issuer: configuration.server.issuer }),
     };

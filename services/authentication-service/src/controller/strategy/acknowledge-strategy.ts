@@ -2,52 +2,44 @@ import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { Controller, ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaContext } from "../../types";
-import { argon } from "../../instance";
-import { createStrategySessionToken } from "../../handler";
-import { randomSecret } from "@lindorm-io/random";
 import {
+  AcknowledgeStrategyRequestBody,
   AcknowledgeStrategyRequestParams,
   AcknowledgeStrategyResponse,
-  AuthenticationStrategy,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { getStrategyHandler } from "../../strategies";
 
-export const acknowledgeStrategySchema = Joi.object<AcknowledgeStrategyRequestParams>()
+type RequestData = AcknowledgeStrategyRequestParams & AcknowledgeStrategyRequestBody;
+
+type ResponseBody = AcknowledgeStrategyResponse;
+
+export const acknowledgeStrategySchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
+    acknowledgeCode: Joi.string().required(),
   })
   .required();
 
 export const acknowledgeStrategyController: Controller<
-  ServerKoaContext,
-  AcknowledgeStrategyResponse
-> = async (ctx): ControllerResponse<AcknowledgeStrategyResponse> => {
+  ServerKoaContext<RequestData>,
+  ResponseBody
+> = async (ctx): ControllerResponse<ResponseBody> => {
   const {
-    cache: { strategySessionCache },
+    data: { acknowledgeCode },
+    entity: { authenticationSession, strategySession },
     token: { bearerToken },
-  } = ctx;
-
-  let {
-    entity: { strategySession },
   } = ctx;
 
   if (strategySession.status !== SessionStatus.PENDING) {
     throw new ClientError("Invalid session status");
   }
 
-  if (![AuthenticationStrategy.SESSION_QR_CODE].includes(strategySession.strategy)) {
-    throw new ClientError("Invalid strategy");
-  }
+  const handler = getStrategyHandler(strategySession.strategy);
+  const body = await handler.acknowledge(ctx, authenticationSession, strategySession, {
+    identityId: bearerToken.subject,
+    acknowledgeCode,
+  });
 
-  const code = randomSecret(32);
-
-  strategySession.secret = await argon.encrypt(code);
-  strategySession.identityId = bearerToken.subject;
-  strategySession.status = SessionStatus.ACKNOWLEDGED;
-
-  strategySession = await strategySessionCache.update(strategySession);
-
-  const strategySessionToken = createStrategySessionToken(ctx, strategySession);
-
-  return { body: { code, strategySessionToken } };
+  return { body };
 };

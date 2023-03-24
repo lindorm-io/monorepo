@@ -15,7 +15,7 @@ export const rejectStrategyController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse => {
   const {
-    cache: { strategySessionCache },
+    redis: { strategySessionCache },
     entity: { strategySession },
   } = ctx;
 

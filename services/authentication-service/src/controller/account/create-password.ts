@@ -21,7 +21,7 @@ export const createPasswordController: ServerKoaController<RequestData> = async 
   const {
     data: { newPassword },
     entity: { account },
-    repository: { accountRepository },
+    mongo: { accountRepository },
   } = ctx;
 
   if (account.password) {

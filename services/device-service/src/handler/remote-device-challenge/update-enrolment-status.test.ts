@@ -8,7 +8,7 @@ describe("updateEnrolmentStatus", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
+      redis: {
         enrolmentSessionCache: {
           find: jest.fn().mockResolvedValue(
             createTestEnrolmentSession({
@@ -29,6 +29,6 @@ describe("updateEnrolmentStatus", () => {
   test("should resolve with rdc session status", async () => {
     await expect(updateEnrolmentStatus(ctx, rdc)).resolves.toBeUndefined();
 
-    expect(ctx.cache.enrolmentSessionCache.update).toHaveBeenCalled();
+    expect(ctx.redis.enrolmentSessionCache.update).toHaveBeenCalled();
   });
 });

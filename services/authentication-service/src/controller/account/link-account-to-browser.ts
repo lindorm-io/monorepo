@@ -28,7 +28,7 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
     data: { code, password },
     entity: { account },
     metadata: { agent, client },
-    repository: { browserLinkRepository },
+    mongo: { browserLinkRepository },
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);

@@ -29,7 +29,7 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
     data: { pincode },
     entity: { deviceLink },
     metadata,
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { bearerToken, challengeConfirmationToken },
   } = ctx;
 

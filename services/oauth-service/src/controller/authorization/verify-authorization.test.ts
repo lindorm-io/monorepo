@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm-io/errors";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { verifyAuthorizationController } from "./verify-authorization";
 import {
   createTestAuthorizationSession,
@@ -40,8 +40,8 @@ describe("oauthVerifyController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         redirectUri: "https://test.client.lindorm.io/redirect",
@@ -57,8 +57,8 @@ describe("oauthVerifyController", () => {
         }),
         client: createTestClient(),
       },
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
 
       server: {

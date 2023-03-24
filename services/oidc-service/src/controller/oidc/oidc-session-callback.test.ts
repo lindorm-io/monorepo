@@ -1,4 +1,4 @@
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestOidcSession } from "../../fixtures/entity";
 import { oidcSessionCallbackController } from "./oidc-session-callback";
 import {
@@ -24,8 +24,8 @@ describe("oidcSessionCallbackController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        oidcSessionCache: createMockCache(createTestOidcSession),
+      redis: {
+        oidcSessionCache: createMockRedisRepository(createTestOidcSession),
       },
       data: {
         accessToken: "access.jwt.jwt",
@@ -56,7 +56,7 @@ describe("oidcSessionCallbackController", () => {
     expect(authenticateIdentity).toHaveBeenCalled();
     expect(updateIdentityUserinfo).toHaveBeenCalled();
 
-    expect(ctx.cache.oidcSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.oidcSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         identityId: "d50c332e-a6a7-48e5-b6c7-a6a2a14be51f",
         verified: true,

@@ -18,6 +18,7 @@ export const createTestAuthenticationSession = (
       AuthenticationStrategy.DEVICE_CHALLENGE,
       AuthenticationStrategy.EMAIL_CODE,
       AuthenticationStrategy.EMAIL_OTP,
+      AuthenticationStrategy.PHONE_CODE,
       AuthenticationStrategy.PHONE_OTP,
     ],
     clientId: randomUUID(),

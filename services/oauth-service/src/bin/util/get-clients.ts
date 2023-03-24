@@ -4,6 +4,6 @@ import { ClientRepository } from "../../infrastructure";
 import { logger } from "./logger";
 
 export const getClients = async (): Promise<Array<Client>> => {
-  const repository = new ClientRepository({ connection: mongoConnection, logger });
+  const repository = new ClientRepository(mongoConnection, logger);
   return repository.findMany();
 };

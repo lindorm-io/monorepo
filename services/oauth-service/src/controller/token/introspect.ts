@@ -24,7 +24,7 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
 ): ControllerResponse<ResponseBody> => {
   const {
     data: { token },
-    repository: { clientRepository, clientSessionRepository },
+    mongo: { clientRepository, clientSessionRepository },
   } = ctx;
 
   try {

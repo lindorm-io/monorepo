@@ -32,7 +32,7 @@ export const initialiseStrategyController: ServerKoaController<RequestData> = as
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    cache: { strategySessionCache },
+    redis: { strategySessionCache },
     data: { identifier, identifierType, nonce, strategy },
     entity: { authenticationSession },
   } = ctx;

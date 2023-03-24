@@ -19,7 +19,7 @@ export const deleteDeviceLinkController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse => {
   const {
     entity: { deviceLink },
-    repository: { deviceLinkRepository },
+    mongo: { deviceLinkRepository },
     token: { bearerToken },
   } = ctx;
 

@@ -1,6 +1,6 @@
 import { Identity } from "../../entity";
 import { addUserinfoController } from "./add-userinfo";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
 import {
   addAddressFromUserinfo as _addAddressFromUserinfo,
@@ -49,8 +49,8 @@ describe("addUserinfoController", () => {
       entity: {
         identity: new Identity({}),
       },
-      repository: {
-        identityRepository: createMockRepository(createTestIdentity),
+      mongo: {
+        identityRepository: createMockMongoRepository(createTestIdentity),
       },
     };
   });
@@ -58,7 +58,7 @@ describe("addUserinfoController", () => {
   test("should update identity", async () => {
     await expect(addUserinfoController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.repository.identityRepository.update).toHaveBeenCalledTimes(2);
+    expect(ctx.mongo.identityRepository.update).toHaveBeenCalledTimes(2);
 
     expect(addAddressFromUserinfo).toHaveBeenCalled();
     expect(addGenericIdentifier).toHaveBeenCalledTimes(3);

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { confirmElevationController } from "./confirm-elevation";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestElevationSession } from "../../fixtures/entity";
 import {
@@ -22,8 +22,8 @@ describe("confirmElevationController", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        elevationSessionCache: createMockCache(createTestElevationSession),
+      redis: {
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       data: {
         identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
@@ -47,7 +47,7 @@ describe("confirmElevationController", () => {
       body: { redirectTo: "createElevationVerifyUri" },
     });
 
-    expect(ctx.cache.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
@@ -67,7 +67,7 @@ describe("confirmElevationController", () => {
 
     await expect(confirmElevationController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.cache.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),

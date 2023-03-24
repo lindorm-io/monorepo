@@ -8,7 +8,7 @@ export const tryFindBrowserSessions = async (
   idToken?: VerifiedIdentityToken,
 ): Promise<Array<BrowserSession>> => {
   const {
-    repository: { browserSessionRepository },
+    mongo: { browserSessionRepository },
   } = ctx;
 
   const cookies = getBrowserSessionCookies(ctx);

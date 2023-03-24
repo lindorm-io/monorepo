@@ -1,6 +1,6 @@
 import { Address, Identity } from "../../entity";
 import { addAddressFromUserinfo } from "./add-address-from-userinfo";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 
 describe("addAddressFromUserinfo", () => {
@@ -10,8 +10,8 @@ describe("addAddressFromUserinfo", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        addressRepository: createMockRepository(createTestAddress),
+      mongo: {
+        addressRepository: createMockMongoRepository(createTestAddress),
       },
     };
 
@@ -33,17 +33,17 @@ describe("addAddressFromUserinfo", () => {
       expect.any(Address),
     );
 
-    expect(ctx.repository.addressRepository.create).toHaveBeenCalled();
+    expect(ctx.mongo.addressRepository.create).toHaveBeenCalled();
   });
 
   test("should resolve with new primary address", async () => {
-    ctx.repository.addressRepository.findMany.mockResolvedValue([]);
+    ctx.mongo.addressRepository.findMany.mockResolvedValue([]);
 
     await expect(addAddressFromUserinfo(ctx, identity, options)).resolves.toStrictEqual(
       expect.any(Address),
     );
 
-    expect(ctx.repository.addressRepository.create).toHaveBeenCalledWith(
+    expect(ctx.mongo.addressRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         primary: true,
       }),
@@ -51,7 +51,7 @@ describe("addAddressFromUserinfo", () => {
   });
 
   test("should resolve with existing address", async () => {
-    ctx.repository.addressRepository.findMany.mockResolvedValue([
+    ctx.mongo.addressRepository.findMany.mockResolvedValue([
       createTestAddress({
         country: "Country",
         locality: "Locality",
@@ -65,6 +65,6 @@ describe("addAddressFromUserinfo", () => {
       expect.any(Address),
     );
 
-    expect(ctx.repository.addressRepository.create).not.toHaveBeenCalled();
+    expect(ctx.mongo.addressRepository.create).not.toHaveBeenCalled();
   });
 });

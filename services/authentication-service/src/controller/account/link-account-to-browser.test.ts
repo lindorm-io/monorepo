@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
 import { linkAccountToBrowserController } from "./link-account-to-browser";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
@@ -54,8 +54,8 @@ describe("linkAccountToBrowserController", () => {
           environment: "client-environment",
         },
       },
-      repository: {
-        browserLinkRepository: createMockRepository(createTestBrowserLink),
+      mongo: {
+        browserLinkRepository: createMockMongoRepository(createTestBrowserLink),
       },
       server: {
         environment: "development",

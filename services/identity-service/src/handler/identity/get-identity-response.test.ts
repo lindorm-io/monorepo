@@ -1,5 +1,5 @@
 import { Identity } from "../../entity";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getIdentityResponse } from "./get-identity-response";
 import {
   createTestAddress,
@@ -17,9 +17,9 @@ describe("getIdentityResponse", () => {
 
   beforeEach(() => {
     ctx = {
-      repository: {
-        addressRepository: createMockRepository(createTestAddress),
-        identifierRepository: createMockRepository(createTestEmailIdentifier),
+      mongo: {
+        addressRepository: createMockMongoRepository(createTestAddress),
+        identifierRepository: createMockMongoRepository(createTestEmailIdentifier),
       },
     };
 
@@ -29,12 +29,12 @@ describe("getIdentityResponse", () => {
   });
 
   test("should resolve", async () => {
-    ctx.repository.addressRepository.findMany.mockResolvedValue([
+    ctx.mongo.addressRepository.findMany.mockResolvedValue([
       createTestAddress({ label: "home" }),
       createTestAddress({ primary: false }),
     ]);
 
-    ctx.repository.identifierRepository.findMany.mockResolvedValue([
+    ctx.mongo.identifierRepository.findMany.mockResolvedValue([
       createTestEmailIdentifier({ value: "one@lindorm.io", primary: true }),
       createTestEmailIdentifier({ value: "two@lindorm.io", primary: false, verified: false }),
       createTestExternalIdentifier({ provider: "apple", value: "three" }),

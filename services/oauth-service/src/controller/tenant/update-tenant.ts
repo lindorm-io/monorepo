@@ -27,7 +27,7 @@ export const updateTenantController: ServerKoaController<RequestData> = async (
   const {
     data: { active, name, owner, subdomain },
     entity: { tenant },
-    repository: { tenantRepository },
+    mongo: { tenantRepository },
   } = ctx;
 
   if (!isUndefined(active)) tenant.active = active;

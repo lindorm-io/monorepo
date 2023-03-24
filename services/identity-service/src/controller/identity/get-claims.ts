@@ -25,7 +25,7 @@ export const getClaimsController: ServerKoaController = async (
 ): ControllerResponse<ResponseData> => {
   const {
     data: { session },
-    repository: { addressRepository, identityRepository },
+    mongo: { addressRepository, identityRepository },
   } = ctx;
 
   const {

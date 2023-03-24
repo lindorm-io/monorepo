@@ -68,6 +68,7 @@ describe("/account", () => {
       browser_link_code: true,
       password: true,
       recovery_code: true,
+      require_mfa: true,
       totp: true,
     });
   });

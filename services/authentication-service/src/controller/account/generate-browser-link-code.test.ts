@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { baseHash } from "@lindorm-io/core";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { generateBrowserLinkCodeController } from "./generate-browser-link-code";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
@@ -45,8 +45,8 @@ describe("generateBrowserLinkCodeController", () => {
           browserLinkCode: null,
         }),
       },
-      repository: {
-        accountRepository: createMockRepository(createTestAccount),
+      mongo: {
+        accountRepository: createMockMongoRepository(createTestAccount),
       },
     };
 
@@ -58,7 +58,7 @@ describe("generateBrowserLinkCodeController", () => {
       body: { code: "12-123456-1234-123456-1234-123456" },
     });
 
-    expect(ctx.repository.accountRepository.update).toHaveBeenCalledWith(
+    expect(ctx.mongo.accountRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserLinkCode: "MTItMTIzNDU2LTEyMzQtMTIzNDU2LTEyMzQtMTIzNDU2",
       }),

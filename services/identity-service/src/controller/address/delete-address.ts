@@ -17,7 +17,7 @@ export const deleteAddressController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     entity: { address },
-    repository: { addressRepository },
+    mongo: { addressRepository },
   } = ctx;
 
   await addressRepository.destroy(address);

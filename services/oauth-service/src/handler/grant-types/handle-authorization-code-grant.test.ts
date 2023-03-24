@@ -3,8 +3,8 @@ import { Client, ClientSession } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { OpenIdScope } from "@lindorm-io/common-types";
 import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
-import { createMockCache } from "@lindorm-io/redis";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { generateTokenResponse as _generateTokenResponse } from "../oauth";
 import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 import { randomUUID } from "crypto";
@@ -32,9 +32,9 @@ describe("handleAuthorizationCodeGrant", () => {
 
   beforeEach(() => {
     ctx = {
-      cache: {
-        authorizationCodeCache: createMockCache(createTestAuthorizationCode),
-        authorizationSessionCache: createMockCache(createTestAuthorizationSession),
+      redis: {
+        authorizationCodeCache: createMockRedisRepository(createTestAuthorizationCode),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         code: "code",
@@ -46,9 +46,9 @@ describe("handleAuthorizationCodeGrant", () => {
           id: "26176fc1-8e86-41f4-a649-9375c3814f47",
         }),
       },
-      repository: {
-        browserSessionRepository: createMockRepository(createTestBrowserSession),
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 
@@ -56,7 +56,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should resolve", async () => {
-    ctx.cache.authorizationSessionCache.find.mockResolvedValue(
+    ctx.redis.authorizationSessionCache.find.mockResolvedValue(
       createTestAuthorizationSession({
         clientSessionId: "f3a194da-1233-4ada-a25f-ffacbc4fc0bf",
         clientId: "26176fc1-8e86-41f4-a649-9375c3814f47",
@@ -82,7 +82,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid client id", async () => {
-    ctx.cache.authorizationSessionCache.find.mockResolvedValue(createTestAuthorizationSession());
+    ctx.redis.authorizationSessionCache.find.mockResolvedValue(createTestAuthorizationSession());
 
     await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
   });
@@ -94,7 +94,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid browser session (identityId)", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
         // @ts-ignore
         identityId: null,
@@ -105,7 +105,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid browser session (levelOfAssurance)", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
         levelOfAssurance: 0,
       }),
@@ -115,7 +115,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid browser session (methods)", async () => {
-    ctx.repository.browserSessionRepository.find.mockResolvedValue(
+    ctx.mongo.browserSessionRepository.find.mockResolvedValue(
       createTestBrowserSession({
         methods: [],
       }),

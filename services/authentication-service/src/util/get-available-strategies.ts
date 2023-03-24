@@ -7,23 +7,17 @@ import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 const hasUnusedMethod =
   (authenticationSession: AuthenticationSession) =>
   (config: AuthenticationStrategyConfig): boolean =>
-    !getMethodsFromStrategies(authenticationSession.confirmedStrategies).includes(config.method);
+    !getMethodsFromStrategies(authenticationSession).includes(config.method);
 
-const hasUnusedStrategy =
+const isPrimaryOrSecondary =
   (authenticationSession: AuthenticationSession) =>
   (config: AuthenticationStrategyConfig): boolean =>
-    !authenticationSession.confirmedStrategies.includes(config.strategy);
-
-const hasAllowedAmrValues =
-  (authenticationSession: AuthenticationSession) =>
-  (config: AuthenticationStrategyConfig): boolean =>
-    authenticationSession.confirmedStrategies.length >= config.methodsMin &&
-    authenticationSession.confirmedStrategies.length <= config.methodsMax;
+    (authenticationSession.confirmedStrategies.length === 0 && config.primary) ||
+    (authenticationSession.confirmedStrategies.length >= 1 && config.secondary);
 
 export const getAvailableStrategies = (
   authenticationSession: AuthenticationSession,
 ): Array<AuthenticationStrategy> =>
   STRATEGY_CONFIG_LIST.filter(hasUnusedMethod(authenticationSession))
-    .filter(hasUnusedStrategy(authenticationSession))
-    .filter(hasAllowedAmrValues(authenticationSession))
+    .filter(isPrimaryOrSecondary(authenticationSession))
     .map((item) => item.strategy);

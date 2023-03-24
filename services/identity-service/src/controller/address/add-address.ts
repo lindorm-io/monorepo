@@ -26,7 +26,7 @@ export const addAddressController: ServerKoaController<RequestData> = async (
   const {
     data: { careOf, country, label, locality, postalCode, region, streetAddress },
     entity: { identity },
-    repository: { addressRepository },
+    mongo: { addressRepository },
   } = ctx;
 
   const amount = await addressRepository.count({ identityId: identity.id });

@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestProtectedRecord } from "../../fixtures/entity";
 import { isAfter as _isAfter } from "date-fns";
 import { unlockProtectedRecordController } from "./unlock-protected-record";
@@ -34,8 +34,8 @@ describe("unlockProtectedRecordController", () => {
       entity: {
         protectedRecord: createTestProtectedRecord(),
       },
-      repository: {
-        protectedRecordRepository: createMockRepository(),
+      mongo: {
+        protectedRecordRepository: createMockMongoRepository(),
       },
       token: {
         bearerToken: {
@@ -54,7 +54,7 @@ describe("unlockProtectedRecordController", () => {
     await expect(unlockProtectedRecordController(ctx)).resolves.toStrictEqual({
       body: {
         data: "parsed-blob",
-        expires: new Date("2023-01-01T08:00:00.000Z"),
+        expires: "2023-01-01T08:00:00.000Z",
       },
     });
   });
@@ -76,7 +76,7 @@ describe("unlockProtectedRecordController", () => {
 
     await expect(unlockProtectedRecordController(ctx)).rejects.toThrow(ClientError);
 
-    expect(ctx.repository.protectedRecordRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.protectedRecordRepository.destroy).toHaveBeenCalled();
   });
 
   test("should destroy and throw on invalid key", async () => {

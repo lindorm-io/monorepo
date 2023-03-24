@@ -1,6 +1,6 @@
 import { Client, LogoutSession } from "../../entity";
 import { createLogoutToken as _createLogoutToken } from "../token";
-import { createMockRepository } from "@lindorm-io/mongo";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { handleClientSessionLogout } from "./handle-client-session-logout";
 import {
   createTestClient,
@@ -24,8 +24,8 @@ describe("handleClientSessionLogout", () => {
           post: jest.fn(),
         },
       },
-      repository: {
-        clientSessionRepository: createMockRepository(createTestClientSession),
+      mongo: {
+        clientSessionRepository: createMockMongoRepository(createTestClientSession),
       },
     };
 
@@ -44,6 +44,6 @@ describe("handleClientSessionLogout", () => {
     await expect(handleClientSessionLogout(ctx, logoutSession, client)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient.post).toHaveBeenCalledTimes(1);
-    expect(ctx.repository.clientSessionRepository.destroy).toHaveBeenCalled();
+    expect(ctx.mongo.clientSessionRepository.destroy).toHaveBeenCalled();
   });
 });
