@@ -3,7 +3,7 @@ import { StandardRequestParamsWithId } from "../../standard";
 export type AcknowledgeStrategyRequestParams = StandardRequestParamsWithId;
 
 export type AcknowledgeStrategyRequestBody = {
-  displayCode?: string;
+  acknowledgeCode: string;
 };
 
 export type AcknowledgeStrategyResponse = {

@@ -5,7 +5,7 @@ export type AuthStrategyConfig = {
   confirmKey: AuthenticationStrategyConfirmKey;
   confirmLength: number | null;
   confirmMode: AuthenticationStrategyConfirmMode;
-  displayCode: string | null;
+  acknowledgeCode: string | null;
   expires: string;
   pollingRequired: boolean;
   qrCode: string | null;
