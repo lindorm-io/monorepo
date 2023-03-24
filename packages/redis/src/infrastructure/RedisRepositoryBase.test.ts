@@ -1,7 +1,8 @@
 import MockDate from "mockdate";
+import RedisMock from "ioredis-mock";
 import { Redis } from "ioredis";
-import { RedisConnection } from "../connection";
-import { TestCache, TestCacheExpires, TestEntityExpires } from "../mocks";
+import { RedisConnection } from "../connections";
+import { TestEntityExpires, TestRedisRepository, TestRedisRepositoryExpires } from "../mocks";
 import { TestEntity } from "@lindorm-io/entity";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
@@ -12,7 +13,7 @@ const entityKey = (entity: any): string => `ns/entity/test_entity/${entity.id}`;
 const entityExpiresKey = (entity: any): string => `ns/entity/test_entity_expires/${entity.id}`;
 
 describe("LindormCache", () => {
-  let cache: TestCache;
+  let cache: TestRedisRepository;
   let connection: RedisConnection;
   let entity: TestEntity;
   let redis: Redis;
@@ -25,6 +26,10 @@ describe("LindormCache", () => {
         host: "localhost",
         port: 5011,
         namespace: "ns",
+        custom: new RedisMock({
+          host: "localhost",
+          port: 5011,
+        }) as unknown as Redis,
       },
       logger,
     );
@@ -32,7 +37,7 @@ describe("LindormCache", () => {
     await connection.connect();
 
     redis = connection.client;
-    cache = new TestCache({ connection, logger });
+    cache = new TestRedisRepository(connection, logger);
   }, 30000);
 
   afterAll(async () => {
@@ -50,7 +55,7 @@ describe("LindormCache", () => {
   });
 
   test("should create with expiry", async () => {
-    const cacheExpires = new TestCacheExpires({ connection, logger });
+    const cacheExpires = new TestRedisRepositoryExpires(connection, logger);
 
     const entityExpires = await cacheExpires.create(
       new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),
@@ -63,7 +68,7 @@ describe("LindormCache", () => {
   });
 
   test("should create without expiry", async () => {
-    const cacheExpires = new TestCacheExpires({ connection, logger });
+    const cacheExpires = new TestRedisRepositoryExpires(connection, logger);
 
     const entityExpires = await cacheExpires.create(
       new TestEntityExpires({ name: "expires", expires: null }),
@@ -130,7 +135,7 @@ describe("LindormCache", () => {
   });
 
   test("should return entity ttl", async () => {
-    const cacheExpires = new TestCacheExpires({ connection, logger });
+    const cacheExpires = new TestRedisRepositoryExpires(connection, logger);
 
     const entityExpires = await cacheExpires.create(
       new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:30:00.000Z") }),
@@ -150,7 +155,7 @@ describe("LindormCache", () => {
   });
 
   test("should update and set new expiry", async () => {
-    const cacheExpires = new TestCacheExpires({ connection, logger });
+    const cacheExpires = new TestRedisRepositoryExpires(connection, logger);
 
     const entityExpires = await cacheExpires.create(
       new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),
@@ -168,7 +173,7 @@ describe("LindormCache", () => {
   });
 
   test("should update and keep expiry", async () => {
-    const cacheExpires = new TestCacheExpires({ connection, logger });
+    const cacheExpires = new TestRedisRepositoryExpires(connection, logger);
 
     const entityExpires = await cacheExpires.create(
       new TestEntityExpires({ name: "expires", expires: new Date("2022-01-01T08:15:00.000Z") }),

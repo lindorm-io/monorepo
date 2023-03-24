@@ -1,22 +1,25 @@
-import { CacheIndexBaseOptions, ICacheBase } from "../types";
+import { IRedisConnection, IRedisIndex, RedisDocument, RedisIndexOptions } from "../types";
 import { Logger } from "@lindorm-io/core-logger";
-import { RedisConnection } from "../connection";
-import { RedisError } from "../error";
+import { RedisIndexError } from "../errors";
 import { snakeCase } from "@lindorm-io/case";
 
-export class CacheIndex<Interface> implements ICacheBase {
-  private readonly connection: RedisConnection;
+export class RedisIndex<Document extends RedisDocument> implements IRedisIndex {
+  private readonly connection: IRedisConnection;
   private readonly logger: Logger;
   private readonly prefix: string;
 
-  public readonly indexKey: keyof Interface;
+  public readonly indexKey: keyof Document;
 
-  public constructor(options: CacheIndexBaseOptions<Interface>) {
-    this.connection = options.connection;
+  public constructor(
+    connection: IRedisConnection,
+    logger: Logger,
+    options: RedisIndexOptions<Document>,
+  ) {
+    this.connection = connection;
     this.indexKey = options.indexKey;
     this.prefix = snakeCase(options.prefix);
 
-    this.logger = options.logger.createChildLogger(["CacheIndex", options.indexKey.toString()]);
+    this.logger = logger.createChildLogger(["RedisCacheIndex", options.indexKey.toString()]);
   }
 
   // public
@@ -82,7 +85,7 @@ export class CacheIndex<Interface> implements ICacheBase {
     });
 
     if (!success) {
-      throw new RedisError("Unable to set index in cache", {
+      throw new RedisIndexError("Unable to set index in redis", {
         debug: {
           array: uniqueArray,
           data,

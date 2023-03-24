@@ -1,6 +1,6 @@
 {
   "name": "@lindorm-io/redis",
-  "description": "Redis and Cache tools lindorm.io packages",
+  "description": "Redis cache tools lindorm.io packages",
   "version": "0.11.13",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",

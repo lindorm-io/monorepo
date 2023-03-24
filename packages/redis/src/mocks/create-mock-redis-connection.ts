@@ -1,7 +1,7 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { IRedisConnection } from "../types";
 import { Redis } from "ioredis";
-import { RedisConnection } from "../connection";
+import { RedisConnection } from "../connections";
 
 type Options = {
   del?: jest.Mock;
@@ -24,9 +24,10 @@ export const createMockRedisConnection = (o: Options = {}): RedisConnection => {
   } as unknown as Redis;
 
   const connection: IRedisConnection = {
+    client,
     connect: jest.fn(),
     disconnect: jest.fn(),
-    client,
+    namespace: "namespace",
 
     status: ConnectionStatus.CONNECTED,
     isConnected: true,

@@ -1,6 +1,6 @@
 # @lindorm-io/redis
 
-Redis and Cache tools lindorm.io packages
+Redis cache tools lindorm.io packages
 
 ## Installation
 

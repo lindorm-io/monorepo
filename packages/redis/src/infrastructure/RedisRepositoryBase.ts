@@ -1,58 +1,75 @@
-import { CacheBase } from "./CacheBase";
-import { CacheIndex } from "./CacheIndex";
-import { ICache, LindormCacheFindOptions, LindormCacheOptions, PostChangeCallback } from "../types";
-import { RedisError } from "../error";
-import { find, filter as _filter, uniqBy } from "lodash";
+import { Logger } from "@lindorm-io/core-logger";
+import { RedisRepositoryError } from "../errors";
+import { RedisIndex } from "./RedisIndex";
+import { filter as _filter, find, uniqBy } from "lodash";
 import { getUnixTime } from "date-fns";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { snakeCase } from "@lindorm-io/case";
 import {
-  EntityAttributes,
+  IRedisConnection,
+  PostChangeCallback,
+  RedisDocument,
+  RedisEntity,
+  RedisRepository,
+  RedisRepositoryFindOptions,
+  RedisRepositoryOptions,
+} from "../types";
+import {
   EntityNotCreatedError,
   EntityNotFoundError,
   EntityNotRemovedError,
   EntityNotUpdatedError,
-  ILindormEntity,
 } from "@lindorm-io/entity";
 
-export abstract class LindormCache<
-    Interface extends EntityAttributes,
-    Entity extends ILindormEntity<Interface>,
-  >
-  extends CacheBase
-  implements ICache<Interface, Entity>
+export abstract class RedisRepositoryBase<
+  Document extends RedisDocument,
+  Entity extends RedisEntity,
+> implements RedisRepository<Document, Entity>
 {
-  protected indices: Array<CacheIndex<Interface>>;
-  protected prefix: string;
-  protected ttlAttribute: keyof Interface | undefined;
+  private readonly connection: IRedisConnection;
+  private readonly indices: Array<RedisIndex<Document>>;
+  private readonly logger: Logger;
+  private readonly prefix: string;
+  private readonly ttlAttribute: keyof Document | undefined;
 
   // protected
 
-  protected constructor(options: LindormCacheOptions<Interface>) {
-    super(options);
+  protected constructor(
+    connection: IRedisConnection,
+    logger: Logger,
+    options: RedisRepositoryOptions<Document>,
+  ) {
+    this.logger = logger.createChildLogger([
+      "RedisCacheBase",
+      connection.namespace,
+      this.constructor.name,
+    ]);
 
+    this.connection = connection;
     this.indices = [];
     this.prefix = snakeCase(options.entityName);
     this.ttlAttribute = options.ttlAttribute;
 
     for (const attributeKey of options.indexedAttributes) {
       this.indices.push(
-        new CacheIndex<Interface>({
-          connection: options.connection,
+        new RedisIndex<Document>(connection, this.logger, {
           indexKey: attributeKey,
-          logger: this.logger,
           prefix: options.entityName,
         }),
       );
     }
   }
 
-  protected abstract createEntity(data: Interface): Entity;
+  protected abstract createDocument(entity: Entity): Document;
+
+  protected abstract createEntity(document: Document): Entity;
+
+  protected abstract validateSchema(entity: Entity): Promise<void>;
 
   // public
 
   public async create(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
-    await entity.schemaValidation();
+    await this.validateSchema(entity);
 
     try {
       await this.setEntity(entity);
@@ -72,23 +89,21 @@ export abstract class LindormCache<
   public async createMany(
     entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
+  ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.create(entity, callback));
     }
 
-    return Promise.allSettled(promises);
+    return await Promise.all(promises);
   }
 
   public async deleteMany(
-    filter: Partial<Interface>,
+    filter: Partial<Document>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
+  ): Promise<void> {
     const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
-
-    if (!results.length) return [];
 
     const promises = [];
 
@@ -96,7 +111,7 @@ export abstract class LindormCache<
       promises.push(this.destroy(entity, callback));
     }
 
-    return Promise.allSettled(promises);
+    await Promise.all(promises);
   }
 
   public async destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void> {
@@ -110,19 +125,19 @@ export abstract class LindormCache<
   public async destroyMany(
     entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<PromiseSettledResult<Awaited<void>>>> {
+  ): Promise<void> {
     const promises: Array<Promise<void>> = [];
 
     for (const entity of entities) {
       promises.push(this.destroy(entity, callback));
     }
 
-    return Promise.allSettled(promises);
+    await Promise.all(promises);
   }
 
   public async find(
-    filter: Partial<Interface>,
-    options?: LindormCacheFindOptions,
+    filter: Partial<Document>,
+    options?: RedisRepositoryFindOptions,
   ): Promise<Entity> {
     const results: Array<Entity> = await this.filterEntities(filter, options);
 
@@ -140,8 +155,8 @@ export abstract class LindormCache<
   }
 
   public async findMany(
-    filter: Partial<Interface>,
-    options?: LindormCacheFindOptions,
+    filter: Partial<Document>,
+    options?: RedisRepositoryFindOptions,
   ): Promise<Array<Entity>> {
     if (Object.keys(filter).length) {
       return await this.filterEntities(filter, options);
@@ -151,7 +166,7 @@ export abstract class LindormCache<
   }
 
   public async findOrCreate(
-    filter: Partial<Interface>,
+    filter: Partial<Document>,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Entity> {
     try {
@@ -161,13 +176,13 @@ export abstract class LindormCache<
         throw err;
       }
 
-      return await this.create(this.createEntity(filter as Interface), callback);
+      return await this.create(this.createEntity(filter as Document), callback);
     }
   }
 
   public async tryFind(
-    filter: Partial<Interface>,
-    options?: LindormCacheFindOptions,
+    filter: Partial<Document>,
+    options?: RedisRepositoryFindOptions,
   ): Promise<Entity | null> {
     try {
       return await this.find(filter, options);
@@ -184,9 +199,7 @@ export abstract class LindormCache<
   }
 
   public async update(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
-    await entity.schemaValidation();
-
-    entity.updated = new Date();
+    await this.validateSchema(entity);
 
     try {
       await this.setEntity(entity);
@@ -206,21 +219,39 @@ export abstract class LindormCache<
   public async updateMany(
     entities: Array<Entity>,
     callback?: PostChangeCallback<Entity>,
-  ): Promise<Array<PromiseSettledResult<Awaited<Entity>>>> {
+  ): Promise<Array<Entity>> {
     const promises: Array<Promise<Entity>> = [];
 
     for (const entity of entities) {
       promises.push(this.update(entity, callback));
     }
 
-    return Promise.allSettled(promises);
+    return await Promise.all(promises);
+  }
+
+  public async upsert(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity> {
+    await this.validateSchema(entity);
+
+    try {
+      await this.setEntity(entity);
+    } catch (err: any) {
+      throw new EntityNotUpdatedError(err.message, {
+        error: err,
+      });
+    }
+
+    if (callback) {
+      await callback(entity);
+    }
+
+    return entity;
   }
 
   // private
 
   private async filterEntities(
-    filter: Partial<Interface>,
-    options: LindormCacheFindOptions = {},
+    filter: Partial<Document>,
+    options: RedisRepositoryFindOptions = {},
   ): Promise<Array<Entity>> {
     const { scan = true } = options || {};
 
@@ -243,7 +274,7 @@ export abstract class LindormCache<
     return _filter(results, filter) as Array<Entity>;
   }
 
-  private async indexEntities(filter: Partial<Interface>): Promise<Array<Entity>> {
+  private async indexEntities(filter: Partial<Document>): Promise<Array<Entity>> {
     const results: Array<Entity> = [];
 
     for (const [key, value] of Object.entries(filter)) {
@@ -342,7 +373,7 @@ export abstract class LindormCache<
     });
 
     if (result) {
-      return this.createEntity(parseBlob(result) as Interface);
+      return this.createEntity(parseBlob(result) as Document);
     }
 
     return null;
@@ -355,10 +386,10 @@ export abstract class LindormCache<
 
     entity.updated = new Date();
 
-    const json = entity.toJSON();
-    const key = this.getKey(json.id);
-    const blob = stringifyBlob(json);
-    const expiresInSeconds = this.getExpiry(json);
+    const document = this.createDocument(entity);
+    const key = this.getKey(document.id);
+    const blob = stringifyBlob(document);
+    const expiresInSeconds = this.getExpiry(document);
     const method = expiresInSeconds ? "setex" : "set";
 
     let result: string | null;
@@ -374,7 +405,7 @@ export abstract class LindormCache<
     this.logger.debug("set entity", {
       input: {
         expiresInSeconds,
-        json,
+        document,
         key,
         method,
       },
@@ -387,17 +418,17 @@ export abstract class LindormCache<
 
     if (success) {
       for (const index of this.indices) {
-        const indexKey = json[index.indexKey as keyof Interface] as unknown as string;
+        const indexKey = document[index.indexKey as keyof Document] as unknown as string;
         if (!indexKey) continue;
 
-        await index.add(indexKey, json.id, expiresInSeconds);
+        await index.add(indexKey, document.id, expiresInSeconds);
       }
 
       return;
     }
 
-    throw new RedisError("Unable to set entity", {
-      debug: { key, json, result },
+    throw new RedisRepositoryError("Unable to set entity", {
+      debug: { key, document, result },
     });
   }
 
@@ -406,8 +437,8 @@ export abstract class LindormCache<
 
     await this.connection.connect();
 
-    const json = entity.toJSON();
-    const key = this.getKey(json.id);
+    const document = this.createDocument(entity);
+    const key = this.getKey(document.id);
 
     const result = await this.connection.client.del(key);
     const success = result !== 0;
@@ -424,9 +455,9 @@ export abstract class LindormCache<
 
     if (success) {
       for (const index of this.indices) {
-        const indexKey = json[index.indexKey as keyof Interface] as unknown as string;
+        const indexKey = document[index.indexKey as keyof Document] as unknown as string;
 
-        await index.sub(indexKey, [json.id]);
+        await index.sub(indexKey, [document.id]);
       }
 
       return;
@@ -441,7 +472,7 @@ export abstract class LindormCache<
     return `${this.connection.namespace}/entity/${this.prefix}/${key}`;
   }
 
-  private getExpiry(entity: Interface): number | undefined {
+  private getExpiry(entity: Document): number | undefined {
     if (!this.ttlAttribute) return;
 
     const attribute = entity[this.ttlAttribute];

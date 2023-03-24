@@ -1,7 +1,9 @@
 import { ConnectionBaseOptions, IConnectionBase } from "@lindorm-io/core-connection";
 import { Redis, RedisOptions } from "ioredis";
 
-export type IRedisConnection = IConnectionBase<Redis>;
+export interface IRedisConnection extends IConnectionBase<Redis> {
+  namespace: string;
+}
 
 export interface ExtendedRedisOptions extends RedisOptions {
   custom?: Redis;
