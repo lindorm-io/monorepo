@@ -80,7 +80,7 @@ describe("LoggerBase", () => {
 
     expect(log).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: new Error("error message"),
       level: "error",
       message: "error message",
       session: {},
