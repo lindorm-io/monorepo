@@ -1,7 +1,7 @@
-import { ClientError, LindormError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { DefaultLindormMongoKoaMiddleware, StoredEntityCustomValidation } from "../types";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
-import { RepositoryBase } from "@lindorm-io/mongo";
-import { StoredEntityCustomValidation, DefaultLindormMongoKoaMiddleware } from "../types";
+import { MongoRepositoryConstructor } from "@lindorm-io/mongo";
 import { camelCase } from "@lindorm-io/case";
 import { get } from "object-path";
 
@@ -16,10 +16,10 @@ export type RepositoryEntityMiddlewareOptions = {
   optional?: boolean;
 };
 
-export const repositoryEntityMiddleware =
+export const mongoRepositoryEntityMiddleware =
   (
     Entity: typeof EntityBase,
-    Repository: typeof RepositoryBase,
+    MongoRepository: MongoRepositoryConstructor,
     middlewareOptions: MiddlewareOptions = {},
   ) =>
   (
@@ -52,17 +52,28 @@ export const repositoryEntityMiddleware =
     }
 
     const entity = middlewareOptions.entityKey || camelCase(Entity.name);
-    const repository = middlewareOptions.repositoryKey || camelCase(Repository.name);
+    const repository = middlewareOptions.repositoryKey || camelCase(MongoRepository.name);
 
     if (!entity) {
-      throw new LindormError("Entity name not found");
+      throw new ServerError("Entity name not found", {
+        debug: { name: entity },
+      });
     }
+
     if (!repository) {
-      throw new LindormError("Repository name not found");
+      throw new ServerError("Repository name not found", {
+        debug: { name: repository },
+      });
+    }
+
+    if (!ctx.mongo[repository]) {
+      throw new ServerError("Mongo repository not found", {
+        debug: { context: ctx.mongo },
+      });
     }
 
     try {
-      ctx.entity[entity] = await ctx.repository[repository].find({
+      ctx.entity[entity] = await ctx.mongo[repository].find({
         [attributeKey]: attributeValue,
       });
 

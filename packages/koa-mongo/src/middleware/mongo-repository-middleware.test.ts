@@ -1,7 +1,7 @@
 import { Metric } from "@lindorm-io/koa";
-import { TestRepository } from "@lindorm-io/mongo";
+import { TestMongoRepository } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { repositoryMiddleware } from "./repository-middleware";
+import { mongoRepositoryMiddleware } from "./mongo-repository-middleware";
 
 const next = () => Promise.resolve();
 
@@ -15,24 +15,26 @@ describe("repositoryMiddleware", () => {
       connection: { mongo: { database: () => "db" } },
       logger,
       metrics: {},
-      repository: {},
+      mongo: {},
     };
     ctx.getMetric = (key: string) => new Metric(ctx, key);
   });
 
   test("should set repository on context", async () => {
-    await expect(repositoryMiddleware(TestRepository)(ctx, next)).resolves.toBeUndefined();
+    await expect(
+      mongoRepositoryMiddleware(TestMongoRepository)(ctx, next),
+    ).resolves.toBeUndefined();
 
-    expect(ctx.repository.testRepository).toStrictEqual(expect.any(TestRepository));
+    expect(ctx.mongo.testMongoRepository).toStrictEqual(expect.any(TestMongoRepository));
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));
   });
 
   test("should set repository with specific key", async () => {
     await expect(
-      repositoryMiddleware(TestRepository, { repositoryKey: "otherKey" })(ctx, next),
+      mongoRepositoryMiddleware(TestMongoRepository, { repositoryKey: "otherKey" })(ctx, next),
     ).resolves.toBeUndefined();
 
-    expect(ctx.repository.otherKey).toStrictEqual(expect.any(TestRepository));
+    expect(ctx.mongo.otherKey).toStrictEqual(expect.any(TestMongoRepository));
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));
   });
 });

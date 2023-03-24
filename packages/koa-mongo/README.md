@@ -1,21 +1,12 @@
 # @lindorm-io/koa-mongo
 
-Mongo Connection middleware for @lindorm-io/koa applications
+Mongo repository middleware for @lindorm-io/koa applications
 
 ## Installation
 
 ```shell script
 npm install --save @lindorm-io/koa-mongo
 ```
-
-### Peer Dependencies
-
-This package has the following peer dependencies:
-
-- [@lindorm-io/entity](https://www.npmjs.com/package/@lindorm-io/entity)
-- [@lindorm-io/koa](https://www.npmjs.com/package/@lindorm-io/koa)
-- [@lindorm-io/mongo](https://www.npmjs.com/package/@lindorm-io/mongo)
-- [@lindorm-io/winston](https://www.npmjs.com/package/@lindorm-io/winston)
 
 ## Usage
 

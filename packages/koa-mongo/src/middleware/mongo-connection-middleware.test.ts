@@ -1,6 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { mongoMiddleware } from "./mongo-middleware";
+import { mongoConnectionMiddleware } from "./mongo-connection-middleware";
 
 const next = () => Promise.resolve();
 
@@ -29,7 +29,7 @@ describe("mongoMiddleware", () => {
   });
 
   test("should set connection on context", async () => {
-    await expect(mongoMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
+    await expect(mongoConnectionMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.mongo).toStrictEqual(expect.any(MongoConnection));
     expect(ctx.metrics.mongo).toStrictEqual(expect.any(Number));

@@ -2,7 +2,7 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { DefaultLindormMongoSocketMiddleware } from "../types";
 import { getSocketError } from "@lindorm-io/koa";
 
-export const socketMongoMiddleware =
+export const socketMongoConnectionMiddleware =
   (connection: IMongoConnection): DefaultLindormMongoSocketMiddleware =>
   (socket, next) => {
     try {

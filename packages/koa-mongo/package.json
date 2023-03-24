@@ -1,6 +1,6 @@
 {
   "name": "@lindorm-io/koa-mongo",
-  "description": "Mongo Connection middleware for @lindorm-io/koa applications",
+  "description": "Mongo repository middleware for @lindorm-io/koa applications",
   "version": "0.8.25",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
