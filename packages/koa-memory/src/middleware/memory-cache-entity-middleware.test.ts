@@ -3,12 +3,12 @@ import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
 import { StoredEntityCustomValidation } from "../types";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockRepository, TestRepository } from "@lindorm-io/mongo";
-import { repositoryEntityMiddleware } from "./repository-entity-middleware";
+import { memoryCacheEntityMiddleware } from "./memory-cache-entity-middleware";
+import { createMockMemoryCache, TestMemoryCache } from "@lindorm-io/in-memory-cache";
 
 const next = () => Promise.resolve();
 
-describe("repositoryEntityMiddleware", () => {
+describe("memoryCacheEntityMiddleware", () => {
   let middlewareOptions: any;
   let options: any;
   let ctx: any;
@@ -23,8 +23,8 @@ describe("repositoryEntityMiddleware", () => {
       entity: {},
       logger,
       metrics: {},
-      repository: {
-        testRepository: createMockRepository(),
+      memory: {
+        testMemoryCache: createMockMemoryCache(),
       },
       request: { body: { identifier: "identifier" } },
     };
@@ -35,7 +35,7 @@ describe("repositoryEntityMiddleware", () => {
 
   test("should set entity on context", async () => {
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -54,7 +54,7 @@ describe("repositoryEntityMiddleware", () => {
     options.customValidation = customValidation;
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -64,13 +64,13 @@ describe("repositoryEntityMiddleware", () => {
     expect(ctx.metrics.entity).toStrictEqual(expect.any(Number));
   });
 
-  test("should find repository on context with options key", async () => {
-    middlewareOptions.repositoryKey = "repositoryKey";
+  test("should find cache on context with options key", async () => {
+    middlewareOptions.cacheKey = "cacheKey";
 
-    ctx.repository.repositoryKey = { find: async () => new TestEntity({}) };
+    ctx.memory.cacheKey = { find: async () => new TestEntity({}) };
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -79,11 +79,11 @@ describe("repositoryEntityMiddleware", () => {
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
   });
 
-  test("should set entity on context with options key", async () => {
+  test("should set entity on context with entity key", async () => {
     middlewareOptions.entityKey = "entityKey";
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -92,18 +92,18 @@ describe("repositoryEntityMiddleware", () => {
     expect(ctx.entity.entityKey).toStrictEqual(expect.any(TestEntity));
   });
 
-  test("should set entity on context with options key", async () => {
+  test("should set entity on context with attribute key", async () => {
     options.attributeKey = "attributeKey";
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
-    expect(ctx.repository.testRepository.find).toHaveBeenCalledWith({
+    expect(ctx.memory.testMemoryCache.find).toHaveBeenCalledWith({
       attributeKey: "identifier",
     });
   });
@@ -113,7 +113,7 @@ describe("repositoryEntityMiddleware", () => {
     ctx.request.body.identifier = undefined;
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -126,7 +126,7 @@ describe("repositoryEntityMiddleware", () => {
     ctx.request.body.identifier = undefined;
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -134,10 +134,10 @@ describe("repositoryEntityMiddleware", () => {
   });
 
   test("should throw ClientError when entity is missing", async () => {
-    ctx.repository.testRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
+    ctx.memory.testMemoryCache.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
@@ -153,7 +153,7 @@ describe("repositoryEntityMiddleware", () => {
     options.customValidation = customValidation;
 
     await expect(
-      repositoryEntityMiddleware(TestEntity, TestRepository, middlewareOptions)(path, options)(
+      memoryCacheEntityMiddleware(TestEntity, TestMemoryCache, middlewareOptions)(path, options)(
         ctx,
         next,
       ),
