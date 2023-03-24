@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.1.2...@lindorm-io/common-types@0.2.0) (2023-03-24)
+
+### Bug Fixes
+
+- add confirm key ([85be733](https://github.com/lindorm-io/monorepo/commit/85be7330309893458b8d12a2ba171f93226b6691))
+- add marital status to identity profile ([6bf623f](https://github.com/lindorm-io/monorepo/commit/6bf623f7b82b60ed9fd3f020d01ed6d5c004c5bf))
+- align scope with open id ([15e81a6](https://github.com/lindorm-io/monorepo/commit/15e81a6434b318d9906962213306761d604e25a0))
+- rename exports ([643cb2e](https://github.com/lindorm-io/monorepo/commit/643cb2ec66b6a1997651c26c54469f4acf6385bf))
+- return jwt on introspect and exchange ([44cf6eb](https://github.com/lindorm-io/monorepo/commit/44cf6eb63b989c2dc8976b77cf444787fa046a96))
+- unify expiry across all services ([255a6c3](https://github.com/lindorm-io/monorepo/commit/255a6c3e7fe6fc5444be236489ce986b920db8c6))
+- update session info responses ([2fd7fa1](https://github.com/lindorm-io/monorepo/commit/2fd7fa12abd76cb54d194eb68ab4d74b7f2be547))
+- update types ([e6d3341](https://github.com/lindorm-io/monorepo/commit/e6d334163a236793c4bc79d6240da10c0a7b1e8f))
+- update types ([0409c40](https://github.com/lindorm-io/monorepo/commit/0409c40ac905c23dd2f0af084e2fa1274c770b23))
+- update types ([0c9016e](https://github.com/lindorm-io/monorepo/commit/0c9016efc6d871214615a9efaa420077b46e67b0))
+
+### Features
+
+- implement session qr code strategy ([311efe2](https://github.com/lindorm-io/monorepo/commit/311efe26401e475c92298a2cb1a0ffe8bad8c69f))
+- remove unnecessary payload claim from jwt ([e4b178b](https://github.com/lindorm-io/monorepo/commit/e4b178b4fbd7f5e8dce000e6553aa5a3121c108a))
+
 ## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.1.1...@lindorm-io/common-types@0.1.2) (2023-03-01)
 
 ### Bug Fixes

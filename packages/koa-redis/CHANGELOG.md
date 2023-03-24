@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.25...@lindorm-io/koa-redis@0.7.0) (2023-03-24)
+
+### Features
+
+- align redis middleware ([db5829a](https://github.com/lindorm-io/monorepo/commit/db5829a1f51ef009821532b78f213fc8d881027d))
+
 ## [0.6.25](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-redis@0.6.24...@lindorm-io/koa-redis@0.6.25) (2023-03-01)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.33...@lindorm-io/node-server@0.5.0) (2023-03-24)
+
+### Features
+
+- align node server with changes ([9a355f7](https://github.com/lindorm-io/monorepo/commit/9a355f713636e6af2b50bad16feb20d3a4e3d788))
+
 ## [0.4.33](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.32...@lindorm-io/node-server@0.4.33) (2023-03-01)
 
 ### Bug Fixes

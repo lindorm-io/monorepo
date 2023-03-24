@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.1.3...@lindorm-io/random@0.2.0) (2023-03-24)
+
+### Bug Fixes
+
+- remove core dependency ([a17808a](https://github.com/lindorm-io/monorepo/commit/a17808a4e411afdf9995e1a881522bf4c2fa69a0))
+
+### Features
+
+- extend more default random string utils ([cda3eb9](https://github.com/lindorm-io/monorepo/commit/cda3eb9cb143ad3219ba66d348cc3ebef3cbb959))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.1.2...@lindorm-io/random@0.1.3) (2023-03-01)
 
 ### Bug Fixes

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.14...@lindorm-io/mongo@0.12.0) (2023-03-24)
+
+### Bug Fixes
+
+- improve error ([e0791f4](https://github.com/lindorm-io/monorepo/commit/e0791f4acbfe1944962732d85722bc102b5c0f4e))
+
+### Features
+
+- new mongo repository ([06af865](https://github.com/lindorm-io/monorepo/commit/06af8653542bf1f4ce114f5ac7d97048881634d8))
+
 ## [0.11.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/mongo@0.11.13...@lindorm-io/mongo@0.11.14) (2023-03-01)
 
 ### Bug Fixes

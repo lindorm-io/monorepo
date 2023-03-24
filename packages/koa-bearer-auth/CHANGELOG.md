@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.38...@lindorm-io/koa-bearer-auth@0.4.0) (2023-03-24)
+
+### Bug Fixes
+
+- rename exports ([643cb2e](https://github.com/lindorm-io/monorepo/commit/643cb2ec66b6a1997651c26c54469f4acf6385bf))
+
+### Features
+
+- remove unnecessary payload claim from jwt ([e4b178b](https://github.com/lindorm-io/monorepo/commit/e4b178b4fbd7f5e8dce000e6553aa5a3121c108a))
+
 ## [0.3.38](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.3.37...@lindorm-io/koa-bearer-auth@0.3.38) (2023-03-01)
 
 ### Bug Fixes

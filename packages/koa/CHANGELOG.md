@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.12...@lindorm-io/koa@0.16.0) (2023-03-24)
+
+### Features
+
+- update context ([6e81f52](https://github.com/lindorm-io/monorepo/commit/6e81f520adb7eef64fc6e7b1c6d5354c61b7eca7))
+
 ## [0.15.12](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.15.11...@lindorm-io/koa@0.15.12) (2023-03-01)
 
 ### Bug Fixes

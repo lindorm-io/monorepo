@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.23...@lindorm-io/jwt@0.9.0) (2023-03-24)
+
+### Bug Fixes
+
+- align scope with open id ([15e81a6](https://github.com/lindorm-io/monorepo/commit/15e81a6434b318d9906962213306761d604e25a0))
+- amend error in acr ([8e6b568](https://github.com/lindorm-io/monorepo/commit/8e6b568b84562ca60a3c0d7c5ed6f213b7691c08))
+
+### Features
+
+- remove unnecessary payload claim from jwt ([e4b178b](https://github.com/lindorm-io/monorepo/commit/e4b178b4fbd7f5e8dce000e6553aa5a3121c108a))
+
 ## [0.8.23](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.8.22...@lindorm-io/jwt@0.8.23) (2023-03-01)
 
 ### Bug Fixes

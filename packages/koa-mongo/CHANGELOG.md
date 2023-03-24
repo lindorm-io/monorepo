@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.25...@lindorm-io/koa-mongo@0.9.0) (2023-03-24)
+
+### Features
+
+- align mongo middleware ([61b4da2](https://github.com/lindorm-io/monorepo/commit/61b4da22a57592d9e862b2cf0f524d59f0ce3f29))
+- release ([7ffdcfe](https://github.com/lindorm-io/monorepo/commit/7ffdcfeaba440483801c5165ab34a0361ec44e44))
+
 ## [0.8.25](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-mongo@0.8.24...@lindorm-io/koa-mongo@0.8.25) (2023-03-01)
 
 ### Bug Fixes

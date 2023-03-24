@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.11.13...@lindorm-io/redis@0.12.0) (2023-03-24)
+
+### Features
+
+- new memory cache ([6dd218d](https://github.com/lindorm-io/monorepo/commit/6dd218d2eb40634d5d350a1d2bb025d9cf088ce7))
+- new redis repository ([1572ff4](https://github.com/lindorm-io/monorepo/commit/1572ff4c7e057917444f3cf990d98a7ca4b08424))
+
 ## [0.11.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.11.12...@lindorm-io/redis@0.11.13) (2023-03-01)
 
 ### Bug Fixes
