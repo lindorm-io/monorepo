@@ -1,13 +1,13 @@
-import { CacheBase } from "@lindorm-io/redis";
 import { CachedEntityCustomValidation, DefaultLindormRedisKoaMiddleware } from "../types";
-import { ClientError, LindormError } from "@lindorm-io/errors";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { EntityBase, EntityNotFoundError } from "@lindorm-io/entity";
+import { RedisRepositoryConstructor } from "@lindorm-io/redis";
 import { camelCase } from "@lindorm-io/case";
 import { get } from "object-path";
 
 interface MiddlewareOptions {
-  cacheKey?: string;
   entityKey?: string;
+  repositoryKey?: string;
 }
 
 export interface CacheEntityMiddlewareOptions {
@@ -16,8 +16,12 @@ export interface CacheEntityMiddlewareOptions {
   optional?: boolean;
 }
 
-export const cacheEntityMiddleware =
-  (Entity: typeof EntityBase, Cache: typeof CacheBase, middlewareOptions: MiddlewareOptions = {}) =>
+export const redisRepositoryEntityMiddleware =
+  (
+    Entity: typeof EntityBase,
+    Repository: RedisRepositoryConstructor,
+    middlewareOptions: MiddlewareOptions = {},
+  ) =>
   (path: string, options: CacheEntityMiddlewareOptions = {}): DefaultLindormRedisKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("entity");
@@ -45,17 +49,28 @@ export const cacheEntityMiddleware =
     }
 
     const entity = middlewareOptions.entityKey || camelCase(Entity.name);
-    const cache = middlewareOptions.cacheKey || camelCase(Cache.name);
+    const repository = middlewareOptions.repositoryKey || camelCase(Repository.name);
 
     if (!entity) {
-      throw new LindormError("Entity name not found");
+      throw new ServerError("Entity name not found", {
+        debug: { name: entity },
+      });
     }
-    if (!cache) {
-      throw new LindormError("Cache name not found");
+
+    if (!repository) {
+      throw new ServerError("Cache name not found", {
+        debug: { name: repository },
+      });
+    }
+
+    if (!ctx.redis[repository]) {
+      throw new ServerError("Redis repository not found", {
+        debug: { context: ctx.redis },
+      });
     }
 
     try {
-      ctx.entity[entity] = await ctx.cache[cache].find({
+      ctx.entity[entity] = await ctx.redis[repository].find({
         [attributeKey]: attributeValue,
       });
 

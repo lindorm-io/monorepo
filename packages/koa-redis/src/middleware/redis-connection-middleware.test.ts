@@ -1,6 +1,6 @@
 import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { redisMiddleware } from "./redis-middleware";
+import { redisConnectionMiddleware } from "./redis-connection-middleware";
 
 const next = () => Promise.resolve();
 
@@ -29,7 +29,7 @@ describe("redisMiddleware", () => {
   });
 
   test("should set connection on context", async () => {
-    await expect(redisMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
+    await expect(redisConnectionMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.redis).toStrictEqual(expect.any(RedisConnection));
     expect(ctx.metrics.redis).toStrictEqual(expect.any(Number));

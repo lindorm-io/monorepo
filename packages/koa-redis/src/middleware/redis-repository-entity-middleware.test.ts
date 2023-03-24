@@ -2,8 +2,8 @@ import { CachedEntityCustomValidation } from "../types";
 import { ClientError } from "@lindorm-io/errors";
 import { EntityNotFoundError, TestEntity } from "@lindorm-io/entity";
 import { Metric } from "@lindorm-io/koa";
-import { cacheEntityMiddleware } from "./cache-entity-middleware";
-import { createMockCache, TestCache } from "@lindorm-io/redis";
+import { redisRepositoryEntityMiddleware } from "./redis-repository-entity-middleware";
+import { createMockRedisRepository, TestRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
@@ -20,8 +20,8 @@ describe("cacheMiddleware", () => {
     middlewareOptions = {};
     options = {};
     ctx = {
-      cache: {
-        testCache: createMockCache(),
+      redis: {
+        testRedisRepository: createMockRedisRepository(),
       },
       entity: {},
       logger,
@@ -35,7 +35,11 @@ describe("cacheMiddleware", () => {
 
   test("should set entity on context", async () => {
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
@@ -51,7 +55,11 @@ describe("cacheMiddleware", () => {
     options.customValidation = customValidation;
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
@@ -61,10 +69,14 @@ describe("cacheMiddleware", () => {
   test("should find cache on context with options key", async () => {
     middlewareOptions.cacheKey = "cacheKey";
 
-    ctx.cache.cacheKey = { find: async () => new TestEntity({}) };
+    ctx.redis.cacheKey = { find: async () => new TestEntity({}) };
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
@@ -74,7 +86,11 @@ describe("cacheMiddleware", () => {
     middlewareOptions.entityKey = "entityKey";
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.entityKey).toStrictEqual(expect.any(TestEntity));
@@ -84,11 +100,15 @@ describe("cacheMiddleware", () => {
     options.attributeKey = "attributeKey";
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toStrictEqual(expect.any(TestEntity));
-    expect(ctx.cache.testCache.find).toHaveBeenCalledWith({ attributeKey: "identifier" });
+    expect(ctx.redis.testRedisRepository.find).toHaveBeenCalledWith({ attributeKey: "identifier" });
   });
 
   test("should succeed when identifier is optional", async () => {
@@ -96,7 +116,11 @@ describe("cacheMiddleware", () => {
     ctx.request.body.identifier = undefined;
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.entity.testEntity).toBeUndefined();
@@ -106,15 +130,23 @@ describe("cacheMiddleware", () => {
     ctx.request.body.identifier = undefined;
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).rejects.toThrow(ClientError);
   });
 
   test("should throw ClientError when entity is missing", async () => {
-    ctx.cache.testCache.find.mockRejectedValue(new EntityNotFoundError("message"));
+    ctx.redis.testRedisRepository.find.mockRejectedValue(new EntityNotFoundError("message"));
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).rejects.toThrow(ClientError);
   });
 
@@ -127,7 +159,11 @@ describe("cacheMiddleware", () => {
     options.customValidation = customValidation;
 
     await expect(
-      cacheEntityMiddleware(TestEntity, TestCache, middlewareOptions)(path, options)(ctx, next),
+      redisRepositoryEntityMiddleware(
+        TestEntity,
+        TestRedisRepository,
+        middlewareOptions,
+      )(path, options)(ctx, next),
     ).rejects.toThrow(ClientError);
   });
 });
