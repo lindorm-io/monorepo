@@ -1,13 +1,18 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairCache } from "../infrastructure";
+import { KeyPairRedisRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
 import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 import { getKeysFromJwks } from "../util";
+import {
+  axiosClientCredentialsMiddleware,
+  AxiosClientCredentialsMiddlewareOptions,
+} from "@lindorm-io/axios";
 
 type Options = {
+  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
   clientName?: string;
   host: string;
   logger: Logger;
@@ -18,8 +23,9 @@ type Options = {
   workerInterval?: string;
 };
 
-export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
+export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
   const {
+    clientCredentials,
     clientName,
     host,
     path,
@@ -41,15 +47,20 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
     workerInterval,
   });
 
+  const clientCredentialsMiddleware = clientCredentials
+    ? axiosClientCredentialsMiddleware(clientCredentials)
+    : undefined;
+
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const cache = new KeyPairCache({ connection: redisConnection, logger });
+        const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
 
         const keys = await getKeysFromJwks({
           clientName,
           host,
           logger,
+          middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
           path,
           port,
         });
@@ -58,7 +69,7 @@ export const keyPairJwksCacheWorker = (options: Options): IntervalWorker => {
           if (!entity.expires) {
             entity.expires = addSeconds(expiryDate(workerInterval), 15);
           }
-          await cache.create(entity);
+          await redisRepository.upsert(entity);
         }
       },
       retry,

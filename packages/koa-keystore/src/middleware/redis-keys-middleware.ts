@@ -1,13 +1,13 @@
 import { DefaultLindormKeystoreKoaMiddleware } from "../types";
-import { getKeysFromRepository } from "../util";
+import { getKeysFromRedis } from "../util";
 
-export const repositoryKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
+export const redisKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
   ctx,
   next,
 ): Promise<void> => {
   const metric = ctx.getMetric("keystore");
 
-  ctx.keys = await getKeysFromRepository(ctx);
+  ctx.keys = await getKeysFromRedis(ctx);
 
   metric.end();
 

@@ -1,6 +1,5 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairCache } from "../infrastructure";
-import { KeyPairRepository } from "../infrastructure";
+import { KeyPairMongoRepository, KeyPairRedisRepository } from "../infrastructure";
 import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
@@ -17,7 +16,7 @@ type Options = {
   workerInterval?: string;
 };
 
-export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
+export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
   const { mongoConnection, redisConnection, retry, workerInterval = "1 hours" } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
@@ -27,27 +26,21 @@ export const keyPairMongoCacheWorker = (options: Options): IntervalWorker => {
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const repository = new KeyPairRepository({
-          connection: mongoConnection,
-          logger,
-        });
+        const mongoRepository = new KeyPairMongoRepository(mongoConnection, logger);
 
-        const array = await repository.findMany({});
+        const array = await mongoRepository.findMany({});
 
         if (!array.length) {
           throw new LindormError("No keys could be found in repository");
         }
 
-        const cache = new KeyPairCache({
-          connection: redisConnection,
-          logger,
-        });
+        const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
 
         for (const entity of array) {
           if (!entity.expires) {
             entity.expires = addSeconds(expiryDate(workerInterval), 15);
           }
-          await cache.create(entity);
+          await redisRepository.upsert(entity);
         }
       },
       retry,

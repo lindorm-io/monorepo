@@ -1,69 +1,75 @@
+import { IMemoryDatabase } from "@lindorm-io/in-memory-cache";
 import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairCache } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
-import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
 import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
 import { getKeysFromJwks } from "../util";
+import { KeyPairMemoryCache } from "../infrastructure";
 import {
   axiosClientCredentialsMiddleware,
   AxiosClientCredentialsMiddlewareOptions,
 } from "@lindorm-io/axios";
 
-type VaultServiceOptions = {
+type Options = {
+  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
+  clientName?: string;
   host: string;
+  logger: Logger;
+  memoryDatabase: IMemoryDatabase;
   path?: string;
   port?: number;
-};
-
-type Options = {
-  clientCredentials: AxiosClientCredentialsMiddlewareOptions;
-  redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
-  vaultService: VaultServiceOptions;
-  logger: Logger;
   workerInterval?: string;
 };
 
-export const keyPairVaultCacheWorker = (options: Options): IntervalWorker => {
+export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
   const {
     clientCredentials,
-    redisConnection,
+    clientName,
+    memoryDatabase,
+    host,
+    path,
+    port,
     retry,
-    vaultService,
     workerInterval = "5 minutes",
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = options.logger.createChildLogger(["keyPairVaultCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairJwksCacheWorker"]);
 
-  logger.debug("creating vault cache worker", {
-    vaultService,
+  logger.debug("creating jwks cache worker", {
+    clientName,
+    host,
+    path,
+    port,
     workerInterval,
   });
 
-  const clientCredentialsMiddleware = axiosClientCredentialsMiddleware(clientCredentials);
+  const clientCredentialsMiddleware = clientCredentials
+    ? axiosClientCredentialsMiddleware(clientCredentials)
+    : undefined;
 
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const cache = new KeyPairCache({ connection: redisConnection, logger });
+        const memoryCache = new KeyPairMemoryCache(memoryDatabase, logger);
 
         const keys = await getKeysFromJwks({
-          host: vaultService.host,
+          clientName,
+          host,
           logger,
-          middleware: [clientCredentialsMiddleware()],
-          path: vaultService.path || "/internal/jwks",
-          port: vaultService.port,
+          middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
+          path,
+          port,
         });
 
         for (const entity of keys) {
           if (!entity.expires) {
             entity.expires = addSeconds(expiryDate(workerInterval), 15);
           }
-          await cache.create(entity);
+          await memoryCache.upsert(entity);
         }
       },
       retry,

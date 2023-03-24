@@ -1,8 +1,8 @@
 import { DefaultLindormKeystoreSocketMiddleware } from "../types";
 import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
-import { getKeysFromCache } from "../util";
+import { getKeysFromRedis } from "../util";
 
-export const socketCacheKeysMiddleware: DefaultLindormKeystoreSocketMiddleware =
+export const socketRedisKeysMiddleware: DefaultLindormKeystoreSocketMiddleware =
   promisifyLindormSocketMiddleware(async (socket) => {
-    socket.ctx.keys = await getKeysFromCache(socket.ctx);
+    socket.ctx.keys = await getKeysFromRedis(socket.ctx);
   });

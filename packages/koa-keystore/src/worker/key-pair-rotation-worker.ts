@@ -1,5 +1,5 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairRepository } from "../infrastructure";
+import { KeyPairMongoRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
@@ -38,10 +38,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const repository = new KeyPairRepository({
-          connection: mongoConnection,
-          logger,
-        });
+        const repository = new KeyPairMongoRepository(mongoConnection, logger);
 
         const keys = await repository.findMany({ expires: { $gt: new Date() }, type: keyType });
         const now = new Date();

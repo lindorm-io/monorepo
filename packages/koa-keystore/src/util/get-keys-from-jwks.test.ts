@@ -33,7 +33,7 @@ describe("getKeysFromJwks", () => {
     options = {
       currentKeys: [createTestKeyPairRSA()],
       host: "https://test.lindorm.io",
-      logger: createMockLogger(console.log),
+      logger: createMockLogger(),
     };
   });
 

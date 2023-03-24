@@ -1,12 +1,12 @@
 import { Metric } from "@lindorm-io/koa";
-import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
+import { memoryKeysMiddleware } from "./memory-keys-middleware";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockRepository } from "@lindorm-io/mongo";
-import { repositoryKeysMiddleware } from "./repository-keys-middleware";
+import { createMockMemoryCache } from "@lindorm-io/in-memory-cache";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 
 const next = () => Promise.resolve();
 
-describe("repositoryKeysMiddleware", () => {
+describe("memoryKeysMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
@@ -15,18 +15,18 @@ describe("repositoryKeysMiddleware", () => {
 
   beforeEach(async () => {
     ctx = {
+      memory: {
+        keyPairMemoryCache: createMockMemoryCache(() => keyRSA),
+      },
       keys: [keyEC],
       logger,
       metrics: {},
-      repository: {
-        keyPairRepository: createMockRepository(() => keyRSA),
-      },
     };
     ctx.getMetric = (key: string) => new Metric(ctx, key);
   });
 
   test("should successfully add keys to context", async () => {
-    await expect(repositoryKeysMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(memoryKeysMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.keys).toStrictEqual([keyEC, keyRSA]);
     expect(ctx.metrics.keystore).toStrictEqual(expect.any(Number));

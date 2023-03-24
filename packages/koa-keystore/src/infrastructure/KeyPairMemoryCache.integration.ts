@@ -1,48 +1,35 @@
 import MockDate from "mockdate";
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { KeyPairCache } from "./KeyPairCache";
-import { RedisConnection } from "@lindorm-io/redis";
+import { KeyPairMemoryCache } from "./KeyPairMemoryCache";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
+import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
 import {
   Algorithm,
-  KeyPair,
-  KeyType,
   createTestKeyPair,
   createTestKeyPairRSA,
+  KeyPair,
+  KeyType,
 } from "@lindorm-io/key-pair";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
-describe("KeyPairCache", () => {
-  let cache: KeyPairCache;
-  let connection: RedisConnection;
+describe("KeyPairMemory", () => {
+  let database: MemoryDatabase;
+  let cache: KeyPairMemoryCache;
   let entity: KeyPair;
 
   const logger = createMockLogger();
 
   beforeAll(async () => {
-    connection = new RedisConnection(
-      {
-        host: "localhost",
-        port: 5005,
-      },
-      logger,
-    );
-
-    await connection.connect();
-
-    cache = new KeyPairCache({ connection, logger });
+    database = new MemoryDatabase();
+    cache = new KeyPairMemoryCache(database, logger);
   });
 
   beforeEach(async () => {
     entity = await cache.create(
       createTestKeyPair({ id: randomUUID(), expires: new Date("2022-01-01T08:15:00.000Z") }),
     );
-  });
-
-  afterAll(async () => {
-    await connection.disconnect();
   });
 
   test("should create", async () => {

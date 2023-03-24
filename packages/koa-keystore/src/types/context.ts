@@ -1,7 +1,11 @@
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { KeyPairCache, KeyPairRepository } from "../infrastructure";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
+import {
+  KeyPairMemoryCache,
+  KeyPairMongoRepository,
+  KeyPairRedisRepository,
+} from "../infrastructure";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -17,11 +21,14 @@ export interface DefaultLindormKeystoreContext extends DefaultLindormContext {
   };
   keys: Array<KeyPair>;
   keystore: Keystore;
-  cache: {
-    keyPairCache: KeyPairCache;
+  memory: {
+    keyPairMemoryCache: KeyPairMemoryCache;
   };
-  repository: {
-    keyPairRepository: KeyPairRepository;
+  mongo: {
+    keyPairMongoRepository: KeyPairMongoRepository;
+  };
+  redis: {
+    keyPairRedisRepository: KeyPairRedisRepository;
   };
 }
 

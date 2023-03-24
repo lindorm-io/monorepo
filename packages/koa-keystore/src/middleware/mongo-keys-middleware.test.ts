@@ -1,12 +1,12 @@
 import { Metric } from "@lindorm-io/koa";
-import { cacheKeysMiddleware } from "./cache-keys-middleware";
 import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockCache } from "@lindorm-io/redis";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { mongoKeysMiddleware } from "./mongo-keys-middleware";
 
 const next = () => Promise.resolve();
 
-describe("cacheKeysMiddleware", () => {
+describe("repositoryKeysMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
@@ -15,18 +15,18 @@ describe("cacheKeysMiddleware", () => {
 
   beforeEach(async () => {
     ctx = {
-      cache: {
-        keyPairCache: createMockCache(() => keyRSA),
-      },
       keys: [keyEC],
       logger,
       metrics: {},
+      mongo: {
+        keyPairMongoRepository: createMockMongoRepository(() => keyRSA),
+      },
     };
     ctx.getMetric = (key: string) => new Metric(ctx, key);
   });
 
   test("should successfully add keys to context", async () => {
-    await expect(cacheKeysMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(mongoKeysMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.keys).toStrictEqual([keyEC, keyRSA]);
     expect(ctx.metrics.keystore).toStrictEqual(expect.any(Number));

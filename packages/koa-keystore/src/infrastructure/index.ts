@@ -1,2 +1,3 @@
-export * from "./KeyPairCache";
-export * from "./KeyPairRepository";
+export * from "./KeyPairMemoryCache";
+export * from "./KeyPairMongoRepository";
+export * from "./KeyPairRedisRepository";

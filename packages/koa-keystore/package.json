@@ -28,6 +28,7 @@
     "@lindorm-io/core": "^0.8.8",
     "@lindorm-io/errors": "^0.1.16",
     "@lindorm-io/expiry": "^0.1.2",
+    "@lindorm-io/in-memory-cache": "^0.2.17",
     "@lindorm-io/key-pair": "^0.6.16",
     "@lindorm-io/koa": "^0.15.12",
     "@lindorm-io/mongo": "^0.11.14",

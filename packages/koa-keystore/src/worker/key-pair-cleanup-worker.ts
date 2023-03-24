@@ -1,5 +1,5 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairRepository } from "../infrastructure";
+import { KeyPairMongoRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
@@ -22,10 +22,7 @@ export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const repository = new KeyPairRepository({
-          connection: mongoConnection,
-          logger,
-        });
+        const repository = new KeyPairMongoRepository(mongoConnection, logger);
 
         await repository.deleteMany({ expires: { $lt: new Date() } });
       },

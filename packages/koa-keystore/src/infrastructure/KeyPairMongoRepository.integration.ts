@@ -1,18 +1,18 @@
 import { EntityNotFoundError } from "@lindorm-io/entity";
-import { KeyPairRepository } from "./KeyPairRepository";
+import { KeyPairMongoRepository } from "./KeyPairMongoRepository";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 import {
   Algorithm,
-  KeyPair,
-  KeyType,
   createTestKeyPair,
   createTestKeyPairRSA,
+  KeyPair,
+  KeyType,
 } from "@lindorm-io/key-pair";
 
 describe("KeyPairRepository", () => {
-  let repository: KeyPairRepository;
+  let repository: KeyPairMongoRepository;
   let connection: MongoConnection;
   let entity: KeyPair;
 
@@ -31,7 +31,7 @@ describe("KeyPairRepository", () => {
 
     await connection.connect();
 
-    repository = new KeyPairRepository({ connection, logger });
+    repository = new KeyPairMongoRepository(connection, logger);
   });
 
   beforeEach(async () => {
