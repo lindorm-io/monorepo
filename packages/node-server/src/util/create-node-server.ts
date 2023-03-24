@@ -3,7 +3,14 @@ import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { createWellKnownJwksRouter } from "../router";
-import { socketJwtMiddleware, jwtMiddleware } from "@lindorm-io/koa-jwt";
+import { jwtMiddleware, socketJwtMiddleware } from "@lindorm-io/koa-jwt";
+import { memoryCacheMiddleware, socketMemoryCacheMiddleware } from "@lindorm-io/koa-memory";
+import {
+  redisConnectionMiddleware,
+  redisRepositoryMiddleware,
+  socketRedisConnectionMiddleware,
+  socketRedisRepositoryMiddleware,
+} from "@lindorm-io/koa-redis";
 import {
   amqpMiddleware,
   messageBusMiddleware,
@@ -11,25 +18,22 @@ import {
   socketMessageBusMiddleware,
 } from "@lindorm-io/koa-amqp";
 import {
-  KeyPairCache,
-  KeyPairRepository,
-  cacheKeysMiddleware,
+  KeyPairMemoryCache,
+  KeyPairMongoRepository,
+  KeyPairRedisRepository,
   keystoreMiddleware,
-  socketCacheKeysMiddleware,
+  memoryKeysMiddleware,
+  redisKeysMiddleware,
   socketKeystoreMiddleware,
+  socketMemoryKeysMiddleware,
+  socketRedisKeysMiddleware,
 } from "@lindorm-io/koa-keystore";
 import {
-  mongoMiddleware,
-  repositoryMiddleware,
-  socketMongoMiddleware,
-  socketRepositoryMiddleware,
+  mongoConnectionMiddleware,
+  mongoRepositoryMiddleware,
+  socketMongoConnectionMiddleware,
+  socketMongoRepositoryMiddleware,
 } from "@lindorm-io/koa-mongo";
-import {
-  cacheMiddleware,
-  redisMiddleware,
-  socketCacheMiddleware,
-  socketRedisMiddleware,
-} from "@lindorm-io/koa-redis";
 import {
   axiosTransformBodyCaseMiddleware,
   axiosTransformQueryCaseMiddleware,
@@ -76,45 +80,56 @@ export const createNodeServer = <
     }
   }
 
-  if (options.mongoConnection) {
-    middleware.push(mongoMiddleware(options.mongoConnection));
-    socketMiddleware.push(socketMongoMiddleware(options.mongoConnection));
-
-    for (const Repository of options.repositories || []) {
-      middleware.push(repositoryMiddleware(Repository));
-      socketMiddleware.push(socketRepositoryMiddleware(Repository));
+  if (options.memoryDatabase) {
+    for (const Cache of options.memory || []) {
+      middleware.push(memoryCacheMiddleware(options.memoryDatabase, Cache));
+      socketMiddleware.push(socketMemoryCacheMiddleware(options.memoryDatabase, Cache));
     }
 
-    if (options.keystore?.keyPairRepository) {
-      middleware.push(repositoryMiddleware(KeyPairRepository));
-      socketMiddleware.push(socketRepositoryMiddleware(KeyPairRepository));
+    if (options.keystore?.keyPairMemory) {
+      middleware.push(memoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache));
+      socketMiddleware.push(
+        socketMemoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache),
+      );
+
+      middleware.push(memoryKeysMiddleware);
+      socketMiddleware.push(socketMemoryKeysMiddleware);
+    }
+  }
+
+  if (options.mongoConnection) {
+    middleware.push(mongoConnectionMiddleware(options.mongoConnection));
+    socketMiddleware.push(socketMongoConnectionMiddleware(options.mongoConnection));
+
+    for (const MongoRepository of options.mongo || []) {
+      middleware.push(mongoRepositoryMiddleware(MongoRepository));
+      socketMiddleware.push(socketMongoRepositoryMiddleware(MongoRepository));
+    }
+
+    if (options.keystore?.keyPairMongo) {
+      middleware.push(mongoRepositoryMiddleware(KeyPairMongoRepository));
+      socketMiddleware.push(socketMongoRepositoryMiddleware(KeyPairMongoRepository));
     }
   }
 
   if (options.redisConnection) {
-    middleware.push(redisMiddleware(options.redisConnection));
-    socketMiddleware.push(socketRedisMiddleware(options.redisConnection));
+    middleware.push(redisConnectionMiddleware(options.redisConnection));
+    socketMiddleware.push(socketRedisConnectionMiddleware(options.redisConnection));
 
-    for (const Cache of options.caches || []) {
-      middleware.push(cacheMiddleware(Cache));
-      socketMiddleware.push(socketCacheMiddleware(Cache));
+    for (const RedisRepository of options.redis || []) {
+      middleware.push(redisRepositoryMiddleware(RedisRepository));
+      socketMiddleware.push(socketRedisRepositoryMiddleware(RedisRepository));
     }
 
-    if (options.keystore?.keyPairCache !== false) {
-      middleware.push(cacheMiddleware(KeyPairCache));
-      socketMiddleware.push(socketCacheMiddleware(KeyPairCache));
+    if (options.keystore?.keyPairRedis) {
+      middleware.push(redisRepositoryMiddleware(KeyPairRedisRepository));
+      socketMiddleware.push(socketRedisRepositoryMiddleware(KeyPairRedisRepository));
 
-      middleware.push(cacheKeysMiddleware);
-      socketMiddleware.push(socketCacheKeysMiddleware);
-
-      middleware.push(keystoreMiddleware);
-      socketMiddleware.push(socketKeystoreMiddleware);
-
-      middleware.push(jwtMiddleware({ issuer: options.issuer || options.host }));
-      socketMiddleware.push(socketJwtMiddleware({ issuer: options.issuer || options.host }));
+      middleware.push(redisKeysMiddleware);
+      socketMiddleware.push(socketRedisKeysMiddleware);
     }
 
-    if (options.useSocketRedisAdapter !== false) {
+    if (options.useSocketRedisAdapter) {
       options.socketOptions = {
         adapter: createAdapter(
           options.redisConnection.client.duplicate(),
@@ -122,6 +137,14 @@ export const createNodeServer = <
         ),
       };
     }
+  }
+
+  if (options.keystore?.keyPairMemory || options.keystore?.keyPairRedis) {
+    middleware.push(keystoreMiddleware);
+    socketMiddleware.push(socketKeystoreMiddleware);
+
+    middleware.push(jwtMiddleware({ issuer: options.issuer || options.host }));
+    socketMiddleware.push(socketJwtMiddleware({ issuer: options.issuer || options.host }));
   }
 
   for (const item of options.middleware || []) {

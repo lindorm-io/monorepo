@@ -1,34 +1,37 @@
-import { AmqpConnection } from "@lindorm-io/amqp";
-import { CacheBase, RedisConnection } from "@lindorm-io/redis";
+import { AmqpConnection, MessageBusBase } from "@lindorm-io/amqp";
 import { KoaAppOptions } from "@lindorm-io/koa";
 import { LindormNodeServerKoaContext } from "./context";
-import { MongoConnection, RepositoryBase } from "@lindorm-io/mongo";
-import { MessageBusBase } from "@lindorm-io/amqp";
+import { MemoryCacheConstructor, MemoryDatabase } from "@lindorm-io/in-memory-cache";
+import { MongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
+import { RedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
 
-interface Service {
+type ServiceOptions = {
   name: string;
   host: string;
   port: number | null;
-}
+};
 
-interface Keystore {
+type KeystoreOptions = {
   exposeExternal?: boolean;
   exposePublic?: boolean;
-  keyPairCache?: boolean; // default: true
-  keyPairRepository?: boolean; // default: false
-}
+  keyPairMemory?: boolean;
+  keyPairMongo?: boolean;
+  keyPairRedis?: boolean;
+};
 
-export interface CreateNodeServerOptions<
+export type CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
-> extends KoaAppOptions<Context> {
+> = KoaAppOptions<Context> & {
   amqpConnection?: AmqpConnection;
-  caches?: Array<typeof CacheBase>;
   issuer?: string;
-  keystore?: Keystore;
+  keystore?: KeystoreOptions;
+  memory?: Array<MemoryCacheConstructor>;
+  memoryDatabase?: MemoryDatabase;
   messageBus?: typeof MessageBusBase;
+  mongo?: Array<MongoRepositoryConstructor>;
   mongoConnection?: MongoConnection;
+  redis?: Array<RedisRepositoryConstructor>;
   redisConnection?: RedisConnection;
-  repositories?: Array<typeof RepositoryBase>;
-  services?: Array<Service>;
-  useSocketRedisAdapter?: boolean; // default: true
-}
+  services?: Array<ServiceOptions>;
+  useSocketRedisAdapter?: boolean;
+};

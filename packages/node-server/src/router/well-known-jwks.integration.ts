@@ -1,12 +1,12 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { KeyPairCache } from "@lindorm-io/koa-keystore";
+import { KeyPairMemoryCache, KeyPairRedisRepository } from "@lindorm-io/koa-keystore";
 import { KoaApp } from "@lindorm-io/koa";
+import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
 import { RedisConnection } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { createNodeServer } from "../util/create-node-server";
-import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { createWellKnownJwksRouter } from "./well-known-jwks";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -24,21 +24,27 @@ describe("/.well-known", () => {
       logger,
     );
 
+    const memoryDatabase = new MemoryDatabase();
+
     server = createNodeServer({
       host: "http://localhost",
       logger,
       keystore: {
         exposePublic: true,
-        keyPairCache: true,
+        keyPairMemory: true,
+        keyPairMongo: false,
+        keyPairRedis: true,
       },
+      memoryDatabase,
       port: 3000,
       redisConnection,
     });
 
-    server.addRoute("/.well-known/jwks.json", createWellKnownJwksRouter(false));
+    const keyPairRedis = new KeyPairRedisRepository(redisConnection, logger);
+    await keyPairRedis.create(createTestKeyPairEC());
 
-    const keyPairCache = new KeyPairCache({ connection: redisConnection, logger });
-    await keyPairCache.create(createTestKeyPair());
+    const keyPairMemory = new KeyPairMemoryCache(memoryDatabase, logger);
+    await keyPairMemory.create(createTestKeyPairRSA());
   });
 
   test("GET /jwks.json", async () => {
@@ -46,6 +52,18 @@ describe("/.well-known", () => {
 
     expect(response.body).toStrictEqual({
       keys: [
+        {
+          alg: "RS512",
+          allowed_from: 1577865600,
+          created_at: 1577865600,
+          e: "AQAB",
+          expires_at: 1861948800,
+          key_ops: ["decrypt", "verify"],
+          kid: expect.any(String),
+          kty: "RSA",
+          n: "ylo2AV+CdQg0p3HLGOVmzcvQYGNxbuqrC3MEAAyB0lZwSjtnx+UM0bKu+XwZqsve2TCgFylTKLX9rDIekd5ExIuAo6fAx4x6cr31PN5ThRY9f1lchDgrFYS1ZZ+tbIJyQdMOAYP+C+kznKCQduGu7ye7Skxk0jU3kZblsyCZfW0=",
+          use: "sig",
+        },
         {
           alg: "ES512",
           allowed_from: 1577865600,

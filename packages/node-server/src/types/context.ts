@@ -1,8 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
 import { Dict } from "@lindorm-io/common-types";
-import { JwtDecodeData, JWT } from "@lindorm-io/jwt";
+import { JWT, JwtDecodeData } from "@lindorm-io/jwt";
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { KeyPairCache, KeyPairRepository } from "@lindorm-io/koa-keystore";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RedisConnection } from "@lindorm-io/redis";
 import {
@@ -13,6 +12,11 @@ import {
   DefaultLindormSocketMiddleware,
   IOServer,
 } from "@lindorm-io/koa";
+import {
+  KeyPairMemoryCache,
+  KeyPairMongoRepository,
+  KeyPairRedisRepository,
+} from "@lindorm-io/koa-keystore";
 
 export interface LindormNodeServerAxios {
   axiosClient: Axios;
@@ -24,12 +28,16 @@ export interface LindormNodeServerConnection {
   redis: RedisConnection;
 }
 
-export interface LindormNodeServerCache {
-  keyPairCache: KeyPairCache;
+export interface LindormNodeServerMemory {
+  keyPairMemoryCache: KeyPairMemoryCache;
 }
 
-export interface LindormNodeServerRepository {
-  keyPairRepository: KeyPairRepository;
+export interface LindormNodeServerMongo {
+  keyPairMongoRepository: KeyPairMongoRepository;
+}
+
+export interface LindormNodeServerRedis {
+  keyPairRedisRepository: KeyPairRedisRepository;
 }
 
 export interface LindormNodeServerToken {
@@ -38,12 +46,13 @@ export interface LindormNodeServerToken {
 
 export interface LindormNodeServerContext extends DefaultLindormContext {
   axios: LindormNodeServerAxios;
-  cache: LindormNodeServerCache;
   connection: LindormNodeServerConnection;
   jwt: JWT;
   keys: Array<KeyPair>;
   keystore: Keystore;
-  repository: LindormNodeServerRepository;
+  memory: LindormNodeServerMemory;
+  mongo: LindormNodeServerMongo;
+  redis: LindormNodeServerRedis;
   token: LindormNodeServerToken;
 }
 
