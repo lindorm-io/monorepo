@@ -6,7 +6,6 @@ export const initSocketContextMiddleware =
   (socket, next) => {
     socket.ctx = {
       axios: {},
-      cache: {},
       connection: {},
       entity: {},
       eventSource: undefined,
@@ -14,8 +13,10 @@ export const initSocketContextMiddleware =
       keys: [],
       keystore: undefined,
       logger: logger.createSessionLogger({ socketId: socket.id }),
+      memory: {},
       messageBus: undefined,
-      repository: {},
+      mongo: {},
+      redis: {},
       token: {},
     };
 

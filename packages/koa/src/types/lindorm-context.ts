@@ -2,7 +2,6 @@ import { Logger } from "@lindorm-io/core-logger";
 
 export interface DefaultLindormContext {
   axios: any;
-  cache: any;
   connection: any;
   entity: any;
   eventSource: any;
@@ -10,7 +9,9 @@ export interface DefaultLindormContext {
   keys: Array<any>;
   keystore: any;
   logger: Logger;
+  memory: any;
   messageBus: any;
-  repository: any;
+  mongo: any;
+  redis: any;
   token: any;
 }

@@ -8,12 +8,13 @@ export const initContextMiddleware =
     ctx.config = {
       transformMode: options.transformMode || "snake",
     };
-    ctx.cache = {};
     ctx.connection = {};
     ctx.entity = {};
     ctx.keys = [];
+    ctx.memory = {};
     ctx.metrics = {};
-    ctx.repository = {};
+    ctx.mongo = {};
+    ctx.redis = {};
     ctx.server = {
       domain: options.domain || options.host,
       environment: options.environment || Environment.DEVELOPMENT,
