@@ -1,2 +1,1 @@
-export * from "./RepositoryBase";
-export * from "./LindormRepository";
+export * from "./MongoRepositoryBase";

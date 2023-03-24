@@ -1,7 +1,7 @@
 import { ConnectionStatus } from "@lindorm-io/core-connection";
 import { Db, MongoClient } from "mongodb";
 import { IMongoConnection } from "../types";
-import { MongoConnection } from "../connection";
+import { MongoConnection } from "../connections";
 
 type Options = {
   insertOne?: jest.Mock;

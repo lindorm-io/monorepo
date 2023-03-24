@@ -68,6 +68,7 @@ export class MongoConnection
     }
     return this.db;
   }
+
   public set database(_: Db) {
     /* ignored */
   }

@@ -1,12 +1,12 @@
 import { ILindormEntity, TestEntity } from "@lindorm-io/entity";
-import { IRepository } from "../types";
+import { MongoRepository } from "../types";
 
 type CreateEntityCallback = (options?: any) => ILindormEntity<any>;
 
-export const createMockRepository = (
+export const createMockMongoRepository = (
   createEntityCallback: CreateEntityCallback = (options): ILindormEntity<any> =>
     new TestEntity(options),
-): IRepository<any, any> => ({
+): MongoRepository<any, any> => ({
   count: jest.fn().mockImplementation(async () => 1),
   create: jest.fn().mockImplementation(async (entity) => entity),
   createMany: jest.fn().mockImplementation(async (entities) => entities),
@@ -19,4 +19,5 @@ export const createMockRepository = (
   tryFind: jest.fn().mockImplementation(async (filter) => createEntityCallback(filter)),
   update: jest.fn().mockImplementation(async (entity) => entity),
   updateMany: jest.fn().mockImplementation(async (entities) => entities),
+  upsert: jest.fn().mockImplementation(async (entity) => entity),
 });

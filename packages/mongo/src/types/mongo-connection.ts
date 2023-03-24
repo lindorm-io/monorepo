@@ -28,6 +28,5 @@ export type MongoConnectionOptions = ConnectionBaseOptions<MongoClientOptions> &
 
 export interface IMongoConnection extends IConnectionBase<MongoClient> {
   collection(collection: string, options?: CollectionOptions): Collection;
-
   database: Db;
 }

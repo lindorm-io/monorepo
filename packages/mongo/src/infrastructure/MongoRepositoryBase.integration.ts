@@ -1,7 +1,7 @@
 import { Collection } from "mongodb";
-import { MongoConnection } from "../connection";
+import { MongoConnection } from "../connections";
 import { TestEntity } from "@lindorm-io/entity";
-import { TestRepository } from "../mocks";
+import { TestMongoRepository } from "../mocks";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
 
@@ -9,7 +9,7 @@ describe("LindormRepository.ts", () => {
   let connection: MongoConnection;
   let entity: TestEntity;
   let collection: Collection;
-  let repository: TestRepository;
+  let repository: TestMongoRepository;
 
   const logger = createMockLogger();
 
@@ -26,8 +26,8 @@ describe("LindormRepository.ts", () => {
 
     await connection.connect();
 
-    collection = await connection.collection("TestRepository");
-    repository = new TestRepository({ connection, logger });
+    collection = await connection.collection("test_entity");
+    repository = new TestMongoRepository(connection, logger);
   }, 30000);
 
   afterAll(async () => {
