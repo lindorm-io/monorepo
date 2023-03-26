@@ -37,7 +37,7 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = options.logger.createChildLogger(["keyPairJwksCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker"]);
 
   logger.debug("creating jwks cache worker", {
     clientName,

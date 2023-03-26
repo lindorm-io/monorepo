@@ -21,7 +21,7 @@ export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = options.logger.createChildLogger(["keyPairMongoCacheWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairMongoRedisWorker"]);
 
   return new IntervalWorker(
     {
