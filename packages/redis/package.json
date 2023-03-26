@@ -9,8 +9,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -b ./tsconfig.build.json",
-    "clean": "rimraf dist",
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "test": "yarn test:unit && yarn test:integration",
     "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js --",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u --",
