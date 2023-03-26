@@ -5,8 +5,6 @@ import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { logger } from "./logger";
 import { memoryDatabase, mongoConnection } from "../instance";
-import { middleware } from "./middleware";
-import { workers } from "./workers";
 import {
   AddressRepository,
   DisplayNameRepository,
@@ -20,12 +18,17 @@ export const server = createNodeServer<ServerKoaContext>({
   host: configuration.server.host,
   issuer: configuration.server.issuer,
   keystore: {
-    exposePublic: false,
-    keyPairMemory: true,
+    storage: ["memory"],
+    jwks: [
+      {
+        host: configuration.services.oauth_service.host,
+        port: configuration.services.oauth_service.port,
+        name: configuration.services.oauth_service.client_name,
+      },
+    ],
   },
   logger,
   memoryDatabase,
-  middleware,
   mongo: [AddressRepository, DisplayNameRepository, IdentifierRepository, IdentityRepository],
   mongoConnection,
   port: configuration.server.port,
@@ -35,7 +38,6 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
-  workers,
 
   setup: async (): Promise<void> => {
     await Promise.all([mongoConnection.connect()]);

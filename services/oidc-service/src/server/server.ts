@@ -4,7 +4,6 @@ import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { middleware } from "./middleware";
 import { memoryDatabase, redisConnection } from "../instance";
 import { logger } from "./logger";
 import { workers } from "./workers";
@@ -16,12 +15,17 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    exposePublic: true,
-    keyPairMemory: true,
+    storage: ["memory"],
+    jwks: [
+      {
+        host: configuration.services.oauth_service.host,
+        port: configuration.services.oauth_service.port,
+        name: configuration.services.oauth_service.client_name,
+      },
+    ],
   },
   logger,
   memoryDatabase,
-  middleware,
   port: configuration.server.port,
   redis: [OidcSessionCache],
   redisConnection,

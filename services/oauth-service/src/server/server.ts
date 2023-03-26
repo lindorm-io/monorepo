@@ -19,6 +19,7 @@ import {
   OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
+import { KeyType } from "@lindorm-io/key-pair";
 
 export const server = createNodeServer<ServerKoaContext>({
   domain: configuration.server.domain,
@@ -27,8 +28,9 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    exposePublic: true,
-    keyPairMemory: true,
+    exposed: ["public"],
+    storage: ["memory"],
+    generated: configuration.server.workers ? [KeyType.EC] : [],
   },
   logger,
   memoryDatabase,

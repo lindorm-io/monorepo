@@ -16,10 +16,8 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap --use-workspaces",
-    "build": "yarn clean && lerna run build",
-    "build:changed": "yarn run clean:changed && lerna run --since --include-dependents build",
-    "clean": "lerna run clean",
-    "clean:changed": "lerna run --since --include-dependents clean",
+    "build": "lerna run build",
+    "build:changed": "lerna run --since --include-dependents build",
     "lint": "lerna exec -- eslint . --ext .ts",
     "lint:changed": "lerna exec --since --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
     "release": "yarn build:changed && yarn typecheck:changed && yarn test:changed && cross-env HUSKY_BYPASS=true lerna publish",
@@ -40,7 +38,7 @@
     "@commitlint/cli": "^17.5.0",
     "@commitlint/config-conventional": "^17.4.4",
     "@types/jest": "^29.5.0",
-    "@types/node": "^14.18.41",
+    "@types/node": "^18.15.10",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
@@ -63,11 +61,11 @@
     "typescript": "^5.0.2"
   },
   "engines": {
-    "node": ">=14.19.1",
+    "node": ">=18.15.0",
     "yarn": ">=1.22.17"
   },
   "volta": {
-    "node": "14.20.1",
+    "node": "18.15.0",
     "yarn": "1.22.17"
   },
   "commitlint": {

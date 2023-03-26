@@ -4,11 +4,9 @@ import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { logger } from "./logger";
-import { middleware } from "./middleware";
 import { memoryDatabase, redisConnection } from "../instance";
 import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { socketListeners } from "./socket";
-import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
   domain: configuration.server.domain,
@@ -17,12 +15,22 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    exposePublic: true,
-    keyPairMemory: true,
+    storage: ["memory"],
+    jwks: [
+      {
+        host: configuration.services.device_service.host,
+        port: configuration.services.device_service.port,
+        name: configuration.services.device_service.client_name,
+      },
+      {
+        host: configuration.services.oauth_service.host,
+        port: configuration.services.oauth_service.port,
+        name: configuration.services.oauth_service.client_name,
+      },
+    ],
   },
   logger,
   memoryDatabase,
-  middleware,
   port: configuration.server.port,
   redisConnection,
   routerDirectory: join(__dirname, "..", "router"),
@@ -31,7 +39,6 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
-  workers,
 
   setup: async (): Promise<void> => {
     await redisConnection.connect();

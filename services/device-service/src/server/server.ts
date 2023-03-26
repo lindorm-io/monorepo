@@ -1,12 +1,11 @@
 import { Environment } from "@lindorm-io/common-types";
+import { KeyType } from "@lindorm-io/key-pair";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { middleware } from "./middleware";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import { logger } from "./logger";
-import { workers } from "./workers";
+import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import {
   ChallengeSessionCache,
   DeviceLinkRepository,
@@ -20,12 +19,19 @@ export const server = createNodeServer<ServerKoaContext>({
   host: configuration.server.host,
   issuer: configuration.server.issuer,
   keystore: {
-    exposePublic: true,
-    keyPairMemory: true,
+    exposed: ["public"],
+    storage: ["memory"],
+    generated: configuration.server.workers ? [KeyType.EC] : [],
+    jwks: [
+      {
+        host: configuration.services.oauth_service.host,
+        port: configuration.services.oauth_service.port,
+        name: configuration.services.oauth_service.client_name,
+      },
+    ],
   },
   logger,
   memoryDatabase,
-  middleware,
   mongo: [DeviceLinkRepository],
   mongoConnection,
   port: configuration.server.port,
@@ -37,7 +43,6 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
-  workers,
 
   setup: async (): Promise<void> => {
     await Promise.all([mongoConnection.connect(), redisConnection.connect()]);
