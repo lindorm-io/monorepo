@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-amqp",
   "description": "AMQP middleware for @lindorm-io/koa applications",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,12 +17,12 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/amqp": "^0.2.15",
-    "@lindorm-io/errors": "^0.1.17",
-    "@lindorm-io/koa": "^0.16.0"
+    "@lindorm-io/amqp": "^0.2.16",
+    "@lindorm-io/errors": "^0.1.18",
+    "@lindorm-io/koa": "^0.16.1"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.4",
+    "@lindorm-io/core-logger": "^0.2.5",
     "@types/express-useragent": "^1.0.2",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/koa": "^2.13.5",

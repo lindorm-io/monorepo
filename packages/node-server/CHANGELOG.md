@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.5.0...@lindorm-io/node-server@0.6.0) (2023-03-26)
+
+### Features
+
+- improve node server with key workers from config ([a35e430](https://github.com/lindorm-io/monorepo/commit/a35e430b1527da95efe75c796870540ee8445ff8))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.4.33...@lindorm-io/node-server@0.5.0) (2023-03-24)
 
 ### Features

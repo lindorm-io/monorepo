@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.10.0...@lindorm-io/koa-keystore@0.10.1) (2023-03-26)
+
+### Bug Fixes
+
+- use correct name for child logger ([5b628ab](https://github.com/lindorm-io/monorepo/commit/5b628ab288f95ceb1a7b5e8b69e0d9b3ca5ebf2c))
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.9.23...@lindorm-io/koa-keystore@0.10.0) (2023-03-24)
 
 ### Features
