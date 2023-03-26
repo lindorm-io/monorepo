@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { Logger } from "@lindorm-io/core-logger";
-import { RetryOptions, calculateRetry, sleep } from "@lindorm-io/retry";
+import { calculateRetry, RetryOptions, sleep } from "@lindorm-io/retry";
 
 type Callback = () => Promise<void>;
 type OnError = (error: Error, worker: IntervalWorker) => Promise<void>;
@@ -95,7 +95,8 @@ export class IntervalWorker {
 
         if (attempt <= this.retry.maximumAttempts) {
           const timeout = calculateRetry(attempt, this.retry);
-          this.logger.debug("retrying", { attempt, timeout });
+
+          this.logger.debug("retrying failed attempt", { attempt, timeout });
 
           sleep(timeout).then(() => this.trigger(attempt + 1));
         } else {
