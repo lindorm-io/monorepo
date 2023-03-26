@@ -18,9 +18,15 @@ import {
   socketMessageBusMiddleware,
 } from "@lindorm-io/koa-amqp";
 import {
+  keyPairCleanupWorker,
+  keyPairJwksMemoryWorker,
+  keyPairJwksRedisWorker,
   KeyPairMemoryCache,
+  keyPairMongoMemoryWorker,
+  keyPairMongoRedisWorker,
   KeyPairMongoRepository,
   KeyPairRedisRepository,
+  keyPairRotationWorker,
   keystoreMiddleware,
   memoryKeysMiddleware,
   redisKeysMiddleware,
@@ -38,6 +44,7 @@ import {
   axiosTransformBodyCaseMiddleware,
   axiosTransformQueryCaseMiddleware,
 } from "@lindorm-io/axios";
+import { getServiceOptions } from "./get-service-options";
 
 export const createNodeServer = <
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
@@ -51,7 +58,9 @@ export const createNodeServer = <
     socketAxiosMiddleware({ clientName: "axiosClient" }),
   ];
 
-  for (const service of options.services || []) {
+  const services = getServiceOptions(options.services);
+
+  for (const service of services) {
     middleware.push(
       axiosMiddleware({
         clientName: service.name,
@@ -86,7 +95,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketMemoryCacheMiddleware(options.memoryDatabase, Cache));
     }
 
-    if (options.keystore?.keyPairMemory) {
+    if (options.keystore?.storage?.includes("memory")) {
       middleware.push(memoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache));
       socketMiddleware.push(
         socketMemoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache),
@@ -106,7 +115,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketMongoRepositoryMiddleware(MongoRepository));
     }
 
-    if (options.keystore?.keyPairMongo) {
+    if (options.keystore?.storage?.includes("mongo")) {
       middleware.push(mongoRepositoryMiddleware(KeyPairMongoRepository));
       socketMiddleware.push(socketMongoRepositoryMiddleware(KeyPairMongoRepository));
     }
@@ -121,7 +130,7 @@ export const createNodeServer = <
       socketMiddleware.push(socketRedisRepositoryMiddleware(RedisRepository));
     }
 
-    if (options.keystore?.keyPairRedis) {
+    if (options.keystore?.storage?.includes("redis")) {
       middleware.push(redisRepositoryMiddleware(KeyPairRedisRepository));
       socketMiddleware.push(socketRedisRepositoryMiddleware(KeyPairRedisRepository));
 
@@ -139,7 +148,7 @@ export const createNodeServer = <
     }
   }
 
-  if (options.keystore?.keyPairMemory || options.keystore?.keyPairRedis) {
+  if (options.keystore?.storage?.length) {
     middleware.push(keystoreMiddleware);
     socketMiddleware.push(socketKeystoreMiddleware);
 
@@ -157,10 +166,86 @@ export const createNodeServer = <
 
   const koa = new KoaApp<Context>({ ...options, middleware, socketMiddleware });
 
-  if (options.keystore?.exposePublic) {
+  if (options.issuer && options.mongoConnection && options.keystore?.generated?.length) {
+    for (const keyType of options.keystore.generated) {
+      koa.addWorker(
+        keyPairRotationWorker({
+          keyType,
+          logger: options.logger,
+          mongoConnection: options.mongoConnection,
+          origin: options.issuer,
+          retry: { maximumAttempts: 30 },
+        }),
+      );
+    }
+
+    koa.addWorker(
+      keyPairCleanupWorker({
+        logger: options.logger,
+        mongoConnection: options.mongoConnection,
+        retry: { maximumAttempts: 30 },
+      }),
+    );
+
+    if (options.memoryDatabase && options.keystore.storage?.includes("memory")) {
+      koa.addWorker(
+        keyPairMongoMemoryWorker({
+          logger: options.logger,
+          memoryDatabase: options.memoryDatabase,
+          mongoConnection: options.mongoConnection,
+          retry: { maximumAttempts: 30 },
+        }),
+      );
+    }
+
+    if (options.redisConnection && options.keystore.storage?.includes("redis")) {
+      koa.addWorker(
+        keyPairMongoRedisWorker({
+          logger: options.logger,
+          mongoConnection: options.mongoConnection,
+          redisConnection: options.redisConnection,
+          retry: { maximumAttempts: 30 },
+        }),
+      );
+    }
+  }
+
+  if (options.keystore?.jwks?.length && options.keystore?.storage?.length) {
+    const jwks = getServiceOptions(options.keystore.jwks);
+
+    for (const service of jwks) {
+      if (options.memoryDatabase && options.keystore.storage.includes("memory")) {
+        koa.addWorker(
+          keyPairJwksMemoryWorker({
+            host: service.host,
+            port: service.port || undefined,
+            clientName: service.name,
+            logger: options.logger,
+            memoryDatabase: options.memoryDatabase,
+            retry: { maximumAttempts: 30 },
+          }),
+        );
+      }
+
+      if (options.redisConnection && options.keystore.storage.includes("redis")) {
+        koa.addWorker(
+          keyPairJwksRedisWorker({
+            host: service.host,
+            port: service.port || undefined,
+            clientName: service.name,
+            logger: options.logger,
+            redisConnection: options.redisConnection,
+            retry: { maximumAttempts: 30 },
+          }),
+        );
+      }
+    }
+  }
+
+  if (options.keystore?.exposed?.includes("public")) {
     koa.addRoute(
       "/.well-known/jwks.json",
-      createWellKnownJwksRouter<Context>(options.keystore?.exposeExternal),
+      createWellKnownJwksRouter<Context>(options.keystore?.exposed?.includes("external")),
     );
   }
 

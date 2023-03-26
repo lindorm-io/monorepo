@@ -30,10 +30,8 @@ describe("/.well-known", () => {
       host: "http://localhost",
       logger,
       keystore: {
-        exposePublic: true,
-        keyPairMemory: true,
-        keyPairMongo: false,
-        keyPairRedis: true,
+        exposed: ["public"],
+        storage: ["memory", "redis"],
       },
       memoryDatabase,
       port: 3000,
