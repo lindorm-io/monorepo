@@ -19,8 +19,8 @@
     "test:unit:watch": "jest --config jest.config.js --watch --",
     "test:update": "yarn test:unit:update && yarn test:integration:update",
     "test:watch": "yarn test:unit:watch --",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
     "@lindorm-io/case": "^0.1.6",
@@ -30,7 +30,7 @@
     "@lindorm-io/errors": "^0.1.17",
     "@lindorm-io/string-blob": "^0.0.24",
     "date-fns": "^2.29.3",
-    "ioredis": "^5.2.5",
+    "ioredis": "^5.3.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
@@ -39,7 +39,7 @@
     "@types/ioredis-mock": "^8.2.1",
     "@types/lodash": "^4.14.191",
     "compd": "^4.1.1",
-    "ioredis-mock": "^8.2.2",
+    "ioredis-mock": "^8.2.7",
     "redis-commands": "^1.7.0"
   }
 }

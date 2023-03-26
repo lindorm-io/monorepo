@@ -13,11 +13,11 @@
     "test": "jest",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
     "@lindorm-io/errors": "^0.1.17",
-    "joi": "^17.7.0"
+    "joi": "^17.9.1"
   }
 }

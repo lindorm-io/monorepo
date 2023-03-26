@@ -13,8 +13,8 @@
     "test": "jest",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
   },
   "bin": {
     "generate-typing": "dist/program.js"
@@ -22,7 +22,7 @@
   "dependencies": {
     "commander": "^10.0.0",
     "js-yaml": "^4.1.0",
-    "quicktype-core": "^21.0.2"
+    "quicktype-core": "^23.0.18"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.5"

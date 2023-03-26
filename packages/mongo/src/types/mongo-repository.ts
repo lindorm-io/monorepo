@@ -26,7 +26,10 @@ export interface MongoRepository<Document extends MongoDocument, Entity extends 
     filter: Partial<Filter<Document>>,
     options: FindOptions<Document>,
   ): Promise<Array<Entity>>;
-  findOrCreate(filter: Partial<Document>, callback?: PostChangeCallback<Entity>): Promise<Entity>;
+  findOrCreate(
+    filter: Partial<Filter<Document>>,
+    callback?: PostChangeCallback<Entity>,
+  ): Promise<Entity>;
   tryFind(
     filter: Partial<Filter<Document>>,
     options: FindOptions<Document>,

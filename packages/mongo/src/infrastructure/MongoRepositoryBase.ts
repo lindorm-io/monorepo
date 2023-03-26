@@ -332,7 +332,7 @@ export abstract class MongoRepositoryBase<
   }
 
   public async findOrCreate(
-    filter: Partial<Document>,
+    filter: Partial<Filter<Document>>,
     callback?: PostChangeCallback<Entity>,
   ): Promise<Entity> {
     try {

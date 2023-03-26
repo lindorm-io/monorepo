@@ -14,8 +14,8 @@
     "test": "jest",
     "test:update": "jest -u --",
     "test:watch": "jest --watch --",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
     "@lindorm-io/core-logger": "^0.2.4"

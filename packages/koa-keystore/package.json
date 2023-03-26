@@ -19,8 +19,8 @@
     "test:unit:watch": "jest --config jest.config.js --watch --",
     "test:update": "yarn test:unit:update && yarn test:integration:update",
     "test:watch": "yarn test:unit:watch --",
-    "typecheck": "tsc --noEmit",
-    "typecheck:watch": "tsc --noEmit --watch"
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.6.1",
@@ -33,7 +33,7 @@
     "@lindorm-io/mongo": "^0.12.0",
     "@lindorm-io/redis": "^0.12.0",
     "@lindorm-io/retry": "^0.1.2",
-    "joi": "^17.7.0"
+    "joi": "^17.9.1"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.4",
@@ -45,8 +45,8 @@
     "@types/koa-router": "^7.4.4",
     "compd": "^4.1.1",
     "koa": "^2.14.1",
-    "koa-bodyparser": "^4.3.0",
-    "mongodb": "^4.13.0",
+    "koa-bodyparser": "^4.4.0",
+    "mongodb": "^5.1.0",
     "nock": "^13.3.0"
   }
 }
