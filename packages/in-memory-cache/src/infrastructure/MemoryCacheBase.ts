@@ -40,7 +40,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   // public
 
   public async count(attributes: Partial<Document>): Promise<number> {
-    this.logger.silly("count", { attributes });
+    this.logger.debug("count", { attributes });
 
     this.runCleanup();
 
@@ -50,7 +50,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async create(entity: Entity): Promise<Entity> {
-    this.logger.silly("create", { entity });
+    this.logger.debug("create", { entity });
 
     await this.validateSchema(entity);
 
@@ -87,7 +87,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async destroy(entity: Entity): Promise<void> {
-    this.logger.silly("destroy", { entity });
+    this.logger.debug("destroy", { entity });
 
     await this.find({ id: entity.id } as Document);
 
@@ -117,7 +117,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async findMany(attributes: Partial<Document>): Promise<Array<Entity>> {
-    this.logger.silly("findMany", { attributes });
+    this.logger.debug("findMany", { attributes });
 
     this.runCleanup();
 
@@ -142,7 +142,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async tryFind(attributes: Partial<Document>): Promise<Entity | undefined> {
-    this.logger.silly("tryFind", { attributes });
+    this.logger.debug("tryFind", { attributes });
 
     this.runCleanup();
 
@@ -172,7 +172,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async update(entity: Entity): Promise<Entity> {
-    this.logger.silly("update", { entity });
+    this.logger.debug("update", { entity });
 
     await this.validateSchema(entity);
 
@@ -193,7 +193,7 @@ export abstract class MemoryCacheBase<Document extends MemoryDocument, Entity ex
   }
 
   public async upsert(entity: Entity): Promise<Entity> {
-    this.logger.silly("upsert", { entity });
+    this.logger.debug("upsert", { entity });
 
     await this.validateSchema(entity);
 
