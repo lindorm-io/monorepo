@@ -2,12 +2,18 @@ import { AxiosResponse, Method } from "axios";
 import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
 import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
-import { axiosRequestHandler } from "../middleware/private";
+import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm-io/url";
 import { defaultRetryCallback, validateStatus } from "../util/private";
-import { createBaseUrl, getPlainUrl, extractSearchParams, getValidUrl } from "@lindorm-io/url";
 import { resolveMiddleware } from "@lindorm-io/middleware";
+import { v4 as uuid } from "uuid";
+import {
+  axiosDefaultClientHeadersMiddleware,
+  axiosDefaultHeadersMiddleware,
+  axiosRequestHandler,
+} from "../middleware/private";
 import {
   AppContext,
+  AxiosClientProperties,
   AxiosOptions,
   Context,
   MethodOptions,
@@ -19,8 +25,9 @@ import {
 } from "../types";
 
 export class Axios {
+  private readonly alias: string | null;
   private readonly baseURL: URL | undefined;
-  private readonly clientName: string;
+  private readonly client: AxiosClientProperties;
   private readonly config: RawAxiosRequestConfigContext;
   private readonly headers: Record<string, any>;
   private readonly middleware: Array<Middleware>;
@@ -47,7 +54,14 @@ export class Axios {
       /* ignored */
     }
 
-    this.clientName = options.clientName || "AxiosClient";
+    this.alias = options.alias || null;
+    this.client = {
+      id: options.client?.id || null,
+      environment: options.client?.environment || null,
+      name: options.client?.name || null,
+      platform: options.client?.platform || null,
+      version: options.client?.version || null,
+    };
     this.headers = options.headers || {};
     this.middleware = options.middleware || [];
     this.queryCaseTransform = options.queryCaseTransform || "snake";
@@ -225,7 +239,8 @@ export class Axios {
     const url = getPlainUrl(valid).toString();
 
     const app: AppContext = {
-      clientName: this.clientName,
+      alias: this.alias,
+      client: this.client,
       config: this.config,
       headers: this.headers,
       queryCaseTransform: this.queryCaseTransform,
@@ -234,6 +249,9 @@ export class Axios {
     };
 
     const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
+      id: uuid(),
+      body: body as RequestBody,
+      client: this.client,
       config: {
         ...this.config,
         ...config,
@@ -243,8 +261,8 @@ export class Axios {
         timeout,
         withCredentials,
       },
+      correlationId: uuid(),
       headers: { ...this.headers, ...headers },
-      body: body as RequestBody,
       params: params as RequestParams,
       query: { ...searchParams, ...query },
       queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
@@ -261,7 +279,13 @@ export class Axios {
 
     const result = await resolveMiddleware<
       Context<ResponseData, RequestBody, RequestParams, RequestQuery>
-    >(context, [...this.middleware, ...middleware, axiosRequestHandler]);
+    >(context, [
+      ...this.middleware,
+      ...middleware,
+      axiosDefaultHeadersMiddleware,
+      axiosDefaultClientHeadersMiddleware,
+      axiosRequestHandler,
+    ]);
 
     return result.res;
   }

@@ -13,9 +13,10 @@ describe("Axios", () => {
       expect(
         () =>
           new Axios({
+            alias: "alias",
             auth: { username: "user", password: "pass" },
             baseURL: "https://test.lindorm.io",
-            clientName: "TestClient",
+            client: { name: "TestClient" },
             headers: { "x-test-header": "test" },
             queryCaseTransform: "snake",
             timeout: 5000,

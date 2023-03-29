@@ -5,7 +5,16 @@ import { RetryCallback } from "./retry";
 import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 
+export type AxiosClientProperties = {
+  id: string | null;
+  environment: string | null;
+  name: string | null;
+  platform: string | null;
+  version: string | null;
+};
+
 export type AxiosOptions = {
+  alias?: string;
   middleware?: Middleware[];
 
   // is used to calculate baseURL
@@ -14,7 +23,7 @@ export type AxiosOptions = {
   port?: number;
 
   // will be placed in context
-  clientName?: string;
+  client?: Partial<AxiosClientProperties>;
   config?: RawAxiosRequestConfigOptions;
   queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;

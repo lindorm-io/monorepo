@@ -1,3 +1,4 @@
+import { AxiosClientProperties } from "./request";
 import { AxiosResponse } from "axios";
 import { RawAxiosRequestConfigContext } from "./overrides";
 import { RetryCallback } from "./retry";
@@ -5,7 +6,8 @@ import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
 
 export type AppContext = {
-  clientName: string;
+  alias: string | null;
+  client: AxiosClientProperties;
   config: RawAxiosRequestConfigContext;
   headers: Record<string, any>;
   queryCaseTransform: TransformMode;
@@ -18,8 +20,11 @@ export type RequestContext<
   Params = Record<string, any>,
   Query = Record<string, any>,
 > = {
+  id: string;
   body: Body;
+  client: AxiosClientProperties;
   config: RawAxiosRequestConfigContext;
+  correlationId: string;
   headers: Record<string, any>;
   params: Params;
   query: Query;

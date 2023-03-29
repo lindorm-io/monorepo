@@ -6,12 +6,21 @@ describe("composeAxiosConfig", () => {
 
   beforeEach(() => {
     const req: RequestContext = {
+      id: "id",
       body: { body: "body" },
+      client: {
+        id: "8badb9a8-e4dd-4970-bdf5-f2765b912e7e",
+        environment: "test",
+        name: "TestClient",
+        platform: "platform",
+        version: "version",
+      },
       config: {
         auth: { username: "username", password: "password" },
         timeout: 250,
         withCredentials: true,
       },
+      correlationId: "correlationId",
       headers: { header: "header" },
       params: {
         answer: "there",
