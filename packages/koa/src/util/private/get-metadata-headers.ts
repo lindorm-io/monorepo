@@ -12,6 +12,7 @@ export const getMetadataHeaders =
 
     [MetadataHeader.CLIENT_ID]: ctx.metadata.client.id,
     [MetadataHeader.CLIENT_ENVIRONMENT]: ctx.metadata.client.environment,
+    [MetadataHeader.CLIENT_NAME]: ctx.metadata.client.name,
     [MetadataHeader.CLIENT_PLATFORM]: ctx.metadata.client.platform,
     [MetadataHeader.CLIENT_VERSION]: ctx.metadata.client.version,
 

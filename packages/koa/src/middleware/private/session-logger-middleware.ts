@@ -10,8 +10,9 @@ export const sessionLoggerMiddleware =
     });
 
     try {
-      ctx.logger.info("service request", {
+      ctx.logger.info("Service request", {
         correlationId: ctx.metadata.identifiers.correlationId,
+        requestId: ctx.metadata.identifiers.requestId,
         request: {
           body: ctx.request.body,
           header: ctx.request.header,
@@ -25,8 +26,9 @@ export const sessionLoggerMiddleware =
 
       await next();
     } finally {
-      ctx.logger.info("service response", {
+      ctx.logger.info("Service response", {
         correlationId: ctx.metadata.identifiers.correlationId,
+        requestId: ctx.metadata.identifiers.requestId,
         response: {
           body: ctx.response.body,
           config: ctx.config,

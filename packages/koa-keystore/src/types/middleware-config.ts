@@ -1,6 +1,9 @@
+import { AxiosClientProperties } from "@lindorm-io/axios";
+
 export interface JwksKeysMiddlewareConfig {
   host: string;
-  clientName?: string;
-  path?: string;
   port?: number;
+  alias: string;
+  client?: Partial<AxiosClientProperties>;
+  path?: string;
 }

@@ -1,12 +1,12 @@
-import { AxiosMiddlewareConfig, DefaultLindormAxiosSocketMiddleware } from "../types";
 import { Axios, axiosRequestLoggerMiddleware } from "@lindorm-io/axios";
+import { AxiosMiddlewareConfig, DefaultLindormAxiosSocketMiddleware } from "../types";
 import { getSocketError } from "@lindorm-io/koa";
 
 export const socketAxiosMiddleware =
-  (config: AxiosMiddlewareConfig): DefaultLindormAxiosSocketMiddleware =>
+  ({ alias, ...config }: AxiosMiddlewareConfig): DefaultLindormAxiosSocketMiddleware =>
   (socket, next): void => {
     try {
-      socket.ctx.axios[config.clientName] = new Axios({
+      socket.ctx.axios[alias] = new Axios({
         ...config,
         middleware: [axiosRequestLoggerMiddleware(socket.ctx.logger), ...(config.middleware || [])],
       });

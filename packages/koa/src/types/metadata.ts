@@ -13,6 +13,7 @@ type Agent = {
 type Client = {
   id: string | undefined;
   environment: Environment;
+  name: string | undefined;
   platform: string | undefined;
   version: string | undefined;
 };
@@ -49,6 +50,7 @@ export type LindormKoaMetadataHeaders = {
 
   [MetadataHeader.CLIENT_ID]: string | undefined;
   [MetadataHeader.CLIENT_ENVIRONMENT]: Environment;
+  [MetadataHeader.CLIENT_NAME]: string | undefined;
   [MetadataHeader.CLIENT_PLATFORM]: string | undefined;
   [MetadataHeader.CLIENT_VERSION]: string | undefined;
 

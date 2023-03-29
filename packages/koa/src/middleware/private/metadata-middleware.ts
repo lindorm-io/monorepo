@@ -19,6 +19,7 @@ export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): P
       id: ctx.get(MetadataHeader.CLIENT_ID),
       environment:
         (ctx.get(MetadataHeader.CLIENT_ENVIRONMENT) as Environment) || Environment.UNKNOWN,
+      name: ctx.get(MetadataHeader.CLIENT_NAME),
       platform: ctx.get(MetadataHeader.CLIENT_PLATFORM),
       version: ctx.get(MetadataHeader.CLIENT_VERSION),
     },

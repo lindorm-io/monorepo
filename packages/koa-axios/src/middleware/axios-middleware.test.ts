@@ -1,15 +1,15 @@
 import MockDate from "mockdate";
 import { Axios, Middleware } from "@lindorm-io/axios";
-import { MetadataHeader } from "@lindorm-io/koa";
 import { axiosMiddleware } from "./axios-middleware";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { AxiosMiddlewareConfig } from "../types";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
 const next = jest.fn();
 
 describe("axiosMiddleware", () => {
-  let options: any;
+  let config: AxiosMiddlewareConfig;
   let ctx: any;
 
   const logger = createMockLogger();
@@ -19,27 +19,46 @@ describe("axiosMiddleware", () => {
       await next();
     };
 
-    options = {
+    config = {
+      alias: "axiosClient",
+
       host: "https://lindorm.io",
       port: 4000,
       middleware: [mw],
-      clientName: "axiosClient",
+      client: {
+        id: "id",
+        environment: "environment",
+        name: "name",
+        platform: "platform",
+        version: "version",
+      },
     };
 
     ctx = {
       axios: {},
       logger,
-      metadata: { correlationId: "6be482f0-943b-4b64-8c9c-4c7f2efcf50c" },
-      getMetadataHeaders: () => ({
-        [MetadataHeader.CORRELATION_ID]: "6be482f0-943b-4b64-8c9c-4c7f2efcf50c",
-      }),
+      metadata: {
+        device: {
+          installationId: "installationId",
+          ip: "ip",
+          linkId: "linkId",
+          name: "name",
+          systemVersion: "systemVersion",
+          uniqueId: "uniqueId",
+        },
+        identifiers: {
+          correlationId: "correlationId",
+        },
+      },
       metrics: {},
-      token: { bearerToken: { token: "jwt.jwt.jwt" } },
+      server: {
+        environment: "environment",
+      },
     };
   });
 
   test("should create axios client on context", async () => {
-    await expect(axiosMiddleware(options)(ctx, next)).resolves.toBeUndefined();
+    await expect(axiosMiddleware(config)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.axios.axiosClient).toStrictEqual(expect.any(Axios));
     expect(ctx.metrics.axios).toBe(0);

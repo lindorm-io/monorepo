@@ -32,7 +32,8 @@ describe("jwksKeysMiddleware", () => {
   test("should successfully add keys to context", async () => {
     await expect(
       jwksKeysMiddleware({
-        clientName: "clientName",
+        alias: "alias",
+        client: { name: "client" },
         host: "https://lindorm.io",
         port: 4000,
       })(ctx, next),

@@ -51,11 +51,9 @@ export const createNodeServer = <
 >(
   options: CreateNodeServerOptions,
 ): KoaApp<Context> => {
-  const middleware: Array<DefaultLindormMiddleware> = [
-    axiosMiddleware({ clientName: "axiosClient" }),
-  ];
+  const middleware: Array<DefaultLindormMiddleware> = [axiosMiddleware({ alias: "axiosClient" })];
   const socketMiddleware: Array<DefaultLindormSocketMiddleware> = [
-    socketAxiosMiddleware({ clientName: "axiosClient" }),
+    socketAxiosMiddleware({ alias: "axiosClient" }),
   ];
 
   const services = getServiceOptions(options.services);
@@ -63,17 +61,19 @@ export const createNodeServer = <
   for (const service of services) {
     middleware.push(
       axiosMiddleware({
-        clientName: service.name,
         host: service.host,
         port: service.port || undefined,
+        alias: service.name,
+        client: options.client,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
     socketMiddleware.push(
       socketAxiosMiddleware({
-        clientName: service.name,
         host: service.host,
         port: service.port || undefined,
+        alias: service.name,
+        client: options.client,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
@@ -219,7 +219,8 @@ export const createNodeServer = <
           keyPairJwksMemoryWorker({
             host: service.host,
             port: service.port || undefined,
-            clientName: service.name,
+            alias: service.name,
+            client: options.client,
             logger: options.logger,
             memoryDatabase: options.memoryDatabase,
             retry: { maximumAttempts: 30 },
@@ -232,7 +233,8 @@ export const createNodeServer = <
           keyPairJwksRedisWorker({
             host: service.host,
             port: service.port || undefined,
-            clientName: service.name,
+            alias: service.name,
+            client: options.client,
             logger: options.logger,
             redisConnection: options.redisConnection,
             retry: { maximumAttempts: 30 },

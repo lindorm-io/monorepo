@@ -9,38 +9,40 @@ import { KeyPairMemoryCache } from "../infrastructure";
 import {
   axiosClientCredentialsMiddleware,
   AxiosClientCredentialsMiddlewareOptions,
+  AxiosClientProperties,
 } from "@lindorm-io/axios";
 
 type Options = {
-  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
-  clientName?: string;
   host: string;
+  port?: number;
+  alias: string;
+  client?: Partial<AxiosClientProperties>;
+  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
   logger: Logger;
   memoryDatabase: IMemoryDatabase;
   path?: string;
-  port?: number;
   retry?: Partial<RetryOptions>;
   workerInterval?: string;
 };
 
 export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
   const {
-    clientCredentials,
-    clientName,
-    memoryDatabase,
     host,
-    path,
     port,
+    alias,
+    client,
+    clientCredentials,
+    memoryDatabase,
+    path,
     retry,
     workerInterval = "5 minutes",
   } = options;
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
-    clientName,
     host,
     path,
     port,
@@ -56,14 +58,17 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
       callback: async (): Promise<void> => {
         const memoryCache = new KeyPairMemoryCache(memoryDatabase, logger);
 
-        const keys = await getKeysFromJwks({
-          clientName,
-          host,
+        const keys = await getKeysFromJwks(
+          {
+            host,
+            port,
+            alias,
+            client,
+            middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
+            path,
+          },
           logger,
-          middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
-          path,
-          port,
-        });
+        );
 
         for (const entity of keys) {
           if (!entity.expires) {

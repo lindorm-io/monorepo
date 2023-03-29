@@ -6,12 +6,15 @@ export const socketJwksKeysMiddleware = (
   config: JwksKeysMiddlewareConfig,
 ): DefaultLindormKeystoreSocketMiddleware =>
   promisifyLindormSocketMiddleware(async (socket) => {
-    socket.ctx.keys = await getKeysFromJwks({
-      clientName: config.clientName,
-      currentKeys: socket.ctx.keys,
-      host: config.host,
-      logger: socket.ctx.logger,
-      path: config.path,
-      port: config.port,
-    });
+    socket.ctx.keys = await getKeysFromJwks(
+      {
+        host: config.host,
+        port: config.port,
+        alias: config.alias,
+        client: config.client,
+        currentKeys: socket.ctx.keys,
+        path: config.path,
+      },
+      socket.ctx.logger,
+    );
   });

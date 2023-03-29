@@ -31,13 +31,13 @@ describe("getKeysFromJwks", () => {
 
   beforeEach(() => {
     options = {
-      currentKeys: [createTestKeyPairRSA()],
       host: "https://test.lindorm.io",
-      logger: createMockLogger(),
+      alias: "Alias",
+      currentKeys: [createTestKeyPairRSA()],
     };
   });
 
   test("should resolve", async () => {
-    await expect(getKeysFromJwks(options)).resolves.toMatchSnapshot();
+    await expect(getKeysFromJwks(options, createMockLogger())).resolves.toMatchSnapshot();
   });
 });

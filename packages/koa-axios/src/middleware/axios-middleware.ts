@@ -1,30 +1,26 @@
 import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
-import { removeEmptyFromObject } from "@lindorm-io/core";
 import {
   Axios,
+  axiosClientPropertiesMiddleware,
+  axiosCorrelationMiddleware,
   axiosRequestLoggerMiddleware,
-  Middleware as AxiosMiddleware,
+  axiosTransformBodyCaseMiddleware,
+  axiosTransformQueryCaseMiddleware,
 } from "@lindorm-io/axios";
 
 export const axiosMiddleware =
-  (config: AxiosMiddlewareConfig): DefaultLindormAxiosKoaMiddleware =>
+  ({ alias, ...config }: AxiosMiddlewareConfig): DefaultLindormAxiosKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const start = Date.now();
 
-    const metadataMiddleware: AxiosMiddleware = async (axiosCtx, axiosNext) => {
-      axiosCtx.req.headers = {
-        ...axiosCtx.req.headers,
-        ...removeEmptyFromObject(ctx.getMetadataHeaders()),
-      };
-
-      await axiosNext();
-    };
-
-    ctx.axios[config.clientName] = new Axios({
+    ctx.axios[alias] = new Axios({
       ...config,
       middleware: [
+        axiosClientPropertiesMiddleware({ environment: ctx.server.environment }),
+        axiosCorrelationMiddleware(ctx.metadata.identifiers.correlationId),
+        axiosTransformBodyCaseMiddleware(),
+        axiosTransformQueryCaseMiddleware(),
         axiosRequestLoggerMiddleware(ctx.logger),
-        metadataMiddleware,
         ...(config.middleware || []),
       ],
     });

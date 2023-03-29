@@ -9,15 +9,17 @@ import { getKeysFromJwks } from "../util";
 import {
   axiosClientCredentialsMiddleware,
   AxiosClientCredentialsMiddlewareOptions,
+  AxiosClientProperties,
 } from "@lindorm-io/axios";
 
 type Options = {
-  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
-  clientName?: string;
   host: string;
+  port?: number;
+  alias: string;
+  client?: Partial<AxiosClientProperties>;
+  clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
   logger: Logger;
   path?: string;
-  port?: number;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
   workerInterval?: string;
@@ -25,11 +27,12 @@ type Options = {
 
 export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
   const {
-    clientCredentials,
-    clientName,
+    alias,
     host,
-    path,
     port,
+    client,
+    clientCredentials,
+    path,
     redisConnection,
     retry,
     workerInterval = "5 minutes",
@@ -37,10 +40,9 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
 
   const workerIntervalInSeconds = stringToSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
-  const logger = options.logger.createChildLogger(["keyPairJwksRedisWorker"]);
+  const logger = options.logger.createChildLogger(["keyPairJwksRedisWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
-    clientName,
     host,
     path,
     port,
@@ -56,14 +58,17 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
       callback: async (): Promise<void> => {
         const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
 
-        const keys = await getKeysFromJwks({
-          clientName,
-          host,
+        const keys = await getKeysFromJwks(
+          {
+            host,
+            port,
+            alias,
+            client,
+            middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
+            path,
+          },
           logger,
-          middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
-          path,
-          port,
-        });
+        );
 
         for (const entity of keys) {
           if (!entity.expires) {

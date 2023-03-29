@@ -1,35 +1,48 @@
-import { Axios, AxiosOptions, axiosRequestLoggerMiddleware } from "@lindorm-io/axios";
 import { JWK, KeyPair } from "@lindorm-io/key-pair";
 import { Logger } from "@lindorm-io/core-logger";
 import { ServerError } from "@lindorm-io/errors";
+import {
+  Axios,
+  AxiosOptions,
+  axiosRequestLoggerMiddleware,
+  axiosTransformBodyCaseMiddleware,
+  axiosTransformQueryCaseMiddleware,
+} from "@lindorm-io/axios";
 
-type Options = AxiosOptions & {
-  currentKeys?: Array<KeyPair>;
-  host: string;
-  logger: Logger;
-  path?: string;
-};
+type Options = AxiosOptions &
+  Required<Pick<AxiosOptions, "alias" | "host">> & {
+    currentKeys?: Array<KeyPair>;
+    path?: string;
+  };
 
 interface Response {
   keys: Array<JWK>;
 }
 
-export const getKeysFromJwks = async (options: Options): Promise<Array<KeyPair>> => {
+export const getKeysFromJwks = async (
+  options: Options,
+  logger: Logger,
+): Promise<Array<KeyPair>> => {
   const {
-    clientName = "jwks",
-    currentKeys = [],
     host,
-    logger,
-    path = "/.well-known/jwks.json",
     port,
+    alias,
+    currentKeys = [],
+    middleware = [],
+    path = "/.well-known/jwks.json",
     ...rest
   } = options;
 
   const axios = new Axios({
-    clientName,
+    alias,
     host,
-    middleware: [axiosRequestLoggerMiddleware(logger)],
     port,
+    middleware: [
+      ...middleware,
+      axiosTransformBodyCaseMiddleware(),
+      axiosTransformQueryCaseMiddleware(),
+      axiosRequestLoggerMiddleware(logger),
+    ],
     ...rest,
   });
 

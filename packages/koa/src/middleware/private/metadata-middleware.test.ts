@@ -38,6 +38,7 @@ describe("metadataMiddleware", () => {
       client: {
         id: "x-client-id",
         environment: "x-client-environment",
+        name: "x-client-name",
         platform: "x-client-platform",
         version: "x-client-version",
       },
@@ -94,6 +95,7 @@ describe("metadataMiddleware", () => {
       client: {
         environment: "unknown",
         id: undefined,
+        name: undefined,
         platform: undefined,
         version: undefined,
       },

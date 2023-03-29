@@ -5,6 +5,7 @@ import { MemoryCacheConstructor, MemoryDatabase } from "@lindorm-io/in-memory-ca
 import { MongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
 import { RedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
 import { KeyType } from "@lindorm-io/key-pair";
+import { AxiosClientProperties } from "@lindorm-io/axios";
 
 export type ServiceOptions = {
   name: string;
@@ -23,6 +24,7 @@ export type CreateNodeServerOptions<
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
 > = KoaAppOptions<Context> & {
   amqpConnection?: AmqpConnection;
+  client?: Partial<AxiosClientProperties>;
   issuer?: string;
   keystore?: KeystoreOptions;
   memory?: Array<MemoryCacheConstructor>;
