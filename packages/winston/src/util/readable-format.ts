@@ -1,6 +1,6 @@
 import chalk, { Chalk } from "chalk";
 import fastSafeStringify from "fast-safe-stringify";
-import { ConsoleOptions, LoggerMessage, LogLevel } from "@lindorm-io/core-logger";
+import { ConsoleOptions, LogDetails, LoggerMessage, LogLevel } from "@lindorm-io/core-logger";
 import { inspect } from "util";
 import { isObject } from "@lindorm-io/core";
 
@@ -51,8 +51,27 @@ const formatContent = (details: Record<string, any>, colours: boolean): string =
   });
 };
 
+const readableDetails = (logDetails: LogDetails, colours: boolean): string | undefined => {
+  if (logDetails instanceof Error) {
+    const { errors, stack, ...rest } = logDetails as any;
+
+    if (Object.keys(rest).length) {
+      const details = formatContent(rest, false);
+      return `${colourise(chalk.red, colours, stack)}\n${colourise(chalk.red, colours, details)}`;
+    }
+
+    const details = logDetails.stack ? logDetails.stack : logDetails;
+
+    return `${colourise(chalk.red, colours, details as string)}`;
+  }
+
+  if (isObject(logDetails)) {
+    return formatContent(logDetails, colours);
+  }
+};
+
 export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOptions>): string => {
-  const { colours = false, timestamp = false } = options;
+  const { colours = false, session = false, timestamp = false } = options;
 
   if (!info.time || !info.context) {
     return formatContent(info, false);
@@ -65,37 +84,21 @@ export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOpti
     const message = levelColor(info.level, colours, info.message);
 
     const contextValues = info.context ? Object.values(info.context) : [];
-    const context = contextValues.length
-      ? colourise(chalk.black, colours, ` [ ${contextValues.join(" | ")} ]`)
-      : "";
+    const contextString = contextValues.length ? `[ ${contextValues.join(" | ")} ]` : undefined;
+    const context = contextString ? colourise(chalk.black, colours, contextString) : "";
 
-    const content = `${level}${colon} ${message}${context}`;
+    const content = `${level}${colon} ${message} ${context}`;
     const formatted = timestamp ? `${time}  ${content}` : content;
 
-    if (info.details instanceof Error) {
-      const { errors, stack, ...rest } = info.details as any;
+    const detailsArray = info.details.map((d) => readableDetails(d, colours));
 
-      if (Object.keys(rest).length) {
-        const details = formatContent(rest, false);
-
-        return `${formatted}\n${colourise(chalk.red, colours, stack)}\n${colourise(
-          chalk.red,
-          colours,
-          details,
-        )}`;
-      }
-
-      const details = info.details.stack ? info.details.stack : info.details;
-
-      return `${formatted}\n${colourise(chalk.red, colours, details as string)}`;
+    if (session && Object.values(info.session).length) {
+      detailsArray.unshift(colourise(chalk.black, colours, formatContent(info.session, false)));
     }
 
-    if (isObject(info.details)) {
-      const details = formatContent(info.details, colours);
-      return `${formatted}\n${details}`;
-    }
+    const details = detailsArray.length ? `\n${detailsArray.join("\n")}` : "";
 
-    return formatted;
+    return `${formatted}${details}`;
   } catch (err) {
     console.error("error when formatting message", err);
     return fastSafeStringify(info);

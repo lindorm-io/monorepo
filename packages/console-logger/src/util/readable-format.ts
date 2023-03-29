@@ -1,5 +1,5 @@
 import fastSafeStringify from "fast-safe-stringify";
-import { ConsoleOptions, LoggerMessage } from "@lindorm-io/core-logger";
+import { ConsoleOptions, LogDetails, LoggerMessage } from "@lindorm-io/core-logger";
 import { inspect } from "util";
 import { isObject } from "@lindorm-io/core";
 
@@ -15,6 +15,23 @@ const formatContent = (details: Record<string, any>, colours: boolean): string =
     breakLength: process.stdout.columns ? process.stdout.columns - 10 : 140,
     sorted: true,
   });
+};
+
+const readableDetails = (logDetails: LogDetails, colours: boolean): string | undefined => {
+  if (logDetails instanceof Error) {
+    const { errors, stack, ...rest } = logDetails as any;
+
+    if (Object.keys(rest).length) {
+      const details = formatContent(rest, false);
+      return `${stack}\n${details}`;
+    }
+
+    return (logDetails.stack ? logDetails.stack : logDetails) as string;
+  }
+
+  if (isObject(logDetails)) {
+    return formatContent(logDetails, colours);
+  }
 };
 
 export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOptions>): string => {
@@ -35,26 +52,14 @@ export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOpti
     const content = `${level}: ${message}${context}`;
     const formatted = timestamp ? `${time}  ${content}` : content;
 
-    if (info.details instanceof Error) {
-      const { errors, stack, ...rest } = info.details as any;
-
-      if (Object.keys(rest).length) {
-        const details = formatContent(rest, false);
-
-        return `${formatted}\n${stack}\n${details}`;
-      }
-
-      const details = info.details.stack ? info.details.stack : info.details;
-
-      return `${formatted}\n${details as string}`;
+    if (Object.values(info.session).length) {
+      info.details.unshift(info.session);
     }
 
-    if (isObject(info.details)) {
-      const details = formatContent(info.details, colours);
-      return `${formatted}\n${details}`;
-    }
+    const detailsArray = info.details.map((d) => readableDetails(d, colours));
+    const details = detailsArray.length ? `\n${detailsArray.join("\n")}` : "";
 
-    return formatted;
+    return `${formatted}${details}`;
   } catch (err) {
     console.error("error when formatting message", err);
     return fastSafeStringify(info);

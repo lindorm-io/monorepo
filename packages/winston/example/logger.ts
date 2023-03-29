@@ -32,7 +32,15 @@ logger.error(
   }),
 );
 
-logger.info("this will be displayed with a details object", { details: "data" });
+logger.info(
+  "this will be displayed with multiple details objects",
+  { details: "data" },
+  undefined,
+  { other: 123 },
+  null,
+  { stuff: { else: true } },
+  undefined,
+);
 
 logger.addContext(["extra", "stuff"]);
 
@@ -64,6 +72,8 @@ const logger3 = new WinstonLogger();
 
 logger3.addConsole(LogLevel.INFO);
 
-const session = logger3.createSessionLogger({ id: "session-id" });
+const session = logger.createSessionLogger({ id: "session-id" });
+
+session.info("this is a log from session logger with data", data);
 
 session.info("this is a log from session");

@@ -26,7 +26,7 @@ describe("ConsoleLogger", () => {
 
     expect(error).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "error",
       message: "message",
       session: {},
@@ -39,7 +39,7 @@ describe("ConsoleLogger", () => {
 
     expect(warn).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "warn",
       message: "message",
       session: {},
@@ -52,7 +52,7 @@ describe("ConsoleLogger", () => {
 
     expect(info).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "info",
       message: "message",
       session: {},
@@ -65,7 +65,7 @@ describe("ConsoleLogger", () => {
 
     expect(log).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "verbose",
       message: "message",
       session: {},
@@ -78,7 +78,7 @@ describe("ConsoleLogger", () => {
 
     expect(debug).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "debug",
       message: "message",
       session: {},
@@ -92,7 +92,7 @@ describe("ConsoleLogger", () => {
     expect(log).toHaveBeenCalledTimes(1);
     expect(log).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "silly",
       message: "message",
       session: {},
@@ -115,7 +115,7 @@ describe("ConsoleLogger", () => {
 
     expect(info).toHaveBeenCalledWith({
       context: ["one_string", "two_string", "three_string", "four_string"],
-      details: null,
+      details: [],
       level: "info",
       message: "message",
       session: {},
@@ -134,7 +134,7 @@ describe("ConsoleLogger", () => {
 
     expect(info).toHaveBeenCalledWith({
       context: [],
-      details: null,
+      details: [],
       level: "info",
       message: "message",
       session: { id: 1, data: "two" },
@@ -161,14 +161,16 @@ describe("ConsoleLogger", () => {
 
     expect(log).toHaveBeenCalledWith({
       context: [],
-      details: {
-        filtered: {
-          path: {
-            message: "[Filtered]",
+      details: [
+        {
+          filtered: {
+            path: {
+              message: "[Filtered]",
+            },
           },
+          mock: "details",
         },
-        mock: "details",
-      },
+      ],
       level: "silly",
       message: "message",
       session: {},
