@@ -22,6 +22,13 @@ import {
 import { KeyType } from "@lindorm-io/key-pair";
 
 export const server = createNodeServer<ServerKoaContext>({
+  client: {
+    id: configuration.oauth.client_id,
+    environment: configuration.server.environment,
+    name: "oauth service",
+    platform: "NodeJS",
+    version: process.env.npm_package_version,
+  },
   domain: configuration.server.domain,
   environment: configuration.server.environment as Environment,
   host: configuration.server.host,
