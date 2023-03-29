@@ -1,6 +1,7 @@
 export type ConsoleOptions = {
   colours: boolean;
   readable: boolean;
+  session: boolean;
   timestamp: boolean;
 };
 

@@ -10,7 +10,7 @@ import {
 
 export type LoggerMessage = {
   context: Array<string>;
-  details: LogDetails;
+  details: Array<LogDetails>;
   level: Level;
   message: string;
   session: LogSession;

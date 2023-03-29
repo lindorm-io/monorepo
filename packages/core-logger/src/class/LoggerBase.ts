@@ -75,20 +75,20 @@ export abstract class LoggerBase implements Logger {
 
   // public logger
 
-  public error(messageOrError: Error | string, details?: LogDetails): void {
+  public error(messageOrError: Error | string, ...details: Array<LogDetails>): void {
     const isError = messageOrError instanceof Error;
 
     this.handleLog({
       level: LogLevel.ERROR,
       message: isError ? messageOrError.message : messageOrError,
-      details: isError ? messageOrError : details ? details : null,
+      details: isError ? [messageOrError] : details?.length ? details : [],
       context: this._context,
       session: this._session || {},
       time: new Date(),
     });
   }
 
-  public warn(message: string, details?: LogDetails): void {
+  public warn(message: string, ...details: Array<LogDetails>): void {
     this.handleLog({
       level: LogLevel.WARN,
       message,
@@ -99,7 +99,7 @@ export abstract class LoggerBase implements Logger {
     });
   }
 
-  public info(message: string, details?: LogDetails): void {
+  public info(message: string, ...details: Array<LogDetails>): void {
     this.handleLog({
       level: LogLevel.INFO,
       message,
@@ -110,7 +110,7 @@ export abstract class LoggerBase implements Logger {
     });
   }
 
-  public verbose(message: string, details?: LogDetails): void {
+  public verbose(message: string, ...details: Array<LogDetails>): void {
     this.handleLog({
       level: LogLevel.VERBOSE,
       message,
@@ -121,7 +121,7 @@ export abstract class LoggerBase implements Logger {
     });
   }
 
-  public debug(message: string, details?: LogDetails): void {
+  public debug(message: string, ...details: Array<LogDetails>): void {
     this.handleLog({
       level: LogLevel.DEBUG,
       message,
@@ -132,7 +132,7 @@ export abstract class LoggerBase implements Logger {
     });
   }
 
-  public silly(message: string, details?: LogDetails): void {
+  public silly(message: string, ...details: Array<LogDetails>): void {
     this.handleLog({
       level: LogLevel.SILLY,
       message,
@@ -211,7 +211,7 @@ export abstract class LoggerBase implements Logger {
   private handleLog(options: LoggerMessage): void {
     this.log({
       ...options,
-      details: this.getFilteredDetails(options.details),
+      details: options.details.filter((d) => d).map((d) => this.getFilteredDetails(d)),
     });
   }
 }
