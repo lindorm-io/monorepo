@@ -1,5 +1,5 @@
 import { ParamsRecord, QueryRecord } from "@lindorm-io/common-types";
-import { TransformMode, transformCase } from "@lindorm-io/case";
+import { transformCase, TransformMode } from "@lindorm-io/case";
 import { createBaseUrl } from "./create-base-url";
 import { extractSearchParams } from "./extract-search-params";
 import { isObject } from "@lindorm-io/core";
@@ -55,7 +55,7 @@ const addQueryToURL = <Query = QueryRecord>(
   }
 
   for (const [key, value] of Object.entries(query)) {
-    const transformed = transformCase(key, queryCaseTransform);
+    const transformed = transformCase<string>(key, queryCaseTransform);
 
     if (Array.isArray(value)) {
       url.searchParams.append(transformed, value.join(" "));
