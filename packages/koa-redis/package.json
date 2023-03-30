@@ -34,7 +34,7 @@
     "@lindorm-io/core-logger": "^0.2.5",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^5.0.0",
-    "@types/koa": "^2.13.5",
+    "@types/koa": "^2.13.6",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-router": "^7.4.4",
     "@types/object-path": "^0.11.1",

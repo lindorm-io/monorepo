@@ -35,9 +35,9 @@
     "@lindorm-io/core-logger": "^0.2.5",
     "@types/ioredis": "^5.0.0",
     "@types/ioredis-mock": "^8.2.1",
-    "@types/lodash": "^4.14.191",
+    "@types/lodash": "^4.14.192",
     "compd": "^4.1.1",
-    "ioredis-mock": "^8.2.7",
+    "ioredis-mock": "^8.4.0",
     "redis-commands": "^1.7.0"
   }
 }
