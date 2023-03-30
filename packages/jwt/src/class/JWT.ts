@@ -2,7 +2,7 @@ import { Keystore, KeyType } from "@lindorm-io/key-pair";
 import { Logger } from "@lindorm-io/core-logger";
 import { TokenError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
-import { decode, Jwt, sign, verify } from "jsonwebtoken";
+import { decode, Jwt, sign, SignOptions, verify } from "jsonwebtoken";
 import { expiryObject } from "@lindorm-io/expiry";
 import { randomUUID } from "crypto";
 import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
@@ -90,11 +90,17 @@ export class JWT {
     const privateKey = key.privateKey as string;
     const signingKey =
       key.type === KeyType.RSA ? { passphrase: key.passphrase || "", key: privateKey } : privateKey;
-    const keyInfo = { algorithm: key.preferredAlgorithm, keyid: key.id };
 
-    const token = sign(sortObjectKeys(removeUndefinedFromObject(object)), signingKey, keyInfo);
+    const signOptions: SignOptions = {
+      algorithm: key.preferredAlgorithm,
+      allowInsecureKeySizes: true,
+      keyid: key.id,
+    };
 
-    this.logger.debug("sign token success", { token, ...object, ...keyInfo });
+    const payload = sortObjectKeys(removeUndefinedFromObject(object));
+    const token = sign(payload, signingKey, signOptions);
+
+    this.logger.debug("sign token success", { token, ...object, ...signOptions });
 
     return {
       id,

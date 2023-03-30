@@ -1,6 +1,6 @@
-import { Axios, axiosRequestLoggerMiddleware } from "../src";
-import { ConsoleLogger, LogLevel } from "@lindorm-io/core-logger";
-import { axiosTransformBodyCaseMiddleware } from "../src";
+import { Axios, axiosRequestLoggerMiddleware, axiosTransformBodyCaseMiddleware } from "../src";
+import { ConsoleLogger } from "@lindorm-io/console-logger";
+import { LogLevel } from "@lindorm-io/core-logger";
 
 (async () => {
   const logger = new ConsoleLogger();

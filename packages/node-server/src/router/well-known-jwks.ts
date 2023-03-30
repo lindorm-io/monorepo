@@ -5,7 +5,7 @@ import { HttpStatus } from "@lindorm-io/koa";
 export const createWellKnownJwksRouter = <
   Context extends LindormNodeServerContext = LindormNodeServerContext,
 >(
-  exposeExternal: boolean = false,
+  exposeExternal = false,
 ): Router => {
   const router = new Router<unknown, any>();
 

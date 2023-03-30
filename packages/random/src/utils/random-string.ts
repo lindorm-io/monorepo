@@ -5,7 +5,7 @@ import { randomInteger } from "./random-integer";
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const NUMBERS = "0123456789";
 
-const randomSort = () => 0.5 - Math.random();
+const randomSort = (): number => 0.5 - Math.random();
 
 const calculateAmount = (length: number, amount?: RandomStringAmount): number => {
   if (typeof amount === "number") {

@@ -18,20 +18,20 @@ import {
   ViewNotCreatedError,
 } from "../error";
 import {
+  Data,
+  DtoClass,
   EventEmitterListener,
   EventEmitterViewData,
   HandlerIdentifier,
   IDomainViewStore,
   IMessage,
   IViewDomain,
+  IViewEventHandler,
   State,
   ViewDomainOptions,
-  ViewEventHandlerContext,
   ViewEventHandlerAdapter,
+  ViewEventHandlerContext,
   ViewIdentifier,
-  Data,
-  DtoClass,
-  IViewEventHandler,
 } from "../types";
 
 export class ViewDomain implements IViewDomain {
@@ -51,7 +51,7 @@ export class ViewDomain implements IViewDomain {
     this.eventHandlers = [];
   }
 
-  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
+  public on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
     this.eventEmitter.on(evt, listener);
   }
 

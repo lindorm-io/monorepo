@@ -8,7 +8,7 @@ type Result = {
   method: PKCEMethod;
 };
 
-export const createPKCE = (method: PKCEMethod = PKCEMethod.SHA256, length: number = 43): Result => {
+export const createPKCE = (method: PKCEMethod = PKCEMethod.SHA256, length = 43): Result => {
   const verifier = randomBaseString(length);
   const challenge = method === "plain" ? verifier : createBaseHash(verifier);
 

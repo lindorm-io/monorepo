@@ -8,23 +8,21 @@ import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import { Saga } from "../model";
 import { SagaEventHandlerImplementation } from "../handler";
 import {
-  SagaIdentifier,
-  ISagaDomain,
-  SagaDomainOptions,
-  State,
-  IDomainSagaStore,
   Data,
   DtoClass,
+  EventEmitterListener,
+  EventEmitterSagaData,
+  HandlerIdentifier,
+  IDomainSagaStore,
+  ISagaDomain,
+  ISagaEventHandler,
+  SagaDomainOptions,
+  SagaEventHandlerContext,
+  SagaIdentifier,
+  State,
 } from "../types";
 import { assertSnakeCase } from "../util";
 import { snakeCase } from "@lindorm-io/case";
-import {
-  EventEmitterSagaData,
-  EventEmitterListener,
-  HandlerIdentifier,
-  ISagaEventHandler,
-  SagaEventHandlerContext,
-} from "../types";
 import {
   ConcurrencyError,
   DomainError,
@@ -51,7 +49,7 @@ export class SagaDomain implements ISagaDomain {
     this.eventHandlers = [];
   }
 
-  on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
+  public on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
     this.eventEmitter.on(evt, listener);
   }
 

@@ -6,7 +6,7 @@ import { Dict } from "@lindorm-io/common-types";
 
 type From = "data" | "headers" | "params" | "query" | string;
 
-const destructHeaders = (ctx: DefaultLindormKoaContext) => {
+const destructHeaders = (ctx: DefaultLindormKoaContext): Record<string, string> => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(ctx.headers)) {

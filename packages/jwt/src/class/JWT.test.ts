@@ -55,7 +55,7 @@ describe("JWT", () => {
 
   afterEach(jest.clearAllMocks);
 
-  describe("RS512", () => {
+  describe("RS", () => {
     beforeEach(() => {
       jwt = createTestJwt(
         undefined,
@@ -80,7 +80,7 @@ describe("JWT", () => {
     });
   });
 
-  describe("ES512", () => {
+  describe("ES", () => {
     beforeEach(() => {
       jwt = createTestJwt(
         undefined,

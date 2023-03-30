@@ -7,7 +7,7 @@ import { paramCase } from "./param-case";
 import { pascalCase } from "./pascal-case";
 import { snakeCase } from "./snake-case";
 
-export const transformCase = (input: CaseInput, mode: TransformMode = "none") => {
+export const transformCase = <T>(input: CaseInput, mode: TransformMode = "none"): T => {
   switch (mode) {
     case "camel":
       return camelCase(input);
@@ -31,7 +31,7 @@ export const transformCase = (input: CaseInput, mode: TransformMode = "none") =>
       return snakeCase(input);
 
     case "none":
-      return input;
+      return input as T;
 
     default:
       throw new Error(`Invalid transform mode [ ${mode} ]`);

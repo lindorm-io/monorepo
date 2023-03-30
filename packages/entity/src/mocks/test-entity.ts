@@ -26,7 +26,7 @@ export class TestEntity extends LindormEntity<TestEntityAttributes> {
     return await schema.validateAsync(this.toJSON());
   }
 
-  public toJSON() {
+  public toJSON(): TestEntityAttributes {
     return {
       ...this.defaultJSON(),
       name: this.name,

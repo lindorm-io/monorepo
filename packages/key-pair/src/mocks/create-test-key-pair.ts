@@ -1,6 +1,5 @@
 import { Algorithm, KeyType, NamedCurve } from "../enum";
-import { KeyPair } from "../entity";
-import { KeyPairOptions } from "../entity";
+import { KeyPair, KeyPairOptions } from "../entity";
 
 export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
@@ -41,7 +40,6 @@ export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): Key
     allowed: new Date("2020-01-01T08:00:00.000Z"),
     created: new Date("2020-01-01T08:00:00.000Z"),
     expires: new Date("2029-01-01T08:00:00.000Z"),
-    updated: new Date("2021-01-01T09:00:00.000Z"),
     external: false,
     passphrase: "",
     privateKey:
@@ -70,5 +68,6 @@ export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): Key
       "tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=\n" +
       "-----END RSA PUBLIC KEY-----\n",
     type: KeyType.RSA,
+    updated: new Date("2021-01-01T09:00:00.000Z"),
     ...options,
   });

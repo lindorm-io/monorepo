@@ -35,7 +35,7 @@ export class Axios {
   private readonly retry: RetryOptions;
   private readonly retryCallback: RetryCallback;
 
-  constructor(options: AxiosOptions = {}) {
+  public constructor(options: AxiosOptions = {}) {
     this.config = {
       auth: options.auth,
       timeout: options.timeout || DEFAULT_TIMEOUT,
@@ -203,7 +203,7 @@ export class Axios {
     }
 
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
-      url! || path!,
+      pathOrUrl,
       method,
       rest,
     );
