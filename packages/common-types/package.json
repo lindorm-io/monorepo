@@ -10,9 +10,9 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
-    "test": "tsc --noEmit",
+    "test": "tsc --noEmit --watch",
+    "test:ci": "tsc --noEmit",
     "test:update": "tsc --noEmit",
-    "test:watch": "tsc --noEmit --watch",
     "typecheck": "tsc --noEmit --watch",
     "typecheck:ci": "tsc --noEmit"
   }
