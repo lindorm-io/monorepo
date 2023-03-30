@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/expiry",
   "description": "Expiry utilities for lindorm.io",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

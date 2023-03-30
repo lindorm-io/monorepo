@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.10.1...@lindorm-io/koa-keystore@0.10.2) (2023-03-30)
+
+### Bug Fixes
+
+- align with new axios options ([d8e1f4a](https://github.com/lindorm-io/monorepo/commit/d8e1f4af399a4d3cb1d63001a00014e3dbbd260f))
+
 ## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.10.0...@lindorm-io/koa-keystore@0.10.1) (2023-03-26)
 
 ### Bug Fixes

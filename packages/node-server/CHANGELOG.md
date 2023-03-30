@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.6.0...@lindorm-io/node-server@0.6.1) (2023-03-30)
+
+### Bug Fixes
+
+- align with new axios options ([d8e1f4a](https://github.com/lindorm-io/monorepo/commit/d8e1f4af399a4d3cb1d63001a00014e3dbbd260f))
+- amend minor bugs ([3851c91](https://github.com/lindorm-io/monorepo/commit/3851c9151c474aac13a30acf4e6fc41cf5e0b6d3))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.5.0...@lindorm-io/node-server@0.6.0) (2023-03-26)
 
 ### Features

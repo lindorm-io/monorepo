@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.17](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/postgres@0.1.16...@lindorm-io/postgres@0.1.17) (2023-03-30)
+
+**Note:** Version bump only for package @lindorm-io/postgres
+
 ## [0.1.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/postgres@0.1.15...@lindorm-io/postgres@0.1.16) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/postgres

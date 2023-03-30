@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.26](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/string-blob@0.0.25...@lindorm-io/string-blob@0.0.26) (2023-03-30)
+
+**Note:** Version bump only for package @lindorm-io/string-blob
+
 ## [0.0.25](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/string-blob@0.0.24...@lindorm-io/string-blob@0.0.25) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/string-blob

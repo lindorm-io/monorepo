@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.38](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.37...@lindorm-io/koa-axios@0.1.38) (2023-03-30)
+
+### Bug Fixes
+
+- align with new axios options ([d8e1f4a](https://github.com/lindorm-io/monorepo/commit/d8e1f4af399a4d3cb1d63001a00014e3dbbd260f))
+
 ## [0.1.37](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.36...@lindorm-io/koa-axios@0.1.37) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/koa-axios

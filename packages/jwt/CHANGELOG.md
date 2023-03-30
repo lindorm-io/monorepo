@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.9.1...@lindorm-io/jwt@0.9.2) (2023-03-30)
+
+### Bug Fixes
+
+- amend minor bugs ([3851c91](https://github.com/lindorm-io/monorepo/commit/3851c9151c474aac13a30acf4e6fc41cf5e0b6d3))
+
 ## [0.9.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.9.0...@lindorm-io/jwt@0.9.1) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/jwt

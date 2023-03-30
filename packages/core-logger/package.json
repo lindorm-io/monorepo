@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/core-logger",
   "description": "Core logger for lindorm.io",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,8 +17,8 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/case": "^0.1.7",
-    "@lindorm-io/core": "^0.8.9",
+    "@lindorm-io/case": "^0.1.8",
+    "@lindorm-io/core": "^0.8.10",
     "clone": "^2.1.2",
     "fast-safe-stringify": "^2.1.1",
     "merge": "^2.1.1",

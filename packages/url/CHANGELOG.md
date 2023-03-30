@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.8...@lindorm-io/url@0.2.9) (2023-03-30)
+
+### Bug Fixes
+
+- use generic ([de49fde](https://github.com/lindorm-io/monorepo/commit/de49fdeb3ecb0da44128ad6531f74e561fa94a09))
+
 ## [0.2.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.7...@lindorm-io/url@0.2.8) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/url

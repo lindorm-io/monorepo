@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.5.9...@lindorm-io/winston@0.5.10) (2023-03-30)
+
+### Bug Fixes
+
+- implement multiple details ([06f2e31](https://github.com/lindorm-io/monorepo/commit/06f2e3170af68af96a22a42ba9a4935bab6baf16))
+
 ## [0.5.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/winston@0.5.8...@lindorm-io/winston@0.5.9) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/winston

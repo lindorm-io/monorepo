@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/console-logger@0.1.5...@lindorm-io/console-logger@0.1.6) (2023-03-30)
+
+### Bug Fixes
+
+- amend bug ([b68985e](https://github.com/lindorm-io/monorepo/commit/b68985ed81966d9c4cec6df07340b1c8f142cd81))
+- implement multiple details ([06f2e31](https://github.com/lindorm-io/monorepo/commit/06f2e3170af68af96a22a42ba9a4935bab6baf16))
+
 ## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/console-logger@0.1.4...@lindorm-io/console-logger@0.1.5) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/console-logger

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.2...@lindorm-io/axios@0.6.3) (2023-03-30)
+
+### Bug Fixes
+
+- amend minor bugs ([3851c91](https://github.com/lindorm-io/monorepo/commit/3851c9151c474aac13a30acf4e6fc41cf5e0b6d3))
+- implement alias and client properties ([085dc4a](https://github.com/lindorm-io/monorepo/commit/085dc4a4fff6a09ccee652bd499121b6c63d0411))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.1...@lindorm-io/axios@0.6.2) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/axios

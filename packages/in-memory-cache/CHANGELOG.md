@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.3.1...@lindorm-io/in-memory-cache@0.3.2) (2023-03-30)
+
+### Bug Fixes
+
+- debug logging ([a823e50](https://github.com/lindorm-io/monorepo/commit/a823e5063d9dc526b68c03d1402be9511a10f698))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/in-memory-cache@0.3.0...@lindorm-io/in-memory-cache@0.3.1) (2023-03-26)
 
 **Note:** Version bump only for package @lindorm-io/in-memory-cache
