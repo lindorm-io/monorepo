@@ -35,7 +35,7 @@ const readableDetails = (logDetails: LogDetails, colours: boolean): string | und
 };
 
 export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOptions>): string => {
-  const { colours = false, timestamp = false } = options;
+  const { colours = false, session = false, timestamp = false } = options;
 
   if (!info.time || !info.context) {
     return formatContent(info, false);
@@ -57,6 +57,11 @@ export const readableFormat = (info: LoggerMessage, options: Partial<ConsoleOpti
     }
 
     const detailsArray = info.details.map((d) => readableDetails(d, colours));
+
+    if (session && Object.values(info.session).length) {
+      detailsArray.unshift(formatContent(info.session, colours));
+    }
+
     const details = detailsArray.length ? `\n${detailsArray.join("\n")}` : "";
 
     return `${formatted}${details}`;

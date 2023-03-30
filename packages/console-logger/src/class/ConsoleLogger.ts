@@ -5,11 +5,11 @@ import {
   ConsoleOptions,
   Level,
   LogContext,
-  LogLevel,
-  LogSession,
   Logger,
   LoggerBase,
   LoggerMessage,
+  LogLevel,
+  LogSession,
 } from "@lindorm-io/core-logger";
 
 export class ConsoleLogger extends LoggerBase implements Logger {
@@ -19,7 +19,12 @@ export class ConsoleLogger extends LoggerBase implements Logger {
   public constructor(options: ConsoleLoggerOptions = {}) {
     super(options);
 
-    this.consoleOptions = { colours: false, readable: false, timestamp: false };
+    this.consoleOptions = {
+      colours: false,
+      readable: false,
+      session: false,
+      timestamp: false,
+    };
   }
 
   public addConsole(level: Level = "info", options: Partial<ConsoleOptions> = {}): void {
