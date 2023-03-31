@@ -11,8 +11,10 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "test": "jest --watch --",
-    "test:ci": "jest",
-    "test:update": "jest -u",
+    "test:ci": "yarn test:unit",
+    "test:unit": "jest --forceExit",
+    "test:unit:update": "jest --forceExit -u",
+    "test:update": "yarn test:unit:update",
     "typecheck": "tsc --noEmit --watch",
     "typecheck:ci": "tsc --noEmit"
   }
