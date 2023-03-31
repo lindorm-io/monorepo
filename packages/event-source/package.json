@@ -47,7 +47,6 @@
     "@lindorm-io/core-logger": "^0.2.6",
     "@types/amqplib": "^0.10.1",
     "@types/clone": "^2.1.1",
-    "@types/ioredis-mock": "^8.2.1",
     "@types/pg": "^8.6.6",
     "amqplib": "^0.10.3",
     "compd": "^4.1.1",

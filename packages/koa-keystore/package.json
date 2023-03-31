@@ -37,7 +37,6 @@
     "@lindorm-io/core-logger": "^0.2.6",
     "@types/express-useragent": "^1.0.2",
     "@types/ioredis": "^5.0.0",
-    "@types/ioredis-mock": "^8.2.1",
     "@types/koa": "^2.13.6",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-router": "^7.4.4",

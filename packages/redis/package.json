@@ -11,7 +11,7 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "test": "jest --watch --",
-    "test:ci": "yarn test:unit && yarn test:integration",
+    "test:ci": "yarn test:integration",
     "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u",
     "test:unit": "jest --forceExit",
@@ -34,10 +34,8 @@
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.6",
     "@types/ioredis": "^5.0.0",
-    "@types/ioredis-mock": "^8.2.1",
     "@types/lodash": "^4.14.192",
     "compd": "^4.1.1",
-    "ioredis-mock": "^8.4.0",
     "redis-commands": "^1.7.0"
   }
 }
