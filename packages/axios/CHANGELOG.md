@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.3...@lindorm-io/axios@0.6.4) (2023-04-01)
+
+**Note:** Version bump only for package @lindorm-io/axios
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.2...@lindorm-io/axios@0.6.3) (2023-03-30)
 
 ### Bug Fixes

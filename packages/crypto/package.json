@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/crypto",
   "description": "Simplified crypto handlers for lindorm.io",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,8 +19,8 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/core": "^0.8.10",
-    "@lindorm-io/errors": "^0.1.19",
+    "@lindorm-io/core": "^0.8.11",
+    "@lindorm-io/errors": "^0.1.20",
     "argon2": "^0.30.3",
     "crypto-js": "^4.1.1"
   },

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.2.2...@lindorm-io/common-types@0.3.0) (2023-04-01)
+
+### Bug Fixes
+
+- streamline contract for get authentication ([8490b27](https://github.com/lindorm-io/monorepo/commit/8490b27bdd7382245749fb49065d5811fb65f18c))
+
+### Features
+
+- expand endpoints for authentication ([3cc624b](https://github.com/lindorm-io/monorepo/commit/3cc624b713c8a4e042af545bc6f788dfc2b8a46b))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.2.1...@lindorm-io/common-types@0.2.2) (2023-03-30)
 
 **Note:** Version bump only for package @lindorm-io/common-types
