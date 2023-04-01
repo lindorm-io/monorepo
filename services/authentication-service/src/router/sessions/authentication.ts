@@ -1,6 +1,8 @@
 import { authenticationSessionEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
+  getAuthenticationCodeController,
+  getAuthenticationCodeSchema,
   getAuthenticationController,
   getAuthenticationSchema,
   initialiseAuthenticationController,
@@ -9,6 +11,8 @@ import {
   initialiseOidcSchema,
   initialiseStrategyController,
   initialiseStrategySchema,
+  rejectAuthenticationController,
+  rejectAuthenticationSchema,
   verifyAuthenticationController,
   verifyAuthenticationSchema,
 } from "../../controller";
@@ -31,6 +35,14 @@ router.get(
 );
 
 router.get(
+  "/:id/code",
+  paramsMiddleware,
+  useSchema(getAuthenticationCodeSchema),
+  authenticationSessionEntityMiddleware("data.id"),
+  useController(getAuthenticationCodeController),
+);
+
+router.get(
   "/:id/oidc",
   paramsMiddleware,
   useSchema(initialiseOidcSchema),
@@ -44,6 +56,14 @@ router.post(
   useSchema(initialiseStrategySchema),
   authenticationSessionEntityMiddleware("data.id"),
   useController(initialiseStrategyController),
+);
+
+router.post(
+  "/:id/reject",
+  paramsMiddleware,
+  useSchema(rejectAuthenticationSchema),
+  authenticationSessionEntityMiddleware("data.id"),
+  useController(rejectAuthenticationController),
 );
 
 router.post(

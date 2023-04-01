@@ -173,7 +173,7 @@ describe("/sessions/authentication", () => {
     );
 
     const response = await request(server.callback())
-      .get(`/sessions/authentication/${authenticationSession.id}`)
+      .get(`/sessions/authentication/${authenticationSession.id}/code`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
@@ -239,6 +239,24 @@ describe("/sessions/authentication", () => {
 
     await expect(TEST_STRATEGY_SESSION_CACHE.find({ id: response.body.id })).resolves.toStrictEqual(
       expect.any(StrategySession),
+    );
+  });
+
+  test("should reject authentication session", async () => {
+    const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
+      createTestAuthenticationSession(),
+    );
+
+    await request(server.callback())
+      .post(`/sessions/authentication/${authenticationSession.id}/reject`)
+      .expect(204);
+
+    await expect(
+      TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        status: "rejected",
+      }),
     );
   });
 
