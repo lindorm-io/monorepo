@@ -2,6 +2,8 @@ import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateClientConfig as _generateClientConfig } from "../../util";
 import { getAuthenticationController } from "./get-authentication";
+import { SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 
 jest.mock("../../util");
 
@@ -72,21 +74,41 @@ describe("getAuthenticationController", () => {
     });
   });
 
-  test("should resolve with code", async () => {
-    ctx.entity.authenticationSession.status = "confirmed";
+  test("should resolve with code status", async () => {
+    ctx.entity.authenticationSession.status = SessionStatus.CODE;
 
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
-        code: expect.any(String),
+        config: [],
+        emailHint: null,
+        expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
+        oidcProviders: [],
+        phoneHint: null,
+        status: "code",
       },
     });
+  });
 
-    expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        code: expect.any(String),
-        status: "code",
-      }),
-    );
+  test("should resolve with confirmed status", async () => {
+    ctx.entity.authenticationSession.status = SessionStatus.CONFIRMED;
+
+    await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
+      body: {
+        config: [],
+        emailHint: null,
+        expires: "2022-01-01T08:00:00.000Z",
+        mode: "oauth",
+        oidcProviders: [],
+        phoneHint: null,
+        status: "confirmed",
+      },
+    });
+  });
+
+  test("should throw on invalid status", async () => {
+    ctx.entity.authenticationSession.status = SessionStatus.REJECTED;
+
+    await expect(getAuthenticationController(ctx)).rejects.toThrow(ClientError);
   });
 });

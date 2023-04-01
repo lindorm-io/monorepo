@@ -1,10 +1,8 @@
 import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { argon } from "../../instance";
+import { ServerKoaController } from "../../types";
 import { generateClientConfig } from "../../util";
-import { randomString } from "@lindorm-io/random";
 import {
   GetAuthenticationRequestParams,
   GetAuthenticationResponse,
@@ -26,27 +24,31 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
 ): ControllerResponse<ResponseBody> => {
   const {
     axios: { oidcClient },
-    redis: { authenticationSessionCache },
     entity: { authenticationSession },
   } = ctx;
 
   if (
-    authenticationSession.status !== SessionStatus.CONFIRMED &&
-    authenticationSession.status !== SessionStatus.PENDING &&
-    authenticationSession.status !== SessionStatus.REJECTED
+    ![SessionStatus.CODE, SessionStatus.CONFIRMED, SessionStatus.PENDING].includes(
+      authenticationSession.status,
+    )
   ) {
-    throw new ClientError("Invalid Session Status");
+    throw new ClientError("Invalid Session Status", {
+      debug: { status: authenticationSession.status },
+    });
   }
 
-  if (authenticationSession.status === SessionStatus.CONFIRMED) {
-    const code = randomString(64);
-
-    authenticationSession.code = await argon.encrypt(code);
-    authenticationSession.status = SessionStatus.CODE;
-
-    await authenticationSessionCache.update(authenticationSession);
-
-    return { body: { code, mode: authenticationSession.mode } };
+  if ([SessionStatus.CODE, SessionStatus.CONFIRMED].includes(authenticationSession.status)) {
+    return {
+      body: {
+        config: [],
+        emailHint: null,
+        expires: authenticationSession.expires.toISOString(),
+        mode: authenticationSession.mode,
+        oidcProviders: [],
+        phoneHint: null,
+        status: authenticationSession.status,
+      },
+    };
   }
 
   const clientConfig = generateClientConfig(authenticationSession);

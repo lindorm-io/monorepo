@@ -4,12 +4,7 @@ import { StandardRequestParamsWithId } from "../../standard";
 
 export type GetAuthenticationRequestParams = StandardRequestParamsWithId;
 
-type CodeResponseBody = {
-  code: string;
-  mode: AuthenticationMode;
-};
-
-type PendingResponseBody = {
+export type GetAuthenticationResponse = {
   config: Array<AuthMethodConfig>;
   emailHint: string | null;
   expires: string;
@@ -18,5 +13,3 @@ type PendingResponseBody = {
   phoneHint: string | null;
   status: SessionStatus;
 };
-
-export type GetAuthenticationResponse = CodeResponseBody | PendingResponseBody;
