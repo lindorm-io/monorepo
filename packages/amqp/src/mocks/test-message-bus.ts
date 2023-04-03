@@ -1,9 +1,10 @@
-import { IMessage, ISubscription, MessageBusOptions } from "../types";
+import { IAmqpConnection, IMessage, ISubscription } from "../types";
 import { MessageBusBase } from "../infrastructure";
+import { Logger } from "@lindorm-io/core-logger";
 
-export class TestMessageBus extends MessageBusBase<IMessage, ISubscription> {
-  public constructor(options: MessageBusOptions) {
-    super(options);
+export class TestMessageBus extends MessageBusBase {
+  public constructor(connection: IAmqpConnection, logger: Logger) {
+    super(connection, logger, { nackTimeout: 5000 });
   }
 
   protected createMessage(message: IMessage): any {

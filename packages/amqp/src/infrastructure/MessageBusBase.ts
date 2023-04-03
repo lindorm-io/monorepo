@@ -7,7 +7,7 @@ import {
   IMessage,
   IMessageBus,
   ISubscription,
-  LindormMessageBusOptions,
+  MessageBusOptions,
   SubscriptionData,
   UnsubscribeOptions,
 } from "../types";
@@ -24,13 +24,15 @@ export abstract class MessageBusBase<
 
   protected readonly logger: Logger;
 
-  protected constructor(options: LindormMessageBusOptions) {
-    const { connection, nackTimeout = 3000 } = options;
-
+  protected constructor(
+    connection: IAmqpConnection,
+    logger: Logger,
+    options: MessageBusOptions = {},
+  ) {
     this.connection = connection;
     this.isConnected = false;
-    this.logger = options.logger.createChildLogger(["MessageBus", this.constructor.name]);
-    this.nackTimeout = nackTimeout;
+    this.logger = logger.createChildLogger(["MessageBus", this.constructor.name]);
+    this.nackTimeout = options.nackTimeout || 3000;
     this.subscriptions = [];
 
     this.connection.on(ConnectionStatus.CONNECTED, this.onConnected.bind(this));

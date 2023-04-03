@@ -27,7 +27,7 @@ describe("MessageBusBase", () => {
 
     await connection.connect();
 
-    messageBus = new TestMessageBus({ connection, logger });
+    messageBus = new TestMessageBus(connection, logger);
   }, 60000);
 
   afterAll(async () => {

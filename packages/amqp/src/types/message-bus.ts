@@ -1,30 +1,21 @@
-import { IAmqpConnection } from "./amqp-connection";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessage } from "./message";
 import { ISubscription } from "./subscription";
 
-export interface BusOptions {
+export type MessageBusOptions = {
   nackTimeout?: number;
-}
+};
 
-export interface MessageBusOptions {
-  connection: IAmqpConnection;
-  logger: Logger;
-}
-
-export type LindormMessageBusOptions = BusOptions & MessageBusOptions;
-
-export interface SubscriptionData<Subscription extends ISubscription = ISubscription> {
+export type SubscriptionData<Subscription extends ISubscription = ISubscription> = {
   queue: string;
   topic: string;
   consumerTag: string;
   subscription: Subscription;
-}
+};
 
-export interface UnsubscribeOptions {
+export type UnsubscribeOptions = {
   queue: string;
   topic: string;
-}
+};
 
 export interface IMessageBus<
   Message extends IMessage = IMessage,
