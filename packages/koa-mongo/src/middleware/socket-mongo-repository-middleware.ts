@@ -1,8 +1,7 @@
-import { DefaultLindormMongoSocketMiddleware } from "../types";
-import { MongoRepositoryConstructor } from "@lindorm-io/mongo";
+import { IMongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
 import { ServerError } from "@lindorm-io/errors";
 import { camelCase } from "@lindorm-io/case";
-import { getSocketError } from "@lindorm-io/koa";
+import { DefaultLindormSocketMiddleware, getSocketError } from "@lindorm-io/koa";
 
 type Options = {
   repositoryKey?: string;
@@ -10,9 +9,10 @@ type Options = {
 
 export const socketMongoRepositoryMiddleware =
   (
+    connection: IMongoConnection,
     Repository: MongoRepositoryConstructor,
     options?: Options,
-  ): DefaultLindormMongoSocketMiddleware =>
+  ): DefaultLindormSocketMiddleware =>
   (socket, next) => {
     try {
       const repository = options?.repositoryKey || camelCase(Repository.name);
@@ -23,7 +23,7 @@ export const socketMongoRepositoryMiddleware =
         });
       }
 
-      socket.ctx.mongo[repository] = new Repository(socket.ctx.connection.mongo, socket.ctx.logger);
+      socket.ctx.mongo[repository] = new Repository(connection, socket.ctx.logger);
 
       next();
     } catch (err: any) {

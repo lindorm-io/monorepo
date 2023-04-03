@@ -1,4 +1,4 @@
-import { AmqpConnection, MessageBusBase } from "@lindorm-io/amqp";
+import { AmqpConnection, MessageBusConstructor } from "@lindorm-io/amqp";
 import { KoaAppOptions } from "@lindorm-io/koa";
 import { LindormNodeServerKoaContext } from "./context";
 import { MemoryCacheConstructor, MemoryDatabase } from "@lindorm-io/in-memory-cache";
@@ -29,7 +29,7 @@ export type CreateNodeServerOptions<
   keystore?: KeystoreOptions;
   memory?: Array<MemoryCacheConstructor>;
   memoryDatabase?: MemoryDatabase;
-  messageBus?: typeof MessageBusBase;
+  messageBus?: Array<MessageBusConstructor>;
   mongo?: Array<MongoRepositoryConstructor>;
   mongoConnection?: MongoConnection;
   redis?: Array<RedisRepositoryConstructor>;

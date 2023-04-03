@@ -1,7 +1,7 @@
 import { DefaultLindormAmqpKoaMiddleware } from "../types";
 import { IAmqpConnection } from "@lindorm-io/amqp";
 
-export const amqpMiddleware =
+export const amqpConnectionMiddleware =
   (connection: IAmqpConnection): DefaultLindormAmqpKoaMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("amqp");

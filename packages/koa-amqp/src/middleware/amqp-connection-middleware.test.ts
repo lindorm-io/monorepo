@@ -1,5 +1,5 @@
 import { Metric } from "@lindorm-io/koa";
-import { amqpMiddleware } from "./amqp-middleware";
+import { amqpConnectionMiddleware } from "./amqp-connection-middleware";
 import { createMockLogger } from "@lindorm-io/core-logger";
 
 const next = () => Promise.resolve();
@@ -31,7 +31,7 @@ describe("amqpMiddleware", () => {
   });
 
   test("should wait for connection and set on context", async () => {
-    await expect(amqpMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
+    await expect(amqpConnectionMiddleware(connection)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.connection.amqp).toStrictEqual(expect.any(AmqpConnection));
     expect(connect).toHaveBeenCalled();

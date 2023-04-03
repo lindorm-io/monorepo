@@ -1,14 +1,18 @@
-import { DefaultLindormRedisKoaMiddleware } from "../types";
 import { camelCase } from "@lindorm-io/case";
 import { ServerError } from "@lindorm-io/errors";
-import { RedisRepositoryConstructor } from "@lindorm-io/redis";
+import { IRedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
+import { DefaultLindormMiddleware } from "@lindorm-io/koa";
 
 interface Options {
   repositoryKey?: string;
 }
 
 export const redisRepositoryMiddleware =
-  (Repository: RedisRepositoryConstructor, options?: Options): DefaultLindormRedisKoaMiddleware =>
+  (
+    connection: IRedisConnection,
+    Repository: RedisRepositoryConstructor,
+    options?: Options,
+  ): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("redis");
 
@@ -20,7 +24,7 @@ export const redisRepositoryMiddleware =
       });
     }
 
-    ctx.redis[repository] = new Repository(ctx.connection.redis, ctx.logger);
+    ctx.redis[repository] = new Repository(connection, ctx.logger);
 
     metric.end();
 

@@ -2,7 +2,7 @@ import { IAmqpConnection } from "@lindorm-io/amqp";
 import { DefaultLindormAmqpSocketMiddleware } from "../types";
 import { getSocketError } from "@lindorm-io/koa";
 
-export const socketAmqpMiddleware =
+export const socketAmqpConnectionMiddleware =
   (connection: IAmqpConnection): DefaultLindormAmqpSocketMiddleware =>
   (socket, next) => {
     try {

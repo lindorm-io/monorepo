@@ -8,11 +8,11 @@ const next = () => Promise.resolve();
 describe("messageBusMiddleware", () => {
   let ctx: any;
 
+  const connection = createMockAmqpConnection();
   const logger = createMockLogger();
 
   beforeEach(() => {
     ctx = {
-      connection: { amqp: createMockAmqpConnection() },
       logger,
       metrics: {},
     };
@@ -20,7 +20,9 @@ describe("messageBusMiddleware", () => {
   });
 
   test("should set messageBus on context", async () => {
-    await expect(messageBusMiddleware(TestMessageBus)(ctx, next)).resolves.toBeUndefined();
+    await expect(
+      messageBusMiddleware(connection, TestMessageBus)(ctx, next),
+    ).resolves.toBeUndefined();
 
     expect(ctx.messageBus).toStrictEqual(expect.any(TestMessageBus));
     expect(ctx.metrics.amqp).toStrictEqual(expect.any(Number));

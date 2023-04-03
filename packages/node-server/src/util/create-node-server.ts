@@ -3,20 +3,12 @@ import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { createWellKnownJwksRouter } from "../router";
+import { getServiceOptions } from "./get-service-options";
 import { jwtMiddleware, socketJwtMiddleware } from "@lindorm-io/koa-jwt";
 import { memoryCacheMiddleware, socketMemoryCacheMiddleware } from "@lindorm-io/koa-memory";
-import {
-  redisConnectionMiddleware,
-  redisRepositoryMiddleware,
-  socketRedisConnectionMiddleware,
-  socketRedisRepositoryMiddleware,
-} from "@lindorm-io/koa-redis";
-import {
-  amqpMiddleware,
-  messageBusMiddleware,
-  socketAmqpMiddleware,
-  socketMessageBusMiddleware,
-} from "@lindorm-io/koa-amqp";
+import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/koa-amqp";
+import { mongoRepositoryMiddleware, socketMongoRepositoryMiddleware } from "@lindorm-io/koa-mongo";
+import { redisRepositoryMiddleware, socketRedisRepositoryMiddleware } from "@lindorm-io/koa-redis";
 import {
   keyPairCleanupWorker,
   keyPairJwksMemoryWorker,
@@ -35,16 +27,9 @@ import {
   socketRedisKeysMiddleware,
 } from "@lindorm-io/koa-keystore";
 import {
-  mongoConnectionMiddleware,
-  mongoRepositoryMiddleware,
-  socketMongoConnectionMiddleware,
-  socketMongoRepositoryMiddleware,
-} from "@lindorm-io/koa-mongo";
-import {
   axiosTransformBodyCaseMiddleware,
   axiosTransformQueryCaseMiddleware,
 } from "@lindorm-io/axios";
-import { getServiceOptions } from "./get-service-options";
 
 export const createNodeServer = <
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
@@ -55,10 +40,24 @@ export const createNodeServer = <
   const socketMiddleware: Array<DefaultLindormSocketMiddleware> = [
     socketAxiosMiddleware({ alias: "axiosClient" }),
   ];
+  const services = getServiceOptions(options.services);
 
   const logger = options.logger.createChildLogger("CreateNodeServer");
 
-  const services = getServiceOptions(options.services);
+  const {
+    amqpConnection,
+    client,
+    issuer,
+    keystore,
+    memory,
+    memoryDatabase,
+    messageBus,
+    mongo,
+    mongoConnection,
+    redis,
+    redisConnection,
+    useSocketRedisAdapter,
+  } = options;
 
   for (const service of services) {
     logger.debug("Adding axios middleware for service to server", { service });
@@ -68,7 +67,7 @@ export const createNodeServer = <
         host: service.host,
         port: service.port || undefined,
         alias: service.name,
-        client: options.client,
+        client,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
@@ -78,47 +77,36 @@ export const createNodeServer = <
         host: service.host,
         port: service.port || undefined,
         alias: service.name,
-        client: options.client,
+        client,
         middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
   }
 
-  if (options.amqpConnection) {
-    logger.debug("Adding AMQP connection middleware to server", {
-      options: options.amqpConnection,
-    });
+  if (amqpConnection && messageBus) {
+    for (const MessageBus of messageBus || []) {
+      logger.debug("Adding Message Bus middleware to server", { options: MessageBus.name });
 
-    middleware.push(amqpMiddleware(options.amqpConnection));
-    socketMiddleware.push(socketAmqpMiddleware(options.amqpConnection));
-
-    if (options.messageBus) {
-      logger.debug("Adding Message Bus middleware to server", { options: options.messageBus });
-
-      middleware.push(messageBusMiddleware(options.messageBus));
-      socketMiddleware.push(socketMessageBusMiddleware(options.messageBus));
+      middleware.push(messageBusMiddleware(amqpConnection, MessageBus));
+      socketMiddleware.push(socketMessageBusMiddleware(amqpConnection, MessageBus));
     }
   }
 
-  if (options.memoryDatabase) {
-    logger.debug("Adding memory database middleware to server");
-
-    for (const Cache of options.memory || []) {
+  if (memoryDatabase) {
+    for (const Cache of memory || []) {
       logger.debug("Adding memory cache middleware to server", { cache: Cache.name });
 
-      middleware.push(memoryCacheMiddleware(options.memoryDatabase, Cache));
-      socketMiddleware.push(socketMemoryCacheMiddleware(options.memoryDatabase, Cache));
+      middleware.push(memoryCacheMiddleware(memoryDatabase, Cache));
+      socketMiddleware.push(socketMemoryCacheMiddleware(memoryDatabase, Cache));
     }
 
-    if (options.keystore?.storage?.includes("memory")) {
+    if (keystore?.storage?.includes("memory")) {
       logger.debug("Adding memory cache middleware to server", {
         cache: KeyPairMemoryCache.name,
       });
 
-      middleware.push(memoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache));
-      socketMiddleware.push(
-        socketMemoryCacheMiddleware(options.memoryDatabase, KeyPairMemoryCache),
-      );
+      middleware.push(memoryCacheMiddleware(memoryDatabase, KeyPairMemoryCache));
+      socketMiddleware.push(socketMemoryCacheMiddleware(memoryDatabase, KeyPairMemoryCache));
 
       logger.debug("Adding memory keys middleware to server");
 
@@ -127,65 +115,59 @@ export const createNodeServer = <
     }
   }
 
-  if (options.mongoConnection) {
-    logger.debug("Adding mongo connection middleware to server");
-
-    middleware.push(mongoConnectionMiddleware(options.mongoConnection));
-    socketMiddleware.push(socketMongoConnectionMiddleware(options.mongoConnection));
-
-    for (const MongoRepository of options.mongo || []) {
+  if (mongoConnection) {
+    for (const MongoRepository of mongo || []) {
       logger.debug("Adding mongo repository middleware to server", {
         repository: MongoRepository.name,
       });
 
-      middleware.push(mongoRepositoryMiddleware(MongoRepository));
-      socketMiddleware.push(socketMongoRepositoryMiddleware(MongoRepository));
+      middleware.push(mongoRepositoryMiddleware(mongoConnection, MongoRepository));
+      socketMiddleware.push(socketMongoRepositoryMiddleware(mongoConnection, MongoRepository));
     }
 
-    if (options.keystore?.storage?.includes("mongo")) {
+    if (keystore?.storage?.includes("mongo")) {
       logger.debug("Adding mongo keystore middleware to server");
 
-      middleware.push(mongoRepositoryMiddleware(KeyPairMongoRepository));
-      socketMiddleware.push(socketMongoRepositoryMiddleware(KeyPairMongoRepository));
+      middleware.push(mongoRepositoryMiddleware(mongoConnection, KeyPairMongoRepository));
+      socketMiddleware.push(
+        socketMongoRepositoryMiddleware(mongoConnection, KeyPairMongoRepository),
+      );
     }
   }
 
-  if (options.redisConnection) {
-    logger.debug("Adding redis connection middleware to server");
-
-    middleware.push(redisConnectionMiddleware(options.redisConnection));
-    socketMiddleware.push(socketRedisConnectionMiddleware(options.redisConnection));
-
-    for (const RedisRepository of options.redis || []) {
+  if (redisConnection) {
+    for (const RedisRepository of redis || []) {
       logger.debug("Adding redis repository middleware to server", {
         repository: RedisRepository.name,
       });
 
-      middleware.push(redisRepositoryMiddleware(RedisRepository));
-      socketMiddleware.push(socketRedisRepositoryMiddleware(RedisRepository));
+      middleware.push(redisRepositoryMiddleware(redisConnection, RedisRepository));
+      socketMiddleware.push(socketRedisRepositoryMiddleware(redisConnection, RedisRepository));
     }
 
-    if (options.keystore?.storage?.includes("redis")) {
+    if (keystore?.storage?.includes("redis")) {
       logger.debug("Adding mongo keystore middleware to server");
 
-      middleware.push(redisRepositoryMiddleware(KeyPairRedisRepository));
-      socketMiddleware.push(socketRedisRepositoryMiddleware(KeyPairRedisRepository));
+      middleware.push(redisRepositoryMiddleware(redisConnection, KeyPairRedisRepository));
+      socketMiddleware.push(
+        socketRedisRepositoryMiddleware(redisConnection, KeyPairRedisRepository),
+      );
 
       middleware.push(redisKeysMiddleware);
       socketMiddleware.push(socketRedisKeysMiddleware);
     }
 
-    if (options.useSocketRedisAdapter) {
+    if (useSocketRedisAdapter) {
       options.socketOptions = {
         adapter: createAdapter(
-          options.redisConnection.client.duplicate(),
-          options.redisConnection.client.duplicate(),
+          redisConnection.client.duplicate(),
+          redisConnection.client.duplicate(),
         ),
       };
     }
   }
 
-  if (options.keystore?.storage?.length) {
+  if (keystore?.storage?.length) {
     logger.debug("Adding keystore middleware to server");
 
     middleware.push(keystoreMiddleware);
@@ -193,8 +175,8 @@ export const createNodeServer = <
 
     logger.debug("Adding JWT middleware to server");
 
-    middleware.push(jwtMiddleware({ issuer: options.issuer || options.host }));
-    socketMiddleware.push(socketJwtMiddleware({ issuer: options.issuer || options.host }));
+    middleware.push(jwtMiddleware({ issuer: issuer || options.host }));
+    socketMiddleware.push(socketJwtMiddleware({ issuer: issuer || options.host }));
   }
 
   for (const item of options.middleware || []) {
@@ -207,16 +189,16 @@ export const createNodeServer = <
 
   const koa = new KoaApp<Context>({ ...options, middleware, socketMiddleware });
 
-  if (options.issuer && options.mongoConnection && options.keystore?.generated?.length) {
-    for (const keyType of options.keystore.generated) {
+  if (issuer && mongoConnection && keystore?.generated?.length) {
+    for (const keyType of keystore.generated) {
       logger.debug("Adding mongo KeyPair rotation worker", { keyType });
 
       koa.addWorker(
         keyPairRotationWorker({
           keyType,
           logger: options.logger,
-          mongoConnection: options.mongoConnection,
-          origin: options.issuer,
+          mongoConnection,
+          origin: issuer,
           retry: { maximumAttempts: 30 },
         }),
       );
@@ -227,65 +209,65 @@ export const createNodeServer = <
     koa.addWorker(
       keyPairCleanupWorker({
         logger: options.logger,
-        mongoConnection: options.mongoConnection,
+        mongoConnection,
         retry: { maximumAttempts: 30 },
       }),
     );
 
-    if (options.memoryDatabase && options.keystore.storage?.includes("memory")) {
+    if (memoryDatabase && keystore.storage?.includes("memory")) {
       logger.debug("Adding memory KeyPair cache worker");
 
       koa.addWorker(
         keyPairMongoMemoryWorker({
           logger: options.logger,
-          memoryDatabase: options.memoryDatabase,
-          mongoConnection: options.mongoConnection,
+          memoryDatabase,
+          mongoConnection,
           retry: { maximumAttempts: 30 },
         }),
       );
     }
 
-    if (options.redisConnection && options.keystore.storage?.includes("redis")) {
+    if (redisConnection && keystore.storage?.includes("redis")) {
       logger.debug("Adding redis KeyPair cache worker");
 
       koa.addWorker(
         keyPairMongoRedisWorker({
           logger: options.logger,
-          mongoConnection: options.mongoConnection,
-          redisConnection: options.redisConnection,
+          mongoConnection,
+          redisConnection,
           retry: { maximumAttempts: 30 },
         }),
       );
     }
   }
 
-  if (options.keystore?.jwks?.length && options.keystore?.storage?.length) {
-    const jwks = getServiceOptions(options.keystore.jwks);
+  if (keystore?.jwks?.length && keystore?.storage?.length) {
+    const jwks = getServiceOptions(keystore.jwks);
 
     for (const service of jwks) {
-      if (options.memoryDatabase && options.keystore.storage.includes("memory")) {
+      if (memoryDatabase && keystore.storage.includes("memory")) {
         koa.addWorker(
           keyPairJwksMemoryWorker({
             host: service.host,
             port: service.port || undefined,
             alias: service.name,
-            client: options.client,
+            client,
             logger: options.logger,
-            memoryDatabase: options.memoryDatabase,
+            memoryDatabase,
             retry: { maximumAttempts: 30 },
           }),
         );
       }
 
-      if (options.redisConnection && options.keystore.storage.includes("redis")) {
+      if (redisConnection && keystore.storage.includes("redis")) {
         koa.addWorker(
           keyPairJwksRedisWorker({
             host: service.host,
             port: service.port || undefined,
             alias: service.name,
-            client: options.client,
+            client,
             logger: options.logger,
-            redisConnection: options.redisConnection,
+            redisConnection,
             retry: { maximumAttempts: 30 },
           }),
         );
@@ -293,10 +275,10 @@ export const createNodeServer = <
     }
   }
 
-  if (options.keystore?.exposed?.includes("public")) {
+  if (keystore?.exposed?.includes("public")) {
     koa.addRoute(
       "/.well-known/jwks.json",
-      createWellKnownJwksRouter<Context>(options.keystore?.exposed?.includes("external")),
+      createWellKnownJwksRouter<Context>(keystore?.exposed?.includes("external")),
     );
   }
 

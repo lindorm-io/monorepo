@@ -1,7 +1,7 @@
-import { DefaultLindormMongoKoaMiddleware } from "../types";
 import { camelCase } from "@lindorm-io/case";
 import { ServerError } from "@lindorm-io/errors";
-import { MongoRepositoryConstructor } from "@lindorm-io/mongo";
+import { IMongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
+import { DefaultLindormMiddleware } from "@lindorm-io/koa";
 
 type Options = {
   repositoryKey?: string;
@@ -9,13 +9,14 @@ type Options = {
 
 export const mongoRepositoryMiddleware =
   (
-    MongoRepository: MongoRepositoryConstructor,
+    connection: IMongoConnection,
+    Repository: MongoRepositoryConstructor,
     options?: Options,
-  ): DefaultLindormMongoKoaMiddleware =>
+  ): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     const metric = ctx.getMetric("mongo");
 
-    const repository = options?.repositoryKey || camelCase(MongoRepository.name);
+    const repository = options?.repositoryKey || camelCase(Repository.name);
 
     if (!repository) {
       throw new ServerError("Invalid repository name", {
@@ -23,7 +24,7 @@ export const mongoRepositoryMiddleware =
       });
     }
 
-    ctx.mongo[repository] = new MongoRepository(ctx.connection.mongo, ctx.logger);
+    ctx.mongo[repository] = new Repository(connection, ctx.logger);
 
     metric.end();
 

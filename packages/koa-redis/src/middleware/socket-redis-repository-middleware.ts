@@ -1,7 +1,6 @@
-import { DefaultLindormRedisSocketMiddleware } from "../types";
-import { RedisRepositoryConstructor } from "@lindorm-io/redis";
+import { IRedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
 import { camelCase } from "@lindorm-io/case";
-import { getSocketError } from "@lindorm-io/koa";
+import { DefaultLindormSocketMiddleware, getSocketError } from "@lindorm-io/koa";
 import { ServerError } from "@lindorm-io/errors";
 
 interface Options {
@@ -10,9 +9,10 @@ interface Options {
 
 export const socketRedisRepositoryMiddleware =
   (
+    connection: IRedisConnection,
     Repository: RedisRepositoryConstructor,
     options?: Options,
-  ): DefaultLindormRedisSocketMiddleware =>
+  ): DefaultLindormSocketMiddleware =>
   (socket, next) => {
     try {
       const repository = options?.repositoryKey || camelCase(Repository.name);
@@ -23,7 +23,7 @@ export const socketRedisRepositoryMiddleware =
         });
       }
 
-      socket.ctx.redis[repository] = new Repository(socket.ctx.connection.redis, socket.ctx.logger);
+      socket.ctx.redis[repository] = new Repository(connection, socket.ctx.logger);
 
       next();
     } catch (err: any) {
