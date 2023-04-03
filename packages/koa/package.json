@@ -24,6 +24,7 @@
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.20",
     "@lindorm-io/retry": "^0.1.5",
+    "@lindorm-io/structure-scanner": "^0.1.0",
     "joi": "^17.9.1",
     "koa": "2.14.1",
     "koa-bodyparser": "4.4.0",
