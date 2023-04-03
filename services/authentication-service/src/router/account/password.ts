@@ -7,8 +7,7 @@ import {
   updateAccountPasswordSchema,
 } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.post(
   "/",

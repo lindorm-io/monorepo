@@ -7,18 +7,13 @@ import {
 } from "../../../controller";
 import {
   authorizationSessionEntityMiddleware,
-  clientAuthMiddleware,
   clientEntityMiddleware,
   tenantEntityMiddleware,
 } from "../../../middleware";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 router.get(
   "/:id",

@@ -1,5 +1,5 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { clientAuthMiddleware, identityEntityMiddleware } from "../../middleware";
+import { identityEntityMiddleware } from "../../middleware";
 import {
   ensureIdentityController,
   ensureIdentitySchema,
@@ -9,13 +9,9 @@ import {
   updateIdentitySchema,
 } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 // Identities
 

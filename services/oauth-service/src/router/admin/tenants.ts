@@ -1,5 +1,5 @@
-import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
-import { clientAuthMiddleware, tenantEntityMiddleware } from "../../middleware";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
+import { tenantEntityMiddleware } from "../../middleware";
 import {
   createTenantController,
   createTenantSchema,
@@ -11,13 +11,9 @@ import {
   updateTenantSchema,
 } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 router.post("/", useSchema(createTenantSchema), useController(createTenantController));
 

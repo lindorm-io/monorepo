@@ -1,8 +1,7 @@
-import { Router, paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  elevationSessionEntityMiddleware,
-  clientAuthMiddleware,
   clientEntityMiddleware,
+  elevationSessionEntityMiddleware,
   tenantEntityMiddleware,
 } from "../../../middleware";
 import {
@@ -14,13 +13,9 @@ import {
   rejectElevationSchema,
 } from "../../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 router.get(
   "/:id",

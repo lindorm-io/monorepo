@@ -1,5 +1,4 @@
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { useController, useSchema } from "@lindorm-io/koa";
+import { Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   clientEntityMiddleware,
   customIdentityAuthMiddleware,
@@ -15,8 +14,7 @@ import {
   verifyElevationSchema,
 } from "../../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.use(customIdentityAuthMiddleware);
 

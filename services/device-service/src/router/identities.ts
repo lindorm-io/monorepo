@@ -2,8 +2,7 @@ import { getPendingRdcSessionsController, getPendingRdcSessionsSchema } from "..
 import { identityAuthMiddleware } from "../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.use(identityAuthMiddleware());
 

@@ -9,8 +9,7 @@ import {
   OpenIdScope,
 } from "@lindorm-io/common-types";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
   const createURL = (path: string): string =>

@@ -7,6 +7,7 @@ import { logger } from "./logger";
 import { middleware } from "./middleware";
 import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import { workers } from "./workers";
+import { KeyType } from "@lindorm-io/key-pair";
 import {
   AuthorizationCodeCache,
   AuthorizationSessionCache,
@@ -19,7 +20,6 @@ import {
   OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
-import { KeyType } from "@lindorm-io/key-pair";
 
 export const server = createNodeServer<ServerKoaContext>({
   client: {

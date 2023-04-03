@@ -7,8 +7,7 @@ import {
 } from "../../controller";
 import { OpenIdScope } from "@lindorm-io/common-types";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.get(
   "/",

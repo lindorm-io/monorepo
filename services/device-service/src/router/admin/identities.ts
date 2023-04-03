@@ -1,14 +1,9 @@
-import { clientAuthMiddleware } from "../../middleware";
-import { useController, paramsMiddleware, Router, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { getIdentityDeviceLinksController, getIdentityDeviceLinksSchema } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 router.get(
   "/:id/device-links",

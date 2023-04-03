@@ -2,8 +2,7 @@ import { Router, useController, useSchema } from "@lindorm-io/koa";
 import { accountEntityMiddleware, identityAuthMiddleware } from "../../middleware";
 import { deleteTotpController, deleteTotpSchema, generateTotpController } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.get(
   "/",

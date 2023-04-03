@@ -1,8 +1,6 @@
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
+import { Router, useController } from "@lindorm-io/koa";
 import { getProvidersListController } from "../controller";
-import { useController } from "@lindorm-io/koa";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.get("/", useController(getProvidersListController));

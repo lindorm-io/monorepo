@@ -1,11 +1,9 @@
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
+import { redirectErrorMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import { configuration } from "../server/configuration";
 import { connectOidcToIdentityController, connectOidcToIdentitySchema } from "../controller";
 import { identityAuthMiddleware } from "../middleware";
-import { redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/koa";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.use(identityAuthMiddleware());
 

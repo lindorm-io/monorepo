@@ -1,6 +1,5 @@
-import { Router } from "@lindorm-io/koa/dist/class/KoaApp";
-import { clientAuthMiddleware, oidcSessionEntityMiddleware } from "../../middleware";
-import { paramsMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
+import { oidcSessionEntityMiddleware } from "../../middleware";
 import {
   getOidcSessionController,
   getOidcSessionSchema,
@@ -8,13 +7,9 @@ import {
   initialiseOidcSessionSchema,
 } from "../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
-router.use(
-  clientAuthMiddleware(),
-  //TODO: Add permissions middleware
-);
+//TODO: Add permissions middleware
 
 router.post(
   "/",

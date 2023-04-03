@@ -1,5 +1,5 @@
 import { ERROR_REDIRECT_URI } from "../../../constant";
-import { Router, redirectErrorMiddleware, useController, useSchema } from "@lindorm-io/koa";
+import { redirectErrorMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   clientEntityMiddleware,
   idTokenMiddleware,
@@ -12,8 +12,7 @@ import {
   verifyLogoutSchema,
 } from "../../../controller";
 
-const router = new Router<any, any>();
-export default router;
+export const router = new Router<any, any>();
 
 router.get(
   "/",
