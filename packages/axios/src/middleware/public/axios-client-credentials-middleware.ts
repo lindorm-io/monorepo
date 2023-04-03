@@ -1,16 +1,11 @@
 import { Axios } from "../../class";
 import { Logger } from "@lindorm-io/core-logger";
-import { MetadataHeader } from "../../enum";
 import { Middleware, OAuthTokenResponseData } from "../../types";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosRequestLoggerMiddleware } from "./axios-request-logger-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
 import { getUnixTime } from "../../util/private";
-import {
-  Environment,
-  OpenIdConfigurationResponse,
-  OpenIdGrantType,
-} from "@lindorm-io/common-types";
+import { OpenIdConfigurationResponse, OpenIdGrantType } from "@lindorm-io/common-types";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
   host: string;
@@ -18,7 +13,6 @@ export type AxiosClientCredentialsMiddlewareOptions = {
   clientId: string;
   clientSecret: string;
   configurationPath?: string;
-  environment?: Environment;
   logger: Logger;
   timeoutAdjustment?: number;
   useBasicAuth?: boolean;
@@ -35,7 +29,6 @@ export const axiosClientCredentialsMiddleware = (
     clientId,
     clientSecret,
     configurationPath = "/.well-known/openid-configuration",
-    environment = Environment.DEVELOPMENT,
     logger,
     timeoutAdjustment = 5,
     useBasicAuth = true,
@@ -44,10 +37,6 @@ export const axiosClientCredentialsMiddleware = (
   const oauthClient = new Axios({
     host,
     port,
-    headers: {
-      ...(clientId ? { [MetadataHeader.CLIENT_ID]: clientId } : {}),
-      ...(environment ? { [MetadataHeader.CLIENT_ENVIRONMENT]: environment } : {}),
-    },
     middleware: [
       axiosRequestLoggerMiddleware(logger),
       axiosTransformBodyCaseMiddleware("snake", "camel"),
