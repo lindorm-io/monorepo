@@ -8,7 +8,7 @@ import { Command, DomainEvent, ErrorMessage, ReplayMessage, TimeoutMessage } fro
 
 export class AmqpMessageBus extends MessageBusBase<IMessage> implements IMessageBus {
   public constructor(connection: IAmqpConnection, logger: Logger) {
-    super({ connection, logger });
+    super(connection, logger);
   }
 
   protected createMessage(
