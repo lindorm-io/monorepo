@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-mongo",
   "description": "Mongo repository middleware for @lindorm-io/koa applications",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -22,7 +22,7 @@
     "@lindorm-io/case": "^0.1.9",
     "@lindorm-io/entity": "^0.3.12",
     "@lindorm-io/errors": "^0.1.20",
-    "@lindorm-io/koa": "^0.16.3",
+    "@lindorm-io/koa": "^0.17.0",
     "@lindorm-io/mongo": "^0.12.3",
     "object-path": "^0.11.8"
   },

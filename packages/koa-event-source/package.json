@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-event-source",
   "description": "Event Source middleware for @lindorm-io/koa applications",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,8 +20,8 @@
   },
   "dependencies": {
     "@lindorm-io/errors": "^0.1.20",
-    "@lindorm-io/event-source": "^0.2.17",
-    "@lindorm-io/koa": "^0.16.3"
+    "@lindorm-io/event-source": "^0.2.18",
+    "@lindorm-io/koa": "^0.17.0"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.7",

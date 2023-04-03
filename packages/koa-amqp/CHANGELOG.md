@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.0.21...@lindorm-io/koa-amqp@0.1.0) (2023-04-03)
+
+### Features
+
+- use connection as first arg in infrastructure middleware ([0135f5d](https://github.com/lindorm-io/monorepo/commit/0135f5d6204ca93936fc0318f97f67dc30e3436a))
+
 ## [0.0.21](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.0.20...@lindorm-io/koa-amqp@0.0.21) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/koa-amqp

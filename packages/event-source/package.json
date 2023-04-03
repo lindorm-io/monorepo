@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/event-source",
   "description": "Event Source for lindorm.io",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "license": "AGPL-3.0-or-later",
   "contributors": [
     "Jonn Nilsson",
@@ -31,7 +31,7 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/amqp": "^0.2.18",
+    "@lindorm-io/amqp": "^0.3.0",
     "@lindorm-io/case": "^0.1.9",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/mongo": "^0.12.3",

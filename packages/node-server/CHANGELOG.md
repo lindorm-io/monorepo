@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.6.2...@lindorm-io/node-server@0.7.0) (2023-04-03)
+
+### Bug Fixes
+
+- added debug logger ([658edac](https://github.com/lindorm-io/monorepo/commit/658edac6a95875bced689472eb3eba644d060b80))
+
+### Features
+
+- use connection as first arg in infrastructure middleware ([0135f5d](https://github.com/lindorm-io/monorepo/commit/0135f5d6204ca93936fc0318f97f67dc30e3436a))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.6.1...@lindorm-io/node-server@0.6.2) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/node-server

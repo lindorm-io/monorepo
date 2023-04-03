@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.16.3...@lindorm-io/koa@0.17.0) (2023-04-03)
+
+### Bug Fixes
+
+- cleanup of unnecessary features ([d7abb96](https://github.com/lindorm-io/monorepo/commit/d7abb961d9718ec48bb82dc63a842e697bc3d817))
+
+### Features
+
+- improved automatic router handler ([dd66411](https://github.com/lindorm-io/monorepo/commit/dd66411436acc5edab209ba0f2e2199cf10ec144))
+
 ## [0.16.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.16.2...@lindorm-io/koa@0.16.3) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/koa
