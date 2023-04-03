@@ -1,17 +1,17 @@
 /* eslint @typescript-eslint/no-var-requires: 0 */
 
-import Koa from "koa";
+import Koa, { Middleware } from "koa";
 import Router from "koa-router";
 import bodyParser from "koa-bodyparser";
 import userAgent from "koa-useragent";
-import { DefaultLindormKoaContext, KoaAppOptions, DefaultLindormMiddleware } from "../types";
+import { DefaultLindormKoaContext, DefaultLindormMiddleware, KoaAppOptions } from "../types";
 import { Environment } from "@lindorm-io/common-types";
 import { IntervalWorker } from "./IntervalWorker";
 import { Logger } from "@lindorm-io/core-logger";
-import { Server as HttpServer, createServer } from "http";
 import { Server as IOServer } from "socket.io";
-import { StructureScanner, StructureScannerOptions } from "./StructureScanner";
+import { ScanData, StructureScanner } from "@lindorm-io/structure-scanner";
 import { createHealthRouter, createHeartbeatRouter } from "../router";
+import { createServer, Server as HttpServer } from "http";
 import {
   dataHandlingMiddleware,
   defaultStatusMiddleware,
@@ -35,7 +35,9 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   private readonly logger: Logger;
   private readonly middleware: Array<DefaultLindormMiddleware<Context>>;
   private readonly port: number;
-  private readonly setup?: () => Promise<void>;
+  private readonly routerDirectory: string | undefined;
+  private readonly scanner: StructureScanner;
+  private readonly setup: () => Promise<void>;
   private readonly workers: Array<IntervalWorker>;
 
   private loaded: boolean;
@@ -52,10 +54,14 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     this.loaded = false;
     this.logger = options.logger;
     this.port = options.port;
-    this.setup = options.setup;
+    this.routerDirectory = options.routerDirectory;
+    this.setup = options.setup ? options.setup : () => Promise.resolve();
     this.started = false;
     this.workers = options.workers || [];
-    this.httpServer = createServer(this.koaApp.callback());
+
+    this.scanner = new StructureScanner({
+      deniedFilenames: [/\.fixture\.ts/, /\.spec\.ts/, /\.test\.ts/, /\.integration\.ts/],
+    });
 
     this.middleware = [
       userAgent,
@@ -70,6 +76,8 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       responseTimeMiddleware,
       ...(options.middleware || []),
     ];
+
+    this.httpServer = createServer(this.koaApp.callback());
 
     if (options.socket) {
       this.logger.verbose("attaching socket.io server");
@@ -93,9 +101,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     this.addRoute("/health", createHealthRouter<Context>(options.heartbeatCallback));
     this.addRoute("/heartbeat", createHeartbeatRouter<Context>(options.heartbeatCallback));
 
-    if (options.routerDirectory) {
-      this.addRoutesAutomatically(options.routerDirectory);
-    }
+    this.addRoutesAutomatically();
   }
 
   public get http(): HttpServer {
@@ -134,52 +140,42 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
   public callback(): any {
     this.load();
-
     return this.koaApp.callback();
   }
 
-  public addMiddleware(middleware: DefaultLindormMiddleware<any>): void {
+  public addMiddleware(
+    middleware: DefaultLindormMiddleware<any> | Array<DefaultLindormMiddleware<any>>,
+  ): void {
+    if (Array.isArray(middleware)) {
+      for (const item of middleware) {
+        this.addMiddleware(item);
+      }
+      return;
+    }
+
     this.middleware.push(middleware);
   }
 
-  public addMiddlewares(middlewares: Array<DefaultLindormMiddleware<any>>): void {
-    for (const middleware of middlewares) {
-      this.addMiddleware(middleware);
-    }
-  }
+  public addRoute(path: string, router: Router): void {
+    this.logger.debug("Adding route", { path });
 
-  public addRoute(route: string, router: Router): void {
     if (!(router instanceof Router)) {
       throw new Error(`Invalid router [ ${JSON.stringify(router)} ]`);
     }
 
-    this.logger.debug("adding route", { route });
-
-    this.koaRouter.use(route, router.routes(), router.allowedMethods());
+    this.koaRouter.use(path, router.routes(), router.allowedMethods());
   }
 
-  public addRoutesAutomatically(directory: string, options?: StructureScannerOptions): void {
-    if (!StructureScanner.hasItems(directory)) {
-      throw new Error(`Router directory [ ${directory} ] is empty`);
+  public addWorker(worker: IntervalWorker | Array<IntervalWorker>): void {
+    if (Array.isArray(worker)) {
+      for (const item of worker) {
+        this.addWorker(item);
+      }
+
+      return;
     }
 
-    const scanner = new StructureScanner(directory, options);
-
-    for (const file of scanner.scan()) {
-      const router: Router = require(file.path).default;
-
-      this.addRoute(scanner.getRoute(file), router);
-    }
-  }
-
-  public addWorker(worker: IntervalWorker): void {
     this.workers.push(worker);
-  }
-
-  public addWorkers(workers: Array<IntervalWorker>): void {
-    for (const worker of workers) {
-      this.addWorker(worker);
-    }
   }
 
   public load(): void {
@@ -187,61 +183,57 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
     this.loadMiddleware();
     this.loadRouter();
-    this.loadEmitter();
+    this.loadErrorListener();
 
     this.loaded = true;
 
-    this.logger.debug("server is loaded");
+    this.logger.debug("Server is loaded");
   }
 
   public async start(): Promise<void> {
     if (this.started) return;
 
-    const promise = this.waitForStartEvent();
-
-    this.logger.info("starting server", {
+    this.logger.info("Starting server", {
       environment: this.environment,
       host: this.host,
       port: this.port,
     });
 
     this.load();
-    this.listen();
+    await this.listen();
+    await this.setup();
 
-    if (this.setup) {
-      this.logger.debug("initialising setup");
-      await this.setup();
-    }
-
-    await promise;
+    this.loadWorkers();
 
     this.started = true;
 
-    this.logger.debug("server has started");
+    this.logger.debug("Server has started");
   }
 
-  private listen(): void {
-    this.httpServer.listen(this.port, (): void => {
-      this.logger.verbose("server listening on port", {
-        port: this.port,
+  // private
+
+  private async listen(): Promise<void> {
+    return new Promise((resolve) => {
+      this.httpServer.listen(this.port, (): void => {
+        this.logger.verbose("Server listening on port", {
+          port: this.port,
+        });
+
+        this.koaApp.emit("start");
+
+        return resolve();
       });
-
-      this.koaApp.emit("start");
     });
   }
 
-  private loadEmitter(): void {
+  private loadErrorListener(): void {
     this.koaApp.on("error", (error): void => {
-      console.error("app caught error", error);
-    });
-
-    this.koaApp.on("start", (): void => {
-      this.loadWorkers();
+      console.error("App caught error", error);
     });
   }
 
   private loadMiddleware(): void {
-    this.logger.debug("loading middleware");
+    this.logger.debug("Loading middleware");
 
     for (const middleware of this.middleware) {
       this.koaApp.use(middleware);
@@ -249,14 +241,14 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   }
 
   private loadRouter(): void {
-    this.logger.debug("loading router");
+    this.logger.debug("Loading Router");
 
     this.koaApp.use(this.koaRouter.routes());
     this.koaApp.use(this.koaRouter.allowedMethods());
   }
 
   private loadWorkers(): void {
-    this.logger.debug("loading workers");
+    this.logger.debug("Loading workers");
 
     for (const worker of this.workers) {
       worker.start();
@@ -264,19 +256,120 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     }
   }
 
-  private async waitForStartEvent(): Promise<void> {
-    this.logger.debug("waiting for start event");
+  // private router
 
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("server start has timed out"));
-      }, 30000);
+  private addRoutesAutomatically(): void {
+    if (!this.routerDirectory) return;
 
-      this.koaApp.on("start", () => {
-        clearTimeout(timeout);
-        resolve();
-      });
+    const start = Date.now();
+
+    this.logger.debug("Adding routes automatically", { directory: this.routerDirectory });
+
+    if (!StructureScanner.hasFiles(this.routerDirectory)) {
+      throw new Error(`Router directory [ ${this.routerDirectory} ] is empty`);
+    }
+
+    const scan = this.scanner.scan(this.routerDirectory);
+
+    this.logger.silly("StructureScanner resolved files", { scan });
+
+    this.addRouterFromScanArray(scan, false);
+
+    this.logger.debug("Routes added automatically", {
+      directory: this.routerDirectory,
+      time: Date.now() - start,
     });
+  }
+
+  private addRouterFromDirectory(scan: ScanData, parentRouter: Router): void {
+    if (!scan.isDirectory) return;
+    if (!scan.children.length) return;
+
+    const path = this.getRouteName(scan);
+    const router = this.addRouterFromScanArray(scan.children, true);
+
+    this.logger.silly("Adding router directory", { path, parents: scan.parents });
+
+    parentRouter.use(path, router.routes(), router.allowedMethods());
+  }
+
+  private addRouterFromFile(scan: ScanData, parentRouter: Router): void {
+    if (!scan.isFile) return;
+
+    const router = this.findRouterInFile(scan);
+    const path = this.getRouteName(scan);
+
+    this.logger.debug("Adding router", {
+      path: "/" + [scan.parents, path.replace("/", "")].flat().join("/").replace("//", ""),
+    });
+
+    parentRouter.use(path, router.routes(), router.allowedMethods());
+  }
+
+  private addConfig(scanData: ScanData, router: Router<any, any>): void {
+    const file = this.scanner.require<{ middleware?: Array<Middleware> }>(scanData.fullPath);
+
+    for (const middleware of file.middleware || []) {
+      router.use(middleware);
+    }
+  }
+
+  private addRouterFromScanArray(array: Array<ScanData>, createRouter: boolean): Router<any, any> {
+    const index = array.find((c) => c.baseName === "index");
+    const config = array.find((c) => c.baseName === "[...config]");
+    const files = array.filter((c) => !["[...config]", "index"].includes(c.baseName));
+
+    const router = index
+      ? this.findRouterInFile(index)
+      : createRouter
+      ? new Router<any, any>()
+      : this.koaRouter;
+
+    if (config) {
+      this.addConfig(config, router);
+    }
+
+    for (const file of files) {
+      if (file.isDirectory) {
+        this.addRouterFromDirectory(file, router);
+      } else if (file.isFile) {
+        this.addRouterFromFile(file, router);
+      }
+    }
+
+    this.logger.silly("Added router from scan array", { array, createRouter });
+
+    return router;
+  }
+
+  private getRouteName(scanData: ScanData): string {
+    const path = scanData.baseName.replace(/index/, "");
+
+    if (path.startsWith("[") && path.endsWith("]")) {
+      const replaced = path.replace("[", ":").replace("]", "");
+
+      this.logger.debug("Route with param", { path, replaced });
+
+      return "/" + replaced;
+    }
+
+    return "/" + path;
+  }
+
+  private findRouterInFile(scan: ScanData): Router<any, any> {
+    const file = this.scanner.require<{ default?: Router<any, any>; router?: Router<any, any> }>(
+      scan.fullPath,
+    );
+
+    const router = file.router ? file.router : file.default ? file.default : undefined;
+
+    if (!router) {
+      throw new Error(
+        `File [ ${scan.relativePath} ] has no exported router from [ default | router ]`,
+      );
+    }
+
+    return router;
   }
 }
 
