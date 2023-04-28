@@ -1,6 +1,20 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { ClientError, ServerError } from "@lindorm-io/errors";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  IdentifierType,
+} from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  authenticateIdentifier,
+  createStrategySessionToken,
+  fetchAccountSalt,
+  resolveIdentity,
+} from "../../handler";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -9,20 +23,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  authenticateIdentifier,
-  createStrategySessionToken,
-  fetchAccountSalt,
-  resolveIdentity,
-} from "../../handler";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  IdentifierType,
-} from "@lindorm-io/common-types";
 
 export class PasswordStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

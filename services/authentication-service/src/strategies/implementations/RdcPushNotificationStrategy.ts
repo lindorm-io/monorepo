@@ -1,8 +1,18 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  DeviceTokenType,
+  InitialiseRdcSessionRequestBody,
+  RdcSessionMode,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { getRdcBody } from "../../handler";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
-import { getRdcBody } from "../../handler";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -11,16 +21,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  DeviceTokenType,
-  InitialiseRdcSessionRequestBody,
-  RdcSessionMode,
-} from "@lindorm-io/common-types";
 
 export class RdcPushNotificationStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

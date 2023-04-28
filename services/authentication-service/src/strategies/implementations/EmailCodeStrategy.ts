@@ -1,10 +1,25 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  IdentifierType,
+  SendCodeRequestBody,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { randomSecret } from "@lindorm-io/random";
+import { createURL } from "@lindorm-io/url";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  authenticateIdentifier,
+  createAccountCallback,
+  createStrategySessionToken,
+  resolveIdentity,
+} from "../../handler";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
-import { createURL } from "@lindorm-io/url";
-import { randomSecret } from "@lindorm-io/random";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -13,21 +28,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  authenticateIdentifier,
-  createAccountCallback,
-  createStrategySessionToken,
-  resolveIdentity,
-} from "../../handler";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  IdentifierType,
-  SendCodeRequestBody,
-} from "@lindorm-io/common-types";
 
 export class EmailCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

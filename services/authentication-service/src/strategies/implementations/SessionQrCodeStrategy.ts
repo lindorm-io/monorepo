@@ -1,5 +1,15 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { randomSecret, randomString } from "@lindorm-io/random";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import { createStrategySessionToken } from "../../handler";
 import { argon } from "../../instance";
 import {
   AcknowledgeStrategyOptions,
@@ -9,16 +19,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  SessionStatus,
-} from "@lindorm-io/common-types";
-import { randomSecret, randomString } from "@lindorm-io/random";
-import { createStrategySessionToken } from "../../handler";
 
 export class SessionQrCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

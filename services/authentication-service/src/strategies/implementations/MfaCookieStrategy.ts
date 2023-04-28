@@ -1,7 +1,14 @@
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken } from "../../handler";
-import { ClientError, ServerError } from "@lindorm-io/errors";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -10,13 +17,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-} from "@lindorm-io/common-types";
 
 export class MfaCookieStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

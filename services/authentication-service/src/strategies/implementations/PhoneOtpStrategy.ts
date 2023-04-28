@@ -1,8 +1,22 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  IdentifierType,
+  SendOtpRequestBody,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  authenticateIdentifier,
+  createAccountCallback,
+  createStrategySessionToken,
+  resolveIdentity,
+} from "../../handler";
 import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
-import { createOtp } from "../../util";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -11,21 +25,7 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  authenticateIdentifier,
-  createAccountCallback,
-  createStrategySessionToken,
-  resolveIdentity,
-} from "../../handler";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  IdentifierType,
-  SendOtpRequestBody,
-} from "@lindorm-io/common-types";
+import { createOtp } from "../../util";
 
 export class PhoneOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

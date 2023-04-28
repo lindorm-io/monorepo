@@ -1,6 +1,13 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
-import { ClientError, ServerError } from "@lindorm-io/errors";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
 import {
   AcknowledgeStrategyOptions,
@@ -10,13 +17,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-} from "@lindorm-io/common-types";
 
 export class RecoveryCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

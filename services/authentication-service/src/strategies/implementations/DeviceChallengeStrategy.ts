@@ -1,7 +1,15 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+  DeviceTokenType,
+} from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { configuration } from "../../server/configuration";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken } from "../../handler";
+import { configuration } from "../../server/configuration";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -10,14 +18,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  AuthStrategyConfig,
-  DeviceTokenType,
-} from "@lindorm-io/common-types";
 
 export class DeviceChallengeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

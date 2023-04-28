@@ -1,5 +1,10 @@
-import { Account, AuthenticationSession, StrategySession } from "../../entity";
+import {
+  AuthStrategyConfig,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
+import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import {
   AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
@@ -8,11 +13,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthStrategyConfig,
-} from "@lindorm-io/common-types";
 
 export class WebauthnStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
