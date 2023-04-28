@@ -3,7 +3,6 @@
 .idea
 .jest-cache
 .jest-coverage
-.vscode
 .yarn
 dist
 node_modules
