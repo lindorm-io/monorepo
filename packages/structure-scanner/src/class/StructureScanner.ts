@@ -1,12 +1,13 @@
-import { ScanData, StructureScannerOptions } from "../types";
-import { basename, extname, join, relative, sep } from "path";
 import { isString } from "@lindorm-io/core";
 import { readdirSync, statSync } from "fs";
+import { basename, extname, join, relative, sep } from "path";
+import { ScanData, StructureScannerOptions } from "../types";
 
 export class StructureScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
+  private readonly deniedTypes: Array<RegExp>;
   private readonly parentDirection: "default" | "reverse";
   private readonly requireFn: NodeJS.Require;
 
@@ -14,6 +15,7 @@ export class StructureScanner {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
+    this.deniedTypes = options.deniedTypes || [];
     this.parentDirection = options.parentDirection || "default";
 
     this.requireFn = options.requireFn || require;
@@ -80,7 +82,7 @@ export class StructureScanner {
         this.parentDirection === "default" ? relativeParents : relativeParents.reverse();
 
       if (isDirectory) {
-        if (!this.isAllowedDir(fullPath)) continue;
+        if (!this.isAllowedDirectoryBaseName(fullName)) continue;
 
         result.push({
           baseName: fullName,
@@ -93,20 +95,26 @@ export class StructureScanner {
           isFile,
           parents,
           relativePath,
+          type: null,
         });
 
         continue;
       }
 
       if (isFile) {
-        if (!this.isAllowedFile(fullPath)) continue;
+        const ext = extname(item);
+        const [_, extension] = ext.split(".");
+        const nameArray = basename(item, ext).split(".");
+        const baseName = nameArray[0];
+        const [type] = nameArray.length > 1 ? nameArray.reverse() : [];
 
-        const extension = extname(item);
-        const baseName = basename(item, extension);
+        if (!this.isAllowedFileBaseName(baseName)) continue;
+        if (!this.isAllowedFileExtension(extension)) continue;
+        if (!this.isAllowedFileType(type)) continue;
 
         result.push({
           baseName,
-          basePath: relativePath.replace(extension, ""),
+          basePath: relativePath.replace(ext, ""),
           children: [],
           extension,
           fullName,
@@ -115,6 +123,7 @@ export class StructureScanner {
           isFile,
           parents,
           relativePath,
+          type: type || null,
         });
       }
     }
@@ -122,10 +131,12 @@ export class StructureScanner {
     return result;
   }
 
-  private isAllowedDir(path: string): boolean {
+  private isAllowedDirectoryBaseName(base?: string): boolean {
+    if (!base) return false;
+
     if (this.deniedDirectories.length) {
       for (const regex of this.deniedDirectories) {
-        if (regex.test(basename(path))) {
+        if (regex.test(basename(base))) {
           return false;
         }
       }
@@ -134,14 +145,12 @@ export class StructureScanner {
     return true;
   }
 
-  private isAllowedFile(path: string): boolean {
-    return this.isAllowedBase(path) && this.isAllowedExt(path);
-  }
+  private isAllowedFileBaseName(base?: string): boolean {
+    if (!base) return false;
 
-  private isAllowedBase(path: string): boolean {
     if (this.deniedFilenames.length) {
       for (const regex of this.deniedFilenames) {
-        if (regex.test(basename(path))) {
+        if (regex.test(base)) {
           return false;
         }
       }
@@ -150,10 +159,26 @@ export class StructureScanner {
     return true;
   }
 
-  private isAllowedExt(path: string): boolean {
+  private isAllowedFileExtension(extension?: string): boolean {
+    if (!extension) return false;
+
     if (this.deniedExtensions.length) {
       for (const regex of this.deniedExtensions) {
-        if (regex.test(extname(path))) {
+        if (regex.test(extension)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private isAllowedFileType(type?: string | null): boolean {
+    if (!type) return true;
+
+    if (this.deniedTypes.length) {
+      for (const regex of this.deniedTypes) {
+        if (regex.test(type)) {
           return false;
         }
       }

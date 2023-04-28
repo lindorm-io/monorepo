@@ -2,6 +2,7 @@ export type StructureScannerOptions = {
   deniedDirectories: Array<RegExp>;
   deniedExtensions: Array<RegExp>;
   deniedFilenames: Array<RegExp>;
+  deniedTypes: Array<RegExp>;
   parentDirection: "default" | "reverse";
   requireFn: NodeJS.Require;
 };
@@ -17,4 +18,5 @@ export type ScanData = {
   isFile: boolean;
   parents: Array<string>;
   relativePath: string;
+  type: string | null;
 };
