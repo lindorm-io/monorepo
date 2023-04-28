@@ -1,11 +1,11 @@
-import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
-import merge from "merge";
-import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 import { ConnectionBase } from "@lindorm-io/core-connection";
-import { ConsumeMessage } from "amqplib/properties";
-import { LindormError } from "@lindorm-io/errors";
 import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
 import { parseBlob } from "@lindorm-io/string-blob";
+import amqplib, { ConfirmChannel, Connection, Options } from "amqplib";
+import { ConsumeMessage } from "amqplib/properties";
+import merge from "deepmerge";
+import { AmqpConnectionOptions, IAmqpConnection } from "../types";
 
 export class AmqpConnection
   extends ConnectionBase<Connection, Options.Connect>
@@ -89,9 +89,9 @@ export class AmqpConnection
   public async bindQueue(
     queue: string,
     topic: string,
-    options?: Options.AssertQueue,
+    options: Options.AssertQueue = {},
   ): Promise<void> {
-    await this.channel.assertQueue(queue, merge({ durable: true }, options));
+    await this.channel.assertQueue(queue, merge<Options.AssertQueue>({ durable: true }, options));
     await this.channel.bindQueue(queue, this.exchange, topic);
 
     this.logger.debug("Successfully bound queue", {

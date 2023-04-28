@@ -1,10 +1,9 @@
-import clone from "clone";
-import merge from "merge";
-import { LogLevel } from "../enum";
-import { defaultFilterCallback } from "../util";
-import { get, set } from "object-path";
-import { isObject } from "@lindorm-io/core";
 import { snakeCase } from "@lindorm-io/case";
+import { isObject } from "@lindorm-io/core";
+import clone from "clone";
+import merge from "deepmerge";
+import { get, set } from "object-path";
+import { LogLevel } from "../enum";
 import {
   ConsoleOptions,
   FilterCallback,
@@ -12,11 +11,12 @@ import {
   Level,
   LogContext,
   LogDetails,
+  LogSession,
   Logger,
   LoggerMessage,
   LoggerOptions,
-  LogSession,
 } from "../types";
+import { defaultFilterCallback } from "../util";
 
 export abstract class LoggerBase implements Logger {
   public readonly className: string;
@@ -194,18 +194,22 @@ export abstract class LoggerBase implements Logger {
     if (!isObject(details)) return details;
     if (details instanceof Error) return details;
 
-    const data = clone(details);
+    try {
+      const data = clone(details);
 
-    for (const [path, callback] of Object.entries(this.filters)) {
-      if (!callback) continue;
+      for (const [path, callback] of Object.entries(this.filters)) {
+        if (!callback) continue;
 
-      const item = get(data, path);
-      if (!item) continue;
+        const item = get(data, path);
+        if (!item) continue;
 
-      set(data, path, callback(item));
+        set(data, path, callback(item));
+      }
+
+      return data;
+    } catch (err) {
+      return details;
     }
-
-    return data;
   }
 
   private handleLog(options: LoggerMessage): void {

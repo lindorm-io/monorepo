@@ -22,8 +22,8 @@
     "@lindorm-io/case": "^0.1.9",
     "@lindorm-io/core": "^0.8.11",
     "clone": "^2.1.2",
+    "deepmerge": "^4.3.1",
     "fast-safe-stringify": "^2.1.1",
-    "merge": "^2.1.1",
     "object-path": "^0.11.8"
   },
   "devDependencies": {
