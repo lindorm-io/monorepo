@@ -16,7 +16,7 @@ import {
 
 export class WebauthnStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "none",
+    hintType: "none",
     identifierType: "none",
     loa: 2,
     loaMax: 3,

@@ -26,7 +26,7 @@ import {
 
 export class PasswordStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "email",
+    hintType: "email",
     identifierType: IdentifierType.USERNAME,
     loa: 2,
     loaMax: 3,

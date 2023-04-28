@@ -29,7 +29,7 @@ import {
 
 export class EmailOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "email",
+    hintType: "email",
     identifierType: IdentifierType.EMAIL,
     loa: 2,
     loaMax: 2,

@@ -27,7 +27,7 @@ import {
 
 export class PasswordBrowserLinkStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "none",
+    hintType: "none",
     identifierType: IdentifierType.USERNAME,
     loa: 3,
     loaMax: 3,

@@ -44,11 +44,9 @@ describe("getAuthenticationController", () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         config: "CLIENT_CONFIG",
-        emailHint: "test@lindorm.io",
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
         oidcProviders: ["apple", "google", "microsoft"],
-        phoneHint: "0701234567",
         status: "pending",
       },
     });
@@ -64,11 +62,9 @@ describe("getAuthenticationController", () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         config: "CLIENT_CONFIG",
-        emailHint: "test@lindorm.io",
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
         oidcProviders: [],
-        phoneHint: "0701234567",
         status: "pending",
       },
     });
@@ -80,11 +76,9 @@ describe("getAuthenticationController", () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         config: [],
-        emailHint: null,
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
         oidcProviders: [],
-        phoneHint: null,
         status: "code",
       },
     });
@@ -96,11 +90,9 @@ describe("getAuthenticationController", () => {
     await expect(getAuthenticationController(ctx)).resolves.toStrictEqual({
       body: {
         config: [],
-        emailHint: null,
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
         oidcProviders: [],
-        phoneHint: null,
         status: "confirmed",
       },
     });

@@ -20,7 +20,7 @@ import {
 
 export class RecoveryCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "none",
+    hintType: "none",
     identifierType: "none",
     loa: 1,
     loaMax: 3,

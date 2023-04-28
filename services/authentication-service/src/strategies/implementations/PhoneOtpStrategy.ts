@@ -29,7 +29,7 @@ import {
 
 export class PhoneOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "phone",
+    hintType: "phone",
     identifierType: IdentifierType.PHONE,
     loa: 2,
     loaMax: 3,

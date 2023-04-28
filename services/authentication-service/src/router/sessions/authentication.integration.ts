@@ -119,7 +119,8 @@ describe("/sessions/authentication", () => {
     expect(response.body).toStrictEqual({
       config: [
         {
-          identifier_hint: "email",
+          hint: "test@lindorm.io",
+          hint_type: "email",
           identifier_type: "email",
           method: "email",
           rank: 1,
@@ -132,7 +133,8 @@ describe("/sessions/authentication", () => {
           weight: 750,
         },
         {
-          identifier_hint: "phone",
+          hint: "0701234567",
+          hint_type: "phone",
           identifier_type: "phone",
           method: "phone",
           rank: 2,
@@ -145,7 +147,8 @@ describe("/sessions/authentication", () => {
           weight: 500,
         },
         {
-          identifier_hint: "none",
+          hint: null,
+          hint_type: "none",
           identifier_type: "none",
           method: "device_link",
           rank: 3,
@@ -155,11 +158,10 @@ describe("/sessions/authentication", () => {
           weight: 90,
         },
       ],
-      email_hint: "test@lindorm.io",
+
       expires: "2022-01-01T08:00:00.000Z",
       mode: "oauth",
       oidc_providers: ["apple", "google", "microsoft"],
-      phone_hint: "0701234567",
       status: "pending",
     });
   });

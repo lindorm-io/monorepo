@@ -24,7 +24,7 @@ import {
 
 export class RdcPushNotificationStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
-    identifierHint: "none",
+    hintType: "none",
     identifierType: "none",
     loa: 3,
     loaMax: 3,

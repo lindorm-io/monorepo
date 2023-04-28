@@ -7,7 +7,7 @@ import {
 } from "@lindorm-io/common-types";
 
 export type AuthenticationStrategyConfig = {
-  identifierHint: AuthMethodInitialiseHint;
+  hintType: AuthMethodInitialiseHint;
   identifierType: IdentifierType | "none";
   loa: LevelOfAssurance;
   loaMax: LevelOfAssurance;

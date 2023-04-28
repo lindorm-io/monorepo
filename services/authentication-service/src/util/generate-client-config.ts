@@ -4,6 +4,7 @@ import { AuthenticationStrategyConfig } from "../types";
 import { STRATEGY_CONFIG_LIST } from "../strategies";
 import { ServerError } from "@lindorm-io/errors";
 import { orderBy, uniq } from "lodash";
+import { getConfigHint } from "./get-config-hint";
 
 type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; required: boolean };
 
@@ -69,7 +70,8 @@ export const generateClientConfig = (
       }));
 
     clientConfig.push({
-      identifierHint: config.identifierHint,
+      hint: getConfigHint(authenticationSession, config),
+      hintType: config.hintType,
       identifierType: config.identifierType,
       method,
       rank,

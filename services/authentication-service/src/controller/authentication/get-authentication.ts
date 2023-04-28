@@ -41,11 +41,9 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
     return {
       body: {
         config: [],
-        emailHint: null,
         expires: authenticationSession.expires.toISOString(),
         mode: authenticationSession.mode,
         oidcProviders: [],
-        phoneHint: null,
         status: authenticationSession.status,
       },
     };
@@ -70,11 +68,9 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
   return {
     body: {
       config: clientConfig,
-      emailHint: authenticationSession.emailHint,
       expires: authenticationSession.expires.toISOString(),
       mode: authenticationSession.mode,
       oidcProviders,
-      phoneHint: authenticationSession.phoneHint,
       status: authenticationSession.status,
     },
   };

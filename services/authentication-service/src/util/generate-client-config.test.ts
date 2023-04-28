@@ -15,7 +15,8 @@ describe("calculateMethodsAndStrategies", () => {
       ),
     ).toStrictEqual([
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "mfa_cookie",
         rank: 1,
@@ -25,7 +26,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 999,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "device_link",
         rank: 2,
@@ -39,7 +41,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "totp",
         rank: 3,
@@ -49,7 +52,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "session_link",
         rank: 4,
@@ -63,7 +67,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 80,
       },
       {
-        identifierHint: "email",
+        hint: "test@lindorm.io",
+        hintType: "email",
         identifierType: "email",
         method: "email",
         rank: 5,
@@ -76,7 +81,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 30,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "username",
         method: "password",
         rank: 6,
@@ -89,7 +95,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 20,
       },
       {
-        identifierHint: "phone",
+        hint: "0701234567",
+        hintType: "phone",
         identifierType: "phone",
         method: "phone",
         rank: 7,
@@ -102,7 +109,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 20,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "recovery",
         rank: 8,
@@ -126,7 +134,8 @@ describe("calculateMethodsAndStrategies", () => {
       ),
     ).toStrictEqual([
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "mfa_cookie",
         rank: 1,
@@ -136,7 +145,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 999,
       },
       {
-        identifierHint: "email",
+        hint: "test@lindorm.io",
+        hintType: "email",
         identifierType: "email",
         method: "email",
         rank: 2,
@@ -149,7 +159,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 750,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "username",
         method: "password",
         rank: 3,
@@ -162,7 +173,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 500,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "device_link",
         rank: 4,
@@ -176,7 +188,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "totp",
         rank: 5,
@@ -186,7 +199,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "session_link",
         rank: 6,
@@ -200,7 +214,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 80,
       },
       {
-        identifierHint: "phone",
+        hint: "0701234567",
+        hintType: "phone",
         identifierType: "phone",
         method: "phone",
         rank: 7,
@@ -213,7 +228,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 20,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "recovery",
         rank: 8,
@@ -237,7 +253,8 @@ describe("calculateMethodsAndStrategies", () => {
       ),
     ).toStrictEqual([
       {
-        identifierHint: "email",
+        hint: "test@lindorm.io",
+        hintType: "email",
         identifierType: "email",
         method: "email",
         rank: 1,
@@ -250,7 +267,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 3000,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "username",
         method: "password",
         rank: 2,
@@ -263,7 +281,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 2000,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "mfa_cookie",
         rank: 3,
@@ -273,7 +292,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 999,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "device_link",
         rank: 4,
@@ -287,7 +307,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "totp",
         rank: 5,
@@ -297,7 +318,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 90,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "session_link",
         rank: 6,
@@ -311,7 +333,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 80,
       },
       {
-        identifierHint: "phone",
+        hint: "0701234567",
+        hintType: "phone",
         identifierType: "phone",
         method: "phone",
         rank: 7,
@@ -324,7 +347,8 @@ describe("calculateMethodsAndStrategies", () => {
         weight: 20,
       },
       {
-        identifierHint: "none",
+        hint: null,
+        hintType: "none",
         identifierType: "none",
         method: "recovery",
         rank: 8,
