@@ -8,7 +8,8 @@ export type ConfigStrategy = {
 };
 
 export type AuthMethodConfig = {
-  identifierHint: AuthMethodInitialiseHint;
+  hint: string | null;
+  hintType: AuthMethodInitialiseHint;
   identifierType: IdentifierType | "none";
   method: AuthenticationMethod;
   rank: number;

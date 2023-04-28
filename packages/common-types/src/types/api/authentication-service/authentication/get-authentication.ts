@@ -6,10 +6,8 @@ export type GetAuthenticationRequestParams = StandardRequestParamsWithId;
 
 export type GetAuthenticationResponse = {
   config: Array<AuthMethodConfig>;
-  emailHint: string | null;
   expires: string;
   mode: AuthenticationMode;
   oidcProviders: Array<string>;
-  phoneHint: string | null;
   status: SessionStatus;
 };
