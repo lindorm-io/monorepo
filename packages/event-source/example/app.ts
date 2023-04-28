@@ -1,23 +1,23 @@
 import { AmqpConnection } from "@lindorm-io/amqp";
-import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
-import { EventSource } from "../src";
-import { GetViewFromMongo } from "./queries/get-view-from-mongo.query";
-import { GetViewFromPostgres } from "./queries/get-view-from-postgres.query";
-import { Logger, LogLevel } from "@lindorm-io/winston";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { PostgresConnection } from "@lindorm-io/postgres";
-import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
-import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
+import { LogLevel, WinstonLogger } from "@lindorm-io/winston";
 import { join } from "path";
+import { EventSource } from "../src";
+import { CreateGreeting } from "./aggregates/greeting/commands/create-greeting.command";
+import { UpdateGreeting } from "./aggregates/greeting/commands/update-greeting.command";
+import { RespondGreeting } from "./aggregates/response/commands/respond-greeting.command";
+import { GetViewFromMongo } from "./queries/get-view-from-mongo.query";
+import { GetViewFromPostgres } from "./queries/get-view-from-postgres.query";
 
-const logger = new Logger();
-logger.addConsole(LogLevel.INFO, { colours: true, readable: true, timestamp: true });
+const logger = new WinstonLogger();
+logger.addConsole(LogLevel.VERBOSE, { colours: true, readable: true, timestamp: true });
 
 const main = async (): Promise<void> => {
   const amqp = new AmqpConnection(
     {
       hostname: "localhost",
-      port: 5671,
+      port: 5002,
       connectInterval: 500,
       connectTimeout: 30000,
     },
@@ -27,7 +27,7 @@ const main = async (): Promise<void> => {
   const mongo = new MongoConnection(
     {
       host: "localhost",
-      port: 27011,
+      port: 5004,
       auth: { username: "root", password: "example" },
       authSource: "admin",
       database: "mongo_db",
@@ -38,7 +38,7 @@ const main = async (): Promise<void> => {
   const postgres = new PostgresConnection(
     {
       host: "localhost",
-      port: 5431,
+      port: 5003,
       user: "root",
       password: "example",
       database: "default_db",
@@ -48,14 +48,14 @@ const main = async (): Promise<void> => {
 
   const app = new EventSource<CreateGreeting | UpdateGreeting | RespondGreeting>(
     {
-      connections: { amqp, mongo, postgres },
-      aggregates: join(__dirname, "aggregates"),
-      queries: join(__dirname, "queries"),
       adapters: {
         eventStore: "postgres",
         messageBus: "amqp",
         sagaStore: "postgres",
       },
+      aggregates: join(__dirname, "aggregates"),
+      connections: { amqp, mongo, postgres },
+      queries: join(__dirname, "queries"),
     },
     logger,
   );
@@ -75,11 +75,13 @@ const main = async (): Promise<void> => {
 
   await new Promise((resolve) => {
     const interval = setInterval(() => {
+      logger.debug("viewChangeCount", { viewChangeCount });
+
       if (viewChangeCount >= 6) {
         clearInterval(interval);
         resolve(undefined);
       }
-    }, 250);
+    }, 1000);
   });
 
   const inspect: any = {};

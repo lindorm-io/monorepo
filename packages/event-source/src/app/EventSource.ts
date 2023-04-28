@@ -1,18 +1,12 @@
-import merge from "merge";
-import { Aggregate, Saga, View } from "../model";
-import { Command } from "../message";
-import { EventSourceScanner } from "./EventSourceScanner";
-import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
+import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { JOI_MESSAGE } from "../schema";
-import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
-import { ReplayEventName } from "../enum";
-import { extractDtoData, StructureScanner } from "../util";
-import { join } from "path";
+import { StructureScanner } from "@lindorm-io/structure-scanner";
 import { randomUUID } from "crypto";
+import merge from "deepmerge";
+import { join } from "path";
 import {
   AggregateDomain,
   ErrorDomain,
@@ -21,6 +15,11 @@ import {
   SagaDomain,
   ViewDomain,
 } from "../domain";
+import { ReplayEventName } from "../enum";
+import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
+import { Command } from "../message";
+import { Aggregate, Saga, View } from "../model";
+import { JOI_MESSAGE } from "../schema";
 import {
   Data,
   DtoClass,
@@ -47,6 +46,8 @@ import {
   State,
   ViewEventHandlerAdapter,
 } from "../types";
+import { extractDtoData } from "../util";
+import { EventSourceScanner } from "./EventSourceScanner";
 
 export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends DtoClass = DtoClass>
   implements IEventSource<TCommand, TQuery>
@@ -85,27 +86,32 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   public constructor(options: EventSourceOptions, logger: Logger) {
     const { connections = {}, custom = {}, ...appOptions } = options;
 
+    // defaults
+    const defaultOptions: EventSourcePrivateOptions = {
+      adapters: {
+        eventStore: "memory",
+        sagaStore: "memory",
+        messageBus: "memory",
+      },
+      aggregates: join(__dirname, "aggregates"),
+      context: "default",
+      dangerouslyRegisterHandlersManually: false,
+      fileFilter: {
+        include: [/.*/],
+        exclude: [],
+      },
+      queries: join(__dirname, "queries"),
+      scanner: {
+        deniedDirectories: [],
+        deniedExtensions: [],
+        deniedFilenames: [],
+        deniedTypes: [/^spec$/, /^test$/],
+      },
+    };
+
     // primary
     this.logger = logger.createChildLogger(["EventSource"]);
-    this.options = merge(
-      {
-        adapters: {
-          eventStore: "memory",
-          sagaStore: "memory",
-          messageBus: "memory",
-        },
-        context: "default",
-        aggregates: join(__dirname, "aggregates"),
-        queries: join(__dirname, "queries"),
-        scanner: {
-          extensions: [".js", ".ts"],
-          include: [/.*/],
-          exclude: [],
-        },
-        dangerouslyRegisterHandlersManually: false,
-      },
-      appOptions,
-    );
+    this.options = merge<EventSourcePrivateOptions, EventSourceOptions>(defaultOptions, appOptions);
     this.adapters = [];
     this.scanner = new EventSourceScanner(this.options, custom, this.logger);
     this.status = "created";
@@ -120,7 +126,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       {
         amqp: this.amqp,
         custom: custom.messageBus,
-        type: this.options.adapters.messageBus!,
+        type: this.options.adapters.messageBus,
       },
       this.logger,
     );
@@ -131,19 +137,21 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         custom: custom.eventStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.adapters.eventStore!,
+        type: this.options.adapters.eventStore,
       },
       this.logger,
     );
+
     this.sagaStore = new SagaStore(
       {
         custom: custom.sagaStore,
         mongo: this.mongo,
         postgres: this.postgres,
-        type: this.options.adapters.sagaStore!,
+        type: this.options.adapters.sagaStore,
       },
       this.logger,
     );
+
     this.viewStore = new ViewStore(
       {
         mongo: this.mongo,
@@ -160,7 +168,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       this.logger,
     );
+
     this.errorDomain = new ErrorDomain(this.messageBus, this.logger);
+
     this.queryDomain = new QueryDomain(
       {
         mongo: this.mongo,
@@ -168,6 +178,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       this.logger,
     );
+
     this.replayDomain = new ReplayDomain(
       {
         messageBus: this.messageBus,
@@ -176,6 +187,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       this.logger,
     );
+
     this.sagaDomain = new SagaDomain(
       {
         messageBus: this.messageBus,
@@ -183,6 +195,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       },
       this.logger,
     );
+
     this.viewDomain = new ViewDomain(
       {
         messageBus: this.messageBus,
@@ -357,23 +370,23 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   ): Promise<View<TState>> {
     await this.promise();
 
-    const identifier = {
+    const viewIdentifier = {
       id: view.id,
       name: view.name,
       context: this.scanner.context(view.context),
     };
 
     const adapter = this.adapters.find(
-      (x) => x.name === identifier.name && x.context === identifier.context,
+      (x) => x.name === viewIdentifier.name && x.context === viewIdentifier.context,
     );
 
     if (!adapter) {
       throw new LindormError("Adapter not found", {
-        data: { identifier },
+        data: { viewIdentifier },
       });
     }
 
-    return this.viewDomain.inspect<TState>(identifier, adapter);
+    return this.viewDomain.inspect<TState>(viewIdentifier, adapter);
   }
 
   // private initialisation handler
@@ -396,18 +409,23 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       for (const handler of this.scanner.aggregateCommandHandlers) {
         await this.aggregateDomain.registerCommandHandler(handler);
       }
+
       for (const handler of this.scanner.aggregateEventHandlers) {
         await this.aggregateDomain.registerEventHandler(handler);
       }
+
       for (const handler of this.scanner.errorHandlers) {
         await this.errorDomain.registerErrorHandler(handler);
       }
+
       for (const handler of this.scanner.queryHandlers) {
         await this.queryDomain.registerQueryHandler(handler);
       }
+
       for (const handler of this.scanner.sagaEventHandlers) {
         await this.sagaDomain.registerEventHandler(handler);
       }
+
       for (const handler of this.scanner.viewEventHandlers) {
         await this.viewDomain.registerEventHandler(handler);
         this.registerViewAdapter({ ...handler.view, ...handler.adapter });

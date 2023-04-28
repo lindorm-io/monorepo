@@ -1,8 +1,8 @@
-import clone from "clone";
+import { isObject } from "@lindorm-io/core";
 import { LindormError } from "@lindorm-io/errors";
+import clone from "clone";
 import { isBefore } from "date-fns";
 import { isEqual } from "lodash";
-import { isObject } from "@lindorm-io/core";
 
 type Meta = {
   value: any;

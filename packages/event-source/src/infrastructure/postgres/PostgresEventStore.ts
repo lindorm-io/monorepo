@@ -1,10 +1,10 @@
-import { CREATE_TABLE_EVENT_STORE } from "./sql/event-store";
-import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
-import { IEventStore, EventStoreFindFilter, EventStoreAttributes, EventData } from "../../types";
 import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
+import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
+import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
+import { PostgresBase } from "./PostgresBase";
+import { CREATE_TABLE_EVENT_STORE } from "./sql/event-store";
 
 export class PostgresEventStore extends PostgresBase implements IEventStore {
   public constructor(connection: IPostgresConnection, logger: Logger) {
@@ -49,8 +49,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
     }
   }
 
-  public async insert(data: EventStoreAttributes): Promise<void> {
-    this.logger.debug("Inserting event entity", { data });
+  public async insert(attributes: EventStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting event entity", { attributes });
 
     try {
       await this.promise();
@@ -71,15 +71,15 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       `;
 
       const values = [
-        data.id,
-        data.name,
-        data.context,
-        data.causation_id,
-        data.correlation_id,
-        stringifyBlob(data.events),
-        data.expected_events,
-        data.previous_event_id,
-        data.timestamp,
+        attributes.id,
+        attributes.name,
+        attributes.context,
+        attributes.causation_id,
+        attributes.correlation_id,
+        stringifyBlob(attributes.events),
+        attributes.expected_events,
+        attributes.previous_event_id,
+        attributes.timestamp,
       ];
 
       const result = await this.connection.query(text, values);

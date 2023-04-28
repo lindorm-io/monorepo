@@ -1,26 +1,26 @@
-import { CREATE_TABLE_SAGA_CAUSATION } from "./sql/saga-causation";
-import { CREATE_TABLE_SAGA_STORE } from "./sql/saga-store";
 import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { PostgresBase } from "./PostgresBase";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
-import {
-  IMessage,
-  ISagaStore,
-  SagaClearMessagesToDispatchData,
-  SagaClearProcessedCausationIdsData,
-  SagaStoreAttributes,
-  SagaCausationAttributes,
-  SagaUpdateData,
-  SagaUpdateFilter,
-  StandardIdentifier,
-} from "../../types";
 import {
   SAGA_CAUSATION,
   SAGA_CAUSATION_INDEXES,
   SAGA_STORE,
   SAGA_STORE_INDEXES,
 } from "../../constant";
+import {
+  IMessage,
+  ISagaStore,
+  SagaCausationAttributes,
+  SagaClearMessagesToDispatchData,
+  SagaClearProcessedCausationIdsData,
+  SagaIdentifier,
+  SagaStoreAttributes,
+  SagaUpdateData,
+  SagaUpdateFilter,
+} from "../../types";
+import { PostgresBase } from "./PostgresBase";
+import { CREATE_TABLE_SAGA_CAUSATION } from "./sql/saga-causation";
+import { CREATE_TABLE_SAGA_STORE } from "./sql/saga-store";
 
 export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   public constructor(connection: IPostgresConnection, logger: Logger) {
@@ -28,10 +28,10 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   }
 
   public async causationExists(
-    identifier: StandardIdentifier,
+    sagaIdentifier: SagaIdentifier,
     causation: IMessage,
   ): Promise<boolean> {
-    this.logger.debug("Verifying if causation exists", { identifier, causation });
+    this.logger.debug("Verifying if causation exists", { sagaIdentifier, causation });
 
     try {
       await this.promise();
@@ -47,7 +47,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           causation_id = $4
       `;
 
-      const values = [identifier.id, identifier.name, identifier.context, causation.id];
+      const values = [sagaIdentifier.id, sagaIdentifier.name, sagaIdentifier.context, causation.id];
 
       const result = await this.connection.query<SagaCausationAttributes>(text, values);
 
@@ -153,8 +153,8 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
     }
   }
 
-  public async find(identifier: StandardIdentifier): Promise<SagaStoreAttributes | undefined> {
-    this.logger.debug("Finding saga", { identifier });
+  public async find(sagaIdentifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
+    this.logger.debug("Finding saga", { sagaIdentifier });
 
     try {
       await this.promise();
@@ -169,7 +169,7 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
           context = $3
       `;
 
-      const values = [identifier.id, identifier.name, identifier.context];
+      const values = [sagaIdentifier.id, sagaIdentifier.name, sagaIdentifier.context];
 
       const result = await this.connection.query<SagaStoreAttributes>(text, values);
 
@@ -247,10 +247,10 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   }
 
   public async insertProcessedCausationIds(
-    identifier: StandardIdentifier,
+    sagaIdentifier: SagaIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+    this.logger.debug("Inserting processed causation ids", { sagaIdentifier, causationIds });
 
     try {
       await this.promise();
@@ -270,9 +270,9 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
         text += `($${num}, $${num + 1}, $${num + 2}, $${num + 3}),`;
         num += 4;
 
-        values.push(identifier.id);
-        values.push(identifier.name);
-        values.push(identifier.context);
+        values.push(sagaIdentifier.id);
+        values.push(sagaIdentifier.name);
+        values.push(sagaIdentifier.context);
         values.push(causationId);
       }
 

@@ -7,10 +7,10 @@ import { GreetingUpdated } from "./greeting-updated.event";
 
 export const main: AggregateEventHandler<GreetingUpdated> = {
   event: GreetingUpdated,
-  handler: async (ctx) => {
-    ctx.mergeState({
+  handler: async ({ event, mergeState }) => {
+    mergeState({
       updated: true,
-      v1: { greeting: ctx.event.greeting },
+      v1: { greeting: event.greeting },
     });
   },
 };

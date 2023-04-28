@@ -1,12 +1,21 @@
-import EventEmitter from "events";
-import clone from "clone";
-import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { LindormError } from "@lindorm-io/errors";
+import { snakeCase } from "@lindorm-io/case";
 import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
+import clone from "clone";
+import EventEmitter from "events";
 import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
-import { Saga } from "../model";
+import {
+  ConcurrencyError,
+  DomainError,
+  HandlerNotRegisteredError,
+  SagaAlreadyCreatedError,
+  SagaDestroyedError,
+  SagaNotCreatedError,
+} from "../error";
 import { SagaEventHandlerImplementation } from "../handler";
+import { DomainEvent, ErrorMessage, TimeoutMessage } from "../message";
+import { Saga } from "../model";
 import {
   Data,
   DtoClass,
@@ -22,15 +31,6 @@ import {
   State,
 } from "../types";
 import { assertSnakeCase } from "../util";
-import { snakeCase } from "@lindorm-io/case";
-import {
-  ConcurrencyError,
-  DomainError,
-  HandlerNotRegisteredError,
-  SagaAlreadyCreatedError,
-  SagaDestroyedError,
-  SagaNotCreatedError,
-} from "../error";
 
 export class SagaDomain implements ISagaDomain {
   private readonly eventEmitter: EventEmitter;
@@ -142,18 +142,18 @@ export class SagaDomain implements ISagaDomain {
   }
 
   public async inspect<TState extends State = State>(
-    identifier: SagaIdentifier,
+    sagaIdentifier: SagaIdentifier,
   ): Promise<Saga<TState>> {
-    return (await this.store.load(identifier)) as Saga<TState>;
+    return (await this.store.load(sagaIdentifier)) as Saga<TState>;
   }
 
   // private
 
   private async handleEvent(
     event: DomainEvent | TimeoutMessage,
-    sagaIdentifier: HandlerIdentifier,
+    handlerIdentifier: HandlerIdentifier,
   ): Promise<void> {
-    this.logger.debug("Handling event", { event, sagaIdentifier });
+    this.logger.debug("Handling event", { event, sagaIdentifier: handlerIdentifier });
 
     const conditionValidators = [];
 
@@ -163,8 +163,8 @@ export class SagaDomain implements ISagaDomain {
         x.version === event.version &&
         x.aggregate.name === event.aggregate.name &&
         x.aggregate.context === event.aggregate.context &&
-        x.saga.name === sagaIdentifier.name &&
-        x.saga.context === sagaIdentifier.context,
+        x.saga.name === handlerIdentifier.name &&
+        x.saga.context === handlerIdentifier.context,
     );
 
     if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
@@ -196,17 +196,17 @@ export class SagaDomain implements ISagaDomain {
       });
     }
 
-    const identifier: SagaIdentifier = {
+    const sagaIdentifier: SagaIdentifier = {
       id: eventHandler.getSagaId(event),
-      name: sagaIdentifier.name,
-      context: sagaIdentifier.context,
+      name: handlerIdentifier.name,
+      context: handlerIdentifier.context,
     };
 
-    let saga: Saga = await this.store.load(identifier);
+    let saga: Saga = await this.store.load(sagaIdentifier);
 
     this.logger.debug("Saga loaded", { saga: saga.toJSON() });
 
-    const exists = await this.store.causationExists(identifier, event);
+    const exists = await this.store.causationExists(sagaIdentifier, event);
 
     this.logger.debug("Causation exists", { exists });
 
@@ -276,30 +276,30 @@ export class SagaDomain implements ISagaDomain {
 
       return saved;
     } catch (err: any) {
-      if (err instanceof DomainError && err.permanent) {
-        this.logger.error("Failed to handle Saga", err);
+      this.logger.error("Failed to handle Saga", err);
 
-        untouchedSaga.messagesToDispatch.push(
-          new ErrorMessage(
-            {
-              name: snakeCase(err.name),
-              aggregate: event.aggregate,
-              data: {
-                error: err,
-                message: event,
-                saga: { id: saga.id, name: saga.name, context: saga.context },
-              },
-              metadata: event.metadata,
-              mandatory: false,
-            },
-            event,
-          ),
-        );
-
-        return untouchedSaga;
+      if (!(err instanceof DomainError) || !err.permanent) {
+        throw err;
       }
 
-      throw err;
+      untouchedSaga.messagesToDispatch.push(
+        new ErrorMessage(
+          {
+            name: snakeCase(err.name),
+            aggregate: event.aggregate,
+            data: {
+              error: err,
+              message: event,
+              saga: { id: saga.id, name: saga.name, context: saga.context },
+            },
+            metadata: event.metadata,
+            mandatory: false,
+          },
+          event,
+        ),
+      );
+
+      return untouchedSaga;
     }
   }
 

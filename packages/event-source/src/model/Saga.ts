@@ -1,22 +1,23 @@
-import Joi from "joi";
-import clone from "clone";
-import merge from "merge";
-import { Command, DomainEvent, TimeoutMessage } from "../message";
-import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
-import { JOI_MESSAGE } from "../schema";
-import { Logger } from "@lindorm-io/core-logger";
-import { assertSnakeCase, assertSchema } from "../util";
-import { randomString } from "@lindorm-io/random";
 import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { randomString } from "@lindorm-io/random";
+import clone from "clone";
+import merge from "deepmerge";
+import Joi from "joi";
+import { IllegalEntityChangeError, SagaDestroyedError } from "../error";
+import { Command, DomainEvent, TimeoutMessage } from "../message";
+import { JOI_MESSAGE } from "../schema";
 import {
   AggregateIdentifier,
   DtoClass,
   ISaga,
+  MessageOptions,
   SagaData,
   SagaDispatchOptions,
   SagaOptions,
   State,
 } from "../types";
+import { assertSchema, assertSnakeCase } from "../util";
 
 export class Saga<TState extends State = State> implements ISaga {
   public readonly id: string;
@@ -160,17 +161,15 @@ export class Saga<TState extends State = State> implements ISaga {
 
     this._messagesToDispatch.push(
       new Command(
-        merge(
+        merge<MessageOptions, SagaDispatchOptions>(
           {
             aggregate: causation.aggregate,
             correlationId: causation.correlationId,
-            metadata: causation.metadata,
-          },
-          {
-            name: snakeCase(command.constructor.name),
             data,
-            ...options,
+            metadata: causation.metadata,
+            name: snakeCase(command.constructor.name),
           },
+          options,
         ),
       ),
     );
@@ -185,7 +184,7 @@ export class Saga<TState extends State = State> implements ISaga {
       throw new SagaDestroyedError();
     }
 
-    merge(this._state, data);
+    this._state = merge(this._state, data);
   }
 
   public setState(state: TState): void {

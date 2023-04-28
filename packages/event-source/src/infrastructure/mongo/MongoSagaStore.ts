@@ -1,25 +1,25 @@
-import { Collection } from "mongodb";
 import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoBase } from "./MongoBase";
-import { MongoNotUpdatedError } from "../../error";
+import { Collection } from "mongodb";
 import {
   SAGA_CAUSATION,
   SAGA_CAUSATION_INDEXES,
   SAGA_STORE,
   SAGA_STORE_INDEXES,
 } from "../../constant";
+import { MongoNotUpdatedError } from "../../error";
 import {
   IMessage,
   ISagaStore,
+  SagaCausationAttributes,
   SagaClearMessagesToDispatchData,
   SagaClearProcessedCausationIdsData,
   SagaIdentifier,
   SagaStoreAttributes,
-  SagaCausationAttributes,
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
+import { MongoBase } from "./MongoBase";
 
 export class MongoSagaStore extends MongoBase implements ISagaStore {
   private promise: () => Promise<void>;
@@ -32,8 +32,11 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
 
   // public
 
-  public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
-    this.logger.debug("Verifying if causation exists", { identifier, causation });
+  public async causationExists(
+    sagaIdentifier: SagaIdentifier,
+    causation: IMessage,
+  ): Promise<boolean> {
+    this.logger.debug("Verifying if causation exists", { sagaIdentifier, causation });
 
     await this.promise();
 
@@ -41,9 +44,9 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const collection = await this.causationCollection();
 
       const result = await collection.findOne({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
+        id: sagaIdentifier.id,
+        name: sagaIdentifier.name,
+        context: sagaIdentifier.context,
         causation_id: causation.id,
       });
 
@@ -137,8 +140,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
     }
   }
 
-  public async find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
-    this.logger.debug("Finding saga", { identifier });
+  public async find(sagaIdentifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined> {
+    this.logger.debug("Finding saga", { sagaIdentifier });
 
     await this.promise();
 
@@ -146,9 +149,9 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const collection = await this.sagaCollection();
 
       const result = await collection.findOne({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
+        id: sagaIdentifier.id,
+        name: sagaIdentifier.name,
+        context: sagaIdentifier.context,
       });
 
       if (!result) {
@@ -186,10 +189,10 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   }
 
   public async insertProcessedCausationIds(
-    identifier: SagaIdentifier,
+    sagaIdentifier: SagaIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+    this.logger.debug("Inserting processed causation ids", { sagaIdentifier, causationIds });
 
     await this.promise();
 
@@ -197,9 +200,9 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
       const collection = await this.causationCollection();
 
       const documents: Array<SagaCausationAttributes> = causationIds.map((causationId) => ({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
+        id: sagaIdentifier.id,
+        name: sagaIdentifier.name,
+        context: sagaIdentifier.context,
         causation_id: causationId,
         timestamp: new Date(),
       }));

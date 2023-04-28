@@ -6,14 +6,14 @@ const main: SagaEventHandler<GreetingResponded> = {
   saga: "test_saga",
   conditions: { created: true },
   getSagaId: (event) => event.aggregate.id,
-  handler: async (ctx) => {
-    ctx.mergeState({ responded: ctx.event.response });
-    ctx.logger.info("GreetingRespondedEvent", { event: ctx.event });
+  handler: async ({ event, logger, mergeState }) => {
+    mergeState({ responded: event.response });
+    logger.info("GreetingRespondedEvent", { event });
     //
     // Enable these to test the error handler
     //
-    // ctx.destroy();
-    // ctx.setState({});
+    // destroy();
+    // setState({});
   },
 };
 export default main;

@@ -1,5 +1,5 @@
-import { GreetingCreated } from "./greeting-created.event";
 import { ViewEventHandler } from "../../../../src";
+import { GreetingCreated } from "./greeting-created.event";
 
 const mongo: ViewEventHandler<GreetingCreated> = {
   event: GreetingCreated,
@@ -7,10 +7,10 @@ const mongo: ViewEventHandler<GreetingCreated> = {
   adapter: { type: "mongo" },
   conditions: { created: false },
   getViewId: (event) => event.aggregate.id,
-  handler: async (ctx) => {
-    ctx.setState({
-      ...ctx.state,
-      messages: [...(ctx.state.messages || []), ctx.event.initial],
+  handler: async ({ event, state, setState }) => {
+    setState({
+      ...state,
+      messages: [...(state.messages || []), event.initial],
     });
   },
 };
@@ -21,10 +21,10 @@ const postgres: ViewEventHandler<GreetingCreated> = {
   adapter: { type: "postgres" },
   conditions: { created: false },
   getViewId: (event) => event.aggregate.id,
-  handler: async (ctx) => {
-    ctx.setState({
-      ...ctx.state,
-      messages: [...(ctx.state.messages || []), ctx.event.initial],
+  handler: async ({ event, state, setState }) => {
+    setState({
+      ...state,
+      messages: [...(state.messages || []), event.initial],
     });
   },
 };

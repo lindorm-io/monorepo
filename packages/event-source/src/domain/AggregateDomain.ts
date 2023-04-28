@@ -1,16 +1,24 @@
-import clone from "clone";
-import { Aggregate } from "../model";
-import { Command, ErrorMessage } from "../message";
-import { ExtendableError, LindormError } from "@lindorm-io/errors";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { Logger } from "@lindorm-io/core-logger";
-import { assertSnakeCase } from "../util";
-import { findLast } from "lodash";
 import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { ExtendableError, LindormError } from "@lindorm-io/errors";
+import clone from "clone";
+import { findLast } from "lodash";
+import {
+  AggregateAlreadyCreatedError,
+  AggregateDestroyedError,
+  AggregateNotCreatedError,
+  CommandSchemaValidationError,
+  ConcurrencyError,
+  DomainError,
+  HandlerNotRegisteredError,
+} from "../error";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
 } from "../handler";
+import { Command, ErrorMessage } from "../message";
+import { Aggregate } from "../model";
 import {
   AggregateCommandHandlerContext,
   AggregateDomainOptions,
@@ -22,15 +30,7 @@ import {
   IDomainEventStore,
   State,
 } from "../types";
-import {
-  AggregateAlreadyCreatedError,
-  AggregateDestroyedError,
-  AggregateNotCreatedError,
-  CommandSchemaValidationError,
-  ConcurrencyError,
-  DomainError,
-  HandlerNotRegisteredError,
-} from "../error";
+import { assertSnakeCase } from "../util";
 
 export class AggregateDomain implements IAggregateDomain {
   private readonly commandHandlers: Array<IAggregateCommandHandler>;
@@ -196,9 +196,9 @@ export class AggregateDomain implements IAggregateDomain {
   }
 
   public async inspect<TState extends State = State>(
-    identifier: AggregateIdentifier,
+    aggregateIdentifier: AggregateIdentifier,
   ): Promise<Aggregate<TState>> {
-    return (await this.store.load(identifier, this.eventHandlers)) as Aggregate<TState>;
+    return (await this.store.load(aggregateIdentifier, this.eventHandlers)) as Aggregate<TState>;
   }
 
   // private

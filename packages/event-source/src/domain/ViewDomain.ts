@@ -1,14 +1,10 @@
-import EventEmitter from "events";
-import clone from "clone";
-import { DomainEvent, ErrorMessage } from "../message";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
-import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
-import { View } from "../model";
-import { ViewEventHandlerImplementation } from "../handler";
-import { assertSnakeCase } from "../util";
 import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
+import clone from "clone";
+import EventEmitter from "events";
+import { MAX_PROCESSED_CAUSATION_IDS_LENGTH } from "../constant";
 import {
   ConcurrencyError,
   DomainError,
@@ -17,6 +13,9 @@ import {
   ViewDestroyedError,
   ViewNotCreatedError,
 } from "../error";
+import { ViewEventHandlerImplementation } from "../handler";
+import { DomainEvent, ErrorMessage } from "../message";
+import { View } from "../model";
 import {
   Data,
   DtoClass,
@@ -33,6 +32,7 @@ import {
   ViewEventHandlerContext,
   ViewIdentifier,
 } from "../types";
+import { assertSnakeCase } from "../util";
 
 export class ViewDomain implements IViewDomain {
   private readonly eventEmitter: EventEmitter;
@@ -144,16 +144,19 @@ export class ViewDomain implements IViewDomain {
   }
 
   public async inspect<TState extends State = State>(
-    identifier: ViewIdentifier,
-    options: ViewEventHandlerAdapter,
+    viewIdentifier: ViewIdentifier,
+    adapter: ViewEventHandlerAdapter,
   ): Promise<View<TState>> {
-    return (await this.store.load(identifier, options)) as View<TState>;
+    return (await this.store.load(viewIdentifier, adapter)) as View<TState>;
   }
 
   // private
 
-  private async handleEvent(event: DomainEvent, viewIdentifier: HandlerIdentifier): Promise<void> {
-    this.logger.debug("Handling event", { event, viewIdentifier });
+  private async handleEvent(
+    event: DomainEvent,
+    handlerIdentifier: HandlerIdentifier,
+  ): Promise<void> {
+    this.logger.debug("Handling event", { event, viewIdentifier: handlerIdentifier });
 
     const conditionValidators = [];
 
@@ -163,8 +166,8 @@ export class ViewDomain implements IViewDomain {
         x.version === event.version &&
         x.aggregate.name === event.aggregate.name &&
         x.aggregate.context === event.aggregate.context &&
-        x.view.name === viewIdentifier.name &&
-        x.view.context === viewIdentifier.context,
+        x.view.name === handlerIdentifier.name &&
+        x.view.context === handlerIdentifier.context,
     );
 
     if (!(eventHandler instanceof ViewEventHandlerImplementation)) {
@@ -196,17 +199,17 @@ export class ViewDomain implements IViewDomain {
       });
     }
 
-    const identifier: ViewIdentifier = {
+    const viewIdentifier: ViewIdentifier = {
       id: eventHandler.getViewId(event),
-      name: viewIdentifier.name,
-      context: viewIdentifier.context,
+      name: handlerIdentifier.name,
+      context: handlerIdentifier.context,
     };
 
-    let view = await this.store.load(identifier, eventHandler.adapter);
+    let view = await this.store.load(viewIdentifier, eventHandler.adapter);
 
     this.logger.debug("View loaded", { view: view.toJSON() });
 
-    const exists = await this.store.causationExists(identifier, event, eventHandler.adapter);
+    const exists = await this.store.causationExists(viewIdentifier, event, eventHandler.adapter);
 
     this.logger.debug("Causation exists", { exists });
 

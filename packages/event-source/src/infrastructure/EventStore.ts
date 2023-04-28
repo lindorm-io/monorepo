@@ -1,12 +1,9 @@
-import { Aggregate } from "../model";
-import { AggregateEventHandlerImplementation } from "../handler";
-import { CausationMissingEventsError } from "../error";
-import { Command, DomainEvent } from "../message";
-import { EventStoreType } from "../enum";
 import { Logger } from "@lindorm-io/core-logger";
-import { MemoryEventStore } from "./memory";
-import { MongoEventStore } from "./mongo";
-import { PostgresEventStore } from "./postgres";
+import { EventStoreType } from "../enum";
+import { CausationMissingEventsError } from "../error";
+import { AggregateEventHandlerImplementation } from "../handler";
+import { Command, DomainEvent } from "../message";
+import { Aggregate } from "../model";
 import {
   AggregateIdentifier,
   EventData,
@@ -15,6 +12,9 @@ import {
   IDomainEventStore,
   IEventStore,
 } from "../types";
+import { MemoryEventStore } from "./memory";
+import { MongoEventStore } from "./mongo";
+import { PostgresEventStore } from "./postgres";
 
 export class EventStore implements IDomainEventStore {
   private readonly store: IEventStore;
@@ -105,20 +105,16 @@ export class EventStore implements IDomainEventStore {
   }
 
   public async load(
-    identifier: AggregateIdentifier,
+    aggregateIdentifier: AggregateIdentifier,
     eventHandlers: Array<AggregateEventHandlerImplementation>,
   ): Promise<Aggregate> {
-    this.logger.debug("Loading aggregate", { identifier });
+    this.logger.debug("Loading aggregate", { aggregateIdentifier });
 
-    const data = await this.store.find({
-      id: identifier.id,
-      name: identifier.name,
-      context: identifier.context,
-    });
+    const data = await this.store.find(aggregateIdentifier);
 
     const events = data.map((item) => this.toDomainEvent(item));
 
-    const aggregate = new Aggregate({ ...identifier, eventHandlers }, this.logger);
+    const aggregate = new Aggregate({ ...aggregateIdentifier, eventHandlers }, this.logger);
 
     for (const event of events) {
       await aggregate.load(event);

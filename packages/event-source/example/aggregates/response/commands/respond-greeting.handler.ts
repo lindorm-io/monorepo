@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { AggregateCommandHandler } from "../../../../src";
-import { RespondGreeting } from "./respond-greeting.command";
 import { GreetingResponded } from "../events/greeting-responded.event";
+import { RespondGreeting } from "./respond-greeting.command";
 
 const main: AggregateCommandHandler<RespondGreeting, GreetingResponded> = {
   command: RespondGreeting,
@@ -11,8 +11,8 @@ const main: AggregateCommandHandler<RespondGreeting, GreetingResponded> = {
       response: Joi.string().required(),
     })
     .required(),
-  handler: async (ctx) => {
-    await ctx.apply(new GreetingResponded(ctx.command.response));
+  handler: async ({ command, apply }) => {
+    await apply(new GreetingResponded(command.response));
   },
 };
 export default main;

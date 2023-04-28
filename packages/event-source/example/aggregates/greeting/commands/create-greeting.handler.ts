@@ -1,7 +1,7 @@
 import Joi from "joi";
 import { AggregateCommandHandler } from "../../../../src";
-import { CreateGreeting } from "./create-greeting.command";
 import { GreetingCreated } from "../events/greeting-created.event";
+import { CreateGreeting } from "./create-greeting.command";
 
 /**
  * Exporting handler as [ main ]
@@ -15,7 +15,7 @@ export const main: AggregateCommandHandler<CreateGreeting, GreetingCreated> = {
       initial: Joi.string().required(),
     })
     .required(),
-  handler: async (ctx) => {
-    await ctx.apply(new GreetingCreated(ctx.command.initial));
+  handler: async ({ command, apply }) => {
+    await apply(new GreetingCreated(command.initial));
   },
 };

@@ -1,12 +1,12 @@
-import Joi from "joi";
-import clone from "clone";
-import merge from "merge";
-import { DomainEvent } from "../message";
-import { IView, ViewOptions, ViewData, State } from "../types";
-import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
 import { Logger } from "@lindorm-io/core-logger";
-import { assertSnakeCase, assertSchema, composeObjectMetadata } from "../util";
 import { randomString } from "@lindorm-io/random";
+import clone from "clone";
+import merge from "deepmerge";
+import Joi from "joi";
+import { IllegalEntityChangeError, ViewDestroyedError } from "../error";
+import { DomainEvent } from "../message";
+import { IView, State, ViewData, ViewOptions } from "../types";
+import { assertSchema, assertSnakeCase, composeObjectMetadata } from "../util";
 
 export class View<TState extends State = State> implements IView<TState> {
   public readonly id: string;

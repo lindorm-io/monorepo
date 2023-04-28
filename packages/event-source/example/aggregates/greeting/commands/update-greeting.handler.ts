@@ -15,8 +15,8 @@ const main: AggregateCommandHandler<UpdateGreeting, GreetingUpdated> = {
       greeting: Joi.string().required(),
     })
     .required(),
-  handler: async (ctx) => {
-    await ctx.apply(new GreetingUpdated(ctx.command.greeting));
+  handler: async ({ command, apply }) => {
+    await apply(new GreetingUpdated(command.greeting));
   },
 };
 export default main;

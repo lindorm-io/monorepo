@@ -1,14 +1,13 @@
-import Joi from "joi";
-import merge from "merge";
-import { Command, ErrorMessage } from "../message";
-import { ErrorHandlerImplementation } from "../handler";
-import { HandlerNotRegisteredError } from "../error";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { JOI_MESSAGE } from "../schema";
-import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
-import { assertSchema, assertSnakeCase } from "../util";
 import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
+import merge from "deepmerge";
+import Joi from "joi";
+import { HandlerNotRegisteredError } from "../error";
+import { ErrorHandlerImplementation } from "../handler";
+import { Command, ErrorMessage } from "../message";
+import { JOI_MESSAGE } from "../schema";
 import {
   AggregateIdentifier,
   DtoClass,
@@ -16,7 +15,9 @@ import {
   ErrorHandlerContext,
   IErrorDomain,
   IErrorHandler,
+  MessageOptions,
 } from "../types";
+import { assertSchema, assertSnakeCase } from "../util";
 
 export class ErrorDomain implements IErrorDomain {
   private readonly errorHandlers: Array<IErrorHandler>;
@@ -166,17 +167,15 @@ export class ErrorDomain implements IErrorDomain {
 
     await this.messageBus.publish(
       new Command(
-        merge(
+        merge<MessageOptions, ErrorDispatchOptions>(
           {
             name: snakeCase(command.constructor.name),
             data,
-            ...options,
-          },
-          {
             aggregate: causation.aggregate,
             correlationId: causation.correlationId,
             metadata: causation.metadata,
           },
+          options,
         ),
       ),
     );

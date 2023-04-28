@@ -1,10 +1,7 @@
 import { Logger } from "@lindorm-io/core-logger";
-import { MemoryViewStore } from "./memory";
-import { MongoViewStore } from "./mongo";
-import { PostgresViewStore } from "./postgres";
-import { View } from "../model";
-import { ViewStoreType } from "../enum";
 import { randomString } from "@lindorm-io/random";
+import { ViewStoreType } from "../enum";
+import { View } from "../model";
 import {
   IDomainViewStore,
   IMessage,
@@ -19,6 +16,9 @@ import {
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../types";
+import { MemoryViewStore } from "./memory";
+import { MongoViewStore } from "./mongo";
+import { PostgresViewStore } from "./postgres";
 
 export class ViewStore implements IDomainViewStore {
   private readonly logger: Logger;
@@ -73,10 +73,13 @@ export class ViewStore implements IDomainViewStore {
     return new View({ ...view.toJSON(), ...data }, this.logger);
   }
 
-  public async load(identifier: ViewIdentifier, adapter: ViewEventHandlerAdapter): Promise<View> {
-    this.logger.debug("Loading view", { identifier });
+  public async load(
+    viewIdentifier: ViewIdentifier,
+    adapter: ViewEventHandlerAdapter,
+  ): Promise<View> {
+    this.logger.debug("Loading view", { viewIdentifier });
 
-    const existing = await this.store(adapter).find(identifier, adapter);
+    const existing = await this.store(adapter).find(viewIdentifier, adapter);
 
     if (existing) {
       this.logger.debug("Loading existing view", { existing });
@@ -84,7 +87,7 @@ export class ViewStore implements IDomainViewStore {
       return new View(ViewStore.toData(existing), this.logger);
     }
 
-    const view = new View(identifier, this.logger);
+    const view = new View(viewIdentifier, this.logger);
 
     this.logger.debug("Loading ephemeral view", { view: view.toJSON() });
 
@@ -92,13 +95,16 @@ export class ViewStore implements IDomainViewStore {
   }
 
   public async processCausationIds(view: IView, adapter: ViewEventHandlerAdapter): Promise<void> {
-    const identifier: ViewIdentifier = {
+    const viewIdentifier: ViewIdentifier = {
       id: view.id,
       name: view.name,
       context: view.context,
     };
 
-    await this.store(adapter).insertProcessedCausationIds(identifier, view.processedCausationIds);
+    await this.store(adapter).insertProcessedCausationIds(
+      viewIdentifier,
+      view.processedCausationIds,
+    );
   }
 
   public async save(
@@ -108,13 +114,13 @@ export class ViewStore implements IDomainViewStore {
   ): Promise<View> {
     this.logger.debug("Saving view", { view: view.toJSON(), causation });
 
-    const identifier: ViewIdentifier = {
+    const viewIdentifier: ViewIdentifier = {
       id: view.id,
       name: view.name,
       context: view.context,
     };
 
-    const existing = await this.store(adapter).find(identifier, adapter);
+    const existing = await this.store(adapter).find(viewIdentifier, adapter);
 
     if (existing) {
       const included = existing.processed_causation_ids.includes(causation.id);
@@ -125,7 +131,7 @@ export class ViewStore implements IDomainViewStore {
         return new View(ViewStore.toData(existing), this.logger);
       }
 
-      const causationExists = await this.store(adapter).causationExists(view, causation);
+      const causationExists = await this.store(adapter).causationExists(viewIdentifier, causation);
 
       if (causationExists) {
         this.logger.debug("Found existing view matching causation", { existing });

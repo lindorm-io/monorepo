@@ -1,7 +1,5 @@
 import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { PostgresBase } from "./PostgresBase";
-import { getViewStoreName } from "../../util";
 import { parseBlob } from "@lindorm-io/string-blob";
 import {
   HandlerIdentifier,
@@ -12,6 +10,8 @@ import {
   ViewRepositoryData,
   ViewStoreAttributes,
 } from "../../types";
+import { getViewStoreName } from "../../util";
+import { PostgresBase } from "./PostgresBase";
 
 export class PostgresViewRepository<TState = State>
   extends PostgresBase
@@ -19,10 +19,14 @@ export class PostgresViewRepository<TState = State>
 {
   private readonly view: HandlerIdentifier;
 
-  public constructor(connection: IPostgresConnection, view: HandlerIdentifier, logger: Logger) {
+  public constructor(
+    connection: IPostgresConnection,
+    handlerIdentifier: HandlerIdentifier,
+    logger: Logger,
+  ) {
     super(connection, logger);
 
-    this.view = view;
+    this.view = handlerIdentifier;
   }
 
   public async find(filter: PostgresFindFilter = {}): Promise<Array<ViewRepositoryData<TState>>> {

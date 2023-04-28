@@ -1,6 +1,7 @@
-import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
 import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
+import { ScanData, StructureScanner } from "@lindorm-io/structure-scanner";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -20,31 +21,26 @@ import {
 import {
   AggregateCommandHandler,
   AggregateEventHandler,
+  ErrorHandler,
   EventSourceCustomOptions,
+  EventSourcePrivateOptions,
   IAggregateCommandHandler,
   IAggregateEventHandler,
+  IErrorHandler,
   IQueryHandler,
   ISagaEventHandler,
   IViewEventHandler,
-  EventSourcePrivateOptions,
   QueryHandler,
   SagaEventHandler,
-  ScanFileData,
   ViewEventHandler,
-  ErrorHandler,
-  IErrorHandler,
 } from "../types";
-import {
-  assertSchema,
-  defaultAggregateCommandHandlerSchema,
-  extractNameData,
-  StructureScanner,
-} from "../util";
+import { assertSchema, defaultAggregateCommandHandlerSchema, extractNameData } from "../util";
 
 export class EventSourceScanner {
   private readonly logger: Logger;
   private readonly options: EventSourcePrivateOptions;
   private readonly require: NodeJS.Require;
+  private readonly scanner: StructureScanner;
 
   public readonly aggregateCommandHandlers: Array<IAggregateCommandHandler>;
   public readonly aggregateEventHandlers: Array<IAggregateEventHandler>;
@@ -57,12 +53,13 @@ export class EventSourceScanner {
 
   public constructor(
     options: EventSourcePrivateOptions,
-    custom: EventSourceCustomOptions,
+    custom: Partial<EventSourceCustomOptions>,
     logger: Logger,
   ) {
     this.logger = logger;
     this.options = options;
     this.require = custom.require || require;
+    this.scanner = new StructureScanner({ ...options.scanner, parentDirection: "reverse" });
 
     this.aggregateCommandHandlers = [];
     this.aggregateEventHandlers = [];
@@ -77,9 +74,8 @@ export class EventSourceScanner {
   // public scan
 
   public async scanAggregates(): Promise<void> {
-    const scanner = new StructureScanner(this.options.aggregates, this.options.scanner.extensions);
-
-    const files = scanner.scan();
+    const scan = this.scanner.scan(this.options.aggregates);
+    const files = StructureScanner.flatten(scan);
 
     this.logger.debug("Scanning aggregates", { files });
 
@@ -90,36 +86,21 @@ export class EventSourceScanner {
         );
       }
 
-      if (!this.isValid("aggregate", file.name)) continue;
+      if (!this.isValid("aggregate", file.baseName)) continue;
 
       const [directory] = file.parents;
 
-      switch (`${directory}.${file.type}`) {
-        case "commands.command":
-          this.loadCommandAggregate(file);
+      switch (directory) {
+        case "commands":
+          this.switchCommands(file);
           break;
 
-        case "commands.handler":
-          this.loadCommandHandlers(file);
+        case "errors":
+          this.switchErrors(file);
           break;
 
-        case "errors.handler":
-          this.loadErrorHandlers(file);
-          break;
-
-        case "events.event":
-          break;
-
-        case "events.handler":
-          this.loadEventHandlers(file);
-          break;
-
-        case "events.saga":
-          this.loadSagaHandlers(file);
-          break;
-
-        case "events.view":
-          this.loadViewHandlers(file);
+        case "events":
+          this.switchEvents(file);
           break;
 
         default:
@@ -129,9 +110,7 @@ export class EventSourceScanner {
   }
 
   public async scanQueries(): Promise<void> {
-    const scanner = new StructureScanner(this.options.queries, this.options.scanner.extensions);
-
-    const files = scanner.scan();
+    const files = this.scanner.scan(this.options.queries);
 
     this.logger.debug("Scanning queries", { files });
 
@@ -186,24 +165,65 @@ export class EventSourceScanner {
     return aggregateName;
   }
 
+  // private switch handlers
+
+  private switchCommands(file: ScanData): void {
+    switch (file.type) {
+      case "command":
+        return this.loadCommandAggregate(file);
+
+      case "handler":
+        return this.loadCommandHandlers(file);
+
+      default:
+        return;
+    }
+  }
+
+  private switchErrors(file: ScanData): void {
+    switch (file.type) {
+      case "handler":
+        return this.loadErrorHandlers(file);
+
+      default:
+        return;
+    }
+  }
+
+  private switchEvents(file: ScanData): void {
+    switch (file.type) {
+      case "handler":
+        return this.loadEventHandlers(file);
+
+      case "saga":
+        return this.loadSagaHandlers(file);
+
+      case "view":
+        return this.loadViewHandlers(file);
+
+      default:
+        return;
+    }
+  }
+
   // private handler scanners
 
-  private loadCommandHandlers(file: ScanFileData): void {
+  private loadCommandHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "commands") {
       throw new Error("Invalid command handler location");
     }
 
-    const handlers = this.getFileHandlers<AggregateCommandHandler>(file.path);
+    const handlers = this.getFileHandlers<AggregateCommandHandler>(file.fullPath);
 
     if (handlers.length !== 1) {
-      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.fullPath} ]`);
     }
 
     const [handler] = handlers;
 
-    this.logger.debug("Found aggregate command handler", { handler: file.name });
+    this.logger.debug("Found aggregate command handler", { handler: file.baseName });
 
     assertSchema(JOI_AGGREGATE_COMMAND_HANDLER_FILE.required().validate(handler));
 
@@ -224,22 +244,22 @@ export class EventSourceScanner {
     );
   }
 
-  private loadEventHandlers(file: ScanFileData): void {
+  private loadEventHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "events") {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<AggregateEventHandler>(file.path);
+    const handlers = this.getFileHandlers<AggregateEventHandler>(file.fullPath);
 
     if (handlers.length !== 1) {
-      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.fullPath} ]`);
     }
 
     const [handler] = handlers;
 
-    this.logger.debug("Found aggregate event handler", { handler: file.name });
+    this.logger.debug("Found aggregate event handler", { handler: file.baseName });
 
     assertSchema(JOI_AGGREGATE_EVENT_HANDLER_FILE.required().validate(handler));
 
@@ -258,22 +278,22 @@ export class EventSourceScanner {
     );
   }
 
-  private loadErrorHandlers(file: ScanFileData): void {
+  private loadErrorHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "errors") {
       throw new Error("Invalid error handler location");
     }
 
-    const handlers = this.getFileHandlers<ErrorHandler>(file.path);
+    const handlers = this.getFileHandlers<ErrorHandler>(file.fullPath);
 
     if (handlers.length !== 1) {
-      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.fullPath} ]`);
     }
 
     const [handler] = handlers;
 
-    this.logger.debug("Found error handler", { handler: file.name });
+    this.logger.debug("Found error handler", { handler: file.baseName });
 
     assertSchema(JOI_ERROR_HANDLER_FILE.required().validate(handler));
 
@@ -291,16 +311,16 @@ export class EventSourceScanner {
     );
   }
 
-  private loadQueryHandlers(file: ScanFileData): void {
-    const handlers = this.getFileHandlers<QueryHandler>(file.path);
+  private loadQueryHandlers(file: ScanData): void {
+    const handlers = this.getFileHandlers<QueryHandler>(file.fullPath);
 
     if (handlers.length !== 1) {
-      throw new Error(`Invalid amount of handlers exported from file [ ${file.path} ]`);
+      throw new Error(`Invalid amount of handlers exported from file [ ${file.fullPath} ]`);
     }
 
     const [handler] = handlers;
 
-    this.logger.debug("Found query handler", { handler: file.name });
+    this.logger.debug("Found query handler", { handler: file.baseName });
 
     assertSchema(JOI_QUERY_HANDLER_FILE.required().validate(handler));
 
@@ -318,17 +338,17 @@ export class EventSourceScanner {
     );
   }
 
-  private loadSagaHandlers(file: ScanFileData): void {
+  private loadSagaHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "events") {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<SagaEventHandler>(file.path);
+    const handlers = this.getFileHandlers<SagaEventHandler>(file.fullPath);
 
     for (const handler of handlers) {
-      this.logger.debug("Found saga event handler", { handler: file.name });
+      this.logger.debug("Found saga event handler", { handler: file.baseName });
 
       assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
 
@@ -356,17 +376,17 @@ export class EventSourceScanner {
     }
   }
 
-  private loadViewHandlers(file: ScanFileData): void {
+  private loadViewHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "events") {
       throw new Error("Invalid event handler location");
     }
 
-    const handlers = this.getFileHandlers<ViewEventHandler>(file.path);
+    const handlers = this.getFileHandlers<ViewEventHandler>(file.fullPath);
 
     for (const handler of handlers) {
-      this.logger.debug("Found view event handler", { handler: file.name });
+      this.logger.debug("Found view event handler", { handler: file.baseName });
 
       assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
 
@@ -397,12 +417,12 @@ export class EventSourceScanner {
 
   // private scanners
 
-  private loadCommandAggregate(file: ScanFileData): void {
-    const content = this.require(file.path);
+  private loadCommandAggregate(file: ScanData): void {
+    const content = this.require(file.fullPath);
     const commands = Object.keys(content);
 
     if (commands.length !== 1) {
-      throw new Error(`Invalid amount of commands in file [ ${file.path} ]`);
+      throw new Error(`Invalid amount of commands in file [ ${file.fullPath} ]`);
     }
 
     const [command] = commands;
@@ -436,14 +456,14 @@ export class EventSourceScanner {
   }
 
   private isValid(type: string, name: string): boolean {
-    for (const regExp of this.options.scanner.include) {
+    for (const regExp of this.options.fileFilter.include) {
       if (!regExp.test(name)) {
         this.logger.warn(`${type} [ ${name} ] is not included in domain`);
         return false;
       }
     }
 
-    for (const regExp of this.options.scanner.exclude) {
+    for (const regExp of this.options.fileFilter.exclude) {
       if (regExp.test(name)) {
         this.logger.warn(`${type} [ ${name} ] is excluded in domain`);
         return false;

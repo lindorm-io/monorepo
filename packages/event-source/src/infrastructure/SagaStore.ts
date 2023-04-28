@@ -1,10 +1,7 @@
 import { Logger } from "@lindorm-io/core-logger";
-import { MemorySagaStore } from "./memory";
-import { MongoSagaStore } from "./mongo";
-import { PostgresSagaStore } from "./postgres";
-import { Saga } from "../model";
-import { SagaStoreType } from "../enum";
 import { randomString } from "@lindorm-io/random";
+import { SagaStoreType } from "../enum";
+import { Saga } from "../model";
 import {
   IDomainSagaStore,
   IMessage,
@@ -19,6 +16,9 @@ import {
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../types";
+import { MemorySagaStore } from "./memory";
+import { MongoSagaStore } from "./mongo";
+import { PostgresSagaStore } from "./postgres";
 
 export class SagaStore implements IDomainSagaStore {
   private readonly store: ISagaStore;
@@ -57,13 +57,13 @@ export class SagaStore implements IDomainSagaStore {
   public async save(saga: ISaga, causation: IMessage): Promise<Saga> {
     this.logger.debug("Saving saga", { saga: saga.toJSON(), causation });
 
-    const identifier: SagaIdentifier = {
+    const sagaIdentifier: SagaIdentifier = {
       id: saga.id,
       name: saga.name,
       context: saga.context,
     };
 
-    const existing = await this.store.find(identifier);
+    const existing = await this.store.find(sagaIdentifier);
 
     if (existing) {
       const included = existing.processed_causation_ids.includes(causation.id);
@@ -74,7 +74,7 @@ export class SagaStore implements IDomainSagaStore {
         return new Saga(SagaStore.toData(existing), this.logger);
       }
 
-      const causationExists = await this.store.causationExists(saga, causation);
+      const causationExists = await this.store.causationExists(sagaIdentifier, causation);
 
       if (causationExists) {
         this.logger.debug("Found existing saga matching causation", { existing });
@@ -118,10 +118,10 @@ export class SagaStore implements IDomainSagaStore {
     return new Saga({ ...saga.toJSON(), ...data }, this.logger);
   }
 
-  public async load(identifier: SagaIdentifier): Promise<Saga> {
-    this.logger.debug("Loading saga", { identifier });
+  public async load(sagaIdentifier: SagaIdentifier): Promise<Saga> {
+    this.logger.debug("Loading saga", { sagaIdentifier });
 
-    const existing = await this.store.find(identifier);
+    const existing = await this.store.find(sagaIdentifier);
 
     if (existing) {
       this.logger.debug("Loading existing saga", { existing });
@@ -129,7 +129,7 @@ export class SagaStore implements IDomainSagaStore {
       return new Saga(SagaStore.toData(existing), this.logger);
     }
 
-    const saga = new Saga(identifier, this.logger);
+    const saga = new Saga(sagaIdentifier, this.logger);
 
     this.logger.debug("Loading ephemeral saga", { saga: saga.toJSON() });
 
@@ -181,13 +181,13 @@ export class SagaStore implements IDomainSagaStore {
   }
 
   public async processCausationIds(saga: ISaga): Promise<void> {
-    const identifier: SagaIdentifier = {
+    const sagaIdentifier: SagaIdentifier = {
       id: saga.id,
       name: saga.name,
       context: saga.context,
     };
 
-    await this.store.insertProcessedCausationIds(identifier, saga.processedCausationIds);
+    await this.store.insertProcessedCausationIds(sagaIdentifier, saga.processedCausationIds);
   }
 
   // private

@@ -1,22 +1,22 @@
-import { Collection } from "mongodb";
 import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoBase } from "./MongoBase";
-import { MongoNotUpdatedError } from "../../error";
+import { Collection } from "mongodb";
 import { getViewStoreIndexes, VIEW_CAUSATION, VIEW_CAUSATION_INDEXES } from "../../constant";
-import { getViewStoreName } from "../../util";
+import { MongoNotUpdatedError } from "../../error";
 import {
   HandlerIdentifier,
   IMessage,
   IViewStore,
+  ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
   ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
-  ViewCausationAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { getViewStoreName } from "../../util";
+import { MongoBase } from "./MongoBase";
 
 export class MongoViewStore extends MongoBase implements IViewStore {
   private readonly initialisedViews: Array<HandlerIdentifier>;
@@ -31,8 +31,11 @@ export class MongoViewStore extends MongoBase implements IViewStore {
 
   // public
 
-  public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
-    this.logger.debug("Verifying if causation exists", { identifier, causation });
+  public async causationExists(
+    viewIdentifier: ViewIdentifier,
+    causation: IMessage,
+  ): Promise<boolean> {
+    this.logger.debug("Verifying if causation exists", { viewIdentifier, causation });
 
     await this.promise();
 
@@ -40,9 +43,9 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       const collection = await this.causationCollection();
 
       const result = await collection.findOne({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
+        id: viewIdentifier.id,
+        name: viewIdentifier.name,
+        context: viewIdentifier.context,
         causation_id: causation.id,
       });
 
@@ -95,17 +98,17 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   public async find(
-    identifier: ViewIdentifier,
+    viewIdentifier: ViewIdentifier,
     adapter: ViewEventHandlerAdapter,
   ): Promise<ViewStoreAttributes | undefined> {
-    this.logger.debug("Finding view", { identifier });
+    this.logger.debug("Finding view", { viewIdentifier });
 
-    await this.initialise(identifier, adapter);
+    await this.initialise(viewIdentifier, adapter);
 
     try {
-      const collection = await this.viewCollection(identifier, adapter);
+      const collection = await this.viewCollection(viewIdentifier, adapter);
 
-      const result = await collection.findOne({ id: identifier.id });
+      const result = await collection.findOne({ id: viewIdentifier.id });
 
       if (!result) {
         this.logger.debug("View not found");
@@ -151,10 +154,10 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   public async insertProcessedCausationIds(
-    identifier: ViewIdentifier,
+    viewIdentifier: ViewIdentifier,
     causationIds: Array<string>,
   ): Promise<void> {
-    this.logger.debug("Inserting processed causation ids", { identifier, causationIds });
+    this.logger.debug("Inserting processed causation ids", { viewIdentifier, causationIds });
 
     await this.promise();
 
@@ -162,9 +165,9 @@ export class MongoViewStore extends MongoBase implements IViewStore {
       const collection = await this.causationCollection();
 
       const documents: Array<ViewCausationAttributes> = causationIds.map((causationId) => ({
-        id: identifier.id,
-        name: identifier.name,
-        context: identifier.context,
+        id: viewIdentifier.id,
+        name: viewIdentifier.name,
+        context: viewIdentifier.context,
         causation_id: causationId,
         timestamp: new Date(),
       }));
@@ -225,21 +228,25 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   // private
 
   private async initialise(
-    view: HandlerIdentifier,
+    handlerIdentifier: HandlerIdentifier,
     adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
     await this.promise();
 
-    if (this.initialisedViews.find((x) => x.name === view.name && x.context === view.context))
+    if (
+      this.initialisedViews.find(
+        (x) => x.name === handlerIdentifier.name && x.context === handlerIdentifier.context,
+      )
+    )
       return;
 
-    const storeName = getViewStoreName(view);
+    const storeName = getViewStoreName(handlerIdentifier);
     const custom = adapter.indexes || [];
-    const indexes = [getViewStoreIndexes(view), custom].flat();
+    const indexes = [getViewStoreIndexes(handlerIdentifier), custom].flat();
 
     await this.createIndexes(storeName, indexes);
 
-    this.initialisedViews.push(view);
+    this.initialisedViews.push(handlerIdentifier);
   }
 
   private async initialiseCausation(): Promise<void> {
@@ -249,12 +256,12 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   private async viewCollection(
-    view: HandlerIdentifier,
+    handlerIdentifier: HandlerIdentifier,
     adapter: ViewEventHandlerAdapter,
   ): Promise<Collection<ViewStoreAttributes>> {
-    const storeName = getViewStoreName(view);
+    const storeName = getViewStoreName(handlerIdentifier);
     const custom = adapter.indexes || [];
-    const indexes = [getViewStoreIndexes(view), custom].flat();
+    const indexes = [getViewStoreIndexes(handlerIdentifier), custom].flat();
 
     await this.createIndexes(storeName, indexes);
 

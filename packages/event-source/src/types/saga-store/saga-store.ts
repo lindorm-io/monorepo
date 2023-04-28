@@ -1,8 +1,8 @@
-import { IMessage } from "../message";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { ISaga, SagaIdentifier } from "../model";
 import { Saga } from "../../model";
+import { IMessage } from "../message";
+import { ISaga, SagaIdentifier } from "../model";
 import { SagaStoreAttributes } from "./saga-store-attributes";
 
 export type SagaStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
@@ -41,16 +41,16 @@ export interface SagaClearProcessedCausationIdsData {
 }
 
 export interface IDomainSagaStore {
-  causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
+  causationExists(sagaIdentifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(saga: ISaga): Promise<Saga>;
   clearProcessedCausationIds(saga: ISaga): Promise<Saga>;
-  load(identifier: SagaIdentifier): Promise<Saga>;
+  load(sagaIdentifier: SagaIdentifier): Promise<Saga>;
   processCausationIds(saga: ISaga): Promise<void>;
   save(saga: ISaga, causation: IMessage): Promise<Saga>;
 }
 
 export interface ISagaStore {
-  causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
+  causationExists(sagaIdentifier: SagaIdentifier, causation: IMessage): Promise<boolean>;
   clearMessagesToDispatch(
     filter: SagaUpdateFilter,
     data: SagaClearMessagesToDispatchData,
@@ -59,10 +59,10 @@ export interface ISagaStore {
     filter: SagaUpdateFilter,
     data: SagaClearProcessedCausationIdsData,
   ): Promise<void>;
-  find(identifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined>;
+  find(sagaIdentifier: SagaIdentifier): Promise<SagaStoreAttributes | undefined>;
   insert(attributes: SagaStoreAttributes): Promise<void>;
   insertProcessedCausationIds(
-    identifier: SagaIdentifier,
+    sagaIdentifier: SagaIdentifier,
     causationIds: Array<string>,
   ): Promise<void>;
   update(filter: SagaUpdateFilter, data: SagaUpdateData): Promise<void>;

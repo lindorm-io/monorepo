@@ -1,21 +1,21 @@
-import { Aggregate } from "../../model";
-import { AggregateIdentifier, IAggregate } from "../model";
-import { Command, DomainEvent } from "../../message";
-import { EventStoreAttributes } from "./event-store-attributes";
-import { IAggregateEventHandler } from "../handler";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { Command, DomainEvent } from "../../message";
+import { Aggregate } from "../../model";
+import { IAggregateEventHandler } from "../handler";
+import { AggregateIdentifier, IAggregate } from "../model";
+import { EventStoreAttributes } from "./event-store-attributes";
 
 export type EventStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
 
-export interface EventStoreOptions {
+export type EventStoreOptions = {
   custom?: IEventStore;
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
   type: EventStoreAdapterType;
-}
+};
 
-export interface EventData {
+export type EventData = {
   id: string;
   aggregate: AggregateIdentifier;
   causation_id: string;
@@ -25,14 +25,14 @@ export interface EventData {
   name: string;
   timestamp: Date;
   version: number;
-}
+};
 
-export interface EventStoreFindFilter {
+export type EventStoreFindFilter = {
   id: string;
   name: string;
   context: string;
   causation_id?: string;
-}
+};
 
 export interface IDomainEventStore {
   listEvents(from: Date, limit: number): Promise<Array<DomainEvent>>;

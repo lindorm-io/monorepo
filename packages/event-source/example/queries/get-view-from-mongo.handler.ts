@@ -1,9 +1,9 @@
-import { GetViewFromMongo } from "./get-view-from-mongo.query";
 import { QueryHandler } from "../../src";
+import { GetViewFromMongo } from "./get-view-from-mongo.query";
 
 const main: QueryHandler<GetViewFromMongo, unknown> = {
   query: GetViewFromMongo,
   view: "mongo_greetings",
-  handler: (ctx) => ctx.repositories.mongo.findById(ctx.query.id),
+  handler: ({ query, repositories }) => repositories.mongo.findById(query.id),
 };
 export default main;

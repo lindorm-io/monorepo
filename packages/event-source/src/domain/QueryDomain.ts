@@ -1,12 +1,18 @@
-import clone from "clone";
-import { HandlerNotRegisteredError } from "../error";
+import { snakeCase } from "@lindorm-io/case";
+import { Logger } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { LindormError } from "@lindorm-io/errors";
-import { Logger } from "@lindorm-io/core-logger";
+import clone from "clone";
+import { HandlerNotRegisteredError } from "../error";
 import { QueryHandlerImplementation } from "../handler";
-import { assertSnakeCase } from "../util";
-import { snakeCase } from "@lindorm-io/case";
+import {
+  MemoryViewRepository,
+  MongoViewRepository,
+  NoopMongoViewRepository,
+  NoopPostgresViewRepository,
+  PostgresViewRepository,
+} from "../infrastructure";
 import {
   DtoClass,
   IQueryDomain,
@@ -15,13 +21,7 @@ import {
   QueryHandlerContext,
   State,
 } from "../types";
-import {
-  MemoryViewRepository,
-  MongoViewRepository,
-  NoopMongoViewRepository,
-  NoopPostgresViewRepository,
-  PostgresViewRepository,
-} from "../infrastructure";
+import { assertSnakeCase } from "../util";
 
 export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends State = State>
   implements IQueryDomain<TQuery, TState>

@@ -1,16 +1,16 @@
-import { DtoClass } from "../types";
 import { snakeCase } from "@lindorm-io/case";
+import { DtoClass } from "../types";
 
-export interface NameData {
+export type NameData = {
   name: string;
   version: number;
-}
+};
 
-export interface DtoData {
+export type DtoData = {
   name: string;
   version: number;
   data: Record<string, any>;
-}
+};
 
 const R_VERSION = /_[vV]/;
 const R_VERSION_DIGIT = /_[vV]\d$/;

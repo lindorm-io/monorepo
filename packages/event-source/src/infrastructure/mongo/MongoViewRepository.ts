@@ -1,8 +1,6 @@
-import { Collection, Filter, FindOptions } from "mongodb";
 import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoBase } from "./MongoBase";
-import { getViewStoreName } from "../../util";
+import { Collection, Filter, FindOptions } from "mongodb";
 import {
   HandlerIdentifier,
   IMongoRepository,
@@ -10,6 +8,8 @@ import {
   ViewRepositoryData,
   ViewStoreAttributes,
 } from "../../types";
+import { getViewStoreName } from "../../util";
+import { MongoBase } from "./MongoBase";
 
 const projection: Partial<Record<keyof ViewStoreAttributes, number>> & { _id: 0 } = {
   _id: 0,
@@ -26,11 +26,15 @@ export class MongoViewRepository<TState = State>
 {
   private readonly collection: Collection<ViewStoreAttributes>;
 
-  public constructor(connection: IMongoConnection, view: HandlerIdentifier, logger: Logger) {
+  public constructor(
+    connection: IMongoConnection,
+    handlerIdentifier: HandlerIdentifier,
+    logger: Logger,
+  ) {
     super(connection, logger);
 
     this.collection = this.connection?.database?.collection<ViewStoreAttributes>(
-      getViewStoreName(view),
+      getViewStoreName(handlerIdentifier),
     );
   }
 

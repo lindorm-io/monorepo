@@ -3,10 +3,10 @@ import { GreetingResponded } from "./greeting-responded.event";
 
 const main: AggregateEventHandler<GreetingResponded> = {
   event: GreetingResponded,
-  handler: async (ctx) => {
-    ctx.mergeState({
+  handler: async ({ event, mergeState }) => {
+    mergeState({
       responded: true,
-      response: ctx.event.response,
+      response: event.response,
     });
   },
 };

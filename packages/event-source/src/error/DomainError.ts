@@ -5,8 +5,10 @@ export class DomainError extends LindormError {
   public readonly permanent: boolean;
 
   public constructor(message: string, options: DomainErrorOptions = {}) {
-    super(message, options);
+    const { permanent = false, ...rest } = options;
 
-    this.permanent = options.permanent || false;
+    super(message, rest);
+
+    this.permanent = permanent;
   }
 }

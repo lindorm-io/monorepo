@@ -1,14 +1,12 @@
-import { Aggregate, Saga, View } from "../model";
-import { AggregateIdentifier } from "./model";
-import { DtoClass, Data, State, Metadata } from "./generic";
-import { EventEmitterListener } from "./event-emitter";
-import { EventStoreAdapterType, IEventStore } from "./event-store";
 import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
-import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
-import { MessageBusQueueType } from "./message-bus";
+import { StructureScannerOptions } from "@lindorm-io/structure-scanner";
+import { Aggregate, Saga, View } from "../model";
 import { ReplayOptions } from "./domain";
+import { EventEmitterListener } from "./event-emitter";
+import { EventStoreAdapterType, IEventStore } from "./event-store";
+import { Data, DtoClass, Metadata, State } from "./generic";
 import {
   HandlerIdentifier,
   IAggregateCommandHandler,
@@ -19,44 +17,56 @@ import {
   IViewEventHandler,
   ViewEventHandlerAdapter,
 } from "./handler";
+import { MessageBusQueueType } from "./message-bus";
+import { AggregateIdentifier } from "./model";
+import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 
 export type EventSourceAdapterOptions = {
-  eventStore?: EventStoreAdapterType;
-  sagaStore?: SagaStoreAdapterType;
-  messageBus?: MessageBusQueueType;
+  eventStore: EventStoreAdapterType;
+  sagaStore: SagaStoreAdapterType;
+  messageBus: MessageBusQueueType;
 };
 
 export type EventSourceConnectionOptions = {
-  amqp?: IAmqpConnection;
-  mongo?: IMongoConnection;
-  postgres?: IPostgresConnection;
+  amqp: IAmqpConnection;
+  mongo: IMongoConnection;
+  postgres: IPostgresConnection;
 };
 
 export type EventSourceCustomOptions = {
-  messageBus?: IMessageBus;
-  eventStore?: IEventStore;
-  sagaStore?: ISagaStore;
-  require?: NodeJS.Require;
+  messageBus: IMessageBus;
+  eventStore: IEventStore;
+  sagaStore: ISagaStore;
+  require: NodeJS.Require;
 };
 
-export type EventSourceScannerOptions = {
-  extensions: Array<string>;
+export type EventSourceFileFilterOptions = {
   include: Array<RegExp>;
   exclude: Array<RegExp>;
 };
 
+export type EventSourceScannerOptions = Pick<
+  StructureScannerOptions,
+  "deniedDirectories" | "deniedExtensions" | "deniedFilenames" | "deniedTypes"
+>;
+
 export type EventSourcePrivateOptions = {
   adapters: EventSourceAdapterOptions;
-  context: string;
   aggregates: string;
+  context: string;
+  dangerouslyRegisterHandlersManually: boolean;
+  fileFilter: EventSourceFileFilterOptions;
   queries: string;
   scanner: EventSourceScannerOptions;
-  dangerouslyRegisterHandlersManually: boolean;
 };
 
-export type EventSourceOptions = Partial<Omit<EventSourcePrivateOptions, "scanner">> & {
-  connections?: EventSourceConnectionOptions;
-  custom?: EventSourceCustomOptions;
+export type EventSourceOptions = Partial<
+  Omit<EventSourcePrivateOptions, "adapters" | "fileFilter" | "scanner">
+> & {
+  adapters?: Partial<EventSourceAdapterOptions>;
+  connections?: Partial<EventSourceConnectionOptions>;
+  custom?: Partial<EventSourceCustomOptions>;
+  fileFilter?: Partial<EventSourceFileFilterOptions>;
   scanner?: Partial<EventSourceScannerOptions>;
 };
 

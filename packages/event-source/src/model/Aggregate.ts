@@ -1,11 +1,17 @@
-import Joi from "joi";
+import { Logger } from "@lindorm-io/core-logger";
 import clone from "clone";
-import merge from "merge";
+import merge from "deepmerge";
+import Joi from "joi";
+import {
+  AggregateDestroyedError,
+  AggregateNotDestroyedError,
+  HandlerNotRegisteredError,
+  IllegalEntityChangeError,
+  MessageTypeError,
+} from "../error";
 import { AggregateEventHandlerImplementation } from "../handler";
 import { Command, DomainEvent } from "../message";
 import { JOI_MESSAGE } from "../schema";
-import { Logger } from "@lindorm-io/core-logger";
-import { assertSnakeCase, assertSchema, assertSchemaAsync, extractDtoData } from "../util";
 import {
   AggregateData,
   AggregateEventHandlerContext,
@@ -15,13 +21,7 @@ import {
   IAggregateEventHandler,
   State,
 } from "../types";
-import {
-  AggregateDestroyedError,
-  AggregateNotDestroyedError,
-  HandlerNotRegisteredError,
-  IllegalEntityChangeError,
-  MessageTypeError,
-} from "../error";
+import { assertSchema, assertSchemaAsync, assertSnakeCase, extractDtoData } from "../util";
 
 export class Aggregate<TState extends State = State> implements IAggregate {
   public readonly id: string;
@@ -224,7 +224,7 @@ export class Aggregate<TState extends State = State> implements IAggregate {
       throw new AggregateDestroyedError();
     }
 
-    merge(this._state, data);
+    this._state = merge(this._state, data);
   }
 
   private setState(state: TState): void {
