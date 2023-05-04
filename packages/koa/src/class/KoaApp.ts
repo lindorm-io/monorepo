@@ -1,17 +1,14 @@
 /* eslint @typescript-eslint/no-var-requires: 0 */
 
-import Koa, { Middleware } from "koa";
-import Router from "koa-router";
-import bodyParser from "koa-bodyparser";
-import userAgent from "koa-useragent";
-import { DefaultLindormKoaContext, DefaultLindormMiddleware, KoaAppOptions } from "../types";
 import { Environment } from "@lindorm-io/common-types";
-import { IntervalWorker } from "./IntervalWorker";
 import { Logger } from "@lindorm-io/core-logger";
-import { Server as IOServer } from "socket.io";
 import { ScanData, StructureScanner } from "@lindorm-io/structure-scanner";
-import { createHealthRouter, createHeartbeatRouter } from "../router";
-import { createServer, Server as HttpServer } from "http";
+import { Server as HttpServer, createServer } from "http";
+import Koa, { Middleware } from "koa";
+import bodyParser from "koa-bodyparser";
+import Router from "koa-router";
+import userAgent from "koa-useragent";
+import { Server as IOServer } from "socket.io";
 import {
   dataHandlingMiddleware,
   defaultStatusMiddleware,
@@ -24,6 +21,9 @@ import {
   socketIoMiddleware,
   utilContextMiddleware,
 } from "../middleware/private";
+import { createHealthRouter, createHeartbeatRouter } from "../router";
+import { DefaultLindormKoaContext, DefaultLindormMiddleware, KoaAppOptions } from "../types";
+import { IntervalWorker } from "./IntervalWorker";
 
 export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoaContext> {
   private readonly environment: Environment;
@@ -60,7 +60,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     this.workers = options.workers || [];
 
     this.scanner = new StructureScanner({
-      deniedFilenames: [/\.fixture\.ts/, /\.spec\.ts/, /\.test\.ts/, /\.integration\.ts/],
+      deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],
     });
 
     this.middleware = [
@@ -293,14 +293,14 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     parentRouter.use(path, router.routes(), router.allowedMethods());
   }
 
-  private addRouterFromFile(scan: ScanData, parentRouter: Router): void {
-    if (!scan.isFile) return;
+  private addRouterFromFile(scanData: ScanData, parentRouter: Router): void {
+    if (!scanData.isFile) return;
 
-    const router = this.findRouterInFile(scan);
-    const path = this.getRouteName(scan);
+    const router = this.findRouterInFile(scanData);
+    const path = this.getRouteName(scanData);
 
     this.logger.debug("Adding router", {
-      path: "/" + [scan.parents, path.replace("/", "")].flat().join("/").replace("//", ""),
+      path: "/" + [scanData.parents, path.replace("/", "")].flat().join("/").replace("//", ""),
     });
 
     parentRouter.use(path, router.routes(), router.allowedMethods());
@@ -308,6 +308,11 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
 
   private addConfig(scanData: ScanData, router: Router<any, any>): void {
     const file = this.scanner.require<{ middleware?: Array<Middleware> }>(scanData.fullPath);
+    const path = this.getRouteName(scanData);
+
+    this.logger.debug("Adding config", {
+      path: "/" + [scanData.parents, path.replace("/", "")].flat().join("/").replace("//", ""),
+    });
 
     for (const middleware of file.middleware || []) {
       router.use(middleware);
@@ -315,9 +320,9 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   }
 
   private addRouterFromScanArray(array: Array<ScanData>, createRouter: boolean): Router<any, any> {
-    const index = array.find((c) => c.baseName === "index");
-    const config = array.find((c) => c.baseName === "[...config]");
-    const files = array.filter((c) => !["[...config]", "index"].includes(c.baseName));
+    const index = array.find((c) => c.baseName === "index" && c.type === null);
+    const config = array.find((c) => c.baseName === "index" && c.type === "config");
+    const files = array.filter((c) => c.baseName !== "index");
 
     const router = index
       ? this.findRouterInFile(index)
