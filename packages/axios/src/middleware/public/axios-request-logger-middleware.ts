@@ -1,5 +1,5 @@
-import { AxiosError } from "axios";
 import { Logger } from "@lindorm-io/core-logger";
+import { AxiosError } from "axios";
 import { Middleware } from "../../types";
 import { getResponseTime } from "../../util/private";
 
@@ -14,6 +14,10 @@ export const axiosRequestLoggerMiddleware =
     const start = Date.now();
 
     try {
+      log.verbose("Request initialised", {
+        req: ctx.req,
+      });
+
       await next();
 
       log.verbose("Request successful", {
@@ -29,12 +33,12 @@ export const axiosRequestLoggerMiddleware =
       });
     } catch (err: any) {
       if (!(err instanceof AxiosError)) {
-        log.error("Unexpected error", err);
+        log.error("Request exception", err);
 
         throw err;
       }
 
-      log.error("Request failed", {
+      log.warn("Request failed", {
         code: err.code,
         config: err.config,
 
