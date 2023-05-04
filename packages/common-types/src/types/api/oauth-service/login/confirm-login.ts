@@ -10,7 +10,7 @@ export type ConfirmLoginRequestBody = {
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
   remember: boolean;
-  sso: boolean;
+  singleSignOn: boolean;
 };
 
 export type ConfirmLoginResponse = StandardResponseWithRedirectTo;

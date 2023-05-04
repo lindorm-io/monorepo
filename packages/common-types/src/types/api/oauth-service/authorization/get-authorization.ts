@@ -1,7 +1,3 @@
-import { AdjustedAccessLevel, LevelOfAssurance } from "../../../auth";
-import { PublicClientInfo } from "../public-client-info";
-import { ScopeDescription } from "../../../global";
-import { StandardRequestParamsWithId } from "../../standard";
 import {
   AuthenticationMethod,
   LindormScope,
@@ -10,6 +6,10 @@ import {
   OpenIdScope,
   SessionStatus,
 } from "../../../../enums";
+import { AdjustedAccessLevel, LevelOfAssurance } from "../../../auth";
+import { ScopeDescription } from "../../../global";
+import { StandardRequestParamsWithId } from "../../standard";
+import { PublicClientInfo } from "../public-client-info";
 import { PublicTenantInfo } from "../public-tenant-info";
 
 export type SelectAccountSession = {
@@ -73,7 +73,7 @@ export type GetAuthorizationResponse = {
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
     remember: boolean;
-    sso: boolean;
+    singleSignOn: boolean;
   };
 
   clientSession: {
