@@ -1,15 +1,15 @@
 import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
-import { confirmStrategyController } from "./confirm-strategy";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
-import { resolveAllowedStrategies as _resolveAllowedMethods } from "../../handler";
 import {
   createTestAccount,
   createTestAuthenticationSession,
   createTestStrategySession,
 } from "../../fixtures/entity";
+import { resolveAllowedStrategies as _resolveAllowedMethods } from "../../handler";
+import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
+import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
+import { confirmStrategyController } from "./confirm-strategy";
 
 jest.mock("../../handler");
 jest.mock("../../strategies");
@@ -68,7 +68,7 @@ describe("confirmStrategyController", () => {
           id: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
         }),
     }));
-    calculateAuthenticationStatus.mockImplementation(() => "confirmed");
+    calculateAuthenticationStatus.mockReturnValue("confirmed");
     resolveAllowedMethods.mockResolvedValue(["device_challenge"]);
   });
 

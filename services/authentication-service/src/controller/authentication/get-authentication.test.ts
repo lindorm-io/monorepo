@@ -1,9 +1,9 @@
+import { SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateClientConfig as _generateClientConfig } from "../../util";
 import { getAuthenticationController } from "./get-authentication";
-import { SessionStatus } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 jest.mock("../../util");
 
@@ -37,7 +37,7 @@ describe("getAuthenticationController", () => {
       },
     };
 
-    generateClientConfig.mockImplementation(() => "CLIENT_CONFIG");
+    generateClientConfig.mockReturnValue("CLIENT_CONFIG");
   });
 
   test("should resolve", async () => {

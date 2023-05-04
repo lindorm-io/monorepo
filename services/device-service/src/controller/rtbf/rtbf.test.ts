@@ -1,6 +1,6 @@
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
 import { createTestDeviceLink } from "../../fixtures/entity";
+import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
 import { rtbfController } from "./rtbf";
 
 jest.mock("../../handler");
@@ -22,7 +22,7 @@ describe("rtbfController", () => {
       },
     };
 
-    destroyDeviceLinkCallback.mockImplementation(() => "destroyDeviceLinkCallback");
+    destroyDeviceLinkCallback.mockReturnValue("destroyDeviceLinkCallback");
   });
 
   test("should resolve", async () => {

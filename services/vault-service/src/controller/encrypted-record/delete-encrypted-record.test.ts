@@ -1,9 +1,9 @@
-import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { deleteEncryptedRecordController } from "./delete-encrypted-record";
-import { getEncryptionKey as _getEncryptionKey } from "../../handler";
+import MockDate from "mockdate";
 import { createTestEncryptedRecord } from "../../fixtures/entity";
+import { getEncryptionKey as _getEncryptionKey } from "../../handler";
+import { deleteEncryptedRecordController } from "./delete-encrypted-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -33,7 +33,7 @@ describe("deleteEncryptedRecordController", () => {
       },
     };
 
-    getEncryptionKey.mockImplementation(() => "secret");
+    getEncryptionKey.mockReturnValue("secret");
   });
 
   test("should resolve", async () => {

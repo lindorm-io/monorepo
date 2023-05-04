@@ -1,15 +1,15 @@
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { ClientError } from "@lindorm-io/errors";
 import { assertPKCE as _assertPKCE } from "@lindorm-io/node-pkce";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { generateMfaCookie as _generateMfaCookie } from "../../handler";
-import { verifyAuthenticationController } from "./verify-authentication";
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import {
   calculateLevelOfAssurance as _calculateLevelOfAssurance,
   canGenerateMfaCookie as _canGenerateMfaCookie,
 } from "../../util";
-import { createMockLogger } from "@lindorm-io/core-logger";
+import { verifyAuthenticationController } from "./verify-authentication";
 
 jest.mock("@lindorm-io/node-pkce", () => ({
   ...jest.requireActual("@lindorm-io/node-pkce"),
@@ -65,7 +65,7 @@ describe("verifyAuthenticationController", () => {
       levelOfAssurance: 3,
       maximumLevelOfAssurance: 3,
     }));
-    canGenerateMfaCookie.mockImplementation(() => false);
+    canGenerateMfaCookie.mockReturnValue(false);
     generateMfaCookie.mockResolvedValue(undefined);
   });
 
@@ -82,7 +82,7 @@ describe("verifyAuthenticationController", () => {
   });
 
   test("should resolve with generated mfa cookie", async () => {
-    canGenerateMfaCookie.mockImplementation(() => true);
+    canGenerateMfaCookie.mockReturnValue(true);
 
     await expect(verifyAuthenticationController(ctx)).resolves.toBeTruthy();
 

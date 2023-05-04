@@ -1,7 +1,7 @@
-import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
-import { rtbfController } from "./rtbf";
-import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
+import { destroyAccountCallback as _destroyAccountCallback } from "../../handler";
+import { rtbfController } from "./rtbf";
 
 jest.mock("../../handler");
 
@@ -21,7 +21,7 @@ describe("rtbfController", () => {
       },
     };
 
-    destroyAccountCallback.mockImplementation(() => "destroyAccountCallback");
+    destroyAccountCallback.mockReturnValue("destroyAccountCallback");
   });
 
   test("should resolve", async () => {

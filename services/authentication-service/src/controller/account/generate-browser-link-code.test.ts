@@ -1,17 +1,17 @@
-import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
 import { baseHash } from "@lindorm-io/core";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestAccount } from "../../fixtures/entity";
-import { generateBrowserLinkCodeController } from "./generate-browser-link-code";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
+import { generateBrowserLinkCodeController } from "./generate-browser-link-code";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("crypto", () => ({
   ...jest.requireActual("crypto"),
 
-  randomUUID: jest.fn().mockImplementation(() => "a26dad28-e854-447d-bce6-5c685cddfea8"),
+  randomUUID: jest.fn().mockReturnValue("a26dad28-e854-447d-bce6-5c685cddfea8"),
 }));
 
 jest.mock("@lindorm-io/random", () => ({

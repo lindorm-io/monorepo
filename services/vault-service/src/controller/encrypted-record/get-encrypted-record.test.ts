@@ -1,10 +1,10 @@
-import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getEncryptedRecordController } from "./get-encrypted-record";
-import { getEncryptionKey as _getEncryptionKey } from "../../handler";
-import { createTestEncryptedRecord } from "../../fixtures/entity";
 import { isAfter as _isAfter } from "date-fns";
+import MockDate from "mockdate";
+import { createTestEncryptedRecord } from "../../fixtures/entity";
+import { getEncryptionKey as _getEncryptionKey } from "../../handler";
+import { getEncryptedRecordController } from "./get-encrypted-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -18,7 +18,7 @@ jest.mock("@lindorm-io/crypto", () => ({
   },
 }));
 jest.mock("@lindorm-io/string-blob", () => ({
-  parseBlob: jest.fn().mockImplementation(() => "parsed-blob"),
+  parseBlob: jest.fn().mockReturnValue("parsed-blob"),
 }));
 jest.mock("../../handler");
 jest.mock("date-fns");
@@ -39,8 +39,8 @@ describe("getEncryptedRecordController", () => {
       },
     };
 
-    getEncryptionKey.mockImplementation(() => "secret");
-    isAfter.mockImplementation(() => false);
+    getEncryptionKey.mockReturnValue("secret");
+    isAfter.mockReturnValue(false);
   });
 
   afterEach(jest.resetAllMocks);
@@ -55,7 +55,7 @@ describe("getEncryptedRecordController", () => {
   });
 
   test("should destroy and throw on expired data", async () => {
-    isAfter.mockImplementation(() => true);
+    isAfter.mockReturnValue(true);
 
     await expect(getEncryptedRecordController(ctx)).rejects.toThrow(ClientError);
 

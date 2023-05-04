@@ -1,7 +1,7 @@
-import MockDate from "mockdate";
-import { createEncryptedRecordController } from "./create-encrypted-record";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
+import { createEncryptedRecordController } from "./create-encrypted-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -32,7 +32,7 @@ describe("createEncryptedRecordController", () => {
       },
     };
 
-    getEncryptionKey.mockImplementation(() => "secret");
+    getEncryptionKey.mockReturnValue("secret");
   });
 
   test("should resolve", async () => {

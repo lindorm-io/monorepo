@@ -1,12 +1,12 @@
-import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
-import { confirmOidcController } from "./confirm-oidc";
-import { createMockRedisRepository } from "@lindorm-io/redis";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { randomUUID } from "crypto";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { resolveAllowedStrategies as _resolveAllowedStrategies } from "../../handler";
-import { randomUUID } from "crypto";
-import { ClientError } from "@lindorm-io/errors";
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { calculateAuthenticationStatus as _calculateAuthenticationStatus } from "../../util";
+import { confirmOidcController } from "./confirm-oidc";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -47,7 +47,7 @@ describe("confirmOidcController", () => {
       },
     };
 
-    calculateAuthenticationStatus.mockImplementation(() => "pending");
+    calculateAuthenticationStatus.mockReturnValue("pending");
     resolveAllowedStrategies.mockResolvedValue(["strategy"]);
   });
 
@@ -66,7 +66,7 @@ describe("confirmOidcController", () => {
   });
 
   test("should skip resolving strategies when not pending", async () => {
-    calculateAuthenticationStatus.mockImplementation(() => "confirmed");
+    calculateAuthenticationStatus.mockReturnValue("confirmed");
 
     await expect(confirmOidcController(ctx)).resolves.toStrictEqual({ redirect: expect.any(URL) });
 

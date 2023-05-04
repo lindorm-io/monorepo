@@ -1,14 +1,14 @@
-import MockDate from "mockdate";
 import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import { getIdentifierClaims as _getIdentifierClaims } from "../../handler";
-import { getUserinfoController } from "./get-userinfo";
 import {
   getAddress as _getAddress,
   getDisplayName as _getDisplayName,
   getName as _getName,
 } from "../../util";
+import { getUserinfoController } from "./get-userinfo";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -42,8 +42,8 @@ describe("getUserinfoController", () => {
       },
     };
 
-    getAddress.mockImplementation(() => "getAddress");
-    getDisplayName.mockImplementation(() => "getDisplayName");
+    getAddress.mockReturnValue("getAddress");
+    getDisplayName.mockReturnValue("getDisplayName");
     getIdentifierClaims.mockResolvedValue({
       email: "email",
       emailVerified: true,
@@ -54,7 +54,7 @@ describe("getUserinfoController", () => {
       socialSecurityNumber: "279708557743",
       socialSecurityNumberVerified: false,
     });
-    getName.mockImplementation(() => "getName");
+    getName.mockReturnValue("getName");
   });
 
   test("should resolve with basic userinfo", async () => {

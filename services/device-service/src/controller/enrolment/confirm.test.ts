@@ -1,10 +1,10 @@
+import { SessionStatus } from "@lindorm-io/common-types";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
+import { createDeviceLinkCallback } from "../../handler";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
-import { createDeviceLinkCallback as createDeviceLinkCallback } from "../../handler";
-import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -66,7 +66,7 @@ describe("confirmEnrolmentController", () => {
       },
     };
 
-    createDeviceCallback.mockImplementation(() => "post-challenge-callback");
+    createDeviceCallback.mockReturnValue("post-challenge-callback");
   });
 
   afterEach(jest.clearAllMocks);

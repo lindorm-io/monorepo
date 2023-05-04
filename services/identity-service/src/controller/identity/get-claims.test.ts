@@ -1,8 +1,7 @@
-import MockDate from "mockdate";
 import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
-import { getClaimsController } from "./get-claims";
 import {
   getIdentifierClaims as _getIdentifierClaims,
   getOauthClaimsSession as _getOauthClaimsSession,
@@ -12,6 +11,7 @@ import {
   getDisplayName as _getDisplayName,
   getName as _getName,
 } from "../../util";
+import { getClaimsController } from "./get-claims";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -38,8 +38,8 @@ describe("getClaimsController", () => {
       },
     };
 
-    getAddress.mockImplementation(() => "getAddress");
-    getDisplayName.mockImplementation(() => "getDisplayName");
+    getAddress.mockReturnValue("getAddress");
+    getDisplayName.mockReturnValue("getDisplayName");
     getIdentifierClaims.mockResolvedValue({
       email: "email",
       emailVerified: true,
@@ -50,7 +50,7 @@ describe("getClaimsController", () => {
       socialSecurityNumber: "279708557743",
       socialSecurityNumberVerified: false,
     });
-    getName.mockImplementation(() => "getName");
+    getName.mockReturnValue("getName");
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
