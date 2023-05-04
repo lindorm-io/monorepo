@@ -1,11 +1,10 @@
-import { AxiosResponse, Method } from "axios";
-import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
-import { RetryOptions } from "@lindorm-io/retry";
 import { TransformMode } from "@lindorm-io/case";
-import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm-io/url";
-import { defaultRetryCallback, validateStatus } from "../util/private";
 import { resolveMiddleware } from "@lindorm-io/middleware";
+import { RetryOptions } from "@lindorm-io/retry";
+import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm-io/url";
+import { AxiosResponse, Method } from "axios";
 import { v4 as uuid } from "uuid";
+import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
 import {
   axiosDefaultClientHeadersMiddleware,
   axiosDefaultHeadersMiddleware,
@@ -23,6 +22,7 @@ import {
   RequestOptions,
   RetryCallback,
 } from "../types";
+import { defaultRetryCallback, validateStatus } from "../util/private";
 
 export class Axios {
   private readonly alias: string | null;
@@ -44,15 +44,17 @@ export class Axios {
       ...(options.config || {}),
     };
 
-    try {
-      this.baseURL = createBaseUrl({
-        base: options.baseURL,
-        host: options.host,
-        port: options.port,
-      });
-    } catch (_) {
-      /* ignored */
-    }
+    this.baseURL =
+      options.baseURL instanceof URL
+        ? options.baseURL
+        : typeof options.baseURL === "string"
+        ? new URL(options.baseURL)
+        : options.host
+        ? createBaseUrl({
+            host: options.host,
+            port: options.port,
+          })
+        : undefined;
 
     this.alias = options.alias || null;
     this.client = {

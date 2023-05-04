@@ -1,7 +1,7 @@
 import nock from "nock";
-import { Axios } from "./Axios";
 import { axiosBasicAuthMiddleware } from "../middleware";
 import { Middleware } from "../types";
+import { Axios } from "./Axios";
 
 describe("Axios", () => {
   describe("constructor", () => {
@@ -9,7 +9,19 @@ describe("Axios", () => {
       expect(() => new Axios()).not.toThrow();
     });
 
-    test("should construct with options", () => {
+    test("should construct with base url as URL", () => {
+      expect(() => new Axios({ baseURL: new URL("https://test.lindorm.io") })).not.toThrow();
+    });
+
+    test("should construct with base url as string", () => {
+      expect(() => new Axios({ baseURL: "https://test.lindorm.io" })).not.toThrow();
+    });
+
+    test("should construct with host and port", () => {
+      expect(() => new Axios({ host: "https://test.lindorm.io", port: 3000 })).not.toThrow();
+    });
+
+    test("should construct with all options", () => {
       expect(
         () =>
           new Axios({
