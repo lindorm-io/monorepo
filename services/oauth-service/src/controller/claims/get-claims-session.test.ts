@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { getClaimsSessionController } from "./get-claims-session";
 import { createTestClaimsSession, createTestClient, createTestTenant } from "../../fixtures/entity";
+import { getClaimsSessionController } from "./get-claims-session";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -47,8 +47,9 @@ describe("getClaimsSessionController", () => {
 
         client: {
           id: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
-          logoUri: "https://logo.uri/logo",
           name: "ClientName",
+          logoUri: "https://logo.uri/logo",
+          singleSignOn: true,
           type: "confidential",
         },
 

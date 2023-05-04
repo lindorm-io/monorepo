@@ -1,7 +1,3 @@
-import { Client, Tenant } from "../entity";
-import { ClientRepository, TenantRepository } from "../infrastructure";
-import { argon, mongoConnection, redisConnection } from "../instance";
-import { logger } from "./util/logger";
 import {
   LindormScope,
   OpenIdClientType,
@@ -11,6 +7,10 @@ import {
   OpenIdResponseType,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { Client, Tenant } from "../entity";
+import { ClientRepository, TenantRepository } from "../infrastructure";
+import { argon, mongoConnection, redisConnection } from "../instance";
+import { logger } from "./util/logger";
 
 const ids = {
   authenticationService: "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
@@ -59,17 +59,26 @@ const main = async (): Promise<void> => {
         responseTypes: [],
         scopes: [],
       },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost",
       name: "lindorm.io/authentication-service",
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authenticationService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -83,17 +92,26 @@ const main = async (): Promise<void> => {
         responseTypes: [],
         scopes: [],
       },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost",
       name: "lindorm.io/communication-service",
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.communicationService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -107,17 +125,26 @@ const main = async (): Promise<void> => {
         responseTypes: [],
         scopes: [],
       },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost",
       name: "lindorm.io/device-service",
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.deviceService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -131,17 +158,26 @@ const main = async (): Promise<void> => {
         responseTypes: [],
         scopes: [],
       },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost",
       name: "lindorm.io/identity-service",
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.identityService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -155,17 +191,26 @@ const main = async (): Promise<void> => {
         responseTypes: [],
         scopes: [],
       },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost",
       name: "lindorm.io/oidc-service",
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.oidcService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -174,22 +219,31 @@ const main = async (): Promise<void> => {
   await repositories.client.create(
     new Client({
       id: ids.vaultService,
-      defaults: {
-        audiences: Object.values(ids),
-        displayMode: OpenIdDisplayMode.PAGE,
-        levelOfAssurance: 1,
-        responseMode: OpenIdResponseMode.QUERY,
-      },
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         responseTypes: [],
         scopes: [],
+      },
+      audiences: {
+        credentials: Object.values(ids),
+        identity: [],
+      },
+      defaults: {
+        displayMode: OpenIdDisplayMode.PAGE,
+        levelOfAssurance: 1,
+        responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       backChannelLogoutUri: "http://localhost/logout",
       host: "http://localhost",
       name: "lindorm.io/vault-service",
       secret: await argon.encrypt(secrets.vaultService),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),
@@ -203,11 +257,19 @@ const main = async (): Promise<void> => {
         responseTypes: Object.values(OpenIdResponseType),
         scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
       },
+      audiences: {
+        credentials: [],
+        identity: Object.values(ids),
+      },
       defaults: {
-        audiences: Object.values(ids),
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+      expiry: {
+        accessToken: "3 minutes",
+        idToken: "24 hours",
+        refreshToken: "30 days",
       },
       active: true,
       host: "http://localhost:4100",
@@ -215,6 +277,7 @@ const main = async (): Promise<void> => {
       redirectUris: ["http://localhost:4100/api/callback"],
       backChannelLogoutUri: "http://localhost/logout",
       secret: await argon.encrypt(secrets.authApplication),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.CONFIDENTIAL,
     }),

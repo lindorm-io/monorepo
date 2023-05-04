@@ -1,11 +1,11 @@
-import { createClientController } from "./create-client";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient, createTestTenant } from "../../fixtures/entity";
+import { createClientController } from "./create-client";
 
 jest.mock("@lindorm-io/random", () => ({
   ...(jest.requireActual("@lindorm-io/random") as object),
 
-  randomUnreserved: jest.fn().mockImplementation(() => "random-string"),
+  randomUnreserved: jest.fn().mockReturnValue("random-string"),
 }));
 
 jest.mock("../../instance", () => ({

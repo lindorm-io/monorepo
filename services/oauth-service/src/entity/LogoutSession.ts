@@ -1,5 +1,3 @@
-import Joi from "joi";
-import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
 import { SessionStatus } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
@@ -8,6 +6,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
 
 type ConfirmedLogout = {
   browserSessionId: string | null;

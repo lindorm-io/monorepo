@@ -1,5 +1,3 @@
-import Joi from "joi";
-import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import {
   LevelOfAssurance,
   LindormScope,
@@ -12,6 +10,14 @@ import {
   Optional,
   ScopeDescription,
 } from "@lindorm-io/common-types";
+import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
+import Joi from "joi";
+import {
+  JOI_ARGON_STRING,
+  JOI_CLIENT_TYPE,
+  JOI_LEVEL_OF_ASSURANCE,
+  JOI_SCOPE_DESCRIPTION,
+} from "../common";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -19,12 +25,6 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../constant";
-import {
-  JOI_ARGON_STRING,
-  JOI_CLIENT_TYPE,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_SCOPE_DESCRIPTION,
-} from "../common";
 
 export type ClientAllowed = {
   grantTypes: Array<OpenIdGrantType>;
@@ -32,22 +32,27 @@ export type ClientAllowed = {
   scopes: Array<OpenIdScope | LindormScope>;
 };
 
+export type ClientAudiences = {
+  credentials: Array<string>;
+  identity: Array<string>;
+};
+
 export type ClientDefaults = {
-  audiences: Array<string>;
   displayMode: OpenIdDisplayMode;
   levelOfAssurance: LevelOfAssurance;
   responseMode: OpenIdResponseMode;
 };
 
 export type ClientExpiry = {
-  accessToken: string | null;
-  idToken: string | null;
-  refreshToken: string | null;
+  accessToken: string;
+  idToken: string;
+  refreshToken: string;
 };
 
 export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
+  audiences: ClientAudiences;
   backChannelLogoutUri: string | null;
   claimsUri: string | null;
   defaults: ClientDefaults;
@@ -59,13 +64,15 @@ export type ClientAttributes = EntityAttributes & {
   host: string;
   logoUri: string | null;
   name: string;
-  opaque: boolean;
+  opaqueAccessToken: boolean;
+  opaqueRefreshToken: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
+  singleSignOn: boolean;
   tenantId: string;
   type: OpenIdClientType;
 };
@@ -78,10 +85,10 @@ export type ClientOptions = Optional<
   | "description"
   | "enforceBasicAuth"
   | "enforceSecret"
-  | "expiry"
   | "frontChannelLogoutUri"
   | "logoUri"
-  | "opaque"
+  | "opaqueAccessToken"
+  | "opaqueRefreshToken"
   | "postLogoutUris"
   | "redirectUris"
   | "requiredScopes"
@@ -100,6 +107,12 @@ const schema = Joi.object<ClientAttributes>()
         scopes: Joi.array().items(Joi.string()).required(),
       })
       .required(),
+    audiences: Joi.object()
+      .keys({
+        credentials: Joi.array().items(Joi.string().guid()).required(),
+        identity: Joi.array().items(Joi.string().guid()).required(),
+      })
+      .required(),
     defaults: Joi.object()
       .keys({
         audiences: Joi.array().items(Joi.string().guid()).required(),
@@ -110,9 +123,9 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
     expiry: Joi.object()
       .keys({
-        accessToken: JOI_EXPIRY_REGEX.allow(null).required(),
-        idToken: JOI_EXPIRY_REGEX.allow(null).required(),
-        refreshToken: JOI_EXPIRY_REGEX.allow(null).required(),
+        accessToken: JOI_EXPIRY_REGEX.required(),
+        idToken: JOI_EXPIRY_REGEX.required(),
+        refreshToken: JOI_EXPIRY_REGEX.required(),
       })
       .required(),
 
@@ -126,13 +139,15 @@ const schema = Joi.object<ClientAttributes>()
     host: Joi.string().uri().required(),
     logoUri: Joi.string().uri().allow(null).required(),
     name: Joi.string().required(),
-    opaque: Joi.boolean().required(),
+    opaqueAccessToken: Joi.boolean().required(),
+    opaqueRefreshToken: Joi.boolean().required(),
     postLogoutUris: Joi.array().items(Joi.string().uri()).required(),
     redirectUris: Joi.array().items(Joi.string().uri()).required(),
     requiredScopes: Joi.array().items(Joi.string()).required(),
     rtbfUri: Joi.string().uri().allow(null).required(),
     scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION).required(),
     secret: JOI_ARGON_STRING.required(),
+    singleSignOn: Joi.boolean().required(),
     tenantId: Joi.string().guid().required(),
     type: JOI_CLIENT_TYPE.required(),
   })
@@ -141,6 +156,7 @@ const schema = Joi.object<ClientAttributes>()
 export class Client extends LindormEntity<ClientAttributes> {
   public active: boolean;
   public allowed: ClientAllowed;
+  public audiences: ClientAudiences;
   public backChannelLogoutUri: string | null;
   public claimsUri: string | null;
   public defaults: ClientDefaults;
@@ -152,44 +168,44 @@ export class Client extends LindormEntity<ClientAttributes> {
   public host: string;
   public logoUri: string | null;
   public name: string;
-  public opaque: boolean;
+  public opaqueAccessToken: boolean;
+  public opaqueRefreshToken: boolean;
   public postLogoutUris: Array<string>;
   public redirectUris: Array<string>;
   public requiredScopes: Array<OpenIdScope | LindormScope>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string;
+  public singleSignOn: boolean;
   public tenantId: string;
   public type: OpenIdClientType;
 
   public constructor(options: ClientOptions) {
     super(options);
 
-    this.expiry = {
-      accessToken: options.expiry?.accessToken || null,
-      idToken: options.expiry?.idToken || null,
-      refreshToken: options.expiry?.refreshToken || null,
-    };
-
     this.active = options.active;
     this.allowed = options.allowed;
+    this.audiences = options.audiences;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
     this.claimsUri = options.claimsUri || null;
     this.defaults = options.defaults;
     this.description = options.description || null;
     this.enforceBasicAuth = options.enforceBasicAuth === true;
     this.enforceSecret = options.enforceSecret === true;
+    this.expiry = options.expiry;
     this.frontChannelLogoutUri = options.frontChannelLogoutUri || null;
     this.host = options.host;
     this.logoUri = options.logoUri || null;
     this.name = options.name;
-    this.opaque = options.opaque !== false;
+    this.opaqueAccessToken = options.opaqueAccessToken !== false;
+    this.opaqueRefreshToken = options.opaqueRefreshToken !== false;
     this.postLogoutUris = options.postLogoutUris || [];
     this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
     this.rtbfUri = options.rtbfUri || null;
     this.scopeDescriptions = options.scopeDescriptions || [];
     this.secret = options.secret;
+    this.singleSignOn = options.singleSignOn === true;
     this.tenantId = options.tenantId;
     this.type = options.type;
   }
@@ -204,6 +220,7 @@ export class Client extends LindormEntity<ClientAttributes> {
 
       active: this.active,
       allowed: this.allowed,
+      audiences: this.audiences,
       backChannelLogoutUri: this.backChannelLogoutUri,
       claimsUri: this.claimsUri,
       defaults: this.defaults,
@@ -215,13 +232,15 @@ export class Client extends LindormEntity<ClientAttributes> {
       host: this.host,
       logoUri: this.logoUri,
       name: this.name,
-      opaque: this.opaque,
+      opaqueAccessToken: this.opaqueAccessToken,
+      opaqueRefreshToken: this.opaqueRefreshToken,
       postLogoutUris: this.postLogoutUris,
       redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,
       rtbfUri: this.rtbfUri,
       scopeDescriptions: this.scopeDescriptions,
       secret: this.secret,
+      singleSignOn: this.singleSignOn,
       tenantId: this.tenantId,
       type: this.type,
     };

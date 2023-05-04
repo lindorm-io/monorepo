@@ -1,10 +1,10 @@
-import MockDate from "mockdate";
-import { ElevationSession } from "../../entity";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
+import { ElevationSession } from "../../entity";
 import { createTestClientSession, createTestElevationSession } from "../../fixtures/entity";
 import { updateClientSessionElevation } from "./update-client-session-elevation";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -23,7 +23,7 @@ describe("verifyClientSessionElevation", () => {
         environment: "development",
       },
       cookies: {
-        get: jest.fn().mockImplementation(() => "06715391-bea3-47db-acf4-ffa1f500bcc8"),
+        get: jest.fn().mockReturnValue("06715391-bea3-47db-acf4-ffa1f500bcc8"),
       },
     };
 

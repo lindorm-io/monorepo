@@ -1,9 +1,9 @@
-import MockDate from "mockdate";
-import { confirmLoginController } from "./confirm-login";
-import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import MockDate from "mockdate";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
+import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { confirmLoginController } from "./confirm-login";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,7 +28,7 @@ describe("confirmLoginController", () => {
         metadata: { ip: "127.0.0.1" },
         methods: ["phone"],
         remember: true,
-        sso: true,
+        singleSignOn: true,
       },
       entity: {
         authorizationSession,
@@ -36,7 +36,7 @@ describe("confirmLoginController", () => {
       logger: createMockLogger(),
     };
 
-    createAuthorizationVerifyRedirectUri.mockImplementation(() => "redirect-uri");
+    createAuthorizationVerifyRedirectUri.mockReturnValue("redirect-uri");
   });
 
   test("should resolve", async () => {
@@ -53,7 +53,7 @@ describe("confirmLoginController", () => {
           metadata: { ip: "127.0.0.1" },
           methods: ["phone"],
           remember: true,
-          sso: true,
+          singleSignOn: true,
         },
         status: expect.objectContaining({ login: "confirmed" }),
       }),

@@ -1,5 +1,3 @@
-import Joi from "joi";
-import { JOI_CODE } from "../constant";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,6 +5,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_CODE } from "../constant";
 
 export type AuthorizationCodeAttributes = EntityAttributes & {
   authorizationSessionId: string;

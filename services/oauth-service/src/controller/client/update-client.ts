@@ -1,14 +1,12 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_CLIENT_TYPE, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
-import { ClientAllowed, ClientDefaults, ClientExpiry } from "../../entity";
 import {
   LindormScope,
   OpenIdClientType,
   OpenIdScope,
   ScopeDescription,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_CLIENT_TYPE, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -16,11 +14,14 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../../constant";
+import { ClientAllowed, ClientAudiences, ClientDefaults, ClientExpiry } from "../../entity";
+import { ServerKoaController } from "../../types";
 
 type RequestData = {
   id: string;
   active: boolean;
   allowed: ClientAllowed;
+  audiences: ClientAudiences;
   backChannelLogoutUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
@@ -31,7 +32,8 @@ type RequestData = {
   host: string;
   logoUri: string | null;
   name: string;
-  opaque: boolean;
+  opaqueAccessToken: boolean;
+  opaqueRefreshToken: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -49,16 +51,19 @@ export const updateClientSchema = Joi.object<RequestData>()
       responseTypes: Joi.array().items(JOI_RESPONSE_TYPE),
       scopes: Joi.array().items(Joi.string()),
     }),
+    audiences: Joi.object().keys({
+      client: Joi.array().items(Joi.string().guid()),
+      identity: Joi.array().items(Joi.string().guid()),
+    }),
     defaults: Joi.object().keys({
-      audiences: Joi.array().items(Joi.string().guid()),
       displayMode: JOI_DISPLAY_MODE,
       levelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
       responseMode: JOI_RESPONSE_MODE,
     }),
     expiry: Joi.object().keys({
-      accessToken: JOI_EXPIRY_REGEX.allow(null),
-      idToken: JOI_EXPIRY_REGEX.allow(null),
-      refreshToken: JOI_EXPIRY_REGEX.allow(null),
+      accessToken: JOI_EXPIRY_REGEX,
+      idToken: JOI_EXPIRY_REGEX,
+      refreshToken: JOI_EXPIRY_REGEX,
     }),
 
     active: Joi.boolean(),
@@ -70,7 +75,8 @@ export const updateClientSchema = Joi.object<RequestData>()
     host: Joi.string().uri(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
-    opaque: Joi.boolean(),
+    opaqueAccessToken: Joi.boolean(),
+    opaqueRefreshToken: Joi.boolean(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
     redirectUris: Joi.array().items(Joi.string().uri()),
     requiredScopes: Joi.array().items(Joi.string()),
@@ -87,6 +93,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     data: {
       active,
       allowed,
+      audiences,
       backChannelLogoutUri,
       defaults,
       description,
@@ -97,7 +104,8 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       host,
       logoUri,
       name,
-      opaque,
+      opaqueAccessToken,
+      opaqueRefreshToken,
       postLogoutUris,
       redirectUris,
       requiredScopes,
@@ -113,7 +121,9 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (allowed?.responseTypes !== undefined) client.allowed.responseTypes = allowed.responseTypes;
   if (allowed?.scopes !== undefined) client.allowed.scopes = allowed.scopes;
 
-  if (defaults?.audiences !== undefined) client.defaults.audiences = defaults.audiences;
+  if (audiences?.credentials !== undefined) client.audiences.credentials = audiences.credentials;
+  if (audiences?.identity !== undefined) client.audiences.identity = audiences.identity;
+
   if (defaults?.displayMode !== undefined) client.defaults.displayMode = defaults.displayMode;
   if (defaults?.levelOfAssurance) client.defaults.levelOfAssurance = defaults.levelOfAssurance;
   if (defaults?.responseMode !== undefined) client.defaults.responseMode = defaults.responseMode;
@@ -131,7 +141,8 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (host !== undefined) client.host = host;
   if (logoUri !== undefined) client.logoUri = logoUri;
   if (name !== undefined) client.name = name;
-  if (opaque !== undefined) client.opaque = opaque;
+  if (opaqueAccessToken !== undefined) client.opaqueAccessToken = opaqueAccessToken;
+  if (opaqueRefreshToken !== undefined) client.opaqueRefreshToken = opaqueRefreshToken;
   if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
   if (redirectUris !== undefined) client.redirectUris = redirectUris;
   if (requiredScopes !== undefined) client.requiredScopes = requiredScopes;

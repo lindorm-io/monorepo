@@ -143,7 +143,7 @@ describe("/admin/sessions/authorization", () => {
         level_of_assurance: 2,
         methods: ["email", "phone"],
         remember: true,
-        sso: true,
+        single_sign_on: true,
       },
 
       client_session: {

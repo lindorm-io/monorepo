@@ -1,7 +1,6 @@
-import MockDate from "mockdate";
-import { createMockRedisRepository } from "@lindorm-io/redis";
-import { oauthAuthorizeController } from "./authorize";
 import { randomUnreserved as _randomUnreserved } from "@lindorm-io/random";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -9,6 +8,10 @@ import {
   createTestClientSession,
 } from "../../fixtures/entity";
 import {
+  isConsentRequired as _isConsentRequired,
+  isLoginRequired as _isLoginRequired,
+  isSelectAccountRequired as _isSelectAccountRequired,
+  isSsoAvailable as _isSsoAvailable,
   setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
   tryFindBrowserSessions as _tryFindBrowserSessions,
   tryFindClientSession as _tryFindClientSession,
@@ -23,10 +26,8 @@ import {
   createLoginPendingUri as _createLoginPendingUri,
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
   filterAcrValues as _filterAcrValues,
-  isConsentRequired as _isConsentRequired,
-  isLoginRequired as _isLoginRequired,
-  isSelectAccountRequired as _isSelectAccountRequired,
 } from "../../util";
+import { oauthAuthorizeController } from "./authorize";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -45,6 +46,7 @@ const createSelectAccountPendingUri = _createSelectAccountPendingUri as jest.Moc
 const filterAcrValues = _filterAcrValues as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
+const isSsoAvailable = _isSsoAvailable as jest.Mock;
 const isSelectAccountRequired = _isSelectAccountRequired as jest.Mock;
 const randomUnreserved = _randomUnreserved as jest.Mock;
 const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
@@ -82,6 +84,10 @@ describe("oauthAuthorizeController", () => {
       entity: {
         client: createTestClient({
           id: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+          audiences: {
+            credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
+            identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+          },
         }),
       },
       request: {
@@ -122,18 +128,19 @@ describe("oauthAuthorizeController", () => {
     assertAuthorizeResponseType.mockImplementation();
     assertAuthorizeScope.mockImplementation();
     assertRedirectUri.mockImplementation();
-    createAuthorizationVerifyUri.mockImplementation(() => "createAuthorizationVerifyUri");
-    createConsentPendingUri.mockImplementation(() => "createConsentPendingUri");
-    createLoginPendingUri.mockImplementation(() => "createLoginPendingUri");
-    createSelectAccountPendingUri.mockImplementation(() => "createSelectAccountPendingUri");
-    filterAcrValues.mockImplementation(() => ({
+    createAuthorizationVerifyUri.mockReturnValue("createAuthorizationVerifyUri");
+    createConsentPendingUri.mockReturnValue("createConsentPendingUri");
+    createLoginPendingUri.mockReturnValue("createLoginPendingUri");
+    createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
+    filterAcrValues.mockReturnValue({
       levelOfAssurance: 3,
       methods: ["phone", "session", "email"],
-    }));
-    isConsentRequired.mockImplementation(() => false);
-    isLoginRequired.mockImplementation(() => false);
-    isSelectAccountRequired.mockImplementation(() => false);
-    randomUnreserved.mockImplementation(() => "WuaUxGcvKAkxJJUF");
+    });
+    isConsentRequired.mockReturnValue(false);
+    isLoginRequired.mockReturnValue(false);
+    isSsoAvailable.mockReturnValue(false);
+    isSelectAccountRequired.mockReturnValue(false);
+    randomUnreserved.mockReturnValue("WuaUxGcvKAkxJJUF");
     setAuthorizationSessionCookie.mockImplementation();
   });
 
@@ -164,7 +171,7 @@ describe("oauthAuthorizeController", () => {
           metadata: {},
           methods: [],
           remember: false,
-          sso: false,
+          singleSignOn: false,
         },
         country: "se",
         displayMode: "popup",
@@ -182,7 +189,11 @@ describe("oauthAuthorizeController", () => {
           audiences: [
             "090fd104-7be0-41d1-b877-1c0851318492",
             "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+            "3b50bab6-2962-4193-8d29-410795620df1",
             "3bfc20bd-0f18-4717-b535-ffb4a071deba",
+            "6ea68f3d-e31e-4882-85a5-0a617f431fdd",
+            "9993fa84-bedf-4a93-a421-1f63719cd9d3",
+            "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
           ],
           scopes: ["openid", "offline_access"],
         },
@@ -257,7 +268,7 @@ describe("oauthAuthorizeController", () => {
           metadata: {},
           methods: [],
           remember: false,
-          sso: false,
+          singleSignOn: false,
         },
         country: null,
         displayMode: "popup",
@@ -272,7 +283,13 @@ describe("oauthAuthorizeController", () => {
         redirectUri: "https://test.lindorm.io/redirect",
         clientSessionId: null,
         requestedConsent: {
-          audiences: ["0930e3aa-a00c-4cd1-9d29-57b90e20cd95"],
+          audiences: [
+            "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
+            "3b50bab6-2962-4193-8d29-410795620df1",
+            "6ea68f3d-e31e-4882-85a5-0a617f431fdd",
+            "9993fa84-bedf-4a93-a421-1f63719cd9d3",
+            "f39e83c0-10d8-49a1-8ecb-bb89f1d57b7f",
+          ],
           scopes: ["openid", "offline_access"],
         },
         requestedLogin: {
@@ -300,7 +317,7 @@ describe("oauthAuthorizeController", () => {
   });
 
   test("should resolve pending select account", async () => {
-    isSelectAccountRequired.mockImplementation(() => true);
+    isSelectAccountRequired.mockReturnValue(true);
 
     await expect(oauthAuthorizeController(ctx)).resolves.toStrictEqual({
       redirect: "createSelectAccountPendingUri",
@@ -318,7 +335,7 @@ describe("oauthAuthorizeController", () => {
   });
 
   test("should resolve pending login", async () => {
-    isLoginRequired.mockImplementation(() => true);
+    isLoginRequired.mockReturnValue(true);
 
     await expect(oauthAuthorizeController(ctx)).resolves.toStrictEqual({
       redirect: "createLoginPendingUri",
@@ -336,7 +353,7 @@ describe("oauthAuthorizeController", () => {
   });
 
   test("should resolve pending consent", async () => {
-    isConsentRequired.mockImplementation(() => true);
+    isConsentRequired.mockReturnValue(true);
 
     await expect(oauthAuthorizeController(ctx)).resolves.toStrictEqual({
       redirect: "createConsentPendingUri",

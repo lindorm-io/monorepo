@@ -42,7 +42,7 @@ describe("/admin/sessions/login", () => {
         metadata: { ip: "127.0.0.1" },
         methods: ["email_otp", "phone_otp"],
         remember: true,
-        sso: true,
+        singleSignOn: true,
       })
       .expect(200);
 

@@ -96,7 +96,7 @@ describe("/oauth2/authorize", () => {
           metadata: {},
           methods: [],
           remember: false,
-          sso: false,
+          singleSignOn: false,
         },
         country: null,
         displayMode: "page",

@@ -1,5 +1,3 @@
-import Joi from "joi";
-import { randomUnreserved } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
@@ -19,6 +17,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { randomUnreserved } from "@lindorm-io/random";
+import Joi from "joi";
 import {
   JOI_COUNTRY_CODE,
   JOI_JWT,
@@ -59,7 +59,7 @@ type ConfirmedLogin = {
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
   remember: boolean;
-  sso: boolean;
+  singleSignOn: boolean;
 };
 
 type RequestedConsent = {
@@ -162,7 +162,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
         metadata: Joi.object().required(),
         methods: Joi.array().items(Joi.string()).required(),
         remember: Joi.boolean().required(),
-        sso: Joi.boolean().required(),
+        singleSignOn: Joi.boolean().required(),
       })
       .required(),
     requestedConsent: Joi.object<RequestedConsent>()
@@ -271,7 +271,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       metadata: options.confirmedLogin?.metadata || {},
       methods: options.confirmedLogin?.methods || [],
       remember: options.confirmedLogin?.remember === true,
-      sso: options.confirmedLogin?.sso === true,
+      singleSignOn: options.confirmedLogin?.singleSignOn === true,
     };
     this.requestedConsent = {
       audiences: options.requestedConsent.audiences,
@@ -350,5 +350,24 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       status: this.status,
       uiLocales: this.uiLocales,
     };
+  }
+
+  public confirmConsent(data: ConfirmedConsent): void {
+    this.confirmedConsent.audiences = data.audiences;
+    this.confirmedConsent.scopes = data.scopes;
+
+    this.status.consent = SessionStatus.CONFIRMED;
+  }
+
+  public confirmLogin(data: ConfirmedLogin): void {
+    this.confirmedLogin.identityId = data.identityId;
+    this.confirmedLogin.latestAuthentication = data.latestAuthentication;
+    this.confirmedLogin.levelOfAssurance = data.levelOfAssurance;
+    this.confirmedLogin.metadata = data.metadata;
+    this.confirmedLogin.methods = data.methods;
+    this.confirmedLogin.remember = data.remember;
+    this.confirmedLogin.singleSignOn = data.singleSignOn;
+
+    this.status.login = SessionStatus.CONFIRMED;
   }
 }

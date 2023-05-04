@@ -1,20 +1,20 @@
+import { OpenIdScope } from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
-import { OpenIdScope } from "@lindorm-io/common-types";
-import { generateTokenResponse } from "./generate-token-response";
-import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   createTestAccessToken,
   createTestClient,
   createTestClientSession,
   createTestRefreshToken,
 } from "../../fixtures/entity";
+import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
   createIdToken as _createIdToken,
   generateAccessToken as _generateAccessToken,
   generateRefreshToken as _generateRefreshToken,
 } from "../token";
+import { generateTokenResponse } from "./generate-token-response";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -96,7 +96,8 @@ describe("generateTokenResponse", () => {
   });
 
   test("should with opaque tokens", async () => {
-    client.opaque = true;
+    client.opaqueAccessToken = true;
+    client.opaqueRefreshToken = true;
     clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({

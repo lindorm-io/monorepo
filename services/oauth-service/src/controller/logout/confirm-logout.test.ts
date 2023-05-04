@@ -1,9 +1,9 @@
-import MockDate from "mockdate";
-import { confirmLogoutController } from "./confirm-logout";
-import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import MockDate from "mockdate";
 import { createTestLogoutSession } from "../../fixtures/entity";
+import { createLogoutVerifyUri as _createLogoutVerifyRedirectUri } from "../../util";
+import { confirmLogoutController } from "./confirm-logout";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -31,7 +31,7 @@ describe("confirmLogoutController", () => {
       logger: createMockLogger(),
     };
 
-    createLogoutVerifyRedirectUri.mockImplementation(() => "createLogoutVerifyRedirectUri");
+    createLogoutVerifyRedirectUri.mockReturnValue("createLogoutVerifyRedirectUri");
   });
 
   test("should resolve", async () => {

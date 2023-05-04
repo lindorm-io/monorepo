@@ -1,16 +1,16 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
-import { tokenIntrospectController } from "./introspect";
-import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
-  resolveTokenSession as _resolveTokenSession,
-} from "../../handler";
+import MockDate from "mockdate";
 import {
   createTestAccessToken,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import {
+  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
+  resolveTokenSession as _resolveTokenSession,
+} from "../../handler";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
+import { tokenIntrospectController } from "./introspect";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -35,7 +35,7 @@ describe("introspectController", () => {
       },
     };
 
-    getAdjustedAccessLevel.mockImplementation(() => 1);
+    getAdjustedAccessLevel.mockReturnValue(1);
     convertOpaqueTokenToJwt.mockImplementation(() => ({ token: "jwt.jwt.jwt", expiresIn: 999 }));
     resolveTokenSession.mockResolvedValue(
       createTestAccessToken({

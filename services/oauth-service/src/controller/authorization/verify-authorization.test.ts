@@ -1,13 +1,12 @@
+import { SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { verifyAuthorizationController } from "./verify-authorization";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import {
   createTestAuthorizationSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
-import { SessionStatus } from "@lindorm-io/common-types";
 import {
   generateCallbackResponse as _generateCallbackResponse,
   handleOauthConsentVerification as _handleOauthConsentVerification,
@@ -21,6 +20,7 @@ import {
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
   createSelectAccountRejectedUri as _createSelectAccountRejectedUri,
 } from "../../util";
+import { verifyAuthorizationController } from "./verify-authorization";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -65,7 +65,7 @@ describe("oauthVerifyController", () => {
         environment: "development",
       },
       cookies: {
-        get: jest.fn().mockImplementation(() => "a49cce82-d0e4-413b-9098-f63d7f5e89e8"),
+        get: jest.fn().mockReturnValue("a49cce82-d0e4-413b-9098-f63d7f5e89e8"),
       },
     };
 
@@ -88,12 +88,12 @@ describe("oauthVerifyController", () => {
       }),
     );
 
-    createConsentPendingUri.mockImplementation(() => "createConsentPendingUri");
-    createConsentRejectedUri.mockImplementation(() => "createConsentRejectedUri");
-    createLoginPendingUri.mockImplementation(() => "createLoginPendingUri");
-    createLoginRejectedUri.mockImplementation(() => "createLoginRejectedUri");
-    createSelectAccountPendingUri.mockImplementation(() => "createSelectAccountPendingUri");
-    createSelectAccountRejectedUri.mockImplementation(() => "createSelectAccountRejectedUri");
+    createConsentPendingUri.mockReturnValue("createConsentPendingUri");
+    createConsentRejectedUri.mockReturnValue("createConsentRejectedUri");
+    createLoginPendingUri.mockReturnValue("createLoginPendingUri");
+    createLoginRejectedUri.mockReturnValue("createLoginRejectedUri");
+    createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
+    createSelectAccountRejectedUri.mockReturnValue("createSelectAccountRejectedUri");
     generateCallbackResponse.mockResolvedValue({ redirect: "generateCallbackResponse" });
   });
 
@@ -158,7 +158,7 @@ describe("oauthVerifyController", () => {
   });
 
   test("should throw on invalid cookie id", async () => {
-    ctx.cookies.get.mockImplementation(() => "wrong");
+    ctx.cookies.get.mockReturnValue("wrong");
 
     await expect(verifyAuthorizationController(ctx)).rejects.toThrow(ClientError);
   });

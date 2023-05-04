@@ -1,12 +1,12 @@
-import MockDate from "mockdate";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import MockDate from "mockdate";
 import { createTestElevationSession } from "../../fixtures/entity";
-import { rejectElevationController } from "./reject-elevation";
 import {
   assertSessionPending as _assertSessionPending,
   createElevationRejectedUri as _createElevationRejectedUri,
 } from "../../util";
+import { rejectElevationController } from "./reject-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,7 +30,7 @@ describe("rejectElevationController", () => {
     };
 
     assertSessionPending.mockImplementation();
-    createElevationRejectedUri.mockImplementation(() => "createElevationRejectedUri");
+    createElevationRejectedUri.mockReturnValue("createElevationRejectedUri");
   });
 
   test("should resolve", async () => {

@@ -1,6 +1,6 @@
-import { createLogoutToken } from "./create-logout-token";
-import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 import { ClientSessionType } from "../../enum";
+import { createTestClient, createTestClientSession } from "../../fixtures/entity";
+import { createLogoutToken } from "./create-logout-token";
 
 describe("createLogoutToken", () => {
   let ctx: any;
@@ -8,7 +8,7 @@ describe("createLogoutToken", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
-        sign: jest.fn().mockImplementation(() => "signed"),
+        sign: jest.fn().mockReturnValue("signed"),
       },
     };
   });

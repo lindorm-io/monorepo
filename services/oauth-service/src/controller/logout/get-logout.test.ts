@@ -75,8 +75,9 @@ describe("getLogoutController", () => {
 
         client: {
           id: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
-          logoUri: "https://logo.uri/logo",
           name: "ClientName",
+          logoUri: "https://logo.uri/logo",
+          singleSignOn: true,
           type: "confidential",
         },
 

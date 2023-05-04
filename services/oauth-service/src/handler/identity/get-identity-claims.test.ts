@@ -1,12 +1,12 @@
-import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import { getIdentityClaims } from "./get-identity-claims";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
+import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import {
   createTestClaimsSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
+import { getIdentityClaims } from "./get-identity-claims";
 
 jest.mock("../token");
 
@@ -34,7 +34,7 @@ describe("getIdentityClaims", () => {
       },
     };
 
-    generateServerCredentialsToken.mockImplementation(() => "bearerToken");
+    generateServerCredentialsToken.mockReturnValue("bearerToken");
   });
 
   test("should resolve", async () => {

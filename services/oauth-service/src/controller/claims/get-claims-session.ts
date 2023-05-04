@@ -1,6 +1,6 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { GetClaimsSessionRequestParams, GetClaimsSessionResponse } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { getAdjustedAccessLevel } from "../../util";
 
@@ -40,6 +40,7 @@ export const getClaimsSessionController: ServerKoaController<RequestData> = asyn
         id: client.id,
         name: client.name,
         logoUri: client.logoUri,
+        singleSignOn: client.singleSignOn,
         type: client.type,
       },
 

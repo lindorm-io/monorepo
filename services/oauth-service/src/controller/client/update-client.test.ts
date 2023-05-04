@@ -1,6 +1,6 @@
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { SCOPE_OPENID } from "../../constant";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestClient } from "../../fixtures/entity";
 import { updateClientController } from "./update-client";
 
@@ -17,6 +17,10 @@ describe("updateClientController", () => {
           responseTypes: ["code"],
           scopes: ["openid"],
         },
+        audiences: {
+          credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
+          identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+        },
         defaults: {
           audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],
           displayMode: "wap",
@@ -30,7 +34,6 @@ describe("updateClientController", () => {
         },
 
         active: false,
-        audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],
         backChannelLogoutUri: "https://backChannelLogoutUri",
         enforceBasicAuth: true,
         enforceSecret: true,
@@ -66,9 +69,12 @@ describe("updateClientController", () => {
           responseTypes: ["code"],
           scopes: ["openid"],
         },
+        audiences: {
+          credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
+          identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+        },
         backChannelLogoutUri: "https://backChannelLogoutUri",
         defaults: {
-          audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],
           displayMode: "wap",
           levelOfAssurance: 1,
           responseMode: "fragment",

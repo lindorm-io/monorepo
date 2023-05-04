@@ -1,14 +1,13 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 import {
   ConfirmLoginRequestBody,
   ConfirmLoginRequestParams,
   ConfirmLoginResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 
 type RequestData = ConfirmLoginRequestParams & ConfirmLoginRequestBody;
 
@@ -22,7 +21,7 @@ export const confirmLoginSchema = Joi.object<RequestData>()
     metadata: Joi.object().required(),
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
-    sso: Joi.boolean().required(),
+    singleSignOn: Joi.boolean().required(),
   })
   .required();
 
@@ -31,7 +30,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     redis: { authorizationSessionCache },
-    data: { identityId, levelOfAssurance, metadata, methods, remember, sso },
+    data: { identityId, levelOfAssurance, metadata, methods, remember, singleSignOn },
     entity: { authorizationSession },
     logger,
   } = ctx;
@@ -40,15 +39,15 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.confirmedLogin.identityId = identityId;
-  authorizationSession.confirmedLogin.latestAuthentication = new Date();
-  authorizationSession.confirmedLogin.levelOfAssurance = levelOfAssurance;
-  authorizationSession.confirmedLogin.metadata = metadata;
-  authorizationSession.confirmedLogin.methods = methods;
-  authorizationSession.confirmedLogin.remember = remember;
-  authorizationSession.confirmedLogin.sso = sso;
-
-  authorizationSession.status.login = SessionStatus.CONFIRMED;
+  authorizationSession.confirmLogin({
+    identityId,
+    latestAuthentication: new Date(),
+    levelOfAssurance,
+    metadata,
+    methods,
+    remember,
+    singleSignOn,
+  });
 
   await authorizationSessionCache.update(authorizationSession);
 

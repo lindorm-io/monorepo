@@ -1,19 +1,19 @@
-import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { oauthLogoutController } from "./initialise-logout";
-import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../../handler";
-import {
-  assertPostLogoutRedirectUri as _assertPostLogoutRedirectUri,
-  createLogoutPendingUri as _createLogoutPendingUri,
-} from "../../util";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
 import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
   createTestLogoutSession,
 } from "../../fixtures/entity";
+import { tryFindBrowserSessions as _tryFindBrowserSessions } from "../../handler";
+import {
+  assertPostLogoutRedirectUri as _assertPostLogoutRedirectUri,
+  createLogoutPendingUri as _createLogoutPendingUri,
+} from "../../util";
+import { oauthLogoutController } from "./initialise-logout";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
@@ -56,7 +56,7 @@ describe("oauthLogoutController", () => {
     };
 
     assertPostLogoutRedirectUri.mockImplementation();
-    createLogoutPendingUri.mockImplementation(() => "createLogoutPendingUri");
+    createLogoutPendingUri.mockReturnValue("createLogoutPendingUri");
     tryFindBrowserSessions.mockResolvedValue([
       createTestBrowserSession({
         id: "cbda49e5-d3e4-4382-9f7d-83a603f7ee49",

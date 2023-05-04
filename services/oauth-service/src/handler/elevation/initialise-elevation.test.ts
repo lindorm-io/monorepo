@@ -1,17 +1,17 @@
+import { ClientError } from "@lindorm-io/errors";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { ElevationSession } from "../../entity";
-import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
-import { initialiseElevation } from "./initialise-elevation";
 import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
   createTestElevationSession,
 } from "../../fixtures/entity";
-import { ClientError } from "@lindorm-io/errors";
-import { randomUUID } from "crypto";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
+import { initialiseElevation } from "./initialise-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -72,7 +72,7 @@ describe("initialiseElevation", () => {
       uiLocales: ["da-DK"],
     };
 
-    getAdjustedAccessLevel.mockImplementation(() => 2);
+    getAdjustedAccessLevel.mockReturnValue(2);
   });
 
   test("should resolve client session for all values", async () => {

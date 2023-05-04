@@ -1,7 +1,7 @@
-import { AuthorizationSession, BrowserSession } from "../../entity";
-import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
 import { uniqArray } from "@lindorm-io/core";
+import { ServerError } from "@lindorm-io/errors";
+import { AuthorizationSession, BrowserSession } from "../../entity";
+import { ServerKoaContext } from "../../types";
 
 const createBrowserSession = async (
   ctx: ServerKoaContext,
@@ -33,7 +33,7 @@ const createBrowserSession = async (
       metadata: authorizationSession.confirmedLogin.metadata,
       methods: authorizationSession.confirmedLogin.methods,
       remember: authorizationSession.confirmedLogin.remember,
-      sso: authorizationSession.confirmedLogin.sso,
+      singleSignOn: authorizationSession.confirmedLogin.singleSignOn,
     }),
   );
 };
@@ -77,9 +77,9 @@ const updateBrowserSession = async (
     ? browserSession.remember
     : authorizationSession.confirmedLogin.remember;
 
-  browserSession.sso = browserSession.sso
-    ? browserSession.sso
-    : authorizationSession.confirmedLogin.sso;
+  browserSession.singleSignOn = browserSession.singleSignOn
+    ? browserSession.singleSignOn
+    : authorizationSession.confirmedLogin.singleSignOn;
 
   return await browserSessionRepository.update(browserSession);
 };

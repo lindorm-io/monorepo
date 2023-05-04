@@ -1,10 +1,10 @@
-import { convertOpaqueTokenToJwt } from "./convert-opaque-token-to-jwt";
 import { ClientSessionType } from "../../enum";
 import {
   createTestAccessToken,
   createTestClientSession,
   createTestRefreshToken,
 } from "../../fixtures/entity";
+import { convertOpaqueTokenToJwt } from "./convert-opaque-token-to-jwt";
 
 describe("createOpaqueJwt", () => {
   let ctx: any;
@@ -12,7 +12,7 @@ describe("createOpaqueJwt", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
-        sign: jest.fn().mockImplementation(() => "signed"),
+        sign: jest.fn().mockReturnValue("signed"),
       },
     };
   });

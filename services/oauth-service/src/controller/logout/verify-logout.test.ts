@@ -1,8 +1,7 @@
-import { ClientError } from "@lindorm-io/errors";
-import { createTestClient, createTestLogoutSession } from "../../fixtures/entity";
-import { randomUUID } from "crypto";
-import { verifyLogoutController } from "./verify-logout";
 import { SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { randomUUID } from "crypto";
+import { createTestClient, createTestLogoutSession } from "../../fixtures/entity";
 import {
   handleBrowserSessionLogout as _handleBrowserSessionLogout,
   handleClientSessionLogout as _handleClientSessionLogout,
@@ -12,6 +11,7 @@ import {
   createLogoutRedirectUri as _createLogoutRedirectUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
 } from "../../util";
+import { verifyLogoutController } from "./verify-logout";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -49,9 +49,9 @@ describe("oauthVerifyLogoutController", () => {
     handleBrowserSessionLogout.mockResolvedValue(undefined);
     handleClientSessionLogout.mockResolvedValue(undefined);
 
-    createLogoutPendingUri.mockImplementation(() => "createLogoutPendingUri");
-    createLogoutRedirectUri.mockImplementation(() => "createLogoutRedirectUri");
-    createLogoutRejectedUri.mockImplementation(() => "createLogoutRejectedUri");
+    createLogoutPendingUri.mockReturnValue("createLogoutPendingUri");
+    createLogoutRedirectUri.mockReturnValue("createLogoutRedirectUri");
+    createLogoutRejectedUri.mockReturnValue("createLogoutRejectedUri");
   });
 
   afterEach(jest.clearAllMocks);

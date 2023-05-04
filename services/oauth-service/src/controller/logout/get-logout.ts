@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { GetLogoutRequestParams, GetLogoutResponse } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 
 type RequestData = GetLogoutRequestParams;
 
@@ -70,6 +70,7 @@ export const getLogoutController: ServerKoaController<RequestData> = async (
         id: client.id,
         name: client.name,
         logoUri: client.logoUri,
+        singleSignOn: client.singleSignOn,
         type: client.type,
       },
 

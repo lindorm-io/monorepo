@@ -1,7 +1,7 @@
+import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ClientAttributes } from "../../entity";
 import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
 
 type RequestData = {
   id: string;
@@ -26,6 +26,7 @@ export const getClientController: ServerKoaController<RequestData> = async (
     body: {
       active: client.active,
       allowed: client.allowed,
+      audiences: client.audiences,
       backChannelLogoutUri: client.backChannelLogoutUri,
       defaults: client.defaults,
       description: client.description,
@@ -41,6 +42,7 @@ export const getClientController: ServerKoaController<RequestData> = async (
       requiredScopes: client.requiredScopes,
       rtbfUri: client.rtbfUri,
       scopeDescriptions: client.scopeDescriptions,
+      singleSignOn: client.singleSignOn,
       tenantId: client.tenantId,
       type: client.type,
     },

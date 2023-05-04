@@ -1,5 +1,5 @@
-import { calculateUpdatedLoa } from "./calculate-updated-loa";
 import { createTestBrowserSession } from "../fixtures/entity";
+import { calculateUpdatedLoa } from "./calculate-updated-loa";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "./get-adjusted-access-level";
 
 jest.mock("./get-adjusted-access-level");
@@ -18,7 +18,7 @@ describe("calculateUpdatedLoa", () => {
       levelOfAssurance: 0,
     };
 
-    getAdjustedAccessLevel.mockImplementation(() => 1);
+    getAdjustedAccessLevel.mockReturnValue(1);
   });
 
   afterEach(jest.resetAllMocks);
@@ -38,7 +38,7 @@ describe("calculateUpdatedLoa", () => {
   });
 
   test("should resolve with loa", () => {
-    getAdjustedAccessLevel.mockImplementation(() => 0);
+    getAdjustedAccessLevel.mockReturnValue(0);
 
     token.claims.maximumLoa = 3;
     token.levelOfAssurance = 2;

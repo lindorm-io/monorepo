@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { getClientController } from "./get-client";
 import { createTestClient } from "../../fixtures/entity";
+import { getClientController } from "./get-client";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -10,7 +10,12 @@ describe("getClientInfoController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        client: createTestClient(),
+        client: createTestClient({
+          audiences: {
+            credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
+            identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+          },
+        }),
       },
     };
   });
@@ -36,9 +41,12 @@ describe("getClientInfoController", () => {
             "username",
           ]),
         },
+        audiences: {
+          credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
+          identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+        },
         backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
         defaults: {
-          audiences: [],
           displayMode: "popup",
           levelOfAssurance: 3,
           responseMode: "query",
@@ -69,6 +77,7 @@ describe("getClientInfoController", () => {
             name: "profile",
           },
         ],
+        singleSignOn: true,
         tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
         type: "confidential",
       },

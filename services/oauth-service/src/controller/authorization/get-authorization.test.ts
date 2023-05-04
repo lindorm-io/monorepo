@@ -1,13 +1,6 @@
-import MockDate from "mockdate";
 import { AuthenticationMethod, OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getAuthorizationController } from "./get-authorization";
-import {
-  getAdjustedAccessLevel as _getAdjustedAccessLevel,
-  isConsentRequired as _isConsentRequired,
-  isLoginRequired as _isLoginRequired,
-  isSelectAccountRequired as _isSelectAccountRequired,
-} from "../../util";
+import MockDate from "mockdate";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -15,9 +8,17 @@ import {
   createTestClientSession,
   createTestTenant,
 } from "../../fixtures/entity";
+import {
+  isConsentRequired as _isConsentRequired,
+  isLoginRequired as _isLoginRequired,
+  isSelectAccountRequired as _isSelectAccountRequired,
+} from "../../handler";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
+import { getAuthorizationController } from "./get-authorization";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.mock("../../handler");
 jest.mock("../../util");
 
 const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
@@ -94,10 +95,10 @@ describe("getAuthorizationController", () => {
       },
     };
 
-    getAdjustedAccessLevel.mockImplementation(() => 0);
-    isConsentRequired.mockImplementation(() => true);
-    isLoginRequired.mockImplementation(() => true);
-    isSelectAccountRequired.mockImplementation(() => true);
+    getAdjustedAccessLevel.mockReturnValue(0);
+    isConsentRequired.mockReturnValue(true);
+    isLoginRequired.mockReturnValue(true);
+    isSelectAccountRequired.mockReturnValue(true);
   });
 
   test("should resolve", async () => {
@@ -164,7 +165,7 @@ describe("getAuthorizationController", () => {
           levelOfAssurance: 2,
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
-          sso: true,
+          singleSignOn: true,
         },
 
         clientSession: {
@@ -182,6 +183,7 @@ describe("getAuthorizationController", () => {
           id: "db5c195a-1c0b-41b2-b047-94c13a7dd30d",
           name: "ClientName",
           logoUri: "https://logo.uri/logo",
+          singleSignOn: true,
           type: "confidential",
         },
 

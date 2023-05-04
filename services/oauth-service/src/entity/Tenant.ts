@@ -1,4 +1,3 @@
-import Joi from "joi";
 import {
   EntityAttributes,
   EntityKeys,
@@ -6,6 +5,7 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
 
 export type TenantAttributes = EntityAttributes & {
   active: boolean;

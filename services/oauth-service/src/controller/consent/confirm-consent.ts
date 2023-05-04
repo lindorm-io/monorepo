@@ -1,15 +1,14 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
-import { difference } from "lodash";
 import {
   ConfirmConsentRequestBody,
   ConfirmConsentRequestParams,
   ConfirmConsentResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { difference } from "lodash";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 
 type RequestData = ConfirmConsentRequestParams & ConfirmConsentRequestBody;
 
@@ -76,10 +75,10 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.confirmedConsent.audiences = audiences;
-  authorizationSession.confirmedConsent.scopes = scopes;
-
-  authorizationSession.status.consent = SessionStatus.CONFIRMED;
+  authorizationSession.confirmConsent({
+    audiences,
+    scopes,
+  });
 
   await authorizationSessionCache.update(authorizationSession);
 

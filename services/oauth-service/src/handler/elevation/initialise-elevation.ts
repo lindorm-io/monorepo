@@ -81,7 +81,7 @@ export const initialiseElevation = async (
       clientSessionId: clientSession.id,
       country,
       displayMode: display,
-      expires: expiryDate(configuration.defaults.expiry.authorization_session),
+      expires: expiryDate(configuration.defaults.expiry.elevation_session),
       idTokenHint: idToken?.token,
       identityId: clientSession.identityId,
       nonce: nonce || idToken?.nonce || undefined,

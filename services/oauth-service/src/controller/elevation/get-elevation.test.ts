@@ -1,10 +1,10 @@
 import MockDate from "mockdate";
-import { getElevationController } from "./get-elevation";
 import {
   createTestClient,
   createTestElevationSession,
   createTestTenant,
 } from "../../fixtures/entity";
+import { getElevationController } from "./get-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -59,6 +59,7 @@ describe("getElevationDataController", () => {
           id: "729ede7e-e3ac-4c26-a5e2-c6f0be03c3c9",
           name: "ClientName",
           logoUri: "https://logo.uri/logo",
+          singleSignOn: true,
           type: "confidential",
         },
 

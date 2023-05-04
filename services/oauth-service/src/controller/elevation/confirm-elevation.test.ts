@@ -1,14 +1,14 @@
-import MockDate from "mockdate";
+import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { confirmElevationController } from "./confirm-elevation";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import MockDate from "mockdate";
 import { createTestElevationSession } from "../../fixtures/entity";
 import {
   assertSessionPending as _assertSessionPending,
   createElevationVerifyUri as _createElevationVerifyUri,
 } from "../../util";
-import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
+import { confirmElevationController } from "./confirm-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -39,7 +39,7 @@ describe("confirmElevationController", () => {
     };
 
     assertSessionPending.mockImplementation();
-    createElevationVerifyUri.mockImplementation(() => "createElevationVerifyUri");
+    createElevationVerifyUri.mockReturnValue("createElevationVerifyUri");
   });
 
   test("should resolve", async () => {

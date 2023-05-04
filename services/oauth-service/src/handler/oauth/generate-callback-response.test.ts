@@ -1,22 +1,22 @@
+import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
+import { baseHash } from "@lindorm-io/core";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
-import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import { baseHash } from "@lindorm-io/core";
-import { generateAuthorizationCode as _generateAuthorizationCode } from "./generate-authorization-code";
-import { generateCallbackResponse } from "./generate-callback-response";
-import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
-import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
-  createIdToken as _createIdToken,
-  generateAccessToken as _generateAccessToken,
-} from "../token";
 import {
   createTestAccessToken,
   createTestAuthorizationSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
+import {
+  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
+  createIdToken as _createIdToken,
+  generateAccessToken as _generateAccessToken,
+} from "../token";
+import { generateAuthorizationCode as _generateAuthorizationCode } from "./generate-authorization-code";
+import { generateCallbackResponse } from "./generate-callback-response";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -190,7 +190,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve with opaque access token", async () => {
-    client.opaque = true;
+    client.opaqueAccessToken = true;
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.TOKEN],

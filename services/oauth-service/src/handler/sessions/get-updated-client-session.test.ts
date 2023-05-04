@@ -1,13 +1,13 @@
+import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getUpdatedClientSession } from "./get-updated-client-session";
-import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import {
   createTestAuthorizationSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import { getUpdatedClientSession } from "./get-updated-client-session";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -49,7 +49,7 @@ describe("getUpdatedClientSession", () => {
           AuthenticationMethod.SESSION_LINK,
         ],
         remember: false,
-        sso: false,
+        singleSignOn: false,
       },
       clientSessionId: "052ef2f3-01d8-4e0c-9c3c-8daae8a8e541",
       browserSessionId: "52f23e8f-68c5-4c17-b6cf-05b17d3de8f5",

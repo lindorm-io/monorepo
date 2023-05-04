@@ -1,8 +1,8 @@
-import { Client, ClientSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
 import { OpenIdScope, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
+import { ClientError } from "@lindorm-io/errors";
 import { expiresIn } from "@lindorm-io/expiry";
+import { Client, ClientSession } from "../../entity";
+import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
 import {
   convertOpaqueTokenToJwt,
@@ -29,7 +29,7 @@ export const generateTokenResponse = async (
   }
 
   const accessToken = await generateAccessToken(ctx, client, clientSession);
-  const accessJwt = client.opaque
+  const accessJwt = client.opaqueAccessToken
     ? undefined
     : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
@@ -45,7 +45,7 @@ export const generateTokenResponse = async (
 
   if (clientSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
     const refreshToken = await generateRefreshToken(ctx, client, clientSession);
-    const refreshJwt = client.opaque
+    const refreshJwt = client.opaqueRefreshToken
       ? undefined
       : convertOpaqueTokenToJwt(ctx, clientSession, refreshToken);
 

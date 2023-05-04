@@ -1,22 +1,23 @@
-import MockDate from "mockdate";
-import { confirmSelectAccountController } from "./confirm-select-account";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { randomUUID } from "crypto";
 import { ClientError } from "@lindorm-io/errors";
-import { tryFindClientSession as _tryFindClientSession } from "../../handler";
-import {
-  createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
-  isConsentRequired as _isConsentRequired,
-  isLoginRequired as _isLoginRequired,
-} from "../../util";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { randomUUID } from "crypto";
+import MockDate from "mockdate";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import {
+  isConsentRequired as _isConsentRequired,
+  isLoginRequired as _isLoginRequired,
+  isSsoAvailable as _isSsoAvailable,
+  tryFindClientSession as _tryFindClientSession,
+} from "../../handler";
+import { createAuthorizationVerifyUri as _createAuthorizationVerifyUri } from "../../util";
+import { confirmSelectAccountController } from "./confirm-select-account";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,6 +28,7 @@ const tryFindClientSession = _tryFindClientSession as jest.Mock;
 const createAuthorizationVerifyUri = _createAuthorizationVerifyUri as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
+const isSsoAvailable = _isSsoAvailable as jest.Mock;
 
 describe("confirmSelectAccountController", () => {
   let ctx: any;
@@ -58,7 +60,7 @@ describe("confirmSelectAccountController", () => {
         client: createTestClient(),
       },
       jwt: {
-        verify: jest.fn().mockImplementation(() => "idToken"),
+        verify: jest.fn().mockReturnValue("idToken"),
       },
       logger: createMockLogger(),
       mongo: {
@@ -69,9 +71,10 @@ describe("confirmSelectAccountController", () => {
     tryFindClientSession.mockResolvedValue(
       createTestClientSession({ id: "250cdbef-41d1-4b10-8e57-71698ff98519" }),
     );
-    createAuthorizationVerifyUri.mockImplementation(() => "createAuthorizationVerifyUri");
-    isConsentRequired.mockImplementation(() => true);
-    isLoginRequired.mockImplementation(() => true);
+    createAuthorizationVerifyUri.mockReturnValue("createAuthorizationVerifyUri");
+    isConsentRequired.mockReturnValue(true);
+    isLoginRequired.mockReturnValue(true);
+    isSsoAvailable.mockReturnValue(false);
   });
 
   test("should resolve existing session", async () => {

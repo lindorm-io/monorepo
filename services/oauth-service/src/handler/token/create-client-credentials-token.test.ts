@@ -1,5 +1,5 @@
-import { createClientCredentialsToken } from "./create-client-credentials-token";
 import { createTestClient } from "../../fixtures/entity";
+import { createClientCredentialsToken } from "./create-client-credentials-token";
 
 describe("createClientCredentialsToken", () => {
   let ctx: any;
@@ -7,7 +7,7 @@ describe("createClientCredentialsToken", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
-        sign: jest.fn().mockImplementation(() => "signed"),
+        sign: jest.fn().mockReturnValue("signed"),
       },
     };
   });

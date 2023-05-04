@@ -1,10 +1,14 @@
+import {
+  AuthenticationMethod,
+  OpenIdResponseMode,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
+import { createURL } from "@lindorm-io/url";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
-import { configuration } from "../../../server/configuration";
-import { createURL } from "@lindorm-io/url";
-import { server } from "../../../server/server";
 import {
   createTestAuthorizationSession,
   createTestBrowserSession,
@@ -12,18 +16,14 @@ import {
   createTestClientSession,
 } from "../../../fixtures/entity";
 import {
-  setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
+  setupIntegration,
 } from "../../../fixtures/integration";
-import {
-  AuthenticationMethod,
-  OpenIdResponseMode,
-  OpenIdScope,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -81,7 +81,7 @@ describe("/oauth2/sessions/authorize", () => {
           metadata: {},
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
-          sso: true,
+          singleSignOn: true,
         },
         responseMode: OpenIdResponseMode.QUERY,
         status: {
@@ -166,7 +166,7 @@ describe("/oauth2/sessions/authorize", () => {
           metadata: {},
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
-          sso: true,
+          singleSignOn: true,
         },
         responseMode: OpenIdResponseMode.FORM_POST,
         status: {

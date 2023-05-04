@@ -1,6 +1,5 @@
 import { SessionStatus } from "@lindorm-io/common-types";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
-import { redirectAuthorizationController } from "./redirect-authorization";
 import {
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
   createConsentPendingUri as _createConsentPendingUri,
@@ -10,6 +9,7 @@ import {
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
   createSelectAccountRejectedUri as _createSelectAccountRejectedUri,
 } from "../../util";
+import { redirectAuthorizationController } from "./redirect-authorization";
 
 jest.mock("../../util");
 
@@ -37,13 +37,13 @@ describe("redirectAuthorizationController", () => {
       },
     };
 
-    createAuthorizationVerifyUri.mockImplementation(() => "createAuthorizationVerifyUri");
-    createConsentPendingUri.mockImplementation(() => "createConsentPendingUri");
-    createConsentRejectedUri.mockImplementation(() => "createConsentRejectedUri");
-    createLoginPendingUri.mockImplementation(() => "createLoginPendingUri");
-    createLoginRejectedUri.mockImplementation(() => "createLoginRejectedUri");
-    createSelectAccountPendingUri.mockImplementation(() => "createSelectAccountPendingUri");
-    createSelectAccountRejectedUri.mockImplementation(() => "createSelectAccountRejectedUri");
+    createAuthorizationVerifyUri.mockReturnValue("createAuthorizationVerifyUri");
+    createConsentPendingUri.mockReturnValue("createConsentPendingUri");
+    createConsentRejectedUri.mockReturnValue("createConsentRejectedUri");
+    createLoginPendingUri.mockReturnValue("createLoginPendingUri");
+    createLoginRejectedUri.mockReturnValue("createLoginRejectedUri");
+    createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
+    createSelectAccountRejectedUri.mockReturnValue("createSelectAccountRejectedUri");
   });
 
   describe("selectAccount", () => {

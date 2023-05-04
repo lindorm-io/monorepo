@@ -1,6 +1,4 @@
-import Joi from "joi";
 import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
-import { JOI_LEVEL_OF_ASSURANCE } from "../common";
 import {
   EntityAttributes,
   EntityKeys,
@@ -8,6 +6,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE } from "../common";
 
 export type BrowserSessionAttributes = EntityAttributes & {
   identityId: string;
@@ -16,7 +16,7 @@ export type BrowserSessionAttributes = EntityAttributes & {
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
   remember: boolean;
-  sso: boolean;
+  singleSignOn: boolean;
 };
 
 export type BrowserSessionOptions = Optional<BrowserSessionAttributes, EntityKeys>;
@@ -31,7 +31,7 @@ const schema = Joi.object<BrowserSessionAttributes>()
     metadata: Joi.object().required(),
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
-    sso: Joi.boolean().required(),
+    singleSignOn: Joi.boolean().required(),
   })
   .required();
 
@@ -43,7 +43,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
   public levelOfAssurance: LevelOfAssurance;
   public methods: Array<AuthenticationMethod>;
   public remember: boolean;
-  public sso: boolean;
+  public singleSignOn: boolean;
 
   public constructor(options: BrowserSessionOptions) {
     super(options);
@@ -54,7 +54,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
     this.metadata = options.metadata || {};
     this.methods = options.methods;
     this.remember = options.remember === true;
-    this.sso = options.sso === true;
+    this.singleSignOn = options.singleSignOn === true;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -71,7 +71,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
       metadata: this.metadata,
       methods: this.methods,
       remember: this.remember,
-      sso: this.sso,
+      singleSignOn: this.singleSignOn,
     };
   }
 }

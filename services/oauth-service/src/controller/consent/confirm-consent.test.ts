@@ -1,11 +1,11 @@
-import MockDate from "mockdate";
-import { confirmConsentController } from "./confirm-consent";
-import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
+import MockDate from "mockdate";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
-import { ClientError } from "@lindorm-io/errors";
-import { OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
+import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
+import { confirmConsentController } from "./confirm-consent";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -37,7 +37,7 @@ describe("confirmConsentController", () => {
       logger: createMockLogger(),
     };
 
-    createAuthorizationVerifyRedirectUri.mockImplementation(() => "redirect-uri");
+    createAuthorizationVerifyRedirectUri.mockReturnValue("redirect-uri");
   });
 
   test("should resolve", async () => {

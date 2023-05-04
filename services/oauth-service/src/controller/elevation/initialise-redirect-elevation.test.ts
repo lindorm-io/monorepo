@@ -1,11 +1,11 @@
 import MockDate from "mockdate";
 import { createTestClient, createTestElevationSession } from "../../fixtures/entity";
 import { initialiseElevation as _initialiseElevation } from "../../handler";
-import { initialiseRedirectElevationController } from "./initialise-redirect-elevation";
 import {
   assertRedirectUri as _assertRedirectUri,
   createElevationPendingUri as _createElevationPendingUri,
 } from "../../util";
+import { initialiseRedirectElevationController } from "./initialise-redirect-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -36,7 +36,7 @@ describe("initialiseRedirectElevationController", () => {
     };
 
     assertRedirectUri.mockImplementation();
-    createElevationPendingUri.mockImplementation(() => "createElevationPendingUri");
+    createElevationPendingUri.mockReturnValue("createElevationPendingUri");
     initialiseElevation.mockResolvedValue(
       createTestElevationSession({
         id: "24d18e4b-002f-4adf-9563-ba137c9fe60f",

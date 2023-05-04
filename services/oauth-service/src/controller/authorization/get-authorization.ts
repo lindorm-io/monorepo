@@ -1,13 +1,9 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { GetAuthorizationRequestParams, GetAuthorizationResponse } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { isConsentRequired, isLoginRequired, isSelectAccountRequired } from "../../handler";
 import { ServerKoaController } from "../../types";
-import {
-  getAdjustedAccessLevel,
-  isConsentRequired,
-  isLoginRequired,
-  isSelectAccountRequired,
-} from "../../util";
+import { getAdjustedAccessLevel } from "../../util";
 
 type RequestData = GetAuthorizationRequestParams;
 
@@ -35,9 +31,14 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
     ? await clientSessionRepository.tryFind({ id: authorizationSession.clientSessionId })
     : undefined;
 
-  const selectAccountRequired = isSelectAccountRequired(authorizationSession);
-  const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
-  const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
+  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationSession);
+  const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
+  const consentRequired = isConsentRequired(
+    ctx,
+    authorizationSession,
+    browserSession,
+    clientSession,
+  );
 
   return {
     body: {
@@ -99,7 +100,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         levelOfAssurance: browserSession?.levelOfAssurance || 0,
         methods: browserSession?.methods || [],
         remember: browserSession?.remember || false,
-        sso: browserSession?.sso || false,
+        singleSignOn: browserSession?.singleSignOn || false,
       },
 
       clientSession: {
@@ -117,6 +118,7 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         id: client.id,
         name: client.name,
         logoUri: client.logoUri,
+        singleSignOn: client.singleSignOn,
         type: client.type,
       },
 

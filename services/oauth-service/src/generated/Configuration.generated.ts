@@ -18,8 +18,10 @@ interface Defaults {
 }
 
 interface Clients {
-  active_state:       boolean;
-  level_of_assurance: number;
+  active_state:          boolean;
+  level_of_assurance:    number;
+  opaque_access_tokens:  boolean;
+  opaque_refresh_tokens: boolean;
 }
 
 interface Expiry {
@@ -30,9 +32,10 @@ interface Expiry {
   claims_session:           string;
   client_credentials:       string;
   code_session:             string;
+  elevation_session:        string;
   id_token:                 string;
   logout_session:           string;
-  refresh_session:          string;
+  refresh_token:            string;
 }
 
 interface Sessions {

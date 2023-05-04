@@ -1,11 +1,11 @@
+import { SessionStatus } from "@lindorm-io/common-types";
 import { createTestLogoutSession } from "../../fixtures/entity";
-import { redirectLogoutController } from "./redirect-logout";
 import {
   createLogoutPendingUri as _createLogoutPendingUri,
   createLogoutRejectedUri as _createLogoutRejectedUri,
   createLogoutVerifyUri as _createLogoutVerifyUri,
 } from "../../util";
-import { SessionStatus } from "@lindorm-io/common-types";
+import { redirectLogoutController } from "./redirect-logout";
 
 jest.mock("../../util");
 
@@ -25,9 +25,9 @@ describe("redirectLogoutController", () => {
       },
     };
 
-    createLogoutVerifyUri.mockImplementation(() => "createLogoutVerifyUri");
-    createLogoutPendingUri.mockImplementation(() => "createLogoutPendingUri");
-    createLogoutRejectedUri.mockImplementation(() => "createLogoutRejectedUri");
+    createLogoutVerifyUri.mockReturnValue("createLogoutVerifyUri");
+    createLogoutPendingUri.mockReturnValue("createLogoutPendingUri");
+    createLogoutRejectedUri.mockReturnValue("createLogoutRejectedUri");
   });
 
   test("should redirect for confirmed", async () => {

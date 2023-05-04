@@ -1,5 +1,3 @@
-import { Client, ClientAttributes } from "../../entity";
-import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
 import {
   LindormScope,
   OpenIdClientType,
@@ -9,6 +7,9 @@ import {
   OpenIdResponseType,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
+import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
+import { Client, ClientAttributes } from "../../entity";
 
 export const createTestClient = (options: Partial<ClientAttributes> = {}): Client =>
   new Client({
@@ -18,8 +19,11 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
       ...(options.allowed || {}),
     },
+    audiences: {
+      credentials: [randomUUID()],
+      identity: [randomUUID()],
+    },
     defaults: {
-      audiences: [],
       displayMode: OpenIdDisplayMode.POPUP,
       levelOfAssurance: 3,
       responseMode: OpenIdResponseMode.QUERY,
@@ -39,7 +43,8 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     host: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",
     name: "ClientName",
-    opaque: false,
+    opaqueAccessToken: false,
+    opaqueRefreshToken: false,
     postLogoutUris: ["https://test.client.lindorm.io/logout"],
     redirectUris: ["https://test.client.lindorm.io/redirect"],
     requiredScopes: [OpenIdScope.OFFLINE_ACCESS, OpenIdScope.OPENID],
@@ -47,6 +52,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     scopeDescriptions: [SCOPE_OPENID, SCOPE_PROFILE],
     secret:
       "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
+    singleSignOn: true,
     tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
     type: OpenIdClientType.CONFIDENTIAL,
     ...options,

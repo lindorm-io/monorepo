@@ -1,11 +1,11 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
 import {
   GetElevationRequestParams,
   GetElevationResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 
 type RequestData = GetElevationRequestParams;
 
@@ -53,6 +53,7 @@ export const getElevationController: ServerKoaController<RequestData> = async (
         id: client.id,
         name: client.name,
         logoUri: client.logoUri,
+        singleSignOn: client.singleSignOn,
         type: client.type,
       },
 

@@ -1,5 +1,9 @@
-import Joi from "joi";
-import { JOI_LEVEL_OF_ASSURANCE } from "../common";
+import {
+  AuthenticationMethod,
+  LevelOfAssurance,
+  LindormScope,
+  OpenIdScope,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,12 +11,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
-import {
-  AuthenticationMethod,
-  LevelOfAssurance,
-  LindormScope,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE } from "../common";
 
 export type ClaimsSessionAttributes = EntityAttributes & {
   audiences: Array<string>;

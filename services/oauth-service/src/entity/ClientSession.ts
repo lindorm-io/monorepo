@@ -1,7 +1,3 @@
-import Joi from "joi";
-import { JOI_LEVEL_OF_ASSURANCE, JOI_NONCE } from "../common";
-import { randomUnreserved } from "@lindorm-io/random";
-import { ClientSessionType } from "../enum";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
@@ -15,6 +11,10 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { randomUnreserved } from "@lindorm-io/random";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_NONCE } from "../common";
+import { ClientSessionType } from "../enum";
 
 export type ClientSessionAttributes = EntityAttributes & {
   audiences: Array<string>;

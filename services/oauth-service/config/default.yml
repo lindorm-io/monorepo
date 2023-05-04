@@ -2,17 +2,20 @@ defaults:
   clients:
     active_state: false
     level_of_assurance: 1
+    opaque_access_tokens: true
+    opaque_refresh_tokens: true
   expiry:
     access_token: 3 minutes
     authorization_session: 30 minutes
-    browser_session: 20 hours
     browser_session_remember: 30 days
+    browser_session: 20 hours
     claims_session: 90 seconds
     client_credentials: 60 seconds
     code_session: 60 seconds
+    elevation_session: 30 minutes
     id_token: 24 hours
     logout_session: 60 seconds
-    refresh_session: 30 days
+    refresh_token: 30 days
   sessions:
     loa_1_max_days: 90
     loa_2_max_days: 30

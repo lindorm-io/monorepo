@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
-import { getIdentitySessionsController } from "./get-identity-sessions";
-import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestClient, createTestClientSession, createTestTenant } from "../../fixtures/entity";
+import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
+import { getIdentitySessionsController } from "./get-identity-sessions";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -44,7 +44,7 @@ describe("getIdentitySessions", () => {
       },
     };
 
-    getAdjustedAccessLevel.mockImplementation(() => 1);
+    getAdjustedAccessLevel.mockReturnValue(1);
   });
 
   test("should resolve sessions", async () => {
@@ -67,8 +67,9 @@ describe("getIdentitySessions", () => {
 
             client: {
               id: expect.any(String),
-              logoUri: "https://logo.uri/logo",
               name: "ClientName",
+              logoUri: "https://logo.uri/logo",
+              singleSignOn: true,
               type: "confidential",
             },
 
@@ -93,8 +94,9 @@ describe("getIdentitySessions", () => {
 
             client: {
               id: expect.any(String),
-              logoUri: "https://logo.uri/logo",
               name: "ClientName",
+              logoUri: "https://logo.uri/logo",
+              singleSignOn: true,
               type: "confidential",
             },
 
@@ -119,8 +121,9 @@ describe("getIdentitySessions", () => {
 
             client: {
               id: expect.any(String),
-              logoUri: "https://logo.uri/logo",
               name: "ClientName",
+              logoUri: "https://logo.uri/logo",
+              singleSignOn: true,
               type: "confidential",
             },
 
@@ -145,8 +148,9 @@ describe("getIdentitySessions", () => {
 
             client: {
               id: expect.any(String),
-              logoUri: "https://logo.uri/logo",
               name: "ClientName",
+              logoUri: "https://logo.uri/logo",
+              singleSignOn: true,
               type: "confidential",
             },
 

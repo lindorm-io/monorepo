@@ -1,9 +1,8 @@
+import { expiryDate } from "@lindorm-io/expiry";
 import { Client, ClientSession, OpaqueToken } from "../../entity";
 import { OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
 import { createOpaqueToken } from "../../util";
-import { expiryDate } from "@lindorm-io/expiry";
 
 export const generateAccessToken = async (
   ctx: ServerKoaContext,
@@ -17,7 +16,7 @@ export const generateAccessToken = async (
   return await opaqueTokenCache.create(
     new OpaqueToken({
       clientSessionId: clientSession.id,
-      expires: expiryDate(client.expiry.accessToken || configuration.defaults.expiry.access_token),
+      expires: expiryDate(client.expiry.accessToken),
       token: createOpaqueToken(),
       type: OpaqueTokenType.ACCESS,
     }),

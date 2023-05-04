@@ -1,6 +1,6 @@
-import { BrowserSession, BrowserSessionOptions } from "../../entity";
-import { randomUUID } from "crypto";
 import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
+import { BrowserSession, BrowserSessionOptions } from "../../entity";
 
 export const createTestBrowserSession = (
   options: Partial<BrowserSessionOptions> = {},
@@ -12,6 +12,6 @@ export const createTestBrowserSession = (
     metadata: { ip: "192.168.0.1", platform: "iOS" },
     methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     remember: true,
-    sso: true,
+    singleSignOn: true,
     ...options,
   });

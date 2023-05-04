@@ -1,17 +1,17 @@
-import Joi from "joi";
-import { AuthorizationSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
-import { ServerKoaController } from "../../types";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
-import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import {
-  setAuthorizationSessionCookie,
-  tryFindBrowserSessions,
-  tryFindClientSession,
-} from "../../handler";
+  AuthorizeRequestQuery,
+  LindormScope,
+  OpenIdPromptMode,
+  OpenIdResponseType,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
+import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
+import { ClientError } from "@lindorm-io/errors";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_COUNTRY_CODE, JOI_JWT, JOI_NONCE, JOI_STATE } from "../../common";
 import {
   JOI_DISPLAY_MODE,
   JOI_PKCE_METHOD,
@@ -19,6 +19,18 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE_REGEX,
 } from "../../constant";
+import { AuthorizationSession } from "../../entity";
+import {
+  isConsentRequired,
+  isLoginRequired,
+  isSelectAccountRequired,
+  isSsoAvailable,
+  setAuthorizationSessionCookie,
+  tryFindBrowserSessions,
+  tryFindClientSession,
+} from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 import {
   assertAuthorizePrompt,
   assertAuthorizeResponseType,
@@ -29,18 +41,7 @@ import {
   createLoginPendingUri,
   createSelectAccountPendingUri,
   filterAcrValues,
-  isConsentRequired,
-  isLoginRequired,
-  isSelectAccountRequired,
 } from "../../util";
-import {
-  AuthorizeRequestQuery,
-  LindormScope,
-  OpenIdPromptMode,
-  OpenIdResponseType,
-  OpenIdScope,
-  SessionStatus,
-} from "@lindorm-io/common-types";
 
 type RequestData = AuthorizeRequestQuery;
 
@@ -129,9 +130,15 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
   const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
 
-  const audiences = idToken
-    ? uniqArray(idToken.audiences, client.id, client.defaults.audiences)
-    : uniqArray(client.id, client.defaults.audiences);
+  const defaultAudiences = uniqArray(
+    client.id,
+    client.audiences.identity,
+    configuration.oauth.client_id,
+    configuration.services.authentication_service.client_id,
+    configuration.services.identity_service.client_id,
+  );
+
+  const audiences = idToken ? uniqArray(idToken.audiences, defaultAudiences) : defaultAudiences;
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     code: {
@@ -185,15 +192,28 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     uiLocales: uiLocales ? uiLocales.split(" ") : [],
   });
 
-  const selectAccountRequired = isSelectAccountRequired(authorizationSession);
+  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationSession);
   authorizationSession.status.selectAccount = selectAccountRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;
 
-  const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
+  const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
   authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
 
-  const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
+  if (
+    loginRequired &&
+    browserSession &&
+    isSsoAvailable(ctx, authorizationSession, client, browserSession)
+  ) {
+    authorizationSession.confirmLogin(browserSession);
+  }
+
+  const consentRequired = isConsentRequired(
+    ctx,
+    authorizationSession,
+    browserSession,
+    clientSession,
+  );
   authorizationSession.status.consent = consentRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;

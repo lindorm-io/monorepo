@@ -1,6 +1,3 @@
-import Joi from "joi";
-import { JOI_DISPLAY_MODE } from "../constant";
-import { randomUnreserved } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   LevelOfAssurance,
@@ -14,6 +11,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { randomUnreserved } from "@lindorm-io/random";
+import Joi from "joi";
 import {
   JOI_COUNTRY_CODE,
   JOI_JWT,
@@ -23,6 +22,7 @@ import {
   JOI_SESSION_STATUS,
   JOI_STATE,
 } from "../common";
+import { JOI_DISPLAY_MODE } from "../constant";
 
 type ConfirmedAuthentication = {
   latestAuthentication: Date | null;

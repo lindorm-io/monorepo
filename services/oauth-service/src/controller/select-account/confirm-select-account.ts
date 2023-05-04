@@ -1,15 +1,3 @@
-import Joi from "joi";
-import { BrowserSessionLike } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { tryFindClientSession } from "../../handler";
-import {
-  assertSessionPending,
-  createAuthorizationVerifyUri,
-  isConsentRequired,
-  isLoginRequired,
-} from "../../util";
 import {
   ConfirmSelectAccountRequestBody,
   ConfirmSelectAccountRequestParams,
@@ -17,6 +5,18 @@ import {
   LindormClaims,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { BrowserSessionLike } from "../../entity";
+import {
+  isConsentRequired,
+  isLoginRequired,
+  isSsoAvailable,
+  tryFindClientSession,
+} from "../../handler";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createAuthorizationVerifyUri } from "../../util";
 
 type RequestData = ConfirmSelectAccountRequestParams & ConfirmSelectAccountRequestBody;
 
@@ -70,8 +70,13 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
       : undefined;
 
     const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
-    const loginRequired = isLoginRequired(authorizationSession, browserSession, clientSession);
-    const consentRequired = isConsentRequired(authorizationSession, browserSession, clientSession);
+    const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
+    const consentRequired = isConsentRequired(
+      ctx,
+      authorizationSession,
+      browserSession,
+      clientSession,
+    );
 
     authorizationSession.clientSessionId = clientSession?.id || null;
 
@@ -79,6 +84,14 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     authorizationSession.status.consent = consentRequired
       ? SessionStatus.PENDING
       : SessionStatus.SKIP;
+
+    if (
+      loginRequired &&
+      browserSession &&
+      isSsoAvailable(ctx, authorizationSession, client, browserSession)
+    ) {
+      authorizationSession.confirmLogin(browserSession);
+    }
   } else {
     throw new ClientError("Invalid input", {
       description: "Use one of the inputs [ selectExisting | selectNew ]",

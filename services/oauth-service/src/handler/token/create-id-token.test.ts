@@ -1,5 +1,5 @@
-import { createIdToken } from "./create-id-token";
 import { createTestClient, createTestClientSession } from "../../fixtures/entity";
+import { createIdToken } from "./create-id-token";
 
 describe("createIdToken", () => {
   let ctx: any;
@@ -7,7 +7,7 @@ describe("createIdToken", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
-        sign: jest.fn().mockImplementation(() => "signed"),
+        sign: jest.fn().mockReturnValue("signed"),
       },
     };
   });

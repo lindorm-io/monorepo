@@ -1,13 +1,10 @@
+import { OpenIdScope } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
-import { OpenIdScope } from "@lindorm-io/common-types";
-import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
-import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { generateTokenResponse as _generateTokenResponse } from "../oauth";
-import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
-import { randomUUID } from "crypto";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
@@ -15,6 +12,9 @@ import {
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import { assertCodeChallenge as _assertCodeChallenge } from "../../util";
+import { generateTokenResponse as _generateTokenResponse } from "../oauth";
+import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -52,7 +52,7 @@ describe("handleAuthorizationCodeGrant", () => {
       },
     };
 
-    generateTokenResponse.mockImplementation(() => "generateTokenResponse");
+    generateTokenResponse.mockReturnValue("generateTokenResponse");
   });
 
   test("should resolve", async () => {

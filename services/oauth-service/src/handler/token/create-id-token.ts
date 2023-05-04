@@ -1,10 +1,8 @@
-import { Client, ClientSession } from "../../entity";
-import { JwtSignData } from "@lindorm-io/jwt";
 import { LindormClaims, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
+import { JwtSignData } from "@lindorm-io/jwt";
 import { getUnixTime } from "date-fns";
-import { uniqArray } from "@lindorm-io/core";
+import { Client, ClientSession } from "../../entity";
+import { ServerKoaContext } from "../../types";
 
 export const createIdToken = (
   ctx: ServerKoaContext,
@@ -16,20 +14,14 @@ export const createIdToken = (
   const { sub, updatedAt, ...rest } = claims;
 
   return jwt.sign({
-    audiences: uniqArray(
-      client.id,
-      clientSession.audiences,
-      configuration.oauth.client_id,
-      configuration.services.authentication_service.client_id,
-      configuration.services.identity_service.client_id,
-    ),
+    audiences: clientSession.audiences,
     authContextClass: `loa_${clientSession.levelOfAssurance}`,
     authMethodsReference: clientSession.methods,
     authTime: getUnixTime(clientSession.latestAuthentication),
     authorizedParty: client.id,
     claims: rest,
     client: client.id,
-    expiry: client.expiry.idToken || configuration.defaults.expiry.id_token,
+    expiry: client.expiry.idToken,
     levelOfAssurance: clientSession.levelOfAssurance,
     nonce: clientSession.nonce,
     scopes: clientSession.scopes,

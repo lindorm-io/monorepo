@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { GetIdentitySessionsResponse, IdentitySessionItem } from "@lindorm-io/common-types";
-import { ServerKoaController } from "../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { orderBy } from "lodash";
+import { ServerKoaController } from "../../types";
 import { getAdjustedAccessLevel } from "../../util";
 
 type RequestData = {
@@ -49,6 +49,7 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
         id: client.id,
         name: client.name,
         logoUri: client.logoUri,
+        singleSignOn: client.singleSignOn,
         type: client.type,
       },
 

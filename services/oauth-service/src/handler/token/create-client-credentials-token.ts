@@ -1,9 +1,9 @@
-import { Client } from "../../entity";
-import { JwtSignData } from "@lindorm-io/jwt";
 import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
+import { uniqArray } from "@lindorm-io/core";
+import { JwtSignData } from "@lindorm-io/jwt";
+import { Client } from "../../entity";
 import { configuration } from "../../server/configuration";
-import { flatten, uniq } from "lodash";
+import { ServerKoaContext } from "../../types";
 
 export const createClientCredentialsToken = (
   ctx: ServerKoaContext,
@@ -13,9 +13,13 @@ export const createClientCredentialsToken = (
   const { jwt } = ctx;
 
   return jwt.sign({
-    audiences: uniq(
-      flatten([configuration.oauth.client_id, client.id, client.defaults.audiences]),
-    ).sort(),
+    audiences: uniqArray(
+      client.id,
+      client.audiences.credentials,
+      configuration.oauth.client_id,
+      configuration.services.authentication_service.client_id,
+      configuration.services.identity_service.client_id,
+    ),
     client: client.id,
     expiry: configuration.defaults.expiry.client_credentials,
     scopes,

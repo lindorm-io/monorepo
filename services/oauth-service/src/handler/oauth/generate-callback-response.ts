@@ -1,14 +1,14 @@
+import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { expiresIn } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { createURL } from "@lindorm-io/url";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
-import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
 import { ServerKoaContext } from "../../types";
-import { convertOpaqueTokenToJwt, createIdToken, generateAccessToken } from "../token";
-import { createURL } from "@lindorm-io/url";
-import { expiresIn } from "@lindorm-io/expiry";
-import { generateAuthorizationCode } from "./generate-authorization-code";
 import { getIdentityClaims } from "../identity";
+import { convertOpaqueTokenToJwt, createIdToken, generateAccessToken } from "../token";
+import { generateAuthorizationCode } from "./generate-authorization-code";
 
 type CallbackData = {
   accessToken: string;
@@ -44,7 +44,7 @@ export const generateCallbackResponse = async (
 
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
     const accessToken = await generateAccessToken(ctx, client, clientSession);
-    const accessJwt = client.opaque
+    const accessJwt = client.opaqueAccessToken
       ? undefined
       : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 

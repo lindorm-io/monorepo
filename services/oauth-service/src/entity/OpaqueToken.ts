@@ -1,5 +1,3 @@
-import Joi from "joi";
-import { OpaqueTokenType } from "../enum";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,6 +5,8 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { OpaqueTokenType } from "../enum";
 
 export type OpaqueTokenAttributes = EntityAttributes & {
   clientSessionId: string;

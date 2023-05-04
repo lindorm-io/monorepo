@@ -1,32 +1,22 @@
-import { ClientSession, OpaqueToken } from "../../entity";
-import { JwtSignData } from "@lindorm-io/jwt";
-import { ServerKoaContext } from "../../types";
 import { SubjectHint } from "@lindorm-io/common-types";
-import { configuration } from "../../server/configuration";
-import { getAdjustedAccessLevel } from "../../util";
-import { getUnixTime } from "date-fns";
+import { JwtSignData } from "@lindorm-io/jwt";
 import { randomUnreserved } from "@lindorm-io/random";
-import { uniqArray } from "@lindorm-io/core";
+import { getUnixTime } from "date-fns";
+import { ClientSession, OpaqueToken } from "../../entity";
+import { ServerKoaContext } from "../../types";
+import { getAdjustedAccessLevel } from "../../util";
 
 export const convertOpaqueTokenToJwt = (
   ctx: ServerKoaContext,
   clientSession: ClientSession,
   opaqueToken: OpaqueToken,
-  audiences: Array<string> = [],
 ): JwtSignData => {
   const { jwt } = ctx;
 
   return jwt.sign({
     id: opaqueToken.id,
     adjustedAccessLevel: getAdjustedAccessLevel(clientSession),
-    audiences: uniqArray(
-      ...audiences,
-      clientSession.clientId,
-      clientSession.audiences,
-      configuration.oauth.client_id,
-      configuration.services.authentication_service.client_id,
-      configuration.services.identity_service.client_id,
-    ),
+    audiences: clientSession.audiences,
     authTime: getUnixTime(clientSession.latestAuthentication),
     authorizedParty: clientSession.clientId,
     client: clientSession.clientId,

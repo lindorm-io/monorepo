@@ -1,11 +1,3 @@
-import Joi from "joi";
-import { Client } from "../../entity";
-import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { argon } from "../../instance";
-import { configuration } from "../../server/configuration";
-import { randomUnreserved } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
 import {
   LevelOfAssurance,
   OpenIdClientType,
@@ -15,6 +7,14 @@ import {
   OpenIdResponseType,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { randomUnreserved } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import Joi from "joi";
+import { Client } from "../../entity";
+import { argon } from "../../instance";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = {
   description: string;
@@ -66,19 +66,31 @@ export const createClientController: ServerKoaController<RequestData> = async (
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE, OpenIdScope.OFFLINE_ACCESS],
       },
 
+      audiences: {
+        credentials: [],
+        identity: [],
+      },
+
       defaults: {
-        audiences: [id],
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: configuration.defaults.clients.level_of_assurance as LevelOfAssurance,
         responseMode: OpenIdResponseMode.QUERY,
+      },
+
+      expiry: {
+        accessToken: configuration.defaults.expiry.access_token,
+        idToken: configuration.defaults.expiry.id_token,
+        refreshToken: configuration.defaults.expiry.refresh_token,
       },
 
       active: configuration.defaults.clients.active_state,
       description,
       host,
       name,
-      opaque: false,
+      opaqueAccessToken: configuration.defaults.clients.opaque_access_tokens,
+      opaqueRefreshToken: configuration.defaults.clients.opaque_refresh_tokens,
       secret: await argon.encrypt(secret),
+      singleSignOn: true,
       tenantId: tenant.id,
       type: OpenIdClientType.PUBLIC,
     }),
