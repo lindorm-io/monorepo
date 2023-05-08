@@ -1,4 +1,3 @@
-import { authenticationConfirmationTokenMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   confirmLoginSessionController,
@@ -22,7 +21,6 @@ router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmLoginSessionSchema),
-  authenticationConfirmationTokenMiddleware("data.authenticationConfirmationToken"),
   useController(confirmLoginSessionController),
 );
 

@@ -1,20 +1,19 @@
-import Joi from "joi";
-import { AuthenticationConfirmationTokenClaims } from "../../common";
-import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { argon } from "../../instance";
-import { assertPKCE } from "@lindorm-io/node-pkce";
-import { generateMfaCookie } from "../../handler";
-import { getUnixTime } from "date-fns";
 import {
-  AuthenticationTokenType,
   SessionStatus,
-  SubjectHint,
   VerifyAuthenticationRequestBody,
   VerifyAuthenticationRequestParams,
   VerifyAuthenticationResponse,
 } from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { expiryObject } from "@lindorm-io/expiry";
+import { createOpaqueToken } from "@lindorm-io/jwt";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { assertPKCE } from "@lindorm-io/node-pkce";
+import Joi from "joi";
+import { AuthenticationConfirmationToken } from "../../entity";
+import { generateMfaCookie } from "../../handler";
+import { argon } from "../../instance";
+import { ServerKoaController } from "../../types";
 import {
   calculateLevelOfAssurance,
   canGenerateMfaCookie,
@@ -37,10 +36,13 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authenticationSessionCache, strategySessionCache },
+    redis: {
+      authenticationConfirmationTokenCache,
+      authenticationSessionCache,
+      strategySessionCache,
+    },
     data: { code, codeVerifier },
     entity: { authenticationSession },
-    jwt,
     logger,
   } = ctx;
 
@@ -81,28 +83,27 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     });
   }
 
-  const { token: authenticationConfirmationToken, expiresIn } =
-    jwt.sign<AuthenticationConfirmationTokenClaims>({
-      audiences: [authenticationSession.clientId],
-      authContextClass: `loa_${level}`,
-      authMethodsReference,
-      authTime: getUnixTime(new Date()),
-      claims: {
-        country: authenticationSession.country,
-        maximumLoa: maximum,
-        remember: authenticationSession.remember,
-        sso: authenticationSession.sso,
-        verifiedIdentifiers: authenticationSession.confirmedIdentifiers,
-      },
-      expiry: "60 seconds",
+  const opaqueToken = createOpaqueToken();
+  const { expires, expiresIn } = expiryObject("1 minutes");
+
+  await authenticationConfirmationTokenCache.create(
+    new AuthenticationConfirmationToken({
+      clientId: authenticationSession.clientId,
+      confirmedIdentifiers: authenticationSession.confirmedIdentifiers,
+      country: authenticationSession.country,
+      expires,
+      identityId: authenticationSession.identityId,
       levelOfAssurance: level,
+      maximumLevelOfAssurance: maximum,
+      metadata: authenticationSession.metadata,
+      methods: getMethodsFromStrategies(authenticationSession),
       nonce: authenticationSession.nonce,
-      scopes: ["authentication"],
-      session: authenticationSession.id,
-      subject: authenticationSession.identityId,
-      subjectHint: SubjectHint.IDENTITY,
-      type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
-    });
+      remember: authenticationSession.remember,
+      sessionId: authenticationSession.id,
+      singleSignOn: authenticationSession.sso,
+      token: opaqueToken,
+    }),
+  );
 
   if (canGenerateMfaCookie(authenticationSession)) {
     await generateMfaCookie(ctx, authenticationSession);
@@ -115,5 +116,5 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     logger.warn("Failed to destroy sessions", err);
   }
 
-  return { body: { authenticationConfirmationToken, expiresIn } };
+  return { body: { authenticationConfirmationToken: opaqueToken, expiresIn } };
 };

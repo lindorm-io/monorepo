@@ -1,5 +1,5 @@
-import { confirmLoginSessionController } from "./confirm-login-session";
 import { confirmOauthLogin as _confirmOauthLogin } from "../../../handler";
+import { confirmLoginSessionController } from "./confirm-login-session";
 
 jest.mock("../../../handler");
 
@@ -10,18 +10,7 @@ describe("confirmLoginSessionController", () => {
 
   beforeEach(() => {
     ctx = {
-      token: {
-        authenticationConfirmationToken: {
-          authContextClass: "authContextClass",
-          authMethodsReference: "authMethodsReference",
-          subject: "subject",
-          levelOfAssurance: "levelOfAssurance",
-          claims: {
-            remember: "remember",
-          },
-          session: "session",
-        },
-      },
+      data: { authenticationConfirmationToken: "authenticationConfirmationToken" },
     };
 
     confirmOauthLogin.mockResolvedValue({ redirectTo: "confirmOauthLogin" });

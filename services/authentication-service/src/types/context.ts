@@ -1,11 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
-import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
 import { JwtDecodeData } from "@lindorm-io/jwt";
-import {
-  VerifiedAuthenticationConfirmationToken,
-  VerifiedChallengeConfirmationToken,
-} from "../common";
+import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
   LindormNodeServerContext,
@@ -17,6 +13,10 @@ import {
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 import {
+  VerifiedAuthenticationConfirmationToken,
+  VerifiedChallengeConfirmationToken,
+} from "../common";
+import {
   Account,
   AuthenticationSession,
   BrowserLink,
@@ -25,6 +25,7 @@ import {
 } from "../entity";
 import {
   AccountRepository,
+  AuthenticationConfirmationTokenCache,
   AuthenticationSessionCache,
   BrowserLinkRepository,
   MfaCookieSessionCache,
@@ -42,6 +43,7 @@ interface ServerAxios extends LindormNodeServerAxios {
 
 interface ServerRedis extends LindormNodeServerRedis {
   authenticationSessionCache: AuthenticationSessionCache;
+  authenticationConfirmationTokenCache: AuthenticationConfirmationTokenCache;
   mfaCookieSessionCache: MfaCookieSessionCache;
   strategySessionCache: StrategySessionCache;
 }
@@ -74,10 +76,8 @@ interface Context extends LindormNodeServerContext {
   token: ServerToken;
 }
 
-export interface ServerKoaContext<D extends Dict = Dict>
-  extends LindormNodeServerKoaContext<Context, D> {}
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export interface ServerKoaController<D extends Dict = Dict>
-  extends Controller<ServerKoaContext<D>> {}
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
-export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

@@ -1,20 +1,21 @@
-import MockDate from "mockdate";
-import nock from "nock";
-import request from "supertest";
-import { server } from "../../server/server";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
-import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   OpenIdDisplayMode,
   OpenIdPromptMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import MockDate from "mockdate";
+import nock from "nock";
+import request from "supertest";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { createTestAuthenticationConfirmationToken } from "../../fixtures/entity";
 import {
-  getTestAuthenticationConfirmationToken,
+  TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE,
   setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -100,9 +101,12 @@ describe("/oauth/login", () => {
   });
 
   test("should confirm on valid authentication confirmation token", async () => {
-    const authToken = getTestAuthenticationConfirmationToken({
-      session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
-    });
+    const authenticationConfirmationToken =
+      await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
+        createTestAuthenticationConfirmationToken({
+          sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        }),
+      );
 
     nock("https://oauth.test.lindorm.io")
       .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
@@ -111,7 +115,7 @@ describe("/oauth/login", () => {
         mockFetchOauthAuthorizationSession({
           authorizationSession: {
             id: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
-            authToken,
+            authToken: authenticationConfirmationToken.token,
             country: "se",
             displayMode: OpenIdDisplayMode.PAGE,
             expires: "2022-01-01T04:00:00.000Z",

@@ -1,16 +1,15 @@
-import Joi from "joi";
-import { AuthenticationConfirmationTokenClaims } from "../../../common";
-import { AuthenticationTokenType, SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
+import Joi from "joi";
 import {
   confirmOauthLogin,
   getOauthAuthorizationRedirect,
   getOauthAuthorizationSession,
 } from "../../../handler";
+import { configuration } from "../../../server/configuration";
+import { ServerKoaController } from "../../../types";
 
 interface RequestData {
   session: string;
@@ -27,8 +26,8 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 ): ControllerResponse => {
   const {
     data: { session },
-    jwt,
     logger,
+    redis: { authenticationConfirmationTokenCache },
   } = ctx;
 
   const {
@@ -46,25 +45,21 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 
   if (authToken) {
     try {
-      const authenticationConfirmationToken = jwt.verify<AuthenticationConfirmationTokenClaims>(
-        authToken,
-        {
-          issuer: configuration.server.issuer,
-          types: [AuthenticationTokenType.AUTHENTICATION_CONFIRMATION],
-        },
-      );
+      const authenticationConfirmationToken = await authenticationConfirmationTokenCache.find({
+        token: authToken,
+      });
 
-      if (session !== authenticationConfirmationToken.session) {
+      if (session !== authenticationConfirmationToken.sessionId) {
         throw new ClientError("Invalid session identifier", {
           debug: {
             expect: session,
-            actual: authenticationConfirmationToken.session,
+            actual: authenticationConfirmationToken.sessionId,
           },
           statusCode: ClientError.StatusCode.FORBIDDEN,
         });
       }
 
-      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
+      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken.token);
 
       return { redirect: redirectTo };
     } catch (err: any) {

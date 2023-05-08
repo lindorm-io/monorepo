@@ -1,37 +1,34 @@
-import { ServerKoaContext } from "../../types";
-import { VerifiedAuthenticationConfirmationToken } from "../../common";
-import { clientCredentialsMiddleware } from "../../middleware";
 import {
-  AuthenticationMethod,
   ConfirmLoginRequestBody,
   ConfirmLoginRequestParams,
   ConfirmLoginResponse,
 } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
 export const confirmOauthLogin = async (
   ctx: ServerKoaContext,
-  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken,
+  token: string,
 ): Promise<ConfirmLoginResponse> => {
   const {
     axios: { oauthClient },
+    redis: { authenticationConfirmationTokenCache },
   } = ctx;
 
-  if (!authenticationConfirmationToken.session) {
+  const authenticationConfirmationToken = await authenticationConfirmationTokenCache.tryFind({
+    token,
+  });
+
+  if (!authenticationConfirmationToken) {
     throw new ServerError("Invalid token", {
       description: "Authentication Confirmation Token created without session id",
       debug: { authenticationConfirmationToken },
     });
   }
 
-  const body: ConfirmLoginRequestBody = {
-    identityId: authenticationConfirmationToken.subject,
-    levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
-    metadata: {},
-    methods: authenticationConfirmationToken.authMethodsReference as Array<AuthenticationMethod>,
-    remember: authenticationConfirmationToken.claims.remember,
-    sso: authenticationConfirmationToken.claims.sso,
-  };
+  const { identityId, levelOfAssurance, metadata, methods, remember, singleSignOn } =
+    authenticationConfirmationToken;
 
   const { data } = await oauthClient.post<
     ConfirmLoginResponse,
@@ -39,8 +36,15 @@ export const confirmOauthLogin = async (
     unknown,
     ConfirmLoginRequestParams
   >("/admin/sessions/login/:id/confirm", {
-    params: { id: authenticationConfirmationToken.session },
-    body,
+    params: { id: authenticationConfirmationToken.sessionId },
+    body: {
+      identityId,
+      levelOfAssurance,
+      metadata,
+      methods,
+      remember,
+      singleSignOn,
+    },
     middleware: [clientCredentialsMiddleware()],
   });
 

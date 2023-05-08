@@ -1,18 +1,12 @@
-import Joi from "joi";
-import { JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS } from "../common";
 import {
   AuthenticationMethod,
   AuthenticationMode,
   AuthenticationStrategy,
+  Dict,
   LevelOfAssurance,
   PKCEMethod,
   SessionStatus,
 } from "@lindorm-io/common-types";
-import {
-  JOI_AUTHENTICATION_METHOD,
-  JOI_AUTHENTICATION_STRATEGY,
-  JOI_PKCE_METHOD,
-} from "../constant";
 import {
   EntityAttributes,
   EntityKeys,
@@ -20,6 +14,13 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS } from "../common";
+import {
+  JOI_AUTHENTICATION_METHOD,
+  JOI_AUTHENTICATION_STRATEGY,
+  JOI_PKCE_METHOD,
+} from "../constant";
 
 export type AuthenticationSessionAttributes = EntityAttributes & {
   allowedStrategies: Array<AuthenticationStrategy>;
@@ -35,6 +36,7 @@ export type AuthenticationSessionAttributes = EntityAttributes & {
   emailHint: string | null;
   expires: Date;
   identityId: string | null;
+  metadata: Dict;
   minimumLevel: LevelOfAssurance;
   mode: AuthenticationMode;
   nonce: string | null;
@@ -60,6 +62,7 @@ export type AuthenticationSessionOptions = Optional<
   | "country"
   | "emailHint"
   | "identityId"
+  | "metadata"
   | "minimumLevel"
   | "nonce"
   | "phoneHint"
@@ -89,6 +92,7 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     emailHint: Joi.string().allow(null).required(),
     expires: Joi.date().required(),
     identityId: Joi.string().guid().allow(null).required(),
+    metadata: Joi.object().required(),
     minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     mode: Joi.string()
       .valid(AuthenticationMode.ELEVATE, AuthenticationMode.NONE, AuthenticationMode.OAUTH)
@@ -131,6 +135,7 @@ export class AuthenticationSession
   public confirmedOidcProvider: string | null;
   public confirmedStrategies: Array<AuthenticationStrategy>;
   public identityId: string | null;
+  public metadata: Dict;
   public remember: boolean;
   public sso: boolean;
   public status: SessionStatus;
@@ -152,6 +157,7 @@ export class AuthenticationSession
     this.expires = options.expires;
     this.identityId = options.identityId || null;
     this.minimumLevel = options.minimumLevel || 1;
+    this.metadata = options.metadata || {};
     this.mode = options.mode;
     this.nonce = options.nonce || null;
     this.phoneHint = options.phoneHint || null;
@@ -189,6 +195,7 @@ export class AuthenticationSession
       emailHint: this.emailHint,
       expires: this.expires,
       identityId: this.identityId,
+      metadata: this.metadata,
       minimumLevel: this.minimumLevel,
       mode: this.mode,
       nonce: this.nonce,

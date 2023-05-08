@@ -1,16 +1,16 @@
-import MockDate from "mockdate";
-import nock from "nock";
-import request from "supertest";
-import { server } from "../../server/server";
-import { setupIntegration } from "../../fixtures/integration";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
-import { randomUUID } from "crypto";
 import {
   LindormScope,
   OpenIdClientType,
   OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
+import MockDate from "mockdate";
+import nock from "nock";
+import request from "supertest";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { setupIntegration } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -116,6 +116,7 @@ describe("/oauth/consent", () => {
             id: randomUUID(),
             logoUri: "https://test.client.com/logo.png",
             name: "Test Client",
+            singleSignOn: true,
             type: OpenIdClientType.CONFIDENTIAL,
           },
         }),

@@ -1,12 +1,13 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { server } from "../../server/server";
 import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { createTestAuthenticationConfirmationToken } from "../../fixtures/entity";
 import {
-  getTestAuthenticationConfirmationToken,
+  TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE,
   setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -72,14 +73,17 @@ describe("/sessions/login", () => {
   });
 
   test("should confirm and redirect", async () => {
-    const authenticationConfirmationToken = getTestAuthenticationConfirmationToken({
-      session: "9937434e-aacb-489c-adc9-faa945be8145",
-    });
+    const authenticationConfirmationToken =
+      await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
+        createTestAuthenticationConfirmationToken({
+          sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
+        }),
+      );
 
     const response = await request(server.callback())
       .post("/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8/confirm")
       .send({
-        authentication_confirmation_token: authenticationConfirmationToken,
+        authentication_confirmation_token: authenticationConfirmationToken.token,
       })
       .expect(200);
 
