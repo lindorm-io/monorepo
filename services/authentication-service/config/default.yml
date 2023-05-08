@@ -15,7 +15,7 @@ frontend:
     select_account: /api/select-account
 
 logger:
-  level: info
+  level: silly
   colours: false
   readable: false
   timestamp: true

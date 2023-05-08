@@ -7,7 +7,7 @@ frontend:
     connect_callback: /connect/callback
 
 logger:
-  level: info
+  level: silly
   colours: false
   readable: false
   timestamp: true

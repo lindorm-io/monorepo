@@ -30,7 +30,7 @@ frontend:
     error: /error
 
 logger:
-  level: info
+  level: silly
   colours: false
   readable: false
   timestamp: true

@@ -5,7 +5,7 @@ defaults:
   remote_device_challenge_session_expiry: 15 minutes
 
 logger:
-  level: info
+  level: silly
   colours: false
   readable: false
   timestamp: true
