@@ -251,7 +251,6 @@ export class Axios {
     };
 
     const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
-      id: uuid(),
       body: body as RequestBody,
       client: this.client,
       config: {
@@ -268,6 +267,7 @@ export class Axios {
       params: params as RequestParams,
       query: { ...searchParams, ...query },
       queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
+      requestId: uuid(),
       retry: { ...retry, ...this.retry },
       retryCallback: retryCallback || this.retryCallback,
       url,

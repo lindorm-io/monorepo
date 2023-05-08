@@ -1,9 +1,9 @@
-import { AxiosClientProperties } from "./request";
+import { TransformMode } from "@lindorm-io/case";
+import { RetryOptions } from "@lindorm-io/retry";
 import { AxiosResponse } from "axios";
 import { RawAxiosRequestConfigContext } from "./overrides";
+import { AxiosClientProperties } from "./request";
 import { RetryCallback } from "./retry";
-import { RetryOptions } from "@lindorm-io/retry";
-import { TransformMode } from "@lindorm-io/case";
 
 export type AppContext = {
   alias: string | null;
@@ -20,7 +20,6 @@ export type RequestContext<
   Params = Record<string, any>,
   Query = Record<string, any>,
 > = {
-  id: string;
   body: Body;
   client: AxiosClientProperties;
   config: RawAxiosRequestConfigContext;
@@ -29,6 +28,7 @@ export type RequestContext<
   params: Params;
   query: Query;
   queryCaseTransform: TransformMode;
+  requestId: string;
   retry: RetryOptions;
   retryCallback: RetryCallback;
   url: string;

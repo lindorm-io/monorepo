@@ -6,7 +6,6 @@ describe("composeAxiosConfig", () => {
 
   beforeEach(() => {
     const req: RequestContext = {
-      id: "id",
       body: { body: "body" },
       client: {
         id: "8badb9a8-e4dd-4970-bdf5-f2765b912e7e",
@@ -32,6 +31,7 @@ describe("composeAxiosConfig", () => {
         with: "you",
       },
       queryCaseTransform: "pascal",
+      requestId: "id",
       retry: { maximumAttempts: 5, maximumMilliseconds: 10, milliseconds: 50, strategy: "linear" },
       retryCallback: () => true,
       url: "https://lindorm.io:3000/test/path/hello/:answer/:general",
