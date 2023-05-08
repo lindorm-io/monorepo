@@ -1,7 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../server/configuration";
-import { server } from "../server/server";
 import {
   createTestAccessToken,
   createTestClient,
@@ -9,12 +7,14 @@ import {
   createTestRefreshToken,
 } from "../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../fixtures/integration";
+import { configuration } from "../server/configuration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -54,7 +54,7 @@ describe("/exchange", () => {
 
     expect(response.body).toStrictEqual({
       expires_in: 86400,
-      jwt: expect.any(String),
+      token: expect.any(String),
     });
   });
 
@@ -88,7 +88,7 @@ describe("/exchange", () => {
 
     expect(response.body).toStrictEqual({
       expires_in: 86400,
-      jwt: expect.any(String),
+      token: expect.any(String),
     });
   });
 });

@@ -126,10 +126,6 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     amrArray: idToken?.authMethodsReference,
   });
 
-  const browserSessions = await tryFindBrowserSessions(ctx, idToken);
-  const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
-  const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
-
   const defaultAudiences = uniqArray(
     client.id,
     client.audiences.identity,
@@ -139,6 +135,10 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   );
 
   const audiences = idToken ? uniqArray(idToken.audiences, defaultAudiences) : defaultAudiences;
+
+  const browserSessions = await tryFindBrowserSessions(ctx, idToken);
+  const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
+  const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
 
   let authorizationSession: AuthorizationSession = new AuthorizationSession({
     code: {

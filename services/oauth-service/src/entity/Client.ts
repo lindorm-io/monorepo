@@ -115,7 +115,6 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
     defaults: Joi.object()
       .keys({
-        audiences: Joi.array().items(Joi.string().guid()).required(),
         displayMode: JOI_DISPLAY_MODE.required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
         responseMode: JOI_RESPONSE_MODE.required(),

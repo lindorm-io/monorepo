@@ -1,9 +1,7 @@
+import { OpenIdClientType } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../server/configuration";
-import { randomUUID } from "crypto";
-import { server } from "../../server/server";
-import { OpenIdClientType } from "@lindorm-io/common-types";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -11,13 +9,15 @@ import {
   createTestTenant,
 } from "../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_TENANT_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../fixtures/integration";
+import { configuration } from "../../server/configuration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -104,8 +104,9 @@ describe("/admin/identities", () => {
 
           client: {
             id: client1.id,
-            logo_uri: "https://logo.uri/logo",
             name: "ClientName",
+            logo_uri: "https://logo.uri/logo",
+            single_sign_on: true,
             type: "confidential",
           },
 
@@ -130,8 +131,9 @@ describe("/admin/identities", () => {
 
           client: {
             id: client2.id,
-            logo_uri: "https://logo.uri/logo",
             name: "ClientName",
+            logo_uri: "https://logo.uri/logo",
+            single_sign_on: true,
             type: "public",
           },
 

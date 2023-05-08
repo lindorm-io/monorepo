@@ -1,19 +1,19 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { server } from "../../../server/server";
 import {
   createTestClaimsSession,
   createTestClient,
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_CLAIMS_SESSION_CACHE,
   TEST_CLIENT_REPOSITORY,
   TEST_TENANT_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -64,6 +64,7 @@ describe("/admin/sessions/claims", () => {
         id: client.id,
         logo_uri: "https://logo.uri/logo",
         name: "ClientName",
+        single_sign_on: true,
         type: "confidential",
       },
 

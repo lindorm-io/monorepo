@@ -1,15 +1,15 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { tokenExchangeController } from "./exchange";
-import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
-  resolveTokenSession as _resolveTokenSession,
-} from "../../handler";
+import MockDate from "mockdate";
 import {
   createTestAccessToken,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import {
+  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
+  resolveTokenSession as _resolveTokenSession,
+} from "../../handler";
+import { tokenExchangeController } from "./exchange";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -38,7 +38,7 @@ describe("introspectController", () => {
 
   test("should resolve token info", async () => {
     await expect(tokenExchangeController(ctx)).resolves.toStrictEqual({
-      body: { jwt: "jwt.jwt.jwt", expiresIn: 999 },
+      body: { expiresIn: 999, token: "jwt.jwt.jwt" },
     });
   });
 });

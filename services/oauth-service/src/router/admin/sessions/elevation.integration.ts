@@ -95,6 +95,7 @@ describe("/admin/sessions/elevation", () => {
         id: client.id,
         name: "ClientName",
         logo_uri: "https://logo.uri/logo",
+        single_sign_on: true,
         type: "confidential",
       },
 

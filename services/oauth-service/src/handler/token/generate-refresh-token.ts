@@ -1,8 +1,8 @@
 import { expiryDate } from "@lindorm-io/expiry";
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import { Client, ClientSession, OpaqueToken } from "../../entity";
 import { OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { createOpaqueToken } from "../../util";
 
 export const generateRefreshToken = async (
   ctx: ServerKoaContext,

@@ -1,10 +1,9 @@
-import { OpaqueToken } from "../../entity";
-import { configuration } from "../../server/configuration";
+import { createOpaqueToken, createTestJwt } from "@lindorm-io/jwt";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createOpaqueToken } from "../../util";
+import { OpaqueToken } from "../../entity";
 import { createTestAccessToken } from "../../fixtures/entity";
-import { createTestJwt } from "@lindorm-io/jwt";
 import { getTestAccessToken } from "../../fixtures/integration";
+import { configuration } from "../../server/configuration";
 import { resolveTokenSession } from "./resolve-token-session";
 
 describe("resolveTokenSession", () => {

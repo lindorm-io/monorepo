@@ -1,9 +1,9 @@
-import { ClientError } from "@lindorm-io/errors";
-import { OpaqueToken } from "../../entity";
-import { ServerKoaContext } from "../../types";
-import { baseParse } from "@lindorm-io/core";
-import { configuration } from "../../server/configuration";
 import { SubjectHint } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { TokenHeaderType, parseTokenHeader } from "@lindorm-io/jwt";
+import { OpaqueToken } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
 
 export const resolveTokenSession = async (
   ctx: ServerKoaContext,
@@ -14,10 +14,9 @@ export const resolveTokenSession = async (
     jwt,
   } = ctx;
 
-  const [header] = token.split(".");
-  const parsed = JSON.parse(baseParse(header));
+  const { typ } = parseTokenHeader(token);
 
-  if (parsed.typ === "JWT") {
+  if (typ === TokenHeaderType.JWT) {
     const verified = jwt.verify(token, {
       audience: configuration.oauth.client_id,
       issuer: configuration.server.issuer,
@@ -27,7 +26,7 @@ export const resolveTokenSession = async (
     return await opaqueTokenCache.find({ id: verified.id });
   }
 
-  if (parsed.typ === "OPAQUE") {
+  if (typ === TokenHeaderType.OPAQUE) {
     return await opaqueTokenCache.find({ token });
   }
 

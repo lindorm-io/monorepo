@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
 import { TokenExchangeRequestBody, TokenExchangeResponseBody } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { convertOpaqueTokenToJwt, resolveTokenSession } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = TokenExchangeRequestBody;
 
@@ -26,7 +26,7 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
   const clientSession = await clientSessionRepository.find({ id: opaqueToken.clientSessionId });
   await clientRepository.find({ id: clientSession.clientId, active: true });
 
-  const { token: jwt, expiresIn } = convertOpaqueTokenToJwt(ctx, clientSession, opaqueToken);
+  const { token: signed, expiresIn } = convertOpaqueTokenToJwt(ctx, clientSession, opaqueToken);
 
-  return { body: { jwt, expiresIn } };
+  return { body: { expiresIn, token: signed } };
 };

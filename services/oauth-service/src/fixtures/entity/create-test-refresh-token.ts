@@ -1,6 +1,6 @@
-import { OpaqueToken, OpaqueTokenOptions } from "../../entity";
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import { randomUUID } from "crypto";
-import { createOpaqueToken } from "../../util";
+import { OpaqueToken, OpaqueTokenOptions } from "../../entity";
 import { OpaqueTokenType } from "../../enum";
 
 export const createTestRefreshToken = (options: Partial<OpaqueTokenOptions> = {}): OpaqueToken =>
