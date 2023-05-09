@@ -89,7 +89,7 @@ describe("generateTokenResponse", () => {
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
       accessToken: "access_token.token.jwt",
       expiresIn: 86400,
-      refreshToken: "refresh_token.token.jwt",
+      refreshToken: "opaque_refresh_token",
       scope: "offline_access",
       tokenType: "Bearer",
     });
@@ -97,7 +97,6 @@ describe("generateTokenResponse", () => {
 
   test("should with opaque tokens", async () => {
     client.opaqueAccessToken = true;
-    client.opaqueRefreshToken = true;
     clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({

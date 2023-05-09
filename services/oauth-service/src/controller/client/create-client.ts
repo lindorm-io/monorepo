@@ -88,7 +88,6 @@ export const createClientController: ServerKoaController<RequestData> = async (
       host,
       name,
       opaqueAccessToken: configuration.defaults.clients.opaque_access_tokens,
-      opaqueRefreshToken: configuration.defaults.clients.opaque_refresh_tokens,
       secret: await argon.encrypt(secret),
       singleSignOn: true,
       tenantId: tenant.id,

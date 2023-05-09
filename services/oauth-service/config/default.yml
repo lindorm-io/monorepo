@@ -2,8 +2,7 @@ defaults:
   clients:
     active_state: false
     level_of_assurance: 1
-    opaque_access_tokens: true
-    opaque_refresh_tokens: true
+    opaque_access_tokens: false
   expiry:
     access_token: 3 minutes
     authorization_session: 30 minutes

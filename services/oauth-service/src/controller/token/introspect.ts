@@ -15,8 +15,8 @@ type ResponseBody = TokenIntrospectResponseBody;
 export const tokenIntrospectSchema = Joi.object<RequestData>()
   .keys({
     token: Joi.string().min(128).required(),
-    tokenTypeHint: Joi.string(),
   })
+  .options({ abortEarly: false, allowUnknown: true })
   .required();
 
 export const tokenIntrospectController: ServerKoaController<RequestData> = async (

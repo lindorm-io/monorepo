@@ -45,11 +45,8 @@ export const generateTokenResponse = async (
 
   if (clientSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
     const refreshToken = await generateRefreshToken(ctx, client, clientSession);
-    const refreshJwt = client.opaqueRefreshToken
-      ? undefined
-      : convertOpaqueTokenToJwt(ctx, clientSession, refreshToken);
 
-    body.refreshToken = refreshJwt?.token || refreshToken.token;
+    body.refreshToken = refreshToken.token;
   }
 
   if (clientSession.scopes.length) {

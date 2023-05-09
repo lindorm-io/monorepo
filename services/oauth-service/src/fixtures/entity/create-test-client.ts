@@ -44,7 +44,6 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     logoUri: "https://logo.uri/logo",
     name: "ClientName",
     opaqueAccessToken: false,
-    opaqueRefreshToken: false,
     postLogoutUris: ["https://test.client.lindorm.io/logout"],
     redirectUris: ["https://test.client.lindorm.io/redirect"],
     requiredScopes: [OpenIdScope.OFFLINE_ACCESS, OpenIdScope.OPENID],

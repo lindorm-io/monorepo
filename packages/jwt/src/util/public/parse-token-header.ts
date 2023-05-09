@@ -7,6 +7,10 @@ export type ParsedTokenHeader<T extends Dict = Dict> = {
 } & T;
 
 export const parseTokenHeader = <T extends Dict = Dict>(token: string): ParsedTokenHeader<T> => {
-  const [header] = token.split(".");
-  return JSON.parse(baseParse(header));
+  try {
+    const [header] = token.split(".");
+    return JSON.parse(baseParse(header));
+  } catch {
+    throw new Error("Invalid token header");
+  }
 };

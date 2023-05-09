@@ -65,7 +65,6 @@ export type ClientAttributes = EntityAttributes & {
   logoUri: string | null;
   name: string;
   opaqueAccessToken: boolean;
-  opaqueRefreshToken: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -88,7 +87,6 @@ export type ClientOptions = Optional<
   | "frontChannelLogoutUri"
   | "logoUri"
   | "opaqueAccessToken"
-  | "opaqueRefreshToken"
   | "postLogoutUris"
   | "redirectUris"
   | "requiredScopes"
@@ -139,7 +137,6 @@ const schema = Joi.object<ClientAttributes>()
     logoUri: Joi.string().uri().allow(null).required(),
     name: Joi.string().required(),
     opaqueAccessToken: Joi.boolean().required(),
-    opaqueRefreshToken: Joi.boolean().required(),
     postLogoutUris: Joi.array().items(Joi.string().uri()).required(),
     redirectUris: Joi.array().items(Joi.string().uri()).required(),
     requiredScopes: Joi.array().items(Joi.string()).required(),
@@ -168,7 +165,6 @@ export class Client extends LindormEntity<ClientAttributes> {
   public logoUri: string | null;
   public name: string;
   public opaqueAccessToken: boolean;
-  public opaqueRefreshToken: boolean;
   public postLogoutUris: Array<string>;
   public redirectUris: Array<string>;
   public requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -196,8 +192,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.host = options.host;
     this.logoUri = options.logoUri || null;
     this.name = options.name;
-    this.opaqueAccessToken = options.opaqueAccessToken !== false;
-    this.opaqueRefreshToken = options.opaqueRefreshToken !== false;
+    this.opaqueAccessToken = options.opaqueAccessToken === true;
     this.postLogoutUris = options.postLogoutUris || [];
     this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
@@ -232,7 +227,6 @@ export class Client extends LindormEntity<ClientAttributes> {
       logoUri: this.logoUri,
       name: this.name,
       opaqueAccessToken: this.opaqueAccessToken,
-      opaqueRefreshToken: this.opaqueRefreshToken,
       postLogoutUris: this.postLogoutUris,
       redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,

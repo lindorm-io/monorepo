@@ -17,7 +17,7 @@ export const generateRefreshToken = async (
     new OpaqueToken({
       clientSessionId: clientSession.id,
       expires: expiryDate(client.expiry.refreshToken),
-      token: createOpaqueToken(),
+      token: createOpaqueToken(192),
       type: OpaqueTokenType.REFRESH,
     }),
   );

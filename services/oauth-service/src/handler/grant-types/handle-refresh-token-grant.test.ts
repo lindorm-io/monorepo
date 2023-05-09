@@ -1,24 +1,21 @@
-import MockDate from "mockdate";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { generateTokenResponse as _generateTokenResponse } from "../oauth";
-import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
-import { ClientSessionType } from "../../enum";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { resolveTokenSession as _resolveTokenSession } from "../token";
+import MockDate from "mockdate";
+import { ClientSessionType } from "../../enum";
 import {
   createTestClient,
   createTestClientSession,
   createTestRefreshToken,
 } from "../../fixtures/entity";
-import { ClientError } from "@lindorm-io/errors";
+import { generateTokenResponse as _generateTokenResponse } from "../oauth";
+import { handleRefreshTokenGrant } from "./handle-refresh-token-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../oauth");
-jest.mock("../token");
 
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
-const resolveTokenSession = _resolveTokenSession as jest.Mock;
 
 describe("handleAuthorizationCodeGrant", () => {
   let ctx: any;
@@ -38,7 +35,6 @@ describe("handleAuthorizationCodeGrant", () => {
     };
 
     generateTokenResponse.mockResolvedValue("generateTokenResponse");
-    resolveTokenSession.mockResolvedValue(createTestRefreshToken());
   });
 
   test("should resolve", async () => {
@@ -55,7 +51,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on expired session", async () => {
-    resolveTokenSession.mockResolvedValue(
+    ctx.redis.opaqueTokenCache.tryFind.mockResolvedValue(
       createTestRefreshToken({
         expires: new Date("1999-01-01T01:00:00.000Z"),
       }),
@@ -64,8 +60,14 @@ describe("handleAuthorizationCodeGrant", () => {
     await expect(handleRefreshTokenGrant(ctx)).rejects.toThrow(ClientError);
   });
 
+  test("should throw on missing session", async () => {
+    ctx.mongo.clientSessionRepository.tryFind.mockResolvedValue(undefined);
+
+    await expect(handleRefreshTokenGrant(ctx)).rejects.toThrow(ClientError);
+  });
+
   test("should throw on expired session", async () => {
-    ctx.mongo.clientSessionRepository.find.mockResolvedValue(
+    ctx.mongo.clientSessionRepository.tryFind.mockResolvedValue(
       createTestClientSession({
         type: ClientSessionType.EPHEMERAL,
       }),

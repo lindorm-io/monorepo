@@ -1,10 +1,10 @@
+import jwt from "jsonwebtoken";
 import MockDate from "mockdate";
 import request from "supertest";
 import {
   createTestAccessToken,
   createTestClient,
   createTestClientSession,
-  createTestRefreshToken,
 } from "../fixtures/entity";
 import {
   TEST_CLIENT_REPOSITORY,
@@ -30,6 +30,7 @@ describe("/exchange", () => {
     const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
       createTestClientSession({
         clientId: client.id,
+        tenantId: client.tenantId,
       }),
     );
 
@@ -42,6 +43,7 @@ describe("/exchange", () => {
     const clientCredentials = getTestClientCredentials({
       audiences: [configuration.oauth.client_id, client.id],
       subject: client.id,
+      tenant: client.tenantId,
     });
 
     const response = await request(server.callback())
@@ -56,39 +58,27 @@ describe("/exchange", () => {
       expires_in: 86400,
       token: expect.any(String),
     });
-  });
 
-  test("should exchange opaque refresh token", async () => {
-    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
-
-    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
-      createTestClientSession({
-        clientId: client.id,
-      }),
-    );
-
-    const refreshToken = await TEST_OPAQUE_TOKEN_CACHE.create(
-      createTestRefreshToken({
-        clientSessionId: clientSession.id,
-      }),
-    );
-
-    const clientCredentials = getTestClientCredentials({
-      audiences: [configuration.oauth.client_id, client.id],
-      subject: client.id,
-    });
-
-    const response = await request(server.callback())
-      .post("/exchange")
-      .set("Authorization", `Bearer ${clientCredentials}`)
-      .send({
-        token: refreshToken.token,
-      })
-      .expect(200);
-
-    expect(response.body).toStrictEqual({
-      expires_in: 86400,
-      token: expect.any(String),
+    expect(jwt.decode(response.body.token)).toStrictEqual({
+      aal: 2,
+      aud: clientSession.audiences,
+      auth_time: 1609487940,
+      azp: client.id,
+      cid: client.id,
+      exp: 1609574400,
+      iat: 1609488000,
+      iss: "https://oauth.test.lindorm.io",
+      jti: expect.any(String),
+      loa: 2,
+      nbf: 1609488000,
+      nonce: clientSession.nonce,
+      scope: "openid profile",
+      sid: clientSession.id,
+      sih: "refresh",
+      sub: clientSession.identityId,
+      suh: "identity",
+      tid: client.tenantId,
+      token_type: "access_token",
     });
   });
 });

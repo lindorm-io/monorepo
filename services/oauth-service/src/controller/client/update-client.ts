@@ -33,7 +33,6 @@ type RequestData = {
   logoUri: string | null;
   name: string;
   opaqueAccessToken: boolean;
-  opaqueRefreshToken: boolean;
   postLogoutUris: Array<string>;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
@@ -76,7 +75,6 @@ export const updateClientSchema = Joi.object<RequestData>()
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
     opaqueAccessToken: Joi.boolean(),
-    opaqueRefreshToken: Joi.boolean(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
     redirectUris: Joi.array().items(Joi.string().uri()),
     requiredScopes: Joi.array().items(Joi.string()),
@@ -105,7 +103,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       logoUri,
       name,
       opaqueAccessToken,
-      opaqueRefreshToken,
       postLogoutUris,
       redirectUris,
       requiredScopes,
@@ -142,7 +139,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (logoUri !== undefined) client.logoUri = logoUri;
   if (name !== undefined) client.name = name;
   if (opaqueAccessToken !== undefined) client.opaqueAccessToken = opaqueAccessToken;
-  if (opaqueRefreshToken !== undefined) client.opaqueRefreshToken = opaqueRefreshToken;
   if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
   if (redirectUris !== undefined) client.redirectUris = redirectUris;
   if (requiredScopes !== undefined) client.requiredScopes = requiredScopes;

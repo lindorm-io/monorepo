@@ -1,19 +1,18 @@
+import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { isAfter } from "date-fns";
 import { ClientSessionType, OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { generateTokenResponse } from "../oauth";
-import { isAfter } from "date-fns";
-import { resolveTokenSession } from "../token";
 
 export const handleRefreshTokenGrant = async (
   ctx: ServerKoaContext<OpenIdTokenRequestBody>,
 ): Promise<Partial<OpenIdTokenResponseBody>> => {
   const {
-    redis: { opaqueTokenCache },
     data: { refreshToken: token },
     entity: { client },
     mongo: { clientSessionRepository },
+    redis: { opaqueTokenCache },
   } = ctx;
 
   if (!token) {
@@ -24,7 +23,7 @@ export const handleRefreshTokenGrant = async (
     });
   }
 
-  const opaqueToken = await resolveTokenSession(ctx, token);
+  const opaqueToken = await opaqueTokenCache.tryFind({ token });
 
   if (!opaqueToken || opaqueToken.type !== OpaqueTokenType.REFRESH) {
     throw new ClientError("Invalid Refresh Token", {
@@ -48,15 +47,23 @@ export const handleRefreshTokenGrant = async (
     });
   }
 
-  const clientSession = await clientSessionRepository.find({
+  const clientSession = await clientSessionRepository.tryFind({
     id: opaqueToken.clientSessionId,
     clientId: client.id,
   });
 
-  if (clientSession.type !== ClientSessionType.REFRESH) {
-    throw new ClientError("Invalid Session", {
+  if (!clientSession) {
+    throw new ClientError("Unauthorized", {
       code: "invalid_request",
-      description: "Session is ephemeral",
+      description: "Session not found",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
+  if (clientSession.type !== ClientSessionType.REFRESH) {
+    throw new ClientError("Unauthorized", {
+      code: "invalid_request",
+      description: "Invalid Session type",
       debug: {
         expect: ClientSessionType.REFRESH,
         actual: clientSession.type,
