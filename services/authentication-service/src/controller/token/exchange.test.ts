@@ -23,6 +23,11 @@ describe("tokenExchangeController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(tokenExchangeController(ctx)).resolves.toStrictEqual({});
+    await expect(tokenExchangeController(ctx)).resolves.toStrictEqual({
+      body: {
+        expiresIn: 60,
+        token: "jwt.jwt.jwt",
+      },
+    });
   });
 });
