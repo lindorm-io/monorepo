@@ -7,7 +7,6 @@ export type LindormIntrospectResponseBody = OpenIdIntrospectResponseBody & {
   amr: Array<string>;
   authTime: number | null;
   azp: string | null;
-  jwt: string | null; // token as signed JWT
   loa: LevelOfAssurance;
   sid: string | null;
   sih: string | null;

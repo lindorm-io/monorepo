@@ -1,7 +1,5 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../server/configuration";
-import { server } from "../server/server";
 import {
   createTestAccessToken,
   createTestClient,
@@ -9,13 +7,15 @@ import {
   createTestRefreshToken,
 } from "../fixtures/entity";
 import {
-  getTestAccessToken,
-  getTestClientCredentials,
-  setupIntegration,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
+  getTestAccessToken,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../fixtures/integration";
+import { configuration } from "../server/configuration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -73,7 +73,6 @@ describe("/introspect", () => {
       iat: 1609488000,
       iss: "https://oauth.test.lindorm.io",
       jti: expect.any(String),
-      jwt: expect.any(String),
       loa: 2,
       nbf: 1609488000,
       scope: "openid profile",
@@ -137,7 +136,6 @@ describe("/introspect", () => {
       iat: 1609488000,
       iss: "https://oauth.test.lindorm.io",
       jti: expect.any(String),
-      jwt: expect.any(String),
       loa: 2,
       nbf: 1609488000,
       scope: "openid profile",
@@ -199,7 +197,6 @@ describe("/introspect", () => {
       iat: 1609488000,
       iss: "https://oauth.test.lindorm.io",
       jti: expect.any(String),
-      jwt: expect.any(String),
       loa: 2,
       nbf: 1609488000,
       scope: "openid profile",

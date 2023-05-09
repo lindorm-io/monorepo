@@ -26,7 +26,7 @@ export const oauthTokenSchema = Joi.object<RequestData>()
     codeVerifier: Joi.string(),
     grantType: JOI_GRANT_TYPE.required(),
     redirectUri: Joi.string().uri(),
-    refreshToken: Joi.string().min(128).required(),
+    refreshToken: Joi.string().min(128),
     scope: Joi.string(),
   })
   .required();

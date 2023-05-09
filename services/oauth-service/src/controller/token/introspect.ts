@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
 import { TokenIntrospectRequestBody, TokenIntrospectResponseBody } from "@lindorm-io/common-types";
-import { configuration } from "../../server/configuration";
-import { convertOpaqueTokenToJwt, resolveTokenSession } from "../../handler";
-import { getAdjustedAccessLevel } from "../../util";
-import { getUnixTime } from "date-fns";
 import { uniqArray } from "@lindorm-io/core";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { getUnixTime } from "date-fns";
+import Joi from "joi";
+import { resolveTokenSession } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
+import { getAdjustedAccessLevel } from "../../util";
 
 type RequestData = TokenIntrospectRequestBody;
 
@@ -32,8 +32,6 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
     const clientSession = await clientSessionRepository.find({ id: opaqueToken.clientSessionId });
     const client = await clientRepository.find({ id: clientSession.clientId });
 
-    const { token: jwt } = convertOpaqueTokenToJwt(ctx, clientSession, opaqueToken);
-
     const exp = getUnixTime(opaqueToken.expires);
     const iat = getUnixTime(opaqueToken.created);
     const now = getUnixTime(new Date());
@@ -58,7 +56,6 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
         iat,
         iss: configuration.server.issuer,
         jti: opaqueToken.id,
-        jwt,
         loa: clientSession.levelOfAssurance,
         nbf: iat,
         scope: clientSession.scopes.join(" "),
@@ -86,7 +83,6 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
         iat: 0,
         iss: null,
         jti: null,
-        jwt: null,
         loa: 0,
         nbf: 0,
         scope: null,

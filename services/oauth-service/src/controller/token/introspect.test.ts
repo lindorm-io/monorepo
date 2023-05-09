@@ -5,10 +5,7 @@ import {
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
-import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
-  resolveTokenSession as _resolveTokenSession,
-} from "../../handler";
+import { resolveTokenSession as _resolveTokenSession } from "../../handler";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 import { tokenIntrospectController } from "./introspect";
 
@@ -19,7 +16,6 @@ jest.mock("../../util");
 
 const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
 const resolveTokenSession = _resolveTokenSession as jest.Mock;
-const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 
 describe("introspectController", () => {
   let ctx: any;
@@ -36,7 +32,6 @@ describe("introspectController", () => {
     };
 
     getAdjustedAccessLevel.mockReturnValue(1);
-    convertOpaqueTokenToJwt.mockImplementation(() => ({ token: "jwt.jwt.jwt", expiresIn: 999 }));
     resolveTokenSession.mockResolvedValue(
       createTestAccessToken({
         id: "b82a1243-e25d-47f3-9fbd-35c15de54cd0",
@@ -79,7 +74,6 @@ describe("introspectController", () => {
         iat: 1609488000,
         iss: "https://oauth.test.lindorm.io",
         jti: "b82a1243-e25d-47f3-9fbd-35c15de54cd0",
-        jwt: "jwt.jwt.jwt",
         loa: 2,
         nbf: 1609488000,
         scope: "openid profile",
@@ -111,7 +105,6 @@ describe("introspectController", () => {
         iat: 0,
         iss: null,
         jti: null,
-        jwt: null,
         loa: 0,
         nbf: 0,
         scope: null,
