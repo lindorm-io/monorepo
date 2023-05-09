@@ -83,7 +83,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     });
   }
 
-  const opaqueToken = createOpaqueToken();
+  const opaqueToken = createOpaqueToken(undefined, undefined, { symbols: 0 });
   const { expires, expiresIn } = expiryObject("1 minutes");
 
   await authenticationConfirmationTokenCache.create(

@@ -48,7 +48,7 @@ const schema = Joi.object<AuthenticationConfirmationTokenAttributes>()
     remember: Joi.boolean().required(),
     sessionId: Joi.string().guid().required(),
     singleSignOn: Joi.boolean().required(),
-    token: Joi.string().length(215).required(),
+    token: Joi.string().min(128).required(),
   })
   .required();
 

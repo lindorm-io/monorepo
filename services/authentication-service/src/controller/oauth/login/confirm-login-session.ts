@@ -13,7 +13,7 @@ type ResponseBody = ConfirmLoginResponse;
 
 export const confirmLoginSessionSchema = Joi.object<RequestData>({
   id: Joi.string().guid().required(),
-  authenticationConfirmationToken: Joi.string().required(),
+  authenticationConfirmationToken: Joi.string().min(128).required(),
 });
 
 export const confirmLoginSessionController: ServerKoaController<RequestData> = async (

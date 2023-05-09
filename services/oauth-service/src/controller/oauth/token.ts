@@ -1,18 +1,18 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
-import { ServerKoaController } from "../../types";
 import {
   OpenIdGrantType,
   OpenIdTokenRequestBody,
   OpenIdTokenResponseBody,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import {
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,
   handleRefreshTokenGrant,
 } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = OpenIdTokenRequestBody;
 
@@ -26,7 +26,7 @@ export const oauthTokenSchema = Joi.object<RequestData>()
     codeVerifier: Joi.string(),
     grantType: JOI_GRANT_TYPE.required(),
     redirectUri: Joi.string().uri(),
-    refreshToken: Joi.string(),
+    refreshToken: Joi.string().min(128).required(),
     scope: Joi.string(),
   })
   .required();

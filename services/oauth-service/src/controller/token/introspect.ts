@@ -14,7 +14,7 @@ type ResponseBody = TokenIntrospectResponseBody;
 
 export const tokenIntrospectSchema = Joi.object<RequestData>()
   .keys({
-    token: Joi.string().required(),
+    token: Joi.string().min(128).required(),
     tokenTypeHint: Joi.string(),
   })
   .required();

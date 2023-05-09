@@ -10,7 +10,7 @@ type ResponseBody = TokenExchangeResponseBody;
 
 export const tokenExchangeSchema = Joi.object<RequestData>()
   .keys({
-    token: Joi.string().required(),
+    token: Joi.string().min(128).required(),
   })
   .required();
 

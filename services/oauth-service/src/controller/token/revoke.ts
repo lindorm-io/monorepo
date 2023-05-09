@@ -9,7 +9,7 @@ type RequestData = TokenRevokeRequestBody;
 
 export const revokeTokenSchema = Joi.object<RequestData>()
   .keys({
-    token: Joi.string().required(),
+    token: Joi.string().min(128).required(),
     tokenTypeHint: Joi.string(),
   })
   .options({ abortEarly: false, allowUnknown: true })
