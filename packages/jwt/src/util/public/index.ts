@@ -1,3 +1,4 @@
 export * from "./create-opaque-token";
-export * from "./parse-token-header";
+export * from "./decode-opaque-token";
+export * from "./get-token-header-type";
 export * from "./sanitise-token";
