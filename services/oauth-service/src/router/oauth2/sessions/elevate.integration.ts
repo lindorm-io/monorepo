@@ -1,11 +1,10 @@
+import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
+import { createOpaqueToken } from "@lindorm-io/jwt";
+import { randomUnreserved } from "@lindorm-io/random";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { getTestData } from "../../../fixtures/data";
-import { randomUnreserved } from "@lindorm-io/random";
-import { server } from "../../../server/server";
-import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
 import { ClientSessionType } from "../../../enum";
+import { getTestData } from "../../../fixtures/data";
 import {
   createTestAccessToken,
   createTestBrowserSession,
@@ -14,14 +13,16 @@ import {
   createTestElevationSession,
 } from "../../../fixtures/entity";
 import {
-  getTestIdToken,
-  setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
   TEST_OPAQUE_TOKEN_CACHE,
+  getTestIdToken,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -44,9 +45,12 @@ describe("/oauth2/sessions/elevate", () => {
       }),
     );
 
-    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
@@ -73,7 +77,7 @@ describe("/oauth2/sessions/elevate", () => {
         methods: "password totp",
         ui_locales: "sv-SE en-GB",
       })
-      .set("Authorization", `Bearer ${accessToken.token}`)
+      .set("Authorization", `Bearer ${opaqueToken.token}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
@@ -133,15 +137,18 @@ describe("/oauth2/sessions/elevate", () => {
       }),
     );
 
-    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
     const response = await request(server.callback())
       .post("/oauth2/sessions/elevate")
-      .set("Authorization", `Bearer ${accessToken.token}`)
+      .set("Authorization", `Bearer ${opaqueToken.token}`)
       .send({
         authentication_hint: ["email@lindorm.io"],
         client_id: client.id,
@@ -202,9 +209,12 @@ describe("/oauth2/sessions/elevate", () => {
       }),
     );
 
-    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
@@ -235,7 +245,7 @@ describe("/oauth2/sessions/elevate", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/sessions/elevate/verify")
-      .set("Authorization", `Bearer ${accessToken.token}`)
+      .set("Authorization", `Bearer ${opaqueToken.token}`)
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])

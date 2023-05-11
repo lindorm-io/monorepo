@@ -1,5 +1,3 @@
-import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   GetAuthorizationResponse,
@@ -10,6 +8,8 @@ import {
   OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 
 export const mockFetchOauthAuthorizationSession = (
   options: Partial<GetAuthorizationResponse> = {},
@@ -71,7 +71,7 @@ export const mockFetchOauthAuthorizationSession = (
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL],
     remember: true,
-    sso: true,
+    singleSignOn: true,
   },
 
   clientSession: {
@@ -90,6 +90,7 @@ export const mockFetchOauthAuthorizationSession = (
     logoUri: "https://test.client.com/logo.png",
     name: "Test Client",
     type: OpenIdClientType.PUBLIC,
+    singleSignOn: true,
   },
 
   tenant: {

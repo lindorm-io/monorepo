@@ -1,12 +1,12 @@
-import { OpaqueToken, OpaqueTokenAttributes } from "../../entity";
-import { IRedisConnection, RedisRepositoryBase } from "@lindorm-io/redis";
 import { Logger } from "@lindorm-io/core-logger";
+import { IRedisConnection, RedisRepositoryBase } from "@lindorm-io/redis";
+import { OpaqueToken, OpaqueTokenAttributes } from "../../entity";
 
 export class OpaqueTokenCache extends RedisRepositoryBase<OpaqueTokenAttributes, OpaqueToken> {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
       entityName: "OpaqueToken",
-      indexedAttributes: ["clientSessionId", "token", "type"],
+      indexedAttributes: ["clientSessionId", "type"],
       ttlAttribute: "expires",
     });
   }

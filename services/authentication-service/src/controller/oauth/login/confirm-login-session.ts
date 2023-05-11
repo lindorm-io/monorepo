@@ -1,7 +1,7 @@
 import { ConfirmLoginResponse } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
-import { confirmOauthLogin } from "../../../handler";
+import { confirmOauthLogin, resolveAuthenticationConfirmationToken } from "../../../handler";
 import { ServerKoaController } from "../../../types";
 
 type RequestData = {
@@ -20,8 +20,13 @@ export const confirmLoginSessionController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { authenticationConfirmationToken },
+    data: { authenticationConfirmationToken: authToken },
   } = ctx;
+
+  const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(
+    ctx,
+    authToken,
+  );
 
   const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
 

@@ -23,7 +23,7 @@ export const handleRefreshTokenGrant = async (
     });
   }
 
-  const opaqueToken = await opaqueTokenCache.tryFind({ token });
+  const opaqueToken = await opaqueTokenCache.tryFind({ signature: token });
 
   if (!opaqueToken || opaqueToken.type !== OpaqueTokenType.REFRESH) {
     throw new ClientError("Invalid Refresh Token", {

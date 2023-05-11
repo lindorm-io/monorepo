@@ -1,5 +1,5 @@
-import { randomUUID } from "crypto";
 import { GetLogoutResponse, OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
 
 export const mockFetchOauthLogoutSession = (
   options: Partial<GetLogoutResponse> = {},
@@ -31,6 +31,7 @@ export const mockFetchOauthLogoutSession = (
     logoUri: "https://test.client.com/logo.png",
     name: "Test Client",
     type: OpenIdClientType.PUBLIC,
+    singleSignOn: true,
   },
 
   tenant: {

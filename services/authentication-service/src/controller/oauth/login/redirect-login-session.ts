@@ -7,6 +7,7 @@ import {
   confirmOauthLogin,
   getOauthAuthorizationRedirect,
   getOauthAuthorizationSession,
+  resolveAuthenticationConfirmationToken,
 } from "../../../handler";
 import { configuration } from "../../../server/configuration";
 import { ServerKoaController } from "../../../types";
@@ -27,7 +28,6 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
   const {
     data: { session },
     logger,
-    redis: { authenticationConfirmationTokenCache },
   } = ctx;
 
   const {
@@ -45,9 +45,10 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 
   if (authToken) {
     try {
-      const authenticationConfirmationToken = await authenticationConfirmationTokenCache.find({
-        token: authToken,
-      });
+      const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(
+        ctx,
+        authToken,
+      );
 
       if (session !== authenticationConfirmationToken.sessionId) {
         throw new ClientError("Invalid session identifier", {
@@ -59,7 +60,7 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
         });
       }
 
-      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken.token);
+      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
 
       return { redirect: redirectTo };
     } catch (err: any) {

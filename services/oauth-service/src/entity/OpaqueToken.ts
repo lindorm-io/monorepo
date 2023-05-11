@@ -11,7 +11,7 @@ import { OpaqueTokenType } from "../enum";
 export type OpaqueTokenAttributes = EntityAttributes & {
   clientSessionId: string;
   expires: Date;
-  token: string;
+  signature: string;
   type: OpaqueTokenType;
 };
 
@@ -23,7 +23,7 @@ const schema = Joi.object<OpaqueTokenAttributes>()
 
     clientSessionId: Joi.string().guid().required(),
     expires: Joi.date().required(),
-    token: Joi.string().min(128).required(),
+    signature: Joi.string().min(128).required(),
     type: Joi.string()
       .valid(...Object.values(OpaqueTokenType))
       .required(),
@@ -33,7 +33,7 @@ const schema = Joi.object<OpaqueTokenAttributes>()
 export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
   public readonly clientSessionId: string;
   public readonly expires: Date;
-  public readonly token: string;
+  public readonly signature: string;
   public readonly type: OpaqueTokenType;
 
   public constructor(options: OpaqueTokenOptions) {
@@ -41,7 +41,7 @@ export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
 
     this.clientSessionId = options.clientSessionId;
     this.expires = options.expires;
-    this.token = options.token;
+    this.signature = options.signature;
     this.type = options.type;
   }
 
@@ -55,7 +55,7 @@ export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
 
       clientSessionId: this.clientSessionId,
       expires: this.expires,
-      token: this.token,
+      signature: this.signature,
       type: this.type,
     };
   }

@@ -68,7 +68,11 @@ describe("verifyAuthenticationController", () => {
       levelOfAssurance: 3,
       maximumLevelOfAssurance: 3,
     }));
-    createOpaqueToken.mockReturnValue("opaque.token");
+    createOpaqueToken.mockReturnValue({
+      id: "opaque.id",
+      signature: "opaque.signature",
+      token: "opaque.token",
+    });
     canGenerateMfaCookie.mockReturnValue(false);
     generateMfaCookie.mockResolvedValue(undefined);
   });

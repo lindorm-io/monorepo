@@ -1,11 +1,9 @@
+import { baseHash } from "@lindorm-io/core";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ClientSessionType } from "../../enum";
-import { baseHash } from "@lindorm-io/core";
-import { configuration } from "../../server/configuration";
 import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import { server } from "../../server/server";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
@@ -24,6 +22,8 @@ import {
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
 } from "../../fixtures/integration";
+import { configuration } from "../../server/configuration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -166,7 +166,7 @@ describe("/oauth2/token", () => {
       .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
         grant_type: "refresh_token",
-        refresh_token: refreshToken.token,
+        refresh_token: refreshToken.signature,
       })
       .expect(200);
 

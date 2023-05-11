@@ -1,18 +1,18 @@
-import { createMockLogger } from "@lindorm-io/winston";
-import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
-import { redirectConsentSessionController } from "./redirect-consent-session";
-import { randomUUID } from "crypto";
-import {
-  confirmOauthConsent as _confirmOauthConsent,
-  getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
-  getOauthAuthorizationSession as _getOauthAuthorizationSession,
-} from "../../../handler";
 import {
   LindormScope,
   OpenIdClientType,
   OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { createMockLogger } from "@lindorm-io/winston";
+import { randomUUID } from "crypto";
+import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import {
+  confirmOauthConsent as _confirmOauthConsent,
+  getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
+  getOauthAuthorizationSession as _getOauthAuthorizationSession,
+} from "../../../handler";
+import { redirectConsentSessionController } from "./redirect-consent-session";
 
 jest.mock("../../../handler");
 
@@ -71,8 +71,9 @@ describe("redirectConsentSessionController", () => {
       mockFetchOauthAuthorizationSession({
         client: {
           id: randomUUID(),
-          logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
+          logoUri: "https://test.client.com/logo.png",
+          singleSignOn: true,
           type: OpenIdClientType.CONFIDENTIAL,
         },
       }),

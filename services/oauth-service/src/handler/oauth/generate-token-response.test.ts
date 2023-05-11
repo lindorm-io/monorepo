@@ -1,4 +1,5 @@
 import { OpenIdScope } from "@lindorm-io/common-types";
+import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
 import {
@@ -18,9 +19,11 @@ import { generateTokenResponse } from "./generate-token-response";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.mock("@lindorm-io/jwt");
 jest.mock("../identity");
 jest.mock("../token");
 
+const createOpaqueToken = _createOpaqueToken as jest.Mock;
 const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
@@ -38,22 +41,15 @@ describe("generateTokenResponse", () => {
     clientSession = createTestClientSession();
     client = createTestClient();
 
+    createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
     convertOpaqueTokenToJwt.mockImplementation((_1, _2, token) => ({
       token: `${token.type}.token.jwt`,
     }));
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
-    generateAccessToken.mockResolvedValue(
-      createTestAccessToken({
-        token: "opaque_access_token",
-      }),
-    );
-    generateRefreshToken.mockResolvedValue(
-      createTestRefreshToken({
-        token: "opaque_refresh_token",
-      }),
-    );
+    generateAccessToken.mockResolvedValue(createTestAccessToken());
+    generateRefreshToken.mockResolvedValue(createTestRefreshToken());
     getIdentityUserinfo.mockResolvedValue({
       active: true,
       claims: { claim: true },
@@ -89,7 +85,7 @@ describe("generateTokenResponse", () => {
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
       accessToken: "access_token.token.jwt",
       expiresIn: 86400,
-      refreshToken: "opaque_refresh_token",
+      refreshToken: "create_opaque_token",
       scope: "offline_access",
       tokenType: "Bearer",
     });
@@ -100,9 +96,9 @@ describe("generateTokenResponse", () => {
     clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
-      accessToken: "opaque_access_token",
+      accessToken: "create_opaque_token",
       expiresIn: 86400,
-      refreshToken: "opaque_refresh_token",
+      refreshToken: "create_opaque_token",
       scope: "offline_access",
       tokenType: "Bearer",
     });

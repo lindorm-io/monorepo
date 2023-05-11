@@ -1,3 +1,4 @@
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
@@ -63,6 +64,7 @@ describe("/sessions/login", () => {
         id: expect.any(String),
         logo_uri: "https://test.client.com/logo.png",
         name: "Test Client",
+        single_sign_on: true,
         type: "public",
       },
       tenant: {
@@ -73,17 +75,20 @@ describe("/sessions/login", () => {
   });
 
   test("should confirm and redirect", async () => {
-    const authenticationConfirmationToken =
-      await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
-        createTestAuthenticationConfirmationToken({
-          sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
-        }),
-      );
+    const authToken = createOpaqueToken();
+
+    await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
+      createTestAuthenticationConfirmationToken({
+        id: authToken.id,
+        sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
+        signature: authToken.signature,
+      }),
+    );
 
     const response = await request(server.callback())
       .post("/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8/confirm")
       .send({
-        authentication_confirmation_token: authenticationConfirmationToken.token,
+        authentication_confirmation_token: authToken.token,
       })
       .expect(200);
 

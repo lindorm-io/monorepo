@@ -1,7 +1,7 @@
-import { getLogoutSessionController } from "./get-logout-session";
-import { getOauthLogoutSession as _fetchOauthLogoutSession } from "../../../handler";
-import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
 import { OpenIdClientType } from "@lindorm-io/common-types";
+import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
+import { getOauthLogoutSession as _fetchOauthLogoutSession } from "../../../handler";
+import { getLogoutSessionController } from "./get-logout-session";
 
 jest.mock("../../../handler");
 
@@ -33,6 +33,7 @@ describe("getLogoutSessionDataController", () => {
           id: expect.any(String),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
+          singleSignOn: true,
           type: OpenIdClientType.PUBLIC,
         },
         tenant: {

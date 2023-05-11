@@ -1,5 +1,6 @@
 import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
+import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
@@ -20,10 +21,12 @@ import { generateCallbackResponse } from "./generate-callback-response";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
+jest.mock("@lindorm-io/jwt");
 jest.mock("../identity");
 jest.mock("../token");
 jest.mock("./generate-authorization-code");
 
+const createOpaqueToken = _createOpaqueToken as jest.Mock;
 const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
@@ -52,22 +55,15 @@ describe("generateCallbackResponse", () => {
     clientSession = createTestClientSession();
     client = createTestClient();
 
+    createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
     convertOpaqueTokenToJwt.mockImplementation(() => ({
       token: "access.token.jwt",
     }));
-
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
-
-    generateAccessToken.mockResolvedValue(
-      createTestAccessToken({
-        token: "opaque_access_token",
-      }),
-    );
-
+    generateAccessToken.mockResolvedValue(createTestAccessToken());
     getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
-
     generateAuthorizationCode.mockResolvedValue(
       "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
     );
@@ -201,7 +197,7 @@ describe("generateCallbackResponse", () => {
       generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
-        "access_token=opaque_access_token&expires_in=86400&token_type=Bearer",
+        "access_token=create_opaque_token&expires_in=86400&token_type=Bearer",
       ),
     });
   });

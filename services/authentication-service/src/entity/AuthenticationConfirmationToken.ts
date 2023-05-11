@@ -22,8 +22,8 @@ export type AuthenticationConfirmationTokenAttributes = EntityAttributes & {
   nonce: string;
   remember: boolean;
   sessionId: string;
+  signature: string;
   singleSignOn: boolean;
-  token: string;
 };
 
 export type AuthenticationConfirmationTokenOptions = Optional<
@@ -47,8 +47,8 @@ const schema = Joi.object<AuthenticationConfirmationTokenAttributes>()
     nonce: Joi.string().required(),
     remember: Joi.boolean().required(),
     sessionId: Joi.string().guid().required(),
+    signature: Joi.string().length(128).required(),
     singleSignOn: Joi.boolean().required(),
-    token: Joi.string().min(128).required(),
   })
   .required();
 
@@ -65,8 +65,8 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
   public readonly nonce: string;
   public readonly remember: boolean;
   public readonly sessionId: string;
+  public readonly signature: string;
   public readonly singleSignOn: boolean;
-  public readonly token: string;
 
   public constructor(options: AuthenticationConfirmationTokenOptions) {
     super(options);
@@ -83,8 +83,8 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
     this.nonce = options.nonce;
     this.remember = options.remember;
     this.sessionId = options.sessionId;
+    this.signature = options.signature;
     this.singleSignOn = options.singleSignOn;
-    this.token = options.token;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -107,8 +107,8 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
       nonce: this.nonce,
       remember: this.remember,
       sessionId: this.sessionId,
+      signature: this.signature,
       singleSignOn: this.singleSignOn,
-      token: this.token,
     };
   }
 }

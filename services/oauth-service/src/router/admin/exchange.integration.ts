@@ -1,3 +1,4 @@
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import jwt from "jsonwebtoken";
 import MockDate from "mockdate";
 import request from "supertest";
@@ -5,16 +6,16 @@ import {
   createTestAccessToken,
   createTestClient,
   createTestClientSession,
-} from "../fixtures/entity";
+} from "../../fixtures/entity";
 import {
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
   getTestClientCredentials,
   setupIntegration,
-} from "../fixtures/integration";
-import { configuration } from "../server/configuration";
-import { server } from "../server/server";
+} from "../../fixtures/integration";
+import { configuration } from "../../server/configuration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -34,9 +35,12 @@ describe("/exchange", () => {
       }),
     );
 
-    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
@@ -47,10 +51,10 @@ describe("/exchange", () => {
     });
 
     const response = await request(server.callback())
-      .post("/exchange")
+      .post("/admin/exchange")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        token: accessToken.token,
+        token: opaqueToken.token,
       })
       .expect(200);
 

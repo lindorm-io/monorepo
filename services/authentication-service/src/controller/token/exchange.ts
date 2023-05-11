@@ -31,7 +31,7 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   const authenticationConfirmationToken = await authenticationConfirmationTokenCache.find({
-    token,
+    signature: token,
   });
 
   const { token: signed, expiresIn } = jwt.sign<AuthenticationConfirmationTokenClaims>({
@@ -48,8 +48,10 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
       verifiedIdentifiers: authenticationConfirmationToken.confirmedIdentifiers,
     },
     expiry: authenticationConfirmationToken.expires,
+    issuedAt: authenticationConfirmationToken.created,
     levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
     nonce: authenticationConfirmationToken.nonce,
+    notBefore: authenticationConfirmationToken.created,
     scopes: ["authentication"],
     session: authenticationConfirmationToken.sessionId,
     subject: authenticationConfirmationToken.identityId,

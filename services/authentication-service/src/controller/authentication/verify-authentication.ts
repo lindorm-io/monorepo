@@ -83,11 +83,12 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     });
   }
 
-  const opaqueToken = createOpaqueToken(undefined, undefined, { symbols: 0 });
+  const opaqueToken = createOpaqueToken({ symbols: 0 });
   const { expires, expiresIn } = expiryObject("1 minutes");
 
   await authenticationConfirmationTokenCache.create(
     new AuthenticationConfirmationToken({
+      id: opaqueToken.id,
       clientId: authenticationSession.clientId,
       confirmedIdentifiers: authenticationSession.confirmedIdentifiers,
       country: authenticationSession.country,
@@ -100,8 +101,8 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
       nonce: authenticationSession.nonce,
       remember: authenticationSession.remember,
       sessionId: authenticationSession.id,
+      signature: opaqueToken.signature,
       singleSignOn: authenticationSession.sso,
-      token: opaqueToken,
     }),
   );
 
@@ -116,5 +117,5 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
     logger.warn("Failed to destroy sessions", err);
   }
 
-  return { body: { authenticationConfirmationToken: opaqueToken, expiresIn } };
+  return { body: { authenticationConfirmationToken: opaqueToken.token, expiresIn } };
 };

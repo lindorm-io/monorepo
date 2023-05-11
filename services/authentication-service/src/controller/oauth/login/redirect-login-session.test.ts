@@ -5,7 +5,6 @@ import {
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
@@ -14,6 +13,7 @@ import {
   confirmOauthLogin as _confirmOauthLogin,
   getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
   getOauthAuthorizationSession as _getOauthAuthorizationSession,
+  resolveAuthenticationConfirmationToken as _resolveAuthenticationConfirmationToken,
 } from "../../../handler";
 import { redirectLoginSessionController } from "./redirect-login-session";
 
@@ -22,6 +22,7 @@ jest.mock("../../../handler");
 const confirmOauthLogin = _confirmOauthLogin as jest.Mock;
 const getOauthAuthorizationRedirect = _getOauthAuthorizationRedirect as jest.Mock;
 const getOauthAuthorizationSession = _getOauthAuthorizationSession as jest.Mock;
+const resolveAuthenticationConfirmationToken = _resolveAuthenticationConfirmationToken as jest.Mock;
 
 describe("redirectLoginSessionController", () => {
   let ctx: any;
@@ -32,14 +33,6 @@ describe("redirectLoginSessionController", () => {
         session: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
       },
       logger: createMockLogger(),
-      redis: {
-        authenticationConfirmationTokenCache: createMockRedisRepository((args: any) =>
-          createTestAuthenticationConfirmationToken({
-            ...args,
-            sessionId: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
-          }),
-        ),
-      },
     };
 
     confirmOauthLogin.mockResolvedValue({ redirectTo: "confirmOauthLogin" });
@@ -47,6 +40,11 @@ describe("redirectLoginSessionController", () => {
       redirectTo: "getOauthAuthorizationRedirect",
     });
     getOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
+    resolveAuthenticationConfirmationToken.mockResolvedValue(
+      createTestAuthenticationConfirmationToken({
+        sessionId: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
+      }),
+    );
   });
 
   test("should resolve", async () => {

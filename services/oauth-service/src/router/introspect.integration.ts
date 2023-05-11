@@ -1,3 +1,5 @@
+import { baseHash } from "@lindorm-io/core";
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import request from "supertest";
 import {
@@ -7,14 +9,13 @@ import {
   createTestRefreshToken,
 } from "../fixtures/entity";
 import {
+  TEST_ARGON,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
   getTestAccessToken,
-  getTestClientCredentials,
   setupIntegration,
 } from "../fixtures/integration";
-import { configuration } from "../server/configuration";
 import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -26,7 +27,11 @@ describe("/introspect", () => {
   beforeAll(setupIntegration);
 
   test("should introspect opaque access token", async () => {
-    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.encrypt("secret"),
+      }),
+    );
 
     const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
       createTestClientSession({
@@ -34,23 +39,20 @@ describe("/introspect", () => {
       }),
     );
 
-    const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
-    const clientCredentials = getTestClientCredentials({
-      audiences: [configuration.oauth.client_id, client.id],
-      subject: client.id,
-    });
-
     const response = await request(server.callback())
       .post("/introspect")
-      .set("Authorization", `Bearer ${clientCredentials}`)
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
-        token: accessToken.token,
-        token_type_hint: "refresh_token",
+        token: opaqueToken.token,
       })
       .expect(200);
 
@@ -87,7 +89,11 @@ describe("/introspect", () => {
   });
 
   test("should introspect jwt access token", async () => {
-    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.encrypt("secret"),
+      }),
+    );
 
     const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
       createTestClientSession({
@@ -95,25 +101,22 @@ describe("/introspect", () => {
       }),
     );
 
+    const opaqueToken = createOpaqueToken();
     const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
     const jwt = getTestAccessToken({ id: accessToken.id });
 
-    const clientCredentials = getTestClientCredentials({
-      audiences: [configuration.oauth.client_id, client.id],
-      subject: client.id,
-    });
-
     const response = await request(server.callback())
       .post("/introspect")
-      .set("Authorization", `Bearer ${clientCredentials}`)
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
         token: jwt,
-        token_type_hint: "refresh_token",
       })
       .expect(200);
 
@@ -150,7 +153,11 @@ describe("/introspect", () => {
   });
 
   test("should introspect opaque refresh token", async () => {
-    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.encrypt("secret"),
+      }),
+    );
 
     const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
       createTestClientSession({
@@ -158,23 +165,20 @@ describe("/introspect", () => {
       }),
     );
 
-    const refreshToken = await TEST_OPAQUE_TOKEN_CACHE.create(
+    const opaqueToken = createOpaqueToken();
+    await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestRefreshToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
-    const clientCredentials = getTestClientCredentials({
-      audiences: [configuration.oauth.client_id, client.id],
-      subject: client.id,
-    });
-
     const response = await request(server.callback())
       .post("/introspect")
-      .set("Authorization", `Bearer ${clientCredentials}`)
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
-        token: refreshToken.token,
-        token_type_hint: "refresh_token",
+        token: opaqueToken.token,
       })
       .expect(200);
 

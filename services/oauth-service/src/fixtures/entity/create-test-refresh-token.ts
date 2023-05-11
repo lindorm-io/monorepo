@@ -3,12 +3,16 @@ import { randomUUID } from "crypto";
 import { OpaqueToken, OpaqueTokenOptions } from "../../entity";
 import { OpaqueTokenType } from "../../enum";
 
-export const createTestRefreshToken = (options: Partial<OpaqueTokenOptions> = {}): OpaqueToken =>
-  new OpaqueToken({
+export const createTestRefreshToken = (options: Partial<OpaqueTokenOptions> = {}): OpaqueToken => {
+  const { id, signature } = createOpaqueToken();
+
+  return new OpaqueToken({
+    id,
     clientSessionId: randomUUID(),
     expires: new Date("2021-01-02T08:00:00.000Z"),
-    token: createOpaqueToken(),
+    signature,
     type: OpaqueTokenType.REFRESH,
 
     ...options,
   });
+};

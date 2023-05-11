@@ -1,7 +1,8 @@
+import { baseHash } from "@lindorm-io/core";
+import { createOpaqueToken } from "@lindorm-io/jwt";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { randomUUID } from "crypto";
-import { server } from "../../../server/server";
 import {
   createTestAccessToken,
   createTestClient,
@@ -9,13 +10,13 @@ import {
   createTestRefreshToken,
 } from "../../../fixtures/entity";
 import {
-  setupIntegration,
   TEST_ARGON,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
+  setupIntegration,
 } from "../../../fixtures/integration";
-import { baseHash } from "@lindorm-io/core";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -38,9 +39,12 @@ describe("/oauth2/sessions/revoke", () => {
       }),
     );
 
+    const opaqueToken = createOpaqueToken();
     const accessToken = await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestAccessToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
@@ -48,7 +52,7 @@ describe("/oauth2/sessions/revoke", () => {
       .post("/oauth2/sessions/revoke")
       .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
-        token: accessToken.token,
+        token: opaqueToken.token,
       })
       .expect(204);
 
@@ -69,9 +73,12 @@ describe("/oauth2/sessions/revoke", () => {
       }),
     );
 
+    const opaqueToken = createOpaqueToken();
     const refreshToken = await TEST_OPAQUE_TOKEN_CACHE.create(
       createTestRefreshToken({
+        id: opaqueToken.id,
         clientSessionId: clientSession.id,
+        signature: opaqueToken.signature,
       }),
     );
 
@@ -80,7 +87,7 @@ describe("/oauth2/sessions/revoke", () => {
       .send({
         client_id: client.id,
         client_secret: "secret",
-        token: refreshToken.token,
+        token: opaqueToken.token,
       })
       .expect(204);
 

@@ -1,14 +1,9 @@
 import { Router, useController, useSchema } from "@lindorm-io/koa";
-import { clientAuthMiddleware, clientEntityMiddleware } from "../middleware";
 import { tokenIntrospectController, tokenIntrospectSchema } from "../controller";
+import { assertClientMiddleware } from "../middleware";
 
 export const router = new Router<any, any>();
 
-router.use(clientAuthMiddleware());
+router.use(assertClientMiddleware);
 
-router.post(
-  "/",
-  useSchema(tokenIntrospectSchema),
-  clientEntityMiddleware("token.bearerToken.subject"),
-  useController(tokenIntrospectController),
-);
+router.post("/", useSchema(tokenIntrospectSchema), useController(tokenIntrospectController));

@@ -4,9 +4,6 @@ import { assertClientMiddleware } from "../../../middleware";
 
 export const router = new Router<any, any>();
 
-router.post(
-  "/",
-  useSchema(revokeTokenSchema),
-  assertClientMiddleware,
-  useController(revokeTokenController),
-);
+router.use(assertClientMiddleware);
+
+router.post("/", useSchema(revokeTokenSchema), useController(revokeTokenController));

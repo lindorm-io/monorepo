@@ -1,7 +1,7 @@
-import { getElevationSessionController } from "./get-elevation-session";
-import { getOauthElevationSession as _getOauthElevationSession } from "../../../handler";
-import { mockFetchOauthElevationSession } from "../../../fixtures/axios";
 import { OpenIdClientType } from "@lindorm-io/common-types";
+import { mockFetchOauthElevationSession } from "../../../fixtures/axios";
+import { getOauthElevationSession as _getOauthElevationSession } from "../../../handler";
+import { getElevationSessionController } from "./get-elevation-session";
 
 jest.mock("../../../handler");
 
@@ -26,6 +26,7 @@ describe("getElevationSessionDataController", () => {
           id: expect.any(String),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
+          singleSignOn: true,
           type: OpenIdClientType.PUBLIC,
         },
         tenant: {

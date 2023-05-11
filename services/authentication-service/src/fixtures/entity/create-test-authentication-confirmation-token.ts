@@ -9,8 +9,11 @@ import {
 
 export const createTestAuthenticationConfirmationToken = (
   options: Partial<AuthenticationConfirmationTokenOptions> = {},
-): AuthenticationConfirmationToken =>
-  new AuthenticationConfirmationToken({
+): AuthenticationConfirmationToken => {
+  const { id, signature } = createOpaqueToken();
+
+  return new AuthenticationConfirmationToken({
+    id,
     clientId: randomUUID(),
     confirmedIdentifiers: ["test@lindorm.io", "0701234567"],
     country: "se",
@@ -23,8 +26,9 @@ export const createTestAuthenticationConfirmationToken = (
     nonce: randomString(16),
     remember: true,
     sessionId: randomUUID(),
+    signature,
     singleSignOn: true,
-    token: createOpaqueToken(),
 
     ...options,
   });
+};

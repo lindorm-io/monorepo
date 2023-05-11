@@ -1,10 +1,8 @@
 import { Router, useController, useSchema } from "@lindorm-io/koa";
-import { clientAuthMiddleware, clientEntityMiddleware } from "../middleware";
-import { tokenExchangeController, tokenExchangeSchema } from "../controller";
+import { tokenExchangeController, tokenExchangeSchema } from "../../controller";
+import { clientEntityMiddleware } from "../../middleware";
 
 export const router = new Router<any, any>();
-
-router.use(clientAuthMiddleware());
 
 router.post(
   "/",

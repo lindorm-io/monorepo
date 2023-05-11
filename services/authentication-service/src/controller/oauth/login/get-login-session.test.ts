@@ -26,6 +26,7 @@ describe("getLoginSessionDataController", () => {
           id: expect.any(String),
           logoUri: "https://test.client.com/logo.png",
           name: "Test Client",
+          singleSignOn: true,
           type: OpenIdClientType.PUBLIC,
         },
         tenant: {

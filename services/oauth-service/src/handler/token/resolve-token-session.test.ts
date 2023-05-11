@@ -19,7 +19,16 @@ describe("resolveTokenSession", () => {
   });
 
   test("should resolve from opaque token", async () => {
-    await expect(resolveTokenSession(ctx, createOpaqueToken())).resolves.toStrictEqual(
+    const opaque = createOpaqueToken();
+
+    ctx.redis.opaqueTokenCache.find.mockResolvedValue(
+      createTestAccessToken({
+        id: opaque.id,
+        signature: opaque.signature,
+      }),
+    );
+
+    await expect(resolveTokenSession(ctx, opaque.token)).resolves.toStrictEqual(
       expect.any(OpaqueToken),
     );
   });

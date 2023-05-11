@@ -1,5 +1,3 @@
-import { randomUUID } from "crypto";
-import { randomString } from "@lindorm-io/random";
 import {
   AuthenticationMethod,
   GetElevationResponse,
@@ -7,6 +5,8 @@ import {
   OpenIdDisplayMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 
 export const mockFetchOauthElevationSession = (
   options: Partial<GetElevationResponse> = {},
@@ -39,6 +39,7 @@ export const mockFetchOauthElevationSession = (
     logoUri: "https://test.client.com/logo.png",
     name: "Test Client",
     type: OpenIdClientType.PUBLIC,
+    singleSignOn: true,
   },
 
   tenant: {

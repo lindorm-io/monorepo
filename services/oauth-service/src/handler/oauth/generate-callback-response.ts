@@ -1,6 +1,7 @@
 import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { expiresIn } from "@lindorm-io/expiry";
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
@@ -43,12 +44,13 @@ export const generateCallbackResponse = async (
   }
 
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
-    const accessToken = await generateAccessToken(ctx, client, clientSession);
+    const accessOpaque = createOpaqueToken();
+    const accessToken = await generateAccessToken(ctx, client, clientSession, accessOpaque);
     const accessJwt = client.opaqueAccessToken
       ? undefined
       : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
-    data.accessToken = accessJwt?.token || accessToken.token;
+    data.accessToken = accessJwt?.token || accessOpaque.token;
     data.expiresIn = expiresIn(accessToken.expires);
     data.tokenType = "Bearer";
   }

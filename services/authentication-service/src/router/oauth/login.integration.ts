@@ -4,6 +4,7 @@ import {
   OpenIdPromptMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -101,12 +102,15 @@ describe("/oauth/login", () => {
   });
 
   test("should confirm on valid authentication confirmation token", async () => {
-    const authenticationConfirmationToken =
-      await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
-        createTestAuthenticationConfirmationToken({
-          sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
-        }),
-      );
+    const authToken = createOpaqueToken();
+
+    await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
+      createTestAuthenticationConfirmationToken({
+        id: authToken.id,
+        sessionId: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        signature: authToken.signature,
+      }),
+    );
 
     nock("https://oauth.test.lindorm.io")
       .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
@@ -115,7 +119,7 @@ describe("/oauth/login", () => {
         mockFetchOauthAuthorizationSession({
           authorizationSession: {
             id: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
-            authToken: authenticationConfirmationToken.token,
+            authToken: authToken.token,
             country: "se",
             displayMode: OpenIdDisplayMode.PAGE,
             expires: "2022-01-01T04:00:00.000Z",

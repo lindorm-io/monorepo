@@ -1,12 +1,12 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { server } from "../../server/server";
 import { mockFetchOauthElevationSession } from "../../fixtures/axios";
 import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -62,6 +62,7 @@ describe("/sessions/elevation", () => {
         id: expect.any(String),
         logo_uri: "https://test.client.com/logo.png",
         name: "Test Client",
+        single_sign_on: true,
         type: "public",
       },
       tenant: {

@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
-import { createOpaqueToken } from "@lindorm-io/jwt";
+import { CreateOpaqueToken, createOpaqueToken } from "@lindorm-io/jwt";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import jwt from "jsonwebtoken";
@@ -21,11 +21,14 @@ const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 
 describe("tokenExchangeController", () => {
   let ctx: any;
+  let opaque: CreateOpaqueToken;
 
   beforeEach(() => {
+    opaque = createOpaqueToken();
+
     ctx = {
       data: {
-        token: createOpaqueToken(),
+        token: opaque.token,
       },
       mongo: {
         clientRepository: createMockMongoRepository(createTestClient),
@@ -40,6 +43,13 @@ describe("tokenExchangeController", () => {
   });
 
   test("should resolve token info", async () => {
+    ctx.redis.opaqueTokenCache.tryFind.mockResolvedValue(
+      createTestAccessToken({
+        id: opaque.id,
+        signature: opaque.signature,
+      }),
+    );
+
     await expect(tokenExchangeController(ctx)).resolves.toStrictEqual({
       body: { expiresIn: 999, token: "jwt.jwt.jwt" },
     });
@@ -59,6 +69,23 @@ describe("tokenExchangeController", () => {
 
   test("should throw on invalid token type", async () => {
     ctx.redis.opaqueTokenCache.tryFind.mockResolvedValue(createTestRefreshToken());
+
+    await expect(tokenExchangeController(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on invalid token signature", async () => {
+    ctx.redis.opaqueTokenCache.tryFind.mockResolvedValue(
+      createTestAccessToken({
+        id: opaque.id,
+        signature: "wrong",
+      }),
+    );
+
+    await expect(tokenExchangeController(ctx)).rejects.toThrow(ClientError);
+  });
+
+  test("should throw on missing client session", async () => {
+    ctx.mongo.clientSessionRepository.tryFind.mockResolvedValue(undefined);
 
     await expect(tokenExchangeController(ctx)).rejects.toThrow(ClientError);
   });

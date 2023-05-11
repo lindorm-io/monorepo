@@ -12,7 +12,7 @@ export class AuthenticationConfirmationTokenCache extends RedisRepositoryBase<
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
       entityName: "AuthenticationConfirmationToken",
-      indexedAttributes: ["token"],
+      indexedAttributes: [],
       ttlAttribute: "expires",
     });
   }

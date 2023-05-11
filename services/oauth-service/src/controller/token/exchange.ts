@@ -1,6 +1,6 @@
 import { TokenExchangeRequestBody, TokenExchangeResponseBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { TokenHeaderType, parseTokenHeader } from "@lindorm-io/jwt";
+import { TokenHeaderType, decodeOpaqueToken, getTokenHeaderType } from "@lindorm-io/jwt";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { OpaqueTokenType } from "../../enum";
@@ -27,29 +27,57 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
     redis: { opaqueTokenCache },
   } = ctx;
 
-  const { typ } = parseTokenHeader(token);
+  const type = getTokenHeaderType(token);
 
-  if (typ !== TokenHeaderType.OPAQUE) {
+  if (type !== TokenHeaderType.OPAQUE) {
     throw new ClientError("Invalid token", {
       debug: {
         expect: TokenHeaderType.OPAQUE,
-        actual: typ,
+        actual: type,
       },
       description: "Input value is not an opaque token",
     });
   }
 
-  const opaqueToken = await opaqueTokenCache.tryFind({ token });
+  const { id, signature } = decodeOpaqueToken(token);
+  const opaqueToken = await opaqueTokenCache.tryFind({ id });
 
-  if (!opaqueToken || opaqueToken.type !== OpaqueTokenType.ACCESS) {
+  if (!opaqueToken) {
     throw new ClientError("Invalid Access Token", {
       code: "invalid_access_token",
       data: { token },
+      description: "Invalid token identifier",
       statusCode: ClientError.StatusCode.UNAUTHORIZED,
     });
   }
 
-  const clientSession = await clientSessionRepository.find({ id: opaqueToken.clientSessionId });
+  if (opaqueToken.type !== OpaqueTokenType.ACCESS) {
+    throw new ClientError("Invalid Access Token", {
+      code: "invalid_access_token",
+      data: { token },
+      description: "Invalid token type",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
+  if (signature !== opaqueToken.signature) {
+    throw new ClientError("Invalid Access Token", {
+      code: "invalid_access_token",
+      data: { token },
+      description: "Invalid token signature",
+      statusCode: ClientError.StatusCode.UNAUTHORIZED,
+    });
+  }
+
+  const clientSession = await clientSessionRepository.tryFind({ id: opaqueToken.clientSessionId });
+
+  if (!clientSession) {
+    throw new ClientError("Session not found", {
+      code: "invalid_session",
+      statusCode: ClientError.StatusCode.FORBIDDEN,
+    });
+  }
+
   const client = await clientRepository.tryFind({ id: clientSession.clientId });
 
   if (!client) {

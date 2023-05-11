@@ -1,12 +1,12 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { createTestAuthenticationConfirmationToken } from "../fixtures/entity";
+import { createTestAuthenticationConfirmationToken } from "../../fixtures/entity";
 import {
   TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE,
   getTestClientCredentials,
   setupIntegration,
-} from "../fixtures/integration";
-import { server } from "../server/server";
+} from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
@@ -25,10 +25,10 @@ describe("/exchange", () => {
     const clientCredentials = getTestClientCredentials();
 
     const response = await request(server.callback())
-      .post("/exchange")
+      .post("/admin/exchange")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        token: authenticationConfirmationToken.token,
+        token: authenticationConfirmationToken.signature,
       })
       .expect(200);
 
