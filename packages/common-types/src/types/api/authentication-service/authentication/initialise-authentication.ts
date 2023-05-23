@@ -1,5 +1,5 @@
-import { LevelOfAssurance } from "../../../auth";
 import { AuthenticationMethod, PKCEMethod } from "../../../../enums";
+import { LevelOfAssurance } from "../../../auth";
 
 export type InitialiseAuthenticationRequestBody = {
   clientId: string;
@@ -11,7 +11,7 @@ export type InitialiseAuthenticationRequestBody = {
   loginHint?: Array<string>;
   methods?: Array<AuthenticationMethod>;
   nonce?: string;
-  elevationSessionId?: string;
+  elevationRequestId?: string;
   oauthSessionId?: string;
 };
 

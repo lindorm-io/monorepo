@@ -24,5 +24,5 @@ export interface InitialiseElevationRequestQuery extends InitialiseElevationRequ
 }
 
 export interface InitialiseElevationResponse {
-  elevationSessionId: string;
+  elevationRequestId: string;
 }

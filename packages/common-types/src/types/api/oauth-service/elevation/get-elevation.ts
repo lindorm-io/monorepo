@@ -1,7 +1,7 @@
-import { LevelOfAssurance } from "../../../auth";
-import { PublicClientInfo } from "../public-client-info";
-import { StandardRequestParamsWithId } from "../../standard";
 import { AuthenticationMethod, OpenIdDisplayMode, SessionStatus } from "../../../../enums";
+import { LevelOfAssurance } from "../../../auth";
+import { StandardRequestParamsWithId } from "../../standard";
+import { PublicClientInfo } from "../public-client-info";
 import { PublicTenantInfo } from "../public-tenant-info";
 
 export type GetElevationRequestParams = StandardRequestParamsWithId;
@@ -18,7 +18,7 @@ export type GetElevationResponse = {
     requiredMethods: Array<AuthenticationMethod>;
   };
 
-  elevationSession: {
+  elevationRequest: {
     id: string;
     authenticationHint: Array<string>;
     country: string | null;

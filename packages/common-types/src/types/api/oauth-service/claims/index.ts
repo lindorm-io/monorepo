@@ -1,1 +1,1 @@
-export * from "./get-claims-session";
+export * from "./get-claims-request";

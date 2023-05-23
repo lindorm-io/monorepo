@@ -1,5 +1,6 @@
 import {
   AuthenticationMethod,
+  AuthenticationStrategy,
   LindormScope,
   OpenIdDisplayMode,
   OpenIdPromptMode,
@@ -38,8 +39,10 @@ export type GetAuthorizationResponse = {
     minimumLevel: LevelOfAssurance;
     recommendedLevel: LevelOfAssurance;
     recommendedMethods: Array<AuthenticationMethod>;
+    recommendedStrategies: Array<AuthenticationStrategy>;
     requiredLevel: LevelOfAssurance;
     requiredMethods: Array<AuthenticationMethod>;
+    requiredStrategies: Array<AuthenticationStrategy>;
   };
 
   selectAccount: {
@@ -49,9 +52,8 @@ export type GetAuthorizationResponse = {
     sessions: Array<SelectAccountSession>;
   };
 
-  authorizationSession: {
+  authorizationRequest: {
     id: string;
-    authToken: string | null;
     country: string | null;
     displayMode: OpenIdDisplayMode;
     expires: string;
