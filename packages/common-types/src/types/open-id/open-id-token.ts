@@ -2,6 +2,8 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
+import { OpenIdGrantType } from "../../enums";
+
 export type OpenIdTokenRequestBody = {
   /**
    * OPTIONAL
@@ -26,6 +28,21 @@ export type OpenIdTokenRequestBody = {
   /**
    * OPTIONAL
    *
+   * https://www.rfc-editor.org/rfc/rfc7523#section-2.1
+   *
+   * To use a Bearer JWT as an authorization grant, the client uses
+   * an access token request as defined in Section 4 of the OAuth
+   * Assertion Framework [RFC7521] with the following specific
+   * parameter values and encodings.
+   *
+   * The value of the "assertion" parameter MUST contain a single
+   * JWT.
+   */
+  assertion?: string;
+
+  /**
+   * OPTIONAL
+   *
    * The logical name of the target service where the client
    * intends to use the requested security token. This serves
    * a purpose similar to the resource parameter but with the
@@ -46,6 +63,32 @@ export type OpenIdTokenRequestBody = {
    * with a mix of logical names and resource URIs.
    */
   audience?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * To use a JWT Bearer Token for client authentication,
+   * the client uses the following parameter values and encodings.
+   *
+   * The value of the "client_assertion" parameter contains a
+   * single JWT. It MUST NOT contain more than one JWT.
+   *
+   * https://www.rfc-editor.org/rfc/rfc7523#section-2.2
+   */
+  clientAssertion?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * To use a JWT Bearer Token for client authentication,
+   * the client uses the following parameter values and encodings.
+   *
+   * The value of the "client_assertion_type" is
+   * "urn:ietf:params:oauth:client-assertion-type:jwt-bearer".
+   *
+   * https://www.rfc-editor.org/rfc/rfc7523#section-2.2
+   */
+  clientAssertionType?: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
   /**
    * OPTIONAL
@@ -82,7 +125,7 @@ export type OpenIdTokenRequestBody = {
    *
    * The value indicates what strategy is requested to be performed.
    */
-  grantType: "authorization_code" | "client_credentials" | "refresh_token" | "token-exchange";
+  grantType: OpenIdGrantType;
 
   /**
    * OPTIONAL

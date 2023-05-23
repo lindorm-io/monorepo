@@ -1,6 +1,14 @@
 // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 // https://www.rfc-editor.org/rfc/rfc7636#section-4.1
 
+import {
+  OpenIdDisplayMode,
+  OpenIdPromptMode,
+  OpenIdResponseMode,
+  OpenIdResponseType,
+  PKCEMethod,
+} from "../../enums";
+
 export type OpenIdAuthorizeRequestQuery = {
   /**
    * OPTIONAL
@@ -15,7 +23,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * Section 2. The acr Claim is requested as a Voluntary
    * Claim by this parameter.
    */
-  acrValues?: Array<string>;
+  acrValues?: string;
 
   /**
    * REQUIRED
@@ -38,7 +46,7 @@ export type OpenIdAuthorizeRequestQuery = {
    *
    * A method that was used to derive code challenge.
    */
-  codeChallengeMethod?: "S256" | "plain";
+  codeChallengeMethod?: PKCEMethod;
 
   /**
    * OPTIONAL
@@ -77,7 +85,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * capabilities of the User Agent and present an appropriate
    * display.
    */
-  display?: "page" | "popup" | "touch" | "wap";
+  display?: OpenIdDisplayMode;
 
   /**
    * OPTIONAL
@@ -152,7 +160,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * parameter.) When max_age is used, the ID Token returned
    * MUST include an auth_time Claim Value.
    */
-  maxAge?: number;
+  maxAge?: string;
 
   /**
    * OPTIONAL
@@ -217,7 +225,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * If this parameter contains none with any other value,
    * an error is returned.
    */
-  prompt?: Array<"none" | "login" | "consent" | "select_account">;
+  prompt?: OpenIdPromptMode;
 
   /**
    * REQUIRED
@@ -247,7 +255,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * when the Response Mode that would be requested is the
    * default mode specified for the Response Type.
    */
-  responseMode?: "form_post" | "fragment" | "query";
+  responseMode?: OpenIdResponseMode;
 
   /**
    * REQUIRED
@@ -258,7 +266,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * When using the Authorization Code Flow, this value is
    * code.
    */
-  responseType: Array<"code" | "id_token" | "token">;
+  responseType: OpenIdResponseType;
 
   /**
    * REQUIRED
@@ -276,7 +284,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * present, the request may still be a valid OAuth 2.0
    * request, but is not an OpenID Connect request.)
    */
-  scope: Array<string>;
+  scope: string;
 
   /**
    * RECOMMENDED
@@ -302,7 +310,7 @@ export type OpenIdAuthorizeRequestQuery = {
    * SHOULD NOT result if some or all of the requested
    * locales are not supported by the OpenID Provider.
    */
-  uiLocales?: Array<string>;
+  uiLocales?: string;
 };
 
 // https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthResponse

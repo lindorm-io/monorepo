@@ -1,24 +1,7 @@
-import { OpenIdGrantType } from "../../../../enums";
+import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "../../../open-id";
 
-export type TokenRequestBody = {
-  // default
-  clientId?: string;
-  clientSecret?: string;
-  code: string;
-  codeVerifier: string;
-  grantType: OpenIdGrantType;
-  redirectUri: string;
-  scope: string;
-
-  // refresh
-  refreshToken: string;
+export type TokenRequestBody = OpenIdTokenRequestBody & {
+  authenticationToken?: string;
 };
 
-export type TokenResponse = {
-  accessToken: string;
-  expiresIn: number;
-  idToken: string;
-  refreshToken: string;
-  scope: Array<string>;
-  tokenType: string;
-};
+export type TokenResponse = OpenIdTokenResponseBody;
