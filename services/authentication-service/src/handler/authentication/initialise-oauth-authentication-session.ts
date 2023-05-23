@@ -1,11 +1,12 @@
+import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
 import Joi from "joi";
-import { AuthenticationSession } from "../../entity";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
-import { ServerKoaContext } from "../../types";
+import { AuthenticationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
+import { filterAuthenticationMethods, filterAuthenticationStrategies } from "../../util";
+import { getOauthAuthorizationRequest } from "../oauth-service";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
-import { AuthenticationMethod, AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
-import { getOauthAuthorizationSession } from "../oauth-service";
 
 type Options = {
   codeChallenge: string;
@@ -35,11 +36,13 @@ export const initialiseOauthAuthenticationSession = async (
       minimumLevel,
       recommendedLevel,
       recommendedMethods,
+      recommendedStrategies,
       requiredLevel,
       requiredMethods,
+      requiredStrategies,
     },
-    authorizationSession: { country, expires, loginHint, nonce },
-  } = await getOauthAuthorizationSession(ctx, oauthSessionId);
+    authorizationRequest: { country, expires, loginHint, nonce },
+  } = await getOauthAuthorizationRequest(ctx, oauthSessionId);
 
   const emailHint = loginHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = loginHint?.find((item: string) => REGEX_PHONE.test(item));
@@ -58,12 +61,10 @@ export const initialiseOauthAuthenticationSession = async (
     nonce,
     phoneHint,
     recommendedLevel,
-    recommendedMethods: recommendedMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethod).includes(key),
-    ) as Array<AuthenticationMethod>,
+    recommendedMethods: filterAuthenticationMethods(recommendedMethods),
+    recommendedStrategies: filterAuthenticationStrategies(recommendedStrategies),
     requiredLevel,
-    requiredMethods: requiredMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethod).includes(key),
-    ) as Array<AuthenticationMethod>,
+    requiredMethods: filterAuthenticationMethods(requiredMethods),
+    requiredStrategies: filterAuthenticationStrategies(requiredStrategies),
   });
 };

@@ -1,26 +1,26 @@
-import { Identity } from "../entity";
 import { NamingSystem } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
+import { Identity } from "../entity";
 
 export const getName = (identity: Identity): string | null => {
-  const { familyName, givenName, namingSystem, takenName } = identity;
+  const { familyName, givenName, namingSystem, preferredName } = identity;
 
-  const preferredName = takenName ? takenName : givenName;
+  const preference = preferredName ? preferredName : givenName;
 
   if (!familyName) {
-    return preferredName;
+    return preference;
   }
 
-  if (!preferredName) {
+  if (!preference) {
     return familyName;
   }
 
   switch (namingSystem) {
     case NamingSystem.GIVEN_FAMILY:
-      return `${preferredName} ${familyName}`;
+      return `${preference} ${familyName}`;
 
     case NamingSystem.FAMILY_GIVEN:
-      return `${familyName} ${preferredName}`;
+      return `${familyName} ${preference}`;
 
     default:
       throw new ServerError("Unknown naming system", {

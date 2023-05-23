@@ -1,17 +1,17 @@
+import { baseHash } from "@lindorm-io/core";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { baseHash } from "@lindorm-io/core";
-import { configuration } from "../../server/configuration";
-import { createTestClient } from "../../fixtures/entity";
 import { getTestData } from "../../fixtures/data";
-import { randomUUID } from "crypto";
-import { server } from "../../server/server";
+import { createTestClient } from "../../fixtures/entity";
 import {
   getTestIdToken,
   setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_REPOSITORY,
 } from "../../fixtures/integration";
+import { configuration } from "../../server/configuration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -43,8 +43,6 @@ describe("/oauth2/authorize", () => {
       .get("/oauth2/authorize")
       .query({
         acr_values: ["loa_3", "session", "email", "phone"].join(" "),
-        amr_values: ["session", "email", "phone"].join(" "),
-        auth_token: "auth.jwt.jwt",
         client_id: client.id,
         code_challenge: codeChallenge,
         code_challenge_method: codeChallengeMethod,
@@ -77,7 +75,6 @@ describe("/oauth2/authorize", () => {
       }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        authToken: "auth.jwt.jwt",
         browserSessionId: null,
         clientId: client.id,
         clientSessionId: null,
@@ -118,8 +115,10 @@ describe("/oauth2/authorize", () => {
           minimumLevel: 3,
           recommendedLevel: 3,
           recommendedMethods: ["email", "phone"],
+          recommendedStrategies: [],
           requiredLevel: 3,
-          requiredMethods: ["email", "phone", "session"],
+          requiredMethods: ["email", "phone"],
+          requiredStrategies: [],
         },
         requestedSelectAccount: {
           browserSessions: [],

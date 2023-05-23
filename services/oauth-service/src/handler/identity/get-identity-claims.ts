@@ -1,23 +1,22 @@
-import { ClaimsSession, Client, ClientSession } from "../../entity";
-import { GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
-import { configuration } from "../../server/configuration";
+import { GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
+import { ClaimsRequest, ClientSession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
 import { generateServerCredentialsJwt } from "../token";
 
 export const getIdentityClaims = async (
   ctx: ServerKoaContext,
-  client: Client,
   clientSession: ClientSession,
 ): Promise<GetClaimsResponse> => {
   const {
-    axios: { axiosClient, identityClient },
-    redis: { claimsSessionCache },
+    axios: { identityClient },
+    redis: { claimsRequestCache },
   } = ctx;
 
-  const claimsSession = await claimsSessionCache.create(
-    new ClaimsSession({
+  const claimsRequest = await claimsRequestCache.create(
+    new ClaimsRequest({
       audiences: clientSession.audiences,
       clientId: clientSession.clientId,
       expires: expiryDate(configuration.defaults.expiry.claims_session),
@@ -30,26 +29,19 @@ export const getIdentityClaims = async (
     }),
   );
 
-  const query = { session: claimsSession.id };
+  const query = { session: claimsRequest.id };
   const middleware = [
     axiosBearerAuthMiddleware(
       generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
     ),
   ];
 
-  const { data: identityClaims } = await identityClient.get<
-    GetClaimsResponse,
-    never,
-    GetClaimsQuery
-  >(configuration.redirect.claims, { query, middleware });
+  const { data } = await identityClient.get<GetClaimsResponse, never, GetClaimsQuery>(
+    configuration.redirect.claims,
+    { query, middleware },
+  );
 
-  let extraClaims: Record<string, any> = {};
+  await claimsRequestCache.destroy(claimsRequest);
 
-  if (client.claimsUri) {
-    ({ data: extraClaims } = await axiosClient.get(client.claimsUri, { query, middleware }));
-  }
-
-  await claimsSessionCache.destroy(claimsSession);
-
-  return { ...identityClaims, ...extraClaims };
+  return data;
 };

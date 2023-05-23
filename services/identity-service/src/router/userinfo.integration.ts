@@ -1,8 +1,7 @@
+import { randomNumber, randomString } from "@lindorm-io/random";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { randomNumber, randomString } from "@lindorm-io/random";
-import { server } from "../server/server";
 import {
   createTestAddress,
   createTestEmailIdentifier,
@@ -12,12 +11,13 @@ import {
   createTestSsnIdentifier,
 } from "../fixtures/entity";
 import {
-  getTestAccessToken,
-  setupIntegration,
   TEST_ADDRESS_REPOSITORY,
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
+  getTestAccessToken,
+  setupIntegration,
 } from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -133,7 +133,7 @@ describe("/userinfo", () => {
       social_security_number: ssn.value,
       social_security_number_verified: false,
       sub: identity.id,
-      taken_name: "Olivia",
+      preferred_name: "Olivia",
       updated_at: 1609488000,
       username: identity.username,
       website: "https://website.url/",

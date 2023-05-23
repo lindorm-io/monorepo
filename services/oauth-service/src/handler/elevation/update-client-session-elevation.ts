@@ -1,46 +1,46 @@
-import { ElevationSession } from "../../entity";
-import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
 import { uniqArray } from "@lindorm-io/core";
+import { ServerError } from "@lindorm-io/errors";
+import { ElevationRequest } from "../../entity";
+import { ServerKoaContext } from "../../types";
 
 export const updateClientSessionElevation = async (
   ctx: ServerKoaContext,
-  elevationSession: ElevationSession,
+  elevationRequest: ElevationRequest,
 ) => {
   const {
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!elevationSession.clientSessionId) {
-    throw new ServerError("Invalid elevationSession", {
-      debug: { clientSessionId: elevationSession.clientSessionId },
+  if (!elevationRequest.clientSessionId) {
+    throw new ServerError("Invalid ElevationRequest", {
+      debug: { clientSessionId: elevationRequest.clientSessionId },
     });
   }
 
   const clientSession = await clientSessionRepository.find({
-    id: elevationSession.clientSessionId,
+    id: elevationRequest.clientSessionId,
   });
 
-  if (elevationSession.identityId !== clientSession.identityId) {
+  if (elevationRequest.identityId !== clientSession.identityId) {
     throw new ServerError("Invalid identity");
   }
 
   if (
-    !elevationSession.confirmedAuthentication.latestAuthentication ||
-    !elevationSession.confirmedAuthentication.levelOfAssurance ||
-    !elevationSession.confirmedAuthentication.methods
+    !elevationRequest.confirmedAuthentication.latestAuthentication ||
+    !elevationRequest.confirmedAuthentication.levelOfAssurance ||
+    !elevationRequest.confirmedAuthentication.methods
   ) {
-    throw new ServerError("Invalid elevationSession", {
-      debug: { confirmedAuthentication: elevationSession.confirmedAuthentication },
+    throw new ServerError("Invalid ElevationRequest", {
+      debug: { confirmedAuthentication: elevationRequest.confirmedAuthentication },
     });
   }
 
   clientSession.latestAuthentication =
-    elevationSession.confirmedAuthentication.latestAuthentication;
-  clientSession.levelOfAssurance = elevationSession.confirmedAuthentication.levelOfAssurance;
+    elevationRequest.confirmedAuthentication.latestAuthentication;
+  clientSession.levelOfAssurance = elevationRequest.confirmedAuthentication.levelOfAssurance;
   clientSession.methods = uniqArray(
     clientSession.methods,
-    elevationSession.confirmedAuthentication.methods,
+    elevationRequest.confirmedAuthentication.methods,
   );
 
   await clientSessionRepository.update(clientSession);

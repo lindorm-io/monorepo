@@ -1,8 +1,8 @@
 import { SessionStatus } from "@lindorm-io/common-types";
 import { createMockLogger } from "@lindorm-io/winston";
-import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClientSession,
 } from "../../fixtures/entity";
@@ -18,7 +18,7 @@ const verifyLoginPrerequisites = _verifyLoginPrerequisites as jest.Mock;
 
 describe("isLoginRequired", () => {
   let ctx: any;
-  let authorizationSession: AuthorizationSession;
+  let authorizationRequest: AuthorizationRequest;
   let browserSession: BrowserSession;
   let clientSession: ClientSession;
 
@@ -27,7 +27,7 @@ describe("isLoginRequired", () => {
       logger: createMockLogger(),
     };
 
-    authorizationSession = createTestAuthorizationSession();
+    authorizationRequest = createTestAuthorizationRequest();
     browserSession = createTestBrowserSession();
     clientSession = createTestClientSession();
 
@@ -36,30 +36,30 @@ describe("isLoginRequired", () => {
   });
 
   test("should return false", () => {
-    expect(isLoginRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
+    expect(isLoginRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
   });
 
   test("should return false when session status is confirmed", () => {
-    authorizationSession.status.login = SessionStatus.CONFIRMED;
+    authorizationRequest.status.login = SessionStatus.CONFIRMED;
 
-    expect(isLoginRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
+    expect(isLoginRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
   });
 
   test("should return false when session status is verified", () => {
-    authorizationSession.status.login = SessionStatus.VERIFIED;
+    authorizationRequest.status.login = SessionStatus.VERIFIED;
 
-    expect(isLoginRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
+    expect(isLoginRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
   });
 
   test("should return true when prompt mode returns false", () => {
     verifyPromptMode.mockReturnValue(false);
 
-    expect(isLoginRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(true);
+    expect(isLoginRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(true);
   });
 
   test("should return true when login prerequisites returns false", () => {
     verifyLoginPrerequisites.mockReturnValue(false);
 
-    expect(isLoginRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(true);
+    expect(isLoginRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(true);
   });
 });

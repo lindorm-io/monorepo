@@ -1,5 +1,6 @@
 import {
   AuthenticationMethod,
+  AuthenticationStrategy,
   LevelOfAssurance,
   LindormScope,
   OpenIdDisplayMode,
@@ -72,8 +73,10 @@ type RequestedLogin = {
   minimumLevel: LevelOfAssurance;
   recommendedLevel: LevelOfAssurance;
   recommendedMethods: Array<AuthenticationMethod>;
+  recommendedStrategies: Array<AuthenticationStrategy>;
   requiredLevel: LevelOfAssurance;
   requiredMethods: Array<AuthenticationMethod>;
+  requiredStrategies: Array<AuthenticationStrategy>;
 };
 
 type RequestedSelectAccount = {
@@ -86,7 +89,7 @@ type Status = {
   selectAccount: SessionStatus;
 };
 
-export type AuthorizationSessionAttributes = EntityAttributes & {
+export type AuthorizationRequestAttributes = EntityAttributes & {
   code: Code;
   confirmedConsent: ConfirmedConsent;
   confirmedLogin: ConfirmedLogin;
@@ -95,7 +98,6 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   requestedSelectAccount: RequestedSelectAccount;
   status: Status;
 
-  authToken: string | null;
   browserSessionId: string | null;
   clientId: string;
   clientSessionId: string | null;
@@ -116,10 +118,9 @@ export type AuthorizationSessionAttributes = EntityAttributes & {
   uiLocales: Array<string>;
 };
 
-export type AuthorizationSessionOptions = Optional<
-  AuthorizationSessionAttributes,
+export type AuthorizationRequestOptions = Optional<
+  AuthorizationRequestAttributes,
   | EntityKeys
-  | "authToken"
   | "browserSessionId"
   | "clientSessionId"
   | "code"
@@ -134,11 +135,12 @@ export type AuthorizationSessionOptions = Optional<
   | "promptModes"
   | "redirectData"
   | "responseMode"
+  | "state"
   | "status"
   | "uiLocales"
 >;
 
-const schema = Joi.object<AuthorizationSessionAttributes>()
+const schema = Joi.object<AuthorizationRequestAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
@@ -177,8 +179,10 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
         minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
         recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
         recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
+        recommendedStrategies: Joi.array().items(Joi.string().lowercase()).required(),
         requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
         requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
+        requiredStrategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     requestedSelectAccount: Joi.object<RequestedSelectAccount>()
@@ -201,7 +205,6 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       })
       .required(),
 
-    authToken: JOI_JWT.allow(null).required(),
     browserSessionId: Joi.string().guid().allow(null).required(),
     clientId: Joi.string().guid().required(),
     clientSessionId: Joi.string().guid().allow(null).required(),
@@ -223,7 +226,7 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
   })
   .required();
 
-export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttributes> {
+export class AuthorizationRequest extends LindormEntity<AuthorizationRequestAttributes> {
   public readonly code: Code;
   public readonly confirmedConsent: ConfirmedConsent;
   public readonly confirmedLogin: ConfirmedLogin;
@@ -232,7 +235,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public readonly requestedSelectAccount: RequestedSelectAccount;
   public readonly status: Status;
 
-  public readonly authToken: string | null;
   public readonly clientId: string;
   public readonly country: string | null;
   public readonly displayMode: OpenIdDisplayMode;
@@ -253,7 +255,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   public browserSessionId: string | null;
   public clientSessionId: string | null;
 
-  public constructor(options: AuthorizationSessionOptions) {
+  public constructor(options: AuthorizationRequestOptions) {
     super(options);
 
     this.code = {
@@ -282,8 +284,10 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       minimumLevel: options.requestedLogin.minimumLevel,
       recommendedLevel: options.requestedLogin.recommendedLevel,
       recommendedMethods: options.requestedLogin.recommendedMethods,
+      recommendedStrategies: options.requestedLogin.recommendedStrategies,
       requiredLevel: options.requestedLogin.requiredLevel,
       requiredMethods: options.requestedLogin.requiredMethods,
+      requiredStrategies: options.requestedLogin.requiredStrategies,
     };
     this.requestedSelectAccount = {
       browserSessions: options.requestedSelectAccount.browserSessions,
@@ -294,7 +298,6 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       selectAccount: options.status?.selectAccount || SessionStatus.PENDING,
     };
 
-    this.authToken = options.authToken || null;
     this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
     this.clientSessionId = options.clientSessionId || null;
@@ -311,7 +314,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.redirectUri = options.redirectUri;
     this.responseMode = options.responseMode || OpenIdResponseMode.QUERY;
     this.responseTypes = options.responseTypes;
-    this.state = options.state;
+    this.state = options.state || randomUnreserved(16);
     this.uiLocales = options.uiLocales || [];
   }
 
@@ -319,11 +322,10 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     await schema.validateAsync(this.toJSON());
   }
 
-  public toJSON(): AuthorizationSessionAttributes {
+  public toJSON(): AuthorizationRequestAttributes {
     return {
       ...this.defaultJSON(),
 
-      authToken: this.authToken,
       browserSessionId: this.browserSessionId,
       clientId: this.clientId,
       clientSessionId: this.clientSessionId,

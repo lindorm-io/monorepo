@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { mockFetchOauthAuthorizationRequest } from "../../fixtures/axios";
 import { setupIntegration } from "../../fixtures/integration";
 import { server } from "../../server/server";
 
@@ -32,7 +32,7 @@ describe("/sessions/consent", () => {
   nock("https://oauth.test.lindorm.io")
     .get((url) => url.startsWith("/admin/sessions/authorization/"))
     .times(999)
-    .reply(200, mockFetchOauthAuthorizationSession());
+    .reply(200, mockFetchOauthAuthorizationRequest());
 
   nock("https://oauth.test.lindorm.io")
     .post("/admin/sessions/consent/87fe3e05-44b8-44bf-ab93-656001d14fc6/confirm")

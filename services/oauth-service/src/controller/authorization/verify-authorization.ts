@@ -1,18 +1,18 @@
-import Joi from "joi";
-import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { ClientError, ServerError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
 import {
   Environment,
   SessionStatus,
   VerifyAuthorizationRequestQuery,
 } from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import {
   generateCallbackResponse,
   handleOauthConsentVerification,
   handleOauthLoginVerification,
 } from "../../handler";
+import { ServerKoaController } from "../../types";
 import {
   createConsentPendingUri,
   createConsentRejectedUri,
@@ -40,9 +40,9 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
     mongo: { clientSessionRepository },
   } = ctx;
 
-  let authorizationSession = ctx.entity.authorizationSession;
+  let authorizationRequest = ctx.entity.authorizationRequest;
 
-  if (redirectUri !== authorizationSession.redirectUri) {
+  if (redirectUri !== authorizationRequest.redirectUri) {
     throw new ClientError("Invalid Redirect URI");
   }
 
@@ -50,25 +50,25 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
     signed: ctx.server.environment !== Environment.TEST,
   });
 
-  if (cookieId !== authorizationSession.id) {
+  if (cookieId !== authorizationRequest.id) {
     throw new ClientError("Invalid Session ID", {
       description: "Mismatched cookie ID",
       debug: {
-        expect: authorizationSession.id,
+        expect: authorizationRequest.id,
         actual: cookieId,
       },
     });
   }
 
-  switch (authorizationSession.status.selectAccount) {
+  switch (authorizationRequest.status.selectAccount) {
     case SessionStatus.CONFIRMED:
       break;
 
     case SessionStatus.PENDING:
-      return { redirect: createSelectAccountPendingUri(authorizationSession) };
+      return { redirect: createSelectAccountPendingUri(authorizationRequest) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createSelectAccountRejectedUri(authorizationSession) };
+      return { redirect: createSelectAccountRejectedUri(authorizationRequest) };
 
     case SessionStatus.SKIP:
       break;
@@ -78,20 +78,20 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
 
     default:
       throw new ServerError("Unexpected session status", {
-        debug: { select: authorizationSession.status.selectAccount },
+        debug: { select: authorizationRequest.status.selectAccount },
       });
   }
 
-  switch (authorizationSession.status.login) {
+  switch (authorizationRequest.status.login) {
     case SessionStatus.CONFIRMED:
-      authorizationSession = await handleOauthLoginVerification(ctx, authorizationSession);
+      authorizationRequest = await handleOauthLoginVerification(ctx, authorizationRequest);
       break;
 
     case SessionStatus.PENDING:
-      return { redirect: createLoginPendingUri(authorizationSession) };
+      return { redirect: createLoginPendingUri(authorizationRequest) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createLoginRejectedUri(authorizationSession) };
+      return { redirect: createLoginRejectedUri(authorizationRequest) };
 
     case SessionStatus.SKIP:
       break;
@@ -101,24 +101,24 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
 
     default:
       throw new ServerError("Unexpected session status", {
-        debug: { login: authorizationSession.status.login },
+        debug: { login: authorizationRequest.status.login },
       });
   }
 
-  switch (authorizationSession.status.consent) {
+  switch (authorizationRequest.status.consent) {
     case SessionStatus.CONFIRMED:
-      authorizationSession = await handleOauthConsentVerification(
+      authorizationRequest = await handleOauthConsentVerification(
         ctx,
-        authorizationSession,
+        authorizationRequest,
         client,
       );
       break;
 
     case SessionStatus.PENDING:
-      return { redirect: createConsentPendingUri(authorizationSession) };
+      return { redirect: createConsentPendingUri(authorizationRequest) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createConsentRejectedUri(authorizationSession) };
+      return { redirect: createConsentRejectedUri(authorizationRequest) };
 
     case SessionStatus.SKIP:
       break;
@@ -128,22 +128,22 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
 
     default:
       throw new ServerError("Unexpected session status", {
-        debug: { consent: authorizationSession.status.consent },
+        debug: { consent: authorizationRequest.status.consent },
       });
   }
 
-  if (!authorizationSession.browserSessionId || !authorizationSession.clientSessionId) {
+  if (!authorizationRequest.browserSessionId || !authorizationRequest.clientSessionId) {
     throw new ServerError("Invalid session state", {
       debug: {
-        browserSessionId: authorizationSession.browserSessionId,
-        clientSessionId: authorizationSession.clientSessionId,
+        browserSessionId: authorizationRequest.browserSessionId,
+        clientSessionId: authorizationRequest.clientSessionId,
       },
     });
   }
 
   const clientSession = await clientSessionRepository.find({
-    id: authorizationSession.clientSessionId,
+    id: authorizationRequest.clientSessionId,
   });
 
-  return await generateCallbackResponse(ctx, authorizationSession, client, clientSession);
+  return await generateCallbackResponse(ctx, authorizationRequest, client, clientSession);
 };

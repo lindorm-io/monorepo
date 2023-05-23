@@ -1,9 +1,9 @@
-import { ServerKoaContext } from "../../types";
-import { clientCredentialsMiddleware } from "../../middleware";
 import {
   RedirectAuthorizationRequestParams,
   RedirectAuthorizationResponse,
 } from "@lindorm-io/common-types";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
 export const getOauthAuthorizationRedirect = async (
   ctx: ServerKoaContext,

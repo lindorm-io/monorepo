@@ -1,12 +1,12 @@
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
-import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
-import { createClientCredentialsToken } from "../token";
 import { difference } from "lodash";
+import { ServerKoaContext } from "../../types";
+import { createClientCredentialsToken } from "../token";
 
 export const handleClientCredentialsGrant = async (
-  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
-): Promise<OpenIdTokenResponseBody> => {
+  ctx: ServerKoaContext<TokenRequestBody>,
+): Promise<TokenResponse> => {
   const {
     data: { scope },
     entity: { client },

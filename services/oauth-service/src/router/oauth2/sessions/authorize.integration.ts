@@ -10,7 +10,7 @@ import nock from "nock";
 import request from "supertest";
 import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -65,8 +65,8 @@ describe("/oauth2/sessions/authorize", () => {
       }),
     );
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         clientId: client.id,
         clientSessionId: clientSession.id,
         browserSessionId: browserSession.id,
@@ -95,15 +95,15 @@ describe("/oauth2/sessions/authorize", () => {
     const url = createURL("/oauth2/sessions/authorize/verify", {
       host: "https://test.test",
       query: {
-        session: authorizationSession.id,
-        redirectUri: authorizationSession.redirectUri,
+        session: authorizationRequest.id,
+        redirectUri: authorizationRequest.redirectUri,
       },
     }).toString();
 
     const response = await request(server.callback())
       .get(url.replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/; httponly`,
+        `lindorm_io_oauth_authorization_session=${authorizationRequest.id}; path=/; httponly`,
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
       .expect(302);
@@ -115,7 +115,7 @@ describe("/oauth2/sessions/authorize", () => {
     expect(location.searchParams.get("code")).toStrictEqual(expect.any(String));
     expect(location.searchParams.get("expires_in")).toBe("99");
     expect(location.searchParams.get("id_token")).toStrictEqual(expect.any(String));
-    expect(location.searchParams.get("state")).toBe(authorizationSession.state);
+    expect(location.searchParams.get("state")).toBe(authorizationRequest.state);
     expect(location.searchParams.get("token_type")).toBe("Bearer");
 
     expect(response.headers["set-cookie"]).toStrictEqual(
@@ -150,8 +150,8 @@ describe("/oauth2/sessions/authorize", () => {
       }),
     );
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         clientId: client.id,
         browserSessionId: browserSession.id,
         clientSessionId: clientSession.id,
@@ -180,15 +180,15 @@ describe("/oauth2/sessions/authorize", () => {
     const url = createURL("/oauth2/sessions/authorize/verify", {
       host: "https://test.test",
       query: {
-        session: authorizationSession.id,
-        redirectUri: authorizationSession.redirectUri,
+        session: authorizationRequest.id,
+        redirectUri: authorizationRequest.redirectUri,
       },
     }).toString();
 
     const response = await request(server.callback())
       .get(url.replace("https://test.test", ""))
       .set("Cookie", [
-        `lindorm_io_oauth_authorization_session=${authorizationSession.id}; path=/;`,
+        `lindorm_io_oauth_authorization_session=${authorizationRequest.id}; path=/;`,
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
       .expect(308);
@@ -203,7 +203,7 @@ describe("/oauth2/sessions/authorize", () => {
       id_token: expect.any(String),
       redirect_data:
         "ZXlKemRISnBibWNpT2lKemRISnBibWNpTENKdWRXMWlaWElpT2pFeU15d2lZbTl2YkdWaGJpSTZkSEoxWlgwPQ==",
-      state: authorizationSession.state,
+      state: authorizationRequest.state,
       token_type: "Bearer",
     });
 

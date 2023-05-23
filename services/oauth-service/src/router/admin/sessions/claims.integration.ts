@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import {
-  createTestClaimsSession,
+  createTestClaimsRequest,
   createTestClient,
   createTestTenant,
 } from "../../../fixtures/entity";
@@ -32,20 +32,20 @@ describe("/admin/sessions/claims", () => {
       subject: client.id,
     });
 
-    const claimsSession = await TEST_CLAIMS_SESSION_CACHE.create(
-      createTestClaimsSession({
+    const claimsRequest = await TEST_CLAIMS_SESSION_CACHE.create(
+      createTestClaimsRequest({
         clientId: client.id,
       }),
     );
 
     const response = await request(server.callback())
-      .get(`/admin/sessions/claims/${claimsSession.id}`)
+      .get(`/admin/sessions/claims/${claimsRequest.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      claims_session: {
-        id: claimsSession.id,
+      claims_request: {
+        id: claimsRequest.id,
         adjusted_access_level: 2,
         audiences: [expect.any(String)],
         expires: "2021-01-02T08:00:00.000Z",

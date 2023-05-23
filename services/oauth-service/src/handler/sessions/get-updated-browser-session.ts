@@ -1,46 +1,46 @@
 import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
-import { AuthorizationSession, BrowserSession } from "../../entity";
+import { AuthorizationRequest, BrowserSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 
 const createBrowserSession = async (
   ctx: ServerKoaContext,
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
 ): Promise<BrowserSession> => {
   const {
     mongo: { browserSessionRepository },
   } = ctx;
 
   if (
-    !authorizationSession.confirmedLogin.identityId ||
-    !authorizationSession.confirmedLogin.latestAuthentication ||
-    !authorizationSession.confirmedLogin.levelOfAssurance ||
-    !authorizationSession.confirmedLogin.methods.length
+    !authorizationRequest.confirmedLogin.identityId ||
+    !authorizationRequest.confirmedLogin.latestAuthentication ||
+    !authorizationRequest.confirmedLogin.levelOfAssurance ||
+    !authorizationRequest.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
       debug: {
-        confirmedLogin: authorizationSession.confirmedLogin,
+        confirmedLogin: authorizationRequest.confirmedLogin,
       },
     });
   }
 
   return await browserSessionRepository.create(
     new BrowserSession({
-      identityId: authorizationSession.confirmedLogin.identityId,
-      latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
-      levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
-      metadata: authorizationSession.confirmedLogin.metadata,
-      methods: authorizationSession.confirmedLogin.methods,
-      remember: authorizationSession.confirmedLogin.remember,
-      singleSignOn: authorizationSession.confirmedLogin.singleSignOn,
+      identityId: authorizationRequest.confirmedLogin.identityId,
+      latestAuthentication: authorizationRequest.confirmedLogin.latestAuthentication,
+      levelOfAssurance: authorizationRequest.confirmedLogin.levelOfAssurance,
+      metadata: authorizationRequest.confirmedLogin.metadata,
+      methods: authorizationRequest.confirmedLogin.methods,
+      remember: authorizationRequest.confirmedLogin.remember,
+      singleSignOn: authorizationRequest.confirmedLogin.singleSignOn,
     }),
   );
 };
 
 const updateBrowserSession = async (
   ctx: ServerKoaContext,
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   browserSession: BrowserSession,
 ): Promise<BrowserSession> => {
   const {
@@ -48,61 +48,61 @@ const updateBrowserSession = async (
   } = ctx;
 
   if (
-    !authorizationSession.confirmedLogin.identityId ||
-    !authorizationSession.confirmedLogin.latestAuthentication ||
-    !authorizationSession.confirmedLogin.levelOfAssurance ||
-    !authorizationSession.confirmedLogin.methods.length
+    !authorizationRequest.confirmedLogin.identityId ||
+    !authorizationRequest.confirmedLogin.latestAuthentication ||
+    !authorizationRequest.confirmedLogin.levelOfAssurance ||
+    !authorizationRequest.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
       debug: {
-        confirmedLogin: authorizationSession.confirmedLogin,
+        confirmedLogin: authorizationRequest.confirmedLogin,
       },
     });
   }
 
-  browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
+  browserSession.latestAuthentication = authorizationRequest.confirmedLogin.latestAuthentication;
 
   browserSession.levelOfAssurance =
-    authorizationSession.confirmedLogin.levelOfAssurance > browserSession.levelOfAssurance
-      ? authorizationSession.confirmedLogin.levelOfAssurance
+    authorizationRequest.confirmedLogin.levelOfAssurance > browserSession.levelOfAssurance
+      ? authorizationRequest.confirmedLogin.levelOfAssurance
       : browserSession.levelOfAssurance;
 
   browserSession.methods = uniqArray(
     browserSession.methods,
-    authorizationSession.confirmedLogin.methods,
+    authorizationRequest.confirmedLogin.methods,
   );
 
   browserSession.remember = browserSession.remember
     ? browserSession.remember
-    : authorizationSession.confirmedLogin.remember;
+    : authorizationRequest.confirmedLogin.remember;
 
   browserSession.singleSignOn = browserSession.singleSignOn
     ? browserSession.singleSignOn
-    : authorizationSession.confirmedLogin.singleSignOn;
+    : authorizationRequest.confirmedLogin.singleSignOn;
 
   return await browserSessionRepository.update(browserSession);
 };
 
 export const getUpdatedBrowserSession = async (
   ctx: ServerKoaContext,
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
 ): Promise<BrowserSession> => {
   const {
     mongo: { browserSessionRepository },
   } = ctx;
 
-  if (!authorizationSession.browserSessionId) {
-    return await createBrowserSession(ctx, authorizationSession);
+  if (!authorizationRequest.browserSessionId) {
+    return await createBrowserSession(ctx, authorizationRequest);
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: authorizationSession.browserSessionId,
+    id: authorizationRequest.browserSessionId,
   });
 
-  if (browserSession.identityId !== authorizationSession.confirmedLogin.identityId) {
-    return await createBrowserSession(ctx, authorizationSession);
+  if (browserSession.identityId !== authorizationRequest.confirmedLogin.identityId) {
+    return await createBrowserSession(ctx, authorizationRequest);
   }
 
-  return await updateBrowserSession(ctx, authorizationSession, browserSession);
+  return await updateBrowserSession(ctx, authorizationRequest, browserSession);
 };

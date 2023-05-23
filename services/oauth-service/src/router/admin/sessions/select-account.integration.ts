@@ -1,21 +1,21 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { server } from "../../../server/server";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
 } from "../../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -33,14 +33,14 @@ describe("/admin/sessions/select-account", () => {
       subject: client.id,
     });
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         clientId: client.id,
       }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationSession.id}/confirm`)
+      .post(`/admin/sessions/select-account/${authorizationRequest.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         select_new: true,
@@ -51,8 +51,8 @@ describe("/admin/sessions/select-account", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
   });
 
   test("should confirm existing and resolve redirect uri", async () => {
@@ -67,8 +67,8 @@ describe("/admin/sessions/select-account", () => {
       }),
     );
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         requestedSelectAccount: {
           browserSessions: [
             {
@@ -89,7 +89,7 @@ describe("/admin/sessions/select-account", () => {
     });
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationSession.id}/confirm`)
+      .post(`/admin/sessions/select-account/${authorizationRequest.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         select_existing: browserSession.id,
@@ -100,8 +100,8 @@ describe("/admin/sessions/select-account", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -112,12 +112,12 @@ describe("/admin/sessions/select-account", () => {
       subject: client.id,
     });
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({ clientId: client.id }),
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationSession.id}/reject`)
+      .post(`/admin/sessions/select-account/${authorizationRequest.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -126,7 +126,7 @@ describe("/admin/sessions/select-account", () => {
     expect(url.origin).toBe("https://test.client.lindorm.io");
     expect(url.pathname).toBe("/redirect");
     expect(url.searchParams.get("error")).toBe("request_rejected");
-    expect(url.searchParams.get("error_description")).toBe("select_account_rejected");
-    expect(url.searchParams.get("state")).toBe(authorizationSession.state);
+    expect(url.searchParams.get("error_description")).toBe("account_selection_rejected");
+    expect(url.searchParams.get("state")).toBe(authorizationRequest.state);
   });
 });

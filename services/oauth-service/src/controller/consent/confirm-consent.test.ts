@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
+import { createTestAuthorizationRequest, createTestClient } from "../../fixtures/entity";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
 import { confirmConsentController } from "./confirm-consent";
 
@@ -19,14 +19,14 @@ describe("confirmConsentController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
+        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
       },
       data: {
         audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
         scopes: ["address", "email", "offline_access", "openid", "phone", "private", "profile"],
       },
       entity: {
-        authorizationSession: createTestAuthorizationSession({
+        authorizationRequest: createTestAuthorizationRequest({
           requestedConsent: {
             audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
             scopes: Object.values(OpenIdScope),
@@ -45,7 +45,7 @@ describe("confirmConsentController", () => {
       body: { redirectTo: "redirect-uri" },
     });
 
-    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedConsent: {
           audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
@@ -57,7 +57,7 @@ describe("confirmConsentController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession = createTestAuthorizationSession({
+    ctx.entity.authorizationRequest = createTestAuthorizationRequest({
       status: {
         login: SessionStatus.CONFIRMED,
         consent: SessionStatus.REJECTED,

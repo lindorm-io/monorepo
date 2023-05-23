@@ -1,13 +1,13 @@
-import { AuthorizationSession, Client } from "../../entity";
+import { OpenIdResponseType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { difference } from "lodash";
-import { OpenIdResponseType } from "@lindorm-io/common-types";
+import { AuthorizationRequest, Client } from "../../entity";
 
 export const assertAuthorizeResponseType = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   client: Client,
 ): void => {
-  const diff = difference(authorizationSession.responseTypes, client.allowed.responseTypes);
+  const diff = difference(authorizationRequest.responseTypes, client.allowed.responseTypes);
 
   if (diff.length) {
     throw new ClientError("Invalid Response Type", {
@@ -15,23 +15,23 @@ export const assertAuthorizeResponseType = (
       description: "Invalid response type",
       debug: {
         expect: client.allowed.responseTypes,
-        actual: authorizationSession.responseTypes,
+        actual: authorizationRequest.responseTypes,
         diff,
       },
     });
   }
 
   if (
-    authorizationSession.responseTypes.includes(OpenIdResponseType.CODE) &&
-    (!authorizationSession.code.codeChallenge || !authorizationSession.code.codeChallengeMethod)
+    authorizationRequest.responseTypes.includes(OpenIdResponseType.CODE) &&
+    (!authorizationRequest.code.codeChallenge || !authorizationRequest.code.codeChallengeMethod)
   ) {
     throw new ClientError("Invalid request combination", {
       code: "invalid_request",
       description: "code_challenge and code_challenge_method required for response type: code",
       debug: {
-        responseTypes: authorizationSession.responseTypes,
-        codeChallenge: authorizationSession.code.codeChallenge,
-        codeChallengeMethod: authorizationSession.code.codeChallengeMethod,
+        responseTypes: authorizationRequest.responseTypes,
+        codeChallenge: authorizationRequest.code.codeChallenge,
+        codeChallengeMethod: authorizationRequest.code.codeChallengeMethod,
       },
     });
   }

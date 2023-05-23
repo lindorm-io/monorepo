@@ -1,11 +1,11 @@
-import { ClaimsSession, ClaimsSessionOptions } from "../../entity";
-import { randomUUID } from "crypto";
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
+import { ClaimsRequest, ClaimsRequestOptions } from "../../entity";
 
-export const createTestClaimsSession = (
-  options: Partial<ClaimsSessionOptions> = {},
-): ClaimsSession =>
-  new ClaimsSession({
+export const createTestClaimsRequest = (
+  options: Partial<ClaimsRequestOptions> = {},
+): ClaimsRequest =>
+  new ClaimsRequest({
     audiences: [randomUUID()],
     clientId: randomUUID(),
     expires: new Date("2021-01-02T08:00:00.000Z"),

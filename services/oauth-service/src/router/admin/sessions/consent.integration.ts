@@ -1,15 +1,15 @@
+import { OpenIdScope } from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
-import { server } from "../../../server/server";
+import { createTestAuthorizationRequest, createTestClient } from "../../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
 } from "../../../fixtures/integration";
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -27,8 +27,8 @@ describe("/admin/sessions/consent", () => {
       subject: client.id,
     });
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         requestedConsent: {
           audiences: [client.id],
           scopes: Object.values(OpenIdScope),
@@ -38,11 +38,11 @@ describe("/admin/sessions/consent", () => {
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/consent/${authorizationSession.id}/confirm`)
+      .post(`/admin/sessions/consent/${authorizationRequest.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        audiences: authorizationSession.requestedConsent.audiences,
-        scopes: authorizationSession.requestedConsent.scopes,
+        audiences: authorizationRequest.requestedConsent.audiences,
+        scopes: authorizationRequest.requestedConsent.scopes,
       })
       .expect(200);
 
@@ -50,8 +50,8 @@ describe("/admin/sessions/consent", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -62,12 +62,12 @@ describe("/admin/sessions/consent", () => {
       subject: client.id,
     });
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({ clientId: client.id }),
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/consent/${authorizationSession.id}/reject`)
+      .post(`/admin/sessions/consent/${authorizationRequest.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -77,6 +77,6 @@ describe("/admin/sessions/consent", () => {
     expect(url.pathname).toBe("/redirect");
     expect(url.searchParams.get("error")).toBe("request_rejected");
     expect(url.searchParams.get("error_description")).toBe("consent_rejected");
-    expect(url.searchParams.get("state")).toBe(authorizationSession.state);
+    expect(url.searchParams.get("state")).toBe(authorizationRequest.state);
   });
 });

@@ -1,24 +1,24 @@
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
-import { server } from "../../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
-  createTestElevationSession,
+  createTestElevationRequest,
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_ELEVATION_SESSION_CACHE,
   TEST_TENANT_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -40,8 +40,8 @@ describe("/admin/sessions/elevation", () => {
       }),
     );
 
-    const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
-      createTestElevationSession({
+    const elevationRequest = await TEST_ELEVATION_SESSION_CACHE.create(
+      createTestElevationRequest({
         requestedAuthentication: {
           minimumLevel: 2,
           recommendedLevel: 2,
@@ -63,7 +63,7 @@ describe("/admin/sessions/elevation", () => {
     });
 
     const response = await request(server.callback())
-      .get(`/admin/sessions/elevation/${elevationSession.id}`)
+      .get(`/admin/sessions/elevation/${elevationRequest.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -79,14 +79,14 @@ describe("/admin/sessions/elevation", () => {
         required_methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       },
 
-      elevation_session: {
-        id: elevationSession.id,
+      elevation_request: {
+        id: elevationRequest.id,
         authentication_hint: ["test@lindorm.io"],
         country: "se",
         display_mode: "page",
         expires: "2021-01-02T08:00:00.000Z",
         id_token_hint: "id.jwt.jwt",
-        identity_id: elevationSession.identityId,
+        identity_id: elevationRequest.identityId,
         nonce: "fQUsgtHGmWCwmCCZ",
         ui_locales: ["sv-SE", "en-GB"],
       },
@@ -108,8 +108,8 @@ describe("/admin/sessions/elevation", () => {
 
   test("should confirm and resolve redirect uri", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
-    const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
-      createTestElevationSession({
+    const elevationRequest = await TEST_ELEVATION_SESSION_CACHE.create(
+      createTestElevationRequest({
         clientId: client.id,
       }),
     );
@@ -120,10 +120,10 @@ describe("/admin/sessions/elevation", () => {
     });
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/elevation/${elevationSession.id}/confirm`)
+      .post(`/admin/sessions/elevation/${elevationRequest.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        identity_id: elevationSession.identityId,
+        identity_id: elevationRequest.identityId,
         level_of_assurance: 2,
         methods: ["email_otp", "phone_otp"],
       })
@@ -133,8 +133,8 @@ describe("/admin/sessions/elevation", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/elevate/verify");
-    expect(url.searchParams.get("session")).toBe(elevationSession.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(elevationSession.redirectUri);
+    expect(url.searchParams.get("session")).toBe(elevationRequest.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(elevationRequest.redirectUri);
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -145,12 +145,12 @@ describe("/admin/sessions/elevation", () => {
       subject: client.id,
     });
 
-    const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
-      createTestElevationSession({ clientId: client.id }),
+    const elevationRequest = await TEST_ELEVATION_SESSION_CACHE.create(
+      createTestElevationRequest({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/elevation/${elevationSession.id}/reject`)
+      .post(`/admin/sessions/elevation/${elevationRequest.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -160,6 +160,6 @@ describe("/admin/sessions/elevation", () => {
     expect(url.pathname).toBe("/redirect");
     expect(url.searchParams.get("error")).toBe("request_rejected");
     expect(url.searchParams.get("error_description")).toBe("elevation_rejected");
-    expect(url.searchParams.get("state")).toBe(elevationSession.state);
+    expect(url.searchParams.get("state")).toBe(elevationRequest.state);
   });
 });

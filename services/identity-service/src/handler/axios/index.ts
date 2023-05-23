@@ -1,1 +1,1 @@
-export * from "./get-oauth-claims-session";
+export * from "./get-oauth-claims-request";

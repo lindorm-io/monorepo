@@ -1,15 +1,15 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_LOCALE } from "../../common";
-import { ServerKoaController } from "../../types";
 import { UpdateIdentityRequestBody, UpdateIdentityRequestParams } from "@lindorm-io/common-types";
-import { updateIdentityDisplayName } from "../../handler";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_LOCALE } from "../../common";
 import {
   JOI_BIRTHDATE,
   JOI_DISPLAY_NAME_STRING,
   JOI_NAMING_SYSTEM,
   JOI_ZONE_INFO,
 } from "../../constant";
+import { updateIdentityDisplayName } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = UpdateIdentityRequestParams & UpdateIdentityRequestBody;
 
@@ -31,7 +31,7 @@ export const updateIdentitySchema = Joi.object<RequestData>()
     preferredAccessibility: Joi.array().items(Joi.string()),
     profile: Joi.string().uri().allow(null),
     pronouns: Joi.string().allow(null),
-    takenName: Joi.string().allow(null),
+    preferredName: Joi.string().allow(null),
     website: Joi.string().uri().allow(null),
     zoneInfo: JOI_ZONE_INFO.allow(null),
   })
@@ -58,7 +58,7 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
       preferredAccessibility,
       profile,
       pronouns,
-      takenName,
+      preferredName,
       website,
       zoneInfo,
     },
@@ -130,8 +130,8 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     identity.pronouns = pronouns;
   }
 
-  if (takenName !== undefined) {
-    identity.takenName = takenName;
+  if (preferredName !== undefined) {
+    identity.preferredName = preferredName;
   }
 
   if (website !== undefined) {

@@ -1,5 +1,6 @@
 import {
   AuthenticationMethod,
+  AuthenticationStrategy,
   OpenIdDisplayMode,
   OpenIdPromptMode,
   SessionStatus,
@@ -7,12 +8,12 @@ import {
 import { randomString } from "@lindorm-io/random";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
-import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { mockFetchOauthAuthorizationRequest } from "../../../fixtures/axios";
 import { createTestAuthenticationConfirmationToken } from "../../../fixtures/entity";
 import {
   confirmOauthLogin as _confirmOauthLogin,
   getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
-  getOauthAuthorizationSession as _getOauthAuthorizationSession,
+  getOauthAuthorizationRequest as _getOauthAuthorizationRequest,
   resolveAuthenticationConfirmationToken as _resolveAuthenticationConfirmationToken,
 } from "../../../handler";
 import { redirectLoginSessionController } from "./redirect-login-session";
@@ -21,7 +22,7 @@ jest.mock("../../../handler");
 
 const confirmOauthLogin = _confirmOauthLogin as jest.Mock;
 const getOauthAuthorizationRedirect = _getOauthAuthorizationRedirect as jest.Mock;
-const getOauthAuthorizationSession = _getOauthAuthorizationSession as jest.Mock;
+const getOauthAuthorizationRequest = _getOauthAuthorizationRequest as jest.Mock;
 const resolveAuthenticationConfirmationToken = _resolveAuthenticationConfirmationToken as jest.Mock;
 
 describe("redirectLoginSessionController", () => {
@@ -39,7 +40,7 @@ describe("redirectLoginSessionController", () => {
     getOauthAuthorizationRedirect.mockResolvedValue({
       redirectTo: "getOauthAuthorizationRedirect",
     });
-    getOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
+    getOauthAuthorizationRequest.mockResolvedValue(mockFetchOauthAuthorizationRequest());
     resolveAuthenticationConfirmationToken.mockResolvedValue(
       createTestAuthenticationConfirmationToken({
         sessionId: "49d276eb-4200-48b6-a1c4-53f08929cdcd",
@@ -54,11 +55,10 @@ describe("redirectLoginSessionController", () => {
   });
 
   test("should resolve auth token", async () => {
-    getOauthAuthorizationSession.mockResolvedValue(
-      mockFetchOauthAuthorizationSession({
-        authorizationSession: {
+    getOauthAuthorizationRequest.mockResolvedValue(
+      mockFetchOauthAuthorizationRequest({
+        authorizationRequest: {
           id: randomUUID(),
-          authToken: "auth.jwt.jwt",
           country: "se",
           displayMode: OpenIdDisplayMode.PAGE,
           expires: "2022-01-01T04:00:00.000Z",
@@ -84,8 +84,8 @@ describe("redirectLoginSessionController", () => {
   });
 
   test("should resolve redirect", async () => {
-    getOauthAuthorizationSession.mockResolvedValue(
-      mockFetchOauthAuthorizationSession({
+    getOauthAuthorizationRequest.mockResolvedValue(
+      mockFetchOauthAuthorizationRequest({
         login: {
           isRequired: true,
           status: SessionStatus.CONFIRMED,
@@ -94,8 +94,10 @@ describe("redirectLoginSessionController", () => {
           minimumLevel: 2,
           recommendedLevel: 2,
           recommendedMethods: [AuthenticationMethod.EMAIL],
+          recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
           requiredLevel: 2,
           requiredMethods: [AuthenticationMethod.EMAIL],
+          requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
         },
       }),
     );

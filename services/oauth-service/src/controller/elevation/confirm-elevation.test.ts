@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestElevationSession } from "../../fixtures/entity";
+import { createTestElevationRequest } from "../../fixtures/entity";
 import {
   assertSessionPending as _assertSessionPending,
   createElevationVerifyUri as _createElevationVerifyUri,
@@ -23,7 +23,7 @@ describe("confirmElevationController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
+        elevationRequestCache: createMockRedisRepository(createTestElevationRequest),
       },
       data: {
         identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
@@ -31,7 +31,7 @@ describe("confirmElevationController", () => {
         methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       },
       entity: {
-        elevationSession: createTestElevationSession({
+        elevationRequest: createTestElevationRequest({
           identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
         }),
       },
@@ -47,7 +47,7 @@ describe("confirmElevationController", () => {
       body: { redirectTo: "createElevationVerifyUri" },
     });
 
-    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
@@ -60,14 +60,14 @@ describe("confirmElevationController", () => {
   });
 
   test("should resolve without redirect", async () => {
-    ctx.entity.elevationSession = createTestElevationSession({
+    ctx.entity.elevationRequest = createTestElevationRequest({
       identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
       redirectUri: null,
     });
 
     await expect(confirmElevationController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),

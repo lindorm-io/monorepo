@@ -1,9 +1,6 @@
-import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
-import { baseHash } from "@lindorm-io/core";
-import { randomUnreserved } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
 import {
   AuthenticationMethod,
+  AuthenticationStrategy,
   OpenIdDisplayMode,
   OpenIdPromptMode,
   OpenIdResponseMode,
@@ -11,11 +8,15 @@ import {
   OpenIdScope,
   PKCEMethod,
 } from "@lindorm-io/common-types";
+import { baseHash } from "@lindorm-io/core";
+import { randomUnreserved } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import { AuthorizationRequest, AuthorizationRequestOptions } from "../../entity";
 
-export const createTestAuthorizationSession = (
-  options: Partial<AuthorizationSessionOptions> = {},
-): AuthorizationSession =>
-  new AuthorizationSession({
+export const createTestAuthorizationRequest = (
+  options: Partial<AuthorizationRequestOptions> = {},
+): AuthorizationRequest =>
+  new AuthorizationRequest({
     code: {
       codeChallenge: randomUnreserved(43),
       codeChallengeMethod: PKCEMethod.SHA256,
@@ -38,8 +39,10 @@ export const createTestAuthorizationSession = (
       minimumLevel: 2,
       recommendedLevel: 2,
       recommendedMethods: [AuthenticationMethod.EMAIL],
+      recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
       requiredLevel: 3,
       requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      requiredStrategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
       ...(options.requestedLogin || {}),
     },
     requestedSelectAccount: {
@@ -47,7 +50,6 @@ export const createTestAuthorizationSession = (
       ...(options.requestedSelectAccount || {}),
     },
 
-    authToken: "auth.jwt.jwt",
     browserSessionId: randomUUID(),
     clientId: randomUUID(),
     clientSessionId: randomUUID(),

@@ -1,13 +1,13 @@
-import { AuthorizationSession } from "../../entity";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
-import { getUpdatedBrowserSession as _getUpdatedBrowserSession } from "../sessions";
-import { handleOauthLoginVerification } from "./handle-oauth-login-verification";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import { AuthorizationRequest } from "../../entity";
+import { createTestAuthorizationRequest, createTestBrowserSession } from "../../fixtures/entity";
 import {
   getBrowserSessionCookies as _getBrowserSessionCookies,
   setBrowserSessionCookies as _setBrowserSessionCookies,
 } from "../cookies";
+import { getUpdatedBrowserSession as _getUpdatedBrowserSession } from "../sessions";
+import { handleOauthLoginVerification } from "./handle-oauth-login-verification";
 
 jest.mock("../cookies");
 jest.mock("../sessions");
@@ -18,19 +18,19 @@ const getUpdatedBrowserSession = _getUpdatedBrowserSession as jest.Mock;
 
 describe("handleOauthLoginVerification", () => {
   let ctx: any;
-  let authorizationSession: AuthorizationSession;
+  let authorizationRequest: AuthorizationRequest;
 
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
+        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
       },
       mongo: {
         browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
-    authorizationSession = createTestAuthorizationSession();
+    authorizationRequest = createTestAuthorizationRequest();
 
     getUpdatedBrowserSession.mockResolvedValue(
       createTestBrowserSession({ id: "65c04ad2-6b10-4eb4-ac8e-6df5911968ec" }),
@@ -41,8 +41,8 @@ describe("handleOauthLoginVerification", () => {
   });
 
   test("should resolve", async () => {
-    await expect(handleOauthLoginVerification(ctx, authorizationSession)).resolves.toStrictEqual(
-      expect.any(AuthorizationSession),
+    await expect(handleOauthLoginVerification(ctx, authorizationRequest)).resolves.toStrictEqual(
+      expect.any(AuthorizationRequest),
     );
 
     expect(getBrowserSessionCookies).toHaveBeenCalled();
@@ -51,7 +51,7 @@ describe("handleOauthLoginVerification", () => {
       "c27d4370-b1bf-4f34-91c4-54314a01228e",
     ]);
 
-    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "65c04ad2-6b10-4eb4-ac8e-6df5911968ec",
         status: expect.objectContaining({

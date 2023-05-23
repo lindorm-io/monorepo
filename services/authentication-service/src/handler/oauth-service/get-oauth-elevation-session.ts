@@ -1,8 +1,8 @@
-import { ServerKoaContext } from "../../types";
 import { GetElevationRequestParams, GetElevationResponse } from "@lindorm-io/common-types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
-export const getOauthElevationSession = async (
+export const getOauthElevationRequest = async (
   ctx: ServerKoaContext,
   id: string,
 ): Promise<GetElevationResponse> => {

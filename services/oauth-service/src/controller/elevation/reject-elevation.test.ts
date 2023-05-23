@@ -1,7 +1,7 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestElevationSession } from "../../fixtures/entity";
+import { createTestElevationRequest } from "../../fixtures/entity";
 import {
   assertSessionPending as _assertSessionPending,
   createElevationRejectedUri as _createElevationRejectedUri,
@@ -21,10 +21,10 @@ describe("rejectElevationController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
+        elevationRequestCache: createMockRedisRepository(createTestElevationRequest),
       },
       entity: {
-        elevationSession: createTestElevationSession(),
+        elevationRequest: createTestElevationRequest(),
       },
       logger: createMockLogger(),
     };
@@ -38,7 +38,7 @@ describe("rejectElevationController", () => {
       body: { redirectTo: "createElevationRejectedUri" },
     });
 
-    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),
@@ -46,11 +46,11 @@ describe("rejectElevationController", () => {
   });
 
   test("should resolve without redirect", async () => {
-    ctx.entity.elevationSession = createTestElevationSession({ redirectUri: null });
+    ctx.entity.elevationRequest = createTestElevationRequest({ redirectUri: null });
 
     await expect(rejectElevationController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
       }),

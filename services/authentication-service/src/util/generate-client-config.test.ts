@@ -128,8 +128,10 @@ describe("calculateMethodsAndStrategies", () => {
         createTestAuthenticationSession({
           allowedStrategies: Object.values(AuthenticationStrategy),
           recommendedMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          recommendedStrategies: [],
           requiredLevel: 1,
           requiredMethods: [],
+          requiredStrategies: [],
         }),
       ),
     ).toStrictEqual([
@@ -241,14 +243,140 @@ describe("calculateMethodsAndStrategies", () => {
     ]);
   });
 
+  test("should calculate based on recommended strategies", () => {
+    expect(
+      generateClientConfig(
+        createTestAuthenticationSession({
+          allowedStrategies: Object.values(AuthenticationStrategy),
+          recommendedMethods: [],
+          recommendedStrategies: [
+            AuthenticationStrategy.EMAIL_CODE,
+            AuthenticationStrategy.PASSWORD,
+          ],
+          requiredLevel: 1,
+          requiredMethods: [],
+          requiredStrategies: [],
+        }),
+      ),
+    ).toStrictEqual([
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "mfa_cookie",
+        rank: 1,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "mfa_cookie", weight: 999 }],
+        weight: 999,
+      },
+      {
+        hint: "test@lindorm.io",
+        hintType: "email",
+        identifierType: "username",
+        method: "password",
+        rank: 2,
+        recommended: true,
+        required: false,
+        strategies: [
+          { strategy: "password", weight: 250 },
+          { strategy: "password_browser_link", weight: 20 },
+        ],
+        weight: 250,
+      },
+      {
+        hint: "test@lindorm.io",
+        hintType: "email",
+        identifierType: "email",
+        method: "email",
+        rank: 3,
+        recommended: true,
+        required: false,
+        strategies: [
+          { strategy: "email_code", weight: 250 },
+          { strategy: "email_otp", weight: 30 },
+        ],
+        weight: 250,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "device_link",
+        rank: 4,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "rdc_push_notification", weight: 90 },
+          { strategy: "rdc_qr_code", weight: 90 },
+          { strategy: "device_challenge", weight: 90 },
+        ],
+        weight: 90,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "totp",
+        rank: 5,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "time_based_otp", weight: 90 }],
+        weight: 90,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "session_link",
+        rank: 6,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "session_otp", weight: 80 },
+          { strategy: "session_qr_code", weight: 80 },
+          { strategy: "session_display_code", weight: 80 },
+        ],
+        weight: 80,
+      },
+      {
+        hint: "0701234567",
+        hintType: "phone",
+        identifierType: "phone",
+        method: "phone",
+        rank: 7,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "phone_otp", weight: 20 },
+          { strategy: "phone_code", weight: 10 },
+        ],
+        weight: 20,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "recovery",
+        rank: 8,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "recovery_code", weight: 0 }],
+        weight: 0,
+      },
+    ]);
+  });
+
   test("should calculate based on required methods", () => {
     expect(
       generateClientConfig(
         createTestAuthenticationSession({
           allowedStrategies: Object.values(AuthenticationStrategy),
           recommendedMethods: [],
+          recommendedStrategies: [],
           requiredLevel: 1,
           requiredMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.EMAIL],
+          requiredStrategies: [],
         }),
       ),
     ).toStrictEqual([
@@ -279,6 +407,127 @@ describe("calculateMethodsAndStrategies", () => {
           { strategy: "password", weight: 1000 },
         ],
         weight: 2000,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "mfa_cookie",
+        rank: 3,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "mfa_cookie", weight: 999 }],
+        weight: 999,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "device_link",
+        rank: 4,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "rdc_push_notification", weight: 90 },
+          { strategy: "rdc_qr_code", weight: 90 },
+          { strategy: "device_challenge", weight: 90 },
+        ],
+        weight: 90,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "totp",
+        rank: 5,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "time_based_otp", weight: 90 }],
+        weight: 90,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "session_link",
+        rank: 6,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "session_otp", weight: 80 },
+          { strategy: "session_qr_code", weight: 80 },
+          { strategy: "session_display_code", weight: 80 },
+        ],
+        weight: 80,
+      },
+      {
+        hint: "0701234567",
+        hintType: "phone",
+        identifierType: "phone",
+        method: "phone",
+        rank: 7,
+        recommended: false,
+        required: false,
+        strategies: [
+          { strategy: "phone_otp", weight: 20 },
+          { strategy: "phone_code", weight: 10 },
+        ],
+        weight: 20,
+      },
+      {
+        hint: null,
+        hintType: "none",
+        identifierType: "none",
+        method: "recovery",
+        rank: 8,
+        recommended: false,
+        required: false,
+        strategies: [{ strategy: "recovery_code", weight: 0 }],
+        weight: 0,
+      },
+    ]);
+  });
+
+  test("should calculate based on required strategies", () => {
+    expect(
+      generateClientConfig(
+        createTestAuthenticationSession({
+          allowedStrategies: Object.values(AuthenticationStrategy),
+          recommendedMethods: [],
+          recommendedStrategies: [],
+          requiredLevel: 1,
+          requiredMethods: [],
+          requiredStrategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PASSWORD],
+        }),
+      ),
+    ).toStrictEqual([
+      {
+        hint: "test@lindorm.io",
+        hintType: "email",
+        identifierType: "username",
+        method: "password",
+        rank: 1,
+        recommended: false,
+        required: true,
+        strategies: [
+          { strategy: "password", weight: 1000 },
+          { strategy: "password_browser_link", weight: 20 },
+        ],
+        weight: 1000,
+      },
+      {
+        hint: "test@lindorm.io",
+        hintType: "email",
+        identifierType: "email",
+        method: "email",
+        rank: 2,
+        recommended: false,
+        required: true,
+        strategies: [
+          { strategy: "email_code", weight: 1000 },
+          { strategy: "email_otp", weight: 30 },
+        ],
+        weight: 1000,
       },
       {
         hint: null,

@@ -1,15 +1,15 @@
 import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
-import { AuthorizationSession, BrowserSession } from "../../entity";
-import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
+import { AuthorizationRequest, BrowserSession } from "../../entity";
+import { createTestAuthorizationRequest, createTestBrowserSession } from "../../fixtures/entity";
 import { getUpdatedBrowserSession } from "./get-updated-browser-session";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("getUpdatedBrowserSession", () => {
   let ctx: any;
-  let authorizationSession: AuthorizationSession;
+  let authorizationRequest: AuthorizationRequest;
 
   beforeEach(() => {
     ctx = {
@@ -18,7 +18,7 @@ describe("getUpdatedBrowserSession", () => {
       },
     };
 
-    authorizationSession = createTestAuthorizationSession({
+    authorizationRequest = createTestAuthorizationRequest({
       confirmedLogin: {
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
@@ -37,9 +37,9 @@ describe("getUpdatedBrowserSession", () => {
   });
 
   test("should resolve created browser session on missing session", async () => {
-    authorizationSession.browserSessionId = null;
+    authorizationRequest.browserSessionId = null;
 
-    await expect(getUpdatedBrowserSession(ctx, authorizationSession)).resolves.toStrictEqual(
+    await expect(getUpdatedBrowserSession(ctx, authorizationRequest)).resolves.toStrictEqual(
       expect.any(BrowserSession),
     );
 
@@ -62,7 +62,7 @@ describe("getUpdatedBrowserSession", () => {
       }),
     );
 
-    await expect(getUpdatedBrowserSession(ctx, authorizationSession)).resolves.toStrictEqual(
+    await expect(getUpdatedBrowserSession(ctx, authorizationRequest)).resolves.toStrictEqual(
       expect.any(BrowserSession),
     );
 
@@ -85,7 +85,7 @@ describe("getUpdatedBrowserSession", () => {
       }),
     );
 
-    await expect(getUpdatedBrowserSession(ctx, authorizationSession)).resolves.toStrictEqual(
+    await expect(getUpdatedBrowserSession(ctx, authorizationRequest)).resolves.toStrictEqual(
       expect.any(BrowserSession),
     );
 
@@ -101,9 +101,9 @@ describe("getUpdatedBrowserSession", () => {
   });
 
   test("should keep immutable values once set", async () => {
-    authorizationSession.confirmedLogin.levelOfAssurance = 1;
-    authorizationSession.confirmedLogin.remember = false;
-    authorizationSession.confirmedLogin.singleSignOn = false;
+    authorizationRequest.confirmedLogin.levelOfAssurance = 1;
+    authorizationRequest.confirmedLogin.remember = false;
+    authorizationRequest.confirmedLogin.singleSignOn = false;
 
     ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
@@ -116,7 +116,7 @@ describe("getUpdatedBrowserSession", () => {
       }),
     );
 
-    await expect(getUpdatedBrowserSession(ctx, authorizationSession)).resolves.toStrictEqual(
+    await expect(getUpdatedBrowserSession(ctx, authorizationRequest)).resolves.toStrictEqual(
       expect.any(BrowserSession),
     );
 

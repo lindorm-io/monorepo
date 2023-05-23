@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
-import { createTestAuthorizationSession } from "../../fixtures/entity";
+import MockDate from "mockdate";
+import { createTestAuthorizationRequest } from "../../fixtures/entity";
 import { rejectSelectAccountController } from "./reject-select-account";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -13,10 +13,10 @@ describe("rejectSelectAccountController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
+        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
       },
       entity: {
-        authorizationSession: createTestAuthorizationSession({
+        authorizationRequest: createTestAuthorizationRequest({
           state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
         }),
       },
@@ -27,11 +27,11 @@ describe("rejectSelectAccountController", () => {
   test("should resolve", async () => {
     await expect(rejectSelectAccountController(ctx)).resolves.toStrictEqual({
       body: {
-        redirectTo: `https://test.client.lindorm.io/redirect?error=request_rejected&error_description=select_account_rejected&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX`,
+        redirectTo: `https://test.client.lindorm.io/redirect?error=request_rejected&error_description=account_selection_rejected&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX`,
       },
     });
 
-    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({ selectAccount: "rejected" }),
       }),
@@ -39,7 +39,7 @@ describe("rejectSelectAccountController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession.status.selectAccount = "skip";
+    ctx.entity.authorizationRequest.status.selectAccount = "skip";
 
     await expect(rejectSelectAccountController(ctx)).rejects.toThrow(ClientError);
   });

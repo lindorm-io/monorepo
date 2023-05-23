@@ -1,18 +1,25 @@
-import Joi from "joi";
-import { AuthenticationMode, LevelOfAssurance, PKCEMethod } from "@lindorm-io/common-types";
-import { AuthenticationSession } from "../../entity";
-import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
+import {
+  AuthenticationMethod,
+  AuthenticationMode,
+  AuthenticationStrategy,
+  LevelOfAssurance,
+  PKCEMethod,
+} from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
-import { filterAuthenticationMethods } from "../../util";
-import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
 import {
   JOI_AUTHENTICATION_METHOD,
+  JOI_AUTHENTICATION_STRATEGY,
   JOI_PKCE_METHOD,
   REGEX_EMAIL,
   REGEX_PHONE,
 } from "../../constant";
+import { AuthenticationSession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
+import { filterAuthenticationMethods, filterAuthenticationStrategies } from "../../util";
+import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 
 type Options = {
   clientId: string;
@@ -22,8 +29,9 @@ type Options = {
   identityId?: string;
   levelOfAssurance?: LevelOfAssurance;
   loginHint?: Array<string>;
-  methods?: Array<string>;
+  methods?: Array<AuthenticationMethod>;
   nonce?: string;
+  strategies?: Array<AuthenticationStrategy>;
 };
 
 const schema = Joi.object<Options>()
@@ -37,6 +45,7 @@ const schema = Joi.object<Options>()
     loginHint: Joi.array().items(Joi.string()).optional(),
     methods: Joi.array().items(JOI_AUTHENTICATION_METHOD).optional(),
     nonce: Joi.string().optional(),
+    strategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).optional(),
   })
   .options({ abortEarly: false, allowUnknown: false })
   .required();
@@ -57,6 +66,7 @@ export const initialiseStandardAuthenticationSession = async (
     loginHint,
     methods,
     nonce,
+    strategies,
   } = options;
 
   const expires = expiryDate(configuration.defaults.authentication_session_expiry);
@@ -76,5 +86,6 @@ export const initialiseStandardAuthenticationSession = async (
     phoneHint,
     requiredLevel: levelOfAssurance,
     requiredMethods: filterAuthenticationMethods(methods),
+    requiredStrategies: filterAuthenticationStrategies(strategies),
   });
 };

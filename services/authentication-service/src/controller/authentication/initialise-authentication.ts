@@ -1,17 +1,17 @@
-import Joi from "joi";
-import { AuthenticationSession } from "../../entity";
+import {
+  InitialiseAuthenticationRequestBody,
+  InitialiseAuthenticationResponse,
+} from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { JOI_PKCE_METHOD } from "../../constant";
-import { ServerKoaController } from "../../types";
+import { AuthenticationSession } from "../../entity";
 import {
   initialiseElevateAuthenticationSession,
   initialiseOauthAuthenticationSession,
   initialiseStandardAuthenticationSession,
 } from "../../handler";
-import {
-  InitialiseAuthenticationRequestBody,
-  InitialiseAuthenticationResponse,
-} from "@lindorm-io/common-types";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseAuthenticationRequestBody;
 
@@ -34,7 +34,7 @@ export const initialiseAuthenticationController: ServerKoaController<RequestData
       codeChallenge,
       codeChallengeMethod,
       country,
-      elevationSessionId,
+      elevationRequestId,
       identityId,
       levelOfAssurance,
       loginHint,
@@ -46,11 +46,11 @@ export const initialiseAuthenticationController: ServerKoaController<RequestData
 
   let authenticationSession: AuthenticationSession;
 
-  if (elevationSessionId) {
+  if (elevationRequestId) {
     authenticationSession = await initialiseElevateAuthenticationSession(ctx, {
       codeChallenge,
       codeChallengeMethod,
-      elevationSessionId,
+      elevationRequestId,
     });
   } else if (oauthSessionId) {
     authenticationSession = await initialiseOauthAuthenticationSession(ctx, {

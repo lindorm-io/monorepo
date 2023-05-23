@@ -1,21 +1,21 @@
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { randomString } from "@lindorm-io/random";
+import { createURL } from "@lindorm-io/url";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { argon } from "../../instance";
-import { createTestAuthenticationSession } from "../../fixtures/entity";
-import { getTestData } from "../../fixtures/data";
-import { randomString } from "@lindorm-io/random";
-import { server } from "../../server/server";
-import { createURL } from "@lindorm-io/url";
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { StrategySession } from "../../entity";
+import { mockFetchOauthAuthorizationRequest } from "../../fixtures/axios";
+import { getTestData } from "../../fixtures/data";
+import { createTestAuthenticationSession } from "../../fixtures/entity";
 import {
-  setupIntegration,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
+  setupIntegration,
 } from "../../fixtures/integration";
+import { argon } from "../../instance";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -45,7 +45,7 @@ describe("/sessions/authentication", () => {
 
   nock("https://oauth.test.lindorm.io")
     .get((uri) => uri.startsWith("/admin/sessions/authorization/"))
-    .reply(200, mockFetchOauthAuthorizationSession());
+    .reply(200, mockFetchOauthAuthorizationRequest());
 
   nock("https://oidc.test.lindorm.io").post("/admin/sessions").times(999).reply(200, {
     redirect_to: "https://oidc-redirect.url",

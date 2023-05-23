@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
-import { server } from "../../server/server";
 import { setupIntegration } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -74,7 +74,15 @@ describe("/.well-known/openid-configuration", () => {
       ],
       end_session_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/sessions/logout",
       exchange_endpoint: "https://oauth.test.lindorm.io:3005/exchange",
-      grant_types_supported: ["authorization_code", "client_credentials", "refresh_token"],
+      grant_types_supported: [
+        "authorization_code",
+        "client_credentials",
+        "password",
+        "refresh_token",
+        "urn:ietf:params:oauth:grant-type:authentication-token",
+        "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "urn:ietf:params:oauth:grant-type:token-exchange",
+      ],
       id_token_encryption_alg_values_supported: [],
       id_token_encryption_enc_values_supported: [],
       id_token_signing_alg_values_supported: ["ES512", "RS512"],

@@ -1,4 +1,6 @@
 import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
   LindormScope,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -56,8 +58,10 @@ const main = async (): Promise<void> => {
       id: ids.authenticationService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -89,8 +93,10 @@ const main = async (): Promise<void> => {
       id: ids.communicationService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -122,8 +128,10 @@ const main = async (): Promise<void> => {
       id: ids.deviceService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -155,8 +163,10 @@ const main = async (): Promise<void> => {
       id: ids.identityService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -188,8 +198,10 @@ const main = async (): Promise<void> => {
       id: ids.oidcService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -221,8 +233,10 @@ const main = async (): Promise<void> => {
       id: ids.vaultService,
       allowed: {
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
+        methods: [],
         responseTypes: [],
         scopes: [],
+        strategies: [],
       },
       audiences: {
         credentials: Object.values(ids),
@@ -254,8 +268,10 @@ const main = async (): Promise<void> => {
       id: ids.authApplication,
       allowed: {
         grantTypes: [OpenIdGrantType.AUTHORIZATION_CODE, OpenIdGrantType.REFRESH_TOKEN],
+        methods: Object.values(AuthenticationMethod),
         responseTypes: Object.values(OpenIdResponseType),
         scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+        strategies: Object.values(AuthenticationStrategy),
       },
       audiences: {
         credentials: [],

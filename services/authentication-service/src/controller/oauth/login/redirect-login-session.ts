@@ -1,14 +1,8 @@
 import { SessionStatus } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
 import Joi from "joi";
-import {
-  confirmOauthLogin,
-  getOauthAuthorizationRedirect,
-  getOauthAuthorizationSession,
-  resolveAuthenticationConfirmationToken,
-} from "../../../handler";
+import { getOauthAuthorizationRedirect, getOauthAuthorizationRequest } from "../../../handler";
 import { configuration } from "../../../server/configuration";
 import { ServerKoaController } from "../../../types";
 
@@ -32,8 +26,7 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
 
   const {
     login: { status },
-    authorizationSession: { authToken },
-  } = await getOauthAuthorizationSession(ctx, session);
+  } = await getOauthAuthorizationRequest(ctx, session);
 
   if (status !== SessionStatus.PENDING) {
     logger.warn("Unexpected Session Status", { status });
@@ -43,30 +36,30 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
     return { redirect: redirectTo };
   }
 
-  if (authToken) {
-    try {
-      const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(
-        ctx,
-        authToken,
-      );
+  // if (authToken) {
+  //   try {
+  //     const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(
+  //       ctx,
+  //       authToken,
+  //     );
 
-      if (session !== authenticationConfirmationToken.sessionId) {
-        throw new ClientError("Invalid session identifier", {
-          debug: {
-            expect: session,
-            actual: authenticationConfirmationToken.sessionId,
-          },
-          statusCode: ClientError.StatusCode.FORBIDDEN,
-        });
-      }
+  //     if (session !== authenticationConfirmationToken.sessionId) {
+  //       throw new ClientError("Invalid session identifier", {
+  //         debug: {
+  //           expect: session,
+  //           actual: authenticationConfirmationToken.sessionId,
+  //         },
+  //         statusCode: ClientError.StatusCode.FORBIDDEN,
+  //       });
+  //     }
 
-      const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
+  //     const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
 
-      return { redirect: redirectTo };
-    } catch (err: any) {
-      logger.warn("Invalid auth token", { authToken });
-    }
-  }
+  //     return { redirect: redirectTo };
+  //   } catch (err: any) {
+  //     logger.warn("Invalid auth token", { authToken });
+  //   }
+  // }
 
   return {
     redirect: createURL(configuration.frontend.routes.login, {

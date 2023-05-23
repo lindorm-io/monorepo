@@ -1,14 +1,14 @@
-import { ElevationSession } from "../../entity";
 import { createURL } from "@lindorm-io/url";
+import { ElevationRequest } from "../../entity";
 import { configuration } from "../../server/configuration";
 
-export const createElevationPendingUri = (elevationSession: ElevationSession): string =>
+export const createElevationPendingUri = (elevationRequest: ElevationRequest): string =>
   createURL(configuration.redirect.elevate, {
     host: configuration.services.authentication_service.host,
     port: configuration.services.authentication_service.port,
     query: {
-      session: elevationSession.id,
-      display: elevationSession.displayMode,
-      locales: elevationSession.uiLocales,
+      session: elevationRequest.id,
+      display: elevationRequest.displayMode,
+      locales: elevationRequest.uiLocales,
     },
   }).toString();

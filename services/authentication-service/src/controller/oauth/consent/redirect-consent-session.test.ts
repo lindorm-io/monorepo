@@ -6,11 +6,11 @@ import {
 } from "@lindorm-io/common-types";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
-import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { mockFetchOauthAuthorizationRequest } from "../../../fixtures/axios";
 import {
   confirmOauthConsent as _confirmOauthConsent,
   getOauthAuthorizationRedirect as _getOauthAuthorizationRedirect,
-  getOauthAuthorizationSession as _getOauthAuthorizationSession,
+  getOauthAuthorizationRequest as _getOauthAuthorizationRequest,
 } from "../../../handler";
 import { redirectConsentSessionController } from "./redirect-consent-session";
 
@@ -18,7 +18,7 @@ jest.mock("../../../handler");
 
 const confirmOauthConsent = _confirmOauthConsent as jest.Mock;
 const getOauthAuthorizationRedirect = _getOauthAuthorizationRedirect as jest.Mock;
-const getOauthAuthorizationSession = _getOauthAuthorizationSession as jest.Mock;
+const getOauthAuthorizationRequest = _getOauthAuthorizationRequest as jest.Mock;
 
 describe("redirectConsentSessionController", () => {
   let ctx: any;
@@ -37,7 +37,7 @@ describe("redirectConsentSessionController", () => {
     getOauthAuthorizationRedirect.mockResolvedValue({
       redirectTo: "getOauthAuthorizationRedirect",
     });
-    getOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
+    getOauthAuthorizationRequest.mockResolvedValue(mockFetchOauthAuthorizationRequest());
   });
 
   test("should resolve url", async () => {
@@ -47,8 +47,8 @@ describe("redirectConsentSessionController", () => {
   });
 
   test("should resolve redirect", async () => {
-    getOauthAuthorizationSession.mockResolvedValue(
-      mockFetchOauthAuthorizationSession({
+    getOauthAuthorizationRequest.mockResolvedValue(
+      mockFetchOauthAuthorizationRequest({
         consent: {
           isRequired: true,
           status: SessionStatus.CONFIRMED,
@@ -67,8 +67,8 @@ describe("redirectConsentSessionController", () => {
   });
 
   test("should resolve confirm", async () => {
-    getOauthAuthorizationSession.mockResolvedValue(
-      mockFetchOauthAuthorizationSession({
+    getOauthAuthorizationRequest.mockResolvedValue(
+      mockFetchOauthAuthorizationRequest({
         client: {
           id: randomUUID(),
           name: "Test Client",

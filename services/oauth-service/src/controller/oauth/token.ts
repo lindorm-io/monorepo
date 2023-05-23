@@ -1,9 +1,5 @@
-import {
-  OpenIdGrantType,
-  OpenIdTokenRequestBody,
-  OpenIdTokenResponseBody,
-} from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
+import { OpenIdGrantType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
@@ -14,12 +10,14 @@ import {
 } from "../../handler";
 import { ServerKoaController } from "../../types";
 
-type RequestData = OpenIdTokenRequestBody;
+type RequestData = TokenRequestBody;
 
-type ResponseBody = OpenIdTokenResponseBody;
+type ResponseBody = TokenResponse;
 
 export const oauthTokenSchema = Joi.object<RequestData>()
   .keys({
+    assertion: Joi.string(),
+    authenticationToken: Joi.string(),
     clientId: Joi.string().guid(),
     clientSecret: Joi.string(),
     code: JOI_CODE,
@@ -29,6 +27,7 @@ export const oauthTokenSchema = Joi.object<RequestData>()
     refreshToken: Joi.string().min(128),
     scope: Joi.string(),
   })
+  .options({ abortEarly: false, allowUnknown: true })
   .required();
 
 export const oauthTokenController: ServerKoaController<RequestData> = async (
@@ -52,7 +51,14 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
 
   let body: Partial<ResponseBody> = {};
 
+  ctx.set("Cache-Control", "no-store");
+  ctx.set("Pragma", "no-cache");
+
   switch (grantType) {
+    // case OpenIdGrantType.AUTHENTICATION_TOKEN:
+    // body = await handleAuthenticationTokenGrant(ctx);
+    // break;
+
     case OpenIdGrantType.AUTHORIZATION_CODE:
       body = await handleAuthorizationCodeGrant(ctx);
       break;
@@ -66,7 +72,9 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
       break;
 
     default:
-      break;
+      throw new ServerError("Unexpected Grant Type", {
+        data: { grantType },
+      });
   }
 
   return { body };

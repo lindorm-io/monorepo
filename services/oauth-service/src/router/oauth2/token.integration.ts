@@ -6,7 +6,7 @@ import { ClientSessionType } from "../../enum";
 import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import {
   createTestAuthorizationCode,
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -66,8 +66,8 @@ describe("/oauth2/token", () => {
       }),
     );
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         browserSessionId: browserSession.id,
         clientId: client.id,
         clientSessionId: clientSession.id,
@@ -82,7 +82,7 @@ describe("/oauth2/token", () => {
 
     await TEST_AUTHORIZATION_CODE_CACHE.create(
       createTestAuthorizationCode({
-        authorizationSessionId: authorizationSession.id,
+        AuthorizationRequestId: authorizationRequest.id,
         code,
         expires: new Date("2021-01-01T08:01:00.000Z"),
       }),
@@ -95,7 +95,7 @@ describe("/oauth2/token", () => {
         code,
         code_verifier: codeVerifier,
         grant_type: "authorization_code",
-        redirect_uri: authorizationSession.redirectUri,
+        redirect_uri: authorizationRequest.redirectUri,
       })
       .expect(200);
 

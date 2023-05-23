@@ -1,10 +1,10 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { SessionStatus } from "@lindorm-io/common-types";
-import { ServerKoaController } from "../../../types";
-import { configuration } from "../../../server/configuration";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
-import { getOauthAuthorizationRedirect, getOauthAuthorizationSession } from "../../../handler";
+import Joi from "joi";
+import { getOauthAuthorizationRedirect, getOauthAuthorizationRequest } from "../../../handler";
+import { configuration } from "../../../server/configuration";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = {
   session: string;
@@ -26,7 +26,7 @@ export const redirectSelectAccountController: ServerKoaController<RequestData> =
 
   const {
     selectAccount: { status },
-  } = await getOauthAuthorizationSession(ctx, session);
+  } = await getOauthAuthorizationRequest(ctx, session);
 
   if (status !== SessionStatus.PENDING) {
     logger.warn("Unexpected Session Status", { status });

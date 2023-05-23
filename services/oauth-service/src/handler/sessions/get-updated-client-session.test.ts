@@ -1,9 +1,9 @@
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
-import { AuthorizationSession, Client, ClientSession } from "../../entity";
+import { AuthorizationRequest, Client, ClientSession } from "../../entity";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
@@ -13,7 +13,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("getUpdatedClientSession", () => {
   let ctx: any;
-  let authorizationSession: AuthorizationSession;
+  let authorizationRequest: AuthorizationRequest;
   let client: Client;
 
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe("getUpdatedClientSession", () => {
       },
     };
 
-    authorizationSession = createTestAuthorizationSession({
+    authorizationRequest = createTestAuthorizationRequest({
       confirmedConsent: {
         audiences: ["6c04e67f-7911-4692-ab3b-f7b3f3178a40", "968db71c-3ea5-446a-a38e-cf614ec3168c"],
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
@@ -63,9 +63,9 @@ describe("getUpdatedClientSession", () => {
   });
 
   test("should resolve created client session on missing session", async () => {
-    authorizationSession.clientSessionId = null;
+    authorizationRequest.clientSessionId = null;
 
-    await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
+    await expect(getUpdatedClientSession(ctx, authorizationRequest, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
     );
 
@@ -88,10 +88,10 @@ describe("getUpdatedClientSession", () => {
   });
 
   test("should resolve refresh session", async () => {
-    authorizationSession.clientSessionId = null;
-    authorizationSession.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
+    authorizationRequest.clientSessionId = null;
+    authorizationRequest.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
 
-    await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
+    await expect(getUpdatedClientSession(ctx, authorizationRequest, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
     );
 
@@ -109,7 +109,7 @@ describe("getUpdatedClientSession", () => {
       }),
     );
 
-    await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
+    await expect(getUpdatedClientSession(ctx, authorizationRequest, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
     );
 
@@ -132,7 +132,7 @@ describe("getUpdatedClientSession", () => {
       }),
     );
 
-    await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
+    await expect(getUpdatedClientSession(ctx, authorizationRequest, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
     );
 
@@ -151,7 +151,7 @@ describe("getUpdatedClientSession", () => {
   });
 
   test("should keep immutable values once set", async () => {
-    authorizationSession.confirmedLogin.levelOfAssurance = 1;
+    authorizationRequest.confirmedLogin.levelOfAssurance = 1;
 
     ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
@@ -162,7 +162,7 @@ describe("getUpdatedClientSession", () => {
       }),
     );
 
-    await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
+    await expect(getUpdatedClientSession(ctx, authorizationRequest, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
     );
 

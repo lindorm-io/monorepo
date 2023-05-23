@@ -1,5 +1,5 @@
-import { LindormAddress } from "./lindorm-address";
 import { OpenIdClaims } from "../open-id";
+import { LindormAddress } from "./lindorm-address";
 
 type CustomClaims = {
   // accessibility
@@ -23,7 +23,7 @@ type CustomClaims = {
 
   // profile
   maritalStatus: string | null;
-  takenName: string | null;
+  preferredName: string | null;
 
   // social_security_number
   socialSecurityNumber: string | null;

@@ -8,7 +8,7 @@ import {
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
-export const mockFetchOauthElevationSession = (
+export const mockFetchOauthElevationRequest = (
   options: Partial<GetElevationResponse> = {},
 ): GetElevationResponse => ({
   elevation: {
@@ -22,7 +22,7 @@ export const mockFetchOauthElevationSession = (
     requiredMethods: [AuthenticationMethod.EMAIL],
   },
 
-  elevationSession: {
+  elevationRequest: {
     id: randomUUID(),
     authenticationHint: ["test@lindorm.io"],
     country: "se",

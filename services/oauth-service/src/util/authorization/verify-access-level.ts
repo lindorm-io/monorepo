@@ -1,8 +1,8 @@
-import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
 import { getAdjustedAccessLevel } from "../get-adjusted-access-level";
 
 export const verifyAccessLevel = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   session: BrowserSession | ClientSession,
 ): boolean => {
   if (!session.levelOfAssurance) return false;
@@ -10,7 +10,7 @@ export const verifyAccessLevel = (
   const adjustedAccessLevel = getAdjustedAccessLevel(session);
 
   return (
-    adjustedAccessLevel >= authorizationSession.requestedLogin.minimumLevel &&
-    adjustedAccessLevel >= authorizationSession.requestedLogin.requiredLevel
+    adjustedAccessLevel >= authorizationRequest.requestedLogin.minimumLevel &&
+    adjustedAccessLevel >= authorizationRequest.requestedLogin.requiredLevel
   );
 };

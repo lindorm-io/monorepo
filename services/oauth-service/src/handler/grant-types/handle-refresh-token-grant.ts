@@ -1,4 +1,4 @@
-import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { isAfter } from "date-fns";
 import { ClientSessionType, OpaqueTokenType } from "../../enum";
@@ -6,8 +6,8 @@ import { ServerKoaContext } from "../../types";
 import { generateTokenResponse } from "../oauth";
 
 export const handleRefreshTokenGrant = async (
-  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
-): Promise<Partial<OpenIdTokenResponseBody>> => {
+  ctx: ServerKoaContext<TokenRequestBody>,
+): Promise<Partial<TokenResponse>> => {
   const {
     data: { refreshToken: token },
     entity: { client },

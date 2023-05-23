@@ -21,32 +21,32 @@ export const getElevationController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { client, elevationSession, tenant },
+    entity: { client, elevationRequest, tenant },
   } = ctx;
 
   return {
     body: {
       elevation: {
-        isRequired: elevationSession.status === SessionStatus.PENDING,
-        status: elevationSession.status,
+        isRequired: elevationRequest.status === SessionStatus.PENDING,
+        status: elevationRequest.status,
 
-        minimumLevel: elevationSession.requestedAuthentication.minimumLevel,
-        recommendedLevel: elevationSession.requestedAuthentication.recommendedLevel,
-        recommendedMethods: elevationSession.requestedAuthentication.recommendedMethods,
-        requiredLevel: elevationSession.requestedAuthentication.requiredLevel,
-        requiredMethods: elevationSession.requestedAuthentication.requiredMethods,
+        minimumLevel: elevationRequest.requestedAuthentication.minimumLevel,
+        recommendedLevel: elevationRequest.requestedAuthentication.recommendedLevel,
+        recommendedMethods: elevationRequest.requestedAuthentication.recommendedMethods,
+        requiredLevel: elevationRequest.requestedAuthentication.requiredLevel,
+        requiredMethods: elevationRequest.requestedAuthentication.requiredMethods,
       },
 
-      elevationSession: {
-        id: elevationSession.id,
-        authenticationHint: elevationSession.authenticationHint,
-        country: elevationSession.country,
-        displayMode: elevationSession.displayMode,
-        expires: elevationSession.expires.toISOString(),
-        idTokenHint: elevationSession.idTokenHint,
-        identityId: elevationSession.identityId,
-        nonce: elevationSession.nonce,
-        uiLocales: elevationSession.uiLocales,
+      elevationRequest: {
+        id: elevationRequest.id,
+        authenticationHint: elevationRequest.authenticationHint,
+        country: elevationRequest.country,
+        displayMode: elevationRequest.displayMode,
+        expires: elevationRequest.expires.toISOString(),
+        idTokenHint: elevationRequest.idTokenHint,
+        identityId: elevationRequest.identityId,
+        nonce: elevationRequest.nonce,
+        uiLocales: elevationRequest.uiLocales,
       },
 
       client: {

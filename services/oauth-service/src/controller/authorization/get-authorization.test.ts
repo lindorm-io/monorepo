@@ -1,8 +1,13 @@
-import { AuthenticationMethod, OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  OpenIdScope,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -32,7 +37,7 @@ describe("getAuthorizationController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        authorizationSession: createTestAuthorizationSession({
+        authorizationRequest: createTestAuthorizationRequest({
           id: "bd959ef1-6782-46ea-baff-2eabad97d967",
           requestedConsent: {
             audiences: ["fecdd5e7-6e6c-4bc7-8473-e87f8a1d13db"],
@@ -50,8 +55,13 @@ describe("getAuthorizationController", () => {
             minimumLevel: 2,
             recommendedLevel: 2,
             recommendedMethods: [AuthenticationMethod.EMAIL],
+            recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
             requiredLevel: 3,
             requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+            requiredStrategies: [
+              AuthenticationStrategy.EMAIL_CODE,
+              AuthenticationStrategy.PHONE_OTP,
+            ],
           },
           requestedSelectAccount: {
             browserSessions: [
@@ -125,8 +135,10 @@ describe("getAuthorizationController", () => {
           minimumLevel: 2,
           recommendedLevel: 2,
           recommendedMethods: ["email"],
+          recommendedStrategies: ["email_code"],
           requiredLevel: 3,
           requiredMethods: ["email", "phone"],
+          requiredStrategies: ["email_code", "phone_otp"],
         },
 
         selectAccount: {
@@ -141,9 +153,8 @@ describe("getAuthorizationController", () => {
           ],
         },
 
-        authorizationSession: {
+        authorizationRequest: {
           id: "bd959ef1-6782-46ea-baff-2eabad97d967",
-          authToken: "auth.jwt.jwt",
           country: "se",
           displayMode: "popup",
           expires: "2021-01-02T08:00:00.000Z",

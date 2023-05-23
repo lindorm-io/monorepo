@@ -1,14 +1,14 @@
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { getAddress, getDisplayName, getName } from "../../util";
-import { getIdentifierClaims } from "../../handler";
-import { getUnixTime } from "date-fns";
 import {
   GetUserinfoResponse,
   LindormClaims,
   LindormScope,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { getUnixTime } from "date-fns";
+import { getIdentifierClaims } from "../../handler";
+import { ServerKoaController } from "../../types";
+import { getAddress, getDisplayName, getName } from "../../util";
 
 type ResponseData = GetUserinfoResponse;
 
@@ -69,7 +69,7 @@ export const getUserinfoController: ServerKoaController = async (
         claims.picture = identity.picture;
         claims.preferredUsername = identity.preferredUsername;
         claims.profile = identity.profile;
-        claims.takenName = identity.takenName;
+        claims.preferredName = identity.preferredName;
         claims.website = identity.website;
         claims.zoneInfo = identity.zoneInfo;
         break;

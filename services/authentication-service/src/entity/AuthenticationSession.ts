@@ -43,9 +43,11 @@ export type AuthenticationSessionAttributes = EntityAttributes & {
   phoneHint: string | null;
   recommendedLevel: LevelOfAssurance;
   recommendedMethods: Array<AuthenticationMethod>;
+  recommendedStrategies: Array<AuthenticationStrategy>;
   remember: boolean;
   requiredLevel: LevelOfAssurance;
   requiredMethods: Array<AuthenticationMethod>;
+  requiredStrategies: Array<AuthenticationStrategy>;
   sso: boolean;
   status: SessionStatus;
 };
@@ -68,9 +70,11 @@ export type AuthenticationSessionOptions = Optional<
   | "phoneHint"
   | "recommendedLevel"
   | "recommendedMethods"
+  | "recommendedStrategies"
   | "remember"
   | "requiredLevel"
   | "requiredMethods"
+  | "requiredStrategies"
   | "sso"
   | "status"
 >;
@@ -101,9 +105,11 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     phoneHint: Joi.string().allow(null).required(),
     recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     recommendedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    recommendedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     remember: Joi.boolean().required(),
     requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     requiredMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
+    requiredStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     sso: Joi.boolean().required(),
     status: JOI_SESSION_STATUS.required(),
   })
@@ -125,8 +131,10 @@ export class AuthenticationSession
   public readonly phoneHint: string | null;
   public readonly recommendedLevel: LevelOfAssurance;
   public readonly recommendedMethods: Array<AuthenticationMethod>;
+  public readonly recommendedStrategies: Array<AuthenticationStrategy>;
   public readonly requiredLevel: LevelOfAssurance;
   public readonly requiredMethods: Array<AuthenticationMethod>;
+  public readonly requiredStrategies: Array<AuthenticationStrategy>;
 
   public allowedStrategies: Array<AuthenticationStrategy>;
   public code: string | null;
@@ -163,9 +171,11 @@ export class AuthenticationSession
     this.phoneHint = options.phoneHint || null;
     this.recommendedLevel = options.recommendedLevel || 1;
     this.recommendedMethods = options.recommendedMethods || [];
+    this.recommendedStrategies = options.recommendedStrategies || [];
     this.remember = options.remember === true;
     this.requiredLevel = options.requiredLevel || 1;
     this.requiredMethods = options.requiredMethods || [];
+    this.requiredStrategies = options.requiredStrategies || [];
     this.sso = options.sso === true;
     this.status = options.status || SessionStatus.PENDING;
   }
@@ -202,9 +212,11 @@ export class AuthenticationSession
       phoneHint: this.phoneHint,
       recommendedLevel: this.recommendedLevel,
       recommendedMethods: this.recommendedMethods,
+      recommendedStrategies: this.recommendedStrategies,
       remember: this.remember,
       requiredLevel: this.requiredLevel,
       requiredMethods: this.requiredMethods,
+      requiredStrategies: this.requiredStrategies,
       sso: this.sso,
       status: this.status,
     };

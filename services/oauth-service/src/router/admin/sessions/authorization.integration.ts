@@ -1,24 +1,28 @@
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  OpenIdScope,
+} from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
-import { server } from "../../../server/server";
 import {
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_TENANT_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -40,8 +44,8 @@ describe("/admin/sessions/authorization", () => {
       }),
     );
 
-    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationSession({
+    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationRequest({
         requestedConsent: {
           audiences: ["0d51b830-1c22-4eea-95cf-209505626d63"],
           scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE, OpenIdScope.PROFILE],
@@ -50,9 +54,11 @@ describe("/admin/sessions/authorization", () => {
           identityId: browserSession.identityId,
           minimumLevel: 2,
           recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.EMAIL],
+          recommendedMethods: [AuthenticationMethod.SESSION_LINK],
+          recommendedStrategies: [AuthenticationStrategy.SESSION_OTP],
           requiredLevel: 3,
           requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          requiredStrategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
         },
         requestedSelectAccount: {
           browserSessions: [
@@ -63,7 +69,6 @@ describe("/admin/sessions/authorization", () => {
           ],
         },
 
-        authToken: "auth.jwt.jwt",
         browserSessionId: browserSession.id,
         clientId: client.id,
         clientSessionId: clientSession.id,
@@ -77,7 +82,7 @@ describe("/admin/sessions/authorization", () => {
     });
 
     const response = await request(server.callback())
-      .get(`/admin/sessions/authorization/${authorizationSession.id}`)
+      .get(`/admin/sessions/authorization/${authorizationRequest.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -102,9 +107,11 @@ describe("/admin/sessions/authorization", () => {
         identity_id: browserSession.identityId,
         minimum_level: 2,
         recommended_level: 2,
-        recommended_methods: ["email"],
+        recommended_methods: ["session_link"],
+        recommended_strategies: ["session_otp"],
         required_level: 3,
         required_methods: ["email", "phone"],
+        required_strategies: ["email_code", "phone_otp"],
       },
 
       select_account: {
@@ -119,9 +126,8 @@ describe("/admin/sessions/authorization", () => {
         ],
       },
 
-      authorization_session: {
-        id: authorizationSession.id,
-        auth_token: "auth.jwt.jwt",
+      authorization_request: {
+        id: authorizationRequest.id,
         country: "se",
         display_mode: "popup",
         expires: "2021-01-02T08:00:00.000Z",

@@ -1,8 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
-import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
 import { JwtDecodeData } from "@lindorm-io/jwt";
-import { VerifiedAuthenticationConfirmationToken, VerifiedIdentityToken } from "../common";
+import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
   LindormNodeServerContext,
@@ -13,24 +12,25 @@ import {
   LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
+import { VerifiedIdentityToken } from "../common";
 import {
-  AuthorizationSession,
-  ClaimsSession,
+  AuthorizationRequest,
+  ClaimsRequest,
   Client,
   ClientSession,
-  ElevationSession,
+  ElevationRequest,
   LogoutSession,
   OpaqueToken,
   Tenant,
 } from "../entity";
 import {
   AuthorizationCodeCache,
-  AuthorizationSessionCache,
+  AuthorizationRequestCache,
   BrowserSessionRepository,
-  ClaimsSessionCache,
+  ClaimsRequestCache,
   ClientRepository,
   ClientSessionRepository,
-  ElevationSessionCache,
+  ElevationRequestCache,
   LogoutSessionCache,
   OpaqueTokenCache,
   TenantRepository,
@@ -41,11 +41,11 @@ interface ServerAxios extends LindormNodeServerAxios {
 }
 
 interface ServerEntity {
-  authorizationSession: AuthorizationSession;
-  claimsSession: ClaimsSession;
+  authorizationRequest: AuthorizationRequest;
+  claimsRequest: ClaimsRequest;
   client: Client;
   clientSession: ClientSession;
-  elevationSession: ElevationSession;
+  elevationRequest: ElevationRequest;
   logoutSession: LogoutSession;
   opaqueToken: OpaqueToken;
   tenant: Tenant;
@@ -60,15 +60,14 @@ interface ServerMongo extends LindormNodeServerMongo {
 
 interface ServerRedis extends LindormNodeServerRedis {
   authorizationCodeCache: AuthorizationCodeCache;
-  authorizationSessionCache: AuthorizationSessionCache;
-  claimsSessionCache: ClaimsSessionCache;
-  elevationSessionCache: ElevationSessionCache;
+  authorizationRequestCache: AuthorizationRequestCache;
+  claimsRequestCache: ClaimsRequestCache;
+  elevationRequestCache: ElevationRequestCache;
   logoutSessionCache: LogoutSessionCache;
   opaqueTokenCache: OpaqueTokenCache;
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
   idToken: VerifiedIdentityToken;
   refreshToken: JwtDecodeData;
 }
@@ -82,10 +81,8 @@ interface Context extends LindormNodeServerContext {
   token: ServerToken;
 }
 
-export interface ServerKoaContext<D extends Dict = Dict>
-  extends LindormNodeServerKoaContext<Context, D> {}
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export interface ServerKoaController<D extends Dict = Dict>
-  extends Controller<ServerKoaContext<D>> {}
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
-export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

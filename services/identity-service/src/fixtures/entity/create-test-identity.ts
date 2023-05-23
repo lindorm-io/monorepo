@@ -1,6 +1,6 @@
-import { Identity, IdentityOptions } from "../../entity";
 import { NamingSystem } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
+import { Identity, IdentityOptions } from "../../entity";
 
 export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Identity =>
   new Identity({
@@ -23,7 +23,7 @@ export const createTestIdentity = (options: Partial<IdentityOptions> = {}): Iden
     preferredUsername: "rio_wheat",
     profile: "https://profile.url/",
     pronouns: "she/her",
-    takenName: "Olivia",
+    preferredName: "Olivia",
     username: randomString(16),
     website: "https://website.url/",
     zoneInfo: "Europe/Stockholm",

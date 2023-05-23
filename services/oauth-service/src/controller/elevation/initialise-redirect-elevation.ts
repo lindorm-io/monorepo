@@ -1,10 +1,6 @@
-import Joi from "joi";
 import { AuthenticationMethod, InitialiseElevationRequestQuery } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_DISPLAY_MODE } from "../../constant";
-import { ServerKoaController } from "../../types";
-import { assertRedirectUri, createElevationPendingUri } from "../../util";
-import { initialiseElevation } from "../../handler";
+import Joi from "joi";
 import {
   JOI_COUNTRY_CODE,
   JOI_JWT,
@@ -12,6 +8,10 @@ import {
   JOI_NONCE,
   JOI_STATE,
 } from "../../common";
+import { JOI_DISPLAY_MODE } from "../../constant";
+import { initialiseElevation } from "../../handler";
+import { ServerKoaController } from "../../types";
+import { assertRedirectUri, createElevationPendingUri } from "../../util";
 
 type RequestData = InitialiseElevationRequestQuery;
 
@@ -52,7 +52,7 @@ export const initialiseRedirectElevationController: ServerKoaController<RequestD
 
   assertRedirectUri(client, redirectUri);
 
-  const elevationSession = await initialiseElevation(ctx, {
+  const elevationRequest = await initialiseElevation(ctx, {
     authenticationHint,
     country,
     display,
@@ -64,5 +64,5 @@ export const initialiseRedirectElevationController: ServerKoaController<RequestD
     uiLocales: uiLocales ? uiLocales.split(" ") : [],
   });
 
-  return { redirect: createElevationPendingUri(elevationSession) };
+  return { redirect: createElevationPendingUri(elevationRequest) };
 };

@@ -4,7 +4,7 @@ import MockDate from "mockdate";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
 import {
   getIdentifierClaims as _getIdentifierClaims,
-  getOauthClaimsSession as _getOauthClaimsSession,
+  getOauthClaimsRequest as _getOauthClaimsRequest,
 } from "../../handler";
 import {
   getAddress as _getAddress,
@@ -22,7 +22,7 @@ const getAddress = _getAddress as jest.Mock;
 const getDisplayName = _getDisplayName as jest.Mock;
 const getIdentifierClaims = _getIdentifierClaims as jest.Mock;
 const getName = _getName as jest.Mock;
-const getOauthClaimsSession = _getOauthClaimsSession as jest.Mock;
+const getOauthClaimsRequest = _getOauthClaimsRequest as jest.Mock;
 
 describe("getClaimsController", () => {
   let ctx: any;
@@ -51,8 +51,8 @@ describe("getClaimsController", () => {
       socialSecurityNumberVerified: false,
     });
     getName.mockReturnValue("getName");
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID],
       },
@@ -70,8 +70,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve ADDRESS", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, OpenIdScope.ADDRESS],
       },
@@ -88,8 +88,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve EMAIL", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
       },
@@ -107,8 +107,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve PHONE", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE],
       },
@@ -126,8 +126,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve PROFILE", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
       },
@@ -149,7 +149,7 @@ describe("getClaimsController", () => {
         preferredUsername: "rio_wheat",
         profile: "https://profile.url/",
         sub: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        takenName: "Olivia",
+        preferredName: "Olivia",
         updatedAt: 1609488000,
         website: "https://website.url/",
         zoneInfo: "Europe/Stockholm",
@@ -158,8 +158,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve ACCESSIBILITY", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, LindormScope.ACCESSIBILITY],
       },
@@ -176,8 +176,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve NATIONAL_IDENTITY_NUMBER", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, LindormScope.NATIONAL_IDENTITY_NUMBER],
       },
@@ -195,8 +195,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve PUBLIC", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, LindormScope.PUBLIC],
       },
@@ -215,8 +215,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve SOCIAL_SECURITY_NUMBER", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, LindormScope.SOCIAL_SECURITY_NUMBER],
       },
@@ -234,8 +234,8 @@ describe("getClaimsController", () => {
   });
 
   test("should resolve USERNAME", async () => {
-    getOauthClaimsSession.mockResolvedValue({
-      claimsSession: {
+    getOauthClaimsRequest.mockResolvedValue({
+      claimsRequest: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         scopes: [OpenIdScope.OPENID, LindormScope.USERNAME],
       },

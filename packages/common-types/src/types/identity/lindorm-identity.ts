@@ -1,8 +1,8 @@
+import { NamingSystem } from "../../enums";
 import { LindormIdentityAddress } from "./lindorm-identity-address";
 import { LindormIdentityEmail } from "./lindorm-identity-email";
-import { LindormIdentityPhoneNumber } from "./lindorm-identity-phone-number";
-import { NamingSystem } from "../../enums";
 import { LindormIdentityNIN } from "./lindorm-identity-nin";
+import { LindormIdentityPhoneNumber } from "./lindorm-identity-phone-number";
 import { LindormIdentitySSN } from "./lindorm-identity-ssn";
 
 export type LindormIdentity = {
@@ -22,7 +22,7 @@ export type LindormIdentity = {
   preferredUsername: string | null;
   profile: string | null;
   pronouns: string | null;
-  takenName: string | null;
+  preferredName: string | null;
   username: string | null;
   website: string | null;
   zoneInfo: string | null;

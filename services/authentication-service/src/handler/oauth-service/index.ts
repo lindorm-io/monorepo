@@ -4,7 +4,7 @@ export * from "./confirm-oauth-login";
 export * from "./confirm-oauth-logout";
 export * from "./confirm-oauth-select-account";
 export * from "./get-oauth-authorization-redirect";
-export * from "./get-oauth-authorization-session";
+export * from "./get-oauth-authorization-request";
 export * from "./get-oauth-elevation-session";
 export * from "./get-oauth-logout-redirect";
 export * from "./get-oauth-logout-session";

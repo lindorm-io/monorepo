@@ -1,7 +1,7 @@
+import { SessionStatus } from "@lindorm-io/common-types";
 import { Account, AuthenticationSession } from "../entity";
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { getMethodsFromStrategies } from "./get-methods-from-strategies";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 export const calculateAuthenticationStatus = (
   authenticationSession: AuthenticationSession,
@@ -19,6 +19,11 @@ export const calculateAuthenticationStatus = (
 
   for (const method of authenticationSession.requiredMethods) {
     if (methods.includes(method)) continue;
+    return SessionStatus.PENDING;
+  }
+
+  for (const strategy of authenticationSession.requiredStrategies) {
+    if (authenticationSession.confirmedStrategies.includes(strategy)) continue;
     return SessionStatus.PENDING;
   }
 

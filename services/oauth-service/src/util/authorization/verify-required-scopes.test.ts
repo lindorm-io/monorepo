@@ -1,49 +1,49 @@
 import { OpenIdScope } from "@lindorm-io/common-types";
-import { AuthorizationSession, ClientSession } from "../../entity";
-import { createTestAuthorizationSession, createTestClientSession } from "../../fixtures/entity";
+import { AuthorizationRequest, ClientSession } from "../../entity";
+import { createTestAuthorizationRequest, createTestClientSession } from "../../fixtures/entity";
 import { verifyRequiredScopes } from "./verify-required-scopes";
 
 describe("verifyRequiredScopes", () => {
-  let authorizationSession: AuthorizationSession;
+  let authorizationRequest: AuthorizationRequest;
   let clientSession: ClientSession;
 
   beforeEach(() => {
-    authorizationSession = createTestAuthorizationSession();
+    authorizationRequest = createTestAuthorizationRequest();
 
     clientSession = createTestClientSession();
   });
 
   test("should return true when authorization session has no required scopes", () => {
-    authorizationSession.requestedConsent.scopes = [];
+    authorizationRequest.requestedConsent.scopes = [];
 
-    expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(true);
+    expect(verifyRequiredScopes(authorizationRequest, clientSession)).toBe(true);
   });
 
   test("should return true when scopes match", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationRequest.requestedConsent.scopes = [OpenIdScope.OPENID];
     clientSession.scopes = [OpenIdScope.OPENID];
 
-    expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(true);
+    expect(verifyRequiredScopes(authorizationRequest, clientSession)).toBe(true);
   });
 
   test("should return true with many scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationRequest.requestedConsent.scopes = [OpenIdScope.OPENID];
     clientSession.scopes = [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.PROFILE];
 
-    expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(true);
+    expect(verifyRequiredScopes(authorizationRequest, clientSession)).toBe(true);
   });
 
   test("should return false when session has no scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationRequest.requestedConsent.scopes = [OpenIdScope.OPENID];
     clientSession.scopes = [];
 
-    expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(false);
+    expect(verifyRequiredScopes(authorizationRequest, clientSession)).toBe(false);
   });
 
   test("should return false when session has missing scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.EMAIL];
+    authorizationRequest.requestedConsent.scopes = [OpenIdScope.EMAIL];
     clientSession.scopes = [OpenIdScope.OPENID];
 
-    expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(false);
+    expect(verifyRequiredScopes(authorizationRequest, clientSession)).toBe(false);
   });
 });

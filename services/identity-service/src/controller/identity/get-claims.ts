@@ -1,9 +1,3 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { getAddress, getDisplayName, getName } from "../../util";
-import { getIdentifierClaims, getOauthClaimsSession } from "../../handler";
-import { getUnixTime } from "date-fns";
 import {
   GetClaimsQuery,
   GetClaimsResponse,
@@ -11,6 +5,12 @@ import {
   LindormScope,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { getUnixTime } from "date-fns";
+import Joi from "joi";
+import { getIdentifierClaims, getOauthClaimsRequest } from "../../handler";
+import { ServerKoaController } from "../../types";
+import { getAddress, getDisplayName, getName } from "../../util";
 
 type ResponseData = GetClaimsResponse;
 
@@ -29,8 +29,8 @@ export const getClaimsController: ServerKoaController = async (
   } = ctx;
 
   const {
-    claimsSession: { identityId, scopes },
-  } = await getOauthClaimsSession(ctx, session);
+    claimsRequest: { identityId, scopes },
+  } = await getOauthClaimsRequest(ctx, session);
 
   const identity = await identityRepository.find({ id: identityId });
 
@@ -80,7 +80,7 @@ export const getClaimsController: ServerKoaController = async (
         claims.picture = identity.picture;
         claims.preferredUsername = identity.preferredUsername;
         claims.profile = identity.profile;
-        claims.takenName = identity.takenName;
+        claims.preferredName = identity.preferredName;
         claims.website = identity.website;
         claims.zoneInfo = identity.zoneInfo;
         break;

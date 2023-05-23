@@ -1,11 +1,9 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { initialiseElevation } from "../../handler";
 import {
   InitialiseElevationRequestBody,
   InitialiseElevationResponse,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import {
   JOI_COUNTRY_CODE,
   JOI_JWT,
@@ -13,6 +11,8 @@ import {
   JOI_LOCALE,
   JOI_NONCE,
 } from "../../common";
+import { initialiseElevation } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseElevationRequestBody;
 
@@ -39,7 +39,7 @@ export const initialisePostElevationController: ServerKoaController<RequestData>
     data: { authenticationHint, country, levelOfAssurance, methods, nonce, uiLocales },
   } = ctx;
 
-  const elevationSession = await initialiseElevation(ctx, {
+  const elevationRequest = await initialiseElevation(ctx, {
     authenticationHint,
     country,
     levelOfAssurance,
@@ -48,5 +48,5 @@ export const initialisePostElevationController: ServerKoaController<RequestData>
     uiLocales,
   });
 
-  return { body: { elevationSessionId: elevationSession.id } };
+  return { body: { elevationRequestId: elevationRequest.id } };
 };

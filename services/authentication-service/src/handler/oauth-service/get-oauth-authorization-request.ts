@@ -1,8 +1,8 @@
-import { ServerKoaContext } from "../../types";
 import { GetAuthorizationRequestParams, GetAuthorizationResponse } from "@lindorm-io/common-types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
-export const getOauthAuthorizationSession = async (
+export const getOauthAuthorizationRequest = async (
   ctx: ServerKoaContext,
   id: string,
 ): Promise<GetAuthorizationResponse> => {

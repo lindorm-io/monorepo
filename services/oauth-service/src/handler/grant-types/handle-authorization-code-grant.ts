@@ -1,15 +1,15 @@
-import { AuthorizationCode } from "../../entity";
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
+import { AuthorizationCode } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { OpenIdTokenRequestBody, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { assertCodeChallenge } from "../../util";
 import { generateTokenResponse } from "../oauth";
 
 export const handleAuthorizationCodeGrant = async (
-  ctx: ServerKoaContext<OpenIdTokenRequestBody>,
-): Promise<Partial<OpenIdTokenResponseBody>> => {
+  ctx: ServerKoaContext<TokenRequestBody>,
+): Promise<Partial<TokenResponse>> => {
   const {
-    redis: { authorizationCodeCache, authorizationSessionCache },
+    redis: { authorizationCodeCache, authorizationRequestCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
     mongo: { browserSessionRepository, clientSessionRepository },
@@ -27,11 +27,11 @@ export const handleAuthorizationCodeGrant = async (
     });
   }
 
-  const authorizationSession = await authorizationSessionCache.find({
-    id: authorizationCode.authorizationSessionId,
+  const authorizationRequest = await authorizationRequestCache.find({
+    id: authorizationCode.AuthorizationRequestId,
   });
 
-  const { codeChallenge, codeChallengeMethod } = authorizationSession.code;
+  const { codeChallenge, codeChallengeMethod } = authorizationRequest.code;
 
   if (!codeChallenge || !codeChallengeMethod) {
     throw new ServerError("Invalid Session", {
@@ -50,30 +50,30 @@ export const handleAuthorizationCodeGrant = async (
 
   assertCodeChallenge(codeChallenge, codeChallengeMethod, codeVerifier);
 
-  if (authorizationSession.clientId !== client.id) {
+  if (authorizationRequest.clientId !== client.id) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid client ID",
     });
   }
 
-  if (authorizationSession.redirectUri !== redirectUri) {
+  if (authorizationRequest.redirectUri !== redirectUri) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid redirect URI",
     });
   }
 
-  if (!authorizationSession.browserSessionId) {
+  if (!authorizationRequest.browserSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
       description: "Session data is missing",
-      data: { browserSessionId: authorizationSession.browserSessionId },
+      data: { browserSessionId: authorizationRequest.browserSessionId },
     });
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: authorizationSession.browserSessionId,
+    id: authorizationRequest.browserSessionId,
   });
 
   if (
@@ -93,17 +93,17 @@ export const handleAuthorizationCodeGrant = async (
   }
 
   await authorizationCodeCache.destroy(authorizationCode);
-  await authorizationSessionCache.destroy(authorizationSession);
+  await authorizationRequestCache.destroy(authorizationRequest);
 
-  if (!authorizationSession.clientSessionId) {
+  if (!authorizationRequest.clientSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
-      data: { clientSessionId: authorizationSession.clientSessionId },
+      data: { clientSessionId: authorizationRequest.clientSessionId },
     });
   }
 
   const clientSession = await clientSessionRepository.find({
-    id: authorizationSession.clientSessionId,
+    id: authorizationRequest.clientSessionId,
   });
 
   return generateTokenResponse(ctx, client, clientSession);

@@ -1,25 +1,25 @@
 import { Environment } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../types";
-import { configuration } from "./configuration";
+import { KeyType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { logger } from "./logger";
-import { middleware } from "./middleware";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
-import { workers } from "./workers";
-import { KeyType } from "@lindorm-io/key-pair";
 import {
   AuthorizationCodeCache,
-  AuthorizationSessionCache,
+  AuthorizationRequestCache,
   BrowserSessionRepository,
-  ClaimsSessionCache,
+  ClaimsRequestCache,
   ClientRepository,
   ClientSessionRepository,
-  ElevationSessionCache,
+  ElevationRequestCache,
   LogoutSessionCache,
   OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
+import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
+import { ServerKoaContext } from "../types";
+import { configuration } from "./configuration";
+import { logger } from "./logger";
+import { middleware } from "./middleware";
+import { workers } from "./workers";
 
 export const server = createNodeServer<ServerKoaContext>({
   client: {
@@ -48,9 +48,9 @@ export const server = createNodeServer<ServerKoaContext>({
   redis: [
     OpaqueTokenCache,
     AuthorizationCodeCache,
-    AuthorizationSessionCache,
-    ClaimsSessionCache,
-    ElevationSessionCache,
+    AuthorizationRequestCache,
+    ClaimsRequestCache,
+    ElevationRequestCache,
     LogoutSessionCache,
   ],
   redisConnection,

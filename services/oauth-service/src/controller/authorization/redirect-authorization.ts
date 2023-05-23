@@ -1,11 +1,11 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
 import {
   RedirectAuthorizationRequestParams,
   RedirectAuthorizationResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 import {
   createAuthorizationVerifyUri,
   createConsentPendingUri,
@@ -30,41 +30,41 @@ export const redirectAuthorizationController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { authorizationSession },
+    entity: { authorizationRequest },
   } = ctx;
 
-  switch (authorizationSession.status.selectAccount) {
+  switch (authorizationRequest.status.selectAccount) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createSelectAccountPendingUri(authorizationSession) } };
+      return { body: { redirectTo: createSelectAccountPendingUri(authorizationRequest) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createSelectAccountRejectedUri(authorizationRequest) } };
 
     default:
       break;
   }
 
-  switch (authorizationSession.status.login) {
+  switch (authorizationRequest.status.login) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createLoginPendingUri(authorizationSession) } };
+      return { body: { redirectTo: createLoginPendingUri(authorizationRequest) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createLoginRejectedUri(authorizationRequest) } };
 
     default:
       break;
   }
 
-  switch (authorizationSession.status.consent) {
+  switch (authorizationRequest.status.consent) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createConsentPendingUri(authorizationSession) } };
+      return { body: { redirectTo: createConsentPendingUri(authorizationRequest) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createConsentRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createConsentRejectedUri(authorizationRequest) } };
 
     default:
       break;
   }
 
-  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationRequest) } };
 };

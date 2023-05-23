@@ -1,11 +1,11 @@
 import { ClientError } from "@lindorm-io/errors";
 import { createTestClient } from "../../fixtures/entity";
-import { oauthTokenController } from "./token";
 import {
   handleAuthorizationCodeGrant as _handleAuthorizationCodeGrant,
   handleClientCredentialsGrant as _handleClientCredentialsGrant,
   handleRefreshTokenGrant as _handleRefreshTokenGrant,
 } from "../../handler";
+import { oauthTokenController } from "./token";
 
 jest.mock("../../handler");
 
@@ -24,6 +24,7 @@ describe("oauthTokenController", () => {
       entity: {
         client: createTestClient(),
       },
+      set: jest.fn(),
     };
 
     handleAuthorizationCodeGrant.mockResolvedValue("handleAuthorizationCodeGrant");

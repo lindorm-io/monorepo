@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestIdentity } from "../../fixtures/entity";
-import { updateIdentityController } from "./update-identity";
 import { updateIdentityDisplayName as _updateIdentityDisplayName } from "../../handler";
+import { updateIdentityController } from "./update-identity";
 
 MockDate.set("2020-01-01T08:00:00.000");
 
@@ -31,7 +31,7 @@ describe("updateIdentityController", () => {
         preferredAccessibility: ["new-setting"],
         profile: "new-profile",
         pronouns: "new-pronouns",
-        takenName: "new-takenName",
+        preferredName: "new-preferredName",
         website: "new-website",
         zoneInfo: "new-zoneInfo",
       },
@@ -73,7 +73,7 @@ describe("updateIdentityController", () => {
         preferredAccessibility: ["new-setting"],
         profile: "new-profile",
         pronouns: "new-pronouns",
-        takenName: "new-takenName",
+        preferredName: "new-preferredName",
         website: "new-website",
         zoneInfo: "new-zoneInfo",
       }),

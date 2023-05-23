@@ -1,14 +1,14 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createElevationVerifyUri } from "../../util";
 import {
   ConfirmElevationRequestBody,
   ConfirmElevationRequestParams,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_LEVEL_OF_ASSURANCE } from "../../common";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createElevationVerifyUri } from "../../util";
 
 type RequestData = ConfirmElevationRequestParams & ConfirmElevationRequestBody;
 
@@ -25,39 +25,39 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { elevationSessionCache },
+    redis: { elevationRequestCache },
     data: { identityId, levelOfAssurance, methods },
-    entity: { elevationSession },
+    entity: { elevationRequest },
     logger,
   } = ctx;
 
-  assertSessionPending(elevationSession.status);
+  assertSessionPending(elevationRequest.status);
 
-  if (identityId !== elevationSession.identityId) {
+  if (identityId !== elevationRequest.identityId) {
     throw new ClientError("Invalid identity", {
       description: "The provided identityId is invalid",
       debug: {
-        expect: elevationSession.identityId,
+        expect: elevationRequest.identityId,
         actual: identityId,
       },
     });
   }
 
-  if (levelOfAssurance < elevationSession.requestedAuthentication.minimumLevel) {
+  if (levelOfAssurance < elevationRequest.requestedAuthentication.minimumLevel) {
     throw new ClientError("Invalid level", {
       description: "The provided LOA value is below minimum value",
       data: {
-        expect: elevationSession.requestedAuthentication.minimumLevel,
+        expect: elevationRequest.requestedAuthentication.minimumLevel,
         actual: levelOfAssurance,
       },
     });
   }
 
-  if (levelOfAssurance < elevationSession.requestedAuthentication.requiredLevel) {
+  if (levelOfAssurance < elevationRequest.requestedAuthentication.requiredLevel) {
     throw new ClientError("Invalid level", {
       description: "The provided LOA value is below the defined required value",
       data: {
-        expect: elevationSession.requestedAuthentication.requiredLevel,
+        expect: elevationRequest.requestedAuthentication.requiredLevel,
         actual: levelOfAssurance,
       },
     });
@@ -65,15 +65,15 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
 
   logger.debug("Updating elevation session");
 
-  elevationSession.confirmedAuthentication.latestAuthentication = new Date();
-  elevationSession.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
-  elevationSession.confirmedAuthentication.methods = methods;
+  elevationRequest.confirmedAuthentication.latestAuthentication = new Date();
+  elevationRequest.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
+  elevationRequest.confirmedAuthentication.methods = methods;
 
-  elevationSession.status = SessionStatus.CONFIRMED;
+  elevationRequest.status = SessionStatus.CONFIRMED;
 
-  await elevationSessionCache.update(elevationSession);
+  await elevationRequestCache.update(elevationRequest);
 
-  if (elevationSession.redirectUri) {
-    return { body: { redirectTo: createElevationVerifyUri(elevationSession) } };
+  if (elevationRequest.redirectUri) {
+    return { body: { redirectTo: createElevationVerifyUri(elevationRequest) } };
   }
 };

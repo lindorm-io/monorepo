@@ -1,10 +1,6 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import {
-  createTestClaimsSession,
-  createTestClient,
-  createTestClientSession,
-} from "../../fixtures/entity";
+import { createTestClaimsRequest, createTestClientSession } from "../../fixtures/entity";
 import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
 import { getIdentityClaims } from "./get-identity-claims";
 
@@ -18,11 +14,6 @@ describe("getIdentityClaims", () => {
   beforeEach(() => {
     ctx = {
       axios: {
-        axiosClient: {
-          get: jest.fn().mockResolvedValue({
-            data: { clientClaim: "clientClaim" },
-          }),
-        },
         identityClient: {
           get: jest.fn().mockResolvedValue({
             data: TEST_GET_USERINFO_RESPONSE,
@@ -30,7 +21,7 @@ describe("getIdentityClaims", () => {
         },
       },
       redis: {
-        claimsSessionCache: createMockRedisRepository(createTestClaimsSession),
+        claimsRequestCache: createMockRedisRepository(createTestClaimsRequest),
       },
     };
 
@@ -38,9 +29,7 @@ describe("getIdentityClaims", () => {
   });
 
   test("should resolve", async () => {
-    await expect(
-      getIdentityClaims(ctx, createTestClient(), createTestClientSession()),
-    ).resolves.toStrictEqual({
+    await expect(getIdentityClaims(ctx, createTestClientSession())).resolves.toStrictEqual({
       active: true,
       address: {
         careOf: "careOf",
@@ -53,7 +42,6 @@ describe("getIdentityClaims", () => {
       },
       avatarUri: "https://avatar.url/",
       birthDate: "2000-01-01",
-      clientClaim: "clientClaim",
       displayName: "displayName#8441",
       email: "test@lindorm.io",
       emailVerified: true,
@@ -79,9 +67,8 @@ describe("getIdentityClaims", () => {
       zoneInfo: "Europe/Stockholm",
     });
 
-    expect(ctx.redis.claimsSessionCache.create).toHaveBeenCalled();
-    expect(ctx.axios.axiosClient.get).toHaveBeenCalled();
+    expect(ctx.redis.claimsRequestCache.create).toHaveBeenCalled();
     expect(ctx.axios.identityClient.get).toHaveBeenCalled();
-    expect(ctx.redis.claimsSessionCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.claimsRequestCache.destroy).toHaveBeenCalled();
   });
 });

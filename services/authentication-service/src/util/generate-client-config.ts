@@ -1,9 +1,9 @@
 import { AuthMethodConfig } from "@lindorm-io/common-types";
-import { AuthenticationSession } from "../entity";
-import { AuthenticationStrategyConfig } from "../types";
-import { STRATEGY_CONFIG_LIST } from "../strategies";
 import { ServerError } from "@lindorm-io/errors";
 import { orderBy, uniq } from "lodash";
+import { AuthenticationSession } from "../entity";
+import { STRATEGY_CONFIG_LIST } from "../strategies";
+import { AuthenticationStrategyConfig } from "../types";
 import { getConfigHint } from "./get-config-hint";
 
 type AdjustedConfig = AuthenticationStrategyConfig & { recommended: boolean; required: boolean };
@@ -37,7 +37,17 @@ export const generateClientConfig = (
       weight = weight * 25;
     }
 
+    if (authenticationSession.recommendedStrategies.includes(config.strategy)) {
+      recommended = true;
+      weight = weight * 25;
+    }
+
     if (authenticationSession.requiredMethods.includes(config.method)) {
+      required = true;
+      weight = weight * 100;
+    }
+
+    if (authenticationSession.requiredStrategies.includes(config.strategy)) {
       required = true;
       weight = weight * 100;
     }

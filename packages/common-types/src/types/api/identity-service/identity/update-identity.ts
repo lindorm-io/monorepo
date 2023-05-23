@@ -20,7 +20,7 @@ export type UpdateIdentityRequestBody = Pick<
   | "preferredAccessibility"
   | "profile"
   | "pronouns"
-  | "takenName"
+  | "preferredName"
   | "website"
   | "zoneInfo"
 >;

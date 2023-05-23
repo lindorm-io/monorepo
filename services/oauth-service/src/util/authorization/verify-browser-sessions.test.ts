@@ -1,12 +1,12 @@
 import { randomUUID } from "crypto";
-import { createTestAuthorizationSession } from "../../fixtures/entity";
+import { createTestAuthorizationRequest } from "../../fixtures/entity";
 import { verifyBrowserSessions } from "./verify-browser-sessions";
 
 describe("verifyBrowserSessions", () => {
   test("should return true if there is only one browser session", () => {
     expect(
       verifyBrowserSessions(
-        createTestAuthorizationSession({
+        createTestAuthorizationRequest({
           requestedSelectAccount: {
             browserSessions: [{ browserSessionId: randomUUID(), identityId: randomUUID() }],
           },
@@ -18,7 +18,7 @@ describe("verifyBrowserSessions", () => {
   test("should return true if there are no browser sessions", () => {
     expect(
       verifyBrowserSessions(
-        createTestAuthorizationSession({
+        createTestAuthorizationRequest({
           requestedSelectAccount: {
             browserSessions: [],
           },
@@ -30,7 +30,7 @@ describe("verifyBrowserSessions", () => {
   test("should return false if there are more than one browser sessions", () => {
     expect(
       verifyBrowserSessions(
-        createTestAuthorizationSession({
+        createTestAuthorizationRequest({
           requestedSelectAccount: {
             browserSessions: [
               { browserSessionId: randomUUID(), identityId: randomUUID() },

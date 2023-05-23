@@ -1,12 +1,12 @@
-import { AuthorizationSession, Client } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
 import { difference } from "lodash";
+import { AuthorizationRequest, Client } from "../../entity";
 
 export const assertAuthorizeScope = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   client: Client,
 ): void => {
-  const diff = difference(authorizationSession.requestedConsent.scopes, client.allowed.scopes);
+  const diff = difference(authorizationRequest.requestedConsent.scopes, client.allowed.scopes);
 
   if (diff.length) {
     throw new ClientError("Invalid Scope", {
@@ -14,7 +14,7 @@ export const assertAuthorizeScope = (
       description: "invalid_scope",
       debug: {
         expect: client.allowed.scopes,
-        actual: authorizationSession.requestedConsent.scopes,
+        actual: authorizationRequest.requestedConsent.scopes,
         diff,
       },
     });

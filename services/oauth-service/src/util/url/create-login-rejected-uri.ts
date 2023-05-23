@@ -1,11 +1,11 @@
-import { AuthorizationSession } from "../../entity";
 import { createURL } from "@lindorm-io/url";
+import { AuthorizationRequest } from "../../entity";
 
-export const createLoginRejectedUri = (authorizationSession: AuthorizationSession): string =>
-  createURL(authorizationSession.redirectUri, {
+export const createLoginRejectedUri = (authorizationRequest: AuthorizationRequest): string =>
+  createURL(authorizationRequest.redirectUri, {
     query: {
       error: "request_rejected",
       error_description: "login_rejected",
-      state: authorizationSession.state,
+      state: authorizationRequest.state,
     },
   }).toString();

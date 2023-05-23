@@ -7,7 +7,7 @@ import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
 import {
   createTestAuthorizationCode,
-  createTestAuthorizationSession,
+  createTestAuthorizationRequest,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -34,7 +34,7 @@ describe("handleAuthorizationCodeGrant", () => {
     ctx = {
       redis: {
         authorizationCodeCache: createMockRedisRepository(createTestAuthorizationCode),
-        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
+        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
       },
       data: {
         code: "code",
@@ -56,8 +56,8 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should resolve", async () => {
-    ctx.redis.authorizationSessionCache.find.mockResolvedValue(
-      createTestAuthorizationSession({
+    ctx.redis.authorizationRequestCache.find.mockResolvedValue(
+      createTestAuthorizationRequest({
         clientSessionId: "f3a194da-1233-4ada-a25f-ffacbc4fc0bf",
         clientId: "26176fc1-8e86-41f4-a649-9375c3814f47",
         requestedConsent: {
@@ -82,7 +82,7 @@ describe("handleAuthorizationCodeGrant", () => {
   });
 
   test("should throw on invalid client id", async () => {
-    ctx.redis.authorizationSessionCache.find.mockResolvedValue(createTestAuthorizationSession());
+    ctx.redis.authorizationRequestCache.find.mockResolvedValue(createTestAuthorizationRequest());
 
     await expect(handleAuthorizationCodeGrant(ctx)).rejects.toThrow(ClientError);
   });

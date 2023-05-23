@@ -9,7 +9,7 @@ import Joi from "joi";
 import { JOI_CODE } from "../constant";
 
 export type AuthorizationCodeAttributes = EntityAttributes & {
-  authorizationSessionId: string;
+  AuthorizationRequestId: string;
   code: string;
   expires: Date;
 };
@@ -20,21 +20,21 @@ const schema = Joi.object<AuthorizationCodeAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    authorizationSessionId: Joi.string().guid().required(),
+    AuthorizationRequestId: Joi.string().guid().required(),
     code: JOI_CODE.required(),
     expires: Joi.date().required(),
   })
   .required();
 
 export class AuthorizationCode extends LindormEntity<AuthorizationCodeAttributes> {
-  public readonly authorizationSessionId: string;
+  public readonly AuthorizationRequestId: string;
   public readonly code: string;
   public readonly expires: Date;
 
   public constructor(options: AuthorizationCodeOptions) {
     super(options);
 
-    this.authorizationSessionId = options.authorizationSessionId;
+    this.AuthorizationRequestId = options.AuthorizationRequestId;
     this.code = options.code;
     this.expires = options.expires;
   }
@@ -47,7 +47,7 @@ export class AuthorizationCode extends LindormEntity<AuthorizationCodeAttributes
     return {
       ...this.defaultJSON(),
 
-      authorizationSessionId: this.authorizationSessionId,
+      AuthorizationRequestId: this.AuthorizationRequestId,
       code: this.code,
       expires: this.expires,
     };

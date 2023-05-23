@@ -1,14 +1,14 @@
-import { AuthorizationSession } from "../../entity";
 import { createURL } from "@lindorm-io/url";
+import { AuthorizationRequest } from "../../entity";
 import { configuration } from "../../server/configuration";
 
-export const createLoginPendingUri = (authorizationSession: AuthorizationSession): string =>
+export const createLoginPendingUri = (authorizationRequest: AuthorizationRequest): string =>
   createURL(configuration.redirect.login, {
     host: configuration.services.authentication_service.host,
     port: configuration.services.authentication_service.port,
     query: {
-      session: authorizationSession.id,
-      display: authorizationSession.displayMode,
-      locales: authorizationSession.uiLocales,
+      session: authorizationRequest.id,
+      display: authorizationRequest.displayMode,
+      locales: authorizationRequest.uiLocales,
     },
   }).toString();

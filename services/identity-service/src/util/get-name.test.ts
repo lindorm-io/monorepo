@@ -1,5 +1,5 @@
-import { Identity } from "../entity";
 import { NamingSystem } from "@lindorm-io/common-types";
+import { Identity } from "../entity";
 import { getName } from "./get-name";
 
 describe("getName", () => {
@@ -34,10 +34,10 @@ describe("getName", () => {
           familyName: "familyName",
           givenName: "givenName",
           namingSystem: NamingSystem.GIVEN_FAMILY,
-          takenName: "takenName",
+          preferredName: "preferredName",
         }),
       ),
-    ).toBe("takenName familyName");
+    ).toBe("preferredName familyName");
   });
 
   test("should resolve givenName", () => {
@@ -60,14 +60,14 @@ describe("getName", () => {
     ).toBe("familyName");
   });
 
-  test("should resolve takenName", () => {
+  test("should resolve preferredName", () => {
     expect(
       getName(
         new Identity({
-          takenName: "takenName",
+          preferredName: "preferredName",
           givenName: "givenName",
         }),
       ),
-    ).toBe("takenName");
+    ).toBe("preferredName");
   });
 });

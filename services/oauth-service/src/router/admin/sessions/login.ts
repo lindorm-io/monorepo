@@ -1,11 +1,11 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { authorizationSessionEntityMiddleware, clientEntityMiddleware } from "../../../middleware";
 import {
   confirmLoginController,
   confirmLoginSchema,
   rejectLoginController,
   rejectLoginSchema,
 } from "../../../controller";
+import { AuthorizationRequestEntityMiddleware, clientEntityMiddleware } from "../../../middleware";
 
 export const router = new Router<any, any>();
 
@@ -15,8 +15,8 @@ router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmLoginSchema),
-  authorizationSessionEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.authorizationSession.clientId"),
+  AuthorizationRequestEntityMiddleware("data.id"),
+  clientEntityMiddleware("entity.authorizationRequest.clientId"),
   useController(confirmLoginController),
 );
 
@@ -24,6 +24,6 @@ router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectLoginSchema),
-  authorizationSessionEntityMiddleware("data.id"),
+  AuthorizationRequestEntityMiddleware("data.id"),
   useController(rejectLoginController),
 );

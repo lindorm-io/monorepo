@@ -1,4 +1,6 @@
 import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
   LindormScope,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -15,8 +17,10 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
   new Client({
     allowed: {
       grantTypes: Object.values(OpenIdGrantType),
+      methods: Object.values(AuthenticationMethod),
       responseTypes: Object.values(OpenIdResponseType),
       scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+      strategies: Object.values(AuthenticationStrategy),
       ...(options.allowed || {}),
     },
     audiences: {
@@ -38,7 +42,6 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
 
     active: true,
     backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
-    claimsUri: "https://test.client.lindorm.io/claims",
     description: "Client description",
     host: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",

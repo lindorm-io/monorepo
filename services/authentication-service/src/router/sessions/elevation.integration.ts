@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { mockFetchOauthElevationSession } from "../../fixtures/axios";
+import { mockFetchOauthElevationRequest } from "../../fixtures/axios";
 import {
   getTestAuthenticationConfirmationToken,
   setupIntegration,
@@ -35,7 +35,7 @@ describe("/sessions/elevation", () => {
   nock("https://oauth.test.lindorm.io")
     .get((url) => url.startsWith("/admin/sessions/elevation/"))
     .times(999)
-    .reply(200, mockFetchOauthElevationSession());
+    .reply(200, mockFetchOauthElevationRequest());
 
   nock("https://oauth.test.lindorm.io")
     .post("/admin/sessions/elevation/9937434e-aacb-489c-adc9-faa945be8145/confirm")

@@ -1,12 +1,12 @@
 import { difference } from "lodash";
-import { AuthorizationSession, ClientSession } from "../../entity";
+import { AuthorizationRequest, ClientSession } from "../../entity";
 
 export const verifyRequiredAudiences = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   clientSession: ClientSession,
 ): boolean => {
   if (!clientSession.audiences.length) return false;
 
-  return !difference(authorizationSession.requestedConsent.audiences, clientSession.audiences)
+  return !difference(authorizationRequest.requestedConsent.audiences, clientSession.audiences)
     .length;
 };

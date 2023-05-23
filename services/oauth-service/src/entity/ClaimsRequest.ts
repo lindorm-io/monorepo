@@ -14,7 +14,7 @@ import {
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE } from "../common";
 
-export type ClaimsSessionAttributes = EntityAttributes & {
+export type ClaimsRequestAttributes = EntityAttributes & {
   audiences: Array<string>;
   clientId: string;
   expires: Date;
@@ -26,9 +26,9 @@ export type ClaimsSessionAttributes = EntityAttributes & {
   scopes: Array<OpenIdScope | LindormScope>;
 };
 
-export type ClaimsSessionOptions = Optional<ClaimsSessionAttributes, EntityKeys>;
+export type ClaimsRequestOptions = Optional<ClaimsRequestAttributes, EntityKeys>;
 
-const schema = Joi.object<ClaimsSessionAttributes>()
+const schema = Joi.object<ClaimsRequestAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
@@ -44,7 +44,7 @@ const schema = Joi.object<ClaimsSessionAttributes>()
   })
   .required();
 
-export class ClaimsSession extends LindormEntity<ClaimsSessionAttributes> {
+export class ClaimsRequest extends LindormEntity<ClaimsRequestAttributes> {
   public readonly audiences: Array<string>;
   public readonly clientId: string;
   public readonly expires: Date;
@@ -55,7 +55,7 @@ export class ClaimsSession extends LindormEntity<ClaimsSessionAttributes> {
   public readonly methods: Array<AuthenticationMethod>;
   public readonly scopes: Array<OpenIdScope | LindormScope>;
 
-  public constructor(options: ClaimsSessionOptions) {
+  public constructor(options: ClaimsRequestOptions) {
     super(options);
 
     this.audiences = options.audiences;
@@ -73,7 +73,7 @@ export class ClaimsSession extends LindormEntity<ClaimsSessionAttributes> {
     await schema.validateAsync(this.toJSON());
   }
 
-  public toJSON(): ClaimsSessionAttributes {
+  public toJSON(): ClaimsRequestAttributes {
     return {
       ...this.defaultJSON(),
 

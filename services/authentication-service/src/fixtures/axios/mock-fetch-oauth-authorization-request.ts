@@ -1,5 +1,6 @@
 import {
   AuthenticationMethod,
+  AuthenticationStrategy,
   GetAuthorizationResponse,
   LindormScope,
   OpenIdClientType,
@@ -11,7 +12,7 @@ import {
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
-export const mockFetchOauthAuthorizationSession = (
+export const mockFetchOauthAuthorizationRequest = (
   options: Partial<GetAuthorizationResponse> = {},
 ): GetAuthorizationResponse => ({
   consent: {
@@ -32,8 +33,10 @@ export const mockFetchOauthAuthorizationSession = (
     minimumLevel: 2,
     recommendedLevel: 2,
     recommendedMethods: [AuthenticationMethod.EMAIL],
+    recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
     requiredLevel: 2,
     requiredMethods: [AuthenticationMethod.EMAIL],
+    requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
   },
 
   selectAccount: {
@@ -43,9 +46,8 @@ export const mockFetchOauthAuthorizationSession = (
     sessions: [{ selectId: randomUUID(), identityId: randomUUID() }],
   },
 
-  authorizationSession: {
+  authorizationRequest: {
     id: randomUUID(),
-    authToken: null,
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,
     expires: "2022-01-01T04:00:00.000Z",

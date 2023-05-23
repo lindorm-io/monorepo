@@ -6,7 +6,7 @@ import {
   redirectAuthorizationSchema,
 } from "../../../controller";
 import {
-  authorizationSessionEntityMiddleware,
+  AuthorizationRequestEntityMiddleware,
   clientEntityMiddleware,
   tenantEntityMiddleware,
 } from "../../../middleware";
@@ -19,8 +19,8 @@ router.get(
   "/:id",
   paramsMiddleware,
   useSchema(getAuthorizationSchema),
-  authorizationSessionEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.authorizationSession.clientId"),
+  AuthorizationRequestEntityMiddleware("data.id"),
+  clientEntityMiddleware("entity.authorizationRequest.clientId"),
   tenantEntityMiddleware("entity.client.tenantId"),
   useController(getAuthorizationController),
 );
@@ -29,6 +29,6 @@ router.get(
   "/:id/redirect",
   paramsMiddleware,
   useSchema(redirectAuthorizationSchema),
-  authorizationSessionEntityMiddleware("data.id"),
+  AuthorizationRequestEntityMiddleware("data.id"),
   useController(redirectAuthorizationController),
 );

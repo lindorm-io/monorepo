@@ -1,6 +1,5 @@
-import { Identity } from "../../entity";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { getIdentityResponse } from "./get-identity-response";
+import { Identity } from "../../entity";
 import {
   createTestAddress,
   createTestEmailIdentifier,
@@ -10,6 +9,7 @@ import {
   createTestPhoneIdentifier,
   createTestSsnIdentifier,
 } from "../../fixtures/entity";
+import { getIdentityResponse } from "./get-identity-response";
 
 describe("getIdentityResponse", () => {
   let ctx: any;
@@ -147,7 +147,7 @@ describe("getIdentityResponse", () => {
           verified: false,
         },
       ],
-      takenName: "Olivia",
+      preferredName: "Olivia",
       username: "rio_wheat",
       website: "https://website.url/",
       zoneInfo: "Europe/Stockholm",

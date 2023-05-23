@@ -1,10 +1,10 @@
-import Joi from "joi";
+import { SessionStatus, VerifyElevationRequestQuery } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { SessionStatus, VerifyElevationRequestQuery } from "@lindorm-io/common-types";
 import { createURL } from "@lindorm-io/url";
+import Joi from "joi";
 import { updateBrowserSessionElevation, updateClientSessionElevation } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = VerifyElevationRequestQuery;
 
@@ -18,29 +18,29 @@ export const verifyElevationController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { elevationSessionCache },
-    entity: { elevationSession },
+    redis: { elevationRequestCache },
+    entity: { elevationRequest },
   } = ctx;
 
-  if (elevationSession.status !== SessionStatus.CONFIRMED) {
+  if (elevationRequest.status !== SessionStatus.CONFIRMED) {
     throw new ClientError("Invalid session status", {
       description: "Session must be confirmed before it can be verified",
       data: {
         expect: SessionStatus.CONFIRMED,
-        actual: elevationSession.status,
+        actual: elevationRequest.status,
       },
     });
   }
 
-  await updateBrowserSessionElevation(ctx, elevationSession);
-  await updateClientSessionElevation(ctx, elevationSession);
+  await updateBrowserSessionElevation(ctx, elevationRequest);
+  await updateClientSessionElevation(ctx, elevationRequest);
 
-  await elevationSessionCache.destroy(elevationSession);
+  await elevationRequestCache.destroy(elevationRequest);
 
-  if (elevationSession.redirectUri) {
+  if (elevationRequest.redirectUri) {
     return {
-      redirect: createURL(elevationSession.redirectUri, {
-        query: { state: elevationSession.state },
+      redirect: createURL(elevationRequest.redirectUri, {
+        query: { state: elevationRequest.state },
       }),
     };
   }

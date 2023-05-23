@@ -1,7 +1,6 @@
+import { NamingSystem } from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import request from "supertest";
-import { NamingSystem } from "@lindorm-io/common-types";
-import { server } from "../../server/server";
 import { createTestIdentity } from "../../fixtures/entity";
 import {
   getTestClientCredentials,
@@ -9,6 +8,7 @@ import {
   TEST_DISPLAY_NAME_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -51,7 +51,7 @@ describe("/admin/identities", () => {
       profile: "https://profile.url/",
       pronouns: "she/her",
       social_security_numbers: [],
-      taken_name: "Olivia",
+      preferred_name: "Olivia",
       username: expect.any(String),
       website: "https://website.url/",
       zone_info: "Europe/Stockholm",
@@ -91,7 +91,7 @@ describe("/admin/identities", () => {
       profile: "https://profile.url/",
       pronouns: "she/her",
       social_security_numbers: [],
-      taken_name: "Olivia",
+      preferred_name: "Olivia",
       username: expect.any(String),
       website: "https://website.url/",
       zone_info: "Europe/Stockholm",
@@ -122,7 +122,7 @@ describe("/admin/identities", () => {
         preferred_accessibility: ["one", "two", "three"],
         profile: "https://new.user.url/profile",
         pronouns: "they/them",
-        taken_name: "something",
+        preferred_name: "something",
         website: "https://new.user.url/website",
         zone_info: "Europe/Oslo",
       })
@@ -149,7 +149,7 @@ describe("/admin/identities", () => {
         profile: "https://new.user.url/profile",
         pronouns: "they/them",
         revision: 1,
-        takenName: "something",
+        preferredName: "something",
         website: "https://new.user.url/website",
         zoneInfo: "Europe/Oslo",
       }),

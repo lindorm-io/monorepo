@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createLoginRejectedUri } from "../../util";
 import {
   RejectLoginRequestParams,
   RejectLoginResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createLoginRejectedUri } from "../../util";
 
 type RequestData = RejectLoginRequestParams;
 
@@ -22,18 +22,18 @@ export const rejectLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationSessionCache },
-    entity: { authorizationSession },
+    redis: { authorizationRequestCache },
+    entity: { authorizationRequest },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationSession.status.login);
+  assertSessionPending(authorizationRequest.status.login);
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.login = SessionStatus.REJECTED;
+  authorizationRequest.status.login = SessionStatus.REJECTED;
 
-  await authorizationSessionCache.update(authorizationSession);
+  await authorizationRequestCache.update(authorizationRequest);
 
-  return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
+  return { body: { redirectTo: createLoginRejectedUri(authorizationRequest) } };
 };

@@ -1,10 +1,10 @@
-import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
 
 export const verifyIdentityId = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   session: BrowserSession | ClientSession,
 ): boolean => {
-  if (!authorizationSession.requestedLogin.identityId) return true;
+  if (!authorizationRequest.requestedLogin.identityId) return true;
 
-  return authorizationSession.requestedLogin.identityId === session.identityId;
+  return authorizationRequest.requestedLogin.identityId === session.identityId;
 };

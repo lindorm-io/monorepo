@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createSelectAccountRejectedUri } from "../../util";
 import {
   RejectSelectAccountRequestParams,
   RejectSelectAccountResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createSelectAccountRejectedUri } from "../../util";
 
 type RequestData = RejectSelectAccountRequestParams;
 
@@ -22,18 +22,18 @@ export const rejectSelectAccountController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationSessionCache },
-    entity: { authorizationSession },
+    redis: { authorizationRequestCache },
+    entity: { authorizationRequest },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationSession.status.selectAccount);
+  assertSessionPending(authorizationRequest.status.selectAccount);
 
   logger.debug("Updating authorization session");
 
-  authorizationSession.status.selectAccount = SessionStatus.REJECTED;
+  authorizationRequest.status.selectAccount = SessionStatus.REJECTED;
 
-  await authorizationSessionCache.update(authorizationSession);
+  await authorizationRequestCache.update(authorizationRequest);
 
-  return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
+  return { body: { redirectTo: createSelectAccountRejectedUri(authorizationRequest) } };
 };

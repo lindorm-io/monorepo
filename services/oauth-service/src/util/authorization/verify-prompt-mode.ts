@@ -1,7 +1,7 @@
 import { OpenIdPromptMode } from "@lindorm-io/common-types";
-import { AuthorizationSession } from "../../entity";
+import { AuthorizationRequest } from "../../entity";
 
 export const verifyPromptMode = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   mode: OpenIdPromptMode,
-): boolean => !authorizationSession.promptModes.includes(mode);
+): boolean => !authorizationRequest.promptModes.includes(mode);

@@ -1,12 +1,4 @@
-import Joi from "joi";
-import { JOI_LOCALE } from "../common";
 import { NamingSystem } from "@lindorm-io/common-types";
-import {
-  JOI_BIRTHDATE,
-  JOI_DISPLAY_NAME_OBJECT,
-  JOI_NAMING_SYSTEM,
-  JOI_ZONE_INFO,
-} from "../constant";
 import {
   EntityAttributes,
   EntityKeys,
@@ -14,6 +6,14 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_LOCALE } from "../common";
+import {
+  JOI_BIRTHDATE,
+  JOI_DISPLAY_NAME_OBJECT,
+  JOI_NAMING_SYSTEM,
+  JOI_ZONE_INFO,
+} from "../constant";
 
 export type IdentityDisplayName = {
   name: string | null;
@@ -35,10 +35,10 @@ export type IdentityAttributes = EntityAttributes & {
   nickname: string | null;
   picture: string | null;
   preferredAccessibility: Array<string>;
+  preferredName: string | null;
   preferredUsername: string | null;
   profile: string | null;
   pronouns: string | null;
-  takenName: string | null;
   username: string | null;
   website: string | null;
   zoneInfo: string | null;
@@ -61,10 +61,10 @@ export type IdentityOptions = Optional<
   | "nickname"
   | "picture"
   | "preferredAccessibility"
+  | "preferredName"
   | "preferredUsername"
   | "profile"
   | "pronouns"
-  | "takenName"
   | "username"
   | "website"
   | "zoneInfo"
@@ -88,10 +88,10 @@ const schema = Joi.object<IdentityAttributes>()
     nickname: Joi.string().allow(null).required(),
     picture: Joi.string().uri().allow(null).required(),
     preferredAccessibility: Joi.array().items(Joi.string()).required(),
+    preferredName: Joi.string().allow(null).required(),
     preferredUsername: Joi.string().allow(null).required(),
     profile: Joi.string().uri().allow(null).required(),
     pronouns: Joi.string().allow(null).required(),
-    takenName: Joi.string().allow(null).required(),
     username: Joi.string().lowercase().allow(null).required(),
     website: Joi.string().uri().allow(null).required(),
     zoneInfo: JOI_ZONE_INFO.allow(null).required(),
@@ -113,10 +113,10 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public nickname: string | null;
   public picture: string | null;
   public preferredAccessibility: Array<string>;
+  public preferredName: string | null;
   public preferredUsername: string | null;
   public profile: string | null;
   public pronouns: string | null;
-  public takenName: string | null;
   public username: string | null;
   public website: string | null;
   public zoneInfo: string | null;
@@ -141,10 +141,10 @@ export class Identity extends LindormEntity<IdentityAttributes> {
     this.nickname = options.nickname || null;
     this.picture = options.picture || null;
     this.preferredAccessibility = options.preferredAccessibility || [];
+    this.preferredName = options.preferredName || null;
     this.preferredUsername = options.preferredUsername || null;
     this.profile = options.profile || null;
     this.pronouns = options.pronouns || null;
-    this.takenName = options.takenName || null;
     this.username = options.username || null;
     this.website = options.website || null;
     this.zoneInfo = options.zoneInfo || null;
@@ -172,10 +172,10 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       nickname: this.nickname,
       picture: this.picture,
       preferredAccessibility: this.preferredAccessibility,
+      preferredName: this.preferredName,
       preferredUsername: this.preferredUsername,
       profile: this.profile,
       pronouns: this.pronouns,
-      takenName: this.takenName,
       username: this.username,
       website: this.website,
       zoneInfo: this.zoneInfo,

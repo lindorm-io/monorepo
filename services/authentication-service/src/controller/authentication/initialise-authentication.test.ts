@@ -1,10 +1,10 @@
 import { createTestAuthenticationSession } from "../../fixtures/entity";
-import { initialiseAuthenticationController } from "./initialise-authentication";
 import {
   initialiseElevateAuthenticationSession as _initialiseElevateAuthenticationSession,
   initialiseOauthAuthenticationSession as _initialiseOauthAuthenticationSession,
   initialiseStandardAuthenticationSession as _initialiseStandardAuthenticationSession,
 } from "../../handler";
+import { initialiseAuthenticationController } from "./initialise-authentication";
 
 jest.mock("../../handler");
 
@@ -42,7 +42,7 @@ describe("initialiseAuthenticationController", () => {
     ctx.data = {
       codeChallenge: "codeChallenge",
       codeChallengeMethod: "codeChallengeMethod",
-      elevationSessionId: "47d079fc-578b-4981-a820-078b75c0176f",
+      ElevationRequestId: "47d079fc-578b-4981-a820-078b75c0176f",
     };
 
     await expect(initialiseAuthenticationController(ctx)).resolves.toStrictEqual({

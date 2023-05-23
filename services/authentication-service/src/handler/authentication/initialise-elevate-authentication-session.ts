@@ -1,23 +1,23 @@
-import Joi from "joi";
-import { AuthenticationSession } from "../../entity";
-import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
-import { getOauthElevationSession } from "../oauth-service";
-import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import { AuthenticationMethod, AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import Joi from "joi";
+import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
+import { AuthenticationSession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
+import { getOauthElevationRequest } from "../oauth-service";
+import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 
 type Options = {
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
-  elevationSessionId: string;
+  elevationRequestId: string;
 };
 
 const schema = Joi.object<Options>()
   .keys({
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
-    elevationSessionId: Joi.string().guid().required(),
+    elevationRequestId: Joi.string().guid().required(),
   })
   .required();
 
@@ -27,7 +27,7 @@ export const initialiseElevateAuthenticationSession = async (
 ): Promise<AuthenticationSession> => {
   await schema.validateAsync(options);
 
-  const { codeChallenge, codeChallengeMethod, elevationSessionId } = options;
+  const { codeChallenge, codeChallengeMethod, elevationRequestId } = options;
 
   const {
     elevation: {
@@ -37,14 +37,14 @@ export const initialiseElevateAuthenticationSession = async (
       requiredLevel,
       requiredMethods,
     },
-    elevationSession: { authenticationHint, country, expires, identityId, nonce },
-  } = await getOauthElevationSession(ctx, elevationSessionId);
+    elevationRequest: { authenticationHint, country, expires, identityId, nonce },
+  } = await getOauthElevationRequest(ctx, elevationRequestId);
 
   const emailHint = authenticationHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = authenticationHint?.find((item: string) => REGEX_PHONE.test(item));
 
   return await handleAuthenticationInitialisation(ctx, {
-    id: elevationSessionId,
+    id: elevationRequestId,
     clientId: configuration.oauth.client_id,
     codeChallenge,
     codeChallengeMethod,

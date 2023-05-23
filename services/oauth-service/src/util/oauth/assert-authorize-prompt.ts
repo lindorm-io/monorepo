@@ -1,6 +1,6 @@
-import { AuthorizationSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
 import { OpenIdPromptMode } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { AuthorizationRequest } from "../../entity";
 
 type Options = {
   consentRequired: boolean;
@@ -9,10 +9,10 @@ type Options = {
 };
 
 export const assertAuthorizePrompt = (
-  authorizationSession: AuthorizationSession,
+  authorizationRequest: AuthorizationRequest,
   options: Options,
 ): void => {
-  const { promptModes } = authorizationSession;
+  const { promptModes } = authorizationRequest;
   const { consentRequired, loginRequired, selectAccountRequired } = options;
 
   if (consentRequired && promptModes.includes(OpenIdPromptMode.NONE)) {
@@ -31,7 +31,7 @@ export const assertAuthorizePrompt = (
 
   if (selectAccountRequired && promptModes.includes(OpenIdPromptMode.NONE)) {
     throw new ClientError("Select Required", {
-      code: "select_account_required",
+      code: "account_selection_required",
       description: "The used prompt cannot be honored",
     });
   }

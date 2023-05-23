@@ -1,5 +1,5 @@
 import { SessionStatus } from "@lindorm-io/common-types";
-import { createTestAuthorizationSession } from "../../fixtures/entity";
+import { createTestAuthorizationRequest } from "../../fixtures/entity";
 import {
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
   createConsentPendingUri as _createConsentPendingUri,
@@ -27,7 +27,7 @@ describe("redirectAuthorizationController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        authorizationSession: createTestAuthorizationSession({
+        authorizationRequest: createTestAuthorizationRequest({
           status: {
             consent: SessionStatus.CONFIRMED,
             login: SessionStatus.CONFIRMED,
@@ -54,7 +54,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for skip", async () => {
-      ctx.entity.authorizationSession.status.selectAccount = "skip";
+      ctx.entity.authorizationRequest.status.selectAccount = "skip";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createAuthorizationVerifyUri" },
@@ -62,7 +62,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for pending", async () => {
-      ctx.entity.authorizationSession.status.selectAccount = "pending";
+      ctx.entity.authorizationRequest.status.selectAccount = "pending";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createSelectAccountPendingUri" },
@@ -70,7 +70,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for rejected", async () => {
-      ctx.entity.authorizationSession.status.selectAccount = "rejected";
+      ctx.entity.authorizationRequest.status.selectAccount = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createSelectAccountRejectedUri" },
@@ -86,7 +86,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for skip", async () => {
-      ctx.entity.authorizationSession.status.login = "skip";
+      ctx.entity.authorizationRequest.status.login = "skip";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createAuthorizationVerifyUri" },
@@ -94,7 +94,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for pending", async () => {
-      ctx.entity.authorizationSession.status.login = "pending";
+      ctx.entity.authorizationRequest.status.login = "pending";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createLoginPendingUri" },
@@ -102,7 +102,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for rejected", async () => {
-      ctx.entity.authorizationSession.status.login = "rejected";
+      ctx.entity.authorizationRequest.status.login = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createLoginRejectedUri" },
@@ -118,7 +118,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for skip", async () => {
-      ctx.entity.authorizationSession.status.consent = "skip";
+      ctx.entity.authorizationRequest.status.consent = "skip";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createAuthorizationVerifyUri" },
@@ -126,7 +126,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for pending", async () => {
-      ctx.entity.authorizationSession.status.consent = "pending";
+      ctx.entity.authorizationRequest.status.consent = "pending";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createConsentPendingUri" },
@@ -134,7 +134,7 @@ describe("redirectAuthorizationController", () => {
     });
 
     test("should redirect for rejected", async () => {
-      ctx.entity.authorizationSession.status.consent = "rejected";
+      ctx.entity.authorizationRequest.status.consent = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
         body: { redirectTo: "createConsentRejectedUri" },

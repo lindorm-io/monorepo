@@ -1,13 +1,13 @@
 import { OpenIdClientType } from "@lindorm-io/common-types";
-import { mockFetchOauthElevationSession } from "../../../fixtures/axios";
-import { getOauthElevationSession as _getOauthElevationSession } from "../../../handler";
-import { getElevationSessionController } from "./get-elevation-session";
+import { mockFetchOauthElevationRequest } from "../../../fixtures/axios";
+import { getOauthElevationRequest as _getOauthElevationRequest } from "../../../handler";
+import { getElevationRequestController } from "./get-elevation-session";
 
 jest.mock("../../../handler");
 
-const getOauthElevationSession = _getOauthElevationSession as jest.Mock;
+const getOauthElevationRequest = _getOauthElevationRequest as jest.Mock;
 
-describe("getElevationSessionDataController", () => {
+describe("getElevationRequestDataController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -15,11 +15,11 @@ describe("getElevationSessionDataController", () => {
       data: { id: "id" },
     };
 
-    getOauthElevationSession.mockResolvedValue(mockFetchOauthElevationSession());
+    getOauthElevationRequest.mockResolvedValue(mockFetchOauthElevationRequest());
   });
 
   test("should resolve", async () => {
-    await expect(getElevationSessionController(ctx)).resolves.toStrictEqual({
+    await expect(getElevationRequestController(ctx)).resolves.toStrictEqual({
       body: {
         status: "pending",
         client: {

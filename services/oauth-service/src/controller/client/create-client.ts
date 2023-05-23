@@ -58,12 +58,14 @@ export const createClientController: ServerKoaController<RequestData> = async (
           OpenIdGrantType.CLIENT_CREDENTIALS,
           OpenIdGrantType.REFRESH_TOKEN,
         ],
+        methods: [],
         responseTypes: [
           OpenIdResponseType.CODE,
           OpenIdResponseType.ID_TOKEN,
           OpenIdResponseType.TOKEN,
         ],
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE, OpenIdScope.OFFLINE_ACCESS],
+        strategies: [],
       },
 
       audiences: {

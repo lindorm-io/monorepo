@@ -1,11 +1,11 @@
-import MockDate from "mockdate";
-import { ElevationSession } from "../../entity";
+import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { ServerError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { createTestBrowserSession, createTestElevationSession } from "../../fixtures/entity";
+import MockDate from "mockdate";
+import { ElevationRequest } from "../../entity";
+import { createTestBrowserSession, createTestElevationRequest } from "../../fixtures/entity";
 import { getBrowserSessionCookies as _getBrowserSessionCookies } from "../cookies";
 import { updateBrowserSessionElevation } from "./update-browser-session-elevation";
-import { ServerError } from "@lindorm-io/errors";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -15,7 +15,7 @@ const getBrowserSessionCookies = _getBrowserSessionCookies as jest.Mock;
 
 describe("updateBrowserSessionElevation", () => {
   let ctx: any;
-  let elevationSession: ElevationSession;
+  let elevationRequest: ElevationRequest;
 
   beforeEach(() => {
     ctx = {
@@ -27,7 +27,7 @@ describe("updateBrowserSessionElevation", () => {
       },
     };
 
-    elevationSession = createTestElevationSession({
+    elevationRequest = createTestElevationRequest({
       confirmedAuthentication: {
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
@@ -54,7 +54,7 @@ describe("updateBrowserSessionElevation", () => {
       }),
     );
 
-    await expect(updateBrowserSessionElevation(ctx, elevationSession)).resolves.toBeUndefined();
+    await expect(updateBrowserSessionElevation(ctx, elevationRequest)).resolves.toBeUndefined();
 
     expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -72,7 +72,7 @@ describe("updateBrowserSessionElevation", () => {
   test("should throw on invalid session id", async () => {
     ctx.mongo.browserSessionRepository.find.mockResolvedValue(createTestBrowserSession());
 
-    await expect(updateBrowserSessionElevation(ctx, elevationSession)).rejects.toThrow(ServerError);
+    await expect(updateBrowserSessionElevation(ctx, elevationRequest)).rejects.toThrow(ServerError);
   });
 
   test("should throw on invalid identity", async () => {
@@ -80,6 +80,6 @@ describe("updateBrowserSessionElevation", () => {
       createTestBrowserSession({ id: "06715391-bea3-47db-acf4-ffa1f500bcc8" }),
     );
 
-    await expect(updateBrowserSessionElevation(ctx, elevationSession)).rejects.toThrow(ServerError);
+    await expect(updateBrowserSessionElevation(ctx, elevationRequest)).rejects.toThrow(ServerError);
   });
 });

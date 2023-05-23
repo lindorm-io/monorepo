@@ -1,7 +1,3 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { getOauthAuthorizationSession } from "../../../handler";
 import {
   LindormScope,
   OpenIdScope,
@@ -10,6 +6,10 @@ import {
   ScopeDescription,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { getOauthAuthorizationRequest } from "../../../handler";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = {
   id: string;
@@ -43,7 +43,7 @@ export const getConsentSessionController: ServerKoaController = async (
     consent: { status, audiences, optionalScopes, requiredScopes, scopeDescriptions },
     client,
     tenant,
-  } = await getOauthAuthorizationSession(ctx, id);
+  } = await getOauthAuthorizationRequest(ctx, id);
 
   return {
     body: {

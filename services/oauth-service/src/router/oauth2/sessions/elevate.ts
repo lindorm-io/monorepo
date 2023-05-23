@@ -1,11 +1,5 @@
 import { Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  clientEntityMiddleware,
-  customIdentityAuthMiddleware,
-  elevationSessionEntityMiddleware,
-  idTokenMiddleware,
-} from "../../../middleware";
-import {
   initialisePostElevationController,
   initialisePostElevationSchema,
   initialiseRedirectElevationController,
@@ -13,6 +7,12 @@ import {
   verifyElevationController,
   verifyElevationSchema,
 } from "../../../controller";
+import {
+  ElevationRequestEntityMiddleware,
+  clientEntityMiddleware,
+  customIdentityAuthMiddleware,
+  idTokenMiddleware,
+} from "../../../middleware";
 
 export const router = new Router<any, any>();
 
@@ -37,6 +37,6 @@ router.post(
 router.get(
   "/verify",
   useSchema(verifyElevationSchema),
-  elevationSessionEntityMiddleware("data.session"),
+  ElevationRequestEntityMiddleware("data.session"),
   useController(verifyElevationController),
 );

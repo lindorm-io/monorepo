@@ -1,70 +1,83 @@
+import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
 import { filterAcrValues } from "./filter-acr-values";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
 
 describe("filterAcrValues", () => {
   test("should resolve all desired values", () => {
     expect(
       filterAcrValues({
-        acrValues: "LOA_3 session email phone",
-        amrValues: "email",
+        acrString: "LOA_3 session email phone email_code",
+        amrString: "email",
         acrArray: ["loa_3"],
-        amrArray: ["email", "phone"],
+        amrArray: ["email", "phone", "session_link", "rdc_qr_code"],
       }),
     ).toStrictEqual({
-      methods: expect.arrayContaining(["session", "email", "phone"]),
       levelOfAssurance: 3,
+      methods: expect.arrayContaining([
+        AuthenticationMethod.EMAIL,
+        AuthenticationMethod.PHONE,
+        AuthenticationMethod.SESSION_LINK,
+      ]),
+      strategies: expect.arrayContaining([
+        AuthenticationStrategy.EMAIL_CODE,
+        AuthenticationStrategy.RDC_QR_CODE,
+      ]),
     });
   });
 
   test("should skip level of assurance", () => {
     expect(
       filterAcrValues({
-        acrValues: "email phone",
+        acrString: "email phone",
       }),
     ).toStrictEqual({
-      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 0,
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      strategies: [],
     });
   });
 
   test("should resolve the highest desired level of assurance", () => {
     expect(
       filterAcrValues({
-        acrValues: "LOA_3 2 LOA_1 LOA_2 1 LOA_4 3",
+        acrString: "LOA_3 2 LOA_1 LOA_2 1 LOA_4 3",
       }),
     ).toStrictEqual({
-      methods: [],
       levelOfAssurance: 4,
+      methods: [],
+      strategies: [],
     });
   });
 
   test("should filter out duplicates from methods", () => {
     expect(
       filterAcrValues({
-        amrValues: "email email phone phone",
+        amrString: "email email phone phone email_otp email_otp",
       }),
     ).toStrictEqual({
-      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 0,
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      strategies: [AuthenticationStrategy.EMAIL_OTP],
     });
   });
 
-  test("should resolve with array", () => {
+  test("should resolve with arrays", () => {
     expect(
       filterAcrValues({
         acrArray: ["loa_4"],
         amrArray: ["email", "phone"],
       }),
     ).toStrictEqual({
-      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       levelOfAssurance: 4,
+      methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+      strategies: [],
     });
   });
 
-  test("should resolve with null", () => {
+  test("should resolve with no options object", () => {
     expect(filterAcrValues()).toStrictEqual({
-      methods: [],
       levelOfAssurance: 0,
+      methods: [],
+      strategies: [],
     });
   });
 });
