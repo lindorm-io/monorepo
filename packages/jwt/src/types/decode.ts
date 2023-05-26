@@ -4,11 +4,12 @@ export type JwtDecodedClaims<Claims = never> = {
   id: string;
   active: boolean;
   adjustedAccessLevel: AdjustedAccessLevel;
+  atHash: string | null;
   audiences: Array<string>;
   authContextClass: string | null;
   authMethodsReference: Array<string>;
-  authTime: number | null;
   authorizedParty: string | null;
+  authTime: number | null;
   claims: Claims;
   client: string | null;
   expires: number;

@@ -1,18 +1,16 @@
-import { Keystore, KeyType } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/core-logger";
-import { TokenError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
-import { decode, Jwt, sign, SignOptions, verify } from "jsonwebtoken";
-import { expiryObject } from "@lindorm-io/expiry";
-import { randomUUID } from "crypto";
-import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
 import {
-  assertClaimDifference,
-  assertClaimEquals,
-  assertClaimIncludes,
-  assertGreaterOrEqual,
-  getUnixTime,
-} from "../util/private";
+  AdjustedAccessLevel,
+  LevelOfAssurance,
+  LindormTokenClaims,
+} from "@lindorm-io/common-types";
+import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
+import { Logger } from "@lindorm-io/core-logger";
+import { expiryObject } from "@lindorm-io/expiry";
+import { KeyPair, KeyType, Keystore } from "@lindorm-io/key-pair";
+import { createHash, randomUUID } from "crypto";
+import { Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
+import { TokenError } from "../error";
 import {
   JwtDecodeData,
   JwtDecodedClaims,
@@ -22,10 +20,14 @@ import {
   JwtVerifyOptions,
 } from "../types";
 import {
-  AdjustedAccessLevel,
-  LevelOfAssurance,
-  LindormTokenClaims,
-} from "@lindorm-io/common-types";
+  assertClaimDifference,
+  assertClaimEquals,
+  assertClaimIncludes,
+  assertGreaterOrEqual,
+  getFirst128BitsFromBuffer,
+  getHashAlgFromKey,
+  getUnixTime,
+} from "../util/private";
 
 export class JWT {
   private readonly clockTolerance: number;
@@ -66,6 +68,7 @@ export class JWT {
       // optional standard claims
       acr: options.authContextClass,
       amr: options.authMethodsReference,
+      at_hash: options.atHash,
       auth_time: options.authTime,
       azp: options.authorizedParty,
       nonce: options.nonce,
@@ -85,20 +88,12 @@ export class JWT {
       ...(options.claims ? snakeCase(options.claims) : {}),
     };
 
-    const key = this.keystore.getSigningKey(options.keyType || this.keyType);
-
-    const privateKey = key.privateKey as string;
-    const signingKey =
-      key.type === KeyType.RSA ? { passphrase: key.passphrase || "", key: privateKey } : privateKey;
-
-    const signOptions: SignOptions = {
-      algorithm: key.preferredAlgorithm,
-      allowInsecureKeySizes: true,
-      keyid: key.id,
-    };
+    const key = this.getSigningKey(options.keyType);
+    const privateKey = this.getPrivateKey(key);
+    const signOptions = this.getSignOptions(key);
 
     const payload = sortObjectKeys(removeUndefinedFromObject(object));
-    const token = sign(payload, signingKey, signOptions);
+    const token = sign(payload, privateKey, signOptions);
 
     this.logger.debug("sign token success", { token, ...object, ...signOptions });
 
@@ -121,6 +116,7 @@ export class JWT {
     const { algorithms, publicKey } = this.keystore.getKey(claims.keyId);
     const {
       adjustedAccessLevel,
+      atHash,
       audience,
       authorizedParty,
       client,
@@ -163,6 +159,10 @@ export class JWT {
         assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
       }
 
+      if (atHash) {
+        assertClaimEquals(atHash, claims.atHash, "at_hash");
+      }
+
       if (client) {
         assertClaimEquals(client, claims.client, "cid");
       }
@@ -201,6 +201,14 @@ export class JWT {
     }
   }
 
+  public createHash(input: string, keyType?: KeyType): string {
+    const key = this.getSigningKey(keyType);
+    const alg = getHashAlgFromKey(key);
+    const buffer = createHash(alg).update(input, "utf8").digest();
+
+    return getFirst128BitsFromBuffer(buffer);
+  }
+
   public static decode(token: string): Jwt | null {
     return decode(token, { complete: true });
   }
@@ -222,6 +230,7 @@ export class JWT {
       aal,
       acr,
       amr,
+      at_hash,
       aud,
       auth_time,
       azp,
@@ -249,11 +258,12 @@ export class JWT {
       id: jti,
       active: iat <= now && nbf <= now && exp >= now,
       adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
+      atHash: at_hash || null,
       audiences: aud,
       authContextClass: acr || null,
       authMethodsReference: amr || [],
-      authTime: auth_time || null,
       authorizedParty: azp || null,
+      authTime: auth_time || null,
       claims: claims ? camelCase<Claims>(claims) : ({} as Claims),
       client: cid || null,
       expires: exp,
@@ -274,6 +284,26 @@ export class JWT {
       token,
       type: token_type,
       username: usr || null,
+    };
+  }
+
+  private getSigningKey(keyType?: KeyType): KeyPair {
+    return this.keystore.getSigningKey(keyType || this.keyType);
+  }
+
+  private getPrivateKey(key: KeyPair): Secret {
+    if (!key.privateKey) throw new Error("Missing private key");
+
+    return key.type === KeyType.RSA
+      ? { passphrase: key.passphrase || "", key: key.privateKey }
+      : key.privateKey;
+  }
+
+  private getSignOptions(key: KeyPair): SignOptions {
+    return {
+      algorithm: key.preferredAlgorithm,
+      allowInsecureKeySizes: true,
+      keyid: key.id,
     };
   }
 }

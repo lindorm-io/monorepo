@@ -1,15 +1,15 @@
-import MockDate from "mockdate";
-import { JWT } from "./JWT";
-import { JwtSignOptions } from "../types";
-import { TokenError } from "../error";
 import { baseParse } from "@lindorm-io/core";
-import { createTestJwt } from "../mocks";
-import { getUnixTime } from "../util/private";
 import {
   createTestKeyPairEC,
   createTestKeyPairRSA,
   createTestKeystore,
 } from "@lindorm-io/key-pair";
+import MockDate from "mockdate";
+import { TokenError } from "../error";
+import { createTestJwt } from "../mocks";
+import { JwtSignOptions } from "../types";
+import { getUnixTime } from "../util/private";
+import { JWT } from "./JWT";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -28,16 +28,17 @@ describe("JWT", () => {
       type: "id_token",
     };
     optionsFull = {
-      id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
       adjustedAccessLevel: 3,
+      atHash: "aa08b86a3550489380219a18efcd1532",
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
       authContextClass: "loa_4",
       authMethodsReference: ["email"],
-      authTime: getUnixTime(new Date()),
       authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+      authTime: getUnixTime(new Date()),
       claims: { claimsKey: "claimValue" },
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
       expiry: "10 seconds",
+      id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: new Date(),
@@ -105,6 +106,16 @@ describe("JWT", () => {
     });
   });
 
+  describe("createHash", () => {
+    test("should create hash", () => {
+      expect(
+        jwt.createHash(
+          "OqqGKbIQmFZEmygaoBtlAhKhJIjKPcUNHVfhAsmAQtQpExmmtJUnxPtTWFcwnUKvEKoAEScAKVkjGrtOjjGwPJLStjEjouUuBPQrNXWCLIQcYMhGauPQkOKvNEhlKoQSscvmLKNDMHYFIjeVEutruVojWmuSXDsWHiVjqQzXhPZICuhwitAxWWlDBAyWbohxAHnMeUAsatJGuNdCWciiPBiQyVhNrtnmXsUvGRIyRihPjWTGKKHVFnmgNDMNJswm",
+        ),
+      ).toBe("6424l6RHpQH3c6u8vDKCdpPRWM55EYgvwhplokwqATaXs0ngACNuRsEQb5ERFp8T");
+    });
+  });
+
   test("should create", () => {
     expect(jwt.sign(optionsMin)).toStrictEqual({
       id: expect.any(String),
@@ -128,6 +139,7 @@ describe("JWT", () => {
         aal: 3,
         acr: "loa_4",
         amr: ["email"],
+        at_hash: "aa08b86a3550489380219a18efcd1532",
         aud: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         auth_time: 1609488000,
         azp: "13480815-309a-4b7c-b8e7-325ff76fd150",
@@ -183,11 +195,12 @@ describe("JWT", () => {
       id,
       active: true,
       adjustedAccessLevel: 3,
+      atHash: "aa08b86a3550489380219a18efcd1532",
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
       authContextClass: "loa_4",
       authMethodsReference: ["email"],
-      authTime: 1609488000,
       authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+      authTime: 1609488000,
       claims: { claimsKey: "claimValue" },
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
       expires: 1609488010,
@@ -348,11 +361,12 @@ describe("JWT", () => {
       id,
       active: true,
       adjustedAccessLevel: 3,
+      atHash: "aa08b86a3550489380219a18efcd1532",
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
       authContextClass: "loa_4",
       authMethodsReference: ["email"],
-      authTime: 1609488000,
       authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+      authTime: 1609488000,
       claims: { claimsKey: "claimValue" },
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
       expires: 1609488010,
@@ -383,11 +397,12 @@ describe("JWT", () => {
       id: id,
       active: true,
       adjustedAccessLevel: 0,
+      atHash: null,
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
       authContextClass: null,
       authMethodsReference: [],
-      authTime: null,
       authorizedParty: null,
+      authTime: null,
       claims: {},
       client: null,
       expires: 1609488010,
