@@ -54,28 +54,28 @@ exports[`generateKeyPair should generate EC KeyPair with namedCurve 1`] = `
 }
 `;
 
-exports[`generateKeyPair should generate KeyPair 1`] = `
+exports[`generateKeyPair should generate HS KeyPair 1`] = `
 {
   "algorithms": [
-    "ES512",
+    "HS256",
   ],
   "allowed": 2021-01-01T08:00:00.000Z,
   "created": 2021-01-01T08:00:00.000Z,
   "expires": null,
   "external": false,
   "id": "011ca5fd-abf4-4c6f-a349-59df20c48ead",
-  "namedCurve": "P-521",
+  "namedCurve": null,
   "operations": [
     "sign",
     "verify",
   ],
   "origin": null,
   "passphrase": null,
-  "preferredAlgorithm": "ES512",
-  "privateKey": "PRIVATE_KEY",
-  "publicKey": "PUBLIC_KEY",
+  "preferredAlgorithm": "HS256",
+  "privateKey": "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
+  "publicKey": "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
   "revision": 0,
-  "type": "EC",
+  "type": "HS",
   "updated": 2021-01-01T08:00:00.000Z,
   "version": 0,
 }

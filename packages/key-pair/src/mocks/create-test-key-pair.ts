@@ -1,5 +1,5 @@
-import { Algorithm, KeyType, NamedCurve } from "../enum";
 import { KeyPair, KeyPairOptions } from "../entity";
+import { Algorithm, KeyType, NamedCurve } from "../enum";
 
 export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
@@ -8,7 +8,6 @@ export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyP
     allowed: new Date("2020-01-01T08:00:00.000Z"),
     created: new Date("2020-01-01T08:00:00.000Z"),
     expires: new Date("2029-01-01T08:00:00.000Z"),
-    updated: new Date("2021-01-01T10:00:00.000Z"),
     external: false,
     namedCurve: NamedCurve.P521,
     privateKey:
@@ -28,17 +27,33 @@ export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyP
       "OQLhJKj4uO0wPYgkmFU=\n" +
       "-----END PUBLIC KEY-----\n",
     type: KeyType.EC,
+    updated: new Date("2021-01-01T10:00:00.000Z"),
     ...options,
   });
 
-export const createTestKeyPair = createTestKeyPairEC;
+export const createTestKeyPairHS = (options: Partial<KeyPairOptions> = {}): KeyPair =>
+  new KeyPair({
+    id: "aa08b86a-3550-4893-8021-9a18efcd1532",
+    algorithms: [Algorithm.HS512],
+    allowed: new Date("2020-01-01T07:00:00.000Z"),
+    created: new Date("2020-01-01T07:00:00.000Z"),
+    expires: new Date("2029-01-01T08:00:00.000Z"),
+    external: false,
+    privateKey:
+      "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
+    publicKey:
+      "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
+    type: KeyType.HS,
+    updated: new Date("2021-01-01T10:00:00.000Z"),
+    ...options,
+  });
 
 export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
     id: "e6301473-e347-4035-8084-8645d034e4a3",
     algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
-    allowed: new Date("2020-01-01T08:00:00.000Z"),
-    created: new Date("2020-01-01T08:00:00.000Z"),
+    allowed: new Date("2020-01-01T07:00:00.000Z"),
+    created: new Date("2020-01-01T07:00:00.000Z"),
     expires: new Date("2029-01-01T08:00:00.000Z"),
     external: false,
     passphrase: "",
@@ -71,3 +86,5 @@ export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): Key
     updated: new Date("2021-01-01T09:00:00.000Z"),
     ...options,
   });
+
+export const createTestKeyPair = createTestKeyPairEC;

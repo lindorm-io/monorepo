@@ -1,8 +1,8 @@
-import { JWK } from "../types";
-import { KeyPair } from "../entity";
-import { KeyType } from "../enum";
-import { KeystoreError } from "../error";
 import { orderBy, uniqBy } from "lodash";
+import { KeyPair } from "../entity";
+import { Algorithm, KeyType } from "../enum";
+import { KeystoreError } from "../error";
+import { JWK } from "../types";
 import {
   isKeyAllowed,
   isKeyCorrectType,
@@ -58,6 +58,9 @@ export class Keystore {
 
     for (const keyPair of this.getKeys()) {
       if (!options.exposeExternal && keyPair.external) continue;
+      if ([Algorithm.HS256, Algorithm.HS384, Algorithm.HS512].includes(keyPair.preferredAlgorithm))
+        continue;
+
       keys.push(keyPair.toJWK(options.exposePrivate));
     }
 

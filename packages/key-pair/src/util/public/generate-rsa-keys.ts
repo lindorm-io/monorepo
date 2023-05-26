@@ -1,20 +1,22 @@
-import { Algorithm, KeyType } from "../../enum";
 import { generateKeyPair } from "crypto";
+import { Algorithm, KeyType } from "../../enum";
 
-interface IOptions {
+export type GenerateRsaKeysOptions = {
   modulusLength?: 1 | 2 | 3 | 4;
   passphrase?: string;
-}
+};
 
-export interface IGenerateRSAKeysData {
+export type GenerateRSAKeysData = {
   algorithms: Array<Algorithm>;
   passphrase: string;
   privateKey: string;
   publicKey: string;
   type: KeyType;
-}
+};
 
-export const generateRsaKeys = async (options: IOptions = {}): Promise<IGenerateRSAKeysData> => {
+export const generateRsaKeys = async (
+  options: GenerateRsaKeysOptions = {},
+): Promise<GenerateRSAKeysData> => {
   const { modulusLength = 4, passphrase = "" } = options;
 
   return new Promise((resolve, reject) => {

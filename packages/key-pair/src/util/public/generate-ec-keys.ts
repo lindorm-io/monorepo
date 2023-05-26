@@ -1,17 +1,17 @@
-import { Algorithm, KeyType, NamedCurve } from "../../enum";
 import { generateKeyPair } from "crypto";
+import { Algorithm, KeyType, NamedCurve } from "../../enum";
 
-interface IOptions {
+export type GenerateEcKeysOptions = {
   namedCurve?: NamedCurve;
-}
+};
 
-export interface IGenerateECCKeysData {
+export type GenerateEcKeysData = {
   algorithms: Array<Algorithm>;
   namedCurve: NamedCurve;
   privateKey: string;
   publicKey: string;
   type: KeyType;
-}
+};
 
 const getAlgorithm = (namedCurve: NamedCurve): Algorithm => {
   switch (namedCurve) {
@@ -29,7 +29,9 @@ const getAlgorithm = (namedCurve: NamedCurve): Algorithm => {
   }
 };
 
-export const generateEcKeys = async (options: IOptions = {}): Promise<IGenerateECCKeysData> => {
+export const generateEcKeys = async (
+  options: GenerateEcKeysOptions = {},
+): Promise<GenerateEcKeysData> => {
   const { namedCurve = NamedCurve.P521 } = options;
 
   const algorithm = getAlgorithm(namedCurve);

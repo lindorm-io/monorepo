@@ -1,11 +1,11 @@
-import { generateRsaKeys } from "./generate-rsa-keys";
 import { generateKeyPair as _generateKeyPair } from "crypto";
+import { generateRsaKeys } from "./generate-rsa-keys";
 
 jest.mock("crypto");
 
 const generateKeyPair = _generateKeyPair as unknown as jest.Mock;
 
-describe("generateRSAKeys", () => {
+describe("generateRsaKeys", () => {
   test("should resolve", async () => {
     generateKeyPair.mockImplementation((_1: never, _2: never, callback: any) =>
       callback(null, "PUBLIC_KEY", "PRIVATE_KEY"),

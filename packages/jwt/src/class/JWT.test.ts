@@ -1,6 +1,7 @@
 import { baseParse } from "@lindorm-io/core";
 import {
   createTestKeyPairEC,
+  createTestKeyPairHS,
   createTestKeyPairRSA,
   createTestKeystore,
 } from "@lindorm-io/key-pair";
@@ -56,12 +57,12 @@ describe("JWT", () => {
 
   afterEach(jest.clearAllMocks);
 
-  describe("RS", () => {
+  describe("ES", () => {
     beforeEach(() => {
       jwt = createTestJwt(
         undefined,
         createTestKeystore({
-          keys: [createTestKeyPairRSA()],
+          keys: [createTestKeyPairEC()],
         }),
       );
     });
@@ -81,12 +82,37 @@ describe("JWT", () => {
     });
   });
 
-  describe("ES", () => {
+  describe("HS", () => {
     beforeEach(() => {
       jwt = createTestJwt(
         undefined,
         createTestKeystore({
-          keys: [createTestKeyPairEC()],
+          keys: [createTestKeyPairHS()],
+        }),
+      );
+    });
+
+    test("should sign/verify", () => {
+      const { id, token } = jwt.sign(optionsMin);
+
+      expect(jwt.verify(token)).toStrictEqual(
+        expect.objectContaining({
+          id,
+          token,
+          audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+          subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+          type: "id_token",
+        }),
+      );
+    });
+  });
+
+  describe("RSA", () => {
+    beforeEach(() => {
+      jwt = createTestJwt(
+        undefined,
+        createTestKeystore({
+          keys: [createTestKeyPairRSA()],
         }),
       );
     });
