@@ -130,6 +130,13 @@ export type OpenIdTokenRequestBody = {
   /**
    * OPTIONAL
    *
+   * The resource owner password.
+   */
+  password?: string;
+
+  /**
+   * OPTIONAL
+   *
    * REQUIRED, if the "redirect_uri" parameter was included
    * in the authorization request as described in Section
    * 4.1.1, and their values MUST be identical.
@@ -215,6 +222,13 @@ export type OpenIdTokenRequestBody = {
    * parameter.
    */
   subjectTokenType?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * The resource owner username.
+   */
+  username?: string;
 };
 
 export type OpenIdTokenResponseBody = {

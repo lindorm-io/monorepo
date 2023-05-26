@@ -7,6 +7,7 @@ export * from "./identity-sessions";
 export * from "./login";
 export * from "./logout";
 export * from "./oauth";
+export * from "./password";
 export * from "./public-client-info";
 export * from "./public-tenant-info";
 export * from "./select-account";
