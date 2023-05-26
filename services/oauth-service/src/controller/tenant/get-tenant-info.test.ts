@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { getTenantInfoController } from "./get-tenant-info";
 import { createTestTenant } from "../../fixtures/entity";
+import { getTenantInfoController } from "./get-tenant-info";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -22,6 +22,7 @@ describe("getTenantInfoController", () => {
         name: "TenantName",
         owner: "0bbfd773-7eed-402b-83f3-916288ff978c",
         subdomain: "test-name",
+        trusted: true,
       },
     });
   });

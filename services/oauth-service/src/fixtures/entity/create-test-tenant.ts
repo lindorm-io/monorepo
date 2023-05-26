@@ -6,6 +6,7 @@ export const createTestTenant = (options: Partial<TenantOptions> = {}): Tenant =
     name: "TenantName",
     owner: "0bbfd773-7eed-402b-83f3-916288ff978c",
     subdomain: "test-name",
+    trusted: true,
 
     ...options,
   });

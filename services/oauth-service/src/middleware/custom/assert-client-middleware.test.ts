@@ -1,8 +1,9 @@
-import { Client } from "../../entity";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { assertClientMiddleware } from "./assert-client-middleware";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { Client } from "../../entity";
 import { createTestClient } from "../../fixtures/entity";
+import { assertClientMiddleware } from "./assert-client-middleware";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -66,6 +67,11 @@ describe("assertClientSecretMiddleware", () => {
   });
 
   test("should skip assertion of secret", async () => {
+    ctx.mongo.clientRepository.find.mockResolvedValue(
+      createTestClient({
+        type: OpenIdClientType.PUBLIC,
+      }),
+    );
     ctx.data.clientSecret = undefined;
 
     await expect(assertClientMiddleware(ctx, next)).resolves.toBeUndefined();

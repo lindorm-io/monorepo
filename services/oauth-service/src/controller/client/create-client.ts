@@ -1,5 +1,6 @@
 import {
   LevelOfAssurance,
+  OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
@@ -20,7 +21,9 @@ type RequestData = {
   description: string;
   host: string;
   name: string;
+  profile: OpenIdClientProfile;
   tenantId: string;
+  type: OpenIdClientType;
 };
 
 type ResponseBody = {
@@ -33,7 +36,13 @@ export const createClientSchema = Joi.object<RequestData>()
     description: Joi.string().required(),
     host: Joi.string().uri().required(),
     name: Joi.string().required(),
+    profile: Joi.string()
+      .valid(...Object.values(OpenIdClientProfile))
+      .required(),
     tenantId: Joi.string().guid().required(),
+    type: Joi.string()
+      .valid(...Object.values(OpenIdClientType))
+      .required(),
   })
   .required();
 
@@ -41,7 +50,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { description, host, name },
+    data: { description, host, name, profile, type },
     entity: { tenant },
     mongo: { clientRepository },
   } = ctx;
@@ -85,15 +94,17 @@ export const createClientController: ServerKoaController<RequestData> = async (
         refreshToken: configuration.defaults.expiry.refresh_token,
       },
 
-      active: configuration.defaults.clients.active_state,
+      active: true,
       description,
       host,
       name,
       opaqueAccessToken: configuration.defaults.clients.opaque_access_tokens,
+      profile,
       secret: await argon.encrypt(secret),
       singleSignOn: true,
       tenantId: tenant.id,
-      type: OpenIdClientType.PUBLIC,
+      trusted: tenant.trusted,
+      type,
     }),
   );
 

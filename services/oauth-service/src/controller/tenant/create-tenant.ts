@@ -1,13 +1,13 @@
-import Joi from "joi";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
+import Joi from "joi";
 import { Tenant } from "../../entity";
-import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = {
   name: string;
   owner: string;
   subdomain: string;
+  trusted: boolean;
 };
 
 type ResponseBody = {
@@ -19,6 +19,7 @@ export const createTenantSchema = Joi.object<RequestData>()
     name: Joi.string().required(),
     owner: Joi.string().guid().required(),
     subdomain: Joi.string().required(),
+    trusted: Joi.boolean().required(),
   })
   .required();
 
@@ -26,16 +27,17 @@ export const createTenantController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { name, owner, subdomain },
+    data: { name, owner, subdomain, trusted },
     mongo: { tenantRepository },
   } = ctx;
 
   const tenant = await tenantRepository.create(
     new Tenant({
-      active: configuration.defaults.tenants.active_state,
+      active: true,
       name,
       owner,
       subdomain,
+      trusted,
     }),
   );
 

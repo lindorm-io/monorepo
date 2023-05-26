@@ -1,12 +1,13 @@
 import {
   LindormScope,
+  OpenIdClientProfile,
   OpenIdClientType,
   OpenIdScope,
   ScopeDescription,
 } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
-import { JOI_CLIENT_TYPE, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
+import { JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -25,8 +26,6 @@ type RequestData = {
   backChannelLogoutUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
-  enforceBasicAuth: boolean;
-  enforceSecret: boolean;
   expiry: ClientExpiry;
   frontChannelLogoutUri: string | null;
   host: string;
@@ -34,10 +33,12 @@ type RequestData = {
   name: string;
   opaqueAccessToken: boolean;
   postLogoutUris: Array<string>;
+  profile: OpenIdClientProfile;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
+  trusted: boolean;
   type: OpenIdClientType;
 };
 
@@ -68,19 +69,19 @@ export const updateClientSchema = Joi.object<RequestData>()
     active: Joi.boolean(),
     backChannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
-    enforceBasicAuth: Joi.boolean(),
-    enforceSecret: Joi.boolean(),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
     host: Joi.string().uri(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
     opaqueAccessToken: Joi.boolean(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
+    profile: Joi.string().valid(...Object.values(OpenIdClientProfile)),
     redirectUris: Joi.array().items(Joi.string().uri()),
     requiredScopes: Joi.array().items(Joi.string()),
     rtbfUri: Joi.string().uri().allow(null),
     scopeDescriptions: Joi.array().items(JOI_SCOPE_DESCRIPTION),
-    type: JOI_CLIENT_TYPE,
+    trusted: Joi.boolean(),
+    type: Joi.string().valid(...Object.values(OpenIdClientType)),
   })
   .required();
 
@@ -95,8 +96,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       backChannelLogoutUri,
       defaults,
       description,
-      enforceBasicAuth,
-      enforceSecret,
       expiry,
       frontChannelLogoutUri,
       host,
@@ -104,10 +103,12 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       name,
       opaqueAccessToken,
       postLogoutUris,
+      profile,
       redirectUris,
       requiredScopes,
       rtbfUri,
       scopeDescriptions,
+      trusted,
       type,
     },
     entity: { client },
@@ -132,18 +133,18 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (active !== undefined) client.active = active;
   if (backChannelLogoutUri !== undefined) client.backChannelLogoutUri = backChannelLogoutUri;
   if (description !== undefined) client.description = description;
-  if (enforceBasicAuth !== undefined) client.enforceBasicAuth = enforceBasicAuth;
-  if (enforceSecret !== undefined) client.enforceSecret = enforceSecret;
   if (frontChannelLogoutUri !== undefined) client.frontChannelLogoutUri = frontChannelLogoutUri;
   if (host !== undefined) client.host = host;
   if (logoUri !== undefined) client.logoUri = logoUri;
   if (name !== undefined) client.name = name;
   if (opaqueAccessToken !== undefined) client.opaqueAccessToken = opaqueAccessToken;
   if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
+  if (profile !== undefined) client.profile = profile;
   if (redirectUris !== undefined) client.redirectUris = redirectUris;
   if (requiredScopes !== undefined) client.requiredScopes = requiredScopes;
   if (rtbfUri !== undefined) client.rtbfUri = rtbfUri;
   if (scopeDescriptions !== undefined) client.scopeDescriptions = scopeDescriptions;
+  if (trusted !== undefined) client.trusted = trusted;
   if (type !== undefined) client.type = type;
 
   await clientRepository.update(client);

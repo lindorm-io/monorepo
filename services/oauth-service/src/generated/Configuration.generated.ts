@@ -14,11 +14,9 @@ interface Defaults {
   clients:  Clients;
   expiry:   Expiry;
   sessions: Sessions;
-  tenants:  Tenants;
 }
 
 interface Clients {
-  active_state:         boolean;
   level_of_assurance:   number;
   opaque_access_tokens: boolean;
 }
@@ -43,10 +41,6 @@ interface Sessions {
   loa_2_max_days:    number;
   loa_3_max_days:    number;
   loa_4_max_minutes: number;
-}
-
-interface Tenants {
-  active_state: boolean;
 }
 
 interface Frontend {

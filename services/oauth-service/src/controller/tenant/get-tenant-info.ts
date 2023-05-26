@@ -1,7 +1,7 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { TenantAttributes } from "../../entity";
+import { ServerKoaController } from "../../types";
 
 type RequestData = {
   id: string;
@@ -28,6 +28,7 @@ export const getTenantInfoController: ServerKoaController<RequestData> = async (
       name: tenant.name,
       owner: tenant.owner,
       subdomain: tenant.subdomain,
+      trusted: tenant.trusted,
     },
   };
 };

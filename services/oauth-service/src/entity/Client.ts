@@ -3,6 +3,7 @@ import {
   AuthenticationStrategy,
   LevelOfAssurance,
   LindormScope,
+  OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
@@ -14,12 +15,7 @@ import {
 } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import Joi from "joi";
-import {
-  JOI_ARGON_STRING,
-  JOI_CLIENT_TYPE,
-  JOI_LEVEL_OF_ASSURANCE,
-  JOI_SCOPE_DESCRIPTION,
-} from "../common";
+import { JOI_ARGON_STRING, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../common";
 import {
   JOI_DISPLAY_MODE,
   JOI_EXPIRY_REGEX,
@@ -60,8 +56,6 @@ export type ClientAttributes = EntityAttributes & {
   backChannelLogoutUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
-  enforceBasicAuth: boolean;
-  enforceSecret: boolean;
   expiry: ClientExpiry;
   frontChannelLogoutUri: string | null;
   host: string;
@@ -69,6 +63,7 @@ export type ClientAttributes = EntityAttributes & {
   name: string;
   opaqueAccessToken: boolean;
   postLogoutUris: Array<string>;
+  profile: OpenIdClientProfile;
   redirectUris: Array<string>;
   requiredScopes: Array<OpenIdScope | LindormScope>;
   rtbfUri: string | null;
@@ -76,16 +71,16 @@ export type ClientAttributes = EntityAttributes & {
   secret: string;
   singleSignOn: boolean;
   tenantId: string;
+  trusted: boolean;
   type: OpenIdClientType;
 };
 
 export type ClientOptions = Optional<
   ClientAttributes,
   | EntityKeys
+  | "active"
   | "backChannelLogoutUri"
   | "description"
-  | "enforceBasicAuth"
-  | "enforceSecret"
   | "frontChannelLogoutUri"
   | "logoUri"
   | "opaqueAccessToken"
@@ -94,6 +89,7 @@ export type ClientOptions = Optional<
   | "requiredScopes"
   | "rtbfUri"
   | "scopeDescriptions"
+  | "trusted"
 >;
 
 const schema = Joi.object<ClientAttributes>()
@@ -133,8 +129,6 @@ const schema = Joi.object<ClientAttributes>()
     active: Joi.boolean().required(),
     backChannelLogoutUri: Joi.string().uri().required(),
     description: Joi.string().allow(null).required(),
-    enforceBasicAuth: Joi.boolean().required(),
-    enforceSecret: Joi.boolean().required(),
     frontChannelLogoutUri: Joi.string().uri().allow(null).required(),
     host: Joi.string().uri().required(),
     logoUri: Joi.string().uri().allow(null).required(),
@@ -148,7 +142,13 @@ const schema = Joi.object<ClientAttributes>()
     secret: JOI_ARGON_STRING.required(),
     singleSignOn: Joi.boolean().required(),
     tenantId: Joi.string().guid().required(),
-    type: JOI_CLIENT_TYPE.required(),
+    type: Joi.string()
+      .valid(...Object.values(OpenIdClientType))
+      .required(),
+    profile: Joi.string()
+      .valid(...Object.values(OpenIdClientProfile))
+      .required(),
+    trusted: Joi.boolean().required(),
   })
   .required();
 
@@ -159,8 +159,6 @@ export class Client extends LindormEntity<ClientAttributes> {
   public backChannelLogoutUri: string | null;
   public defaults: ClientDefaults;
   public description: string | null;
-  public enforceBasicAuth: boolean;
-  public enforceSecret: boolean;
   public expiry: ClientExpiry;
   public frontChannelLogoutUri: string | null;
   public host: string;
@@ -168,6 +166,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public name: string;
   public opaqueAccessToken: boolean;
   public postLogoutUris: Array<string>;
+  public profile: OpenIdClientProfile;
   public redirectUris: Array<string>;
   public requiredScopes: Array<OpenIdScope | LindormScope>;
   public rtbfUri: string | null;
@@ -175,19 +174,18 @@ export class Client extends LindormEntity<ClientAttributes> {
   public secret: string;
   public singleSignOn: boolean;
   public tenantId: string;
+  public trusted: boolean;
   public type: OpenIdClientType;
 
   public constructor(options: ClientOptions) {
     super(options);
 
-    this.active = options.active;
+    this.active = options.active === true;
     this.allowed = options.allowed;
     this.audiences = options.audiences;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
     this.defaults = options.defaults;
     this.description = options.description || null;
-    this.enforceBasicAuth = options.enforceBasicAuth === true;
-    this.enforceSecret = options.enforceSecret === true;
     this.expiry = options.expiry;
     this.frontChannelLogoutUri = options.frontChannelLogoutUri || null;
     this.host = options.host;
@@ -195,6 +193,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.name = options.name;
     this.opaqueAccessToken = options.opaqueAccessToken === true;
     this.postLogoutUris = options.postLogoutUris || [];
+    this.profile = options.profile;
     this.redirectUris = options.redirectUris || [];
     this.requiredScopes = options.requiredScopes || [];
     this.rtbfUri = options.rtbfUri || null;
@@ -202,6 +201,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.secret = options.secret;
     this.singleSignOn = options.singleSignOn === true;
     this.tenantId = options.tenantId;
+    this.trusted = options.trusted === true;
     this.type = options.type;
   }
 
@@ -219,8 +219,6 @@ export class Client extends LindormEntity<ClientAttributes> {
       backChannelLogoutUri: this.backChannelLogoutUri,
       defaults: this.defaults,
       description: this.description,
-      enforceBasicAuth: this.enforceBasicAuth,
-      enforceSecret: this.enforceSecret,
       expiry: this.expiry,
       frontChannelLogoutUri: this.frontChannelLogoutUri,
       host: this.host,
@@ -228,6 +226,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       name: this.name,
       opaqueAccessToken: this.opaqueAccessToken,
       postLogoutUris: this.postLogoutUris,
+      profile: this.profile,
       redirectUris: this.redirectUris,
       requiredScopes: this.requiredScopes,
       rtbfUri: this.rtbfUri,
@@ -235,6 +234,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       secret: this.secret,
       singleSignOn: this.singleSignOn,
       tenantId: this.tenantId,
+      trusted: this.trusted,
       type: this.type,
     };
   }

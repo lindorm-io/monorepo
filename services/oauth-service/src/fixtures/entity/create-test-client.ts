@@ -2,6 +2,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   LindormScope,
+  OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
@@ -48,6 +49,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     name: "ClientName",
     opaqueAccessToken: false,
     postLogoutUris: ["https://test.client.lindorm.io/logout"],
+    profile: OpenIdClientProfile.USER_AGENT_BASED_APPLICATION,
     redirectUris: ["https://test.client.lindorm.io/redirect"],
     requiredScopes: [OpenIdScope.OFFLINE_ACCESS, OpenIdScope.OPENID],
     rtbfUri: "https://test.client.lindorm.io/rtbf",
@@ -56,6 +58,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
     singleSignOn: true,
     tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+    trusted: true,
     type: OpenIdClientType.CONFIDENTIAL,
     ...options,
   });

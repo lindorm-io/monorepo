@@ -1,3 +1,4 @@
+export * from "./open-id-client-profile";
 export * from "./open-id-client-type";
 export * from "./open-id-display-mode";
 export * from "./open-id-grant-type";

@@ -12,6 +12,7 @@ export type TenantAttributes = EntityAttributes & {
   name: string;
   owner: string;
   subdomain: string;
+  trusted: boolean;
 };
 
 export type TenantOptions = Optional<TenantAttributes, EntityKeys>;
@@ -24,6 +25,7 @@ const schema = Joi.object<TenantAttributes>()
     name: Joi.string().required(),
     owner: Joi.string().required(),
     subdomain: Joi.string().required(),
+    trusted: Joi.boolean().required(),
   })
   .required();
 
@@ -32,6 +34,7 @@ export class Tenant extends LindormEntity<TenantAttributes> {
   public name: string;
   public owner: string;
   public subdomain: string;
+  public trusted: boolean;
 
   public constructor(options: TenantOptions) {
     super(options);
@@ -40,6 +43,7 @@ export class Tenant extends LindormEntity<TenantAttributes> {
     this.name = options.name;
     this.owner = options.owner;
     this.subdomain = options.subdomain;
+    this.trusted = options.trusted === true;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -54,6 +58,7 @@ export class Tenant extends LindormEntity<TenantAttributes> {
       name: this.name,
       owner: this.owner,
       subdomain: this.subdomain,
+      trusted: this.trusted,
     };
   }
 }

@@ -1,8 +1,9 @@
-import { Client } from "../../entity";
+import { OpenIdClientType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { ServerKoaMiddleware } from "../../types";
-import { argon } from "../../instance";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";
+import { Client } from "../../entity";
+import { argon } from "../../instance";
+import { ServerKoaMiddleware } from "../../types";
 
 export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Promise<void> => {
   const {
@@ -16,14 +17,6 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
 
   if (clientId) {
     client = await clientRepository.find({ id: clientId });
-
-    if (client.enforceBasicAuth) {
-      throw new ClientError("Unauthorized", {
-        data: { enforceBasicAuth: client.enforceBasicAuth },
-        description: "Client is configured to require basic auth",
-        statusCode: ClientError.StatusCode.UNAUTHORIZED,
-      });
-    }
   } else {
     const { type, value } = ctx.getAuthorizationHeader();
 
@@ -40,10 +33,9 @@ export const assertClientMiddleware: ServerKoaMiddleware = async (ctx, next): Pr
     throw new ClientError("Client is not active");
   }
 
-  if (client.enforceSecret && !clientSecret) {
+  if (client.type === OpenIdClientType.CONFIDENTIAL && !clientSecret) {
     throw new ClientError("Unauthorized", {
-      data: { enforceSecret: client.enforceSecret },
-      description: "Client is configured to require secret",
+      description: "Confidential clients require secrets",
       statusCode: ClientError.StatusCode.UNAUTHORIZED,
     });
   }

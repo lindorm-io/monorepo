@@ -1,6 +1,5 @@
 defaults:
   clients:
-    active_state: false
     level_of_assurance: 1
     opaque_access_tokens: false
   expiry:
@@ -21,8 +20,6 @@ defaults:
     loa_2_max_days: 30
     loa_3_max_days: 3
     loa_4_max_minutes: 15
-  tenants:
-    active_state: false
 
 frontend:
   host: localhost

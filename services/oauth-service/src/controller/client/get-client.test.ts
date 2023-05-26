@@ -91,8 +91,6 @@ describe("getClientInfoController", () => {
           responseMode: "query",
         },
         description: "Client description",
-        enforceBasicAuth: false,
-        enforceSecret: false,
         expiry: {
           accessToken: "99 seconds",
           idToken: "99 seconds",
@@ -102,6 +100,7 @@ describe("getClientInfoController", () => {
         host: "https://test.client.lindorm.io",
         logoUri: "https://logo.uri/logo",
         name: "ClientName",
+        profile: "user_agent_based_application",
         postLogoutUris: ["https://test.client.lindorm.io/logout"],
         redirectUris: ["https://test.client.lindorm.io/redirect"],
         requiredScopes: ["offline_access", "openid"],
@@ -118,6 +117,7 @@ describe("getClientInfoController", () => {
         ],
         singleSignOn: true,
         tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+        trusted: true,
         type: "confidential",
       },
     });
