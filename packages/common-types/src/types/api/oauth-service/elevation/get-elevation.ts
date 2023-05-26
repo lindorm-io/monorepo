@@ -4,9 +4,9 @@ import { StandardRequestParamsWithId } from "../../standard";
 import { PublicClientInfo } from "../public-client-info";
 import { PublicTenantInfo } from "../public-tenant-info";
 
-export type GetElevationRequestParams = StandardRequestParamsWithId;
+export type GetElevationSessionRequestParams = StandardRequestParamsWithId;
 
-export type GetElevationResponse = {
+export type GetElevationSessionResponse = {
   elevation: {
     isRequired: boolean;
     status: SessionStatus;
@@ -18,7 +18,7 @@ export type GetElevationResponse = {
     requiredMethods: Array<AuthenticationMethod>;
   };
 
-  elevationRequest: {
+  elevationSession: {
     id: string;
     authenticationHint: Array<string>;
     country: string | null;

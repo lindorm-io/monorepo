@@ -1,3 +1,3 @@
 import { StandardRequestParamsWithId } from "../../standard";
 
-export type RejectElevationRequestParams = StandardRequestParamsWithId;
+export type RejectElevationSessionRequestParams = StandardRequestParamsWithId;

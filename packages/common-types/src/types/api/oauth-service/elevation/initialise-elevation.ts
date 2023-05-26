@@ -1,7 +1,7 @@
 import { AuthenticationMethod, OpenIdDisplayMode } from "../../../../enums";
 import { LevelOfAssurance } from "../../../auth";
 
-interface InitialiseElevationRequestData {
+interface InitialiseElevationSessionRequestData {
   authenticationHint?: Array<string>;
   clientId: string;
   country?: string;
@@ -10,12 +10,14 @@ interface InitialiseElevationRequestData {
   nonce?: string;
 }
 
-export interface InitialiseElevationRequestBody extends InitialiseElevationRequestData {
+export interface InitialiseElevationSessionRequestBody
+  extends InitialiseElevationSessionRequestData {
   methods?: Array<AuthenticationMethod>;
   uiLocales?: Array<string>;
 }
 
-export interface InitialiseElevationRequestQuery extends InitialiseElevationRequestData {
+export interface InitialiseElevationSessionRequestQuery
+  extends InitialiseElevationSessionRequestData {
   display?: OpenIdDisplayMode;
   methods?: string;
   redirectUri: string;
@@ -24,5 +26,5 @@ export interface InitialiseElevationRequestQuery extends InitialiseElevationRequ
 }
 
 export interface InitialiseElevationResponse {
-  elevationRequestId: string;
+  elevationSessionId: string;
 }

@@ -11,7 +11,7 @@ export type InitialiseAuthenticationRequestBody = {
   loginHint?: Array<string>;
   methods?: Array<AuthenticationMethod>;
   nonce?: string;
-  elevationRequestId?: string;
+  elevationSessionId?: string;
   oauthSessionId?: string;
 };
 

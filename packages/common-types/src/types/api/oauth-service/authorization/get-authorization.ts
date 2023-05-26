@@ -52,7 +52,7 @@ export type GetAuthorizationResponse = {
     sessions: Array<SelectAccountSession>;
   };
 
-  authorizationRequest: {
+  authorizationSession: {
     id: string;
     country: string | null;
     displayMode: OpenIdDisplayMode;

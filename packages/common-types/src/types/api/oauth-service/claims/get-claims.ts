@@ -4,10 +4,10 @@ import { StandardRequestParamsWithId } from "../../standard";
 import { PublicClientInfo } from "../public-client-info";
 import { PublicTenantInfo } from "../public-tenant-info";
 
-export type GetClaimsRequestRequestParams = StandardRequestParamsWithId;
+export type GetClaimsSessionRequestParams = StandardRequestParamsWithId;
 
-export type GetClaimsRequestResponse = {
-  claimsRequest: {
+export type GetClaimsSessionResponse = {
+  claimsSession: {
     id: string;
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
