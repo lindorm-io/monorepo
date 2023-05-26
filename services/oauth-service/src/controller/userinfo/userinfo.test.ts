@@ -1,10 +1,10 @@
-import { userinfoController } from "./userinfo";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
+import { createTestAccessToken, createTestClientSession } from "../../fixtures/entity";
 import {
   convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
   getIdentityUserinfo as _getIdentityUserinfo,
 } from "../../handler";
-import { createTestAccessToken, createTestClientSession } from "../../fixtures/entity";
+import { userinfoController } from "./userinfo";
 
 jest.mock("../../handler");
 
@@ -20,6 +20,7 @@ describe("userinfoController", () => {
         clientSession: createTestClientSession(),
         opaqueToken: createTestAccessToken(),
       },
+      token: { bearerToken: { token: "opaque" } },
     };
 
     convertOpaqueTokenToJwt.mockImplementation(() => ({ token: "jwt.jwt.jwt", expiresIn: 999 }));

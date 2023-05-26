@@ -15,6 +15,7 @@ describe("resolveTokenSession", () => {
         opaqueTokenCache: createMockRedisRepository(createTestAccessToken),
       },
       jwt: createTestJwt({ issuer: configuration.server.issuer }),
+      token: {},
     };
   });
 

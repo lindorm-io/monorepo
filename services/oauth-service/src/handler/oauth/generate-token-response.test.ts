@@ -10,7 +10,6 @@ import {
 } from "../../fixtures/entity";
 import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
   createIdToken as _createIdToken,
   generateAccessToken as _generateAccessToken,
   generateRefreshToken as _generateRefreshToken,
@@ -24,7 +23,6 @@ jest.mock("../identity");
 jest.mock("../token");
 
 const createOpaqueToken = _createOpaqueToken as jest.Mock;
-const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
 const generateRefreshToken = _generateRefreshToken as jest.Mock;
@@ -42,9 +40,6 @@ describe("generateTokenResponse", () => {
     client = createTestClient();
 
     createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
-    convertOpaqueTokenToJwt.mockImplementation((_1, _2, token) => ({
-      token: `${token.type}.token.jwt`,
-    }));
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
@@ -62,7 +57,7 @@ describe("generateTokenResponse", () => {
     clientSession.scopes = [];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
-      accessToken: "access_token.token.jwt",
+      accessToken: "create_opaque_token",
       expiresIn: 86400,
       tokenType: "Bearer",
     });
@@ -80,19 +75,6 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
-
-    await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
-      accessToken: "access_token.token.jwt",
-      expiresIn: 86400,
-      refreshToken: "create_opaque_token",
-      scope: "offline_access",
-      tokenType: "Bearer",
-    });
-  });
-
-  test("should with opaque tokens", async () => {
-    client.opaqueAccessToken = true;
     clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({

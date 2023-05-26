@@ -17,11 +17,13 @@ export const resolveTokenSession = async (
   const type = getTokenHeaderType(token);
 
   if (type === TokenHeaderType.JWT) {
-    const verified = jwt.verify(token, {
+    const verified = jwt.verify<never>(token, {
       audience: configuration.oauth.client_id,
       issuer: configuration.server.issuer,
       subjectHints: [SubjectHint.IDENTITY],
     });
+
+    ctx.token.bearerToken = verified;
 
     return await opaqueTokenCache.find({ id: verified.id });
   }

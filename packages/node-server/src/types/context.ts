@@ -2,8 +2,6 @@ import { Axios } from "@lindorm-io/axios";
 import { Dict } from "@lindorm-io/common-types";
 import { JWT, JwtDecodeData } from "@lindorm-io/jwt";
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -17,6 +15,8 @@ import {
   KeyPairMongoRepository,
   KeyPairRedisRepository,
 } from "@lindorm-io/koa-keystore";
+import { MongoConnection } from "@lindorm-io/mongo";
+import { RedisConnection } from "@lindorm-io/redis";
 
 export interface LindormNodeServerAxios {
   axiosClient: Axios;
@@ -41,7 +41,7 @@ export interface LindormNodeServerRedis {
 }
 
 export interface LindormNodeServerToken {
-  bearerToken: JwtDecodeData;
+  bearerToken: JwtDecodeData<never>;
 }
 
 export interface LindormNodeServerContext extends DefaultLindormContext {

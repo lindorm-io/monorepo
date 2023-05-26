@@ -66,6 +66,7 @@ describe("/exchange", () => {
     expect(jwt.decode(response.body.token)).toStrictEqual({
       aal: 2,
       aud: clientSession.audiences,
+      at_hash: expect.any(String),
       auth_time: 1609487940,
       azp: client.id,
       cid: client.id,

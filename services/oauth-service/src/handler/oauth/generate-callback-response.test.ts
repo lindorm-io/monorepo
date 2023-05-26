@@ -12,7 +12,6 @@ import {
 } from "../../fixtures/entity";
 import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
-  convertOpaqueTokenToJwt as _convertOpaqueTokenToJwt,
   createIdToken as _createIdToken,
   generateAccessToken as _generateAccessToken,
 } from "../token";
@@ -27,7 +26,6 @@ jest.mock("../token");
 jest.mock("./generate-authorization-code");
 
 const createOpaqueToken = _createOpaqueToken as jest.Mock;
-const convertOpaqueTokenToJwt = _convertOpaqueTokenToJwt as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
 const generateAuthorizationCode = _generateAuthorizationCode as jest.Mock;
@@ -56,9 +54,6 @@ describe("generateCallbackResponse", () => {
     client = createTestClient();
 
     createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
-    convertOpaqueTokenToJwt.mockImplementation(() => ({
-      token: "access.token.jwt",
-    }));
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
@@ -147,7 +142,7 @@ describe("generateCallbackResponse", () => {
       generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
-        "access_token=access.token.jwt&expires_in=86400&token_type=Bearer",
+        "access_token=create_opaque_token&expires_in=86400&token_type=Bearer",
       ),
     });
   });
@@ -181,23 +176,6 @@ describe("generateCallbackResponse", () => {
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "redirect_data=ZXlKemRISnBibWNpT2lKemRISnBibWNpTENKdWRXMWlaWElpT2pFeU15d2lZbTl2YkdWaGJpSTZkSEoxWlgwPQ%3D%3D",
-      ),
-    });
-  });
-
-  test("should resolve with opaque access token", async () => {
-    client.opaqueAccessToken = true;
-    authorizationSession = createTestAuthorizationSession({
-      redirectData: null,
-      responseTypes: [OpenIdResponseType.TOKEN],
-      state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
-    });
-
-    await expect(
-      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
-    ).resolves.toStrictEqual({
-      redirect: expect.stringContaining(
-        "access_token=create_opaque_token&expires_in=86400&token_type=Bearer",
       ),
     });
   });

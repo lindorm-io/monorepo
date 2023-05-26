@@ -1,5 +1,4 @@
 import {
-  LevelOfAssurance,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -84,7 +83,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
 
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
-        levelOfAssurance: configuration.defaults.clients.level_of_assurance as LevelOfAssurance,
+        levelOfAssurance: 1,
         responseMode: OpenIdResponseMode.QUERY,
       },
 
@@ -98,7 +97,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
       description,
       host,
       name,
-      opaqueAccessToken: configuration.defaults.clients.opaque_access_tokens,
+      opaqueAccessToken: true,
       profile,
       secret: await argon.encrypt(secret),
       singleSignOn: true,

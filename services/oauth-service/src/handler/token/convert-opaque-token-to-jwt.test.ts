@@ -12,6 +12,7 @@ describe("createOpaqueJwt", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
+        createHash: jest.fn().mockReturnValue("hash"),
         sign: jest.fn().mockReturnValue("signed"),
       },
     };
@@ -23,11 +24,13 @@ describe("createOpaqueJwt", () => {
         ctx,
         createTestClientSession({ type: ClientSessionType.EPHEMERAL }),
         createTestAccessToken(),
+        "access_token",
       ),
     ).toBe("signed");
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
+        atHash: "hash",
         sessionHint: "ephemeral",
         type: "access_token",
       }),

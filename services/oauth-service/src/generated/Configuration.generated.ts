@@ -11,14 +11,8 @@ export interface Configuration {
 }
 
 interface Defaults {
-  clients:  Clients;
   expiry:   Expiry;
   sessions: Sessions;
-}
-
-interface Clients {
-  level_of_assurance:   number;
-  opaque_access_tokens: boolean;
 }
 
 interface Expiry {

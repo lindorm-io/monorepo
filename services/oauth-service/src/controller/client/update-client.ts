@@ -31,7 +31,6 @@ type RequestData = {
   host: string;
   logoUri: string | null;
   name: string;
-  opaqueAccessToken: boolean;
   postLogoutUris: Array<string>;
   profile: OpenIdClientProfile;
   redirectUris: Array<string>;
@@ -73,7 +72,6 @@ export const updateClientSchema = Joi.object<RequestData>()
     host: Joi.string().uri(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
-    opaqueAccessToken: Joi.boolean(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
     profile: Joi.string().valid(...Object.values(OpenIdClientProfile)),
     redirectUris: Joi.array().items(Joi.string().uri()),
@@ -101,7 +99,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       host,
       logoUri,
       name,
-      opaqueAccessToken,
       postLogoutUris,
       profile,
       redirectUris,
@@ -137,7 +134,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (host !== undefined) client.host = host;
   if (logoUri !== undefined) client.logoUri = logoUri;
   if (name !== undefined) client.name = name;
-  if (opaqueAccessToken !== undefined) client.opaqueAccessToken = opaqueAccessToken;
   if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
   if (profile !== undefined) client.profile = profile;
   if (redirectUris !== undefined) client.redirectUris = redirectUris;

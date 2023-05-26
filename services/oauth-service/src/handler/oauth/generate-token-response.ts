@@ -5,12 +5,7 @@ import { createOpaqueToken } from "@lindorm-io/jwt";
 import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
-import {
-  convertOpaqueTokenToJwt,
-  createIdToken,
-  generateAccessToken,
-  generateRefreshToken,
-} from "../token";
+import { createIdToken, generateAccessToken, generateRefreshToken } from "../token";
 
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
@@ -31,16 +26,13 @@ export const generateTokenResponse = async (
 
   const accessOpaque = createOpaqueToken();
   const accessToken = await generateAccessToken(ctx, client, clientSession, accessOpaque);
-  const accessJwt = client.opaqueAccessToken
-    ? undefined
-    : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
-  body.accessToken = accessJwt?.token || accessOpaque.token;
+  body.accessToken = accessOpaque.token;
   body.expiresIn = expiresIn(accessToken.expires);
   body.tokenType = "Bearer";
 
   if (clientSession.scopes.includes(OpenIdScope.OPENID)) {
-    const { token: idToken } = createIdToken(ctx, client, clientSession, claims);
+    const { token: idToken } = createIdToken(ctx, client, clientSession, claims, body.accessToken);
 
     body.idToken = idToken;
   }

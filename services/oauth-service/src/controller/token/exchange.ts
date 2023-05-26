@@ -94,7 +94,12 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
     });
   }
 
-  const { token: signed, expiresIn } = convertOpaqueTokenToJwt(ctx, clientSession, opaqueToken);
+  const { token: signed, expiresIn } = convertOpaqueTokenToJwt(
+    ctx,
+    clientSession,
+    opaqueToken,
+    token,
+  );
 
   return { body: { expiresIn, token: signed } };
 };

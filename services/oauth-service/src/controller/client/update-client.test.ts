@@ -120,7 +120,6 @@ describe("updateClientController", () => {
         host: "https://host",
         logoUri: "https://logoUri",
         name: "updated-name",
-        opaqueAccessToken: false,
         postLogoutUris: ["https://postLogoutUris"],
         profile: "updated profile",
         redirectUris: ["https://redirectUris"],

@@ -8,7 +8,7 @@ import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
-import { convertOpaqueTokenToJwt, createIdToken, generateAccessToken } from "../token";
+import { createIdToken, generateAccessToken } from "../token";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 
 type CallbackData = {
@@ -46,11 +46,8 @@ export const generateCallbackResponse = async (
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
     const accessOpaque = createOpaqueToken();
     const accessToken = await generateAccessToken(ctx, client, clientSession, accessOpaque);
-    const accessJwt = client.opaqueAccessToken
-      ? undefined
-      : convertOpaqueTokenToJwt(ctx, clientSession, accessToken);
 
-    data.accessToken = accessJwt?.token || accessOpaque.token;
+    data.accessToken = accessOpaque.token;
     data.expiresIn = expiresIn(accessToken.expires);
     data.tokenType = "Bearer";
   }
@@ -59,7 +56,7 @@ export const generateCallbackResponse = async (
     authorizationSession.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
     clientSession.scopes.includes(OpenIdScope.OPENID)
   ) {
-    const { token: idToken } = createIdToken(ctx, client, clientSession, claims);
+    const { token: idToken } = createIdToken(ctx, client, clientSession, claims, data.accessToken);
 
     data.idToken = idToken;
   }

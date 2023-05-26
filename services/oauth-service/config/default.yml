@@ -1,7 +1,4 @@
 defaults:
-  clients:
-    level_of_assurance: 1
-    opaque_access_tokens: false
   expiry:
     authentication_token_session: 90 seconds
     access_token: 3 minutes

@@ -10,12 +10,15 @@ export const convertOpaqueTokenToJwt = (
   ctx: ServerKoaContext,
   clientSession: ClientSession,
   opaqueToken: OpaqueToken,
+  token?: string,
 ): JwtSignData => {
   const { jwt } = ctx;
+  const atHash = token ? jwt.createHash(token) : undefined;
 
   return jwt.sign({
     id: opaqueToken.id,
     adjustedAccessLevel: getAdjustedAccessLevel(clientSession),
+    atHash,
     audiences: clientSession.audiences,
     authorizedParty: clientSession.clientId,
     authTime: getUnixTime(clientSession.latestAuthentication),
