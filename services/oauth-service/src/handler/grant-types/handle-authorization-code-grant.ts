@@ -106,5 +106,5 @@ export const handleAuthorizationCodeGrant = async (
     id: authorizationSession.clientSessionId,
   });
 
-  return generateTokenResponse(ctx, client, clientSession);
+  return await generateTokenResponse(ctx, client, clientSession);
 };

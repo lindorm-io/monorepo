@@ -74,5 +74,5 @@ export const handleRefreshTokenGrant = async (
 
   await opaqueTokenCache.destroy(opaqueToken);
 
-  return generateTokenResponse(ctx, client, clientSession);
+  return await generateTokenResponse(ctx, client, clientSession);
 };

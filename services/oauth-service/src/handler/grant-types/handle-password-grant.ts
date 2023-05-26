@@ -1,38 +1,36 @@
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import {
-  GetAuthenticationTokenQuery,
-  GetAuthenticationTokenResponse,
   OpenIdScope,
   TokenRequestBody,
   TokenResponse,
+  VerifyPasswordRequestBody,
+  VerifyPasswordResponse,
 } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
-import { expiryDate } from "@lindorm-io/expiry";
 import { difference } from "lodash";
-import { AuthenticationTokenSession, ClientSession } from "../../entity";
+import { ClientSession } from "../../entity";
 import { ClientSessionType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateTokenResponse } from "../oauth";
 import { generateServerCredentialsJwt } from "../token";
 
-export const handleAuthenticationTokenGrant = async (
+export const handlePasswordGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<TokenResponse> => {
   const {
     axios: { authenticationClient },
-    data: { authenticationToken, scope },
+    data: { username, password, scope },
     entity: { client },
-    redis: { authenticationTokenSessionCache },
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!authenticationToken) {
-    throw new ClientError("Missing authentication token");
+  if (!username || !password) {
+    throw new ClientError("Missing username or password");
   }
 
-  const scopes = scope ? scope.split(" ") : [];
+  const scopes = (scope ? scope.split(" ") : []) as Array<OpenIdScope>;
   const diff = difference(scopes, client.allowed.scopes);
 
   if (diff.length) {
@@ -48,8 +46,21 @@ export const handleAuthenticationTokenGrant = async (
     });
   }
 
-  const authenticationTokenSession = await authenticationTokenSessionCache.create(
-    new AuthenticationTokenSession({
+  const middleware = [
+    axiosBearerAuthMiddleware(
+      generateServerCredentialsJwt(ctx, [configuration.services.authentication_service.client_id]),
+    ),
+  ];
+
+  const { data } = await authenticationClient.post<
+    VerifyPasswordResponse,
+    VerifyPasswordRequestBody
+  >(configuration.services.authentication_service.routes.password, {
+    middleware,
+  });
+
+  const clientSession = await clientSessionRepository.create(
+    new ClientSession({
       audiences: uniqArray(
         client.id,
         client.audiences.identity,
@@ -58,48 +69,19 @@ export const handleAuthenticationTokenGrant = async (
         configuration.services.identity_service.client_id,
       ),
       clientId: client.id,
-      expires: expiryDate(configuration.defaults.expiry.authentication_token_session),
-      metadata: {},
-      scopes: scopes as Array<OpenIdScope>,
-      token: authenticationToken,
-    }),
-  );
-
-  const query = { session: authenticationTokenSession.id };
-  const middleware = [
-    axiosBearerAuthMiddleware(
-      generateServerCredentialsJwt(ctx, [configuration.services.authentication_service.client_id]),
-    ),
-  ];
-
-  const { data } = await authenticationClient.get<
-    GetAuthenticationTokenResponse,
-    never,
-    GetAuthenticationTokenQuery
-  >(configuration.services.authentication_service.routes.authentication_token, {
-    query,
-    middleware,
-  });
-
-  const clientSession = await clientSessionRepository.create(
-    new ClientSession({
-      audiences: authenticationTokenSession.audiences,
-      clientId: client.id,
       identityId: data.identityId,
       latestAuthentication: new Date(data.latestAuthentication),
       levelOfAssurance: data.levelOfAssurance,
-      metadata: authenticationTokenSession.metadata,
+      metadata: {},
       methods: data.methods,
       nonce: data.nonce,
-      scopes: authenticationTokenSession.scopes,
+      scopes,
       tenantId: client.tenantId,
-      type: authenticationTokenSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
+      type: scopes.includes(OpenIdScope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH
         : ClientSessionType.EPHEMERAL,
     }),
   );
-
-  await authenticationTokenSessionCache.destroy(authenticationTokenSession);
 
   return await generateTokenResponse(ctx, client, clientSession);
 };

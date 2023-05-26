@@ -50,6 +50,18 @@ describe("/oauth2/token", () => {
       nonce: randomString(16),
     });
 
+  nock("https://authentication.test.lindorm.io")
+    .post("/admin/grant-types/password")
+    .query(true)
+    .times(1)
+    .reply(200, {
+      identityId: randomUUID(),
+      latestAuthentication: new Date().toISOString(),
+      levelOfAssurance: 2,
+      methods: ["email"],
+      nonce: randomString(16),
+    });
+
   nock("https://identity.test.lindorm.io")
     .get("/admin/claims")
     .query(true)
@@ -176,6 +188,35 @@ describe("/oauth2/token", () => {
     expect(response.body).toStrictEqual({
       access_token: expect.any(String),
       expires_in: 60,
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
+      token_type: "Bearer",
+    });
+  });
+
+  test("should resolve for password grant type", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.encrypt("secret"),
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post("/oauth2/token")
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
+      .send({
+        grant_type: OpenIdGrantType.PASSWORD,
+        username: "username",
+        password: "password",
+        scope: client.allowed.scopes.join(" "),
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      access_token: expect.any(String),
+      expires_in: 99,
+      id_token: expect.any(String),
+      refresh_token: expect.any(String),
       scope:
         "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
       token_type: "Bearer",

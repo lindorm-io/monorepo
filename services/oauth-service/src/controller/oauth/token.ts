@@ -7,6 +7,7 @@ import {
   handleAuthenticationTokenGrant,
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,
+  handlePasswordGrant,
   handleRefreshTokenGrant,
 } from "../../handler";
 import { ServerKoaController } from "../../types";
@@ -66,6 +67,10 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
 
     case OpenIdGrantType.CLIENT_CREDENTIALS:
       body = await handleClientCredentialsGrant(ctx);
+      break;
+
+    case OpenIdGrantType.PASSWORD:
+      body = await handlePasswordGrant(ctx);
       break;
 
     case OpenIdGrantType.REFRESH_TOKEN:
