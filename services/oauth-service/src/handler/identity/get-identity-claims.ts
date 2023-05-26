@@ -1,7 +1,7 @@
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
-import { ClaimsRequest, ClientSession } from "../../entity";
+import { ClaimsSession, ClientSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateServerCredentialsJwt } from "../token";
@@ -12,11 +12,11 @@ export const getIdentityClaims = async (
 ): Promise<GetClaimsResponse> => {
   const {
     axios: { identityClient },
-    redis: { claimsRequestCache },
+    redis: { claimsSessionCache },
   } = ctx;
 
-  const claimsRequest = await claimsRequestCache.create(
-    new ClaimsRequest({
+  const claimsSession = await claimsSessionCache.create(
+    new ClaimsSession({
       audiences: clientSession.audiences,
       clientId: clientSession.clientId,
       expires: expiryDate(configuration.defaults.expiry.claims_session),
@@ -29,7 +29,7 @@ export const getIdentityClaims = async (
     }),
   );
 
-  const query = { session: claimsRequest.id };
+  const query = { session: claimsSession.id };
   const middleware = [
     axiosBearerAuthMiddleware(
       generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
@@ -37,11 +37,11 @@ export const getIdentityClaims = async (
   ];
 
   const { data } = await identityClient.get<GetClaimsResponse, never, GetClaimsQuery>(
-    configuration.redirect.claims,
+    configuration.services.identity_service.routes.claims,
     { query, middleware },
   );
 
-  await claimsRequestCache.destroy(claimsRequest);
+  await claimsSessionCache.destroy(claimsSession);
 
   return data;
 };

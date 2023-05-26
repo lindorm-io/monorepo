@@ -1,25 +1,25 @@
 import { SessionStatus } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getBrowserSessionCookies, setBrowserSessionCookies } from "../cookies";
 import { getUpdatedBrowserSession } from "../sessions";
 
 export const handleOauthLoginVerification = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
-): Promise<AuthorizationRequest> => {
+  authorizationSession: AuthorizationSession,
+): Promise<AuthorizationSession> => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
   } = ctx;
 
-  const browserSession = await getUpdatedBrowserSession(ctx, authorizationRequest);
+  const browserSession = await getUpdatedBrowserSession(ctx, authorizationSession);
   const cookies = getBrowserSessionCookies(ctx);
 
   setBrowserSessionCookies(ctx, uniqArray(cookies, browserSession.id));
 
-  authorizationRequest.browserSessionId = browserSession.id;
-  authorizationRequest.status.login = SessionStatus.VERIFIED;
+  authorizationSession.browserSessionId = browserSession.id;
+  authorizationSession.status.login = SessionStatus.VERIFIED;
 
-  return await authorizationRequestCache.update(authorizationRequest);
+  return await authorizationSessionCache.update(authorizationSession);
 };

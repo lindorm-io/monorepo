@@ -1,16 +1,16 @@
 import MockDate from "mockdate";
-import { createTestClaimsRequest, createTestClient, createTestTenant } from "../../fixtures/entity";
-import { getClaimsRequestController } from "./get-claims-request";
+import { createTestClaimsSession, createTestClient, createTestTenant } from "../../fixtures/entity";
+import { getClaimsSessionController } from "./get-claims-request";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-describe("getClaimsRequestController", () => {
+describe("getClaimsSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
       entity: {
-        claimsRequest: createTestClaimsRequest({
+        claimsSession: createTestClaimsSession({
           id: "6016cfd6-a8e2-4949-9eff-4fe5a7cb7c3b",
           audiences: ["5d109728-b5db-42cc-b93c-44c78994678d"],
           clientId: "d778c5b4-cd54-4bdd-b8b9-cda8fb70ab14",
@@ -27,9 +27,9 @@ describe("getClaimsRequestController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(getClaimsRequestController(ctx)).resolves.toStrictEqual({
+    await expect(getClaimsSessionController(ctx)).resolves.toStrictEqual({
       body: {
-        claimsRequest: {
+        claimsSession: {
           id: "6016cfd6-a8e2-4949-9eff-4fe5a7cb7c3b",
           adjustedAccessLevel: 2,
           audiences: ["5d109728-b5db-42cc-b93c-44c78994678d"],

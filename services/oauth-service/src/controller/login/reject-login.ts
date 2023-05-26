@@ -22,18 +22,18 @@ export const rejectLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
-    entity: { authorizationRequest },
+    redis: { authorizationSessionCache },
+    entity: { authorizationSession },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.login);
+  assertSessionPending(authorizationSession.status.login);
 
   logger.debug("Updating authorization session");
 
-  authorizationRequest.status.login = SessionStatus.REJECTED;
+  authorizationSession.status.login = SessionStatus.REJECTED;
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createLoginRejectedUri(authorizationRequest) } };
+  return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
 };

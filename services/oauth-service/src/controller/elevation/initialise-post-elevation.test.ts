@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createTestElevationRequest } from "../../fixtures/entity";
+import { createTestElevationSession } from "../../fixtures/entity";
 import { initialiseElevation as _initialiseElevation } from "../../handler";
 import { initialisePostElevationController } from "./initialise-post-elevation";
 
@@ -26,7 +26,7 @@ describe("initialisePostElevationController", () => {
     };
 
     initialiseElevation.mockResolvedValue(
-      createTestElevationRequest({
+      createTestElevationSession({
         id: "24d18e4b-002f-4adf-9563-ba137c9fe60f",
       }),
     );
@@ -34,7 +34,7 @@ describe("initialisePostElevationController", () => {
 
   test("should resolve", async () => {
     await expect(initialisePostElevationController(ctx)).resolves.toStrictEqual({
-      body: { elevationRequestId: "24d18e4b-002f-4adf-9563-ba137c9fe60f" },
+      body: { elevationSessionId: "24d18e4b-002f-4adf-9563-ba137c9fe60f" },
     });
   });
 });

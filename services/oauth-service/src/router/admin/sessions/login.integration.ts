@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { createTestAuthorizationRequest, createTestClient } from "../../../fixtures/entity";
+import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
 import {
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_REPOSITORY,
@@ -27,14 +27,14 @@ describe("/admin/sessions/login", () => {
       subject: client.id,
     });
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
         clientId: client.id,
       }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/login/${authorizationRequest.id}/confirm`)
+      .post(`/admin/sessions/login/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         identity_id: randomUUID(),
@@ -50,8 +50,8 @@ describe("/admin/sessions/login", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -62,12 +62,12 @@ describe("/admin/sessions/login", () => {
       subject: client.id,
     });
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({ clientId: client.id }),
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/login/${authorizationRequest.id}/reject`)
+      .post(`/admin/sessions/login/${authorizationSession.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -77,6 +77,6 @@ describe("/admin/sessions/login", () => {
     expect(url.pathname).toBe("/redirect");
     expect(url.searchParams.get("error")).toBe("request_rejected");
     expect(url.searchParams.get("error_description")).toBe("login_rejected");
-    expect(url.searchParams.get("state")).toBe(authorizationRequest.state);
+    expect(url.searchParams.get("state")).toBe(authorizationSession.state);
   });
 });

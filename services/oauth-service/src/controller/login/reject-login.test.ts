@@ -2,7 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectLoginController } from "./reject-login";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -13,10 +13,10 @@ describe("rejectLoginController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       entity: {
-        authorizationRequest: createTestAuthorizationRequest({
+        authorizationSession: createTestAuthorizationSession({
           state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
         }),
       },
@@ -31,7 +31,7 @@ describe("rejectLoginController", () => {
       },
     });
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({ login: "rejected" }),
       }),
@@ -39,7 +39,7 @@ describe("rejectLoginController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationRequest.status.login = "skip";
+    ctx.entity.authorizationSession.status.login = "skip";
 
     await expect(rejectLoginController(ctx)).rejects.toThrow(ClientError);
   });

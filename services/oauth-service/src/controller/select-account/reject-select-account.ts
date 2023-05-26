@@ -22,18 +22,18 @@ export const rejectSelectAccountController: ServerKoaController<RequestData> = a
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
-    entity: { authorizationRequest },
+    redis: { authorizationSessionCache },
+    entity: { authorizationSession },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.selectAccount);
+  assertSessionPending(authorizationSession.status.selectAccount);
 
   logger.debug("Updating authorization session");
 
-  authorizationRequest.status.selectAccount = SessionStatus.REJECTED;
+  authorizationSession.status.selectAccount = SessionStatus.REJECTED;
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createSelectAccountRejectedUri(authorizationRequest) } };
+  return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
 };

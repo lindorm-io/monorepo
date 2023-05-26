@@ -7,7 +7,7 @@ import {
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -37,7 +37,7 @@ describe("getAuthorizationController", () => {
   beforeEach(() => {
     ctx = {
       entity: {
-        authorizationRequest: createTestAuthorizationRequest({
+        authorizationSession: createTestAuthorizationSession({
           id: "bd959ef1-6782-46ea-baff-2eabad97d967",
           requestedConsent: {
             audiences: ["fecdd5e7-6e6c-4bc7-8473-e87f8a1d13db"],
@@ -153,7 +153,7 @@ describe("getAuthorizationController", () => {
           ],
         },
 
-        authorizationRequest: {
+        authorizationSession: {
           id: "bd959ef1-6782-46ea-baff-2eabad97d967",
           country: "se",
           displayMode: "popup",

@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import request from "supertest";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -33,14 +33,14 @@ describe("/admin/sessions/select-account", () => {
       subject: client.id,
     });
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
         clientId: client.id,
       }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationRequest.id}/confirm`)
+      .post(`/admin/sessions/select-account/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         select_new: true,
@@ -51,8 +51,8 @@ describe("/admin/sessions/select-account", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });
 
   test("should confirm existing and resolve redirect uri", async () => {
@@ -67,8 +67,8 @@ describe("/admin/sessions/select-account", () => {
       }),
     );
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
         requestedSelectAccount: {
           browserSessions: [
             {
@@ -89,7 +89,7 @@ describe("/admin/sessions/select-account", () => {
     });
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationRequest.id}/confirm`)
+      .post(`/admin/sessions/select-account/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         select_existing: browserSession.id,
@@ -100,8 +100,8 @@ describe("/admin/sessions/select-account", () => {
 
     expect(url.origin).toBe("https://oauth.test.lindorm.io");
     expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
-    expect(url.searchParams.get("session")).toBe(authorizationRequest.id);
-    expect(url.searchParams.get("redirect_uri")).toBe(authorizationRequest.redirectUri);
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });
 
   test("should reject and resolve redirect uri", async () => {
@@ -112,12 +112,12 @@ describe("/admin/sessions/select-account", () => {
       subject: client.id,
     });
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({ clientId: client.id }),
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({ clientId: client.id }),
     );
 
     const response = await request(server.callback())
-      .post(`/admin/sessions/select-account/${authorizationRequest.id}/reject`)
+      .post(`/admin/sessions/select-account/${authorizationSession.id}/reject`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -127,6 +127,6 @@ describe("/admin/sessions/select-account", () => {
     expect(url.pathname).toBe("/redirect");
     expect(url.searchParams.get("error")).toBe("request_rejected");
     expect(url.searchParams.get("error_description")).toBe("account_selection_rejected");
-    expect(url.searchParams.get("state")).toBe(authorizationRequest.state);
+    expect(url.searchParams.get("state")).toBe(authorizationSession.state);
   });
 });

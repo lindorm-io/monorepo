@@ -1,8 +1,6 @@
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { configuration } from "../../../server/configuration";
-import { randomUUID } from "crypto";
-import { server } from "../../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -11,14 +9,16 @@ import {
   createTestTenant,
 } from "../../../fixtures/entity";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
   TEST_TENANT_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

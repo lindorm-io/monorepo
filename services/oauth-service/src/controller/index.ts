@@ -1,3 +1,4 @@
+export * from "./authentication-token";
 export * from "./authorization";
 export * from "./claims";
 export * from "./client";

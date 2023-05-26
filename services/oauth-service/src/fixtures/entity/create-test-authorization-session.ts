@@ -11,12 +11,12 @@ import {
 import { baseHash } from "@lindorm-io/core";
 import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
-import { AuthorizationRequest, AuthorizationRequestOptions } from "../../entity";
+import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
 
-export const createTestAuthorizationRequest = (
-  options: Partial<AuthorizationRequestOptions> = {},
-): AuthorizationRequest =>
-  new AuthorizationRequest({
+export const createTestAuthorizationSession = (
+  options: Partial<AuthorizationSessionOptions> = {},
+): AuthorizationSession =>
+  new AuthorizationSession({
     code: {
       codeChallenge: randomUnreserved(43),
       codeChallengeMethod: PKCEMethod.SHA256,

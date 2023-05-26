@@ -1,20 +1,23 @@
-import { GetElevationRequestParams, GetElevationResponse } from "@lindorm-io/common-types";
+import {
+  GetElevationSessionRequestParams,
+  GetElevationSessionResponse,
+} from "@lindorm-io/common-types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { ServerKoaContext } from "../../types";
 
-export const getOauthElevationRequest = async (
+export const getOauthElevationSession = async (
   ctx: ServerKoaContext,
   id: string,
-): Promise<GetElevationResponse> => {
+): Promise<GetElevationSessionResponse> => {
   const {
     axios: { oauthClient },
   } = ctx;
 
   const { data } = await oauthClient.get<
-    GetElevationResponse,
+    GetElevationSessionResponse,
     never,
     unknown,
-    GetElevationRequestParams
+    GetElevationSessionRequestParams
   >("/admin/sessions/elevation/:id", {
     params: { id },
     middleware: [clientCredentialsMiddleware()],

@@ -1,26 +1,26 @@
-import { AuthorizationRequest, BrowserSession } from "../../entity";
-import { createTestAuthorizationRequest, createTestBrowserSession } from "../../fixtures/entity";
+import { AuthorizationSession, BrowserSession } from "../../entity";
+import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { verifyIdentityId } from "./verify-identity-id";
 
 describe("verifyIdentityId", () => {
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let browserSession: BrowserSession;
 
   beforeEach(() => {
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
 
     browserSession = createTestBrowserSession({
-      identityId: authorizationRequest.requestedLogin.identityId!,
+      identityId: authorizationSession.requestedLogin.identityId!,
     });
   });
 
   test("should return true when identityId is the same", () => {
-    expect(verifyIdentityId(authorizationRequest, browserSession)).toBe(true);
+    expect(verifyIdentityId(authorizationSession, browserSession)).toBe(true);
   });
 
   test("should return false when identityId is not the same", () => {
-    authorizationRequest.requestedLogin.identityId = "wrong-identity-id";
+    authorizationSession.requestedLogin.identityId = "wrong-identity-id";
 
-    expect(verifyIdentityId(authorizationRequest, browserSession)).toBe(false);
+    expect(verifyIdentityId(authorizationSession, browserSession)).toBe(false);
   });
 });

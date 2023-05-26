@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm-io/winston";
-import { AuthorizationRequest, BrowserSession, Client } from "../../entity";
+import { AuthorizationSession, BrowserSession, Client } from "../../entity";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
 } from "../../fixtures/entity";
@@ -26,7 +26,7 @@ const verifySessionExpiry = _verifySessionExpiry as jest.Mock;
 
 describe("isSsoAvailable", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let browserSession: BrowserSession;
   let client: Client;
 
@@ -35,7 +35,7 @@ describe("isSsoAvailable", () => {
       logger: createMockLogger(),
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
     client = createTestClient();
     browserSession = createTestBrowserSession();
 
@@ -48,58 +48,58 @@ describe("isSsoAvailable", () => {
   });
 
   test("should return true", () => {
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(true);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(true);
   });
 
   test("should return false when browser session is missing", () => {
-    expect(isSsoAvailable(ctx, authorizationRequest, client)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client)).toBe(false);
   });
 
   test("should return false when browser session sso is false", () => {
     browserSession.singleSignOn = false;
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false when client sso is false", () => {
     client.singleSignOn = false;
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on prompt mode returning false", () => {
     verifyPromptMode.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on identity id returning false", () => {
     verifyIdentityId.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on access level returning false", () => {
     verifyAccessLevel.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on required methods returning false", () => {
     verifyRequiredMethods.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on session expiry returning false", () => {
     verifySessionExpiry.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
   test("should return false on max age returning false", () => {
     verifyMaxAge.mockReturnValue(false);
 
-    expect(isSsoAvailable(ctx, authorizationRequest, client, browserSession)).toBe(false);
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 });

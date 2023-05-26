@@ -19,13 +19,13 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE_REGEX,
 } from "../../constant";
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 import {
   isConsentRequired,
   isLoginRequired,
   isSelectAccountRequired,
   isSsoAvailable,
-  setAuthorizationRequestCookie,
+  setAuthorizationSessionCookie,
   tryFindBrowserSessions,
   tryFindClientSession,
 } from "../../handler";
@@ -73,7 +73,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
     data: {
       acrValues,
       codeChallenge,
@@ -141,7 +141,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;
   const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
 
-  let authorizationRequest = new AuthorizationRequest({
+  let authorizationSession = new AuthorizationSession({
     code: {
       codeChallenge: codeChallenge || null,
       codeChallengeMethod: codeChallengeMethod || null,
@@ -194,55 +194,55 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     uiLocales: uiLocales ? uiLocales.split(" ") : [],
   });
 
-  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationRequest);
-  authorizationRequest.status.selectAccount = selectAccountRequired
+  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationSession);
+  authorizationSession.status.selectAccount = selectAccountRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;
 
-  const loginRequired = isLoginRequired(ctx, authorizationRequest, browserSession, clientSession);
-  authorizationRequest.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
+  const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
+  authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
 
   if (
     loginRequired &&
     browserSession &&
-    isSsoAvailable(ctx, authorizationRequest, client, browserSession)
+    isSsoAvailable(ctx, authorizationSession, client, browserSession)
   ) {
-    authorizationRequest.confirmLogin(browserSession);
+    authorizationSession.confirmLogin(browserSession);
   }
 
   const consentRequired = isConsentRequired(
     ctx,
-    authorizationRequest,
+    authorizationSession,
     browserSession,
     clientSession,
   );
-  authorizationRequest.status.consent = consentRequired
+  authorizationSession.status.consent = consentRequired
     ? SessionStatus.PENDING
     : SessionStatus.SKIP;
 
-  assertAuthorizePrompt(authorizationRequest, {
+  assertAuthorizePrompt(authorizationSession, {
     consentRequired,
     loginRequired,
     selectAccountRequired,
   });
-  assertAuthorizeResponseType(authorizationRequest, client);
-  assertAuthorizeScope(authorizationRequest, client);
+  assertAuthorizeResponseType(authorizationSession, client);
+  assertAuthorizeScope(authorizationSession, client);
 
-  authorizationRequest = await authorizationRequestCache.create(authorizationRequest);
+  authorizationSession = await authorizationSessionCache.create(authorizationSession);
 
-  setAuthorizationRequestCookie(ctx, authorizationRequest);
+  setAuthorizationSessionCookie(ctx, authorizationSession);
 
-  if (authorizationRequest.status.selectAccount === SessionStatus.PENDING) {
-    return { redirect: createSelectAccountPendingUri(authorizationRequest) };
+  if (authorizationSession.status.selectAccount === SessionStatus.PENDING) {
+    return { redirect: createSelectAccountPendingUri(authorizationSession) };
   }
 
-  if (authorizationRequest.status.login === SessionStatus.PENDING) {
-    return { redirect: createLoginPendingUri(authorizationRequest) };
+  if (authorizationSession.status.login === SessionStatus.PENDING) {
+    return { redirect: createLoginPendingUri(authorizationSession) };
   }
 
-  if (authorizationRequest.status.consent === SessionStatus.PENDING) {
-    return { redirect: createConsentPendingUri(authorizationRequest) };
+  if (authorizationSession.status.consent === SessionStatus.PENDING) {
+    return { redirect: createConsentPendingUri(authorizationSession) };
   }
 
-  return { redirect: createAuthorizationVerifyUri(authorizationRequest) };
+  return { redirect: createAuthorizationVerifyUri(authorizationSession) };
 };

@@ -9,7 +9,7 @@ export const handleAuthorizationCodeGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<Partial<TokenResponse>> => {
   const {
-    redis: { authorizationCodeCache, authorizationRequestCache },
+    redis: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
     mongo: { browserSessionRepository, clientSessionRepository },
@@ -27,11 +27,11 @@ export const handleAuthorizationCodeGrant = async (
     });
   }
 
-  const authorizationRequest = await authorizationRequestCache.find({
-    id: authorizationCode.AuthorizationRequestId,
+  const authorizationSession = await authorizationSessionCache.find({
+    id: authorizationCode.AuthorizationSessionId,
   });
 
-  const { codeChallenge, codeChallengeMethod } = authorizationRequest.code;
+  const { codeChallenge, codeChallengeMethod } = authorizationSession.code;
 
   if (!codeChallenge || !codeChallengeMethod) {
     throw new ServerError("Invalid Session", {
@@ -50,30 +50,30 @@ export const handleAuthorizationCodeGrant = async (
 
   assertCodeChallenge(codeChallenge, codeChallengeMethod, codeVerifier);
 
-  if (authorizationRequest.clientId !== client.id) {
+  if (authorizationSession.clientId !== client.id) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid client ID",
     });
   }
 
-  if (authorizationRequest.redirectUri !== redirectUri) {
+  if (authorizationSession.redirectUri !== redirectUri) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid redirect URI",
     });
   }
 
-  if (!authorizationRequest.browserSessionId) {
+  if (!authorizationSession.browserSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
       description: "Session data is missing",
-      data: { browserSessionId: authorizationRequest.browserSessionId },
+      data: { browserSessionId: authorizationSession.browserSessionId },
     });
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: authorizationRequest.browserSessionId,
+    id: authorizationSession.browserSessionId,
   });
 
   if (
@@ -93,17 +93,17 @@ export const handleAuthorizationCodeGrant = async (
   }
 
   await authorizationCodeCache.destroy(authorizationCode);
-  await authorizationRequestCache.destroy(authorizationRequest);
+  await authorizationSessionCache.destroy(authorizationSession);
 
-  if (!authorizationRequest.clientSessionId) {
+  if (!authorizationSession.clientSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
-      data: { clientSessionId: authorizationRequest.clientSessionId },
+      data: { clientSessionId: authorizationSession.clientSessionId },
     });
   }
 
   const clientSession = await clientSessionRepository.find({
-    id: authorizationRequest.clientSessionId,
+    id: authorizationSession.clientSessionId,
   });
 
   return generateTokenResponse(ctx, client, clientSession);

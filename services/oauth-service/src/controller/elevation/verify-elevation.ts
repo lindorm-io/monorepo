@@ -1,4 +1,4 @@
-import { SessionStatus, VerifyElevationRequestQuery } from "@lindorm-io/common-types";
+import { SessionStatus, VerifyElevationSessionRequestQuery } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
@@ -6,7 +6,7 @@ import Joi from "joi";
 import { updateBrowserSessionElevation, updateClientSessionElevation } from "../../handler";
 import { ServerKoaController } from "../../types";
 
-type RequestData = VerifyElevationRequestQuery;
+type RequestData = VerifyElevationSessionRequestQuery;
 
 export const verifyElevationSchema = Joi.object<RequestData>()
   .keys({
@@ -18,29 +18,29 @@ export const verifyElevationController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { elevationRequestCache },
-    entity: { elevationRequest },
+    redis: { elevationSessionCache },
+    entity: { elevationSession },
   } = ctx;
 
-  if (elevationRequest.status !== SessionStatus.CONFIRMED) {
+  if (elevationSession.status !== SessionStatus.CONFIRMED) {
     throw new ClientError("Invalid session status", {
       description: "Session must be confirmed before it can be verified",
       data: {
         expect: SessionStatus.CONFIRMED,
-        actual: elevationRequest.status,
+        actual: elevationSession.status,
       },
     });
   }
 
-  await updateBrowserSessionElevation(ctx, elevationRequest);
-  await updateClientSessionElevation(ctx, elevationRequest);
+  await updateBrowserSessionElevation(ctx, elevationSession);
+  await updateClientSessionElevation(ctx, elevationSession);
 
-  await elevationRequestCache.destroy(elevationRequest);
+  await elevationSessionCache.destroy(elevationSession);
 
-  if (elevationRequest.redirectUri) {
+  if (elevationSession.redirectUri) {
     return {
-      redirect: createURL(elevationRequest.redirectUri, {
-        query: { state: elevationRequest.state },
+      redirect: createURL(elevationSession.redirectUri, {
+        query: { state: elevationSession.state },
       }),
     };
   }

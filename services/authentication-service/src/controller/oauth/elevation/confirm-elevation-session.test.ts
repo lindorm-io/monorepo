@@ -1,11 +1,11 @@
 import { confirmOauthElevation as _confirmOauthElevation } from "../../../handler";
-import { confirmElevationRequestController } from "./confirm-elevation-session";
+import { confirmElevationSessionController } from "./confirm-elevation-session";
 
 jest.mock("../../../handler");
 
 const confirmOauthElevation = _confirmOauthElevation as jest.Mock;
 
-describe("confirmElevationRequestController", () => {
+describe("confirmElevationSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe("confirmElevationRequestController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(confirmElevationRequestController(ctx)).resolves.toStrictEqual({
+    await expect(confirmElevationSessionController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "confirmOauthElevation" },
     });
   });

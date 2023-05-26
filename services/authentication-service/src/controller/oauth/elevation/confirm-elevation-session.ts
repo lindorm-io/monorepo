@@ -9,12 +9,12 @@ interface RequestData {
   authenticationConfirmationToken: string;
 }
 
-export const confirmElevationRequestSchema = Joi.object<RequestData>({
+export const confirmElevationSessionSchema = Joi.object<RequestData>({
   id: Joi.string().guid().required(),
   authenticationConfirmationToken: JOI_JWT.required(),
 });
 
-export const confirmElevationRequestController: ServerKoaController<RequestData> = async (
+export const confirmElevationSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

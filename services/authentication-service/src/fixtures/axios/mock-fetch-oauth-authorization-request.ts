@@ -12,7 +12,7 @@ import {
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
-export const mockFetchOauthAuthorizationRequest = (
+export const mockFetchOauthAuthorizationSession = (
   options: Partial<GetAuthorizationResponse> = {},
 ): GetAuthorizationResponse => ({
   consent: {
@@ -46,7 +46,7 @@ export const mockFetchOauthAuthorizationRequest = (
     sessions: [{ selectId: randomUUID(), identityId: randomUUID() }],
   },
 
-  authorizationRequest: {
+  authorizationSession: {
     id: randomUUID(),
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,

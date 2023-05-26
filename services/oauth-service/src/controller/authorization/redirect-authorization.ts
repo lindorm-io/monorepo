@@ -30,41 +30,41 @@ export const redirectAuthorizationController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { authorizationRequest },
+    entity: { authorizationSession },
   } = ctx;
 
-  switch (authorizationRequest.status.selectAccount) {
+  switch (authorizationSession.status.selectAccount) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createSelectAccountPendingUri(authorizationRequest) } };
+      return { body: { redirectTo: createSelectAccountPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createSelectAccountRejectedUri(authorizationRequest) } };
+      return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
 
     default:
       break;
   }
 
-  switch (authorizationRequest.status.login) {
+  switch (authorizationSession.status.login) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createLoginPendingUri(authorizationRequest) } };
+      return { body: { redirectTo: createLoginPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createLoginRejectedUri(authorizationRequest) } };
+      return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
 
     default:
       break;
   }
 
-  switch (authorizationRequest.status.consent) {
+  switch (authorizationSession.status.consent) {
     case SessionStatus.PENDING:
-      return { body: { redirectTo: createConsentPendingUri(authorizationRequest) } };
+      return { body: { redirectTo: createConsentPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createConsentRejectedUri(authorizationRequest) } };
+      return { body: { redirectTo: createConsentRejectedUri(authorizationSession) } };
 
     default:
       break;
   }
 
-  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationRequest) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 };

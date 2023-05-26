@@ -89,7 +89,7 @@ type Status = {
   selectAccount: SessionStatus;
 };
 
-export type AuthorizationRequestAttributes = EntityAttributes & {
+export type AuthorizationSessionAttributes = EntityAttributes & {
   code: Code;
   confirmedConsent: ConfirmedConsent;
   confirmedLogin: ConfirmedLogin;
@@ -118,8 +118,8 @@ export type AuthorizationRequestAttributes = EntityAttributes & {
   uiLocales: Array<string>;
 };
 
-export type AuthorizationRequestOptions = Optional<
-  AuthorizationRequestAttributes,
+export type AuthorizationSessionOptions = Optional<
+  AuthorizationSessionAttributes,
   | EntityKeys
   | "browserSessionId"
   | "clientSessionId"
@@ -140,7 +140,7 @@ export type AuthorizationRequestOptions = Optional<
   | "uiLocales"
 >;
 
-const schema = Joi.object<AuthorizationRequestAttributes>()
+const schema = Joi.object<AuthorizationSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
@@ -226,7 +226,7 @@ const schema = Joi.object<AuthorizationRequestAttributes>()
   })
   .required();
 
-export class AuthorizationRequest extends LindormEntity<AuthorizationRequestAttributes> {
+export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttributes> {
   public readonly code: Code;
   public readonly confirmedConsent: ConfirmedConsent;
   public readonly confirmedLogin: ConfirmedLogin;
@@ -255,7 +255,7 @@ export class AuthorizationRequest extends LindormEntity<AuthorizationRequestAttr
   public browserSessionId: string | null;
   public clientSessionId: string | null;
 
-  public constructor(options: AuthorizationRequestOptions) {
+  public constructor(options: AuthorizationSessionOptions) {
     super(options);
 
     this.code = {
@@ -322,7 +322,7 @@ export class AuthorizationRequest extends LindormEntity<AuthorizationRequestAttr
     await schema.validateAsync(this.toJSON());
   }
 
-  public toJSON(): AuthorizationRequestAttributes {
+  public toJSON(): AuthorizationSessionAttributes {
     return {
       ...this.defaultJSON(),
 

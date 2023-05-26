@@ -1,4 +1,7 @@
+import { OpenIdGrantType } from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
+import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
@@ -6,11 +9,12 @@ import { ClientSessionType } from "../../enum";
 import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import {
   createTestAuthorizationCode,
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
   createTestRefreshToken,
+  createTestTenant,
 } from "../../fixtures/entity";
 import {
   setupIntegration,
@@ -21,6 +25,7 @@ import {
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
+  TEST_TENANT_REPOSITORY,
 } from "../../fixtures/integration";
 import { configuration } from "../../server/configuration";
 import { server } from "../../server/server";
@@ -33,6 +38,18 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/token", () => {
   beforeAll(setupIntegration);
 
+  nock("https://authentication.test.lindorm.io")
+    .get("/admin/grant-types/authentication-token")
+    .query(true)
+    .times(1)
+    .reply(200, {
+      identityId: randomUUID(),
+      latestAuthentication: new Date().toISOString(),
+      levelOfAssurance: 2,
+      methods: ["email"],
+      nonce: randomString(16),
+    });
+
   nock("https://identity.test.lindorm.io")
     .get("/admin/claims")
     .query(true)
@@ -44,6 +61,36 @@ describe("/oauth2/token", () => {
     .query(true)
     .times(999)
     .reply(200, { extraClientClaim: "extraClientClaim" });
+
+  test("should resolve for authentication token grant type", async () => {
+    const tenant = await TEST_TENANT_REPOSITORY.create(createTestTenant());
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.encrypt("secret"),
+        tenantId: tenant.id,
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post("/oauth2/token")
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
+      .send({
+        grant_type: OpenIdGrantType.AUTHENTICATION_TOKEN,
+        authentication_token: "authentication_token",
+        scope: client.allowed.scopes.join(" "),
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      access_token: expect.any(String),
+      expires_in: 99,
+      id_token: expect.any(String),
+      refresh_token: expect.any(String),
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
+      token_type: "Bearer",
+    });
+  });
 
   test("should resolve for authorization code grant type", async () => {
     const { code, codeChallenge, codeChallengeMethod, codeVerifier, nonce, state } = getTestData();
@@ -66,8 +113,8 @@ describe("/oauth2/token", () => {
       }),
     );
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
         browserSessionId: browserSession.id,
         clientId: client.id,
         clientSessionId: clientSession.id,
@@ -82,7 +129,7 @@ describe("/oauth2/token", () => {
 
     await TEST_AUTHORIZATION_CODE_CACHE.create(
       createTestAuthorizationCode({
-        AuthorizationRequestId: authorizationRequest.id,
+        AuthorizationSessionId: authorizationSession.id,
         code,
         expires: new Date("2021-01-01T08:01:00.000Z"),
       }),
@@ -94,8 +141,8 @@ describe("/oauth2/token", () => {
       .send({
         code,
         code_verifier: codeVerifier,
-        grant_type: "authorization_code",
-        redirect_uri: authorizationRequest.redirectUri,
+        grant_type: OpenIdGrantType.AUTHORIZATION_CODE,
+        redirect_uri: authorizationSession.redirectUri,
       })
       .expect(200);
 
@@ -121,7 +168,7 @@ describe("/oauth2/token", () => {
       .post("/oauth2/token")
       .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
-        grant_type: "client_credentials",
+        grant_type: OpenIdGrantType.CLIENT_CREDENTIALS,
         scope: client.allowed.scopes.join(" "),
       })
       .expect(200);
@@ -165,7 +212,7 @@ describe("/oauth2/token", () => {
       .post("/oauth2/token")
       .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
       .send({
-        grant_type: "refresh_token",
+        grant_type: OpenIdGrantType.REFRESH_TOKEN,
         refresh_token: refreshToken.signature,
       })
       .expect(200);

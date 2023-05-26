@@ -22,18 +22,18 @@ export const rejectConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
-    entity: { authorizationRequest },
+    redis: { authorizationSessionCache },
+    entity: { authorizationSession },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.consent);
+  assertSessionPending(authorizationSession.status.consent);
 
   logger.debug("Updating authorization session");
 
-  authorizationRequest.status.consent = SessionStatus.REJECTED;
+  authorizationSession.status.consent = SessionStatus.REJECTED;
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createConsentRejectedUri(authorizationRequest) } };
+  return { body: { redirectTo: createConsentRejectedUri(authorizationSession) } };
 };

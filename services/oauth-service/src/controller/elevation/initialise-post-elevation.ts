@@ -1,6 +1,6 @@
 import {
-  InitialiseElevationRequestBody,
   InitialiseElevationResponse,
+  InitialiseElevationSessionRequestBody,
 } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -14,7 +14,7 @@ import {
 import { initialiseElevation } from "../../handler";
 import { ServerKoaController } from "../../types";
 
-type RequestData = InitialiseElevationRequestBody;
+type RequestData = InitialiseElevationSessionRequestBody;
 
 type ResponseBody = InitialiseElevationResponse;
 
@@ -39,7 +39,7 @@ export const initialisePostElevationController: ServerKoaController<RequestData>
     data: { authenticationHint, country, levelOfAssurance, methods, nonce, uiLocales },
   } = ctx;
 
-  const elevationRequest = await initialiseElevation(ctx, {
+  const elevationSession = await initialiseElevation(ctx, {
     authenticationHint,
     country,
     levelOfAssurance,
@@ -48,5 +48,5 @@ export const initialisePostElevationController: ServerKoaController<RequestData>
     uiLocales,
   });
 
-  return { body: { elevationRequestId: elevationRequest.id } };
+  return { body: { elevationSessionId: elevationSession.id } };
 };

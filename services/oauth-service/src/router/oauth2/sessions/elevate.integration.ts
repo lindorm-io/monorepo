@@ -10,7 +10,7 @@ import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
-  createTestElevationRequest,
+  createTestElevationSession,
 } from "../../../fixtures/entity";
 import {
   TEST_BROWSER_SESSION_REPOSITORY,
@@ -161,11 +161,11 @@ describe("/oauth2/sessions/elevate", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      elevation_request_id: expect.any(String),
+      elevation_session_id: expect.any(String),
     });
 
     await expect(
-      TEST_ELEVATION_SESSION_CACHE.find({ id: response.body.elevation_request_id }),
+      TEST_ELEVATION_SESSION_CACHE.find({ id: response.body.elevation_session_id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
         authenticationHint: ["email@lindorm.io"],
@@ -218,8 +218,8 @@ describe("/oauth2/sessions/elevate", () => {
       }),
     );
 
-    const elevationRequest = await TEST_ELEVATION_SESSION_CACHE.create(
-      createTestElevationRequest({
+    const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
+      createTestElevationSession({
         confirmedAuthentication: {
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 4,
@@ -249,13 +249,13 @@ describe("/oauth2/sessions/elevate", () => {
       .set("Cookie", [
         `lindorm_io_oauth_browser_sessions=["${browserSession.id}"]; path=/; httponly`,
       ])
-      .query({ session: elevationRequest.id })
+      .query({ session: elevationSession.id })
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://test.client.lindorm.io");
     expect(location.pathname).toBe("/redirect");
-    expect(location.searchParams.get("state")).toStrictEqual(elevationRequest.state);
+    expect(location.searchParams.get("state")).toStrictEqual(elevationSession.state);
 
     await expect(
       TEST_BROWSER_SESSION_REPOSITORY.find({ id: browserSession.id }),

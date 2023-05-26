@@ -1,7 +1,7 @@
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { AuthorizationRequest } from "../../entity";
-import { createTestAuthorizationRequest, createTestBrowserSession } from "../../fixtures/entity";
+import { AuthorizationSession } from "../../entity";
+import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import {
   getBrowserSessionCookies as _getBrowserSessionCookies,
   setBrowserSessionCookies as _setBrowserSessionCookies,
@@ -18,19 +18,19 @@ const getUpdatedBrowserSession = _getUpdatedBrowserSession as jest.Mock;
 
 describe("handleOauthLoginVerification", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       mongo: {
         browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
 
     getUpdatedBrowserSession.mockResolvedValue(
       createTestBrowserSession({ id: "65c04ad2-6b10-4eb4-ac8e-6df5911968ec" }),
@@ -41,8 +41,8 @@ describe("handleOauthLoginVerification", () => {
   });
 
   test("should resolve", async () => {
-    await expect(handleOauthLoginVerification(ctx, authorizationRequest)).resolves.toStrictEqual(
-      expect.any(AuthorizationRequest),
+    await expect(handleOauthLoginVerification(ctx, authorizationSession)).resolves.toStrictEqual(
+      expect.any(AuthorizationSession),
     );
 
     expect(getBrowserSessionCookies).toHaveBeenCalled();
@@ -51,7 +51,7 @@ describe("handleOauthLoginVerification", () => {
       "c27d4370-b1bf-4f34-91c4-54314a01228e",
     ]);
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "65c04ad2-6b10-4eb4-ac8e-6df5911968ec",
         status: expect.objectContaining({

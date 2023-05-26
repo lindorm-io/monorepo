@@ -5,7 +5,7 @@ import { AuthenticationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { filterAuthenticationMethods, filterAuthenticationStrategies } from "../../util";
-import { getOauthAuthorizationRequest } from "../oauth-service";
+import { getOauthAuthorizationSession } from "../oauth-service";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 
 type Options = {
@@ -41,8 +41,8 @@ export const initialiseOauthAuthenticationSession = async (
       requiredMethods,
       requiredStrategies,
     },
-    authorizationRequest: { country, expires, loginHint, nonce },
-  } = await getOauthAuthorizationRequest(ctx, oauthSessionId);
+    authorizationSession: { country, expires, loginHint, nonce },
+  } = await getOauthAuthorizationSession(ctx, oauthSessionId);
 
   const emailHint = loginHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = loginHint?.find((item: string) => REGEX_PHONE.test(item));

@@ -1,11 +1,11 @@
 import { Environment } from "@lindorm-io/common-types";
 import { AUTHORIZATION_SESSION_COOKIE_NAME, BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 
-export const setAuthorizationRequestCookie = (
+export const setAuthorizationSessionCookie = (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
 ): void => {
   const {
     cookies,
@@ -13,9 +13,9 @@ export const setAuthorizationRequestCookie = (
     server: { environment },
   } = ctx;
 
-  const value = authorizationRequest.id;
+  const value = authorizationSession.id;
   const opts = {
-    expires: authorizationRequest.expires,
+    expires: authorizationSession.expires,
     httpOnly: true,
     overwrite: true,
     signed: environment !== Environment.TEST,
@@ -27,8 +27,8 @@ export const setAuthorizationRequestCookie = (
     opts,
   });
 
-  cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME, authorizationRequest.id, {
-    expires: authorizationRequest.expires,
+  cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME, authorizationSession.id, {
+    expires: authorizationSession.expires,
     httpOnly: true,
     overwrite: true,
     signed: environment !== Environment.TEST,

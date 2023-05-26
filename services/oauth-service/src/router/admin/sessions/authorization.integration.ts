@@ -6,7 +6,7 @@ import {
 import MockDate from "mockdate";
 import request from "supertest";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -44,8 +44,8 @@ describe("/admin/sessions/authorization", () => {
       }),
     );
 
-    const authorizationRequest = await TEST_AUTHORIZATION_SESSION_CACHE.create(
-      createTestAuthorizationRequest({
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
         requestedConsent: {
           audiences: ["0d51b830-1c22-4eea-95cf-209505626d63"],
           scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE, OpenIdScope.PROFILE],
@@ -82,7 +82,7 @@ describe("/admin/sessions/authorization", () => {
     });
 
     const response = await request(server.callback())
-      .get(`/admin/sessions/authorization/${authorizationRequest.id}`)
+      .get(`/admin/sessions/authorization/${authorizationSession.id}`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .expect(200);
 
@@ -126,8 +126,8 @@ describe("/admin/sessions/authorization", () => {
         ],
       },
 
-      authorization_request: {
-        id: authorizationRequest.id,
+      authorization_session: {
+        id: authorizationSession.id,
         country: "se",
         display_mode: "popup",
         expires: "2021-01-02T08:00:00.000Z",

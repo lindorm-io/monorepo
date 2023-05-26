@@ -1,7 +1,7 @@
 import { PublicClientInfo, PublicTenantInfo, SessionStatus } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
-import { getOauthElevationRequest } from "../../../handler";
+import { getOauthElevationSession } from "../../../handler";
 import { ServerKoaController } from "../../../types";
 
 type RequestData = {
@@ -15,13 +15,13 @@ type ResponseBody = {
   tenant: PublicTenantInfo;
 };
 
-export const getElevationRequestSchema = Joi.object<RequestData>()
+export const getElevationSessionSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
   })
   .required();
 
-export const getElevationRequestController: ServerKoaController<RequestData> = async (
+export const getElevationSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
@@ -32,7 +32,7 @@ export const getElevationRequestController: ServerKoaController<RequestData> = a
     elevation: { status },
     client,
     tenant,
-  } = await getOauthElevationRequest(ctx, id);
+  } = await getOauthElevationSession(ctx, id);
 
   return { body: { status, client, tenant } };
 };

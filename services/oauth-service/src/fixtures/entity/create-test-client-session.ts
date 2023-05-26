@@ -1,7 +1,7 @@
 import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
-import { ClientSession, ClientSessionOptions } from "../../entity";
-import { randomUUID } from "crypto";
 import { randomUnreserved } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import { ClientSession, ClientSessionOptions } from "../../entity";
 import { ClientSessionType } from "../../enum";
 
 export const createTestClientSession = (

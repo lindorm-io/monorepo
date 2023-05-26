@@ -8,7 +8,7 @@ import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { mockFetchOauthAuthorizationRequest } from "../../fixtures/axios";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { setupIntegration } from "../../fixtures/integration";
 import { server } from "../../server/server";
 
@@ -53,7 +53,7 @@ describe("/oauth/consent", () => {
   test("should redirect to front end", async () => {
     nock("https://oauth.test.lindorm.io")
       .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, mockFetchOauthAuthorizationRequest());
+      .reply(200, mockFetchOauthAuthorizationSession());
 
     const response = await request(server.callback())
       .get("/oauth/consent")
@@ -72,7 +72,7 @@ describe("/oauth/consent", () => {
       .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(
         200,
-        mockFetchOauthAuthorizationRequest({
+        mockFetchOauthAuthorizationSession({
           consent: {
             isRequired: false,
             status: SessionStatus.CONFIRMED,
@@ -101,7 +101,7 @@ describe("/oauth/consent", () => {
       .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(
         200,
-        mockFetchOauthAuthorizationRequest({
+        mockFetchOauthAuthorizationSession({
           consent: {
             isRequired: false,
             status: SessionStatus.PENDING,

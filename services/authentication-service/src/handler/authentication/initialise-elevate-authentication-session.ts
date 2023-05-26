@@ -4,20 +4,20 @@ import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
 import { AuthenticationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
-import { getOauthElevationRequest } from "../oauth-service";
+import { getOauthElevationSession } from "../oauth-service";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 
 type Options = {
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
-  elevationRequestId: string;
+  elevationSessionId: string;
 };
 
 const schema = Joi.object<Options>()
   .keys({
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
-    elevationRequestId: Joi.string().guid().required(),
+    elevationSessionId: Joi.string().guid().required(),
   })
   .required();
 
@@ -27,7 +27,7 @@ export const initialiseElevateAuthenticationSession = async (
 ): Promise<AuthenticationSession> => {
   await schema.validateAsync(options);
 
-  const { codeChallenge, codeChallengeMethod, elevationRequestId } = options;
+  const { codeChallenge, codeChallengeMethod, elevationSessionId } = options;
 
   const {
     elevation: {
@@ -37,14 +37,14 @@ export const initialiseElevateAuthenticationSession = async (
       requiredLevel,
       requiredMethods,
     },
-    elevationRequest: { authenticationHint, country, expires, identityId, nonce },
-  } = await getOauthElevationRequest(ctx, elevationRequestId);
+    elevationSession: { authenticationHint, country, expires, identityId, nonce },
+  } = await getOauthElevationSession(ctx, elevationSessionId);
 
   const emailHint = authenticationHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = authenticationHint?.find((item: string) => REGEX_PHONE.test(item));
 
   return await handleAuthenticationInitialisation(ctx, {
-    id: elevationRequestId,
+    id: elevationSessionId,
     clientId: configuration.oauth.client_id,
     codeChallenge,
     codeChallengeMethod,

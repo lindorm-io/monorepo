@@ -1,11 +1,11 @@
 import { OpenIdClientType } from "@lindorm-io/common-types";
-import { mockFetchOauthAuthorizationRequest } from "../../../fixtures/axios";
-import { getOauthAuthorizationRequest as _fetchOauthAuthorizationRequest } from "../../../handler";
+import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
+import { getOauthAuthorizationSession as _fetchOauthAuthorizationSession } from "../../../handler";
 import { getConsentSessionController } from "./get-consent-session";
 
 jest.mock("../../../handler");
 
-const fetchOauthAuthorizationRequest = _fetchOauthAuthorizationRequest as jest.Mock;
+const fetchOauthAuthorizationSession = _fetchOauthAuthorizationSession as jest.Mock;
 
 describe("getConsentSessionController", () => {
   let ctx: any;
@@ -15,7 +15,7 @@ describe("getConsentSessionController", () => {
       data: { id: "id" },
     };
 
-    fetchOauthAuthorizationRequest.mockResolvedValue(mockFetchOauthAuthorizationRequest());
+    fetchOauthAuthorizationSession.mockResolvedValue(mockFetchOauthAuthorizationSession());
   });
 
   test("should resolve", async () => {

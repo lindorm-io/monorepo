@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { createTestClient, createTestElevationRequest } from "../../fixtures/entity";
+import { createTestClient, createTestElevationSession } from "../../fixtures/entity";
 import { initialiseElevation as _initialiseElevation } from "../../handler";
 import {
   assertRedirectUri as _assertRedirectUri,
@@ -38,7 +38,7 @@ describe("initialiseRedirectElevationController", () => {
     assertRedirectUri.mockImplementation();
     createElevationPendingUri.mockReturnValue("createElevationPendingUri");
     initialiseElevation.mockResolvedValue(
-      createTestElevationRequest({
+      createTestElevationSession({
         id: "24d18e4b-002f-4adf-9563-ba137c9fe60f",
       }),
     );

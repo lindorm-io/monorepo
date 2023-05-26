@@ -8,7 +8,7 @@ import {
 import { ControllerResponse } from "@lindorm-io/koa";
 import { getUnixTime } from "date-fns";
 import Joi from "joi";
-import { getIdentifierClaims, getOauthClaimsRequest } from "../../handler";
+import { getIdentifierClaims, getOauthClaimsSession } from "../../handler";
 import { ServerKoaController } from "../../types";
 import { getAddress, getDisplayName, getName } from "../../util";
 
@@ -29,8 +29,8 @@ export const getClaimsController: ServerKoaController = async (
   } = ctx;
 
   const {
-    claimsRequest: { identityId, scopes },
-  } = await getOauthClaimsRequest(ctx, session);
+    claimsSession: { identityId, scopes },
+  } = await getOauthClaimsSession(ctx, session);
 
   const identity = await identityRepository.find({ id: identityId });
 

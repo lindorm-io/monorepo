@@ -1,10 +1,10 @@
-import { RejectElevationRequestParams, SessionStatus } from "@lindorm-io/common-types";
+import { RejectElevationSessionRequestParams, SessionStatus } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createElevationRejectedUri } from "../../util";
 
-type RequestData = RejectElevationRequestParams;
+type RequestData = RejectElevationSessionRequestParams;
 
 export const rejectElevationSchema = Joi.object<RequestData>()
   .keys({
@@ -16,20 +16,20 @@ export const rejectElevationController: ServerKoaController<RequestData> = async
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { elevationRequestCache },
-    entity: { elevationRequest },
+    redis: { elevationSessionCache },
+    entity: { elevationSession },
     logger,
   } = ctx;
 
-  assertSessionPending(elevationRequest.status);
+  assertSessionPending(elevationSession.status);
 
   logger.debug("Updating elevation session");
 
-  elevationRequest.status = SessionStatus.REJECTED;
+  elevationSession.status = SessionStatus.REJECTED;
 
-  await elevationRequestCache.update(elevationRequest);
+  await elevationSessionCache.update(elevationSession);
 
-  if (elevationRequest.redirectUri) {
-    return { body: { redirectTo: createElevationRejectedUri(elevationRequest) } };
+  if (elevationSession.redirectUri) {
+    return { body: { redirectTo: createElevationRejectedUri(elevationSession) } };
   }
 };

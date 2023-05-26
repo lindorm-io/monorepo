@@ -8,9 +8,9 @@ import {
   verifyElevationSchema,
 } from "../../../controller";
 import {
-  ElevationRequestEntityMiddleware,
   clientEntityMiddleware,
   customIdentityAuthMiddleware,
+  elevationSessionEntityMiddleware,
   idTokenMiddleware,
 } from "../../../middleware";
 
@@ -37,6 +37,6 @@ router.post(
 router.get(
   "/verify",
   useSchema(verifyElevationSchema),
-  ElevationRequestEntityMiddleware("data.session"),
+  elevationSessionEntityMiddleware("data.session"),
   useController(verifyElevationController),
 );

@@ -1,11 +1,11 @@
 import { difference } from "lodash";
-import { AuthorizationRequest, ClientSession } from "../../entity";
+import { AuthorizationSession, ClientSession } from "../../entity";
 
 export const verifyRequiredScopes = (
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   clientSession: ClientSession,
 ): boolean => {
   if (!clientSession.scopes.length) return false;
 
-  return !difference(authorizationRequest.requestedConsent.scopes, clientSession.scopes).length;
+  return !difference(authorizationSession.requestedConsent.scopes, clientSession.scopes).length;
 };

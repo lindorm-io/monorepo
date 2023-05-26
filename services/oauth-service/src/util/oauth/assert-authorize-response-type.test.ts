@@ -1,15 +1,15 @@
 import { OpenIdResponseType, PKCEMethod } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { AuthorizationRequest, Client } from "../../entity";
-import { createTestAuthorizationRequest, createTestClient } from "../../fixtures/entity";
+import { AuthorizationSession, Client } from "../../entity";
+import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
 import { assertAuthorizeResponseType } from "./assert-authorize-response-type";
 
 describe("assertAuthorizeResponseType", () => {
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let client: Client;
 
   beforeEach(() => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       responseTypes: [OpenIdResponseType.CODE],
     });
 
@@ -22,19 +22,19 @@ describe("assertAuthorizeResponseType", () => {
   });
 
   test("should succeed", () => {
-    expect(() => assertAuthorizeResponseType(authorizationRequest, client)).not.toThrow();
+    expect(() => assertAuthorizeResponseType(authorizationSession, client)).not.toThrow();
   });
 
   test("should throw on invalid response type", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       responseTypes: [OpenIdResponseType.TOKEN],
     });
 
-    expect(() => assertAuthorizeResponseType(authorizationRequest, client)).toThrow(ClientError);
+    expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
   });
 
   test("should throw on missing data (codeChallenge)", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       code: {
         codeChallenge: null,
         codeChallengeMethod: PKCEMethod.SHA256,
@@ -42,11 +42,11 @@ describe("assertAuthorizeResponseType", () => {
       responseTypes: [OpenIdResponseType.CODE],
     });
 
-    expect(() => assertAuthorizeResponseType(authorizationRequest, client)).toThrow(ClientError);
+    expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
   });
 
   test("should throw on missing data (codeChallengeMethod)", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       code: {
         codeChallenge: "codeChallenge",
         codeChallengeMethod: null,
@@ -54,6 +54,6 @@ describe("assertAuthorizeResponseType", () => {
       responseTypes: [OpenIdResponseType.CODE],
     });
 
-    expect(() => assertAuthorizeResponseType(authorizationRequest, client)).toThrow(ClientError);
+    expect(() => assertAuthorizeResponseType(authorizationSession, client)).toThrow(ClientError);
   });
 });

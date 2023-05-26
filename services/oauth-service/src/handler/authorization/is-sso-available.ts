@@ -1,5 +1,5 @@
 import { OpenIdPromptMode } from "@lindorm-io/common-types";
-import { AuthorizationRequest, BrowserSession, Client } from "../../entity";
+import { AuthorizationSession, BrowserSession, Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import {
   verifyAccessLevel,
@@ -12,7 +12,7 @@ import {
 
 export const isSsoAvailable = (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   client: Client,
   browserSession?: BrowserSession,
 ): boolean => {
@@ -33,22 +33,22 @@ export const isSsoAvailable = (
     return false;
   }
 
-  if (!verifyPromptMode(authorizationRequest, OpenIdPromptMode.LOGIN)) {
+  if (!verifyPromptMode(authorizationSession, OpenIdPromptMode.LOGIN)) {
     logger.debug("SSO not available [prompt mode]");
     return false;
   }
 
-  if (!verifyIdentityId(authorizationRequest, browserSession)) {
+  if (!verifyIdentityId(authorizationSession, browserSession)) {
     logger.debug("SSO not available [identity id]");
     return false;
   }
 
-  if (!verifyAccessLevel(authorizationRequest, browserSession)) {
+  if (!verifyAccessLevel(authorizationSession, browserSession)) {
     logger.debug("SSO not available [access level]");
     return false;
   }
 
-  if (!verifyRequiredMethods(authorizationRequest, browserSession)) {
+  if (!verifyRequiredMethods(authorizationSession, browserSession)) {
     logger.debug("SSO not available [required methods]");
     return false;
   }
@@ -58,7 +58,7 @@ export const isSsoAvailable = (
     return false;
   }
 
-  if (!verifyMaxAge(authorizationRequest, browserSession)) {
+  if (!verifyMaxAge(authorizationSession, browserSession)) {
     logger.debug("SSO not available [max age]");
     return false;
   }

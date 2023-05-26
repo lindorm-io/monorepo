@@ -6,7 +6,7 @@ export const createTestAuthorizationCode = (
   options: Partial<AuthorizationCodeOptions> = {},
 ): AuthorizationCode =>
   new AuthorizationCode({
-    AuthorizationRequestId: randomUUID(),
+    AuthorizationSessionId: randomUUID(),
     code: randomUnreserved(128),
     expires: new Date("2021-01-02T08:00:00.000Z"),
 

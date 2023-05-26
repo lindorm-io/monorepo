@@ -1,7 +1,7 @@
 import { SessionStatus } from "@lindorm-io/common-types";
 import { createMockLogger } from "@lindorm-io/winston";
-import { AuthorizationRequest } from "../../entity";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
+import { AuthorizationSession } from "../../entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import {
   verifyBrowserSessions as _verifyBrowserSessions,
   verifyPromptMode as _verifyPromptMode,
@@ -15,44 +15,44 @@ const verifyPromptMode = _verifyPromptMode as jest.Mock;
 
 describe("isSelectAccountRequired", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
 
     verifyBrowserSessions.mockReturnValue(true);
     verifyPromptMode.mockReturnValue(true);
   });
 
   test("should return false", () => {
-    expect(isSelectAccountRequired(ctx, authorizationRequest)).toBe(false);
+    expect(isSelectAccountRequired(ctx, authorizationSession)).toBe(false);
   });
 
   test("should return false when session status is confirmed", () => {
-    authorizationRequest.status.consent = SessionStatus.CONFIRMED;
+    authorizationSession.status.consent = SessionStatus.CONFIRMED;
 
-    expect(isSelectAccountRequired(ctx, authorizationRequest)).toBe(false);
+    expect(isSelectAccountRequired(ctx, authorizationSession)).toBe(false);
   });
 
   test("should return false when session status is verified", () => {
-    authorizationRequest.status.consent = SessionStatus.VERIFIED;
+    authorizationSession.status.consent = SessionStatus.VERIFIED;
 
-    expect(isSelectAccountRequired(ctx, authorizationRequest)).toBe(false);
+    expect(isSelectAccountRequired(ctx, authorizationSession)).toBe(false);
   });
 
   test("should return true when prompt mode returns false", () => {
     verifyPromptMode.mockReturnValue(false);
 
-    expect(isSelectAccountRequired(ctx, authorizationRequest)).toBe(true);
+    expect(isSelectAccountRequired(ctx, authorizationSession)).toBe(true);
   });
 
   test("should return true when browser sessions returns false", () => {
     verifyBrowserSessions.mockReturnValue(false);
 
-    expect(isSelectAccountRequired(ctx, authorizationRequest)).toBe(true);
+    expect(isSelectAccountRequired(ctx, authorizationSession)).toBe(true);
   });
 });

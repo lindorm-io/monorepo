@@ -2,7 +2,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { rejectConsentController } from "./reject-consent";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -13,10 +13,10 @@ describe("rejectConsentController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       entity: {
-        authorizationRequest: createTestAuthorizationRequest({
+        authorizationSession: createTestAuthorizationSession({
           state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
         }),
       },
@@ -32,7 +32,7 @@ describe("rejectConsentController", () => {
       },
     });
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({
           consent: "rejected",
@@ -42,7 +42,7 @@ describe("rejectConsentController", () => {
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationRequest.status.consent = "skip";
+    ctx.entity.authorizationSession.status.consent = "skip";
 
     await expect(rejectConsentController(ctx)).rejects.toThrow(ClientError);
   });

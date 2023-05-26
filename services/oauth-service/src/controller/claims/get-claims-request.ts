@@ -1,39 +1,39 @@
-import { GetClaimsRequestRequestParams, GetClaimsRequestResponse } from "@lindorm-io/common-types";
+import { GetClaimsSessionRequestParams, GetClaimsSessionResponse } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { getAdjustedAccessLevel } from "../../util";
 
-type RequestData = GetClaimsRequestRequestParams;
+type RequestData = GetClaimsSessionRequestParams;
 
-type ResponseBody = GetClaimsRequestResponse;
+type ResponseBody = GetClaimsSessionResponse;
 
-export const getClaimsRequestSchema = Joi.object<RequestData>()
+export const getClaimsSessionSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
   })
   .required();
 
-export const getClaimsRequestController: ServerKoaController<RequestData> = async (
+export const getClaimsSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { claimsRequest, client, tenant },
+    entity: { claimsSession, client, tenant },
   } = ctx;
 
   return {
     body: {
-      claimsRequest: {
-        id: claimsRequest.id,
-        adjustedAccessLevel: getAdjustedAccessLevel(claimsRequest),
-        audiences: claimsRequest.audiences,
-        expires: claimsRequest.expires.toISOString(),
-        identityId: claimsRequest.identityId,
-        latestAuthentication: claimsRequest.latestAuthentication.toISOString(),
-        levelOfAssurance: claimsRequest.levelOfAssurance,
-        metadata: claimsRequest.metadata,
-        methods: claimsRequest.methods,
-        scopes: claimsRequest.scopes,
+      claimsSession: {
+        id: claimsSession.id,
+        adjustedAccessLevel: getAdjustedAccessLevel(claimsSession),
+        audiences: claimsSession.audiences,
+        expires: claimsSession.expires.toISOString(),
+        identityId: claimsSession.identityId,
+        latestAuthentication: claimsSession.latestAuthentication.toISOString(),
+        levelOfAssurance: claimsSession.levelOfAssurance,
+        metadata: claimsSession.metadata,
+        methods: claimsSession.methods,
+        scopes: claimsSession.scopes,
       },
 
       client: {

@@ -1,20 +1,20 @@
-import { GetClaimsRequestRequestParams, GetClaimsRequestResponse } from "@lindorm-io/common-types";
+import { GetClaimsSessionRequestParams, GetClaimsSessionResponse } from "@lindorm-io/common-types";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { ServerKoaContext } from "../../types";
 
-export const getOauthClaimsRequest = async (
+export const getOauthClaimsSession = async (
   ctx: ServerKoaContext,
   id: string,
-): Promise<GetClaimsRequestResponse> => {
+): Promise<GetClaimsSessionResponse> => {
   const {
     axios: { oauthClient },
   } = ctx;
 
   const { data } = await oauthClient.get<
-    GetClaimsRequestResponse,
+    GetClaimsSessionResponse,
     never,
     unknown,
-    GetClaimsRequestRequestParams
+    GetClaimsSessionRequestParams
   >("/admin/sessions/claims/:id", {
     params: { id },
     middleware: [clientCredentialsMiddleware()],

@@ -1,11 +1,11 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
-  confirmElevationRequestController,
-  confirmElevationRequestSchema,
-  getElevationRequestController,
-  getElevationRequestSchema,
-  rejectElevationRequestController,
-  rejectElevationRequestSchema,
+  confirmElevationSessionController,
+  confirmElevationSessionSchema,
+  getElevationSessionController,
+  getElevationSessionSchema,
+  rejectElevationSessionController,
+  rejectElevationSessionSchema,
 } from "../../controller";
 import { authenticationConfirmationTokenMiddleware } from "../../middleware";
 
@@ -14,21 +14,21 @@ export const router = new Router<any, any>();
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getElevationRequestSchema),
-  useController(getElevationRequestController),
+  useSchema(getElevationSessionSchema),
+  useController(getElevationSessionController),
 );
 
 router.post(
   "/:id/confirm",
   paramsMiddleware,
-  useSchema(confirmElevationRequestSchema),
+  useSchema(confirmElevationSessionSchema),
   authenticationConfirmationTokenMiddleware("data.authenticationConfirmationToken"),
-  useController(confirmElevationRequestController),
+  useController(confirmElevationSessionController),
 );
 
 router.post(
   "/:id/reject",
   paramsMiddleware,
-  useSchema(rejectElevationRequestSchema),
-  useController(rejectElevationRequestController),
+  useSchema(rejectElevationSessionSchema),
+  useController(rejectElevationSessionController),
 );

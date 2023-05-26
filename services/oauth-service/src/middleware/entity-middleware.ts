@@ -1,37 +1,44 @@
 import { mongoRepositoryEntityMiddleware } from "@lindorm-io/koa-mongo";
 import { redisRepositoryEntityMiddleware } from "@lindorm-io/koa-redis";
 import {
-  AuthorizationRequest,
-  ClaimsRequest,
+  AuthenticationTokenSession,
+  AuthorizationSession,
+  ClaimsSession,
   Client,
-  ElevationRequest,
+  ElevationSession,
   LogoutSession,
   Tenant,
 } from "../entity";
 import {
-  AuthorizationRequestCache,
-  ClaimsRequestCache,
+  AuthenticationTokenSessionCache,
+  AuthorizationSessionCache,
+  ClaimsSessionCache,
   ClientRepository,
-  ElevationRequestCache,
+  ElevationSessionCache,
   LogoutSessionCache,
   TenantRepository,
 } from "../infrastructure";
 
-export const AuthorizationRequestEntityMiddleware = redisRepositoryEntityMiddleware(
-  AuthorizationRequest,
-  AuthorizationRequestCache,
+export const authenticationTokenSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  AuthenticationTokenSession,
+  AuthenticationTokenSessionCache,
 );
 
-export const ClaimsRequestEntityMiddleware = redisRepositoryEntityMiddleware(
-  ClaimsRequest,
-  ClaimsRequestCache,
+export const authorizationSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  AuthorizationSession,
+  AuthorizationSessionCache,
+);
+
+export const claimsSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  ClaimsSession,
+  ClaimsSessionCache,
 );
 
 export const clientEntityMiddleware = mongoRepositoryEntityMiddleware(Client, ClientRepository);
 
-export const ElevationRequestEntityMiddleware = redisRepositoryEntityMiddleware(
-  ElevationRequest,
-  ElevationRequestCache,
+export const elevationSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  ElevationSession,
+  ElevationSessionCache,
 );
 
 export const logoutSessionEntityMiddleware = redisRepositoryEntityMiddleware(

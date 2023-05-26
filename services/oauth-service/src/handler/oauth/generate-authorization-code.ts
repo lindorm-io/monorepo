@@ -1,12 +1,12 @@
 import { expiryDate } from "@lindorm-io/expiry";
 import { randomUnreserved } from "@lindorm-io/random";
-import { AuthorizationCode, AuthorizationRequest } from "../../entity";
+import { AuthorizationCode, AuthorizationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 
 export const generateAuthorizationCode = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
 ): Promise<string> => {
   const {
     redis: { authorizationCodeCache },
@@ -16,7 +16,7 @@ export const generateAuthorizationCode = async (
 
   await authorizationCodeCache.create(
     new AuthorizationCode({
-      AuthorizationRequestId: authorizationRequest.id,
+      AuthorizationSessionId: authorizationSession.id,
       code,
       expires: expiryDate(configuration.defaults.expiry.code_session),
     }),

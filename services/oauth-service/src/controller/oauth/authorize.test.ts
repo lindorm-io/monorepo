@@ -2,7 +2,7 @@ import { randomUnreserved as _randomUnreserved } from "@lindorm-io/random";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -12,7 +12,7 @@ import {
   isLoginRequired as _isLoginRequired,
   isSelectAccountRequired as _isSelectAccountRequired,
   isSsoAvailable as _isSsoAvailable,
-  setAuthorizationRequestCookie as _setAuthorizationRequestCookie,
+  setAuthorizationSessionCookie as _setAuthorizationSessionCookie,
   tryFindBrowserSessions as _tryFindBrowserSessions,
   tryFindClientSession as _tryFindClientSession,
 } from "../../handler";
@@ -49,7 +49,7 @@ const isLoginRequired = _isLoginRequired as jest.Mock;
 const isSsoAvailable = _isSsoAvailable as jest.Mock;
 const isSelectAccountRequired = _isSelectAccountRequired as jest.Mock;
 const randomUnreserved = _randomUnreserved as jest.Mock;
-const setAuthorizationRequestCookie = _setAuthorizationRequestCookie as jest.Mock;
+const setAuthorizationSessionCookie = _setAuthorizationSessionCookie as jest.Mock;
 const tryFindBrowserSessions = _tryFindBrowserSessions as jest.Mock;
 const tryFindClientSession = _tryFindClientSession as jest.Mock;
 
@@ -59,7 +59,7 @@ describe("oauthAuthorizeController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         acrValues: "3 phone session email",
@@ -140,7 +140,7 @@ describe("oauthAuthorizeController", () => {
     isSsoAvailable.mockReturnValue(false);
     isSelectAccountRequired.mockReturnValue(false);
     randomUnreserved.mockReturnValue("WuaUxGcvKAkxJJUF");
-    setAuthorizationRequestCookie.mockImplementation();
+    setAuthorizationSessionCookie.mockImplementation();
   });
 
   test("should resolve for all values", async () => {
@@ -148,9 +148,9 @@ describe("oauthAuthorizeController", () => {
       redirect: "createAuthorizationVerifyUri",
     });
 
-    expect(setAuthorizationRequestCookie).toHaveBeenCalled();
+    expect(setAuthorizationSessionCookie).toHaveBeenCalled();
 
-    expect(ctx.redis.authorizationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "b60ca053-4fcb-4f86-a453-05f46cb56040",
         clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
@@ -244,9 +244,9 @@ describe("oauthAuthorizeController", () => {
 
     await expect(oauthAuthorizeController(ctx)).resolves.toBeTruthy();
 
-    expect(setAuthorizationRequestCookie).toHaveBeenCalled();
+    expect(setAuthorizationSessionCookie).toHaveBeenCalled();
 
-    expect(ctx.redis.authorizationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: null,
         clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
@@ -320,7 +320,7 @@ describe("oauthAuthorizeController", () => {
       redirect: "createSelectAccountPendingUri",
     });
 
-    expect(ctx.redis.authorizationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         status: {
           consent: "skip",
@@ -338,7 +338,7 @@ describe("oauthAuthorizeController", () => {
       redirect: "createLoginPendingUri",
     });
 
-    expect(ctx.redis.authorizationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         status: {
           consent: "skip",
@@ -356,7 +356,7 @@ describe("oauthAuthorizeController", () => {
       redirect: "createConsentPendingUri",
     });
 
-    expect(ctx.redis.authorizationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         status: {
           consent: "pending",

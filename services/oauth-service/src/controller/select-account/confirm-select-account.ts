@@ -34,26 +34,26 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
     data: { selectExisting, selectNew },
-    entity: { authorizationRequest, client },
+    entity: { authorizationSession, client },
     jwt,
     logger,
     mongo: { browserSessionRepository },
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.selectAccount);
+  assertSessionPending(authorizationSession.status.selectAccount);
 
   logger.debug("Updating authorization session");
 
   if (selectNew) {
-    authorizationRequest.browserSessionId = null;
-    authorizationRequest.clientSessionId = null;
-    authorizationRequest.status.login = SessionStatus.PENDING;
-    authorizationRequest.status.consent = SessionStatus.PENDING;
+    authorizationSession.browserSessionId = null;
+    authorizationSession.clientSessionId = null;
+    authorizationSession.status.login = SessionStatus.PENDING;
+    authorizationSession.status.consent = SessionStatus.PENDING;
   } else if (selectExisting) {
     if (
-      !authorizationRequest.requestedSelectAccount.browserSessions.find(
+      !authorizationSession.requestedSelectAccount.browserSessions.find(
         (x: BrowserSessionLike) => x.browserSessionId === selectExisting,
       )
     ) {
@@ -63,34 +63,34 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     }
 
     const browserSession = await browserSessionRepository.find({ id: selectExisting });
-    authorizationRequest.browserSessionId = browserSession.id;
+    authorizationSession.browserSessionId = browserSession.id;
 
-    const idToken = authorizationRequest.idTokenHint
-      ? jwt.verify<LindormClaims>(authorizationRequest.idTokenHint)
+    const idToken = authorizationSession.idTokenHint
+      ? jwt.verify<LindormClaims>(authorizationSession.idTokenHint)
       : undefined;
 
     const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);
-    const loginRequired = isLoginRequired(ctx, authorizationRequest, browserSession, clientSession);
+    const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
     const consentRequired = isConsentRequired(
       ctx,
-      authorizationRequest,
+      authorizationSession,
       browserSession,
       clientSession,
     );
 
-    authorizationRequest.clientSessionId = clientSession?.id || null;
+    authorizationSession.clientSessionId = clientSession?.id || null;
 
-    authorizationRequest.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
-    authorizationRequest.status.consent = consentRequired
+    authorizationSession.status.login = loginRequired ? SessionStatus.PENDING : SessionStatus.SKIP;
+    authorizationSession.status.consent = consentRequired
       ? SessionStatus.PENDING
       : SessionStatus.SKIP;
 
     if (
       loginRequired &&
       browserSession &&
-      isSsoAvailable(ctx, authorizationRequest, client, browserSession)
+      isSsoAvailable(ctx, authorizationSession, client, browserSession)
     ) {
-      authorizationRequest.confirmLogin(browserSession);
+      authorizationSession.confirmLogin(browserSession);
     }
   } else {
     throw new ClientError("Invalid input", {
@@ -99,9 +99,9 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     });
   }
 
-  authorizationRequest.status.selectAccount = SessionStatus.CONFIRMED;
+  authorizationSession.status.selectAccount = SessionStatus.CONFIRMED;
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationRequest) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 };

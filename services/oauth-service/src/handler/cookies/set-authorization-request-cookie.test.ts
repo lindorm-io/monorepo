@@ -1,15 +1,15 @@
 import { createMockLogger } from "@lindorm-io/core-logger";
 import MockDate from "mockdate";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { AuthorizationRequest } from "../../entity";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
-import { setAuthorizationRequestCookie } from "./set-authorization-request-cookie";
+import { AuthorizationSession } from "../../entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
+import { setAuthorizationSessionCookie } from "./set-authorization-request-cookie";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-describe("setAuthorizationRequestCookie", () => {
+describe("setAuthorizationSessionCookie", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
     ctx = {
@@ -22,13 +22,13 @@ describe("setAuthorizationRequestCookie", () => {
       },
     };
 
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       id: "09b5c6b5-51f7-45e6-b0de-3cd36d2652f8",
     });
   });
 
   test("should set cookie", () => {
-    expect(() => setAuthorizationRequestCookie(ctx, authorizationRequest)).not.toThrow();
+    expect(() => setAuthorizationSessionCookie(ctx, authorizationSession)).not.toThrow();
 
     expect(ctx.cookies.set).toHaveBeenCalledWith(
       AUTHORIZATION_SESSION_COOKIE_NAME,

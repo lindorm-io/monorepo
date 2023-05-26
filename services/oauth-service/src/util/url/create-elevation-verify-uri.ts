@@ -1,9 +1,9 @@
 import { Environment } from "@lindorm-io/common-types";
 import { createURL } from "@lindorm-io/url";
-import { ElevationRequest } from "../../entity";
+import { ElevationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 
-export const createElevationVerifyUri = (elevationRequest: ElevationRequest): string =>
+export const createElevationVerifyUri = (elevationSession: ElevationSession): string =>
   createURL("/oauth2/sessions/elevate/verify", {
     host: configuration.server.host,
     port:
@@ -11,7 +11,7 @@ export const createElevationVerifyUri = (elevationRequest: ElevationRequest): st
         ? configuration.server.port
         : undefined,
     query: {
-      session: elevationRequest.id,
-      redirectUri: elevationRequest.redirectUri,
+      session: elevationSession.id,
+      redirectUri: elevationSession.redirectUri,
     },
   }).toString();

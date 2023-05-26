@@ -1,18 +1,18 @@
-import { RejectElevationRequestParams } from "@lindorm-io/common-types";
+import { RejectElevationSessionRequestParams } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { clientCredentialsMiddleware } from "../../../middleware";
 import { ServerKoaController } from "../../../types";
 
-type RequestData = RejectElevationRequestParams;
+type RequestData = RejectElevationSessionRequestParams;
 
-export const rejectElevationRequestSchema = Joi.object<RequestData>()
+export const rejectElevationSessionSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
   })
   .required();
 
-export const rejectElevationRequestController: ServerKoaController<RequestData> = async (
+export const rejectElevationSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {

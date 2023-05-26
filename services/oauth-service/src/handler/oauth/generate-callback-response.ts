@@ -5,7 +5,7 @@ import { createOpaqueToken } from "@lindorm-io/jwt";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
 import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
-import { AuthorizationRequest, Client, ClientSession } from "../../entity";
+import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
 import { convertOpaqueTokenToJwt, createIdToken, generateAccessToken } from "../token";
@@ -23,7 +23,7 @@ type CallbackData = {
 
 export const generateCallbackResponse = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   client: Client,
   clientSession: ClientSession,
 ): ControllerResponse => {
@@ -39,11 +39,11 @@ export const generateCallbackResponse = async (
     });
   }
 
-  if (authorizationRequest.responseTypes.includes(OpenIdResponseType.CODE)) {
-    data.code = await generateAuthorizationCode(ctx, authorizationRequest);
+  if (authorizationSession.responseTypes.includes(OpenIdResponseType.CODE)) {
+    data.code = await generateAuthorizationCode(ctx, authorizationSession);
   }
 
-  if (authorizationRequest.responseTypes.includes(OpenIdResponseType.TOKEN)) {
+  if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
     const accessOpaque = createOpaqueToken();
     const accessToken = await generateAccessToken(ctx, client, clientSession, accessOpaque);
     const accessJwt = client.opaqueAccessToken
@@ -56,7 +56,7 @@ export const generateCallbackResponse = async (
   }
 
   if (
-    authorizationRequest.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
+    authorizationSession.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
     clientSession.scopes.includes(OpenIdScope.OPENID)
   ) {
     const { token: idToken } = createIdToken(ctx, client, clientSession, claims);
@@ -64,24 +64,24 @@ export const generateCallbackResponse = async (
     data.idToken = idToken;
   }
 
-  data.state = authorizationRequest.state;
+  data.state = authorizationSession.state;
 
-  if (authorizationRequest.redirectData) {
-    data.redirectData = authorizationRequest.redirectData;
+  if (authorizationSession.redirectData) {
+    data.redirectData = authorizationSession.redirectData;
   }
 
   ctx.cookies.set(AUTHORIZATION_SESSION_COOKIE_NAME);
 
-  switch (authorizationRequest.responseMode) {
+  switch (authorizationSession.responseMode) {
     case OpenIdResponseMode.FORM_POST:
       return {
-        redirect: authorizationRequest.redirectUri,
+        redirect: authorizationSession.redirectUri,
         body: data,
       };
 
     case OpenIdResponseMode.FRAGMENT:
       return {
-        redirect: createURL(authorizationRequest.redirectUri, {
+        redirect: createURL(authorizationSession.redirectUri, {
           query: data,
           queryCaseTransform: "snake",
         })
@@ -91,7 +91,7 @@ export const generateCallbackResponse = async (
 
     case OpenIdResponseMode.QUERY:
       return {
-        redirect: createURL(authorizationRequest.redirectUri, {
+        redirect: createURL(authorizationSession.redirectUri, {
           query: data,
           queryCaseTransform: "snake",
         }).toString(),

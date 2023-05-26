@@ -1,10 +1,8 @@
+import { SessionStatus } from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { SessionStatus } from "@lindorm-io/common-types";
-import { configuration } from "../../../server/configuration";
 import { getTestData } from "../../../fixtures/data";
-import { server } from "../../../server/server";
 import {
   createTestBrowserSession,
   createTestClient,
@@ -12,13 +10,15 @@ import {
   createTestLogoutSession,
 } from "../../../fixtures/entity";
 import {
-  getTestIdToken,
-  setupIntegration,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_LOGOUT_SESSION_CACHE,
+  getTestIdToken,
+  setupIntegration,
 } from "../../../fixtures/integration";
+import { configuration } from "../../../server/configuration";
+import { server } from "../../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

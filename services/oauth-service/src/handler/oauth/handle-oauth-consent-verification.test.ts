@@ -1,9 +1,9 @@
 import { OpenIdScope } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { AuthorizationRequest, Client } from "../../entity";
+import { AuthorizationSession, Client } from "../../entity";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -17,21 +17,21 @@ const getUpdatedClientSession = _getUpdatedClientSession as jest.Mock;
 
 describe("handleOauthConsentVerification", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let client: Client;
 
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       mongo: {
         browserSessionRepository: createMockMongoRepository(createTestBrowserSession),
       },
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
-    authorizationRequest.confirmedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationSession = createTestAuthorizationSession();
+    authorizationSession.confirmedConsent.scopes = [OpenIdScope.OPENID];
 
     client = createTestClient();
 
@@ -42,10 +42,10 @@ describe("handleOauthConsentVerification", () => {
 
   test("should resolve", async () => {
     await expect(
-      handleOauthConsentVerification(ctx, authorizationRequest, client),
-    ).resolves.toStrictEqual(expect.any(AuthorizationRequest));
+      handleOauthConsentVerification(ctx, authorizationSession, client),
+    ).resolves.toStrictEqual(expect.any(AuthorizationSession));
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         status: expect.objectContaining({
           consent: "verified",
@@ -55,15 +55,15 @@ describe("handleOauthConsentVerification", () => {
   });
 
   test("should resolve client session", async () => {
-    authorizationRequest.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
+    authorizationSession.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
 
     await expect(
-      handleOauthConsentVerification(ctx, authorizationRequest, client),
-    ).resolves.toStrictEqual(expect.any(AuthorizationRequest));
+      handleOauthConsentVerification(ctx, authorizationSession, client),
+    ).resolves.toStrictEqual(expect.any(AuthorizationSession));
 
     expect(getUpdatedClientSession).toHaveBeenCalled();
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         clientSessionId: expect.any(String),
       }),

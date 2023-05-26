@@ -4,6 +4,7 @@ defaults:
     level_of_assurance: 1
     opaque_access_tokens: false
   expiry:
+    authentication_token_session: 90 seconds
     access_token: 3 minutes
     authorization_session: 30 minutes
     browser_session_remember: 30 days
@@ -45,13 +46,11 @@ oauth:
   client_id: id
 
 redirect:
-  claims: /admin/claims
   consent: /oauth/consent
   elevate: /oauth/elevate
   login: /oauth/login
   logout: /oauth/logout
   select: /oauth/select
-  userinfo: /userinfo
 
 redis:
   host: localhost
@@ -72,7 +71,14 @@ services:
     client_name: authenticationClient
     issuer: https://authentication.lindorm.io
     host: localhost
+    routes:
+      authentication_token: /admin/grant-types/authentication-token
+      password: /admin/grant-types/password
+
   identity_service:
     client_name: identityClient
     issuer: https://identity.lindorm.io
     host: localhost
+    routes:
+      claims: /admin/claims
+      userinfo: /userinfo

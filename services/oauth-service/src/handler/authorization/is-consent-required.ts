@@ -1,24 +1,24 @@
 import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
-import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { verifyPromptMode, verifyRequiredAudiences, verifyRequiredScopes } from "../../util";
 
 export const isConsentRequired = (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   browserSession?: BrowserSession,
   clientSession?: ClientSession,
 ): boolean => {
   const { logger } = ctx;
 
   if (
-    [SessionStatus.CONFIRMED, SessionStatus.VERIFIED].includes(authorizationRequest.status.consent)
+    [SessionStatus.CONFIRMED, SessionStatus.VERIFIED].includes(authorizationSession.status.consent)
   ) {
     logger.debug("Consent not required [session status]");
     return false;
   }
 
-  if (!verifyPromptMode(authorizationRequest, OpenIdPromptMode.CONSENT)) {
+  if (!verifyPromptMode(authorizationSession, OpenIdPromptMode.CONSENT)) {
     logger.debug("Consent required [prompt mode]");
     return true;
   }
@@ -33,12 +33,12 @@ export const isConsentRequired = (
     return true;
   }
 
-  if (!verifyRequiredAudiences(authorizationRequest, clientSession)) {
+  if (!verifyRequiredAudiences(authorizationSession, clientSession)) {
     logger.debug("Consent required [audiences]");
     return true;
   }
 
-  if (!verifyRequiredScopes(authorizationRequest, clientSession)) {
+  if (!verifyRequiredScopes(authorizationSession, clientSession)) {
     logger.debug("Consent required [scopes]");
     return true;
   }

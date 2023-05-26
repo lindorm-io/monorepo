@@ -18,7 +18,7 @@ import { ClientSessionType } from "../enum";
 
 export type ClientSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
-  browserSessionId: string;
+  browserSessionId: string | null;
   clientId: string;
   identityId: string;
   latestAuthentication: Date;
@@ -31,14 +31,23 @@ export type ClientSessionAttributes = EntityAttributes & {
   type: ClientSessionType;
 };
 
-export type ClientSessionOptions = Optional<ClientSessionAttributes, EntityKeys>;
+export type ClientSessionOptions = Optional<
+  ClientSessionAttributes,
+  | EntityKeys
+  | "audiences"
+  | "browserSessionId"
+  | "latestAuthentication"
+  | "metadata"
+  | "nonce"
+  | "scopes"
+>;
 
 const schema = Joi.object<ClientSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
     audiences: Joi.array().items(Joi.string().guid()).required(),
-    browserSessionId: Joi.string().guid().required(),
+    browserSessionId: Joi.string().guid().allow(null).required(),
     clientId: Joi.string().guid().required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
@@ -55,7 +64,7 @@ const schema = Joi.object<ClientSessionAttributes>()
   .required();
 
 export class ClientSession extends LindormEntity<ClientSessionAttributes> {
-  public readonly browserSessionId: string;
+  public readonly browserSessionId: string | null;
   public readonly clientId: string;
   public readonly identityId: string;
   public readonly metadata: Record<string, any>;
@@ -73,7 +82,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     super(options);
 
     this.audiences = options.audiences || [];
-    this.browserSessionId = options.browserSessionId;
+    this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();

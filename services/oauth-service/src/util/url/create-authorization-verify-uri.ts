@@ -1,9 +1,9 @@
 import { Environment } from "@lindorm-io/common-types";
 import { createURL } from "@lindorm-io/url";
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 
-export const createAuthorizationVerifyUri = (authorizationRequest: AuthorizationRequest): string =>
+export const createAuthorizationVerifyUri = (authorizationSession: AuthorizationSession): string =>
   createURL("/oauth2/sessions/authorize/verify", {
     host: configuration.server.host,
     port:
@@ -11,7 +11,7 @@ export const createAuthorizationVerifyUri = (authorizationRequest: Authorization
         ? configuration.server.port
         : undefined,
     query: {
-      session: authorizationRequest.id,
-      redirectUri: authorizationRequest.redirectUri,
+      session: authorizationSession.id,
+      redirectUri: authorizationSession.redirectUri,
     },
   }).toString();

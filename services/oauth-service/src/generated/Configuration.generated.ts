@@ -18,24 +18,24 @@ interface Defaults {
 }
 
 interface Clients {
-  active_state:          boolean;
-  level_of_assurance:    number;
-  opaque_access_tokens:  boolean;
-  opaque_refresh_tokens: boolean;
+  active_state:         boolean;
+  level_of_assurance:   number;
+  opaque_access_tokens: boolean;
 }
 
 interface Expiry {
-  access_token:             string;
-  authorization_session:    string;
-  browser_session:          string;
-  browser_session_remember: string;
-  claims_session:           string;
-  client_credentials:       string;
-  code_session:             string;
-  elevation_session:        string;
-  id_token:                 string;
-  logout_session:           string;
-  refresh_token:            string;
+  access_token:                 string;
+  authentication_token_session: string;
+  authorization_session:        string;
+  browser_session:              string;
+  browser_session_remember:     string;
+  claims_session:               string;
+  client_credentials:           string;
+  code_session:                 string;
+  elevation_session:            string;
+  id_token:                     string;
+  logout_session:               string;
+  refresh_token:                string;
 }
 
 interface Sessions {
@@ -52,10 +52,10 @@ interface Tenants {
 interface Frontend {
   host:    string;
   port:    number;
-  routes:  Routes;
+  routes:  FrontendRoutes;
 }
 
-interface Routes {
+interface FrontendRoutes {
   error: string;
 }
 
@@ -80,13 +80,11 @@ interface Oauth {
 }
 
 interface Redirect {
-  claims:   string;
-  consent:  string;
-  elevate:  string;
-  login:    string;
-  logout:   string;
-  select:   string;
-  userinfo: string;
+  consent: string;
+  elevate: string;
+  login:   string;
+  logout:  string;
+  select:  string;
 }
 
 interface Server {
@@ -100,15 +98,35 @@ interface Server {
 }
 
 interface Services {
-  authentication_service: Service;
-  identity_service:       Service;
+  authentication_service: AuthenticationService;
+  identity_service:       IdentityService;
 }
 
-interface Service {
+interface AuthenticationService {
   client_id:    string;
   client_name:  string;
   host:         string;
   issuer:       string;
   port:         number;
+  routes:       AuthenticationServiceRoutes;
+}
+
+interface AuthenticationServiceRoutes {
+  authentication_token: string;
+  password:             string;
+}
+
+interface IdentityService {
+  client_id:    string;
+  client_name:  string;
+  host:         string;
+  issuer:       string;
+  port:         number;
+  routes:       IdentityServiceRoutes;
+}
+
+interface IdentityServiceRoutes {
+  claims:   string;
+  userinfo: string;
 }
 

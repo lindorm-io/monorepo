@@ -1,21 +1,21 @@
 import { SessionStatus } from "@lindorm-io/common-types";
-import { AuthorizationRequest, Client } from "../../entity";
+import { AuthorizationSession, Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getUpdatedClientSession } from "../sessions";
 
 export const handleOauthConsentVerification = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   client: Client,
-): Promise<AuthorizationRequest> => {
+): Promise<AuthorizationSession> => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
   } = ctx;
 
-  const clientSession = await getUpdatedClientSession(ctx, authorizationRequest, client);
+  const clientSession = await getUpdatedClientSession(ctx, authorizationSession, client);
 
-  authorizationRequest.clientSessionId = clientSession.id;
-  authorizationRequest.status.consent = SessionStatus.VERIFIED;
+  authorizationSession.clientSessionId = clientSession.id;
+  authorizationSession.status.consent = SessionStatus.VERIFIED;
 
-  return await authorizationRequestCache.update(authorizationRequest);
+  return await authorizationSessionCache.update(authorizationSession);
 };

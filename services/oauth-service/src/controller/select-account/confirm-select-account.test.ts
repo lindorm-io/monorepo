@@ -5,7 +5,7 @@ import { createMockRedisRepository } from "@lindorm-io/redis";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -36,14 +36,14 @@ describe("confirmSelectAccountController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         selectNew: false,
         selectExisting: "abdd7aba-5c2d-474d-a965-4eb9a261a929",
       },
       entity: {
-        authorizationRequest: createTestAuthorizationRequest({
+        authorizationSession: createTestAuthorizationSession({
           browserSessionId: null,
           clientSessionId: null,
           requestedSelectAccount: {
@@ -82,7 +82,7 @@ describe("confirmSelectAccountController", () => {
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: "abdd7aba-5c2d-474d-a965-4eb9a261a929",
         clientSessionId: "250cdbef-41d1-4b10-8e57-71698ff98519",
@@ -102,7 +102,7 @@ describe("confirmSelectAccountController", () => {
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         browserSessionId: null,
         clientSessionId: null,

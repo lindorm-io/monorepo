@@ -1,6 +1,6 @@
 import { OpenIdPromptMode } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 
 type Options = {
   consentRequired: boolean;
@@ -9,10 +9,10 @@ type Options = {
 };
 
 export const assertAuthorizePrompt = (
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   options: Options,
 ): void => {
-  const { promptModes } = authorizationRequest;
+  const { promptModes } = authorizationSession;
   const { consentRequired, loginRequired, selectAccountRequired } = options;
 
   if (consentRequired && promptModes.includes(OpenIdPromptMode.NONE)) {

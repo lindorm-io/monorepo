@@ -1,14 +1,14 @@
 import { getUnixTime } from "date-fns";
-import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 
 export const verifyMaxAge = (
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   session: BrowserSession | ClientSession,
 ): boolean => {
-  if (!authorizationRequest.maxAge) return true;
+  if (!authorizationSession.maxAge) return true;
 
   const now = getUnixTime(new Date());
   const authTime = getUnixTime(session.latestAuthentication);
 
-  return authorizationRequest.maxAge >= now - authTime;
+  return authorizationSession.maxAge >= now - authTime;
 };

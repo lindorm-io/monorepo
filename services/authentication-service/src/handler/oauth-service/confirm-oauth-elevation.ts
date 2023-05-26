@@ -1,13 +1,13 @@
-import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../../types";
-import { VerifiedAuthenticationConfirmationToken } from "../../common";
-import { clientCredentialsMiddleware } from "../../middleware";
 import {
   AuthenticationMethod,
-  ConfirmElevationRequestBody,
-  ConfirmElevationRequestParams,
   ConfirmElevationResponse,
+  ConfirmElevationSessionRequestBody,
+  ConfirmElevationSessionRequestParams,
 } from "@lindorm-io/common-types";
+import { ServerError } from "@lindorm-io/errors";
+import { VerifiedAuthenticationConfirmationToken } from "../../common";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
 export const confirmOauthElevation = async (
   ctx: ServerKoaContext,
@@ -24,7 +24,7 @@ export const confirmOauthElevation = async (
     });
   }
 
-  const body: ConfirmElevationRequestBody = {
+  const body: ConfirmElevationSessionRequestBody = {
     identityId: authenticationConfirmationToken.subject,
     levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
     methods: authenticationConfirmationToken.authMethodsReference as Array<AuthenticationMethod>,
@@ -32,9 +32,9 @@ export const confirmOauthElevation = async (
 
   const { data } = await oauthClient.post<
     ConfirmElevationResponse,
-    ConfirmElevationRequestBody,
+    ConfirmElevationSessionRequestBody,
     unknown,
-    ConfirmElevationRequestParams
+    ConfirmElevationSessionRequestParams
   >("/admin/sessions/elevation/:id/confirm", {
     params: { id: authenticationConfirmationToken.session },
     body,

@@ -5,7 +5,7 @@ import {
   rejectLoginController,
   rejectLoginSchema,
 } from "../../../controller";
-import { AuthorizationRequestEntityMiddleware, clientEntityMiddleware } from "../../../middleware";
+import { authorizationSessionEntityMiddleware, clientEntityMiddleware } from "../../../middleware";
 
 export const router = new Router<any, any>();
 
@@ -15,8 +15,8 @@ router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmLoginSchema),
-  AuthorizationRequestEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.authorizationRequest.clientId"),
+  authorizationSessionEntityMiddleware("data.id"),
+  clientEntityMiddleware("entity.authorizationSession.clientId"),
   useController(confirmLoginController),
 );
 
@@ -24,6 +24,6 @@ router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectLoginSchema),
-  AuthorizationRequestEntityMiddleware("data.id"),
+  authorizationSessionEntityMiddleware("data.id"),
   useController(rejectLoginController),
 );

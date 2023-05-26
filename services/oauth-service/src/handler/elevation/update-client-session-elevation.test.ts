@@ -2,8 +2,8 @@ import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
-import { ElevationRequest } from "../../entity";
-import { createTestClientSession, createTestElevationRequest } from "../../fixtures/entity";
+import { ElevationSession } from "../../entity";
+import { createTestClientSession, createTestElevationSession } from "../../fixtures/entity";
 import { updateClientSessionElevation } from "./update-client-session-elevation";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -12,7 +12,7 @@ jest.mock("../../util");
 
 describe("verifyClientSessionElevation", () => {
   let ctx: any;
-  let elevationRequest: ElevationRequest;
+  let elevationSession: ElevationSession;
 
   beforeEach(() => {
     ctx = {
@@ -27,7 +27,7 @@ describe("verifyClientSessionElevation", () => {
       },
     };
 
-    elevationRequest = createTestElevationRequest({
+    elevationSession = createTestElevationSession({
       confirmedAuthentication: {
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
@@ -50,7 +50,7 @@ describe("verifyClientSessionElevation", () => {
       }),
     );
 
-    await expect(updateClientSessionElevation(ctx, elevationRequest)).resolves.toBeUndefined();
+    await expect(updateClientSessionElevation(ctx, elevationSession)).resolves.toBeUndefined();
 
     expect(ctx.mongo.clientSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -68,6 +68,6 @@ describe("verifyClientSessionElevation", () => {
   test("should throw on invalid identity", async () => {
     ctx.mongo.clientSessionRepository.find.mockResolvedValue(createTestClientSession());
 
-    await expect(updateClientSessionElevation(ctx, elevationRequest)).rejects.toThrow(ServerError);
+    await expect(updateClientSessionElevation(ctx, elevationSession)).rejects.toThrow(ServerError);
   });
 });

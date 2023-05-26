@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { createTestElevationRequest } from "../../fixtures/entity";
+import { createTestElevationSession } from "../../fixtures/entity";
 import {
   updateBrowserSessionElevation as _updateBrowserSessionElevation,
   updateClientSessionElevation as _updateClientSessionElevation,
@@ -23,11 +23,11 @@ describe("verifyElevationController", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        elevationRequestCache: createMockRedisRepository(createTestElevationRequest),
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       data: {},
       entity: {
-        elevationRequest: createTestElevationRequest({
+        elevationSession: createTestElevationSession({
           browserSessionId: null,
           clientSessionId: null,
           status: SessionStatus.CONFIRMED,
@@ -48,7 +48,7 @@ describe("verifyElevationController", () => {
   });
 
   test("should resolve without redirect", async () => {
-    ctx.entity.elevationRequest = createTestElevationRequest({
+    ctx.entity.elevationSession = createTestElevationSession({
       redirectUri: null,
       status: SessionStatus.CONFIRMED,
     });
@@ -57,7 +57,7 @@ describe("verifyElevationController", () => {
   });
 
   test("should resolve for browser session", async () => {
-    ctx.entity.elevationRequest = createTestElevationRequest({
+    ctx.entity.elevationSession = createTestElevationSession({
       browserSessionId: randomUUID(),
       clientSessionId: null,
       status: SessionStatus.CONFIRMED,
@@ -69,7 +69,7 @@ describe("verifyElevationController", () => {
   });
 
   test("should resolve for client session", async () => {
-    ctx.entity.elevationRequest = createTestElevationRequest({
+    ctx.entity.elevationSession = createTestElevationSession({
       browserSessionId: null,
       clientSessionId: randomUUID(),
       status: SessionStatus.CONFIRMED,
@@ -81,7 +81,7 @@ describe("verifyElevationController", () => {
   });
 
   test("should reject on invalid status", async () => {
-    ctx.entity.elevationRequest.status = "rejected";
+    ctx.entity.elevationSession.status = "rejected";
 
     await expect(verifyElevationController(ctx)).rejects.toThrow(ClientError);
   });

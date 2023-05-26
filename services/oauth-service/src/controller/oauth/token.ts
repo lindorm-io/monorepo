@@ -4,6 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import {
+  handleAuthenticationTokenGrant,
   handleAuthorizationCodeGrant,
   handleClientCredentialsGrant,
   handleRefreshTokenGrant,
@@ -55,9 +56,9 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
   ctx.set("Pragma", "no-cache");
 
   switch (grantType) {
-    // case OpenIdGrantType.AUTHENTICATION_TOKEN:
-    // body = await handleAuthenticationTokenGrant(ctx);
-    // break;
+    case OpenIdGrantType.AUTHENTICATION_TOKEN:
+      body = await handleAuthenticationTokenGrant(ctx);
+      break;
 
     case OpenIdGrantType.AUTHORIZATION_CODE:
       body = await handleAuthorizationCodeGrant(ctx);

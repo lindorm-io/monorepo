@@ -1,6 +1,6 @@
 import {
   AuthenticationMethod,
-  GetElevationResponse,
+  GetElevationSessionResponse,
   OpenIdClientType,
   OpenIdDisplayMode,
   SessionStatus,
@@ -8,9 +8,9 @@ import {
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
-export const mockFetchOauthElevationRequest = (
-  options: Partial<GetElevationResponse> = {},
-): GetElevationResponse => ({
+export const mockFetchOauthElevationSession = (
+  options: Partial<GetElevationSessionResponse> = {},
+): GetElevationSessionResponse => ({
   elevation: {
     isRequired: true,
     status: SessionStatus.PENDING,
@@ -22,7 +22,7 @@ export const mockFetchOauthElevationRequest = (
     requiredMethods: [AuthenticationMethod.EMAIL],
   },
 
-  elevationRequest: {
+  elevationSession: {
     id: randomUUID(),
     authenticationHint: ["test@lindorm.io"],
     country: "se",

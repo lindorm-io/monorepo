@@ -48,7 +48,7 @@ describe("/admin/claims", () => {
     .get("/admin/sessions/claims/37c81a2f-88d3-4af9-a1c1-8636e2ab0435")
     .times(999)
     .reply(200, {
-      claims_request: {
+      claims_session: {
         identity_id: "e13c1038-ed23-44f9-ad7e-e8c91c523ae1",
         scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
       },

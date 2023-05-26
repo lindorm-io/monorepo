@@ -9,7 +9,7 @@ import {
 } from "../../../controller";
 import {
   clientEntityMiddleware,
-  ElevationRequestEntityMiddleware,
+  elevationSessionEntityMiddleware,
   tenantEntityMiddleware,
 } from "../../../middleware";
 
@@ -21,8 +21,8 @@ router.get(
   "/:id",
   paramsMiddleware,
   useSchema(getElevationSchema),
-  ElevationRequestEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.elevationRequest.clientId"),
+  elevationSessionEntityMiddleware("data.id"),
+  clientEntityMiddleware("entity.elevationSession.clientId"),
   tenantEntityMiddleware("entity.client.tenantId"),
   useController(getElevationController),
 );
@@ -31,7 +31,7 @@ router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmElevationSchema),
-  ElevationRequestEntityMiddleware("data.id"),
+  elevationSessionEntityMiddleware("data.id"),
   useController(confirmElevationController),
 );
 
@@ -39,6 +39,6 @@ router.post(
   "/:id/reject",
   paramsMiddleware,
   useSchema(rejectElevationSchema),
-  ElevationRequestEntityMiddleware("data.id"),
+  elevationSessionEntityMiddleware("data.id"),
   useController(rejectElevationController),
 );

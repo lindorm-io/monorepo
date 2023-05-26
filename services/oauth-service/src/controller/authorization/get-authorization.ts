@@ -19,23 +19,23 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    entity: { authorizationRequest, client, tenant },
+    entity: { authorizationSession, client, tenant },
     mongo: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
-  const browserSession = authorizationRequest.browserSessionId
-    ? await browserSessionRepository.tryFind({ id: authorizationRequest.browserSessionId })
+  const browserSession = authorizationSession.browserSessionId
+    ? await browserSessionRepository.tryFind({ id: authorizationSession.browserSessionId })
     : undefined;
 
-  const clientSession = authorizationRequest.clientSessionId
-    ? await clientSessionRepository.tryFind({ id: authorizationRequest.clientSessionId })
+  const clientSession = authorizationSession.clientSessionId
+    ? await clientSessionRepository.tryFind({ id: authorizationSession.clientSessionId })
     : undefined;
 
-  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationRequest);
-  const loginRequired = isLoginRequired(ctx, authorizationRequest, browserSession, clientSession);
+  const selectAccountRequired = isSelectAccountRequired(ctx, authorizationSession);
+  const loginRequired = isLoginRequired(ctx, authorizationSession, browserSession, clientSession);
   const consentRequired = isConsentRequired(
     ctx,
-    authorizationRequest,
+    authorizationSession,
     browserSession,
     clientSession,
   );
@@ -44,10 +44,10 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
     body: {
       consent: {
         isRequired: consentRequired,
-        status: authorizationRequest.status.consent,
+        status: authorizationSession.status.consent,
 
-        audiences: authorizationRequest.requestedConsent.audiences,
-        optionalScopes: authorizationRequest.requestedConsent.scopes.filter(
+        audiences: authorizationSession.requestedConsent.audiences,
+        optionalScopes: authorizationSession.requestedConsent.scopes.filter(
           (x) => !client.requiredScopes.includes(x),
         ),
         requiredScopes: client.requiredScopes,
@@ -56,41 +56,41 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
 
       login: {
         isRequired: loginRequired,
-        status: authorizationRequest.status.login,
+        status: authorizationSession.status.login,
 
-        identityId: authorizationRequest.requestedLogin.identityId,
-        minimumLevel: authorizationRequest.requestedLogin.minimumLevel,
-        recommendedLevel: authorizationRequest.requestedLogin.recommendedLevel,
-        recommendedMethods: authorizationRequest.requestedLogin.recommendedMethods,
-        recommendedStrategies: authorizationRequest.requestedLogin.recommendedStrategies,
-        requiredLevel: authorizationRequest.requestedLogin.requiredLevel,
-        requiredMethods: authorizationRequest.requestedLogin.requiredMethods,
-        requiredStrategies: authorizationRequest.requestedLogin.requiredStrategies,
+        identityId: authorizationSession.requestedLogin.identityId,
+        minimumLevel: authorizationSession.requestedLogin.minimumLevel,
+        recommendedLevel: authorizationSession.requestedLogin.recommendedLevel,
+        recommendedMethods: authorizationSession.requestedLogin.recommendedMethods,
+        recommendedStrategies: authorizationSession.requestedLogin.recommendedStrategies,
+        requiredLevel: authorizationSession.requestedLogin.requiredLevel,
+        requiredMethods: authorizationSession.requestedLogin.requiredMethods,
+        requiredStrategies: authorizationSession.requestedLogin.requiredStrategies,
       },
 
       selectAccount: {
         isRequired: selectAccountRequired,
-        status: authorizationRequest.status.selectAccount,
+        status: authorizationSession.status.selectAccount,
 
-        sessions: authorizationRequest.requestedSelectAccount.browserSessions.map((x) => ({
+        sessions: authorizationSession.requestedSelectAccount.browserSessions.map((x) => ({
           selectId: x.browserSessionId,
           identityId: x.identityId,
         })),
       },
 
-      authorizationRequest: {
-        id: authorizationRequest.id,
-        country: authorizationRequest.country,
-        displayMode: authorizationRequest.displayMode,
-        expires: authorizationRequest.expires.toISOString(),
-        idTokenHint: authorizationRequest.idTokenHint,
-        loginHint: authorizationRequest.loginHint,
-        nonce: authorizationRequest.nonce,
-        maxAge: authorizationRequest.maxAge,
-        originalUri: authorizationRequest.originalUri,
-        promptModes: authorizationRequest.promptModes,
-        redirectUri: authorizationRequest.redirectUri,
-        uiLocales: authorizationRequest.uiLocales,
+      authorizationSession: {
+        id: authorizationSession.id,
+        country: authorizationSession.country,
+        displayMode: authorizationSession.displayMode,
+        expires: authorizationSession.expires.toISOString(),
+        idTokenHint: authorizationSession.idTokenHint,
+        loginHint: authorizationSession.loginHint,
+        nonce: authorizationSession.nonce,
+        maxAge: authorizationSession.maxAge,
+        originalUri: authorizationSession.originalUri,
+        promptModes: authorizationSession.promptModes,
+        redirectUri: authorizationSession.redirectUri,
+        uiLocales: authorizationSession.uiLocales,
       },
 
       browserSession: {

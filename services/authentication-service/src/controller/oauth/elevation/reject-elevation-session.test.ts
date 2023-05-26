@@ -1,6 +1,6 @@
-import { rejectElevationRequestController } from "./reject-elevation-session";
+import { rejectElevationSessionController } from "./reject-elevation-session";
 
-describe("rejectElevationRequestController", () => {
+describe("rejectElevationSessionController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -17,7 +17,7 @@ describe("rejectElevationRequestController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(rejectElevationRequestController(ctx)).resolves.toBeUndefined();
+    await expect(rejectElevationSessionController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.axios.oauthClient.post).toHaveBeenCalledWith(
       "/admin/sessions/elevation/:id/reject",

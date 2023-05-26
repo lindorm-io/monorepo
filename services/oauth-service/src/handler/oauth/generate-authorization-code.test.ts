@@ -1,14 +1,14 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
-import { AuthorizationCode, AuthorizationRequest } from "../../entity";
-import { createTestAuthorizationCode, createTestAuthorizationRequest } from "../../fixtures/entity";
+import { AuthorizationCode, AuthorizationSession } from "../../entity";
+import { createTestAuthorizationCode, createTestAuthorizationSession } from "../../fixtures/entity";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("setAuthorizationCode", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
     ctx = {
@@ -17,11 +17,11 @@ describe("setAuthorizationCode", () => {
       },
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
   });
 
   test("should resolve update authorization session with code", async () => {
-    await expect(generateAuthorizationCode(ctx, authorizationRequest)).resolves.toStrictEqual(
+    await expect(generateAuthorizationCode(ctx, authorizationSession)).resolves.toStrictEqual(
       expect.any(String),
     );
 

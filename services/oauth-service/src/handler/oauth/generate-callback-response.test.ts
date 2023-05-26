@@ -2,11 +2,11 @@ import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types
 import { baseHash } from "@lindorm-io/core";
 import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
-import { AuthorizationRequest, Client, ClientSession } from "../../entity";
+import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import {
   createTestAccessToken,
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
@@ -35,7 +35,7 @@ const getIdentityUserinfo = _getIdentityUserinfo as jest.Mock;
 
 describe("generateCallbackResponse", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let clientSession: ClientSession;
   let client: Client;
 
@@ -46,7 +46,7 @@ describe("generateCallbackResponse", () => {
       },
     };
 
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
@@ -72,14 +72,14 @@ describe("generateCallbackResponse", () => {
   afterEach(jest.resetAllMocks);
 
   test("should resolve form post", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       responseMode: OpenIdResponseMode.FORM_POST,
       responseTypes: [],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect",
       body: {
@@ -91,7 +91,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve fragment", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseMode: OpenIdResponseMode.FRAGMENT,
       responseTypes: [],
@@ -99,14 +99,14 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect#state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
   });
 
   test("should resolve query", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseMode: OpenIdResponseMode.QUERY,
       responseTypes: [],
@@ -114,21 +114,21 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: "https://test.client.lindorm.io/redirect?state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
   });
 
   test("should resolve with code", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.CODE],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "code=vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
@@ -137,14 +137,14 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve with access token", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "access_token=access.token.jwt&expires_in=86400&token_type=Bearer",
@@ -153,21 +153,21 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve with id token", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.ID_TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining("id_token=id.token.jwt"),
     });
   });
 
   test("should resolve with redirect data", async () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: baseHash(
         baseHash(JSON.stringify({ string: "string", number: 123, boolean: true })),
       ),
@@ -177,7 +177,7 @@ describe("generateCallbackResponse", () => {
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "redirect_data=ZXlKemRISnBibWNpT2lKemRISnBibWNpTENKdWRXMWlaWElpT2pFeU15d2lZbTl2YkdWaGJpSTZkSEoxWlgwPQ%3D%3D",
@@ -187,14 +187,14 @@ describe("generateCallbackResponse", () => {
 
   test("should resolve with opaque access token", async () => {
     client.opaqueAccessToken = true;
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       redirectData: null,
       responseTypes: [OpenIdResponseType.TOKEN],
       state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
     });
 
     await expect(
-      generateCallbackResponse(ctx, authorizationRequest, client, clientSession),
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining(
         "access_token=create_opaque_token&expires_in=86400&token_type=Bearer",

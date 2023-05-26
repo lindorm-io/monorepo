@@ -1,4 +1,4 @@
-import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import {
   verifyAccessLevel,
@@ -10,7 +10,7 @@ import {
 
 export const verifyLoginPrerequisites = (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   session?: BrowserSession | ClientSession,
 ): boolean => {
   const { logger } = ctx;
@@ -20,17 +20,17 @@ export const verifyLoginPrerequisites = (
     return false;
   }
 
-  if (!verifyIdentityId(authorizationRequest, session)) {
+  if (!verifyIdentityId(authorizationSession, session)) {
     logger.debug("Login required [identity id]");
     return false;
   }
 
-  if (!verifyAccessLevel(authorizationRequest, session)) {
+  if (!verifyAccessLevel(authorizationSession, session)) {
     logger.debug("Login required [access level]");
     return false;
   }
 
-  if (!verifyRequiredMethods(authorizationRequest, session)) {
+  if (!verifyRequiredMethods(authorizationSession, session)) {
     logger.debug("Login required [required methods]");
     return false;
   }
@@ -40,7 +40,7 @@ export const verifyLoginPrerequisites = (
     return false;
   }
 
-  if (!verifyMaxAge(authorizationRequest, session)) {
+  if (!verifyMaxAge(authorizationSession, session)) {
     logger.debug("Login required [max age]");
     return false;
   }

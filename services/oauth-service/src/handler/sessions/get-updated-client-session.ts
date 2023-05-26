@@ -1,63 +1,63 @@
 import { OpenIdScope } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
-import { AuthorizationRequest, Client, ClientSession } from "../../entity";
+import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ClientSessionType } from "../../enum";
 import { ServerKoaContext } from "../../types";
 
 const createClientSession = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   client: Client,
 ): Promise<ClientSession> => {
   const {
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!authorizationRequest.browserSessionId) {
+  if (!authorizationSession.browserSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
       description: "Session data is missing",
-      data: { browserSessionId: authorizationRequest.browserSessionId },
+      data: { browserSessionId: authorizationSession.browserSessionId },
     });
   }
 
   if (
-    !authorizationRequest.confirmedLogin.identityId ||
-    !authorizationRequest.confirmedLogin.latestAuthentication ||
-    !authorizationRequest.confirmedLogin.levelOfAssurance ||
-    !authorizationRequest.confirmedLogin.methods.length
+    !authorizationSession.confirmedLogin.identityId ||
+    !authorizationSession.confirmedLogin.latestAuthentication ||
+    !authorizationSession.confirmedLogin.levelOfAssurance ||
+    !authorizationSession.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
-      debug: { confirmedLogin: authorizationRequest.confirmedLogin },
+      debug: { confirmedLogin: authorizationSession.confirmedLogin },
     });
   }
 
   if (
-    !authorizationRequest.confirmedConsent.audiences.length ||
-    !authorizationRequest.confirmedConsent.scopes.length
+    !authorizationSession.confirmedConsent.audiences.length ||
+    !authorizationSession.confirmedConsent.scopes.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
-      debug: { confirmedConsent: authorizationRequest.confirmedConsent },
+      debug: { confirmedConsent: authorizationSession.confirmedConsent },
     });
   }
 
   return await clientSessionRepository.create(
     new ClientSession({
-      audiences: authorizationRequest.confirmedConsent.audiences,
-      browserSessionId: authorizationRequest.browserSessionId,
+      audiences: authorizationSession.confirmedConsent.audiences,
+      browserSessionId: authorizationSession.browserSessionId,
       clientId: client.id,
-      identityId: authorizationRequest.confirmedLogin.identityId,
-      latestAuthentication: authorizationRequest.confirmedLogin.latestAuthentication,
-      levelOfAssurance: authorizationRequest.confirmedLogin.levelOfAssurance,
-      metadata: authorizationRequest.confirmedLogin.metadata,
-      methods: authorizationRequest.confirmedLogin.methods,
-      nonce: authorizationRequest.nonce,
-      scopes: authorizationRequest.confirmedConsent.scopes,
+      identityId: authorizationSession.confirmedLogin.identityId,
+      latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
+      levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
+      metadata: authorizationSession.confirmedLogin.metadata,
+      methods: authorizationSession.confirmedLogin.methods,
+      nonce: authorizationSession.nonce,
+      scopes: authorizationSession.confirmedConsent.scopes,
       tenantId: client.tenantId,
-      type: authorizationRequest.confirmedConsent.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
+      type: authorizationSession.confirmedConsent.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH
         : ClientSessionType.EPHEMERAL,
     }),
@@ -66,70 +66,70 @@ const createClientSession = async (
 
 const updateClientSession = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   clientSession: ClientSession,
 ): Promise<ClientSession> => {
   const {
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!authorizationRequest.browserSessionId) {
+  if (!authorizationSession.browserSessionId) {
     throw new ServerError("Invalid Session", {
       code: "invalid_session",
       description: "Session data is missing",
-      data: { browserSessionId: authorizationRequest.browserSessionId },
+      data: { browserSessionId: authorizationSession.browserSessionId },
     });
   }
 
   if (
-    !authorizationRequest.confirmedLogin.identityId ||
-    !authorizationRequest.confirmedLogin.latestAuthentication ||
-    !authorizationRequest.confirmedLogin.levelOfAssurance ||
-    !authorizationRequest.confirmedLogin.methods.length
+    !authorizationSession.confirmedLogin.identityId ||
+    !authorizationSession.confirmedLogin.latestAuthentication ||
+    !authorizationSession.confirmedLogin.levelOfAssurance ||
+    !authorizationSession.confirmedLogin.methods.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
       debug: {
-        confirmedLogin: authorizationRequest.confirmedLogin,
+        confirmedLogin: authorizationSession.confirmedLogin,
       },
     });
   }
 
   if (
-    !authorizationRequest.confirmedConsent.audiences.length ||
-    !authorizationRequest.confirmedConsent.scopes.length
+    !authorizationSession.confirmedConsent.audiences.length ||
+    !authorizationSession.confirmedConsent.scopes.length
   ) {
     throw new ServerError("Unexpected session data", {
       description: "Authorization session has invalid data",
-      debug: { confirmedConsent: authorizationRequest.confirmedConsent },
+      debug: { confirmedConsent: authorizationSession.confirmedConsent },
     });
   }
 
   clientSession.audiences = uniqArray(
     clientSession.audiences,
-    authorizationRequest.confirmedConsent.audiences,
+    authorizationSession.confirmedConsent.audiences,
   );
 
-  clientSession.latestAuthentication = authorizationRequest.confirmedLogin.latestAuthentication;
+  clientSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
 
   clientSession.levelOfAssurance =
-    authorizationRequest.confirmedLogin.levelOfAssurance > clientSession.levelOfAssurance
-      ? authorizationRequest.confirmedLogin.levelOfAssurance
+    authorizationSession.confirmedLogin.levelOfAssurance > clientSession.levelOfAssurance
+      ? authorizationSession.confirmedLogin.levelOfAssurance
       : clientSession.levelOfAssurance;
 
   clientSession.methods = uniqArray(
     clientSession.methods,
-    authorizationRequest.confirmedLogin.methods,
+    authorizationSession.confirmedLogin.methods,
   );
 
-  clientSession.nonce = authorizationRequest.nonce;
+  clientSession.nonce = authorizationSession.nonce;
 
   clientSession.scopes = uniqArray(
     clientSession.scopes,
-    authorizationRequest.confirmedConsent.scopes,
+    authorizationSession.confirmedConsent.scopes,
   );
 
-  clientSession.type = authorizationRequest.confirmedConsent.scopes.includes(
+  clientSession.type = authorizationSession.confirmedConsent.scopes.includes(
     OpenIdScope.OFFLINE_ACCESS,
   )
     ? ClientSessionType.REFRESH
@@ -140,24 +140,24 @@ const updateClientSession = async (
 
 export const getUpdatedClientSession = async (
   ctx: ServerKoaContext,
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   client: Client,
 ): Promise<ClientSession> => {
   const {
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!authorizationRequest.clientSessionId) {
-    return await createClientSession(ctx, authorizationRequest, client);
+  if (!authorizationSession.clientSessionId) {
+    return await createClientSession(ctx, authorizationSession, client);
   }
 
   const clientSession = await clientSessionRepository.find({
-    id: authorizationRequest.clientSessionId,
+    id: authorizationSession.clientSessionId,
   });
 
-  if (clientSession.identityId !== authorizationRequest.confirmedLogin.identityId) {
-    return await createClientSession(ctx, authorizationRequest, client);
+  if (clientSession.identityId !== authorizationSession.confirmedLogin.identityId) {
+    return await createClientSession(ctx, authorizationSession, client);
   }
 
-  return await updateClientSession(ctx, authorizationRequest, clientSession);
+  return await updateClientSession(ctx, authorizationSession, clientSession);
 };

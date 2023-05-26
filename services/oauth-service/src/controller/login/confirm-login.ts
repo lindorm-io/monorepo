@@ -29,17 +29,17 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
     data: { identityId, levelOfAssurance, metadata, methods, remember, singleSignOn },
-    entity: { authorizationRequest },
+    entity: { authorizationSession },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.login);
+  assertSessionPending(authorizationSession.status.login);
 
   logger.debug("Updating authorization session");
 
-  authorizationRequest.confirmLogin({
+  authorizationSession.confirmLogin({
     identityId,
     latestAuthentication: new Date(),
     levelOfAssurance,
@@ -49,7 +49,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
     singleSignOn,
   });
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationRequest) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 };

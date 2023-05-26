@@ -1,7 +1,7 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
 import { confirmLoginController } from "./confirm-login";
 
@@ -13,14 +13,14 @@ const createAuthorizationVerifyRedirectUri = _createAuthorizationVerifyRedirectU
 
 describe("confirmLoginController", () => {
   let ctx: any;
-  let authorizationRequest = createTestAuthorizationRequest({
+  let authorizationSession = createTestAuthorizationSession({
     state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
   });
 
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationRequestCache: createMockRedisRepository(createTestAuthorizationRequest),
+        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
       },
       data: {
         identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",
@@ -31,7 +31,7 @@ describe("confirmLoginController", () => {
         singleSignOn: true,
       },
       entity: {
-        authorizationRequest,
+        authorizationSession,
       },
       logger: createMockLogger(),
     };
@@ -44,7 +44,7 @@ describe("confirmLoginController", () => {
       body: { redirectTo: "redirect-uri" },
     });
 
-    expect(ctx.redis.authorizationRequestCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedLogin: {
           identityId: "5902daa2-2d3b-40e7-ab97-3dcebe190b98",

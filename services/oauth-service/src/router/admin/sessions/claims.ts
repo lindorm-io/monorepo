@@ -1,7 +1,7 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { getClaimsRequestController, getClaimsRequestSchema } from "../../../controller";
+import { getClaimsSessionController, getClaimsSessionSchema } from "../../../controller";
 import {
-  ClaimsRequestEntityMiddleware,
+  claimsSessionEntityMiddleware,
   clientEntityMiddleware,
   tenantEntityMiddleware,
 } from "../../../middleware";
@@ -13,9 +13,9 @@ export const router = new Router<any, any>();
 router.get(
   "/:id",
   paramsMiddleware,
-  useSchema(getClaimsRequestSchema),
-  ClaimsRequestEntityMiddleware("data.id"),
-  clientEntityMiddleware("entity.claimsRequest.clientId"),
+  useSchema(getClaimsSessionSchema),
+  claimsSessionEntityMiddleware("data.id"),
+  clientEntityMiddleware("entity.claimsSession.clientId"),
   tenantEntityMiddleware("entity.client.tenantId"),
-  useController(getClaimsRequestController),
+  useController(getClaimsSessionController),
 );

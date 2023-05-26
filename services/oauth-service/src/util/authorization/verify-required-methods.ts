@@ -1,12 +1,12 @@
 import { difference } from "lodash";
-import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 
 export const verifyRequiredMethods = (
-  authorizationRequest: AuthorizationRequest,
+  authorizationSession: AuthorizationSession,
   session: BrowserSession | ClientSession,
 ): boolean => {
-  if (!authorizationRequest.requestedLogin.requiredMethods.length) return true;
+  if (!authorizationSession.requestedLogin.requiredMethods.length) return true;
   if (!session.methods.length) return false;
 
-  return !difference(authorizationRequest.requestedLogin.requiredMethods, session.methods).length;
+  return !difference(authorizationSession.requestedLogin.requiredMethods, session.methods).length;
 };

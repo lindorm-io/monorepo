@@ -42,7 +42,7 @@ describe("initialiseAuthenticationController", () => {
     ctx.data = {
       codeChallenge: "codeChallenge",
       codeChallengeMethod: "codeChallengeMethod",
-      ElevationRequestId: "47d079fc-578b-4981-a820-078b75c0176f",
+      elevationSessionId: "47d079fc-578b-4981-a820-078b75c0176f",
     };
 
     await expect(initialiseAuthenticationController(ctx)).resolves.toStrictEqual({

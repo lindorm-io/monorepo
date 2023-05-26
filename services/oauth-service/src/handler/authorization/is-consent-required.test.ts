@@ -1,8 +1,8 @@
 import { SessionStatus } from "@lindorm-io/common-types";
 import { createMockLogger } from "@lindorm-io/winston";
-import { AuthorizationRequest, BrowserSession, ClientSession } from "../../entity";
+import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import {
-  createTestAuthorizationRequest,
+  createTestAuthorizationSession,
   createTestBrowserSession,
   createTestClientSession,
 } from "../../fixtures/entity";
@@ -21,7 +21,7 @@ const verifyRequiredScopes = _verifyRequiredScopes as jest.Mock;
 
 describe("isConsentRequired", () => {
   let ctx: any;
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
   let browserSession: BrowserSession;
   let clientSession: ClientSession;
 
@@ -30,7 +30,7 @@ describe("isConsentRequired", () => {
       logger: createMockLogger(),
     };
 
-    authorizationRequest = createTestAuthorizationRequest();
+    authorizationSession = createTestAuthorizationSession();
     browserSession = createTestBrowserSession();
     clientSession = createTestClientSession();
 
@@ -40,44 +40,44 @@ describe("isConsentRequired", () => {
   });
 
   test("should return false", () => {
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
   });
 
   test("should return false when session status is confirmed", () => {
-    authorizationRequest.status.consent = SessionStatus.CONFIRMED;
+    authorizationSession.status.consent = SessionStatus.CONFIRMED;
 
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
   });
 
   test("should return false when session status is verified", () => {
-    authorizationRequest.status.consent = SessionStatus.VERIFIED;
+    authorizationSession.status.consent = SessionStatus.VERIFIED;
 
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(false);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(false);
   });
 
   test("should return true when prompt mode returns false", () => {
     verifyPromptMode.mockReturnValue(false);
 
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(true);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(true);
   });
 
   test("should return true when browser session is missing", () => {
-    expect(isConsentRequired(ctx, authorizationRequest, undefined, clientSession)).toBe(true);
+    expect(isConsentRequired(ctx, authorizationSession, undefined, clientSession)).toBe(true);
   });
 
   test("should return true when client session is missing", () => {
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, undefined)).toBe(true);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, undefined)).toBe(true);
   });
 
   test("should return true when required audiences returns false", () => {
     verifyRequiredAudiences.mockReturnValue(false);
 
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(true);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(true);
   });
 
   test("should return true when required scopes returns false", () => {
     verifyRequiredScopes.mockReturnValue(false);
 
-    expect(isConsentRequired(ctx, authorizationRequest, browserSession, clientSession)).toBe(true);
+    expect(isConsentRequired(ctx, authorizationSession, browserSession, clientSession)).toBe(true);
   });
 });

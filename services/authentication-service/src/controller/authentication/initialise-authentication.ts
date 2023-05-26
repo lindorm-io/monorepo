@@ -34,7 +34,7 @@ export const initialiseAuthenticationController: ServerKoaController<RequestData
       codeChallenge,
       codeChallengeMethod,
       country,
-      elevationRequestId,
+      elevationSessionId,
       identityId,
       levelOfAssurance,
       loginHint,
@@ -46,11 +46,11 @@ export const initialiseAuthenticationController: ServerKoaController<RequestData
 
   let authenticationSession: AuthenticationSession;
 
-  if (elevationRequestId) {
+  if (elevationSessionId) {
     authenticationSession = await initialiseElevateAuthenticationSession(ctx, {
       codeChallenge,
       codeChallengeMethod,
-      elevationRequestId,
+      elevationSessionId,
     });
   } else if (oauthSessionId) {
     authenticationSession = await initialiseOauthAuthenticationSession(ctx, {

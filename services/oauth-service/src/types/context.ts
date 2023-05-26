@@ -1,6 +1,5 @@
 import { Axios } from "@lindorm-io/axios";
 import { Dict } from "@lindorm-io/common-types";
-import { JwtDecodeData } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -14,38 +13,42 @@ import {
 } from "@lindorm-io/node-server";
 import { VerifiedIdentityToken } from "../common";
 import {
-  AuthorizationRequest,
-  ClaimsRequest,
+  AuthenticationTokenSession,
+  AuthorizationSession,
+  ClaimsSession,
   Client,
   ClientSession,
-  ElevationRequest,
+  ElevationSession,
   LogoutSession,
   OpaqueToken,
   Tenant,
 } from "../entity";
 import {
+  AuthenticationTokenSessionCache,
   AuthorizationCodeCache,
-  AuthorizationRequestCache,
+  AuthorizationSessionCache,
   BrowserSessionRepository,
-  ClaimsRequestCache,
+  ClaimsSessionCache,
   ClientRepository,
   ClientSessionRepository,
-  ElevationRequestCache,
+  ElevationSessionCache,
   LogoutSessionCache,
   OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
 
 interface ServerAxios extends LindormNodeServerAxios {
+  authenticationClient: Axios;
   identityClient: Axios;
 }
 
 interface ServerEntity {
-  authorizationRequest: AuthorizationRequest;
-  claimsRequest: ClaimsRequest;
+  authenticationTokenSession: AuthenticationTokenSession;
+  authorizationSession: AuthorizationSession;
+  claimsSession: ClaimsSession;
   client: Client;
   clientSession: ClientSession;
-  elevationRequest: ElevationRequest;
+  elevationSession: ElevationSession;
   logoutSession: LogoutSession;
   opaqueToken: OpaqueToken;
   tenant: Tenant;
@@ -59,17 +62,17 @@ interface ServerMongo extends LindormNodeServerMongo {
 }
 
 interface ServerRedis extends LindormNodeServerRedis {
+  authenticationTokenSessionCache: AuthenticationTokenSessionCache;
   authorizationCodeCache: AuthorizationCodeCache;
-  authorizationRequestCache: AuthorizationRequestCache;
-  claimsRequestCache: ClaimsRequestCache;
-  elevationRequestCache: ElevationRequestCache;
+  authorizationSessionCache: AuthorizationSessionCache;
+  claimsSessionCache: ClaimsSessionCache;
+  elevationSessionCache: ElevationSessionCache;
   logoutSessionCache: LogoutSessionCache;
   opaqueTokenCache: OpaqueTokenCache;
 }
 
 interface ServerToken extends LindormNodeServerToken {
   idToken: VerifiedIdentityToken;
-  refreshToken: JwtDecodeData;
 }
 
 interface Context extends LindormNodeServerContext {

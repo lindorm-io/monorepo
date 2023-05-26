@@ -38,7 +38,7 @@ type RequestedAuthentication = {
   requiredMethods: Array<AuthenticationMethod>;
 };
 
-export type ElevationRequestAttributes = EntityAttributes & {
+export type ElevationSessionAttributes = EntityAttributes & {
   confirmedAuthentication: ConfirmedAuthentication;
   requestedAuthentication: RequestedAuthentication;
 
@@ -58,8 +58,8 @@ export type ElevationRequestAttributes = EntityAttributes & {
   uiLocales: Array<string>;
 };
 
-export type ElevationRequestOptions = Optional<
-  ElevationRequestAttributes,
+export type ElevationSessionOptions = Optional<
+  ElevationSessionAttributes,
   | EntityKeys
   | "authenticationHint"
   | "browserSessionId"
@@ -76,7 +76,7 @@ export type ElevationRequestOptions = Optional<
   | "uiLocales"
 >;
 
-const schema = Joi.object<ElevationRequestAttributes>()
+const schema = Joi.object<ElevationSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
@@ -114,7 +114,7 @@ const schema = Joi.object<ElevationRequestAttributes>()
   })
   .required();
 
-export class ElevationRequest extends LindormEntity<ElevationRequestAttributes> {
+export class ElevationSession extends LindormEntity<ElevationSessionAttributes> {
   public readonly confirmedAuthentication: ConfirmedAuthentication;
   public readonly requestedAuthentication: RequestedAuthentication;
 
@@ -134,7 +134,7 @@ export class ElevationRequest extends LindormEntity<ElevationRequestAttributes> 
 
   public status: SessionStatus;
 
-  public constructor(options: ElevationRequestOptions) {
+  public constructor(options: ElevationSessionOptions) {
     super(options);
 
     this.confirmedAuthentication = {
@@ -174,7 +174,7 @@ export class ElevationRequest extends LindormEntity<ElevationRequestAttributes> 
     await schema.validateAsync(this.toJSON());
   }
 
-  public toJSON(): ElevationRequestAttributes {
+  public toJSON(): ElevationSessionAttributes {
     return {
       ...this.defaultJSON(),
 

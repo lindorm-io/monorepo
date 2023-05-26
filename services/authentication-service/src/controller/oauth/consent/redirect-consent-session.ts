@@ -5,7 +5,7 @@ import Joi from "joi";
 import {
   confirmOauthConsent,
   getOauthAuthorizationRedirect,
-  getOauthAuthorizationRequest,
+  getOauthAuthorizationSession,
 } from "../../../handler";
 import { configuration } from "../../../server/configuration";
 import { ServerKoaController } from "../../../types";
@@ -31,7 +31,7 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
   const {
     consent: { status, audiences, optionalScopes, requiredScopes },
     client: { type },
-  } = await getOauthAuthorizationRequest(ctx, session);
+  } = await getOauthAuthorizationSession(ctx, session);
 
   if (status !== SessionStatus.PENDING) {
     logger.warn("Unexpected Session Status", { status });

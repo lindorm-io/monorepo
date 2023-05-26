@@ -6,7 +6,7 @@ import {
 import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
-import { ElevationRequest } from "../../entity";
+import { ElevationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { getAdjustedAccessLevel } from "../../util";
@@ -26,9 +26,9 @@ type Options = {
 export const initialiseElevation = async (
   ctx: ServerKoaContext,
   options: Options,
-): Promise<ElevationRequest> => {
+): Promise<ElevationSession> => {
   const {
-    redis: { elevationRequestCache },
+    redis: { elevationSessionCache },
     entity: { client, clientSession },
     mongo: { browserSessionRepository },
     token: { idToken },
@@ -52,14 +52,16 @@ export const initialiseElevation = async (
     });
   }
 
-  const browserSession = await browserSessionRepository.find({
-    id: clientSession.browserSessionId,
-  });
+  const browserSession = clientSession.browserSessionId
+    ? await browserSessionRepository.find({
+        id: clientSession.browserSessionId,
+      })
+    : undefined;
 
   const adjustedAccessLevel = getAdjustedAccessLevel(clientSession);
 
-  return await elevationRequestCache.create(
-    new ElevationRequest({
+  return await elevationSessionCache.create(
+    new ElevationSession({
       requestedAuthentication: {
         minimumLevel: (clientSession.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
         recommendedLevel: idToken?.levelOfAssurance || 0,
@@ -76,7 +78,7 @@ export const initialiseElevation = async (
         ),
       ),
 
-      browserSessionId: browserSession.id,
+      browserSessionId: browserSession?.id,
       clientId: client.id,
       clientSessionId: clientSession.id,
       country,

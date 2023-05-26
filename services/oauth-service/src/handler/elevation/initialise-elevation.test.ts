@@ -3,12 +3,12 @@ import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { ElevationRequest } from "../../entity";
+import { ElevationSession } from "../../entity";
 import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
-  createTestElevationRequest,
+  createTestElevationSession,
 } from "../../fixtures/entity";
 import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
 import { initialiseElevation } from "./initialise-elevation";
@@ -27,7 +27,7 @@ describe("initialiseElevation", () => {
   beforeEach(() => {
     ctx = {
       redis: {
-        elevationRequestCache: createMockRedisRepository(createTestElevationRequest),
+        elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       entity: {
         client: createTestClient({
@@ -77,10 +77,10 @@ describe("initialiseElevation", () => {
 
   test("should resolve client session for all values", async () => {
     await expect(initialiseElevation(ctx, options)).resolves.toStrictEqual(
-      expect.any(ElevationRequest),
+      expect.any(ElevationSession),
     );
 
-    expect(ctx.redis.elevationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         authenticationHint: ["+4520123456", "0701234567", "test@email.com", "username"],
         browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
@@ -117,10 +117,10 @@ describe("initialiseElevation", () => {
     ctx.token.idToken = undefined;
 
     await expect(initialiseElevation(ctx, options)).resolves.toStrictEqual(
-      expect.any(ElevationRequest),
+      expect.any(ElevationSession),
     );
 
-    expect(ctx.redis.elevationRequestCache.create).toHaveBeenCalledWith(
+    expect(ctx.redis.elevationSessionCache.create).toHaveBeenCalledWith(
       expect.objectContaining({
         authenticationHint: [],
         browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",

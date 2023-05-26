@@ -6,7 +6,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { StrategySession } from "../../entity";
-import { mockFetchOauthAuthorizationRequest } from "../../fixtures/axios";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { getTestData } from "../../fixtures/data";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import {
@@ -45,7 +45,7 @@ describe("/sessions/authentication", () => {
 
   nock("https://oauth.test.lindorm.io")
     .get((uri) => uri.startsWith("/admin/sessions/authorization/"))
-    .reply(200, mockFetchOauthAuthorizationRequest());
+    .reply(200, mockFetchOauthAuthorizationSession());
 
   nock("https://oidc.test.lindorm.io").post("/admin/sessions").times(999).reply(200, {
     redirect_to: "https://oidc-redirect.url",

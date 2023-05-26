@@ -1,25 +1,25 @@
 import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
-import { ElevationRequest } from "../../entity";
+import { ElevationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getBrowserSessionCookies } from "../cookies";
 
 export const updateBrowserSessionElevation = async (
   ctx: ServerKoaContext,
-  elevationRequest: ElevationRequest,
+  elevationSession: ElevationSession,
 ): Promise<void> => {
   const {
     mongo: { browserSessionRepository },
   } = ctx;
 
-  if (!elevationRequest.browserSessionId) {
+  if (!elevationSession.browserSessionId) {
     throw new ServerError("Invalid elevation session", {
-      debug: { browserSessionId: elevationRequest.browserSessionId },
+      debug: { browserSessionId: elevationSession.browserSessionId },
     });
   }
 
   const browserSession = await browserSessionRepository.find({
-    id: elevationRequest.browserSessionId,
+    id: elevationSession.browserSessionId,
   });
 
   const cookies = getBrowserSessionCookies(ctx);
@@ -28,31 +28,31 @@ export const updateBrowserSessionElevation = async (
     throw new ServerError("Invalid browser session", {
       debug: {
         expect: cookies,
-        actual: elevationRequest.browserSessionId,
+        actual: elevationSession.browserSessionId,
       },
     });
   }
 
-  if (elevationRequest.identityId !== browserSession.identityId) {
+  if (elevationSession.identityId !== browserSession.identityId) {
     throw new ServerError("Invalid identity");
   }
 
   if (
-    !elevationRequest.confirmedAuthentication.latestAuthentication ||
-    !elevationRequest.confirmedAuthentication.levelOfAssurance ||
-    !elevationRequest.confirmedAuthentication.methods
+    !elevationSession.confirmedAuthentication.latestAuthentication ||
+    !elevationSession.confirmedAuthentication.levelOfAssurance ||
+    !elevationSession.confirmedAuthentication.methods
   ) {
-    throw new ServerError("Invalid ElevationRequest", {
-      debug: { confirmedAuthentication: elevationRequest.confirmedAuthentication },
+    throw new ServerError("Invalid ElevationSession", {
+      debug: { confirmedAuthentication: elevationSession.confirmedAuthentication },
     });
   }
 
   browserSession.latestAuthentication =
-    elevationRequest.confirmedAuthentication.latestAuthentication;
-  browserSession.levelOfAssurance = elevationRequest.confirmedAuthentication.levelOfAssurance;
+    elevationSession.confirmedAuthentication.latestAuthentication;
+  browserSession.levelOfAssurance = elevationSession.confirmedAuthentication.levelOfAssurance;
   browserSession.methods = uniqArray(
     browserSession.methods,
-    elevationRequest.confirmedAuthentication.methods,
+    elevationSession.confirmedAuthentication.methods,
   );
 
   await browserSessionRepository.update(browserSession);

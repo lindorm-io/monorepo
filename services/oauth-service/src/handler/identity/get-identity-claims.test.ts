@@ -1,6 +1,6 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import { createTestClaimsRequest, createTestClientSession } from "../../fixtures/entity";
+import { createTestClaimsSession, createTestClientSession } from "../../fixtures/entity";
 import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
 import { getIdentityClaims } from "./get-identity-claims";
 
@@ -21,7 +21,7 @@ describe("getIdentityClaims", () => {
         },
       },
       redis: {
-        claimsRequestCache: createMockRedisRepository(createTestClaimsRequest),
+        claimsSessionCache: createMockRedisRepository(createTestClaimsSession),
       },
     };
 
@@ -67,8 +67,8 @@ describe("getIdentityClaims", () => {
       zoneInfo: "Europe/Stockholm",
     });
 
-    expect(ctx.redis.claimsRequestCache.create).toHaveBeenCalled();
+    expect(ctx.redis.claimsSessionCache.create).toHaveBeenCalled();
     expect(ctx.axios.identityClient.get).toHaveBeenCalled();
-    expect(ctx.redis.claimsRequestCache.destroy).toHaveBeenCalled();
+    expect(ctx.redis.claimsSessionCache.destroy).toHaveBeenCalled();
   });
 });

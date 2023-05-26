@@ -1,21 +1,21 @@
 import { OpenIdPromptMode } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { AuthorizationRequest } from "../../entity";
-import { createTestAuthorizationRequest } from "../../fixtures/entity";
+import { AuthorizationSession } from "../../entity";
+import { createTestAuthorizationSession } from "../../fixtures/entity";
 import { assertAuthorizePrompt } from "./assert-authorize-prompt";
 
 describe("assertAuthorizePrompt", () => {
-  let authorizationRequest: AuthorizationRequest;
+  let authorizationSession: AuthorizationSession;
 
   beforeEach(() => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       promptModes: [OpenIdPromptMode.LOGIN, OpenIdPromptMode.CONSENT],
     });
   });
 
   test("should succeed without verification", () => {
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: false,
         selectAccountRequired: false,
@@ -25,7 +25,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should succeed with login verification", () => {
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: true,
         selectAccountRequired: false,
@@ -35,7 +35,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should succeed with consent verification", () => {
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: true,
         loginRequired: false,
         selectAccountRequired: false,
@@ -45,7 +45,7 @@ describe("assertAuthorizePrompt", () => {
 
   test("should succeed with consent verification", () => {
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: false,
         selectAccountRequired: true,
@@ -54,12 +54,12 @@ describe("assertAuthorizePrompt", () => {
   });
 
   test("should throw when login is required", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: true,
         selectAccountRequired: false,
@@ -68,12 +68,12 @@ describe("assertAuthorizePrompt", () => {
   });
 
   test("should throw when consent is required", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: true,
         loginRequired: false,
         selectAccountRequired: false,
@@ -82,12 +82,12 @@ describe("assertAuthorizePrompt", () => {
   });
 
   test("should throw when select is required", () => {
-    authorizationRequest = createTestAuthorizationRequest({
+    authorizationSession = createTestAuthorizationSession({
       promptModes: [OpenIdPromptMode.NONE],
     });
 
     expect(() =>
-      assertAuthorizePrompt(authorizationRequest, {
+      assertAuthorizePrompt(authorizationSession, {
         consentRequired: false,
         loginRequired: false,
         selectAccountRequired: true,

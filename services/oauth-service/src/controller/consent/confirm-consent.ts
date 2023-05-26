@@ -26,21 +26,21 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    redis: { authorizationRequestCache },
+    redis: { authorizationSessionCache },
     data: { audiences, scopes },
-    entity: { authorizationRequest, client },
+    entity: { authorizationSession, client },
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationRequest.status.consent);
+  assertSessionPending(authorizationSession.status.consent);
 
-  const wrongAudiences = difference(authorizationRequest.requestedConsent.audiences, audiences);
+  const wrongAudiences = difference(authorizationSession.requestedConsent.audiences, audiences);
 
   if (wrongAudiences.length) {
     throw new ClientError("Invalid Audiences", {
       description: "Unexpected audiences added",
       data: {
-        expect: authorizationRequest.requestedConsent.audiences,
+        expect: authorizationSession.requestedConsent.audiences,
         actual: audiences,
         wrong: wrongAudiences,
       },
@@ -60,13 +60,13 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
     });
   }
 
-  const wrongScopes = difference(authorizationRequest.requestedConsent.scopes, scopes);
+  const wrongScopes = difference(authorizationSession.requestedConsent.scopes, scopes);
 
   if (wrongScopes.length) {
     throw new ClientError("Invalid Scopes", {
       description: "Unexpected scopes added",
       data: {
-        expect: authorizationRequest.requestedConsent.scopes,
+        expect: authorizationSession.requestedConsent.scopes,
         actual: scopes,
         wrong: wrongScopes,
       },
@@ -75,12 +75,12 @@ export const confirmConsentController: ServerKoaController<RequestData> = async 
 
   logger.debug("Updating authorization session");
 
-  authorizationRequest.confirmConsent({
+  authorizationSession.confirmConsent({
     audiences,
     scopes,
   });
 
-  await authorizationRequestCache.update(authorizationRequest);
+  await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationRequest) } };
+  return { body: { redirectTo: createAuthorizationVerifyUri(authorizationSession) } };
 };

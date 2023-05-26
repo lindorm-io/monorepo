@@ -2,7 +2,7 @@ import { createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { mockFetchOauthAuthorizationRequest } from "../../fixtures/axios";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { createTestAuthenticationConfirmationToken } from "../../fixtures/entity";
 import {
   TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE,
@@ -37,7 +37,7 @@ describe("/sessions/login", () => {
   nock("https://oauth.test.lindorm.io")
     .get((url) => url.startsWith("/admin/sessions/authorization/"))
     .times(999)
-    .reply(200, mockFetchOauthAuthorizationRequest());
+    .reply(200, mockFetchOauthAuthorizationSession());
 
   nock("https://oauth.test.lindorm.io")
     .post("/admin/sessions/login/9937434e-aacb-489c-adc9-faa945be8145/confirm")

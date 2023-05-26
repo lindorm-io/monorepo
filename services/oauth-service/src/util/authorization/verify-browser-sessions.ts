@@ -1,4 +1,4 @@
-import { AuthorizationRequest } from "../../entity";
+import { AuthorizationSession } from "../../entity";
 
-export const verifyBrowserSessions = (authorizationRequest: AuthorizationRequest): boolean =>
-  authorizationRequest.requestedSelectAccount.browserSessions.length <= 1;
+export const verifyBrowserSessions = (authorizationSession: AuthorizationSession): boolean =>
+  authorizationSession.requestedSelectAccount.browserSessions.length <= 1;

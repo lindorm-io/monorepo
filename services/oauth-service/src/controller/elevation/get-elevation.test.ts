@@ -1,7 +1,7 @@
 import MockDate from "mockdate";
 import {
   createTestClient,
-  createTestElevationRequest,
+  createTestElevationSession,
   createTestTenant,
 } from "../../fixtures/entity";
 import { getElevationController } from "./get-elevation";
@@ -17,7 +17,7 @@ describe("getElevationDataController", () => {
         client: createTestClient({
           id: "729ede7e-e3ac-4c26-a5e2-c6f0be03c3c9",
         }),
-        elevationRequest: createTestElevationRequest({
+        elevationSession: createTestElevationSession({
           id: "b3fde7ae-8d2a-4ac0-bf7c-95aabc96a267",
           identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
           nonce: "QxEQ4H21R-gslTwr",
@@ -43,7 +43,7 @@ describe("getElevationDataController", () => {
           requiredMethods: ["email"],
         },
 
-        elevationRequest: {
+        elevationSession: {
           id: "b3fde7ae-8d2a-4ac0-bf7c-95aabc96a267",
           authenticationHint: ["test@lindorm.io"],
           country: "se",
