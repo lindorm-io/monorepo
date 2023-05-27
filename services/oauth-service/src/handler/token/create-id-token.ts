@@ -1,6 +1,7 @@
 import { LindormClaims, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { expiryDate } from "@lindorm-io/expiry";
 import { JwtSignData } from "@lindorm-io/jwt";
-import { getUnixTime } from "date-fns";
+import { getUnixTime, isAfter } from "date-fns";
 import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 
@@ -15,6 +16,8 @@ export const createIdToken = (
   const { sub, updatedAt, ...rest } = claims;
   const atHash = accessToken ? jwt.createHash(accessToken) : undefined;
 
+  const expires = expiryDate(client.expiry.idToken);
+
   return jwt.sign({
     atHash,
     audiences: clientSession.audiences,
@@ -24,7 +27,7 @@ export const createIdToken = (
     authTime: getUnixTime(clientSession.latestAuthentication),
     claims: rest,
     client: client.id,
-    expiry: client.expiry.idToken,
+    expiry: isAfter(expires, clientSession.expires) ? clientSession.expires : expires,
     levelOfAssurance: clientSession.levelOfAssurance,
     nonce: clientSession.nonce,
     scopes: clientSession.scopes,

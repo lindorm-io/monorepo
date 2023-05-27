@@ -1,4 +1,4 @@
-import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
+import { AuthenticationMethod, LevelOfAssurance, OpenIdGrantType } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -14,8 +14,10 @@ import { Scope } from "../types";
 
 export type ClientSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
+  authorizationGrant: OpenIdGrantType;
   browserSessionId: string | null;
   clientId: string;
+  expires: Date;
   identityId: string;
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
@@ -44,6 +46,10 @@ const schema = Joi.object<ClientSessionAttributes>()
 
     audiences: Joi.array().items(Joi.string().guid()).required(),
     browserSessionId: Joi.string().guid().allow(null).required(),
+    expires: Joi.date().required(),
+    authorizationGrant: Joi.string()
+      .valid(...Object.values(OpenIdGrantType))
+      .required(),
     clientId: Joi.string().guid().required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
@@ -60,6 +66,7 @@ const schema = Joi.object<ClientSessionAttributes>()
   .required();
 
 export class ClientSession extends LindormEntity<ClientSessionAttributes> {
+  public readonly authorizationGrant: OpenIdGrantType;
   public readonly browserSessionId: string | null;
   public readonly clientId: string;
   public readonly identityId: string;
@@ -67,6 +74,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
   public readonly tenantId: string;
 
   public audiences: Array<string>;
+  public expires: Date;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
   public methods: Array<AuthenticationMethod>;
@@ -78,8 +86,10 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     super(options);
 
     this.audiences = options.audiences || [];
+    this.authorizationGrant = options.authorizationGrant;
     this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
+    this.expires = options.expires;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
@@ -100,8 +110,10 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
       ...this.defaultJSON(),
 
       audiences: this.audiences,
+      authorizationGrant: this.authorizationGrant,
       browserSessionId: this.browserSessionId,
       clientId: this.clientId,
+      expires: this.expires,
       identityId: this.identityId,
       latestAuthentication: this.latestAuthentication,
       levelOfAssurance: this.levelOfAssurance,

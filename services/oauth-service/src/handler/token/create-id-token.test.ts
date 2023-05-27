@@ -47,4 +47,24 @@ describe("createIdToken", () => {
       }),
     );
   });
+
+  test("should resolve with expires from client session", async () => {
+    await expect(
+      createIdToken(
+        ctx,
+        createTestClient(),
+        createTestClientSession({
+          expires: new Date("2021-01-01T08:00:10.000Z"),
+        }),
+        { email: "test@lindorm.io" },
+        "accessToken",
+      ),
+    ).toBe("signed");
+
+    expect(ctx.jwt.sign).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expiry: new Date("2021-01-01T08:00:10.000Z"),
+      }),
+    );
+  });
 });

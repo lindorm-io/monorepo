@@ -2,6 +2,7 @@ import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import {
   GetAuthenticationTokenQuery,
   GetAuthenticationTokenResponse,
+  OpenIdGrantType,
   OpenIdScope,
   TokenRequestBody,
   TokenResponse,
@@ -60,7 +61,7 @@ export const handleAuthenticationTokenGrant = async (
       clientId: client.id,
       expires: expiryDate(configuration.defaults.expiry.authentication_token_session),
       metadata: {},
-      scopes: scopes as Array<OpenIdScope>,
+      scopes,
       token: authenticationToken,
     }),
   );
@@ -84,7 +85,9 @@ export const handleAuthenticationTokenGrant = async (
   const clientSession = await clientSessionRepository.create(
     new ClientSession({
       audiences: authenticationTokenSession.audiences,
+      authorizationGrant: OpenIdGrantType.AUTHENTICATION_TOKEN,
       clientId: client.id,
+      expires: expiryDate("4 years"),
       identityId: data.identityId,
       latestAuthentication: new Date(data.latestAuthentication),
       levelOfAssurance: data.levelOfAssurance,

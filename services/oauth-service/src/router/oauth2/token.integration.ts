@@ -1,7 +1,10 @@
 import { OpenIdGrantType } from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
-import { randomString } from "@lindorm-io/random";
+import { Algorithm } from "@lindorm-io/key-pair";
+import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { getUnixTime } from "date-fns";
+import jwt from "jsonwebtoken";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
@@ -47,7 +50,7 @@ describe("/oauth2/token", () => {
       latestAuthentication: new Date().toISOString(),
       levelOfAssurance: 2,
       methods: ["email"],
-      nonce: randomString(16),
+      nonce: randomHex(16),
     });
 
   nock("https://authentication.test.lindorm.io")
@@ -59,7 +62,7 @@ describe("/oauth2/token", () => {
       latestAuthentication: new Date().toISOString(),
       levelOfAssurance: 2,
       methods: ["email"],
-      nonce: randomString(16),
+      nonce: randomHex(16),
     });
 
   nock("https://identity.test.lindorm.io")
@@ -165,6 +168,68 @@ describe("/oauth2/token", () => {
       refresh_token: expect.any(String),
       scope:
         "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
+      token_type: "Bearer",
+    });
+  });
+
+  test("should resolve for jwt bearer grant type", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        authenticationAssertion: {
+          algorithm: Algorithm.HS256,
+          issuer: "https://client.test.authentication.lindorm.io",
+          secret: "9as5n79KR1woVTdqaJ0ZjADAMLSh2SLM",
+        },
+        authorizationAssertion: {
+          algorithm: Algorithm.HS256,
+          issuer: "https://client.test.authorization.lindorm.io",
+          secret: "zVLezwFmrYWsyhuBkrnFSBiDtUfpSuHT",
+        },
+      }),
+    );
+
+    const clientAssertion = jwt.sign(
+      {
+        assertion_id: "044f4883-94d1-42f7-94d8-d0e0430adb5d",
+        aud: configuration.oauth.client_id,
+        exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
+        iat: getUnixTime(new Date()),
+        iss: "https://client.test.authentication.lindorm.io",
+        sub: client.id,
+      },
+      client.authenticationAssertion.secret!,
+    );
+
+    const assertion = jwt.sign(
+      {
+        assertion_id: "aa9170fd-1004-4616-87da-0f288ab458f6",
+        aud: configuration.oauth.client_id,
+        exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
+        iat: getUnixTime(new Date()),
+        iss: "https://client.test.authorization.lindorm.io",
+        sub: randomUUID(),
+      },
+      client.authorizationAssertion.secret!,
+    );
+
+    const response = await request(server.callback())
+      .post("/oauth2/token")
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
+      .send({
+        client_id: client.id,
+        client_assertion: clientAssertion,
+        client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        assertion,
+        grant_type: OpenIdGrantType.JWT_BEARER,
+        scope: "openid address email phone profile",
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      access_token: expect.any(String),
+      expires_in: 99,
+      id_token: expect.any(String),
+      scope: "openid address email phone profile",
       token_type: "Bearer",
     });
   });

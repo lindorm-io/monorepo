@@ -1,6 +1,7 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { OpenIdGrantType, OpenIdScope } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
+import { expiryDate } from "@lindorm-io/expiry";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ClientSessionType } from "../../enum";
 import { ServerKoaContext } from "../../types";
@@ -47,8 +48,10 @@ const createClientSession = async (
   return await clientSessionRepository.create(
     new ClientSession({
       audiences: authorizationSession.confirmedConsent.audiences,
+      authorizationGrant: OpenIdGrantType.AUTHORIZATION_CODE,
       browserSessionId: authorizationSession.browserSessionId,
       clientId: client.id,
+      expires: expiryDate("4 years"),
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
@@ -109,6 +112,8 @@ const updateClientSession = async (
     clientSession.audiences,
     authorizationSession.confirmedConsent.audiences,
   );
+
+  clientSession.expires = expiryDate("4 years");
 
   clientSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
 

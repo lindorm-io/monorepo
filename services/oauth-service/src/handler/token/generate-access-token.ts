@@ -1,5 +1,6 @@
 import { expiryDate } from "@lindorm-io/expiry";
 import { CreateOpaqueToken } from "@lindorm-io/jwt";
+import { isAfter } from "date-fns";
 import { Client, ClientSession, OpaqueToken } from "../../entity";
 import { OpaqueTokenType } from "../../enum";
 import { ServerKoaContext } from "../../types";
@@ -14,11 +15,13 @@ export const generateAccessToken = async (
     redis: { opaqueTokenCache },
   } = ctx;
 
+  const expires = expiryDate(client.expiry.accessToken);
+
   return await opaqueTokenCache.create(
     new OpaqueToken({
       id: opaqueToken.id,
       clientSessionId: clientSession.id,
-      expires: expiryDate(client.expiry.accessToken),
+      expires: isAfter(expires, clientSession.expires) ? clientSession.expires : expires,
       signature: opaqueToken.signature,
       type: OpaqueTokenType.ACCESS,
     }),

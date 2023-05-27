@@ -1,38 +1,36 @@
-import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import {
+  AuthenticationMethod,
   OpenIdGrantType,
   OpenIdScope,
   TokenRequestBody,
   TokenResponse,
-  VerifyPasswordRequestBody,
-  VerifyPasswordResponse,
 } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
-import { expiryDate } from "@lindorm-io/expiry";
+import { randomHex } from "@lindorm-io/random";
 import { difference } from "lodash";
 import { ClientSession } from "../../entity";
 import { ClientSessionType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateTokenResponse } from "../oauth";
-import { generateServerCredentialsJwt } from "../token";
 
-export const handlePasswordGrant = async (
+export const handleJwtBearerGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<TokenResponse> => {
   const {
-    axios: { authenticationClient },
-    data: { username, password, scope },
+    data: { assertion, scope },
     entity: { client },
+    jwt,
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (!username || !password) {
-    throw new ClientError("Missing username or password");
+  if (!assertion) {
+    throw new ClientError("Missing assertion");
   }
 
-  const scopes = scope ? scope.split(" ") : [];
+  const split = scope ? scope.split(" ") : [];
+  const scopes = split.filter((s: any) => ![OpenIdScope.OFFLINE_ACCESS].includes(s));
   const diff = difference(scopes, client.allowed.scopes);
 
   if (diff.length) {
@@ -48,17 +46,17 @@ export const handlePasswordGrant = async (
     });
   }
 
-  const middleware = [
-    axiosBearerAuthMiddleware(
-      generateServerCredentialsJwt(ctx, [configuration.services.authentication_service.client_id]),
-    ),
-  ];
-
-  const { data } = await authenticationClient.post<
-    VerifyPasswordResponse,
-    VerifyPasswordRequestBody
-  >(configuration.services.authentication_service.routes.password, {
-    middleware,
+  const verified = jwt.verify(assertion, {
+    algorithms: client.authorizationAssertion.algorithm
+      ? [client.authorizationAssertion.algorithm]
+      : ["HS256"],
+    audience: configuration.oauth.client_id,
+    clockTolerance: 10,
+    issuer: client.authorizationAssertion.issuer ? client.authorizationAssertion.issuer : client.id,
+    maxAge: 60,
+    secret: client.authorizationAssertion.secret
+      ? client.authorizationAssertion.secret
+      : client.secret,
   });
 
   const clientSession = await clientSessionRepository.create(
@@ -70,20 +68,18 @@ export const handlePasswordGrant = async (
         configuration.services.authentication_service.client_id,
         configuration.services.identity_service.client_id,
       ),
-      authorizationGrant: OpenIdGrantType.PASSWORD,
+      authorizationGrant: OpenIdGrantType.JWT_BEARER,
       clientId: client.id,
-      expires: expiryDate("4 years"),
-      identityId: data.identityId,
-      latestAuthentication: new Date(data.latestAuthentication),
-      levelOfAssurance: data.levelOfAssurance,
+      expires: new Date(verified.expires * 1000),
+      identityId: verified.subject,
+      latestAuthentication: new Date(),
+      levelOfAssurance: 1,
       metadata: {},
-      methods: data.methods,
-      nonce: data.nonce,
+      methods: verified.authMethodsReference as Array<AuthenticationMethod>,
+      nonce: randomHex(16),
       scopes,
       tenantId: client.tenantId,
-      type: scopes.includes(OpenIdScope.OFFLINE_ACCESS)
-        ? ClientSessionType.REFRESH
-        : ClientSessionType.EPHEMERAL,
+      type: ClientSessionType.EPHEMERAL,
     }),
   );
 

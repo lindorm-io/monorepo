@@ -48,4 +48,16 @@ describe("generateRefreshToken", () => {
 
     expect(ctx.redis.opaqueTokenCache.create).toHaveBeenCalledWith(expect.any(OpaqueToken));
   });
+
+  test("should resolve with expires from client session", async () => {
+    clientSession.expires = new Date("2021-01-01T08:00:10.000Z");
+
+    await expect(
+      generateRefreshToken(ctx, client, clientSession, opaqueToken),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        expires: new Date("2021-01-01T08:00:10.000Z"),
+      }),
+    );
+  });
 });
