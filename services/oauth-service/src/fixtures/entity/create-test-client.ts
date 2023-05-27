@@ -10,6 +10,7 @@ import {
   OpenIdResponseType,
   OpenIdScope,
 } from "@lindorm-io/common-types";
+import { Algorithm } from "@lindorm-io/key-pair";
 import { randomUUID } from "crypto";
 import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
 import { Client, ClientAttributes } from "../../entity";
@@ -27,6 +28,16 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     audiences: {
       credentials: [randomUUID()],
       identity: [randomUUID()],
+    },
+    authenticationAssertion: {
+      algorithm: Algorithm.HS256,
+      issuer: "https://test.client.authentication.issuer",
+      secret: "oM3kmVjlvzQUs87K2f9zeNKdZ1SfaKux",
+    },
+    authorizationAssertion: {
+      algorithm: Algorithm.HS256,
+      issuer: "https://test.client.authorization.issuer",
+      secret: "d96i6t8eUVtKaeOlM34hJQsP2OL0KfOM",
     },
     defaults: {
       displayMode: OpenIdDisplayMode.POPUP,

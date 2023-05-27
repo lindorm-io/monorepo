@@ -3,7 +3,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { Client } from "../../entity";
 import { createTestClient } from "../../fixtures/entity";
-import { assertClientMiddleware } from "./assert-client-middleware";
+import { authenticateClientMiddleware } from "./authenticate-client-middleware";
 
 const cryptoAssert = jest.fn();
 jest.mock("@lindorm-io/crypto", () => ({
@@ -23,7 +23,7 @@ jest.mock("@lindorm-io/koa-basic-auth", () => ({
 
 const next = async () => await Promise.resolve();
 
-describe("assertClientSecretMiddleware", () => {
+describe("authenticateClientMiddleware", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -46,13 +46,13 @@ describe("assertClientSecretMiddleware", () => {
   afterEach(jest.clearAllMocks);
 
   test("should set client on success", async () => {
-    await expect(assertClientMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(authenticateClientMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.entity.client).toStrictEqual(expect.any(Client));
   });
 
   test("should resolve with assertion on data", async () => {
-    await expect(assertClientMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(authenticateClientMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(cryptoAssert).toHaveBeenCalled();
   });
@@ -60,7 +60,7 @@ describe("assertClientSecretMiddleware", () => {
   test("should fallback to header assertion", async () => {
     ctx.data = {};
 
-    await expect(assertClientMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(authenticateClientMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.getAuthorizationHeader).toHaveBeenCalled();
     expect(cryptoAssert).toHaveBeenCalled();
@@ -74,7 +74,7 @@ describe("assertClientSecretMiddleware", () => {
     );
     ctx.data.clientSecret = undefined;
 
-    await expect(assertClientMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(authenticateClientMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(cryptoAssert).not.toHaveBeenCalled();
   });
@@ -82,12 +82,12 @@ describe("assertClientSecretMiddleware", () => {
   test("should throw on invalid assertion", async () => {
     cryptoAssert.mockRejectedValueOnce(new Error("message"));
 
-    await expect(assertClientMiddleware(ctx, next)).rejects.toThrow(ClientError);
+    await expect(authenticateClientMiddleware(ctx, next)).rejects.toThrow(ClientError);
   });
 
   test("should throw on invalid client", async () => {
     ctx.mongo.clientRepository.find.mockResolvedValue(createTestClient({ active: false }));
 
-    await expect(assertClientMiddleware(ctx, next)).rejects.toThrow(ClientError);
+    await expect(authenticateClientMiddleware(ctx, next)).rejects.toThrow(ClientError);
   });
 });

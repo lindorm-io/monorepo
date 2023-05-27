@@ -65,6 +65,8 @@ const main = async (): Promise<void> => {
         scopes: [],
         strategies: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
@@ -102,6 +104,8 @@ const main = async (): Promise<void> => {
         scopes: [],
         strategies: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
@@ -139,6 +143,8 @@ const main = async (): Promise<void> => {
         scopes: [],
         strategies: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
@@ -176,6 +182,8 @@ const main = async (): Promise<void> => {
         scopes: [],
         strategies: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
@@ -213,6 +221,8 @@ const main = async (): Promise<void> => {
         scopes: [],
         strategies: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
@@ -254,6 +264,8 @@ const main = async (): Promise<void> => {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -291,6 +303,8 @@ const main = async (): Promise<void> => {
         credentials: [],
         identity: Object.values(ids),
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,

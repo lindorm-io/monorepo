@@ -2,18 +2,17 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   LevelOfAssurance,
-  LindormScope,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
   OpenIdResponseMode,
   OpenIdResponseType,
-  OpenIdScope,
   Optional,
   ScopeDescription,
 } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
+import { Algorithm } from "@lindorm-io/key-pair";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../common";
 import {
@@ -23,13 +22,26 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../constant";
+import { Scope } from "../types";
 
 export type ClientAllowed = {
   grantTypes: Array<OpenIdGrantType>;
   methods: Array<AuthenticationMethod>;
   responseTypes: Array<OpenIdResponseType>;
-  scopes: Array<OpenIdScope | LindormScope>;
+  scopes: Array<Scope>;
   strategies: Array<AuthenticationStrategy>;
+};
+
+export type ClientAuthenticationAssertion = {
+  algorithm: Algorithm | null;
+  issuer: string | null;
+  secret: string | null;
+};
+
+export type ClientAuthorizationAssertion = {
+  algorithm: Algorithm | null;
+  issuer: string | null;
+  secret: string | null;
 };
 
 export type ClientAudiences = {
@@ -53,6 +65,8 @@ export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
   audiences: ClientAudiences;
+  authenticationAssertion: ClientAuthenticationAssertion;
+  authorizationAssertion: ClientAuthorizationAssertion;
   backChannelLogoutUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
@@ -65,7 +79,7 @@ export type ClientAttributes = EntityAttributes & {
   postLogoutUris: Array<string>;
   profile: OpenIdClientProfile;
   redirectUris: Array<string>;
-  requiredScopes: Array<OpenIdScope | LindormScope>;
+  requiredScopes: Array<Scope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
@@ -109,6 +123,26 @@ const schema = Joi.object<ClientAttributes>()
       .keys({
         credentials: Joi.array().items(Joi.string().guid()).required(),
         identity: Joi.array().items(Joi.string().guid()).required(),
+      })
+      .required(),
+    authenticationAssertion: Joi.object()
+      .keys({
+        algorithm: Joi.string()
+          .valid(...Object.values(Algorithm))
+          .allow(null)
+          .required(),
+        issuer: Joi.string().allow(null).required(),
+        secret: Joi.string().allow(null).required(),
+      })
+      .required(),
+    authorizationAssertion: Joi.object()
+      .keys({
+        algorithm: Joi.string()
+          .valid(...Object.values(Algorithm))
+          .allow(null)
+          .required(),
+        issuer: Joi.string().allow(null).required(),
+        secret: Joi.string().allow(null).required(),
       })
       .required(),
     defaults: Joi.object()
@@ -156,6 +190,8 @@ export class Client extends LindormEntity<ClientAttributes> {
   public active: boolean;
   public allowed: ClientAllowed;
   public audiences: ClientAudiences;
+  public authenticationAssertion: ClientAuthenticationAssertion;
+  public authorizationAssertion: ClientAuthorizationAssertion;
   public backChannelLogoutUri: string | null;
   public defaults: ClientDefaults;
   public description: string | null;
@@ -168,7 +204,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public postLogoutUris: Array<string>;
   public profile: OpenIdClientProfile;
   public redirectUris: Array<string>;
-  public requiredScopes: Array<OpenIdScope | LindormScope>;
+  public requiredScopes: Array<Scope>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string;
@@ -183,6 +219,8 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.active = options.active === true;
     this.allowed = options.allowed;
     this.audiences = options.audiences;
+    this.authenticationAssertion = options.authenticationAssertion;
+    this.authorizationAssertion = options.authorizationAssertion;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
     this.defaults = options.defaults;
     this.description = options.description || null;
@@ -216,6 +254,8 @@ export class Client extends LindormEntity<ClientAttributes> {
       active: this.active,
       allowed: this.allowed,
       audiences: this.audiences,
+      authenticationAssertion: this.authenticationAssertion,
+      authorizationAssertion: this.authorizationAssertion,
       backChannelLogoutUri: this.backChannelLogoutUri,
       defaults: this.defaults,
       description: this.description,

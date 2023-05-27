@@ -81,6 +81,18 @@ export const createClientController: ServerKoaController<RequestData> = async (
         identity: [],
       },
 
+      authenticationAssertion: {
+        algorithm: null,
+        issuer: null,
+        secret: null,
+      },
+
+      authorizationAssertion: {
+        algorithm: null,
+        issuer: null,
+        secret: null,
+      },
+
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,

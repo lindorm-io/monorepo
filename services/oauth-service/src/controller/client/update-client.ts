@@ -1,10 +1,4 @@
-import {
-  LindormScope,
-  OpenIdClientProfile,
-  OpenIdClientType,
-  OpenIdScope,
-  ScopeDescription,
-} from "@lindorm-io/common-types";
+import { OpenIdClientProfile, OpenIdClientType, ScopeDescription } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
@@ -16,7 +10,7 @@ import {
   JOI_RESPONSE_TYPE,
 } from "../../constant";
 import { ClientAllowed, ClientAudiences, ClientDefaults, ClientExpiry } from "../../entity";
-import { ServerKoaController } from "../../types";
+import { Scope, ServerKoaController } from "../../types";
 
 type RequestData = {
   id: string;
@@ -34,7 +28,7 @@ type RequestData = {
   postLogoutUris: Array<string>;
   profile: OpenIdClientProfile;
   redirectUris: Array<string>;
-  requiredScopes: Array<OpenIdScope | LindormScope>;
+  requiredScopes: Array<Scope>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   trusted: boolean;

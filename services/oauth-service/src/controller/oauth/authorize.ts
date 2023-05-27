@@ -1,9 +1,7 @@
 import {
   AuthorizeRequestQuery,
-  LindormScope,
   OpenIdPromptMode,
   OpenIdResponseType,
-  OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
@@ -106,7 +104,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OpenIdPromptMode>) : [];
   const responseTypes = responseType.toLowerCase().split(" ") as Array<OpenIdResponseType>;
-  const scopes = scope.toLowerCase().split(" ") as Array<OpenIdScope | LindormScope>;
+  const scopes = scope.toLowerCase().split(" ");
 
   assertRedirectUri(client, redirectUri);
 
