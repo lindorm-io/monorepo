@@ -9,7 +9,7 @@ import { Logger } from "@lindorm-io/core-logger";
 import { expiryObject } from "@lindorm-io/expiry";
 import { KeyPair, KeyType, Keystore } from "@lindorm-io/key-pair";
 import { createHash, randomUUID } from "crypto";
-import { Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
+import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
 import {
   JwtDecodeData,
@@ -113,7 +113,6 @@ export class JWT {
     this.logger.debug("verify token", { token, options });
 
     const claims = JWT.decodeFormatted<Claims>(token);
-    const { algorithms, publicKey } = this.keystore.getKey(claims.keyId);
     const {
       adjustedAccessLevel,
       atHash,
@@ -134,9 +133,21 @@ export class JWT {
       types,
     } = options;
 
+    let algorithms: Array<Algorithm>;
+    let publicKey: Secret;
+
+    if (secret) {
+      algorithms = options.algorithms || ["HS256"];
+      publicKey = secret;
+    } else if (claims.keyId) {
+      ({ algorithms, publicKey } = this.keystore.getKey(claims.keyId));
+    } else {
+      throw new TokenError("Missing keyId or secret");
+    }
+
     try {
-      verify(token, secret || publicKey, {
-        algorithms: options.algorithms || algorithms,
+      verify(token, publicKey, {
+        algorithms,
         audience,
         clockTimestamp: getUnixTime(),
         clockTolerance: clockTolerance || this.clockTolerance,
