@@ -126,6 +126,7 @@ export class JWT {
       maxAge,
       nonce,
       scopes,
+      secret,
       session,
       subject,
       subjectHints,
@@ -134,8 +135,8 @@ export class JWT {
     } = options;
 
     try {
-      verify(token, publicKey, {
-        algorithms,
+      verify(token, secret || publicKey, {
+        algorithms: options.algorithms || algorithms,
         audience,
         clockTimestamp: getUnixTime(),
         clockTolerance: clockTolerance || this.clockTolerance,
