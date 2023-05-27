@@ -248,7 +248,6 @@ export class JWT {
       azp,
       cid,
       exp,
-      ext,
       iat,
       iss,
       jti,
