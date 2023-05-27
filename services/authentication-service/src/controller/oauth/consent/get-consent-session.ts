@@ -1,6 +1,4 @@
 import {
-  LindormScope,
-  OpenIdScope,
   PublicClientInfo,
   PublicTenantInfo,
   ScopeDescription,
@@ -9,7 +7,7 @@ import {
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { getOauthAuthorizationSession } from "../../../handler";
-import { ServerKoaController } from "../../../types";
+import { Scope, ServerKoaController } from "../../../types";
 
 type RequestData = {
   id: string;
@@ -17,8 +15,8 @@ type RequestData = {
 
 type ResponseBody = {
   audiences: Array<string>;
-  optionalScopes: Array<OpenIdScope | LindormScope>;
-  requiredScopes: Array<OpenIdScope | LindormScope>;
+  optionalScopes: Array<Scope>;
+  requiredScopes: Array<Scope>;
   scopeDescriptions: Array<ScopeDescription>;
   status: SessionStatus;
 
