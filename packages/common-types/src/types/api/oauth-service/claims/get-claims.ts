@@ -17,7 +17,7 @@ export type GetClaimsSessionResponse = {
     levelOfAssurance: LevelOfAssurance;
     metadata: Record<string, any>;
     methods: Array<AuthenticationMethod>;
-    scopes: Array<OpenIdScope | LindormScope>;
+    scopes: Array<OpenIdScope | LindormScope | string>;
   };
 
   client: PublicClientInfo;

@@ -26,8 +26,8 @@ export type GetAuthorizationResponse = {
     status: SessionStatus;
 
     audiences: Array<string>;
-    optionalScopes: Array<OpenIdScope | LindormScope>;
-    requiredScopes: Array<OpenIdScope | LindormScope>;
+    optionalScopes: Array<OpenIdScope | LindormScope | string>;
+    requiredScopes: Array<OpenIdScope | LindormScope | string>;
     scopeDescriptions: Array<ScopeDescription>;
   };
 
@@ -86,7 +86,7 @@ export type GetAuthorizationResponse = {
     latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
-    scopes: Array<OpenIdScope | LindormScope>;
+    scopes: Array<OpenIdScope | LindormScope | string>;
   };
 
   client: PublicClientInfo;

@@ -11,7 +11,7 @@ export type GetAuthenticationTokenSessionResponse = {
     audiences: Array<string>;
     expires: string;
     metadata: Record<string, any>;
-    scopes: Array<OpenIdScope | LindormScope>;
+    scopes: Array<OpenIdScope | LindormScope | string>;
     token: string;
   };
 
