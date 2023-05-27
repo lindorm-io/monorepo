@@ -1,6 +1,6 @@
 import { configuration } from "../../server/configuration";
 import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/random";
+import { randomHex } from "@lindorm-io/random";
 import { ChallengeConfirmationTokenClaims, RdcSessionTokenClaims } from "../../common";
 import { randomUUID } from "crypto";
 import {
@@ -24,7 +24,7 @@ export const getTestChallengeConfirmationToken = (
       strategy: ChallengeStrategy.PINCODE,
     },
     expiry: configuration.defaults.challenge_confirmation_token_expiry,
-    nonce: randomString(16),
+    nonce: randomHex(16),
     scopes: ["test"],
     session: randomUUID(),
     sessionHint: "challenge",

@@ -1,6 +1,3 @@
-import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
-import { randomString } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
 import {
   AuthenticationMethod,
   AuthenticationMode,
@@ -8,6 +5,9 @@ import {
   PKCEMethod,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { randomHex, randomUnreserved } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
 
 export const createTestAuthenticationSession = (
   options: Partial<AuthenticationSessionOptions> = {},
@@ -22,7 +22,7 @@ export const createTestAuthenticationSession = (
       AuthenticationStrategy.PHONE_OTP,
     ],
     clientId: randomUUID(),
-    codeChallenge: randomString(32),
+    codeChallenge: randomUnreserved(32),
     codeChallengeMethod: PKCEMethod.SHA256,
     country: "se",
     emailHint: "test@lindorm.io",
@@ -30,7 +30,7 @@ export const createTestAuthenticationSession = (
     identityId: randomUUID(),
     minimumLevel: 1,
     mode: AuthenticationMode.OAUTH,
-    nonce: randomString(16),
+    nonce: randomHex(16),
     phoneHint: "0701234567",
     recommendedLevel: 3,
     recommendedMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],

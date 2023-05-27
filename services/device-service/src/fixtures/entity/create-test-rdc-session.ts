@@ -1,5 +1,5 @@
 import { RdcSession, RdcSessionOptions } from "../../entity";
-import { randomString } from "@lindorm-io/random";
+import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   RdcSessionMethod,
@@ -20,7 +20,7 @@ export const createTestRdcSession = (options: Partial<RdcSessionOptions> = {}): 
     factors: 1,
     identityId: randomUUID(),
     mode: RdcSessionMode.PUSH_NOTIFICATION,
-    nonce: randomString(16),
+    nonce: randomHex(16),
     rejectMethod: RdcSessionMethod.DELETE,
     rejectPayload: { reject: true },
     rejectUri: "https://callback.lindorm.io/reject",

@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { RdcSessionMode } from "@lindorm-io/common-types";
 import { createTestDeviceLink } from "../../fixtures/entity";
-import { randomString } from "@lindorm-io/random";
+import { randomHex } from "@lindorm-io/random";
 import { server } from "../../server/server";
 import {
   getTestClientCredentials,
@@ -65,7 +65,7 @@ describe("/admin/rdc", () => {
         confirm_uri: "https://callback.uri/confirm",
         identity_id: deviceLink.identityId,
         mode: RdcSessionMode.PUSH_NOTIFICATION,
-        nonce: randomString(16),
+        nonce: randomHex(16),
         reject_payload: { reject: true },
         reject_uri: "https://callback.uri/reject",
         scopes: ["scope"],

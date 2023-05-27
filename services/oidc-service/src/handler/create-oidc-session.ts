@@ -1,13 +1,13 @@
-import { ClientError } from "@lindorm-io/errors";
-import { OidcSession } from "../entity";
 import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../types";
-import { configuration } from "../server/configuration";
+import { removeEmptyFromObject } from "@lindorm-io/core";
+import { ClientError } from "@lindorm-io/errors";
 import { createPKCE } from "@lindorm-io/node-pkce";
+import { randomHex } from "@lindorm-io/random";
 import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";
-import { randomString } from "@lindorm-io/random";
-import { removeEmptyFromObject } from "@lindorm-io/core";
+import { OidcSession } from "../entity";
+import { configuration } from "../server/configuration";
+import { ServerKoaContext } from "../types";
 
 type Options = {
   callbackId: string;
@@ -52,9 +52,9 @@ export const createOidcSession = async (ctx: ServerKoaContext, options: Options)
       codeVerifier,
       expires,
       identityId,
-      nonce: randomString(16),
+      nonce: randomHex(16),
       provider,
-      state: randomString(48),
+      state: randomHex(48),
     }),
   );
 

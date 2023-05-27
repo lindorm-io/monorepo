@@ -9,7 +9,7 @@ import {
   PKCEMethod,
 } from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
-import { randomUnreserved } from "@lindorm-io/random";
+import { randomHex, randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { AuthorizationSession, AuthorizationSessionOptions } from "../../entity";
 
@@ -59,7 +59,7 @@ export const createTestAuthorizationSession = (
     idTokenHint: "id.jwt.jwt",
     loginHint: ["test@lindorm.io"],
     maxAge: 999,
-    nonce: randomUnreserved(16),
+    nonce: randomHex(16),
     originalUri: "https://localhost/oauth2/authorize?query=query",
     promptModes: [
       OpenIdPromptMode.LOGIN,
@@ -72,7 +72,7 @@ export const createTestAuthorizationSession = (
     redirectUri: "https://test.client.lindorm.io/redirect",
     responseMode: OpenIdResponseMode.QUERY,
     responseTypes: [OpenIdResponseType.CODE, OpenIdResponseType.ID_TOKEN, OpenIdResponseType.TOKEN],
-    state: randomUnreserved(16),
+    state: randomHex(16),
     uiLocales: ["sv-SE", "en-GB"],
 
     ...options,

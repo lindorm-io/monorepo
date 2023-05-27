@@ -1,5 +1,5 @@
 import { AuthenticationMethod } from "@lindorm-io/common-types";
-import { randomUnreserved } from "@lindorm-io/random";
+import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { ElevationSession, ElevationSessionAttributes } from "../../entity";
 
@@ -23,9 +23,9 @@ export const createTestElevationSession = (
     expires: new Date("2021-01-02T08:00:00.000Z"),
     idTokenHint: "id.jwt.jwt",
     identityId: randomUUID(),
-    nonce: randomUnreserved(16),
+    nonce: randomHex(16),
     redirectUri: "https://test.client.lindorm.io/redirect",
-    state: randomUnreserved(16),
+    state: randomHex(16),
     uiLocales: ["sv-SE", "en-GB"],
 
     ...options,

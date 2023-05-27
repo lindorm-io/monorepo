@@ -3,7 +3,7 @@ import nock from "nock";
 import request from "supertest";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
-import { randomNumber, randomString } from "@lindorm-io/random";
+import { randomNumber, randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { server } from "../server/server";
 import { ChallengeStrategy } from "@lindorm-io/common-types";
@@ -78,7 +78,7 @@ describe("/challenges", () => {
         audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
         device_link_id: deviceLink.id,
         identity_id: deviceLink.identityId,
-        nonce: randomString(16),
+        nonce: randomHex(16),
         payload: { integration: true },
         scopes: ["integration", "test"],
       })
@@ -137,7 +137,7 @@ describe("/challenges", () => {
   });
 
   test("should confirm challenge session [ BIOMETRY ]", async () => {
-    const biometry = randomString(128);
+    const biometry = randomHex(128);
 
     const deviceLink = await TEST_DEVICE_REPOSITORY.create(
       createTestDeviceLink({
