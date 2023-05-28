@@ -1,23 +1,20 @@
-import { CreateNodeServerOptions, LindormNodeServerKoaContext } from "../types";
-import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
-import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
-import { createAdapter } from "@socket.io/redis-adapter";
-import { createWellKnownJwksRouter } from "../router";
-import { getServiceOptions } from "./get-service-options";
-import { jwtMiddleware, socketJwtMiddleware } from "@lindorm-io/koa-jwt";
-import { memoryCacheMiddleware, socketMemoryCacheMiddleware } from "@lindorm-io/koa-memory";
-import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/koa-amqp";
-import { mongoRepositoryMiddleware, socketMongoRepositoryMiddleware } from "@lindorm-io/koa-mongo";
-import { redisRepositoryMiddleware, socketRedisRepositoryMiddleware } from "@lindorm-io/koa-redis";
 import {
+  axiosTransformBodyCaseMiddleware,
+  axiosTransformQueryCaseMiddleware,
+} from "@lindorm-io/axios";
+import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
+import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/koa-amqp";
+import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
+import { jwtMiddleware, socketJwtMiddleware } from "@lindorm-io/koa-jwt";
+import {
+  KeyPairMemoryCache,
+  KeyPairMongoRepository,
+  KeyPairRedisRepository,
   keyPairCleanupWorker,
   keyPairJwksMemoryWorker,
   keyPairJwksRedisWorker,
-  KeyPairMemoryCache,
   keyPairMongoMemoryWorker,
   keyPairMongoRedisWorker,
-  KeyPairMongoRepository,
-  KeyPairRedisRepository,
   keyPairRotationWorker,
   keystoreMiddleware,
   memoryKeysMiddleware,
@@ -26,10 +23,23 @@ import {
   socketMemoryKeysMiddleware,
   socketRedisKeysMiddleware,
 } from "@lindorm-io/koa-keystore";
+import { memoryCacheMiddleware, socketMemoryCacheMiddleware } from "@lindorm-io/koa-memory";
 import {
-  axiosTransformBodyCaseMiddleware,
-  axiosTransformQueryCaseMiddleware,
-} from "@lindorm-io/axios";
+  mongoConnectionMiddleware,
+  mongoRepositoryMiddleware,
+  socketMongoConnectionMiddleware,
+  socketMongoRepositoryMiddleware,
+} from "@lindorm-io/koa-mongo";
+import {
+  redisConnectionMiddleware,
+  redisRepositoryMiddleware,
+  socketRedisConnectionMiddleware,
+  socketRedisRepositoryMiddleware,
+} from "@lindorm-io/koa-redis";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { createWellKnownJwksRouter } from "../router";
+import { CreateNodeServerOptions, LindormNodeServerKoaContext } from "../types";
+import { getServiceOptions } from "./get-service-options";
 
 export const createNodeServer = <
   Context extends LindormNodeServerKoaContext = LindormNodeServerKoaContext,
@@ -116,6 +126,9 @@ export const createNodeServer = <
   }
 
   if (mongoConnection) {
+    middleware.push(mongoConnectionMiddleware(mongoConnection));
+    socketMiddleware.push(socketMongoConnectionMiddleware(mongoConnection));
+
     for (const MongoRepository of mongo || []) {
       logger.debug("Adding mongo repository middleware to server", {
         repository: MongoRepository.name,
@@ -136,6 +149,9 @@ export const createNodeServer = <
   }
 
   if (redisConnection) {
+    middleware.push(redisConnectionMiddleware(redisConnection));
+    socketMiddleware.push(socketRedisConnectionMiddleware(redisConnection));
+
     for (const RedisRepository of redis || []) {
       logger.debug("Adding redis repository middleware to server", {
         repository: RedisRepository.name,
