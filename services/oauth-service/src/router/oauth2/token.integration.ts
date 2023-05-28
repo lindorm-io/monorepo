@@ -190,11 +190,11 @@ describe("/oauth2/token", () => {
 
     const clientAssertion = jwt.sign(
       {
-        assertion_id: "044f4883-94d1-42f7-94d8-d0e0430adb5d",
         aud: configuration.oauth.client_id,
         exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
         iat: getUnixTime(new Date()),
         iss: "https://client.test.authentication.lindorm.io",
+        jti: "044f4883-94d1-42f7-94d8-d0e0430adb5d",
         sub: client.id,
       },
       client.authenticationAssertion.secret!,
@@ -202,11 +202,11 @@ describe("/oauth2/token", () => {
 
     const assertion = jwt.sign(
       {
-        assertion_id: "aa9170fd-1004-4616-87da-0f288ab458f6",
         aud: configuration.oauth.client_id,
         exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
         iat: getUnixTime(new Date()),
         iss: "https://client.test.authorization.lindorm.io",
+        jti: "aa9170fd-1004-4616-87da-0f288ab458f6",
         sub: randomUUID(),
       },
       client.authorizationAssertion.secret!,

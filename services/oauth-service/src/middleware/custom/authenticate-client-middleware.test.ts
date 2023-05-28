@@ -1,8 +1,10 @@
 import { OpenIdClientType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { getCredentials as _getCredentials } from "@lindorm-io/koa-basic-auth";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { Client } from "../../entity";
 import { createTestClient } from "../../fixtures/entity";
+import { verifyAssertionId as _verifyAssertionId } from "../../handler";
 import { authenticateClientMiddleware } from "./authenticate-client-middleware";
 
 const cryptoAssert = jest.fn();
@@ -17,11 +19,13 @@ jest.mock("@lindorm-io/crypto", () => ({
   },
 }));
 
-jest.mock("@lindorm-io/koa-basic-auth", () => ({
-  getCredentials: () => ({ username: "username", password: "password" }),
-}));
+jest.mock("@lindorm-io/koa-basic-auth");
+jest.mock("../../handler");
 
 const next = async () => await Promise.resolve();
+
+const getCredentials = _getCredentials as jest.Mock;
+const verifyAssertionId = _verifyAssertionId as jest.Mock;
 
 describe("authenticateClientMiddleware", () => {
   let ctx: any;
@@ -39,8 +43,11 @@ describe("authenticateClientMiddleware", () => {
 
       getAuthorizationHeader: jest
         .fn()
-        .mockImplementation(() => ({ type: "Basic", value: "username:password" })),
+        .mockReturnValue({ type: "Basic", value: "username:password" }),
     };
+
+    getCredentials.mockReturnValue({ username: "username", password: "password" });
+    verifyAssertionId.mockResolvedValue(undefined);
   });
 
   afterEach(jest.clearAllMocks);

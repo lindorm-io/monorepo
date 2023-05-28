@@ -4,14 +4,17 @@ import { getUnixTime } from "date-fns";
 import MockDate from "mockdate";
 import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 import { generateTokenResponse as _generateTokenResponse } from "../oauth";
+import { verifyAssertionId as _verifyAssertionId } from "../redis";
 import { handleJwtBearerGrant } from "./handle-jwt-bearer-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../oauth");
 jest.mock("../token");
+jest.mock("../redis");
 
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
+const verifyAssertionId = _verifyAssertionId as jest.Mock;
 
 describe("handleJwtBearerGrant", () => {
   let ctx: any;
@@ -38,6 +41,7 @@ describe("handleJwtBearerGrant", () => {
     };
 
     generateTokenResponse.mockResolvedValue("generateTokenResponse");
+    verifyAssertionId.mockResolvedValue(undefined);
   });
 
   test("should resolve", async () => {

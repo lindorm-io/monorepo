@@ -5,5 +5,6 @@ export * from "./grant-types";
 export * from "./identity";
 export * from "./logout";
 export * from "./oauth";
+export * from "./redis";
 export * from "./sessions";
 export * from "./token";

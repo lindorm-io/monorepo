@@ -14,6 +14,7 @@ import { ClientSessionType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateTokenResponse } from "../oauth";
+import { verifyAssertionId } from "../redis";
 
 export const handleJwtBearerGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
@@ -58,6 +59,8 @@ export const handleJwtBearerGrant = async (
       ? client.authorizationAssertion.secret
       : client.secret,
   });
+
+  await verifyAssertionId(ctx, verified.id);
 
   const clientSession = await clientSessionRepository.create(
     new ClientSession({

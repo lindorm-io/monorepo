@@ -2,6 +2,7 @@ import { OpenIdClientType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";
 import { Client } from "../../entity";
+import { verifyAssertionId } from "../../handler";
 import { argon } from "../../instance";
 import { configuration } from "../../server/configuration";
 import { ServerKoaMiddleware } from "../../types";
@@ -57,10 +58,8 @@ export const authenticateClientMiddleware: ServerKoaMiddleware = async (
   }
 
   if (assertion && assertionType === "urn:ietf:params:oauth:client-assertion-type:jwt-bearer") {
-    // TODO: Add support for Assertion ID
-
     try {
-      jwt.verify(assertion, {
+      const verified = jwt.verify(assertion, {
         algorithms: client.authenticationAssertion.algorithm
           ? [client.authenticationAssertion.algorithm]
           : ["HS256"],
@@ -75,6 +74,8 @@ export const authenticateClientMiddleware: ServerKoaMiddleware = async (
           : client.secret,
         subject: client.id,
       });
+
+      await verifyAssertionId(ctx, verified.id);
 
       authenticated = true;
     } catch (err: any) {
