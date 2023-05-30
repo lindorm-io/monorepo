@@ -1,5 +1,5 @@
+import { stringSeconds } from "@lindorm-io/expiry";
 import { MAXIMUM_RATE_LIMIT_ATTEMPTS, MAXIMUM_RATE_LIMIT_EXPIRY } from "../constant";
-import { stringToSeconds } from "@lindorm-io/expiry";
 
 export const getRateLimitBackoffRetrySeconds = (currentValue: number): number => {
   if (currentValue < MAXIMUM_RATE_LIMIT_ATTEMPTS) {
@@ -7,23 +7,23 @@ export const getRateLimitBackoffRetrySeconds = (currentValue: number): number =>
   }
 
   if (currentValue === MAXIMUM_RATE_LIMIT_ATTEMPTS) {
-    return stringToSeconds("1 minutes");
+    return stringSeconds("1m");
   }
 
   if (currentValue === MAXIMUM_RATE_LIMIT_ATTEMPTS + 1) {
-    return stringToSeconds("3 minutes");
+    return stringSeconds("3m");
   }
 
   if (currentValue === MAXIMUM_RATE_LIMIT_ATTEMPTS + 2) {
-    return stringToSeconds("5 minutes");
+    return stringSeconds("5m");
   }
 
   if (currentValue === MAXIMUM_RATE_LIMIT_ATTEMPTS + 3) {
-    return stringToSeconds("15 minutes");
+    return stringSeconds("15m");
   }
 
   if (currentValue === MAXIMUM_RATE_LIMIT_ATTEMPTS + 4) {
-    return stringToSeconds("30 minutes");
+    return stringSeconds("30m");
   }
 
   return MAXIMUM_RATE_LIMIT_EXPIRY;

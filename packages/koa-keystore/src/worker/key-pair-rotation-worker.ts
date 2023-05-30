@@ -1,23 +1,23 @@
-import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairMongoRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
+import { StringTimeValue, stringDuration, stringMs } from "@lindorm-io/expiry";
+import { KeyType, NamedCurve, generateKeyPair } from "@lindorm-io/key-pair";
+import { IntervalWorker } from "@lindorm-io/koa";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
 import { add } from "date-fns";
-import { generateKeyPair, KeyType, NamedCurve } from "@lindorm-io/key-pair";
-import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/expiry";
+import { KeyPairMongoRepository } from "../infrastructure";
 
 type Options = {
-  keyExpiry?: string;
+  keyExpiry?: StringTimeValue;
   keyType?: KeyType;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
   origin?: string;
   passphrase?: string;
   retry?: Partial<RetryOptions>;
-  rotationInterval?: string;
+  rotationInterval?: StringTimeValue;
   logger: Logger;
-  workerInterval?: string;
+  workerInterval?: StringTimeValue;
 };
 
 export const keyPairRotationWorker = (options: Options): IntervalWorker => {
@@ -54,7 +54,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           });
 
           keyPair.allowed = now;
-          keyPair.expires = add(now, stringToDurationObject(keyExpiry));
+          keyPair.expires = add(now, stringDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
@@ -74,8 +74,8 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
             type: keyType,
           });
 
-          keyPair.allowed = add(now, stringToDurationObject(rotationInterval));
-          keyPair.expires = add(keyPair.allowed, stringToDurationObject(keyExpiry));
+          keyPair.allowed = add(now, stringDuration(rotationInterval));
+          keyPair.expires = add(keyPair.allowed, stringDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
@@ -88,7 +88,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         }
       },
       retry,
-      time: stringToMilliseconds(workerInterval),
+      time: stringMs(workerInterval),
     },
     logger,
   );

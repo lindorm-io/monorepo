@@ -1,16 +1,16 @@
-import { IMemoryDatabase } from "@lindorm-io/in-memory-cache";
-import { IntervalWorker } from "@lindorm-io/koa";
-import { Logger } from "@lindorm-io/core-logger";
-import { RetryOptions } from "@lindorm-io/retry";
-import { addSeconds } from "date-fns";
-import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
-import { getKeysFromJwks } from "../util";
-import { KeyPairMemoryCache } from "../infrastructure";
 import {
-  axiosClientCredentialsMiddleware,
   AxiosClientCredentialsMiddlewareOptions,
   AxiosClientProperties,
+  axiosClientCredentialsMiddleware,
 } from "@lindorm-io/axios";
+import { Logger } from "@lindorm-io/core-logger";
+import { StringTimeValue, expiryDate, stringSeconds } from "@lindorm-io/expiry";
+import { IMemoryDatabase } from "@lindorm-io/in-memory-cache";
+import { IntervalWorker } from "@lindorm-io/koa";
+import { RetryOptions } from "@lindorm-io/retry";
+import { addSeconds } from "date-fns";
+import { KeyPairMemoryCache } from "../infrastructure";
+import { getKeysFromJwks } from "../util";
 
 type Options = {
   host: string;
@@ -22,7 +22,7 @@ type Options = {
   memoryDatabase: IMemoryDatabase;
   path?: string;
   retry?: Partial<RetryOptions>;
-  workerInterval?: string;
+  workerInterval?: StringTimeValue;
 };
 
 export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
@@ -38,7 +38,7 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const workerIntervalInSeconds = stringToSeconds(workerInterval);
+  const workerIntervalInSeconds = stringSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker", alias]);
 

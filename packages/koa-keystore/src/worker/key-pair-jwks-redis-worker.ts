@@ -1,16 +1,16 @@
-import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairRedisRepository } from "../infrastructure";
+import {
+  AxiosClientCredentialsMiddlewareOptions,
+  AxiosClientProperties,
+  axiosClientCredentialsMiddleware,
+} from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
+import { StringTimeValue, expiryDate, stringSeconds } from "@lindorm-io/expiry";
+import { IntervalWorker } from "@lindorm-io/koa";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { expiryDate, stringToSeconds } from "@lindorm-io/expiry";
+import { KeyPairRedisRepository } from "../infrastructure";
 import { getKeysFromJwks } from "../util";
-import {
-  axiosClientCredentialsMiddleware,
-  AxiosClientCredentialsMiddlewareOptions,
-  AxiosClientProperties,
-} from "@lindorm-io/axios";
 
 type Options = {
   host: string;
@@ -22,7 +22,7 @@ type Options = {
   path?: string;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
-  workerInterval?: string;
+  workerInterval?: StringTimeValue;
 };
 
 export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
@@ -38,7 +38,7 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const workerIntervalInSeconds = stringToSeconds(workerInterval);
+  const workerIntervalInSeconds = stringSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairJwksRedisWorker", alias]);
 

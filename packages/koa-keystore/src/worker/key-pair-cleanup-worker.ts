@@ -1,21 +1,21 @@
-import { IntervalWorker } from "@lindorm-io/koa";
-import { KeyPairMongoRepository } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
+import { StringTimeValue, stringSeconds } from "@lindorm-io/expiry";
+import { IntervalWorker } from "@lindorm-io/koa";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { RetryOptions } from "@lindorm-io/retry";
-import { stringToSeconds } from "@lindorm-io/expiry";
+import { KeyPairMongoRepository } from "../infrastructure";
 
 type Options = {
   mongoConnection: MongoConnection;
   retry?: Partial<RetryOptions>;
   logger: Logger;
-  workerInterval?: string;
+  workerInterval?: StringTimeValue;
 };
 
 export const keyPairCleanupWorker = (options: Options): IntervalWorker => {
   const { mongoConnection, retry, workerInterval = "1 days" } = options;
 
-  const workerIntervalInSeconds = stringToSeconds(workerInterval);
+  const workerIntervalInSeconds = stringSeconds(workerInterval);
   const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairCleanupWorker"]);
 
