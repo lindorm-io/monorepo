@@ -1,7 +1,7 @@
 import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
 import { uniqArray } from "@lindorm-io/core";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
 
 export const generateServerCredentialsJwt = (
   ctx: ServerKoaContext,

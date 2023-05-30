@@ -3,7 +3,7 @@ import { AuthorizationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 
 export const createSelectAccountPendingUri = (authorizationSession: AuthorizationSession): string =>
-  createURL(configuration.redirect.select, {
+  createURL(configuration.services.authentication_service.routes.redirect.select, {
     host: configuration.services.authentication_service.host,
     port: configuration.services.authentication_service.port,
     query: {

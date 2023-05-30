@@ -57,7 +57,7 @@ export const handlePasswordGrant = async (
   const { data } = await authenticationClient.post<
     VerifyPasswordResponse,
     VerifyPasswordRequestBody
-  >(configuration.services.authentication_service.routes.password, {
+  >(configuration.services.authentication_service.routes.admin.password, {
     middleware,
   });
 

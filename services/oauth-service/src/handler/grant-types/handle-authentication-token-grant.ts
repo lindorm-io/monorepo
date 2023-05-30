@@ -77,7 +77,7 @@ export const handleAuthenticationTokenGrant = async (
     GetAuthenticationTokenResponse,
     never,
     GetAuthenticationTokenQuery
-  >(configuration.services.authentication_service.routes.authentication_token, {
+  >(configuration.services.authentication_service.routes.admin.authentication_token, {
     query,
     middleware,
   });

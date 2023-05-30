@@ -39,13 +39,6 @@ mongo:
 oauth:
   client_id: id
 
-redirect:
-  consent: /oauth/consent
-  elevate: /oauth/elevate
-  login: /oauth/login
-  logout: /oauth/logout
-  select: /oauth/select
-
 redis:
   host: localhost
   port: 6379
@@ -66,8 +59,15 @@ services:
     issuer: https://authentication.lindorm.io
     host: localhost
     routes:
-      authentication_token: /admin/grant-types/authentication-token
-      password: /admin/grant-types/password
+      admin:
+        authentication_token: /admin/grant-types/authentication-token
+        password: /admin/grant-types/password
+      redirect:
+        consent: /oauth/consent
+        elevate: /oauth/elevate
+        login: /oauth/login
+        logout: /oauth/logout
+        select: /oauth/select
 
   identity_service:
     client_name: identityClient
