@@ -1,1 +1,3 @@
-export type Expiry = string | number | Date;
+import { StringTimeValue } from "./string-time";
+
+export type Expiry = StringTimeValue | number | Date;

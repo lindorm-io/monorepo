@@ -1,87 +1,124 @@
-enum Duration {
-  YEARS = "years",
-  MONTHS = "months",
-  DAYS = "days",
-  HOURS = "hours",
-  MINUTES = "minutes",
-  SECONDS = "seconds",
-  MILLISECONDS = "milliseconds",
-}
+import { DateDuration } from "../enums";
+import { DurationObject, MatchString, StringTimeValue } from "../types";
 
-type DurationObject = {
-  [Duration.YEARS]: number;
-  [Duration.MONTHS]: number;
-  [Duration.DAYS]: number;
-  [Duration.HOURS]: number;
-  [Duration.MINUTES]: number;
-  [Duration.SECONDS]: number;
-  [Duration.MILLISECONDS]: number;
-};
+const seconds = 1000;
+const minutes = seconds * 60;
+const hours = minutes * 60;
+const days = hours * 24;
+const weeks = days * 7;
+const months = days * 30.5;
+const years = days * 365.25;
 
-type RegExpObject = Record<Duration, RegExp>;
+const regex =
+  /^(?<value>(?:\d+)?\.?\d+) *(?<duration>years|year|yrs|yr|y|months|month|mo|weeks|week|w|days|day|d|hours|hour|hrs|hr|h|minutes|minute|mins|min|m|seconds|second|secs|sec|s|milliseconds|millisecond|msecs|msec|ms)?$/gi;
 
-const regexp: RegExpObject = {
-  [Duration.YEARS]: /(\d+ years)/g,
-  [Duration.MONTHS]: /(\d+ months)/g,
-  [Duration.DAYS]: /(\d+ days)/g,
-  [Duration.HOURS]: /(\d+ hours)/g,
-  [Duration.MINUTES]: /(\d+ minutes)/g,
-  [Duration.SECONDS]: /(\d+ seconds)/g,
-  [Duration.MILLISECONDS]: /(\d+ milliseconds)/g,
-};
+const getDuration = (string: string): DateDuration => {
+  switch (string) {
+    case "years":
+    case "year":
+    case "yrs":
+    case "yr":
+    case "y":
+      return DateDuration.YEARS;
 
-const getNumber = (string: string, regex: RegExp): number => {
-  try {
-    const result = string.toLowerCase().match(regex);
+    case "months":
+    case "month":
+    case "mo":
+      return DateDuration.MONTHS;
 
-    if (!result || !result.length || result.length > 1) {
-      return 0;
-    }
+    case "weeks":
+    case "week":
+    case "w":
+      return DateDuration.WEEKS;
 
-    const number = parseInt(result[0].replace(/\s+/g, ""));
+    case "days":
+    case "day":
+    case "d":
+      return DateDuration.DAYS;
 
-    if (typeof number !== "number") {
-      return 0;
-    }
+    case "hours":
+    case "hour":
+    case "hrs":
+    case "hr":
+    case "h":
+      return DateDuration.HOURS;
 
-    return number;
-  } catch (_) {
-    return 0;
+    case "minutes":
+    case "minute":
+    case "mins":
+    case "min":
+    case "m":
+      return DateDuration.MINUTES;
+
+    case "seconds":
+    case "second":
+    case "secs":
+    case "sec":
+    case "s":
+      return DateDuration.SECONDS;
+
+    case "milliseconds":
+    case "millisecond":
+    case "msecs":
+    case "msec":
+    case "ms":
+      return DateDuration.MILLISECONDS;
+
+    default:
+      throw new Error(`Invalid string time value [ ${string} ]`);
   }
 };
 
-export const stringToDurationObject = (string: string): DurationObject => {
-  const object: Record<Duration, number> = {
-    [Duration.YEARS]: 0,
-    [Duration.MONTHS]: 0,
-    [Duration.DAYS]: 0,
-    [Duration.HOURS]: 0,
-    [Duration.MINUTES]: 0,
-    [Duration.SECONDS]: 0,
-    [Duration.MILLISECONDS]: 0,
+const matchString = (string: string): MatchString => {
+  const result = new RegExp(regex).exec(string.toLowerCase());
+
+  if (!result?.groups?.duration || !result?.groups?.value) {
+    throw new Error(`Invalid string time value [ ${string} ]`);
+  }
+
+  const duration = getDuration(result.groups.duration);
+  const number = parseInt(result.groups.value);
+
+  return { duration, number };
+};
+
+export const stringDuration = (...values: Array<StringTimeValue>): DurationObject => {
+  const object: Record<DateDuration, number> = {
+    [DateDuration.YEARS]: 0,
+    [DateDuration.MONTHS]: 0,
+    [DateDuration.WEEKS]: 0,
+    [DateDuration.DAYS]: 0,
+    [DateDuration.HOURS]: 0,
+    [DateDuration.MINUTES]: 0,
+    [DateDuration.SECONDS]: 0,
+    [DateDuration.MILLISECONDS]: 0,
   };
 
-  for (const key of Object.keys(regexp)) {
-    object[key as Duration] = getNumber(string, regexp[key as Duration]);
+  for (const string of values) {
+    const { duration, number } = matchString(string);
+    object[duration] += number;
   }
 
   return object;
 };
 
-export const stringToMilliseconds = (string: string): number => {
-  const object = stringToDurationObject(string);
+export const stringMilliseconds = (...values: Array<StringTimeValue>): number => {
+  const object = stringDuration(...values);
   let time = 0;
 
-  time = time + object[Duration.MILLISECONDS];
-  time = time + object[Duration.SECONDS] * 1000;
-  time = time + object[Duration.MINUTES] * 60 * 1000;
-  time = time + object[Duration.HOURS] * 60 * 60 * 1000;
-  time = time + object[Duration.DAYS] * 24 * 60 * 60 * 1000;
-  time = time + object[Duration.MONTHS] * 30 * 24 * 60 * 60 * 1000;
-  time = time + object[Duration.YEARS] * 365 * 24 * 60 * 60 * 1000;
+  time = time + object[DateDuration.MILLISECONDS];
+  time = time + object[DateDuration.SECONDS] * seconds;
+  time = time + object[DateDuration.MINUTES] * minutes;
+  time = time + object[DateDuration.HOURS] * hours;
+  time = time + object[DateDuration.DAYS] * days;
+  time = time + object[DateDuration.WEEKS] * weeks;
+  time = time + object[DateDuration.MONTHS] * months;
+  time = time + object[DateDuration.YEARS] * years;
 
-  return time;
+  return Math.round(time);
 };
 
-export const stringToSeconds = (string: string): number =>
-  Math.round(stringToMilliseconds(string) / 1000);
+export const stringMs = stringMilliseconds;
+
+export const stringSeconds = (...values: Array<StringTimeValue>): number =>
+  Math.round(stringMilliseconds(...values) / 1000);

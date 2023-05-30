@@ -5,7 +5,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 
 describe("expiryDate", () => {
   test("should convert string to expiry", () => {
-    expect(expiryDate("10 minutes")).toStrictEqual(new Date("2021-01-01T08:10:00.000Z"));
+    expect(expiryDate("10m")).toStrictEqual(new Date("2021-01-01T08:10:00.000Z"));
   });
 
   test("should convert number to expiry", () => {
