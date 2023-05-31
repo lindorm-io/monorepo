@@ -29,6 +29,7 @@ describe("JWT", () => {
       type: "id_token",
     };
     optionsFull = {
+      id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
       adjustedAccessLevel: 3,
       atHash: "aa08b86a3550489380219a18efcd1532",
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
@@ -39,7 +40,7 @@ describe("JWT", () => {
       claims: { claimsKey: "claimValue" },
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
       expiry: "10 seconds",
-      id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
+      jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: new Date(),
@@ -52,7 +53,9 @@ describe("JWT", () => {
       type: "id_token",
       username: "princejonn",
     };
-    jwt = createTestJwt();
+    jwt = createTestJwt({
+      jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
+    });
   });
 
   afterEach(jest.clearAllMocks);
@@ -73,10 +76,15 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
+          claims: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+          }),
+          metadata: expect.objectContaining({
+            algorithm: "ES512",
+            type: "id_token",
+          }),
           token,
-          audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-          subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          type: "id_token",
         }),
       );
     });
@@ -98,10 +106,15 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
+          claims: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+          }),
+          metadata: expect.objectContaining({
+            algorithm: "HS512",
+            type: "id_token",
+          }),
           token,
-          audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-          subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          type: "id_token",
         }),
       );
     });
@@ -123,10 +136,15 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
+          claims: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+          }),
+          metadata: expect.objectContaining({
+            algorithm: "RS512",
+            type: "id_token",
+          }),
           token,
-          audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-          subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          type: "id_token",
         }),
       );
     });
@@ -158,6 +176,7 @@ describe("JWT", () => {
     expect(JWT.decode(token)).toStrictEqual({
       header: {
         alg: "ES512",
+        jku: "https://test.lindorm.io/.well-known/jwks.json",
         kid: "7531da89-12e9-403e-925a-5da49100635c",
         typ: "JWT",
       },
@@ -197,6 +216,7 @@ describe("JWT", () => {
     expect(JWT.decode(token)).toStrictEqual({
       header: {
         alg: "ES512",
+        jku: "https://default.lindorm.io/.well-known/jwks.json",
         kid: "7531da89-12e9-403e-925a-5da49100635c",
         typ: "JWT",
       },
@@ -217,36 +237,42 @@ describe("JWT", () => {
   test("should decode and format", () => {
     const { id, token } = jwt.sign(optionsFull);
 
-    expect(JWT.decodeFormatted(token)).toStrictEqual({
+    expect(JWT.decodePayload(token)).toStrictEqual({
       id,
-      active: true,
-      adjustedAccessLevel: 3,
-      atHash: "aa08b86a3550489380219a18efcd1532",
-      audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-      authContextClass: "loa_4",
-      authMethodsReference: ["email"],
-      authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
-      authTime: 1609488000,
-      claims: { claimsKey: "claimValue" },
-      client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-      expires: 1609488010,
-      expiresIn: 10,
-      issuedAt: 1609488000,
-      issuer: "https://test.lindorm.io",
-      keyId: "7531da89-12e9-403e-925a-5da49100635c",
-      levelOfAssurance: 4,
-      nonce: "bed190d568a5456bb15a39cf71d72022",
-      notBefore: 1609488000,
-      now: 1609488000,
-      scopes: ["openid"],
-      session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
-      sessionHint: "refresh",
-      subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-      subjectHint: "identity",
-      tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      claims: {
+        adjustedAccessLevel: 3,
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        authContextClass: "loa_4",
+        authMethodsReference: ["email"],
+        authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        claimsKey: "claimValue",
+        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
+        levelOfAssurance: 4,
+        scopes: ["openid"],
+        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+        username: "princejonn",
+      },
+      metadata: {
+        active: true,
+        algorithm: "ES512",
+        atHash: "aa08b86a3550489380219a18efcd1532",
+        authTime: 1609488000,
+        expires: 1609488010,
+        expiresIn: 10,
+        issuedAt: 1609488000,
+        issuer: "https://test.lindorm.io",
+        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+        notBefore: 1609488000,
+        now: 1609488000,
+        sessionHint: "refresh",
+        subjectHint: "identity",
+        type: "id_token",
+      },
       token,
-      type: "id_token",
-      username: "princejonn",
     });
   });
 
@@ -385,34 +411,40 @@ describe("JWT", () => {
 
     expect(jwt.verify(token)).toStrictEqual({
       id,
-      active: true,
-      adjustedAccessLevel: 3,
-      atHash: "aa08b86a3550489380219a18efcd1532",
-      audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-      authContextClass: "loa_4",
-      authMethodsReference: ["email"],
-      authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
-      authTime: 1609488000,
-      claims: { claimsKey: "claimValue" },
-      client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-      expires: 1609488010,
-      expiresIn: 10,
-      issuedAt: 1609488000,
-      issuer: "https://test.lindorm.io",
-      keyId: "7531da89-12e9-403e-925a-5da49100635c",
-      levelOfAssurance: 4,
-      nonce: "bed190d568a5456bb15a39cf71d72022",
-      notBefore: 1609488000,
-      now: 1609488000,
-      scopes: ["openid"],
-      session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
-      sessionHint: "refresh",
-      subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-      subjectHint: "identity",
-      tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+      claims: {
+        adjustedAccessLevel: 3,
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        authContextClass: "loa_4",
+        authMethodsReference: ["email"],
+        authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        claimsKey: "claimValue",
+        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
+        levelOfAssurance: 4,
+        scopes: ["openid"],
+        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
+        username: "princejonn",
+      },
+      metadata: {
+        active: true,
+        algorithm: "ES512",
+        atHash: "aa08b86a3550489380219a18efcd1532",
+        authTime: 1609488000,
+        expires: 1609488010,
+        expiresIn: 10,
+        issuedAt: 1609488000,
+        issuer: "https://test.lindorm.io",
+        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+        notBefore: 1609488000,
+        now: 1609488000,
+        sessionHint: "refresh",
+        subjectHint: "identity",
+        type: "id_token",
+      },
       token,
-      type: "id_token",
-      username: "princejonn",
     });
   });
 
@@ -420,35 +452,40 @@ describe("JWT", () => {
     const { id, token } = jwt.sign(optionsMin);
 
     expect(jwt.verify(token)).toStrictEqual({
-      id: id,
-      active: true,
-      adjustedAccessLevel: 0,
-      atHash: null,
-      audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-      authContextClass: null,
-      authMethodsReference: [],
-      authorizedParty: null,
-      authTime: null,
-      claims: {},
-      client: null,
-      expires: 1609488010,
-      expiresIn: 10,
-      issuedAt: 1609488000,
-      issuer: "https://test.lindorm.io",
-      keyId: "7531da89-12e9-403e-925a-5da49100635c",
-      levelOfAssurance: 0,
-      nonce: null,
-      notBefore: 1609488000,
-      now: 1609488000,
-      scopes: [],
-      session: null,
-      sessionHint: null,
-      subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-      subjectHint: null,
-      tenant: null,
+      id,
+      claims: {
+        adjustedAccessLevel: 0,
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        authContextClass: null,
+        authMethodsReference: [],
+        authorizedParty: null,
+        client: null,
+        levelOfAssurance: 0,
+        scopes: [],
+        session: null,
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        tenant: null,
+        username: null,
+      },
+      metadata: {
+        active: true,
+        algorithm: "ES512",
+        atHash: null,
+        authTime: null,
+        expires: 1609488010,
+        expiresIn: 10,
+        issuedAt: 1609488000,
+        issuer: "https://test.lindorm.io",
+        jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+        nonce: null,
+        notBefore: 1609488000,
+        now: 1609488000,
+        sessionHint: null,
+        subjectHint: null,
+        type: "id_token",
+      },
       token,
-      type: "id_token",
-      username: null,
     });
   });
 
@@ -466,23 +503,23 @@ describe("JWT", () => {
 
     expect(parseTokenData(token)).toStrictEqual(
       expect.objectContaining({
-        case_five: true,
-        case_four: ["array", "data"],
         case_one: 1,
-        case_three: { nested_one: "one", nested_two: 2 },
         case_two: "two",
+        case_three: { nested_one: "one", nested_two: 2 },
+        case_four: ["array", "data"],
+        case_five: true,
       }),
     );
 
     expect(jwt.verify(token)).toStrictEqual(
       expect.objectContaining({
-        claims: {
-          caseFive: true,
-          caseFour: ["array", "data"],
+        claims: expect.objectContaining({
           caseOne: 1,
-          caseThree: { nestedOne: "one", nestedTwo: 2 },
           caseTwo: "two",
-        },
+          caseThree: { nestedOne: "one", nestedTwo: 2 },
+          caseFour: ["array", "data"],
+          caseFive: true,
+        }),
       }),
     );
   });

@@ -12,11 +12,10 @@ import { createHash, randomUUID } from "crypto";
 import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
 import {
-  JwtDecodeData,
-  JwtDecodedClaims,
+  JwtDecodeResult,
   JwtOptions,
-  JwtSignData,
   JwtSignOptions,
+  JwtSignResult,
   JwtVerifyOptions,
 } from "../types";
 import {
@@ -32,70 +31,97 @@ import {
 export class JWT {
   private readonly clockTolerance: number;
   private readonly issuer: string;
-  private readonly keyType: KeyType | undefined;
+  private readonly jwksUrl: string | undefined;
   private readonly keystore: Keystore;
+  private readonly keyType: KeyType | undefined;
   private readonly logger: Logger;
 
   public constructor(options: JwtOptions, keystore: Keystore, logger: Logger) {
     this.logger = logger.createChildLogger(["jwt"]);
 
-    this.clockTolerance = options.clockTolerance || 5;
+    this.clockTolerance = options.clockTolerance || 0;
     this.issuer = options.issuer;
-    this.keyType = options.keyType;
+    this.jwksUrl = options.jwksUrl;
     this.keystore = keystore;
+    this.keyType = options.keyType;
   }
 
-  public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSignData {
-    const id = options.id || randomUUID();
+  public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSignResult {
+    const {
+      id = randomUUID(),
+      adjustedAccessLevel,
+      atHash,
+      audiences,
+      authContextClass,
+      authMethodsReference,
+      authorizedParty,
+      authTime,
+      claims,
+      client,
+      issuedAt,
+      jwksUrl = this.jwksUrl,
+      keyType,
+      levelOfAssurance,
+      nonce,
+      notBefore,
+      scopes,
+      session,
+      sessionHint,
+      subject,
+      subjectHint,
+      tenant,
+      type,
+      username,
+    } = options;
 
     const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
 
-    this.logger.debug("sign token", {
+    this.logger.debug("Signing token", {
       options,
     });
 
     const object: LindormTokenClaims = {
       // required claims
-      aud: options.audiences,
+      aud: audiences,
       exp: expiresUnix,
-      iat: getUnixTime(options.issuedAt || now),
+      iat: getUnixTime(issuedAt || now),
       iss: this.issuer,
       jti: id,
-      nbf: getUnixTime(options.notBefore || now),
-      sub: options.subject,
-      token_type: options.type,
+      nbf: getUnixTime(notBefore || now),
+      sub: subject,
+      token_type: type,
 
       // optional standard claims
-      acr: options.authContextClass,
-      amr: options.authMethodsReference,
-      at_hash: options.atHash,
-      auth_time: options.authTime,
-      azp: options.authorizedParty,
-      nonce: options.nonce,
-      sid: options.session,
+      acr: authContextClass,
+      amr: authMethodsReference,
+      at_hash: atHash,
+      auth_time: authTime,
+      azp: authorizedParty,
+      nonce: nonce,
+      sid: session,
 
       // optional lindorm claims
-      aal: options.adjustedAccessLevel,
-      cid: options.client,
-      loa: options.levelOfAssurance,
-      scope: options.scopes?.join(" "),
-      sih: options.sessionHint,
-      suh: options.subjectHint,
-      tid: options.tenant,
-      usr: options.username,
+      aal: adjustedAccessLevel,
+      cid: client,
+      loa: levelOfAssurance,
+      scope: scopes?.join(" "),
+      sih: sessionHint,
+      suh: subjectHint,
+      tid: tenant,
+      usr: username,
 
       // remaining claims
-      ...(options.claims ? snakeCase(options.claims) : {}),
+      ...(claims ? snakeCase(claims) : {}),
     };
 
-    const key = this.getSigningKey(options.keyType);
-    const privateKey = this.getPrivateKey(key);
-    const signOptions = this.getSignOptions(key);
-
+    const key = this.getSigningKey(keyType);
+    const privateKey = this.getSecret(key);
+    const signOptions = this.getSignOptions(key, jwksUrl);
     const payload = sortObjectKeys(removeUndefinedFromObject(object));
+
     const token = sign(payload, privateKey, signOptions);
 
-    this.logger.debug("sign token success", { token, ...object, ...signOptions });
+    this.logger.debug("Successfully signed token", { token, ...object, ...signOptions });
 
     return {
       id,
@@ -106,13 +132,13 @@ export class JWT {
     };
   }
 
-  public verify<Claims = Record<string, any>>(
+  public verify<Claims = Record<string, never>>(
     token: string,
     options: JwtVerifyOptions = {},
-  ): JwtDecodedClaims<Claims> {
+  ): JwtDecodeResult<Claims> {
     this.logger.debug("verify token", { token, options });
 
-    const claims = JWT.decodeFormatted<Claims>(token);
+    const payload = JWT.decodePayload<Claims>(token);
     const {
       adjustedAccessLevel,
       atHash,
@@ -139,8 +165,8 @@ export class JWT {
     if (secret) {
       algorithms = options.algorithms || ["HS256"];
       publicKey = secret;
-    } else if (claims.keyId) {
-      ({ algorithms, publicKey } = this.keystore.getKey(claims.keyId));
+    } else if (payload.metadata.keyId) {
+      ({ algorithms, publicKey } = this.keystore.getKey(payload.metadata.keyId));
     } else {
       throw new TokenError("Missing keyId or secret");
     }
@@ -164,48 +190,48 @@ export class JWT {
 
     try {
       if (adjustedAccessLevel) {
-        assertGreaterOrEqual(adjustedAccessLevel, claims.adjustedAccessLevel, "aal");
+        assertGreaterOrEqual(adjustedAccessLevel, payload.claims.adjustedAccessLevel, "aal");
       }
 
       if (authorizedParty) {
-        assertClaimEquals(authorizedParty, claims.authorizedParty, "azp");
+        assertClaimEquals(authorizedParty, payload.claims.authorizedParty, "azp");
       }
 
       if (atHash) {
-        assertClaimEquals(atHash, claims.atHash, "at_hash");
+        assertClaimEquals(atHash, payload.metadata.atHash, "at_hash");
       }
 
       if (client) {
-        assertClaimEquals(client, claims.client, "cid");
+        assertClaimEquals(client, payload.claims.client, "cid");
       }
 
       if (levelOfAssurance) {
-        assertGreaterOrEqual(levelOfAssurance, claims.levelOfAssurance, "loa");
+        assertGreaterOrEqual(levelOfAssurance, payload.claims.levelOfAssurance, "loa");
       }
 
       if (scopes?.length) {
-        assertClaimDifference(scopes, claims.scopes, "scp");
+        assertClaimDifference(scopes, payload.claims.scopes, "scp");
       }
 
       if (types?.length) {
-        assertClaimIncludes(types, claims.type, "token_type");
+        assertClaimIncludes(types, payload.metadata.type, "token_type");
       }
 
       if (session) {
-        assertClaimEquals(session, claims.session, "sid");
+        assertClaimEquals(session, payload.claims.session, "sid");
       }
 
       if (subjectHints?.length) {
-        assertClaimIncludes(subjectHints, claims.subjectHint, "suh");
+        assertClaimIncludes(subjectHints, payload.metadata.subjectHint, "suh");
       }
 
       if (tenant) {
-        assertClaimEquals(tenant, claims.tenant, "tid");
+        assertClaimEquals(tenant, payload.claims.tenant, "tid");
       }
 
-      this.logger.debug("verify token success", { claims });
+      this.logger.debug("verify token success", { claims: payload });
 
-      return claims;
+      return payload;
     } catch (err: any) {
       this.logger.error("Failed to validate token", err);
 
@@ -225,11 +251,11 @@ export class JWT {
     return decode(token, { complete: true });
   }
 
-  public static decodeFormatted<Claims = Record<string, any>>(
+  public static decodePayload<Claims = Record<string, never>>(
     token: string,
-  ): JwtDecodeData<Claims> {
+  ): JwtDecodeResult<Claims> {
     const {
-      header: { kid: keyId },
+      header: { alg: algorithm, jku, kid: keyId },
       payload: object,
     } = decode(token, { complete: true }) as unknown as {
       header: any;
@@ -262,47 +288,52 @@ export class JWT {
       tid,
       token_type,
       usr,
-      ...claims
+      ...rest
     } = object;
+
+    const claims = rest ? camelCase<Claims>(rest) : ({} as Claims);
 
     return {
       id: jti,
-      active: iat <= now && nbf <= now && exp >= now,
-      adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
-      atHash: at_hash || null,
-      audiences: aud,
-      authContextClass: acr || null,
-      authMethodsReference: amr || [],
-      authorizedParty: azp || null,
-      authTime: auth_time || null,
-      claims: claims ? camelCase<Claims>(claims) : ({} as Claims),
-      client: cid || null,
-      expires: exp,
-      expiresIn: exp - now,
-      issuedAt: iat,
-      issuer: iss,
-      keyId,
-      levelOfAssurance: (loa as LevelOfAssurance) || 0,
-      nonce: nonce || null,
-      notBefore: nbf,
-      now,
-      scopes: scope ? scope.split(" ") : [],
-      session: sid || null,
-      sessionHint: sih || null,
-      subject: sub,
-      subjectHint: suh || null,
-      tenant: tid || null,
+      claims: {
+        ...claims,
+
+        adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
+        audiences: aud,
+        authContextClass: acr || null,
+        authMethodsReference: amr || [],
+        authorizedParty: azp || null,
+        client: cid || null,
+        levelOfAssurance: (loa as LevelOfAssurance) || 0,
+        scopes: scope ? scope.split(" ") : [],
+        session: sid || null,
+        subject: sub,
+        tenant: tid || null,
+        username: usr || null,
+      },
+      metadata: {
+        active: iat <= now && nbf <= now && exp >= now,
+        algorithm,
+        atHash: at_hash || null,
+        authTime: auth_time || null,
+        expires: exp,
+        expiresIn: exp - now,
+        issuedAt: iat,
+        issuer: iss,
+        jwksUrl: jku || null,
+        keyId,
+        nonce: nonce || null,
+        notBefore: nbf,
+        now,
+        sessionHint: sih || null,
+        subjectHint: suh || null,
+        type: token_type,
+      },
       token,
-      type: token_type,
-      username: usr || null,
     };
   }
 
-  private getSigningKey(keyType?: KeyType): KeyPair {
-    return this.keystore.getSigningKey(keyType || this.keyType);
-  }
-
-  private getPrivateKey(key: KeyPair): Secret {
+  private getSecret(key: KeyPair): Secret {
     if (!key.privateKey) throw new Error("Missing private key");
 
     return key.type === KeyType.RSA
@@ -310,11 +341,19 @@ export class JWT {
       : key.privateKey;
   }
 
-  private getSignOptions(key: KeyPair): SignOptions {
+  private getSigningKey(keyType?: KeyType): KeyPair {
+    return this.keystore.getSigningKey(keyType || this.keyType);
+  }
+
+  private getSignOptions(key: KeyPair, jwksUrl?: string): SignOptions {
     return {
       algorithm: key.preferredAlgorithm,
       allowInsecureKeySizes: true,
-      keyid: key.id,
+      header: {
+        alg: key.preferredAlgorithm,
+        jku: jwksUrl,
+        kid: key.id,
+      },
     };
   }
 }

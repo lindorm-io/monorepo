@@ -2,7 +2,7 @@ import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types"
 import { Expiry } from "@lindorm-io/expiry";
 import { KeyType } from "@lindorm-io/key-pair";
 
-export type JwtSignOptions<Claims = never> = {
+export type JwtSignOptions<Claims = Record<string, never>> = {
   id?: string;
   adjustedAccessLevel?: AdjustedAccessLevel;
   atHash?: string;
@@ -15,6 +15,7 @@ export type JwtSignOptions<Claims = never> = {
   client?: string;
   expiry: Expiry;
   issuedAt?: Date;
+  jwksUrl?: string;
   keyType?: KeyType;
   levelOfAssurance?: LevelOfAssurance;
   nonce?: string;
@@ -29,7 +30,7 @@ export type JwtSignOptions<Claims = never> = {
   username?: string;
 };
 
-export type JwtSignData = {
+export type JwtSignResult = {
   id: string;
   expires: Date;
   expiresIn: number;
