@@ -90,7 +90,7 @@ describe("tokenValidationMiddleware", () => {
   test("should validate token on path custom validation callback", async () => {
     await expect(
       tokenValidationMiddleware(config)(path, {}, async (context, verifyData) => {
-        if (verifyData.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
+        if (verifyData.claims.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),

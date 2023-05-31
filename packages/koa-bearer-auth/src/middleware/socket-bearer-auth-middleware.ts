@@ -1,7 +1,7 @@
-import { DefaultLindormBearerAuthSocketMiddleware, BearerAuthMiddlewareConfig } from "../types";
+import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { getSocketError } from "@lindorm-io/koa";
-import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
+import { BearerAuthMiddlewareConfig, DefaultLindormBearerAuthSocketMiddleware } from "../types";
 
 interface Config extends BearerAuthMiddlewareConfig {
   adjustedAccessLevel?: AdjustedAccessLevel;
@@ -46,7 +46,9 @@ export const socketBearerAuthMiddleware =
 
         socket.ctx.token[contextKey] = verified;
 
-        const array = verified.session ? [verified.subject, verified.session] : [verified.subject];
+        const array = verified.claims.session
+          ? [verified.claims.subject, verified.claims.session]
+          : [verified.claims.subject];
 
         socket.join(array);
       } catch (err: any) {

@@ -1,10 +1,10 @@
-import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
-import { Metric } from "@lindorm-io/koa";
-import { bearerAuthMiddleware, BearerAuthOptions } from "./bearer-auth-middleware";
-import { createTestJwt } from "@lindorm-io/jwt";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { ClientError } from "@lindorm-io/errors";
+import { createTestJwt } from "@lindorm-io/jwt";
+import { Metric } from "@lindorm-io/koa";
+import MockDate from "mockdate";
 import { BearerAuthMiddlewareConfig } from "../types";
+import { bearerAuthMiddleware, BearerAuthOptions } from "./bearer-auth-middleware";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -87,7 +87,7 @@ describe("bearerAuthMiddleware", () => {
   test("should successfully validate bearer token with custom validation callback", async () => {
     await expect(
       bearerAuthMiddleware(config)({}, async (context, verifyData) => {
-        if (verifyData.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
+        if (verifyData.claims.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),
