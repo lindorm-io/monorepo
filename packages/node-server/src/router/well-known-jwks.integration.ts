@@ -1,12 +1,12 @@
+import { createMockLogger } from "@lindorm-io/core-logger";
+import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
+import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
+import { KoaApp } from "@lindorm-io/koa";
+import { KeyPairMemoryCache, KeyPairRedisRepository } from "@lindorm-io/koa-keystore";
+import { RedisConnection } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import request from "supertest";
-import { KeyPairMemoryCache, KeyPairRedisRepository } from "@lindorm-io/koa-keystore";
-import { KoaApp } from "@lindorm-io/koa";
-import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
-import { RedisConnection } from "@lindorm-io/redis";
-import { createMockLogger } from "@lindorm-io/core-logger";
 import { createNodeServer } from "../util/create-node-server";
-import { createTestKeyPairEC, createTestKeyPairRSA } from "@lindorm-io/key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -51,29 +51,29 @@ describe("/.well-known", () => {
     expect(response.body).toStrictEqual({
       keys: [
         {
-          alg: "RS512",
-          allowed_from: 1577865600,
-          created_at: 1577865600,
-          e: "AQAB",
-          expires_at: 1861948800,
-          key_ops: ["decrypt", "verify"],
-          kid: expect.any(String),
-          kty: "RSA",
-          n: "ylo2AV+CdQg0p3HLGOVmzcvQYGNxbuqrC3MEAAyB0lZwSjtnx+UM0bKu+XwZqsve2TCgFylTKLX9rDIekd5ExIuAo6fAx4x6cr31PN5ThRY9f1lchDgrFYS1ZZ+tbIJyQdMOAYP+C+kznKCQduGu7ye7Skxk0jU3kZblsyCZfW0=",
-          use: "sig",
-        },
-        {
           alg: "ES512",
           allowed_from: 1577865600,
           created_at: 1577865600,
           crv: "P-521",
           expires_at: 1861948800,
           key_ops: ["verify"],
-          kid: expect.any(String),
+          kid: "7531da89-12e9-403e-925a-5da49100635c",
           kty: "EC",
           use: "sig",
           x: "AHxwF8PAKLjUbiRVbhXdjzqcgwwLKljN87yBiOlLT3WXGQyChNFLcszWnrkpB/AGiWtYh1Wtts4gsBJ/Tp9CwfDm",
           y: "AS3iydW4wE74tLql6xf28DxBPUuNfvlerYiectjVVOh42bGS4z6gNmCoc5jDN9SG77NloDkC4SSo+LjtMD2IJJhV",
+        },
+        {
+          alg: "RS512",
+          allowed_from: 1577862000,
+          created_at: 1577862000,
+          e: "AQAB",
+          expires_at: 1861948800,
+          key_ops: ["decrypt", "verify"],
+          kid: "e6301473-e347-4035-8084-8645d034e4a3",
+          kty: "RSA",
+          n: "ylo2AV+CdQg0p3HLGOVmzcvQYGNxbuqrC3MEAAyB0lZwSjtnx+UM0bKu+XwZqsve2TCgFylTKLX9rDIekd5ExIuAo6fAx4x6cr31PN5ThRY9f1lchDgrFYS1ZZ+tbIJyQdMOAYP+C+kznKCQduGu7ye7Skxk0jU3kZblsyCZfW0=",
+          use: "sig",
         },
       ],
     });
