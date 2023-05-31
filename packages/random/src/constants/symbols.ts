@@ -26,6 +26,6 @@ export const DEFAULT_SYMBOLS = [
   "{",
   "}",
   "~",
-];
-export const UNRESERVED_TOKEN_SYMBOLS = ["!", "'", "(", ")", "*", "-", "_", "~"];
-export const UNRESERVED_URL_SYMBOLS = ["!", "'", "(", ")", "*", "-", ".", "_", "~"];
+].join("");
+export const TOKEN_SYMBOLS = ["*", "-", "_", "~"].join("");
+export const UNRESERVED_URL_SYMBOLS = ["!", "'", "(", ")", "*", "-", ".", "_", "~"].join("");

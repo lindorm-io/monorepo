@@ -37,11 +37,7 @@ export const randomString = (length: number, options: RandomStringOptions = {}):
 
   const result: string[] = [];
 
-  const {
-    chars = CHARS,
-    numbers = NUMBERS,
-    symbols = DEFAULT_SYMBOLS.join(""),
-  } = options.custom || {};
+  const { chars = CHARS, numbers = NUMBERS, symbols = DEFAULT_SYMBOLS } = options.custom || {};
 
   for (let i = 0; i < numbersAmount; i++) {
     result.push(numbers.charAt(Math.floor(Math.random() * numbers.length)));
