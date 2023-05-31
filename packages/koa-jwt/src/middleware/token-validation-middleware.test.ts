@@ -1,10 +1,10 @@
-import MockDate from "mockdate";
-import { ClientError } from "@lindorm-io/errors";
-import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { tokenValidationMiddleware, TokenValidationOptions } from "./token-validation-middleware";
+import { ClientError } from "@lindorm-io/errors";
 import { createTestJwt } from "@lindorm-io/jwt";
+import { Metric } from "@lindorm-io/koa";
+import MockDate from "mockdate";
 import { TokenValidationMiddlewareConfig } from "../types";
+import { tokenValidationMiddleware, TokenValidationOptions } from "./token-validation-middleware";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -80,7 +80,9 @@ describe("tokenValidationMiddleware", () => {
 
     expect(ctx.token.tokenKey).toStrictEqual(
       expect.objectContaining({
-        subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
+        claims: expect.objectContaining({
+          subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
+        }),
         token: expect.any(String),
       }),
     );
@@ -119,7 +121,7 @@ describe("tokenValidationMiddleware", () => {
   test("should throw error with custom validation callback", async () => {
     await expect(
       tokenValidationMiddleware(config)(path, {}, async (context) => {
-        if (context.token.tokenKey.subject === "c57ed8ee-0797-44dd-921b-3db030879ec6") {
+        if (context.token.tokenKey.claims.subject === "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),
