@@ -1,11 +1,11 @@
+import { readableDuration } from "@lindorm-io/readable-time";
 import { add, addMilliseconds, fromUnixTime } from "date-fns";
 import { Expiry } from "../types";
 import { assertExpiryDate, assertSeconds } from "./private";
-import { stringDuration } from "./string-time";
 
 export const expiryDate = (expiry: Expiry): Date => {
   if (typeof expiry === "string") {
-    const duration = stringDuration(expiry);
+    const duration = readableDuration(expiry);
     const date = add(new Date(), duration);
 
     if (!duration.milliseconds) {

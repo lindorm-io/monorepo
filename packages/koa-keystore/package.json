@@ -29,6 +29,7 @@
     "@lindorm-io/key-pair": "^0.7.0",
     "@lindorm-io/koa": "^0.17.1",
     "@lindorm-io/mongo": "^0.12.4",
+    "@lindorm-io/readable-time": "^0.1.0",
     "@lindorm-io/redis": "^0.12.4",
     "@lindorm-io/retry": "^0.1.5",
     "joi": "^17.9.1"

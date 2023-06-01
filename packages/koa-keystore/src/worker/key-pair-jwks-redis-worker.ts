@@ -4,8 +4,9 @@ import {
   axiosClientCredentialsMiddleware,
 } from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
-import { StringTimeValue, expiryDate, stringSeconds } from "@lindorm-io/expiry";
+import { expiryDate } from "@lindorm-io/expiry";
 import { IntervalWorker } from "@lindorm-io/koa";
+import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
@@ -22,7 +23,7 @@ type Options = {
   path?: string;
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
-  workerInterval?: StringTimeValue;
+  workerInterval?: ReadableTime;
 };
 
 export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
@@ -38,8 +39,6 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const workerIntervalInSeconds = stringSeconds(workerInterval);
-  const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairJwksRedisWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
@@ -78,7 +77,7 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
         }
       },
       retry,
-      time,
+      time: ms(workerInterval),
     },
     logger,
   );

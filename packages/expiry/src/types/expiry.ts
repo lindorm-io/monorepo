@@ -1,3 +1,3 @@
-import { StringTimeValue } from "./string-time";
+import { ReadableTime } from "@lindorm-io/readable-time";
 
-export type Expiry = StringTimeValue | number | Date;
+export type Expiry = ReadableTime | number | Date;

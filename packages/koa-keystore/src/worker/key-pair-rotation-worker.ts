@@ -1,23 +1,23 @@
 import { Logger } from "@lindorm-io/core-logger";
-import { StringTimeValue, stringDuration, stringMs } from "@lindorm-io/expiry";
 import { KeyType, NamedCurve, generateKeyPair } from "@lindorm-io/key-pair";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { ReadableTime, ms, readableDuration } from "@lindorm-io/readable-time";
 import { RetryOptions } from "@lindorm-io/retry";
 import { add } from "date-fns";
 import { KeyPairMongoRepository } from "../infrastructure";
 
 type Options = {
-  keyExpiry?: StringTimeValue;
+  keyExpiry?: ReadableTime;
   keyType?: KeyType;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
   origin?: string;
   passphrase?: string;
   retry?: Partial<RetryOptions>;
-  rotationInterval?: StringTimeValue;
+  rotationInterval?: ReadableTime;
   logger: Logger;
-  workerInterval?: StringTimeValue;
+  workerInterval?: ReadableTime;
 };
 
 export const keyPairRotationWorker = (options: Options): IntervalWorker => {
@@ -54,7 +54,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           });
 
           keyPair.allowed = now;
-          keyPair.expires = add(now, stringDuration(keyExpiry));
+          keyPair.expires = add(now, readableDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
@@ -74,8 +74,8 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
             type: keyType,
           });
 
-          keyPair.allowed = add(now, stringDuration(rotationInterval));
-          keyPair.expires = add(keyPair.allowed, stringDuration(keyExpiry));
+          keyPair.allowed = add(now, readableDuration(rotationInterval));
+          keyPair.expires = add(keyPair.allowed, readableDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
@@ -88,7 +88,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         }
       },
       retry,
-      time: stringMs(workerInterval),
+      time: ms(workerInterval),
     },
     logger,
   );

@@ -1,8 +1,9 @@
 import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
-import { StringTimeValue, expiryDate, stringSeconds } from "@lindorm-io/expiry";
+import { expiryDate } from "@lindorm-io/expiry";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { MongoConnection } from "@lindorm-io/mongo";
+import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
@@ -13,14 +14,12 @@ type Options = {
   redisConnection: RedisConnection;
   retry?: Partial<RetryOptions>;
   logger: Logger;
-  workerInterval?: StringTimeValue;
+  workerInterval?: ReadableTime;
 };
 
 export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
   const { mongoConnection, redisConnection, retry, workerInterval = "1 hours" } = options;
 
-  const workerIntervalInSeconds = stringSeconds(workerInterval);
-  const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairMongoRedisWorker"]);
 
   return new IntervalWorker(
@@ -44,7 +43,7 @@ export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
         }
       },
       retry,
-      time,
+      time: ms(workerInterval),
     },
     logger,
   );

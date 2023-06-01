@@ -4,9 +4,10 @@ import {
   axiosClientCredentialsMiddleware,
 } from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
-import { StringTimeValue, expiryDate, stringSeconds } from "@lindorm-io/expiry";
+import { expiryDate } from "@lindorm-io/expiry";
 import { IMemoryDatabase } from "@lindorm-io/in-memory-cache";
 import { IntervalWorker } from "@lindorm-io/koa";
+import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
 import { KeyPairMemoryCache } from "../infrastructure";
@@ -22,7 +23,7 @@ type Options = {
   memoryDatabase: IMemoryDatabase;
   path?: string;
   retry?: Partial<RetryOptions>;
-  workerInterval?: StringTimeValue;
+  workerInterval?: ReadableTime;
 };
 
 export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
@@ -38,8 +39,6 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const workerIntervalInSeconds = stringSeconds(workerInterval);
-  const time = workerIntervalInSeconds * 1000;
   const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
@@ -78,7 +77,7 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
         }
       },
       retry,
-      time,
+      time: ms(workerInterval),
     },
     logger,
   );
