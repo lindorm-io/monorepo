@@ -69,17 +69,17 @@
     "node": "18.15.0",
     "yarn": "1.22.17"
   },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
   "husky": {
     "hooks": {
       "commit-msg": "[[ -n $HUSKY_BYPASS ]] || commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged",
       "pre-push": "yarn verify:changed"
     }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   },
   "workspaces": [
     "packages/*"
