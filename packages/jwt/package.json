@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/jwt",
   "description": "JWT tools for lindorm.io",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,15 +20,15 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.1.9",
-    "@lindorm-io/common-types": "^0.3.0",
+    "@lindorm-io/common-types": "^0.3.1",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.20",
-    "@lindorm-io/expiry": "^0.1.6",
-    "@lindorm-io/random": "^0.2.3",
+    "@lindorm-io/expiry": "^0.2.0",
+    "@lindorm-io/random": "^0.2.4",
     "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
-    "@lindorm-io/key-pair": "^0.6.20",
+    "@lindorm-io/key-pair": "^0.7.0",
     "@types/jsonwebtoken": "^9.0.1",
     "date-fns": "^2.29.3"
   }

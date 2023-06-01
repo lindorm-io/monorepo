@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.20...@lindorm-io/key-pair@0.7.0) (2023-06-01)
+
+### Features
+
+- implement hs keys ([185225a](https://github.com/lindorm-io/monorepo/commit/185225aeda037e1397f38ebf51675d99f7bc499c))
+
 ## [0.6.20](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.6.19...@lindorm-io/key-pair@0.6.20) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/key-pair

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.7.0...@lindorm-io/node-server@0.8.0) (2023-06-01)
+
+### Bug Fixes
+
+- align with jwt changes ([4179369](https://github.com/lindorm-io/monorepo/commit/4179369eb1ca6ebed70a2a0b7b5fa35b533ec70b))
+- restore connection middleware ([c5c9920](https://github.com/lindorm-io/monorepo/commit/c5c992087de9d68e868bd42600c25392c9c2b719))
+
+### Features
+
+- implement at hash for jwts ([14f3a64](https://github.com/lindorm-io/monorepo/commit/14f3a644d3aae9567662c9a4ad4cfab201dc3ae8))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.6.2...@lindorm-io/node-server@0.7.0) (2023-04-03)
 
 ### Bug Fixes

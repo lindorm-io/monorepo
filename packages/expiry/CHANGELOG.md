@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/expiry@0.1.6...@lindorm-io/expiry@0.2.0) (2023-06-01)
+
+### Features
+
+- vastly improve string-time ([33e250c](https://github.com/lindorm-io/monorepo/commit/33e250c6b60ea4a6b63481e92e8715a0e2a3c4bc))
+
 ## [0.1.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/expiry@0.1.5...@lindorm-io/expiry@0.1.6) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/expiry

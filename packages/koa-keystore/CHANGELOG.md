@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.10.4...@lindorm-io/koa-keystore@0.10.5) (2023-06-01)
+
+### Bug Fixes
+
+- align with expiry ([424c98f](https://github.com/lindorm-io/monorepo/commit/424c98ffc5e704427feff958bc8504431bc0e78a))
+
 ## [0.10.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-keystore@0.10.3...@lindorm-io/koa-keystore@0.10.4) (2023-04-03)
 
 **Note:** Version bump only for package @lindorm-io/koa-keystore

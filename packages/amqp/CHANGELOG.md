@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/amqp@0.3.0...@lindorm-io/amqp@0.3.1) (2023-06-01)
+
+### Bug Fixes
+
+- replace merge with deepmerge ([64a131b](https://github.com/lindorm-io/monorepo/commit/64a131b68cbe730003cb99fc09cccad1a33decdc))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/amqp@0.2.18...@lindorm-io/amqp@0.3.0) (2023-04-03)
 
 ### Features

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.0...@lindorm-io/koa@0.17.1) (2023-06-01)
+
+### Bug Fixes
+
+- rework config type ([f6b5edb](https://github.com/lindorm-io/monorepo/commit/f6b5edb2b15541ec50fcc6f971b0fbc99f2a193c))
+
 # [0.17.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.16.3...@lindorm-io/koa@0.17.0) (2023-04-03)
 
 ### Bug Fixes

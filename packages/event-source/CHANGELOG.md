@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.19](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.18...@lindorm-io/event-source@0.2.19) (2023-06-01)
+
+### Bug Fixes
+
+- use common structure scanner and deepmerge ([027c41c](https://github.com/lindorm-io/monorepo/commit/027c41cc73bd0e50af15a5dd806964fdfe9da322))
+
 ## [0.2.18](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.17...@lindorm-io/event-source@0.2.18) (2023-04-03)
 
 ### Bug Fixes

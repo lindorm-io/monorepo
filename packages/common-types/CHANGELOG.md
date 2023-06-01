@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.0...@lindorm-io/common-types@0.3.1) (2023-06-01)
+
+### Bug Fixes
+
+- add password grant ([2377d9f](https://github.com/lindorm-io/monorepo/commit/2377d9f09466ad3edf05f92d38d89140a63fdc24))
+- align with open id ([f29ba40](https://github.com/lindorm-io/monorepo/commit/f29ba4094be14f9507a84a3f6533104904d6b158))
+- move hint into method config ([02f9e0f](https://github.com/lindorm-io/monorepo/commit/02f9e0f3d98a1f6ed5bba8830606365e95b5d2ab))
+- relax scopes ([51ec884](https://github.com/lindorm-io/monorepo/commit/51ec8849ebb067a2fdf5a5055bb796f8ea445074))
+- remove jwt from introspect ([634e36a](https://github.com/lindorm-io/monorepo/commit/634e36a1c369327da0798c42097b645c39b73aff))
+- rename api contracts ([c1115a0](https://github.com/lindorm-io/monorepo/commit/c1115a09a3710e4fcf5155daf93c1b9b805a6d86))
+- rename sso ([ff9f512](https://github.com/lindorm-io/monorepo/commit/ff9f512b5192e49d0928244b06086ed04849ba13))
+- renaming entities and adding features ([1cda8ab](https://github.com/lindorm-io/monorepo/commit/1cda8aba34fea9cd7567206de77ba8a1ea5d4885))
+- update client data ([da8ed95](https://github.com/lindorm-io/monorepo/commit/da8ed959f91fab8dcf40255379c7799e59b7f277))
+- update exchange endpoint keys ([39f0047](https://github.com/lindorm-io/monorepo/commit/39f0047ba15c846560b7021b867c627a4d513a0d))
+- update nomenclature ([138e7f0](https://github.com/lindorm-io/monorepo/commit/138e7f0a94be372ee03a5386214f86cdf40c0ccf))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.2.2...@lindorm-io/common-types@0.3.0) (2023-04-01)
 
 ### Bug Fixes

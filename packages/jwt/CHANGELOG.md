@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.9.3...@lindorm-io/jwt@0.10.0) (2023-06-01)
+
+### Bug Fixes
+
+- add options to opaque token ([b8bbcee](https://github.com/lindorm-io/monorepo/commit/b8bbceeed819063350ff9230ac3046fd5d547578))
+- ensure secret is honored ([bf372e8](https://github.com/lindorm-io/monorepo/commit/bf372e8b0f2fcc79a52a84f1dd79c2e42c47ae47))
+- force refresh tokens to be opaque ([aae2942](https://github.com/lindorm-io/monorepo/commit/aae29422b4aa723f22cc8848eaf1ddb0d87b94e1))
+- improve custom verification ([98fb986](https://github.com/lindorm-io/monorepo/commit/98fb9869c7bb6f3632eaa0ad57003f2c48a2ed0c))
+- remove ext ([f4827f5](https://github.com/lindorm-io/monorepo/commit/f4827f5a57925a1d62af6f847aa76646ed94a52d))
+- upgrade opaque token functions ([0646c03](https://github.com/lindorm-io/monorepo/commit/0646c03dabf08d310114fcc4d320664ff926f846))
+
+### Features
+
+- add at-hash ([ffefa9a](https://github.com/lindorm-io/monorepo/commit/ffefa9aa50d3f84074d506a6236cb6056cefb058))
+- add opaque tokens ([5094d52](https://github.com/lindorm-io/monorepo/commit/5094d521632ea5f8c095603192321ce0b2b0ace4))
+- implement hs keys ([185225a](https://github.com/lindorm-io/monorepo/commit/185225aeda037e1397f38ebf51675d99f7bc499c))
+- organise decode result ([a44c546](https://github.com/lindorm-io/monorepo/commit/a44c54615ff3687316b3f52150e2334a5a5950c7))
+
 ## [0.9.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.9.2...@lindorm-io/jwt@0.9.3) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/jwt
