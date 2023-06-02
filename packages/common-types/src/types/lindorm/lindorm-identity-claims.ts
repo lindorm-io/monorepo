@@ -30,4 +30,4 @@ type CustomClaims = {
   socialSecurityNumberVerified: boolean;
 };
 
-export type LindormClaims = Omit<OpenIdClaims, "address"> & CustomClaims;
+export type LindormIdentityClaims = Omit<OpenIdClaims, "address"> & CustomClaims;

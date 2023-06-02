@@ -1,3 +1,3 @@
-import { LindormClaims } from "../../../lindorm";
+import { LindormIdentityClaims } from "../../../lindorm";
 
-export type GetUserinfoResponse = Partial<LindormClaims>;
+export type GetUserinfoResponse = Partial<LindormIdentityClaims>;
