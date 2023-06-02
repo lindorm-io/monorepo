@@ -1,6 +1,6 @@
 import { Axios } from "@lindorm-io/axios";
 import { Dict } from "@lindorm-io/common-types";
-import { JWT, JwtDecodeResult } from "@lindorm-io/jwt";
+import { JWT, JwtVerify } from "@lindorm-io/jwt";
 import { KeyPair, Keystore } from "@lindorm-io/key-pair";
 import {
   DefaultLindormContext,
@@ -41,7 +41,7 @@ export interface LindormNodeServerRedis {
 }
 
 export interface LindormNodeServerToken {
-  bearerToken: JwtDecodeResult<never>;
+  bearerToken: JwtVerify;
 }
 
 export interface LindormNodeServerContext extends DefaultLindormContext {
