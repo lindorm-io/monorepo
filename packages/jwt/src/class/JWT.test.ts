@@ -30,8 +30,9 @@ describe("JWT", () => {
     };
     optionsFull = {
       id: "d2457602-63bd-48c5-a19f-bfd81bf870c0",
+      accessToken:
+        "aa08b86a3550489380219a18efcd1532aa08b86a3550489380219a18efcd1532aa08b86a3550489380219a18efcd1532",
       adjustedAccessLevel: 3,
-      atHash: "aa08b86a3550489380219a18efcd1532",
       audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
       authContextClass: "loa_4",
       authMethodsReference: ["email"],
@@ -39,6 +40,7 @@ describe("JWT", () => {
       authTime: getUnixTime(new Date()),
       claims: { claimsKey: "claimValue" },
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
+      code: "e69f2ca7ef134767827a13f5ae28d8bde69f2ca7ef134767827a13f5ae28d8bde69f2ca7ef134767827a13f5ae28d8bd",
       expiry: "10 seconds",
       jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
       levelOfAssurance: 4,
@@ -80,8 +82,11 @@ describe("JWT", () => {
             audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
             subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
-          metadata: expect.objectContaining({
+          key: expect.objectContaining({
             algorithm: "ES512",
+            keyId: "7531da89-12e9-403e-925a-5da49100635c",
+          }),
+          metadata: expect.objectContaining({
             type: "id_token",
           }),
           token,
@@ -110,8 +115,11 @@ describe("JWT", () => {
             audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
             subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
-          metadata: expect.objectContaining({
+          key: expect.objectContaining({
             algorithm: "HS512",
+            keyId: "aa08b86a-3550-4893-8021-9a18efcd1532",
+          }),
+          metadata: expect.objectContaining({
             type: "id_token",
           }),
           token,
@@ -140,23 +148,16 @@ describe("JWT", () => {
             audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
             subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
-          metadata: expect.objectContaining({
+          key: expect.objectContaining({
             algorithm: "RS512",
+            keyId: "e6301473-e347-4035-8084-8645d034e4a3",
+          }),
+          metadata: expect.objectContaining({
             type: "id_token",
           }),
           token,
         }),
       );
-    });
-  });
-
-  describe("createHash", () => {
-    test("should create hash", () => {
-      expect(
-        jwt.createHash(
-          "OqqGKbIQmFZEmygaoBtlAhKhJIjKPcUNHVfhAsmAQtQpExmmtJUnxPtTWFcwnUKvEKoAEScAKVkjGrtOjjGwPJLStjEjouUuBPQrNXWCLIQcYMhGauPQkOKvNEhlKoQSscvmLKNDMHYFIjeVEutruVojWmuSXDsWHiVjqQzXhPZICuhwitAxWWlDBAyWbohxAHnMeUAsatJGuNdCWciiPBiQyVhNrtnmXsUvGRIyRihPjWTGKKHVFnmgNDMNJswm",
-        ),
-      ).toBe("6424l6RHpQH3c6u8vDKCdpPRWM55EYgvwhplokwqATaXs0ngACNuRsEQb5ERFp8T");
     });
   });
 
@@ -184,10 +185,11 @@ describe("JWT", () => {
         aal: 3,
         acr: "loa_4",
         amr: ["email"],
-        at_hash: "aa08b86a3550489380219a18efcd1532",
+        at_hash: "DiaOjAZXq59GMroKTHuo0g",
         aud: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         auth_time: 1609488000,
         azp: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        c_hash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         cid: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
         claims_key: "claimValue",
         exp: 1609488010,
@@ -239,33 +241,38 @@ describe("JWT", () => {
 
     expect(JWT.decodePayload(token)).toStrictEqual({
       id,
-      claims: {
+      active: true,
+      auth: {
+        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         adjustedAccessLevel: 3,
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         authContextClass: "loa_4",
         authMethodsReference: ["email"],
         authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
+        levelOfAssurance: 4,
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+      },
+      claims: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         claimsKey: "claimValue",
         client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-        levelOfAssurance: 4,
         scopes: ["openid"],
         session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         subject: "c3e1b21a-0556-4b61-8805-60627028536f",
         tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
         username: "princejonn",
       },
-      metadata: {
-        active: true,
+      key: {
         algorithm: "ES512",
-        atHash: "aa08b86a3550489380219a18efcd1532",
+        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+      },
+      metadata: {
         authTime: 1609488000,
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
-        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
-        nonce: "bed190d568a5456bb15a39cf71d72022",
         notBefore: 1609488000,
         now: 1609488000,
         sessionHint: "refresh",
@@ -411,33 +418,38 @@ describe("JWT", () => {
 
     expect(jwt.verify(token)).toStrictEqual({
       id,
-      claims: {
+      active: true,
+      auth: {
+        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         adjustedAccessLevel: 3,
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         authContextClass: "loa_4",
         authMethodsReference: ["email"],
         authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
+        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
+        levelOfAssurance: 4,
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+      },
+      claims: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         claimsKey: "claimValue",
         client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-        levelOfAssurance: 4,
         scopes: ["openid"],
         session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         subject: "c3e1b21a-0556-4b61-8805-60627028536f",
         tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
         username: "princejonn",
       },
-      metadata: {
-        active: true,
+      key: {
         algorithm: "ES512",
-        atHash: "aa08b86a3550489380219a18efcd1532",
+        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+      },
+      metadata: {
         authTime: 1609488000,
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
-        jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
-        nonce: "bed190d568a5456bb15a39cf71d72022",
         notBefore: 1609488000,
         now: 1609488000,
         sessionHint: "refresh",
@@ -453,32 +465,37 @@ describe("JWT", () => {
 
     expect(jwt.verify(token)).toStrictEqual({
       id,
-      claims: {
+      active: true,
+      auth: {
+        accessTokenHash: null,
         adjustedAccessLevel: 0,
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         authContextClass: null,
         authMethodsReference: [],
         authorizedParty: null,
-        client: null,
+        codeHash: null,
         levelOfAssurance: 0,
+        nonce: null,
+      },
+      claims: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        client: null,
         scopes: [],
         session: null,
         subject: "c3e1b21a-0556-4b61-8805-60627028536f",
         tenant: null,
         username: null,
       },
-      metadata: {
-        active: true,
+      key: {
         algorithm: "ES512",
-        atHash: null,
+        jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
+        keyId: "7531da89-12e9-403e-925a-5da49100635c",
+      },
+      metadata: {
         authTime: null,
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
-        jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
-        nonce: null,
         notBefore: 1609488000,
         now: 1609488000,
         sessionHint: null,

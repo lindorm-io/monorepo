@@ -1,14 +1,16 @@
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { Algorithm } from "jsonwebtoken";
+import { JwtDecode } from "./decode";
 
 export type JwtVerifyOptions = {
+  accessTokenHash?: string;
   adjustedAccessLevel?: AdjustedAccessLevel;
   algorithms?: Algorithm[];
-  atHash?: string;
   audience?: string;
   authorizedParty?: string;
   client?: string;
   clockTolerance?: number;
+  codeHash?: string;
   issuer?: string;
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string | number;
@@ -21,3 +23,5 @@ export type JwtVerifyOptions = {
   tenant?: string;
   types?: string[];
 };
+
+export type JwtVerify<Claims = Record<string, never>> = JwtDecode<Claims>;

@@ -11,19 +11,13 @@ import { KeyPair, KeyType, Keystore } from "@lindorm-io/key-pair";
 import { createHash, randomUUID } from "crypto";
 import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
-import {
-  JwtDecodeResult,
-  JwtOptions,
-  JwtSignOptions,
-  JwtSignResult,
-  JwtVerifyOptions,
-} from "../types";
+import { JwtDecode, JwtOptions, JwtSign, JwtSignOptions, JwtVerifyOptions } from "../types";
 import {
   assertClaimDifference,
   assertClaimEquals,
   assertClaimIncludes,
   assertGreaterOrEqual,
-  getFirst128BitsFromBuffer,
+  getFirstBitsFromBuffer,
   getHashAlgFromKey,
   getUnixTime,
 } from "../util/private";
@@ -46,11 +40,11 @@ export class JWT {
     this.keyType = options.keyType;
   }
 
-  public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSignResult {
+  public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSign {
     const {
       id = randomUUID(),
+      accessToken,
       adjustedAccessLevel,
-      atHash,
       audiences,
       authContextClass,
       authMethodsReference,
@@ -58,6 +52,7 @@ export class JWT {
       authTime,
       claims,
       client,
+      code,
       issuedAt,
       jwksUrl = this.jwksUrl,
       keyType,
@@ -75,6 +70,9 @@ export class JWT {
     } = options;
 
     const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
+
+    const accessTokenHash = accessToken ? this.createHash(accessToken, 128) : undefined;
+    const codeHash = code ? this.createHash(code, 256) : undefined;
 
     this.logger.debug("Signing token", {
       options,
@@ -94,9 +92,10 @@ export class JWT {
       // optional standard claims
       acr: authContextClass,
       amr: authMethodsReference,
-      at_hash: atHash,
+      at_hash: accessTokenHash,
       auth_time: authTime,
       azp: authorizedParty,
+      c_hash: codeHash,
       nonce: nonce,
       sid: session,
 
@@ -135,17 +134,18 @@ export class JWT {
   public verify<Claims = Record<string, never>>(
     token: string,
     options: JwtVerifyOptions = {},
-  ): JwtDecodeResult<Claims> {
+  ): JwtDecode<Claims> {
     this.logger.debug("verify token", { token, options });
 
     const payload = JWT.decodePayload<Claims>(token);
     const {
+      accessTokenHash,
       adjustedAccessLevel,
-      atHash,
       audience,
       authorizedParty,
       client,
       clockTolerance,
+      codeHash,
       issuer = this.issuer,
       levelOfAssurance,
       maxAge,
@@ -165,8 +165,8 @@ export class JWT {
     if (secret) {
       algorithms = options.algorithms || ["HS256"];
       publicKey = secret;
-    } else if (payload.metadata.keyId) {
-      ({ algorithms, publicKey } = this.keystore.getKey(payload.metadata.keyId));
+    } else if (payload.key.keyId) {
+      ({ algorithms, publicKey } = this.keystore.getKey(payload.key.keyId));
     } else {
       throw new TokenError("Missing keyId or secret");
     }
@@ -190,23 +190,27 @@ export class JWT {
 
     try {
       if (adjustedAccessLevel) {
-        assertGreaterOrEqual(adjustedAccessLevel, payload.claims.adjustedAccessLevel, "aal");
+        assertGreaterOrEqual(adjustedAccessLevel, payload.auth.adjustedAccessLevel, "aal");
       }
 
       if (authorizedParty) {
-        assertClaimEquals(authorizedParty, payload.claims.authorizedParty, "azp");
+        assertClaimEquals(authorizedParty, payload.auth.authorizedParty, "azp");
       }
 
-      if (atHash) {
-        assertClaimEquals(atHash, payload.metadata.atHash, "at_hash");
+      if (accessTokenHash) {
+        assertClaimEquals(accessTokenHash, payload.auth.accessTokenHash, "at_hash");
       }
 
       if (client) {
         assertClaimEquals(client, payload.claims.client, "cid");
       }
 
+      if (codeHash) {
+        assertClaimEquals(codeHash, payload.auth.codeHash, "c_hash");
+      }
+
       if (levelOfAssurance) {
-        assertGreaterOrEqual(levelOfAssurance, payload.claims.levelOfAssurance, "loa");
+        assertGreaterOrEqual(levelOfAssurance, payload.auth.levelOfAssurance, "loa");
       }
 
       if (scopes?.length) {
@@ -239,21 +243,11 @@ export class JWT {
     }
   }
 
-  public createHash(input: string, keyType?: KeyType): string {
-    const key = this.getSigningKey(keyType);
-    const alg = getHashAlgFromKey(key);
-    const buffer = createHash(alg).update(input, "utf8").digest();
-
-    return getFirst128BitsFromBuffer(buffer);
-  }
-
   public static decode(token: string): Jwt | null {
     return decode(token, { complete: true });
   }
 
-  public static decodePayload<Claims = Record<string, never>>(
-    token: string,
-  ): JwtDecodeResult<Claims> {
+  public static decodePayload<Claims = Record<string, never>>(token: string): JwtDecode<Claims> {
     const {
       header: { alg: algorithm, jku, kid: keyId },
       payload: object,
@@ -272,6 +266,7 @@ export class JWT {
       aud,
       auth_time,
       azp,
+      c_hash,
       cid,
       exp,
       iat,
@@ -295,34 +290,38 @@ export class JWT {
 
     return {
       id: jti,
-      claims: {
-        ...claims,
-
+      active: iat <= now && nbf <= now && exp >= now,
+      auth: {
+        accessTokenHash: at_hash || null,
         adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
-        audiences: aud,
         authContextClass: acr || null,
         authMethodsReference: amr || [],
         authorizedParty: azp || null,
-        client: cid || null,
+        codeHash: c_hash || null,
         levelOfAssurance: (loa as LevelOfAssurance) || 0,
+        nonce: nonce || null,
+      },
+      claims: {
+        ...claims,
+        audiences: aud,
+        client: cid || null,
         scopes: scope ? scope.split(" ") : [],
         session: sid || null,
         subject: sub,
         tenant: tid || null,
         username: usr || null,
       },
-      metadata: {
-        active: iat <= now && nbf <= now && exp >= now,
+      key: {
         algorithm,
-        atHash: at_hash || null,
+        keyId,
+        jwksUrl: jku || null,
+      },
+      metadata: {
         authTime: auth_time || null,
         expires: exp,
         expiresIn: exp - now,
         issuedAt: iat,
         issuer: iss,
-        jwksUrl: jku || null,
-        keyId,
-        nonce: nonce || null,
         notBefore: nbf,
         now,
         sessionHint: sih || null,
@@ -331,6 +330,14 @@ export class JWT {
       },
       token,
     };
+  }
+
+  private createHash(input: string, bits: number, keyType?: KeyType): string {
+    const key = this.getSigningKey(keyType);
+    const alg = getHashAlgFromKey(key);
+    const buffer = createHash(alg).update(input, "utf8").digest();
+
+    return getFirstBitsFromBuffer(buffer, bits);
   }
 
   private getSecret(key: KeyPair): Secret {
