@@ -66,7 +66,6 @@ export class JWT {
       subjectHint,
       tenant,
       type,
-      username,
     } = options;
 
     const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
@@ -107,7 +106,6 @@ export class JWT {
       sih: sessionHint,
       suh: subjectHint,
       tid: tenant,
-      usr: username,
 
       // remaining claims
       ...(claims ? snakeCase(claims) : {}),
@@ -165,8 +163,8 @@ export class JWT {
     if (secret) {
       algorithms = options.algorithms || ["HS256"];
       publicKey = secret;
-    } else if (payload.key.keyId) {
-      ({ algorithms, publicKey } = this.keystore.getKey(payload.key.keyId));
+    } else if (payload.key.id) {
+      ({ algorithms, publicKey } = this.keystore.getKey(payload.key.id));
     } else {
       throw new TokenError("Missing keyId or secret");
     }
@@ -198,15 +196,15 @@ export class JWT {
       }
 
       if (accessTokenHash) {
-        assertClaimEquals(accessTokenHash, payload.auth.accessTokenHash, "at_hash");
+        assertClaimEquals(accessTokenHash, payload.metadata.accessTokenHash, "at_hash");
       }
 
       if (client) {
-        assertClaimEquals(client, payload.claims.client, "cid");
+        assertClaimEquals(client, payload.payload.client, "cid");
       }
 
       if (codeHash) {
-        assertClaimEquals(codeHash, payload.auth.codeHash, "c_hash");
+        assertClaimEquals(codeHash, payload.metadata.codeHash, "c_hash");
       }
 
       if (levelOfAssurance) {
@@ -214,7 +212,7 @@ export class JWT {
       }
 
       if (scopes?.length) {
-        assertClaimDifference(scopes, payload.claims.scopes, "scp");
+        assertClaimDifference(scopes, payload.payload.scopes, "scp");
       }
 
       if (types?.length) {
@@ -222,7 +220,7 @@ export class JWT {
       }
 
       if (session) {
-        assertClaimEquals(session, payload.claims.session, "sid");
+        assertClaimEquals(session, payload.payload.session, "sid");
       }
 
       if (subjectHints?.length) {
@@ -230,7 +228,7 @@ export class JWT {
       }
 
       if (tenant) {
-        assertClaimEquals(tenant, payload.claims.tenant, "tid");
+        assertClaimEquals(tenant, payload.payload.tenant, "tid");
       }
 
       this.logger.debug("verify token success", { claims: payload });
@@ -282,7 +280,6 @@ export class JWT {
       suh,
       tid,
       token_type,
-      usr,
       ...rest
     } = object;
 
@@ -292,32 +289,22 @@ export class JWT {
       id: jti,
       active: iat <= now && nbf <= now && exp >= now,
       auth: {
-        accessTokenHash: at_hash || null,
         adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
         authContextClass: acr || null,
         authMethodsReference: amr || [],
         authorizedParty: azp || null,
-        codeHash: c_hash || null,
         levelOfAssurance: (loa as LevelOfAssurance) || 0,
-        nonce: nonce || null,
       },
-      claims: {
-        ...claims,
-        audiences: aud,
-        client: cid || null,
-        scopes: scope ? scope.split(" ") : [],
-        session: sid || null,
-        subject: sub,
-        tenant: tid || null,
-        username: usr || null,
-      },
+      claims,
       key: {
+        id: keyId,
         algorithm,
-        keyId,
         jwksUrl: jku || null,
       },
       metadata: {
+        accessTokenHash: at_hash || null,
         authTime: auth_time || null,
+        codeHash: c_hash || null,
         expires: exp,
         expiresIn: exp - now,
         issuedAt: iat,
@@ -327,6 +314,15 @@ export class JWT {
         sessionHint: sih || null,
         subjectHint: suh || null,
         type: token_type,
+      },
+      payload: {
+        audiences: aud,
+        client: cid || null,
+        nonce: nonce || null,
+        scopes: scope ? scope.split(" ") : [],
+        session: sid || null,
+        subject: sub,
+        tenant: tid || null,
       },
       token,
     };

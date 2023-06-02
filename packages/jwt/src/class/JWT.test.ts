@@ -53,7 +53,6 @@ describe("JWT", () => {
       subjectHint: "identity",
       tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       type: "id_token",
-      username: "princejonn",
     };
     jwt = createTestJwt({
       jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
@@ -78,16 +77,16 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
-          claims: expect.objectContaining({
-            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          }),
           key: expect.objectContaining({
+            id: "7531da89-12e9-403e-925a-5da49100635c",
             algorithm: "ES512",
-            keyId: "7531da89-12e9-403e-925a-5da49100635c",
           }),
           metadata: expect.objectContaining({
             type: "id_token",
+          }),
+          payload: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
           token,
         }),
@@ -111,16 +110,16 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
-          claims: expect.objectContaining({
-            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          }),
           key: expect.objectContaining({
+            id: "aa08b86a-3550-4893-8021-9a18efcd1532",
             algorithm: "HS512",
-            keyId: "aa08b86a-3550-4893-8021-9a18efcd1532",
           }),
           metadata: expect.objectContaining({
             type: "id_token",
+          }),
+          payload: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
           token,
         }),
@@ -144,16 +143,16 @@ describe("JWT", () => {
       expect(jwt.verify(token)).toStrictEqual(
         expect.objectContaining({
           id,
-          claims: expect.objectContaining({
-            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-          }),
           key: expect.objectContaining({
+            id: "e6301473-e347-4035-8084-8645d034e4a3",
             algorithm: "RS512",
-            keyId: "e6301473-e347-4035-8084-8645d034e4a3",
           }),
           metadata: expect.objectContaining({
             type: "id_token",
+          }),
+          payload: expect.objectContaining({
+            audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+            subject: "c3e1b21a-0556-4b61-8805-60627028536f",
           }),
           token,
         }),
@@ -206,7 +205,6 @@ describe("JWT", () => {
         suh: "identity",
         tid: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
         token_type: "id_token",
-        usr: "princejonn",
       },
       signature: expect.any(String),
     });
@@ -243,32 +241,24 @@ describe("JWT", () => {
       id,
       active: true,
       auth: {
-        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         adjustedAccessLevel: 3,
         authContextClass: "loa_4",
         authMethodsReference: ["email"],
         authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
-        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         levelOfAssurance: 4,
-        nonce: "bed190d568a5456bb15a39cf71d72022",
       },
       claims: {
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         claimsKey: "claimValue",
-        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-        scopes: ["openid"],
-        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
-        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
-        username: "princejonn",
       },
       key: {
+        id: "7531da89-12e9-403e-925a-5da49100635c",
         algorithm: "ES512",
         jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
       },
       metadata: {
+        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         authTime: 1609488000,
+        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
@@ -278,6 +268,15 @@ describe("JWT", () => {
         sessionHint: "refresh",
         subjectHint: "identity",
         type: "id_token",
+      },
+      payload: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+        scopes: ["openid"],
+        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       },
       token,
     });
@@ -420,32 +419,24 @@ describe("JWT", () => {
       id,
       active: true,
       auth: {
-        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         adjustedAccessLevel: 3,
         authContextClass: "loa_4",
         authMethodsReference: ["email"],
         authorizedParty: "13480815-309a-4b7c-b8e7-325ff76fd150",
-        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         levelOfAssurance: 4,
-        nonce: "bed190d568a5456bb15a39cf71d72022",
       },
       claims: {
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
         claimsKey: "claimValue",
-        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
-        scopes: ["openid"],
-        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
-        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
-        username: "princejonn",
       },
       key: {
+        id: "7531da89-12e9-403e-925a-5da49100635c",
         algorithm: "ES512",
         jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
       },
       metadata: {
+        accessTokenHash: "DiaOjAZXq59GMroKTHuo0g",
         authTime: 1609488000,
+        codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
@@ -455,6 +446,15 @@ describe("JWT", () => {
         sessionHint: "refresh",
         subjectHint: "identity",
         type: "id_token",
+      },
+      payload: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
+        nonce: "bed190d568a5456bb15a39cf71d72022",
+        scopes: ["openid"],
+        session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        tenant: "d4d0aa3b-e7f3-494b-87d0-cdfed3514788",
       },
       token,
     });
@@ -467,31 +467,22 @@ describe("JWT", () => {
       id,
       active: true,
       auth: {
-        accessTokenHash: null,
         adjustedAccessLevel: 0,
         authContextClass: null,
         authMethodsReference: [],
         authorizedParty: null,
-        codeHash: null,
         levelOfAssurance: 0,
-        nonce: null,
       },
-      claims: {
-        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
-        client: null,
-        scopes: [],
-        session: null,
-        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
-        tenant: null,
-        username: null,
-      },
+      claims: {},
       key: {
+        id: "7531da89-12e9-403e-925a-5da49100635c",
         algorithm: "ES512",
         jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
-        keyId: "7531da89-12e9-403e-925a-5da49100635c",
       },
       metadata: {
+        accessTokenHash: null,
         authTime: null,
+        codeHash: null,
         expires: 1609488010,
         expiresIn: 10,
         issuedAt: 1609488000,
@@ -501,6 +492,15 @@ describe("JWT", () => {
         sessionHint: null,
         subjectHint: null,
         type: "id_token",
+      },
+      payload: {
+        audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
+        subject: "c3e1b21a-0556-4b61-8805-60627028536f",
+        client: null,
+        nonce: null,
+        scopes: [],
+        session: null,
+        tenant: null,
       },
       token,
     });

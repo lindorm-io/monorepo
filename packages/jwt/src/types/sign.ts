@@ -28,7 +28,6 @@ export type JwtSignOptions<Claims = Record<string, never>> = {
   subjectHint?: string;
   tenant?: string;
   type: string;
-  username?: string;
 };
 
 export type JwtSign = {

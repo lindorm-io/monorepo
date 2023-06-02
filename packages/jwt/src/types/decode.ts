@@ -2,34 +2,23 @@ import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types"
 import { Algorithm } from "@lindorm-io/key-pair";
 
 export type JwtDecodeAuth = {
-  accessTokenHash: string | null;
   adjustedAccessLevel: AdjustedAccessLevel;
   authContextClass: string | null;
   authMethodsReference: Array<string>;
   authorizedParty: string | null;
-  codeHash: string | null;
   levelOfAssurance: LevelOfAssurance;
-  nonce: string | null;
-};
-
-export type JwtDecodeClaims<Claims = Record<string, never>> = Claims & {
-  audiences: Array<string>;
-  client: string | null;
-  scopes: Array<string>;
-  session: string | null;
-  subject: string;
-  tenant: string | null;
-  username: string | null;
 };
 
 export type JwtDecodeKey = {
+  id: string;
   algorithm: Algorithm;
   jwksUrl: string | null;
-  keyId: string;
 };
 
 export type JwtDecodeMetadata = {
+  accessTokenHash: string | null;
   authTime: number | null;
+  codeHash: string | null;
   expires: number;
   expiresIn: number;
   issuedAt: number;
@@ -41,12 +30,23 @@ export type JwtDecodeMetadata = {
   type: string;
 };
 
+export type JwtDecodePayload = {
+  audiences: Array<string>;
+  client: string | null;
+  nonce: string | null;
+  scopes: Array<string>;
+  session: string | null;
+  subject: string;
+  tenant: string | null;
+};
+
 export type JwtDecode<Claims = Record<string, never>> = {
   id: string;
   active: boolean;
   auth: JwtDecodeAuth;
-  claims: JwtDecodeClaims<Claims>;
+  claims: Claims;
   key: JwtDecodeKey;
   metadata: JwtDecodeMetadata;
+  payload: JwtDecodePayload;
   token: string;
 };
