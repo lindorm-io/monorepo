@@ -77,9 +77,7 @@ describe("bearerAuthMiddleware", () => {
 
     expect(ctx.token.bearerToken).toStrictEqual(
       expect.objectContaining({
-        claims: expect.objectContaining({
-          subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
-        }),
+        subject: "c57ed8ee-0797-44dd-921b-3db030879ec6",
         token: expect.any(String),
       }),
     );
@@ -89,7 +87,7 @@ describe("bearerAuthMiddleware", () => {
   test("should successfully validate bearer token with custom validation callback", async () => {
     await expect(
       bearerAuthMiddleware(config)({}, async (context, verifyData) => {
-        if (verifyData.claims.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
+        if (verifyData.subject !== "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),
@@ -119,7 +117,7 @@ describe("bearerAuthMiddleware", () => {
   test("should throw error with custom validation callback", async () => {
     await expect(
       bearerAuthMiddleware(config)({}, async (context) => {
-        if (context.token.bearerToken.claims.subject === "c57ed8ee-0797-44dd-921b-3db030879ec6") {
+        if (context.token.bearerToken.subject === "c57ed8ee-0797-44dd-921b-3db030879ec6") {
           throw Error("message");
         }
       })(ctx, next),

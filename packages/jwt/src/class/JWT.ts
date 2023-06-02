@@ -188,11 +188,11 @@ export class JWT {
 
     try {
       if (adjustedAccessLevel) {
-        assertGreaterOrEqual(adjustedAccessLevel, payload.auth.adjustedAccessLevel, "aal");
+        assertGreaterOrEqual(adjustedAccessLevel, payload.metadata.adjustedAccessLevel, "aal");
       }
 
       if (authorizedParty) {
-        assertClaimEquals(authorizedParty, payload.auth.authorizedParty, "azp");
+        assertClaimEquals(authorizedParty, payload.metadata.authorizedParty, "azp");
       }
 
       if (accessTokenHash) {
@@ -200,7 +200,7 @@ export class JWT {
       }
 
       if (client) {
-        assertClaimEquals(client, payload.payload.client, "cid");
+        assertClaimEquals(client, payload.metadata.client, "cid");
       }
 
       if (codeHash) {
@@ -208,11 +208,11 @@ export class JWT {
       }
 
       if (levelOfAssurance) {
-        assertGreaterOrEqual(levelOfAssurance, payload.auth.levelOfAssurance, "loa");
+        assertGreaterOrEqual(levelOfAssurance, payload.metadata.levelOfAssurance, "loa");
       }
 
       if (scopes?.length) {
-        assertClaimDifference(scopes, payload.payload.scopes, "scp");
+        assertClaimDifference(scopes, payload.metadata.scopes, "scp");
       }
 
       if (types?.length) {
@@ -220,7 +220,7 @@ export class JWT {
       }
 
       if (session) {
-        assertClaimEquals(session, payload.payload.session, "sid");
+        assertClaimEquals(session, payload.metadata.session, "sid");
       }
 
       if (subjectHints?.length) {
@@ -228,7 +228,7 @@ export class JWT {
       }
 
       if (tenant) {
-        assertClaimEquals(tenant, payload.payload.tenant, "tid");
+        assertClaimEquals(tenant, payload.metadata.tenant, "tid");
       }
 
       this.logger.debug("verify token success", { claims: payload });
@@ -287,14 +287,6 @@ export class JWT {
 
     return {
       id: jti,
-      active: iat <= now && nbf <= now && exp >= now,
-      auth: {
-        adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
-        authContextClass: acr || null,
-        authMethodsReference: amr || [],
-        authorizedParty: azp || null,
-        levelOfAssurance: (loa as LevelOfAssurance) || 0,
-      },
       claims,
       key: {
         id: keyId,
@@ -303,27 +295,31 @@ export class JWT {
       },
       metadata: {
         accessTokenHash: at_hash || null,
+        active: iat <= now && nbf <= now && exp >= now,
+        adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
+        audiences: aud,
+        authContextClass: acr || null,
+        authMethodsReference: amr || [],
+        authorizedParty: azp || null,
         authTime: auth_time || null,
+        client: cid || null,
         codeHash: c_hash || null,
         expires: exp,
         expiresIn: exp - now,
         issuedAt: iat,
         issuer: iss,
+        levelOfAssurance: (loa as LevelOfAssurance) || 0,
+        nonce: nonce || null,
         notBefore: nbf,
         now,
-        sessionHint: sih || null,
-        subjectHint: suh || null,
-        type: token_type,
-      },
-      payload: {
-        audiences: aud,
-        client: cid || null,
-        nonce: nonce || null,
         scopes: scope ? scope.split(" ") : [],
         session: sid || null,
-        subject: sub,
+        sessionHint: sih || null,
+        subjectHint: suh || null,
         tenant: tid || null,
+        type: token_type,
       },
+      subject: sub,
       token,
     };
   }

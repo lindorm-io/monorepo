@@ -24,4 +24,4 @@ export type JwtVerifyOptions = {
   types?: string[];
 };
 
-export type JwtVerify<Claims = Record<string, never>> = JwtDecode<Claims>;
+export type JwtVerify<Claims = never> = JwtDecode<Claims>;
