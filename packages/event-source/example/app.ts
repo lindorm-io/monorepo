@@ -56,6 +56,8 @@ const main = async (): Promise<void> => {
       aggregates: join(__dirname, "aggregates"),
       connections: { amqp, mongo, postgres },
       queries: join(__dirname, "queries"),
+      sagas: join(__dirname, "sagas"),
+      views: join(__dirname, "views"),
     },
     logger,
   );

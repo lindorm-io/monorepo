@@ -1,9 +1,9 @@
-import { Attributes, Constructor, DtoClass, State } from "../generic";
-import { DomainEvent } from "../../message";
-import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { Logger } from "@lindorm-io/core-logger";
-import { IViewStore, ViewStoreAdapterType } from "../view-store";
+import { DomainEvent } from "../../message";
+import { Attributes, Constructor, DtoClass, State } from "../generic";
 import { StoreIndexes } from "../store-index";
+import { IViewStore, ViewStoreAdapterType } from "../view-store";
+import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 
 export interface ViewEventHandlerContext<
   TEvent extends DtoClass = DtoClass,
@@ -18,6 +18,7 @@ export interface ViewEventHandlerContext<
 }
 
 export interface ViewEventHandlerFileAggregate {
+  name?: string;
   context?: Array<string> | string;
 }
 
@@ -32,7 +33,6 @@ export interface ViewEventHandler<
   TState extends State = State,
 > {
   event: Constructor<TEvent>;
-  view: string;
   adapter: ViewEventHandlerAdapter;
   aggregate?: ViewEventHandlerFileAggregate;
   conditions?: HandlerConditions;

@@ -3,18 +3,14 @@ import { HandlerConditions, SagaEventHandler, SagaEventHandlerFileAggregate } fr
 
 export const JOI_SAGA_EVENT_HANDLER_FILE = Joi.object<SagaEventHandler>().keys({
   event: Joi.function().required(),
-  saga: Joi.string().required(),
-  aggregate: Joi.object<SagaEventHandlerFileAggregate>()
-    .keys({
-      context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())).optional(),
-    })
-    .optional(),
-  conditions: Joi.object<HandlerConditions>()
-    .keys({
-      created: Joi.boolean().optional(),
-      permanent: Joi.boolean().optional(),
-    })
-    .optional(),
-  getSagaId: Joi.function().optional(),
+  aggregate: Joi.object<SagaEventHandlerFileAggregate>().keys({
+    name: Joi.string(),
+    context: Joi.alternatives(Joi.string(), Joi.array().items(Joi.string())),
+  }),
+  conditions: Joi.object<HandlerConditions>().keys({
+    created: Joi.boolean(),
+    permanent: Joi.boolean(),
+  }),
+  getSagaId: Joi.function(),
   handler: Joi.function().required(),
 });

@@ -1,10 +1,9 @@
-import { SagaEventHandler } from "../../../../src";
-import { RespondGreeting } from "../../response/commands/respond-greeting.command";
-import { GreetingUpdated } from "./greeting-updated.event";
+import { SagaEventHandler } from "../../../src";
+import { GreetingUpdated } from "../../aggregates/greeting/events/greeting-updated.event";
+import { RespondGreeting } from "../../aggregates/response/commands/respond-greeting.command";
 
 const main: SagaEventHandler<GreetingUpdated> = {
   event: GreetingUpdated,
-  saga: "test_saga",
   conditions: { created: true },
   getSagaId: (event) => event.aggregate.id,
   handler: async ({ event, logger, dispatch, mergeState }) => {

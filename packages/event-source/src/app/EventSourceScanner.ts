@@ -50,6 +50,7 @@ export class EventSourceScanner {
   public readonly viewEventHandlers: Array<IViewEventHandler>;
 
   public readonly commandAggregates: Record<string, Array<string>>;
+  public readonly eventAggregates: Record<string, Array<string>>;
 
   public constructor(
     options: EventSourcePrivateOptions,
@@ -69,6 +70,7 @@ export class EventSourceScanner {
     this.viewEventHandlers = [];
 
     this.commandAggregates = {};
+    this.eventAggregates = {};
   }
 
   // public scan
@@ -82,7 +84,7 @@ export class EventSourceScanner {
     for (const file of files) {
       if (file.parents.length !== 2) {
         throw new Error(
-          "Expecting file structure: [ ./ aggregates / {commands|events} / {commandName|eventName} . {command|command-handler|event|event-handler|saga-handler|view-handler} . {js|ts} ]",
+          "Expecting file structure: [ . / aggregates / <aggregate-name> / {commands|events} / <file-name> . {command|event|handler} . {js|ts} ]",
         );
       }
 
@@ -106,6 +108,40 @@ export class EventSourceScanner {
         default:
           break;
       }
+    }
+  }
+
+  public async scanSagas(): Promise<void> {
+    const scan = this.scanner.scan(this.options.sagas);
+    const files = StructureScanner.flatten(scan);
+
+    this.logger.debug("Scanning sagas", { files });
+
+    for (const file of files) {
+      if (file.parents.length !== 1) {
+        throw new Error(
+          "Expecting file structure: [ . / sagas / <saga-name> / <file-name> . {handler} . {js|ts} ]",
+        );
+      }
+
+      this.loadSagaHandlers(file);
+    }
+  }
+
+  public async scanViews(): Promise<void> {
+    const scan = this.scanner.scan(this.options.views);
+    const files = StructureScanner.flatten(scan);
+
+    this.logger.debug("Scanning views", { files });
+
+    for (const file of files) {
+      if (file.parents.length !== 1) {
+        throw new Error(
+          "Expecting file structure: [ . / views / <view-name> / <file-name> . {handler} . {js|ts} ]",
+        );
+      }
+
+      this.loadViewHandlers(file);
     }
   }
 
@@ -135,14 +171,21 @@ export class EventSourceScanner {
     return context || this.options.context;
   }
 
-  public registerCommandAggregate(name: string, aggregate: string): void {
+  public registerAggregateCommand(name: string, aggregate: string): void {
     const snake = snakeCase(name);
     const current = this.commandAggregates[snake] || [];
 
     this.commandAggregates[snake] = [...new Set([current, aggregate].flat())];
   }
 
-  public getCommandAggregate(name: string): string {
+  public registerAggregateEvent(name: string, aggregate: string): void {
+    const snake = snakeCase(name);
+    const current = this.eventAggregates[snake] || [];
+
+    this.eventAggregates[snake] = [...new Set([current, aggregate].flat())];
+  }
+
+  public getAggregateFromCommand(name: string): string {
     const commandAggregates = this.commandAggregates[name];
 
     if (!commandAggregates.length) {
@@ -167,10 +210,33 @@ export class EventSourceScanner {
 
   // private switch handlers
 
+  private getAggregateFromEvent(name: string): string {
+    const eventAggregates = this.eventAggregates[name];
+
+    if (!eventAggregates.length) {
+      throw new LindormError("Invalid Event", {
+        data: { eventAggregates },
+        description: "Aggregate not registered to event",
+      });
+    }
+
+    if (eventAggregates.length > 1) {
+      throw new LindormError("Invalid Event", {
+        data: { eventAggregates },
+        description:
+          "Multiple aggregates registered to event. You need to specify which aggregate to use in options",
+      });
+    }
+
+    const [aggregateName] = eventAggregates;
+
+    return aggregateName;
+  }
+
   private switchCommands(file: ScanData): void {
     switch (file.type) {
       case "command":
-        return this.loadCommandAggregate(file);
+        return this.loadAggregateCommand(file);
 
       case "handler":
         return this.loadCommandHandlers(file);
@@ -192,14 +258,11 @@ export class EventSourceScanner {
 
   private switchEvents(file: ScanData): void {
     switch (file.type) {
+      case "event":
+        return this.loadAggregateEvent(file);
+
       case "handler":
         return this.loadEventHandlers(file);
-
-      case "saga":
-        return this.loadSagaHandlers(file);
-
-      case "view":
-        return this.loadViewHandlers(file);
 
       default:
         return;
@@ -339,16 +402,12 @@ export class EventSourceScanner {
   }
 
   private loadSagaHandlers(file: ScanData): void {
-    const [directory, aggregate] = file.parents;
-
-    if (directory !== "events") {
-      throw new Error("Invalid event handler location");
-    }
+    const [sagaName] = file.parents;
 
     const handlers = this.getFileHandlers<SagaEventHandler>(file.fullPath);
 
     for (const handler of handlers) {
-      this.logger.debug("Found saga event handler", { handler: file.baseName });
+      this.logger.debug("Found saga event handler", { sagaName, handler: file.baseName });
 
       assertSchema(JOI_SAGA_EVENT_HANDLER_FILE.required().validate(handler));
 
@@ -358,13 +417,13 @@ export class EventSourceScanner {
         new SagaEventHandlerImplementation({
           eventName,
           aggregate: {
-            name: snakeCase(aggregate),
+            name: handler.aggregate?.name || this.getAggregateFromEvent(eventName),
             context: Array.isArray(handler.aggregate?.context)
               ? handler.aggregate!.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
           },
           saga: {
-            name: snakeCase(handler.saga),
+            name: snakeCase(sagaName),
             context: snakeCase(this.options.context),
           },
           conditions: handler.conditions,
@@ -377,16 +436,12 @@ export class EventSourceScanner {
   }
 
   private loadViewHandlers(file: ScanData): void {
-    const [directory, aggregate] = file.parents;
-
-    if (directory !== "events") {
-      throw new Error("Invalid event handler location");
-    }
+    const [viewName] = file.parents;
 
     const handlers = this.getFileHandlers<ViewEventHandler>(file.fullPath);
 
     for (const handler of handlers) {
-      this.logger.debug("Found view event handler", { handler: file.baseName });
+      this.logger.debug("Found view event handler", { viewName, handler: file.baseName });
 
       assertSchema(JOI_VIEW_EVENT_HANDLER_FILE.required().validate(handler));
 
@@ -396,12 +451,12 @@ export class EventSourceScanner {
         new ViewEventHandlerImplementation({
           eventName,
           view: {
-            name: snakeCase(handler.view),
+            name: snakeCase(viewName),
             context: snakeCase(this.options.context),
           },
           adapter: handler.adapter,
           aggregate: {
-            name: snakeCase(aggregate),
+            name: handler.aggregate?.name || this.getAggregateFromEvent(eventName),
             context: Array.isArray(handler.aggregate?.context)
               ? handler.aggregate!.context.map((context) => snakeCase(context))
               : snakeCase(this.context(handler.aggregate?.context)),
@@ -417,7 +472,7 @@ export class EventSourceScanner {
 
   // private scanners
 
-  private loadCommandAggregate(file: ScanData): void {
+  private loadAggregateCommand(file: ScanData): void {
     const content = this.require(file.fullPath);
     const commands = Object.keys(content);
 
@@ -433,9 +488,30 @@ export class EventSourceScanner {
       throw new Error("Invalid command location");
     }
 
-    this.registerCommandAggregate(name, aggregate);
+    this.registerAggregateCommand(name, aggregate);
 
-    this.logger.debug("Found command aggregate", { name });
+    this.logger.debug("Found aggregate command", { name });
+  }
+
+  private loadAggregateEvent(file: ScanData): void {
+    const content = this.require(file.fullPath);
+    const events = Object.keys(content);
+
+    if (events.length !== 1) {
+      throw new Error(`Invalid amount of events in file [ ${file.fullPath} ]`);
+    }
+
+    const [event] = events;
+    const { name } = extractNameData(event);
+    const [directory, aggregate] = file.parents;
+
+    if (directory !== "events") {
+      throw new Error("Invalid event location");
+    }
+
+    this.registerAggregateEvent(name, aggregate);
+
+    this.logger.debug("Found aggregate event", { name });
   }
 
   // private helpers

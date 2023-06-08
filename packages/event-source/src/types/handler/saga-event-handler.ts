@@ -1,8 +1,8 @@
-import { Constructor, DtoClass, State } from "../generic";
-import { DomainEvent, TimeoutMessage } from "../../message";
-import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 import { Logger } from "@lindorm-io/core-logger";
+import { DomainEvent, TimeoutMessage } from "../../message";
+import { Constructor, DtoClass, State } from "../generic";
 import { SagaDispatchOptions } from "../model";
+import { HandlerConditions, HandlerIdentifier, HandlerIdentifierMultipleContexts } from "./handler";
 
 export interface SagaEventHandlerContext<
   TEvent extends DtoClass = DtoClass,
@@ -20,6 +20,7 @@ export interface SagaEventHandlerContext<
 }
 
 export interface SagaEventHandlerFileAggregate {
+  name?: string;
   context?: Array<string> | string;
 }
 
@@ -29,7 +30,6 @@ export interface SagaEventHandler<
   TDispatch extends DtoClass = DtoClass,
 > {
   event: Constructor<TEvent>;
-  saga: string;
   aggregate?: SagaEventHandlerFileAggregate;
   conditions?: HandlerConditions;
   getSagaId?(event: DomainEvent<TEvent> | TimeoutMessage<TEvent>): string;

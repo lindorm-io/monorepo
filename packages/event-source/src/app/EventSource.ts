@@ -101,12 +101,14 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         exclude: [],
       },
       queries: join(__dirname, "queries"),
+      sagas: join(__dirname, "sagas"),
       scanner: {
         deniedDirectories: [],
         deniedExtensions: [],
         deniedFilenames: [],
         deniedTypes: [/^spec$/, /^test$/],
       },
+      views: join(__dirname, "views"),
     };
 
     // primary
@@ -257,7 +259,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       registerSagaEventHandler: this.sagaDomain.registerEventHandler.bind(this.sagaDomain),
       registerViewEventHandler: this.viewDomain.registerEventHandler.bind(this.viewDomain),
 
-      registerCommandAggregate: this.scanner.registerCommandAggregate.bind(this.scanner),
+      registerCommandAggregate: this.scanner.registerAggregateCommand.bind(this.scanner),
       registerViewAdapter: this.registerViewAdapter.bind(this),
     };
   }
@@ -278,7 +280,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
     const aggregate = {
       id: data.aggregateId || options.aggregate?.id || randomUUID(),
-      name: options.aggregate?.name || this.scanner.getCommandAggregate(name),
+      name: options.aggregate?.name || this.scanner.getAggregateFromCommand(name),
       context: this.scanner.context(options.aggregate?.context),
     };
 
@@ -404,6 +406,8 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       }
 
       await this.scanner.scanAggregates();
+      await this.scanner.scanSagas();
+      await this.scanner.scanViews();
       await this.scanner.scanQueries();
 
       for (const handler of this.scanner.aggregateCommandHandlers) {

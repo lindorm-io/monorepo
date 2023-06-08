@@ -98,9 +98,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         filter.revision,
       ];
 
-      const result = await this.connection.query(text, values);
+      await this.connection.query(text, values);
 
-      this.logger.debug("Cleared processed causation ids", { result });
+      this.logger.debug("Cleared processed causation ids", { filter, data });
     } catch (err: any) {
       this.logger.error("Failed to clear processed causation ids", err);
 
@@ -138,9 +138,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         return;
       }
 
-      this.logger.debug("Found view", { result });
-
       const [data] = result.rows;
+
+      this.logger.debug("Found view", { data });
 
       return {
         id: data.id,
@@ -199,9 +199,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         stringifyBlob(attributes.state),
       ];
 
-      const result = await this.connection.query(text, values);
+      await this.connection.query(text, values);
 
-      this.logger.debug("Inserted view", { result });
+      this.logger.debug("Inserted view", { attributes });
     } catch (err: any) {
       this.logger.error("Failed to insert view", err);
 
@@ -241,9 +241,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       text = text.trim().slice(0, -1);
 
-      const result = await this.connection.query(text, values);
+      await this.connection.query(text, values);
 
-      this.logger.debug("Inserted processed causation ids", { result });
+      this.logger.debug("Inserted processed causation ids", { viewIdentifier, causationIds });
     } catch (err: any) {
       this.logger.error("Failed to ", err);
 
@@ -297,9 +297,9 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
         filter.revision,
       ];
 
-      const result = await this.connection.query(text, values);
+      await this.connection.query(text, values);
 
-      this.logger.debug("Updated view", { result });
+      this.logger.debug("Updated view", { filter, data });
     } catch (err: any) {
       this.logger.error("Failed to ", err);
 

@@ -57,7 +57,9 @@ export type EventSourcePrivateOptions = {
   dangerouslyRegisterHandlersManually: boolean;
   fileFilter: EventSourceFileFilterOptions;
   queries: string;
+  sagas: string;
   scanner: EventSourceScannerOptions;
+  views: string;
 };
 
 export type EventSourceOptions = Partial<
