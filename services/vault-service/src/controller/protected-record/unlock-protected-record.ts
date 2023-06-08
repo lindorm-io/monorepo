@@ -1,15 +1,15 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
-import { isAfter } from "date-fns";
-import { parseBlob } from "@lindorm-io/string-blob";
 import {
   UnlockProtectedRecordRequestBody,
   UnlockProtectedRecordRequestParams,
   UnlockProtectedRecordResponse,
 } from "@lindorm-io/common-types";
+import { CryptoAES } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { parseBlob } from "@lindorm-io/string-blob";
+import { isAfter } from "date-fns";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 
 type RequestData = UnlockProtectedRecordRequestParams & UnlockProtectedRecordRequestBody;
 
@@ -30,7 +30,10 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
     entity: { protectedRecord },
     mongo: { protectedRecordRepository },
     token: {
-      bearerToken: { subject, subjectHint },
+      bearerToken: {
+        metadata: { subjectHint },
+        subject,
+      },
     },
   } = ctx;
 

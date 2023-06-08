@@ -1,22 +1,21 @@
 import { IntervalWorker } from "@lindorm-io/koa";
+import { ms, readableDuration } from "@lindorm-io/readable-time";
+import { sub } from "date-fns";
 import { BrowserSessionRepository } from "../infrastructure";
 import { mongoConnection } from "../instance";
-import { stringToDurationObject, stringToMilliseconds } from "@lindorm-io/expiry";
 import { logger as winston } from "../server/logger";
-import { sub } from "date-fns";
 
 const logger = winston.createChildLogger("sessionCleanupWorker");
-const time = stringToMilliseconds("60 minutes");
 
 export const browserSessionCleanupWorker = new IntervalWorker(
   {
     callback: async (): Promise<void> => {
       const repository = new BrowserSessionRepository(mongoConnection, logger);
       await repository.deleteMany({
-        latestAuthentication: { $lt: sub(new Date(), stringToDurationObject("1 years")) },
+        latestAuthentication: { $lt: sub(new Date(), readableDuration("1 years")) },
       });
     },
-    time: time,
+    time: ms("60 minutes"),
   },
   logger,
 );

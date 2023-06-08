@@ -1,16 +1,3 @@
-import Joi from "joi";
-import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoLayered } from "@lindorm-io/crypto";
-import { DeviceLink } from "../../entity";
-import { DeviceLinkSalt, ServerKoaController } from "../../types";
-import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
-import { assertCertificateChallenge } from "../../util";
-import { configuration } from "../../server/configuration";
-import { createDeviceLinkCallback } from "../../handler";
-import { flatten } from "lodash";
-import { randomString } from "@lindorm-io/random";
-import { ClientError } from "@lindorm-io/errors";
 import {
   ChallengeStrategy,
   ConfirmEnrolmentRequestBody,
@@ -21,6 +8,19 @@ import {
   SessionStatus,
   SubjectHint,
 } from "@lindorm-io/common-types";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { randomString } from "@lindorm-io/random";
+import Joi from "joi";
+import { flatten } from "lodash";
+import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
+import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
+import { DeviceLink } from "../../entity";
+import { createDeviceLinkCallback } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { DeviceLinkSalt, ServerKoaController } from "../../types";
+import { assertCertificateChallenge } from "../../util";
 
 type RequestData = ConfirmEnrolmentRequestParams & ConfirmEnrolmentRequestBody;
 
@@ -52,7 +52,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     throw new ClientError("Invalid bearer token");
   }
 
-  if (enrolmentSession.id !== enrolmentSessionToken.session) {
+  if (enrolmentSession.id !== enrolmentSessionToken.metadata.session) {
     throw new ClientError("Invalid enrolment token");
   }
 

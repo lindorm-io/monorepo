@@ -2,7 +2,7 @@ import {
   ConfirmSelectAccountRequestBody,
   ConfirmSelectAccountRequestParams,
   ConfirmSelectAccountResponse,
-  LindormClaims,
+  LindormIdentityClaims,
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
@@ -66,7 +66,7 @@ export const confirmSelectAccountController: ServerKoaController<RequestData> = 
     authorizationSession.browserSessionId = browserSession.id;
 
     const idToken = authorizationSession.idTokenHint
-      ? jwt.verify<LindormClaims>(authorizationSession.idTokenHint)
+      ? jwt.verify<LindormIdentityClaims>(authorizationSession.idTokenHint)
       : undefined;
 
     const clientSession = await tryFindClientSession(ctx, client, browserSession, idToken);

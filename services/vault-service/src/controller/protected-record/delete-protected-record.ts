@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
 import {
   DeleteProtectedRecordRequestBody,
   DeleteProtectedRecordRequestParams,
 } from "@lindorm-io/common-types";
+import { CryptoAES } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 
 type RequestData = DeleteProtectedRecordRequestParams & DeleteProtectedRecordRequestBody;
 
@@ -25,7 +25,10 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
     entity: { protectedRecord },
     mongo: { protectedRecordRepository },
     token: {
-      bearerToken: { subject, subjectHint },
+      bearerToken: {
+        metadata: { subjectHint },
+        subject,
+      },
     },
   } = ctx;
 

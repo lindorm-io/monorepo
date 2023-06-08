@@ -1,5 +1,6 @@
 import { Axios } from "@lindorm-io/axios";
-import { Dict } from "@lindorm-io/common-types";
+import { Dict, LindormIdentityClaims } from "@lindorm-io/common-types";
+import { JwtVerify } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -11,7 +12,6 @@ import {
   LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
-import { VerifiedIdentityToken } from "../common";
 import {
   AuthenticationTokenSession,
   AuthorizationSession,
@@ -72,7 +72,7 @@ interface ServerRedis extends LindormNodeServerRedis {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  idToken: VerifiedIdentityToken;
+  idToken: JwtVerify<LindormIdentityClaims>;
 }
 
 interface Context extends LindormNodeServerContext {

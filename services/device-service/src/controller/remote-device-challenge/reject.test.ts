@@ -1,8 +1,8 @@
+import { RdcSessionType } from "@lindorm-io/common-types";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
-import { rejectRdcController } from "./reject";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
-import { RdcSessionType } from "@lindorm-io/common-types";
+import { rejectRdcController } from "./reject";
 
 jest.mock("../../handler");
 
@@ -33,7 +33,7 @@ describe("rejectRdcController", () => {
           subject: "b799b044-16db-495a-b7e1-2cf3175d4b54",
         },
         rdcSessionToken: {
-          session: "cadd8cf3-ca5b-4bc5-861e-43e2de54eaeb",
+          metadata: { session: "cadd8cf3-ca5b-4bc5-861e-43e2de54eaeb" },
         },
       },
     };

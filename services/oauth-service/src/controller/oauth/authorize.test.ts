@@ -94,16 +94,18 @@ describe("oauthAuthorizeController", () => {
       },
       token: {
         idToken: {
-          audiences: [
-            "3bfc20bd-0f18-4717-b535-ffb4a071deba",
-            "090fd104-7be0-41d1-b877-1c0851318492",
-          ],
           claims: {
             email: "test@lindorm.io",
             phoneNumber: "+46705498721",
             username: "identity_username",
           },
-          nonce: "d821cde6250f4918",
+          metadata: {
+            audiences: [
+              "3bfc20bd-0f18-4717-b535-ffb4a071deba",
+              "090fd104-7be0-41d1-b877-1c0851318492",
+            ],
+            nonce: "d821cde6250f4918",
+          },
           subject: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
           token: "id.jwt.jwt",
         },

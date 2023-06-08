@@ -1,10 +1,10 @@
-import MockDate from "mockdate";
-import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
-import { confirmChallengeController } from "./confirm";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
 import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
+import { confirmChallengeController } from "./confirm";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -70,7 +70,7 @@ describe("confirmChallengeController", () => {
       },
       token: {
         challengeSessionToken: {
-          session: "7af9ad76-cd7a-4738-8952-1fdc17259176",
+          metadata: { session: "7af9ad76-cd7a-4738-8952-1fdc17259176" },
         },
       },
     };

@@ -1,5 +1,5 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createProtectedRecordController } from "./create-protected-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -29,7 +29,7 @@ describe("createProtectedRecordController", () => {
       token: {
         bearerToken: {
           subject: "subject",
-          subjectHint: "hint",
+          metadata: { subjectHint: "hint" },
         },
       },
     };

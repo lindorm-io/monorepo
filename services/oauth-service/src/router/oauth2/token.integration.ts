@@ -202,6 +202,7 @@ describe("/oauth2/token", () => {
 
     const assertion = jwt.sign(
       {
+        amr: ["pwd"],
         aud: configuration.oauth.client_id,
         exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
         iat: getUnixTime(new Date()),

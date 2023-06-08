@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { deleteDeviceLinkController } from "./delete-device-link";
-import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
+import MockDate from "mockdate";
 import { createTestDeviceLink } from "../../fixtures/entity";
+import { destroyDeviceLinkCallback as _destroyDeviceLinkCallback } from "../../handler";
+import { deleteDeviceLinkController } from "./delete-device-link";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

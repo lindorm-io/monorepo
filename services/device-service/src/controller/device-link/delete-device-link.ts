@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { destroyDeviceLinkCallback } from "../../handler";
 import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { destroyDeviceLinkCallback } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;

@@ -46,7 +46,7 @@ export const initialiseElevation = async (
     uiLocales,
   } = options;
 
-  if (idToken && idToken.session !== clientSession.id) {
+  if (idToken && idToken.metadata.session !== clientSession.id) {
     throw new ClientError("Invalid request", {
       description: "Id token mismatch",
     });
@@ -64,8 +64,8 @@ export const initialiseElevation = async (
     new ElevationSession({
       requestedAuthentication: {
         minimumLevel: (clientSession.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
-        recommendedLevel: idToken?.levelOfAssurance || 0,
-        recommendedMethods: idToken?.authMethodsReference as Array<AuthenticationMethod>,
+        recommendedLevel: idToken?.metadata.levelOfAssurance || 0,
+        recommendedMethods: idToken?.metadata.authMethodsReference as Array<AuthenticationMethod>,
         requiredLevel: levelOfAssurance || 0,
         requiredMethods: methods || [],
       },
@@ -86,7 +86,7 @@ export const initialiseElevation = async (
       expires: expiryDate(configuration.defaults.expiry.elevation_session),
       idTokenHint: idToken?.token,
       identityId: clientSession.identityId,
-      nonce: nonce || idToken?.nonce || undefined,
+      nonce: nonce || idToken?.metadata.nonce || undefined,
       redirectUri,
       state,
       uiLocales,

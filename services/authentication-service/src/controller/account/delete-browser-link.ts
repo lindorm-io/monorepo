@@ -1,6 +1,6 @@
-import Joi from "joi";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { ServerKoaController } from "../../types";
 
 interface RequestData {

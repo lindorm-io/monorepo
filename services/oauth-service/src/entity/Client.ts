@@ -12,8 +12,8 @@ import {
   ScopeDescription,
 } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
-import { StringTimeValue } from "@lindorm-io/expiry";
 import { Algorithm } from "@lindorm-io/key-pair";
+import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../common";
 import {
@@ -57,9 +57,9 @@ export type ClientDefaults = {
 };
 
 export type ClientExpiry = {
-  accessToken: StringTimeValue;
-  idToken: StringTimeValue;
-  refreshToken: StringTimeValue;
+  accessToken: ReadableTime;
+  idToken: ReadableTime;
+  refreshToken: ReadableTime;
 };
 
 export type ClientAttributes = EntityAttributes & {

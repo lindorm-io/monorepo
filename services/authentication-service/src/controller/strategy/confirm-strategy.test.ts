@@ -57,7 +57,7 @@ describe("confirmStrategyController", () => {
       },
       token: {
         strategySessionToken: {
-          session: "0e8f3c0d-264f-45e2-8d95-9e4dbb18063e",
+          metadata: { session: "0e8f3c0d-264f-45e2-8d95-9e4dbb18063e" },
         },
       },
     };
@@ -100,7 +100,7 @@ describe("confirmStrategyController", () => {
   });
 
   test("should throw on invalid session", async () => {
-    ctx.token.strategySessionToken.session = "wrong";
+    ctx.token.strategySessionToken.metadata.session = "wrong";
 
     await expect(confirmStrategyController(ctx)).rejects.toThrow(ClientError);
   });

@@ -1,13 +1,13 @@
-import { Client, ClientSession } from "../../entity";
-import { JwtSignData } from "@lindorm-io/jwt";
 import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { JwtSign } from "@lindorm-io/jwt";
+import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 
 export const createLogoutToken = (
   ctx: ServerKoaContext,
   client: Client,
   clientSession: ClientSession,
-): JwtSignData => {
+): JwtSign => {
   const { jwt } = ctx;
 
   return jwt.sign({

@@ -1,8 +1,8 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { configuration } from "../server/configuration";
 import { keyPairJwksMemoryWorker } from "@lindorm-io/koa-keystore";
-import { logger } from "../server/logger";
 import { memoryDatabase } from "../instance";
+import { configuration } from "../server/configuration";
+import { logger } from "../server/logger";
 
 export const oidcProvidersJwksWorkers: Array<IntervalWorker> = [];
 
@@ -11,7 +11,7 @@ for (const provider of configuration.oidc_providers) {
 
   oidcProvidersJwksWorkers.push(
     keyPairJwksMemoryWorker({
-      clientName: provider.key,
+      alias: provider.key,
       host: provider.base_url,
       logger,
       memoryDatabase,

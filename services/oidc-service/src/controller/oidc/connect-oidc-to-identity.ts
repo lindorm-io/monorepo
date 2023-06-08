@@ -1,9 +1,9 @@
-import Joi from "joi";
 import { ConnectOidcToIdentityRequestQuery } from "@lindorm-io/common-types";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { createOidcSession } from "../../handler";
 import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { createOidcSession } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = ConnectOidcToIdentityRequestQuery;
 

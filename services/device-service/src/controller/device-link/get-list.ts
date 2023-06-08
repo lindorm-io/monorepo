@@ -1,6 +1,6 @@
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { DeviceLinkAttributes } from "../../entity";
+import { ServerKoaController } from "../../types";
 
 interface ResponseBody {
   deviceLinks: Array<Partial<DeviceLinkAttributes>>;

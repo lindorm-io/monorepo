@@ -1,18 +1,18 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_JWT } from "../../common";
-import { ServerKoaController } from "../../types";
-import { calculateAuthenticationStatus } from "../../util";
-import { flatten, uniq } from "lodash";
-import { getStrategyHandler } from "../../strategies";
-import { removeEmptyFromArray } from "@lindorm-io/core";
-import { resolveAllowedStrategies } from "../../handler";
 import {
   ConfirmStrategyRequestBody,
   ConfirmStrategyRequestParams,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { removeEmptyFromArray } from "@lindorm-io/core";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { flatten, uniq } from "lodash";
+import { JOI_JWT } from "../../common";
+import { resolveAllowedStrategies } from "../../handler";
+import { getStrategyHandler } from "../../strategies";
+import { ServerKoaController } from "../../types";
+import { calculateAuthenticationStatus } from "../../util";
 
 type RequestData = ConfirmStrategyRequestParams & ConfirmStrategyRequestBody;
 
@@ -45,11 +45,11 @@ export const confirmStrategyController: ServerKoaController<RequestData> = async
     token: { strategySessionToken },
   } = ctx;
 
-  if (strategySessionToken.session !== strategySession.id) {
+  if (strategySessionToken.metadata.session !== strategySession.id) {
     throw new ClientError("Forbidden", {
       debug: {
         expect: strategySession.id,
-        actual: strategySessionToken.session,
+        actual: strategySessionToken.metadata.session,
       },
       statusCode: ClientError.StatusCode.FORBIDDEN,
     });

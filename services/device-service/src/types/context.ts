@@ -1,9 +1,7 @@
 import { Axios } from "@lindorm-io/axios";
-import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
-import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
-import { JwtDecodeData } from "@lindorm-io/jwt";
-import { VerifiedChallengeConfirmationToken } from "../common";
+import { JwtVerify } from "@lindorm-io/jwt";
+import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
   LindormNodeServerContext,
@@ -14,6 +12,8 @@ import {
   LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
+import { ChallengeConfirmationTokenClaims } from "../common";
+import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
 import {
   ChallengeSessionCache,
   DeviceLinkRepository,
@@ -45,10 +45,10 @@ interface ServerRedis extends LindormNodeServerRedis {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  challengeConfirmationToken: VerifiedChallengeConfirmationToken;
-  challengeSessionToken: JwtDecodeData;
-  rdcSessionToken: JwtDecodeData<Record<string, any>>;
-  enrolmentSessionToken: JwtDecodeData;
+  challengeConfirmationToken: JwtVerify<ChallengeConfirmationTokenClaims>;
+  challengeSessionToken: JwtVerify;
+  rdcSessionToken: JwtVerify<Record<string, any>>;
+  enrolmentSessionToken: JwtVerify;
 }
 
 interface Context extends LindormNodeServerContext {
@@ -60,10 +60,8 @@ interface Context extends LindormNodeServerContext {
   token: ServerToken;
 }
 
-export interface ServerKoaContext<D extends Dict = Dict>
-  extends LindormNodeServerKoaContext<Context, D> {}
+export type ServerKoaContext<D extends Dict = Dict> = LindormNodeServerKoaContext<Context, D>;
 
-export interface ServerKoaController<D extends Dict = Dict>
-  extends Controller<ServerKoaContext<D>> {}
+export type ServerKoaController<D extends Dict = Dict> = Controller<ServerKoaContext<D>>;
 
-export interface ServerKoaMiddleware extends LindormNodeServerKoaMiddleware<ServerKoaContext> {}
+export type ServerKoaMiddleware = LindormNodeServerKoaMiddleware<ServerKoaContext>;

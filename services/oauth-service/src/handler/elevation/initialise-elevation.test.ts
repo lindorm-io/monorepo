@@ -44,18 +44,20 @@ describe("initialiseElevation", () => {
       },
       token: {
         idToken: {
-          authMethodsReference: ["email"],
-          client: "be55601a-8034-4dde-a039-e8a42e8280d9",
-          levelOfAssurance: 2,
-          nonce: "QxEQ4H21R-gslTwr",
-          session: "e9c91056-01e8-4396-bc60-e231ad743688",
-          sessionHint: "access",
-          token: "id.jwt.jwt",
           claims: {
             email: "test@email.com",
             phoneNumber: "+4520123456",
             username: "username",
           },
+          metadata: {
+            authMethodsReference: ["email"],
+            client: "be55601a-8034-4dde-a039-e8a42e8280d9",
+            levelOfAssurance: 2,
+            nonce: "QxEQ4H21R-gslTwr",
+            session: "e9c91056-01e8-4396-bc60-e231ad743688",
+            sessionHint: "access",
+          },
+          token: "id.jwt.jwt",
         },
       },
     };
@@ -153,7 +155,7 @@ describe("initialiseElevation", () => {
   });
 
   test("should throw on id token mismatch", async () => {
-    ctx.token.idToken.session = randomUUID();
+    ctx.token.idToken.metadata.session = randomUUID();
 
     await expect(initialiseElevation(ctx, options)).rejects.toThrow(ClientError);
   });

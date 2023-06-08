@@ -11,6 +11,7 @@ import {
   OpenIdScope,
 } from "@lindorm-io/common-types";
 import { Algorithm } from "@lindorm-io/key-pair";
+import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
 import { Client, ClientAttributes } from "../../entity";
@@ -32,12 +33,12 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     authenticationAssertion: {
       algorithm: Algorithm.HS256,
       issuer: "https://test.client.authentication.issuer",
-      secret: "oM3kmVjlvzQUs87K2f9zeNKdZ1SfaKux",
+      secret: randomString(32),
     },
     authorizationAssertion: {
       algorithm: Algorithm.HS256,
       issuer: "https://test.client.authorization.issuer",
-      secret: "d96i6t8eUVtKaeOlM34hJQsP2OL0KfOM",
+      secret: randomString(32),
     },
     defaults: {
       displayMode: OpenIdDisplayMode.POPUP,
@@ -68,7 +69,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     secret:
       "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
     singleSignOn: true,
-    tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+    tenantId: randomUUID(),
     trusted: true,
     type: OpenIdClientType.CONFIDENTIAL,
     ...options,

@@ -116,7 +116,7 @@ describe("getClientInfoController", () => {
           },
         ],
         singleSignOn: true,
-        tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+        tenantId: expect.any(String),
         trusted: true,
         type: "confidential",
       },

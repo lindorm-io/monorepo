@@ -9,7 +9,10 @@ describe("getEncryptionKey", () => {
   beforeEach(() => {
     ctx = {
       token: {
-        bearerToken: { subject: "75887260-62d5-4130-b56c-53aaa5d484c4", subjectHint: "client" },
+        bearerToken: {
+          metadata: { subjectHint: "client" },
+          subject: "75887260-62d5-4130-b56c-53aaa5d484c4",
+        },
       },
     };
   });

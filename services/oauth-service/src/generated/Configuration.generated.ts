@@ -1,4 +1,4 @@
-import { StringTimeValue } from "@lindorm-io/expiry";
+import { ReadableTime } from "@lindorm-io/readable-time";
 
 export interface Configuration {
   defaults: Defaults;
@@ -17,18 +17,18 @@ interface Defaults {
 }
 
 interface Expiry {
-  access_token: StringTimeValue;
-  authentication_token_session: StringTimeValue;
-  authorization_session: StringTimeValue;
-  browser_session: StringTimeValue;
-  browser_session_remember: StringTimeValue;
-  claims_session: StringTimeValue;
-  client_credentials: StringTimeValue;
-  code_session: StringTimeValue;
-  elevation_session: StringTimeValue;
-  id_token: StringTimeValue;
-  logout_session: StringTimeValue;
-  refresh_token: StringTimeValue;
+  access_token: ReadableTime;
+  authentication_token_session: ReadableTime;
+  authorization_session: ReadableTime;
+  browser_session: ReadableTime;
+  browser_session_remember: ReadableTime;
+  claims_session: ReadableTime;
+  client_credentials: ReadableTime;
+  code_session: ReadableTime;
+  elevation_session: ReadableTime;
+  id_token: ReadableTime;
+  logout_session: ReadableTime;
+  refresh_token: ReadableTime;
 }
 
 interface Sessions {

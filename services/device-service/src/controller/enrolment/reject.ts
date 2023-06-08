@@ -1,9 +1,9 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_JWT } from "../../common";
 import { RejectEnrolmentRequestBody, RejectEnrolmentRequestParams } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_JWT } from "../../common";
+import { ServerKoaController } from "../../types";
 
 type RequestData = RejectEnrolmentRequestParams & RejectEnrolmentRequestBody;
 
@@ -27,7 +27,7 @@ export const rejectEnrolmentController: ServerKoaController<RequestData> = async
     throw new ClientError("Invalid token subject");
   }
 
-  if (enrolmentSession.id !== enrolmentSessionToken.session) {
+  if (enrolmentSession.id !== enrolmentSessionToken.metadata.session) {
     throw new ClientError("Invalid token session");
   }
 

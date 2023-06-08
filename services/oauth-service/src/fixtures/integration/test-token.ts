@@ -1,19 +1,19 @@
-import { configuration } from "../../server/configuration";
-import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { getUnixTime } from "date-fns";
-import { randomHex } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
-import { ClientSessionType } from "../../enum";
 import {
-  LindormClaims,
+  LindormIdentityClaims,
   LindormScope,
   OpenIdScope,
   OpenIdTokenType,
   SubjectHint,
 } from "@lindorm-io/common-types";
+import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { randomHex } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import { getUnixTime } from "date-fns";
+import { ClientSessionType } from "../../enum";
+import { configuration } from "../../server/configuration";
 
 export const getTestIdToken = (
-  options: Partial<JwtSignOptions<Partial<LindormClaims>>> = {},
+  options: Partial<JwtSignOptions<Partial<LindormIdentityClaims>>> = {},
 ): string => {
   const { token } = createTestJwt({
     issuer: configuration.server.issuer,

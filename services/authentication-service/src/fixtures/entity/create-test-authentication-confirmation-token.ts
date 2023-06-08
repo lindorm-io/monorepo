@@ -1,6 +1,5 @@
 import { AuthenticationMethod } from "@lindorm-io/common-types";
-import { createOpaqueToken } from "@lindorm-io/jwt";
-import { randomString } from "@lindorm-io/random";
+import { randomString, randomToken } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
   AuthenticationConfirmationToken,
@@ -9,11 +8,8 @@ import {
 
 export const createTestAuthenticationConfirmationToken = (
   options: Partial<AuthenticationConfirmationTokenOptions> = {},
-): AuthenticationConfirmationToken => {
-  const { id, signature } = createOpaqueToken();
-
-  return new AuthenticationConfirmationToken({
-    id,
+): AuthenticationConfirmationToken =>
+  new AuthenticationConfirmationToken({
     clientId: randomUUID(),
     confirmedIdentifiers: ["test@lindorm.io", "0701234567"],
     country: "se",
@@ -26,9 +22,8 @@ export const createTestAuthenticationConfirmationToken = (
     nonce: randomString(16),
     remember: true,
     sessionId: randomUUID(),
-    signature,
+    signature: randomToken(128),
     singleSignOn: true,
 
     ...options,
   });
-};

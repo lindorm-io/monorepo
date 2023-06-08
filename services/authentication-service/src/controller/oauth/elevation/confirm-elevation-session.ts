@@ -1,25 +1,26 @@
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
-import { JOI_JWT } from "../../../common";
-import { confirmOauthElevation } from "../../../handler";
+import { confirmOauthElevation, resolveAuthenticationConfirmationToken } from "../../../handler";
 import { ServerKoaController } from "../../../types";
 
 interface RequestData {
   id: string;
-  authenticationConfirmationToken: string;
+  token: string;
 }
 
 export const confirmElevationSessionSchema = Joi.object<RequestData>({
   id: Joi.string().guid().required(),
-  authenticationConfirmationToken: JOI_JWT.required(),
+  token: Joi.string().required(),
 });
 
 export const confirmElevationSessionController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse => {
   const {
-    token: { authenticationConfirmationToken },
+    data: { token },
   } = ctx;
+
+  const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(ctx, token);
 
   const { redirectTo } = await confirmOauthElevation(ctx, authenticationConfirmationToken);
 

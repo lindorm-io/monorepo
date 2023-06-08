@@ -17,6 +17,7 @@ export type ClientSessionAttributes = EntityAttributes & {
   authorizationGrant: OpenIdGrantType;
   browserSessionId: string | null;
   clientId: string;
+  code: string | null;
   expires: Date;
   identityId: string;
   latestAuthentication: Date;
@@ -34,6 +35,7 @@ export type ClientSessionOptions = Optional<
   | EntityKeys
   | "audiences"
   | "browserSessionId"
+  | "code"
   | "latestAuthentication"
   | "metadata"
   | "nonce"
@@ -51,6 +53,7 @@ const schema = Joi.object<ClientSessionAttributes>()
       .valid(...Object.values(OpenIdGrantType))
       .required(),
     clientId: Joi.string().guid().required(),
+    code: Joi.string().allow(null).required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
@@ -74,6 +77,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
   public readonly tenantId: string;
 
   public audiences: Array<string>;
+  public code: string | null;
   public expires: Date;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
@@ -89,12 +93,13 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     this.authorizationGrant = options.authorizationGrant;
     this.browserSessionId = options.browserSessionId || null;
     this.clientId = options.clientId;
+    this.code = options.code || null;
     this.expires = options.expires;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
     this.metadata = options.metadata || {};
-    this.methods = options.methods;
+    this.methods = options.methods || [];
     this.nonce = options.nonce || randomUnreserved(16);
     this.scopes = options.scopes || [];
     this.tenantId = options.tenantId;
@@ -113,6 +118,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
       authorizationGrant: this.authorizationGrant,
       browserSessionId: this.browserSessionId,
       clientId: this.clientId,
+      code: this.code,
       expires: this.expires,
       identityId: this.identityId,
       latestAuthentication: this.latestAuthentication,

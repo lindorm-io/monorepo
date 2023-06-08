@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { JOI_JWT } from "../../common";
 import { JOI_PINCODE } from "../../constant";
-import { assertConfirmationTokenFactorLength } from "../../util";
 import { vaultGetSalt } from "../../handler";
-import { ClientError } from "@lindorm-io/errors";
+import { ServerKoaController } from "../../types";
+import { assertConfirmationTokenFactorLength } from "../../util";
 
 interface RequestData {
   id: string;

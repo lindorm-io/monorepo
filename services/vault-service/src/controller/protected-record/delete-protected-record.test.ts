@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { deleteProtectedRecordController } from "./delete-protected-record";
+import MockDate from "mockdate";
 import { createTestProtectedRecord } from "../../fixtures/entity";
+import { deleteProtectedRecordController } from "./delete-protected-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -33,7 +33,7 @@ describe("deleteProtectedRecordController", () => {
       token: {
         bearerToken: {
           subject: "9168f571-2f25-4960-a585-330d1a07c094",
-          subjectHint: "client",
+          metadata: { subjectHint: "client" },
         },
       },
     };
@@ -52,7 +52,7 @@ describe("deleteProtectedRecordController", () => {
   });
 
   test("should throw on forbidden subject hint", async () => {
-    ctx.token.bearerToken.subjectHint = "wrong";
+    ctx.token.bearerToken.metadata.subjectHint = "wrong";
 
     await expect(deleteProtectedRecordController(ctx)).rejects.toThrow(ClientError);
   });

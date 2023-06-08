@@ -1,5 +1,5 @@
 import { SubjectHint } from "@lindorm-io/common-types";
-import { JwtSignData } from "@lindorm-io/jwt";
+import { JwtSign } from "@lindorm-io/jwt";
 import { randomUnreserved } from "@lindorm-io/random";
 import { getUnixTime } from "date-fns";
 import { ClientSession, OpaqueToken } from "../../entity";
@@ -10,15 +10,12 @@ export const convertOpaqueTokenToJwt = (
   ctx: ServerKoaContext,
   clientSession: ClientSession,
   opaqueToken: OpaqueToken,
-  token?: string,
-): JwtSignData => {
+): JwtSign => {
   const { jwt } = ctx;
-  const atHash = token ? jwt.createHash(token) : undefined;
 
   return jwt.sign({
     id: opaqueToken.id,
     adjustedAccessLevel: getAdjustedAccessLevel(clientSession),
-    atHash,
     audiences: clientSession.audiences,
     authorizedParty: clientSession.clientId,
     authTime: getUnixTime(clientSession.latestAuthentication),

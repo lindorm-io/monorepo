@@ -1,13 +1,3 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { EnrolmentSession } from "../../entity";
-import { JOI_CERTIFICATE_METHOD } from "../../constant";
-import { ServerKoaController } from "../../types";
-import { configuration } from "../../server/configuration";
-import { createRdcSession, isRdcRequired } from "../../handler";
-import { expiryDate } from "@lindorm-io/expiry";
-import { randomString } from "@lindorm-io/random";
 import {
   DeviceTokenType,
   InitialiseEnrolmentRequestBody,
@@ -17,6 +7,16 @@ import {
   SessionStatus,
   SubjectHint,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { randomString } from "@lindorm-io/random";
+import Joi from "joi";
+import { JOI_CERTIFICATE_METHOD } from "../../constant";
+import { EnrolmentSession } from "../../entity";
+import { createRdcSession, isRdcRequired } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseEnrolmentRequestBody;
 

@@ -7,7 +7,6 @@ import {
   rejectElevationSessionController,
   rejectElevationSessionSchema,
 } from "../../controller";
-import { authenticationConfirmationTokenMiddleware } from "../../middleware";
 
 export const router = new Router<any, any>();
 
@@ -22,7 +21,6 @@ router.post(
   "/:id/confirm",
   paramsMiddleware,
   useSchema(confirmElevationSessionSchema),
-  authenticationConfirmationTokenMiddleware("data.authenticationConfirmationToken"),
   useController(confirmElevationSessionController),
 );
 

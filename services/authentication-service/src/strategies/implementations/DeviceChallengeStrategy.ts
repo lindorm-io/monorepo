@@ -96,7 +96,7 @@ export class DeviceChallengeStrategy implements StrategyHandler {
       });
     }
 
-    const verifiedToken = jwt.verify(challengeConfirmationToken, {
+    const { subject } = jwt.verify(challengeConfirmationToken, {
       issuer:
         configuration.services.device_service.issuer || configuration.services.device_service.host,
       nonce: strategySession.nonce,
@@ -107,6 +107,6 @@ export class DeviceChallengeStrategy implements StrategyHandler {
 
     logger.debug("Resolving Account");
 
-    return await accountRepository.find({ id: verifiedToken.subject });
+    return await accountRepository.find({ id: subject });
   }
 }

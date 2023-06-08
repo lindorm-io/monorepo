@@ -1,11 +1,12 @@
+import { LindormIdentityClaims } from "@lindorm-io/common-types";
+import { JwtVerify } from "@lindorm-io/jwt";
 import { BrowserSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { VerifiedIdentityToken } from "../../common";
 import { getBrowserSessionCookies } from "../cookies";
 
 export const tryFindBrowserSessions = async (
   ctx: ServerKoaContext,
-  idToken?: VerifiedIdentityToken,
+  idToken?: JwtVerify<LindormIdentityClaims>,
 ): Promise<Array<BrowserSession>> => {
   const {
     mongo: { browserSessionRepository },

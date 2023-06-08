@@ -1,9 +1,11 @@
+import { createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { mockFetchOauthElevationSession } from "../../fixtures/axios";
+import { createTestAuthenticationConfirmationToken } from "../../fixtures/entity";
 import {
-  getTestAuthenticationConfirmationToken,
+  TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE,
   setupIntegration,
 } from "../../fixtures/integration";
 import { server } from "../../server/server";
@@ -73,14 +75,20 @@ describe("/sessions/elevation", () => {
   });
 
   test("should confirm", async () => {
-    const authenticationConfirmationToken = getTestAuthenticationConfirmationToken({
-      session: "9937434e-aacb-489c-adc9-faa945be8145",
-    });
+    const authenticationToken = createOpaqueToken();
+
+    await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
+      createTestAuthenticationConfirmationToken({
+        id: authenticationToken.id,
+        sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
+        signature: authenticationToken.signature,
+      }),
+    );
 
     const response = await request(server.callback())
       .post("/sessions/elevation/dd23a1f5-1a31-479b-a81e-2f20945061d8/confirm")
       .send({
-        authentication_confirmation_token: authenticationConfirmationToken,
+        token: authenticationToken.token,
       })
       .expect(200);
 

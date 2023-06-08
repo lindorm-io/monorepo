@@ -1,6 +1,6 @@
 import { Axios } from "@lindorm-io/axios";
 import { Dict } from "@lindorm-io/common-types";
-import { JwtDecodeData } from "@lindorm-io/jwt";
+import { JwtVerify } from "@lindorm-io/jwt";
 import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
@@ -12,10 +12,7 @@ import {
   LindormNodeServerRedis,
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
-import {
-  VerifiedAuthenticationConfirmationToken,
-  VerifiedChallengeConfirmationToken,
-} from "../common";
+import { AuthenticationConfirmationTokenClaims, ChallengeConfirmationTokenClaims } from "../common";
 import {
   Account,
   AuthenticationSession,
@@ -62,9 +59,9 @@ interface ServerMongo extends LindormNodeServerMongo {
 }
 
 interface ServerToken extends LindormNodeServerToken {
-  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken;
-  challengeConfirmationToken: VerifiedChallengeConfirmationToken;
-  strategySessionToken: JwtDecodeData;
+  authenticationConfirmationToken: JwtVerify<AuthenticationConfirmationTokenClaims>;
+  challengeConfirmationToken: JwtVerify<ChallengeConfirmationTokenClaims>;
+  strategySessionToken: JwtVerify;
 }
 
 interface Context extends LindormNodeServerContext {

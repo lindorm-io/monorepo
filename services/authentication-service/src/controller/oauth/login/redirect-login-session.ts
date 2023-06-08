@@ -36,31 +36,6 @@ export const redirectLoginSessionController: ServerKoaController<RequestData> = 
     return { redirect: redirectTo };
   }
 
-  // if (authToken) {
-  //   try {
-  //     const authenticationConfirmationToken = await resolveAuthenticationConfirmationToken(
-  //       ctx,
-  //       authToken,
-  //     );
-
-  //     if (session !== authenticationConfirmationToken.sessionId) {
-  //       throw new ClientError("Invalid session identifier", {
-  //         debug: {
-  //           expect: session,
-  //           actual: authenticationConfirmationToken.sessionId,
-  //         },
-  //         statusCode: ClientError.StatusCode.FORBIDDEN,
-  //       });
-  //     }
-
-  //     const { redirectTo } = await confirmOauthLogin(ctx, authenticationConfirmationToken);
-
-  //     return { redirect: redirectTo };
-  //   } catch (err: any) {
-  //     logger.warn("Invalid auth token", { authToken });
-  //   }
-  // }
-
   return {
     redirect: createURL(configuration.frontend.routes.login, {
       host: configuration.frontend.host,

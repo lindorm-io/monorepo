@@ -40,7 +40,7 @@ describe("unlockProtectedRecordController", () => {
       token: {
         bearerToken: {
           subject: "9168f571-2f25-4960-a585-330d1a07c094",
-          subjectHint: "client",
+          metadata: { subjectHint: "client" },
         },
       },
     };
@@ -66,7 +66,7 @@ describe("unlockProtectedRecordController", () => {
   });
 
   test("should throw on forbidden subject hint", async () => {
-    ctx.token.bearerToken.subjectHint = "wrong";
+    ctx.token.bearerToken.metadata.subjectHint = "wrong";
 
     await expect(unlockProtectedRecordController(ctx)).rejects.toThrow(ClientError);
   });

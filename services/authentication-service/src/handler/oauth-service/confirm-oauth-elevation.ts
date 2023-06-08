@@ -1,33 +1,24 @@
 import {
-  AuthenticationMethod,
   ConfirmElevationResponse,
   ConfirmElevationSessionRequestBody,
   ConfirmElevationSessionRequestParams,
 } from "@lindorm-io/common-types";
-import { ServerError } from "@lindorm-io/errors";
-import { VerifiedAuthenticationConfirmationToken } from "../../common";
+import { AuthenticationConfirmationToken } from "../../entity";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { ServerKoaContext } from "../../types";
 
 export const confirmOauthElevation = async (
   ctx: ServerKoaContext,
-  authenticationConfirmationToken: VerifiedAuthenticationConfirmationToken,
+  authenticationConfirmationToken: AuthenticationConfirmationToken,
 ): Promise<ConfirmElevationResponse> => {
   const {
     axios: { oauthClient },
   } = ctx;
 
-  if (!authenticationConfirmationToken.session) {
-    throw new ServerError("Invalid token", {
-      description: "Authentication confirmation token created without session id",
-      debug: { authenticationConfirmationToken },
-    });
-  }
-
   const body: ConfirmElevationSessionRequestBody = {
-    identityId: authenticationConfirmationToken.subject,
+    identityId: authenticationConfirmationToken.identityId,
     levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
-    methods: authenticationConfirmationToken.authMethodsReference as Array<AuthenticationMethod>,
+    methods: authenticationConfirmationToken.methods,
   };
 
   const { data } = await oauthClient.post<
@@ -36,7 +27,7 @@ export const confirmOauthElevation = async (
     unknown,
     ConfirmElevationSessionRequestParams
   >("/admin/sessions/elevation/:id/confirm", {
-    params: { id: authenticationConfirmationToken.session },
+    params: { id: authenticationConfirmationToken.sessionId },
     body,
     middleware: [clientCredentialsMiddleware()],
   });

@@ -1,17 +1,17 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_JWT } from "../../common";
-import { ServerKoaController } from "../../types";
-import { assertConfirmationTokenFactorLength } from "../../util";
-import { clientCredentialsMiddleware } from "../../middleware";
-import { updateEnrolmentStatus } from "../../handler";
 import {
   ConfirmRdcRequestBody,
   ConfirmRdcRequestParams,
   RdcSessionType,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_JWT } from "../../common";
+import { updateEnrolmentStatus } from "../../handler";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaController } from "../../types";
+import { assertConfirmationTokenFactorLength } from "../../util";
 
 type RequestData = ConfirmRdcRequestParams & ConfirmRdcRequestBody;
 
@@ -57,11 +57,11 @@ export const confirmRdcController: ServerKoaController<RequestData> = async (
     });
   }
 
-  if (rdcSession.id !== rdcSessionToken.session) {
+  if (rdcSession.id !== rdcSessionToken.metadata.session) {
     throw new ClientError("Invalid session token");
   }
 
-  if (rdcSession.nonce !== challengeConfirmationToken.nonce) {
+  if (rdcSession.nonce !== challengeConfirmationToken.metadata.nonce) {
     throw new ClientError("Invalid confirmation token");
   }
 

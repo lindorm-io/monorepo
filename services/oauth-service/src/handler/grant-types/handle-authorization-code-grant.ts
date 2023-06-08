@@ -15,6 +15,13 @@ export const handleAuthorizationCodeGrant = async (
     mongo: { browserSessionRepository, clientSessionRepository },
   } = ctx;
 
+  if (!code) {
+    throw new ClientError("Invalid Request", {
+      code: "invalid_request",
+      description: "Invalid Code",
+    });
+  }
+
   let authorizationCode: AuthorizationCode;
 
   try {
@@ -102,9 +109,13 @@ export const handleAuthorizationCodeGrant = async (
     });
   }
 
-  const clientSession = await clientSessionRepository.find({
+  let clientSession = await clientSessionRepository.find({
     id: authorizationSession.clientSessionId,
   });
+
+  clientSession.code = code;
+
+  clientSession = await clientSessionRepository.update(clientSession);
 
   return await generateTokenResponse(ctx, client, clientSession);
 };

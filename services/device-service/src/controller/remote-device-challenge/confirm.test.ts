@@ -1,8 +1,8 @@
-import { confirmRdcController } from "./confirm";
+import { RdcSessionType } from "@lindorm-io/common-types";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";
-import { RdcSessionType } from "@lindorm-io/common-types";
+import { confirmRdcController } from "./confirm";
 
 jest.mock("../../handler");
 jest.mock("../../util");
@@ -35,15 +35,17 @@ describe("confirmRdcController", () => {
           subject: "c056fe10-ffe3-4229-8886-602ce8715a61",
         },
         challengeConfirmationToken: {
-          token: "jwt.jwt.jwt",
           claims: {
             factors: ["1", "2"],
           },
-          nonce: "QxEQ4H21R-gslTwr",
+          metadata: {
+            nonce: "QxEQ4H21R-gslTwr",
+          },
           subject: "c056fe10-ffe3-4229-8886-602ce8715a61",
+          token: "jwt.jwt.jwt",
         },
         rdcSessionToken: {
-          session: "8f3e88fc-445c-447a-ba48-81535366a8ec",
+          metadata: { session: "8f3e88fc-445c-447a-ba48-81535366a8ec" },
         },
       },
     };

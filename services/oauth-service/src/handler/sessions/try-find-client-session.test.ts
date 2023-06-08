@@ -1,11 +1,11 @@
-import { BrowserSession, Client, ClientSession } from "../../entity";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { tryFindClientSession } from "./try-find-client-session";
+import { BrowserSession, Client, ClientSession } from "../../entity";
 import {
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
+import { tryFindClientSession } from "./try-find-client-session";
 
 describe("tryFindClientSession", () => {
   let ctx: any;
@@ -29,7 +29,7 @@ describe("tryFindClientSession", () => {
     });
 
     idToken = {
-      session: "bc9ebf6f-2c5b-47ba-875b-810f56122f75",
+      metadata: { session: "bc9ebf6f-2c5b-47ba-875b-810f56122f75" },
     };
   });
 

@@ -7,7 +7,6 @@ describe("createIdToken", () => {
   beforeEach(() => {
     ctx = {
       jwt: {
-        createHash: jest.fn().mockReturnValue("hashed_value"),
         sign: jest.fn().mockReturnValue("signed"),
       },
     };
@@ -20,15 +19,32 @@ describe("createIdToken", () => {
       }),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalledWith(
-      expect.objectContaining({
-        claims: { email: "test@lindorm.io" },
-        sessionHint: "refresh",
-      }),
-    );
+    expect(ctx.jwt.sign).toHaveBeenCalledWith({
+      accessToken: undefined,
+      audiences: [expect.any(String)],
+      authContextClass: "loa_2",
+      authMethodsReference: ["email", "phone"],
+      authTime: 1609487940,
+      authorizedParty: expect.any(String),
+      claims: {
+        email: "test@lindorm.io",
+      },
+      client: expect.any(String),
+      code: expect.any(String),
+      expiry: expect.any(Date),
+      levelOfAssurance: 2,
+      nonce: expect.any(String),
+      scopes: ["openid", "profile"],
+      session: expect.any(String),
+      sessionHint: "refresh",
+      subject: expect.any(String),
+      subjectHint: "identity",
+      tenant: expect.any(String),
+      type: "id_token",
+    });
   });
 
-  test("should create id token with hash", async () => {
+  test("should create id token with access token", async () => {
     await expect(
       createIdToken(
         ctx,
@@ -39,13 +55,29 @@ describe("createIdToken", () => {
       ),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalledWith(
-      expect.objectContaining({
-        atHash: "hashed_value",
-        claims: { email: "test@lindorm.io" },
-        sessionHint: "refresh",
-      }),
-    );
+    expect(ctx.jwt.sign).toHaveBeenCalledWith({
+      accessToken: "accessToken",
+      audiences: [expect.any(String)],
+      authContextClass: "loa_2",
+      authMethodsReference: ["email", "phone"],
+      authTime: 1609487940,
+      authorizedParty: expect.any(String),
+      claims: {
+        email: "test@lindorm.io",
+      },
+      client: expect.any(String),
+      code: expect.any(String),
+      expiry: expect.any(Date),
+      levelOfAssurance: 2,
+      nonce: expect.any(String),
+      scopes: ["openid", "profile"],
+      session: expect.any(String),
+      sessionHint: "refresh",
+      subject: expect.any(String),
+      subjectHint: "identity",
+      tenant: expect.any(String),
+      type: "id_token",
+    });
   });
 
   test("should resolve with expires from client session", async () => {
@@ -61,10 +93,28 @@ describe("createIdToken", () => {
       ),
     ).toBe("signed");
 
-    expect(ctx.jwt.sign).toHaveBeenCalledWith(
-      expect.objectContaining({
-        expiry: new Date("2021-01-01T08:00:10.000Z"),
-      }),
-    );
+    expect(ctx.jwt.sign).toHaveBeenCalledWith({
+      accessToken: "accessToken",
+      audiences: [expect.any(String)],
+      authContextClass: "loa_2",
+      authMethodsReference: ["email", "phone"],
+      authTime: 1609487940,
+      authorizedParty: expect.any(String),
+      claims: {
+        email: "test@lindorm.io",
+      },
+      client: expect.any(String),
+      code: expect.any(String),
+      expiry: new Date("2021-01-01T08:00:10.000Z"),
+      levelOfAssurance: 2,
+      nonce: expect.any(String),
+      scopes: ["openid", "profile"],
+      session: expect.any(String),
+      sessionHint: "refresh",
+      subject: expect.any(String),
+      subjectHint: "identity",
+      tenant: expect.any(String),
+      type: "id_token",
+    });
   });
 });

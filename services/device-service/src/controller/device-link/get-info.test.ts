@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { getDeviceLinkInfoController } from "./get-info";
 import { createTestDeviceLink } from "../../fixtures/entity";
+import { getDeviceLinkInfoController } from "./get-info";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

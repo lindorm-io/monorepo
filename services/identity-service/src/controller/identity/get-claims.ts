@@ -1,7 +1,7 @@
 import {
   GetClaimsQuery,
   GetClaimsResponse,
-  LindormClaims,
+  LindormIdentityClaims,
   LindormScope,
   OpenIdScope,
 } from "@lindorm-io/common-types";
@@ -34,7 +34,7 @@ export const getClaimsController: ServerKoaController = async (
 
   const identity = await identityRepository.find({ id: identityId });
 
-  const claims: Partial<LindormClaims> = {
+  const claims: Partial<LindormIdentityClaims> = {
     active: identity.active,
     sub: identity.id,
     updatedAt: getUnixTime(identity.updated),

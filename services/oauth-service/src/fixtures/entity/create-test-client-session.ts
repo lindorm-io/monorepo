@@ -1,5 +1,5 @@
 import { AuthenticationMethod, OpenIdGrantType, OpenIdScope } from "@lindorm-io/common-types";
-import { randomHex } from "@lindorm-io/random";
+import { randomHex, randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { ClientSession, ClientSessionOptions } from "../../entity";
 import { ClientSessionType } from "../../enum";
@@ -12,6 +12,7 @@ export const createTestClientSession = (
     authorizationGrant: OpenIdGrantType.AUTHORIZATION_CODE,
     browserSessionId: randomUUID(),
     clientId: randomUUID(),
+    code: randomUnreserved(128),
     expires: new Date("2031-01-01T07:59:00.000Z"),
     identityId: randomUUID(),
     latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),

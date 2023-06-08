@@ -61,7 +61,7 @@ describe("confirmEnrolmentController", () => {
           subject: "ec04fed7-7ecd-4f43-96b1-d23f193f1d07",
         },
         enrolmentSessionToken: {
-          session: "a15c8ead-157a-4cd6-ab19-46c18b38f150",
+          metadata: { session: "a15c8ead-157a-4cd6-ab19-46c18b38f150" },
         },
       },
     };

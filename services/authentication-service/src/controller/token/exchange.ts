@@ -41,11 +41,8 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
     authMethodsReference: authenticationConfirmationToken.methods,
     authTime: getUnixTime(authenticationConfirmationToken.created),
     claims: {
+      confirmedIdentifiers: authenticationConfirmationToken.confirmedIdentifiers,
       country: authenticationConfirmationToken.country,
-      maximumLoa: authenticationConfirmationToken.maximumLevelOfAssurance,
-      remember: authenticationConfirmationToken.remember,
-      sso: authenticationConfirmationToken.singleSignOn,
-      verifiedIdentifiers: authenticationConfirmationToken.confirmedIdentifiers,
     },
     expiry: authenticationConfirmationToken.expires,
     issuedAt: authenticationConfirmationToken.created,

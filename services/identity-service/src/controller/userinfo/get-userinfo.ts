@@ -1,6 +1,6 @@
 import {
   GetUserinfoResponse,
-  LindormClaims,
+  LindormIdentityClaims,
   LindormScope,
   OpenIdScope,
 } from "@lindorm-io/common-types";
@@ -19,11 +19,13 @@ export const getUserinfoController: ServerKoaController = async (
     entity: { identity },
     mongo: { addressRepository },
     token: {
-      bearerToken: { scopes },
+      bearerToken: {
+        metadata: { scopes },
+      },
     },
   } = ctx;
 
-  const claims: Partial<LindormClaims> = {
+  const claims: Partial<LindormIdentityClaims> = {
     active: identity.active,
     sub: identity.id,
     updatedAt: getUnixTime(identity.updated),

@@ -134,7 +134,7 @@ describe("updateClientController", () => {
         secret:
           "$argon2id$v=19$m=2048,t=32,p=2$gMJgh4L58ROHKxfiK12KRWTqX0Nz4xNrNJOZBHOvVYfvlDnnidbIq0iROKGR9Ugkhd0fqXntHZ0",
         singleSignOn: true,
-        tenantId: "d1b90ac7-69a6-4187-92f2-46e9dceccde9",
+        tenantId: expect.any(String),
         trusted: false,
         type: "updated type",
       }),

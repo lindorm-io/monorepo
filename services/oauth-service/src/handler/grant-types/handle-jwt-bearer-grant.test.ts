@@ -30,9 +30,15 @@ describe("handleJwtBearerGrant", () => {
       },
       jwt: {
         verify: jest.fn().mockReturnValue({
-          expires: getUnixTime(new Date("2021-01-01T09:00:00.000Z")),
-          subject: "bb51ea97-6003-4c6b-aedc-d121ea93e17d",
-          authMethodsReference: ["email"],
+          auth: {
+            authMethodsReference: ["email"],
+          },
+          claims: {
+            subject: "bb51ea97-6003-4c6b-aedc-d121ea93e17d",
+          },
+          metadata: {
+            expires: getUnixTime(new Date("2021-01-01T09:00:00.000Z")),
+          },
         }),
       },
       mongo: {

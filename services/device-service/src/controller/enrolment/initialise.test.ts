@@ -1,11 +1,11 @@
-import MockDate from "mockdate";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { initialiseEnrolmentController } from "./initialise";
+import MockDate from "mockdate";
+import { createTestEnrolmentSession } from "../../fixtures/entity";
 import {
   createRdcSession as _createRdcSession,
   isRdcRequired as _isRdcRequired,
 } from "../../handler";
-import { createTestEnrolmentSession } from "../../fixtures/entity";
+import { initialiseEnrolmentController } from "./initialise";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

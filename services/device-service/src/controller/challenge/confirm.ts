@@ -1,14 +1,3 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoLayered } from "@lindorm-io/crypto";
-import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
-import { ServerKoaController } from "../../types";
-import { assertCertificateChallenge } from "../../util";
-import { configuration } from "../../server/configuration";
-import { flatten } from "lodash";
-import { vaultGetSalt } from "../../handler";
-import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import {
   ChallengeStrategy,
   ConfirmChallengeRequestBody,
@@ -18,6 +7,17 @@ import {
   PSD2Factor,
   SubjectHint,
 } from "@lindorm-io/common-types";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { flatten } from "lodash";
+import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
+import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
+import { vaultGetSalt } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
+import { assertCertificateChallenge } from "../../util";
 
 type RequestData = ConfirmChallengeRequestParams & ConfirmChallengeRequestBody;
 
@@ -55,7 +55,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     token: { challengeSessionToken },
   } = ctx;
 
-  if (challengeSession.id !== challengeSessionToken.session) {
+  if (challengeSession.id !== challengeSessionToken.metadata.session) {
     throw new ClientError("Invalid challenge session token");
   }
 

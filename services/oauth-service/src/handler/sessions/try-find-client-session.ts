@@ -1,19 +1,20 @@
+import { LindormIdentityClaims } from "@lindorm-io/common-types";
+import { JwtVerify } from "@lindorm-io/jwt";
 import { BrowserSession, Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { VerifiedIdentityToken } from "../../common";
 
 export const tryFindClientSession = async (
   ctx: ServerKoaContext,
   client: Client,
   browserSession?: BrowserSession,
-  idToken?: VerifiedIdentityToken,
+  idToken?: JwtVerify<LindormIdentityClaims>,
 ): Promise<ClientSession | undefined> => {
   const {
     mongo: { clientSessionRepository },
   } = ctx;
 
-  if (idToken?.session) {
-    return await clientSessionRepository.tryFind({ id: idToken.session });
+  if (idToken?.metadata.session) {
+    return await clientSessionRepository.tryFind({ id: idToken.metadata.session });
   }
 
   if (!client || !browserSession) return;

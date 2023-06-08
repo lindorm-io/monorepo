@@ -1,14 +1,14 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { Controller, ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
 import {
   AcknowledgeStrategyRequestBody,
   AcknowledgeStrategyRequestParams,
   AcknowledgeStrategyResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { Controller, ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { getStrategyHandler } from "../../strategies";
+import { ServerKoaContext } from "../../types";
 
 type RequestData = AcknowledgeStrategyRequestParams & AcknowledgeStrategyRequestBody;
 
@@ -28,7 +28,9 @@ export const acknowledgeStrategyController: Controller<
   const {
     data: { acknowledgeCode },
     entity: { authenticationSession, strategySession },
-    token: { bearerToken },
+    token: {
+      bearerToken: { subject: identityId },
+    },
   } = ctx;
 
   if (strategySession.status !== SessionStatus.PENDING) {
@@ -37,7 +39,7 @@ export const acknowledgeStrategyController: Controller<
 
   const handler = getStrategyHandler(strategySession.strategy);
   const body = await handler.acknowledge(ctx, authenticationSession, strategySession, {
-    identityId: bearerToken.subject,
+    identityId,
     acknowledgeCode,
   });
 

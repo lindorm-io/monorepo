@@ -1,6 +1,6 @@
 import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
-import { JwtSignData } from "@lindorm-io/jwt";
+import { JwtSign } from "@lindorm-io/jwt";
 import { Client } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
@@ -9,7 +9,7 @@ export const createClientCredentialsToken = (
   ctx: ServerKoaContext,
   client: Client,
   scopes: Array<string>,
-): JwtSignData => {
+): JwtSign => {
   const { jwt } = ctx;
 
   return jwt.sign({

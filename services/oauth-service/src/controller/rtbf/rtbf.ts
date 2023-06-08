@@ -1,13 +1,13 @@
+import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { ServerKoaController } from "../../types";
-import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {
     axios: { axiosClient },
     mongo: { browserSessionRepository, clientRepository, clientSessionRepository },
     token: {
-      bearerToken: { token: accessToken, subject: identityId },
+      bearerToken: { subject: identityId, token },
     },
   } = ctx;
 
@@ -17,7 +17,7 @@ export const rtbfController: ServerKoaController = async (ctx): ControllerRespon
     if (!client.rtbfUri) continue;
 
     await axiosClient.get(client.rtbfUri, {
-      middleware: [axiosBearerAuthMiddleware(accessToken)],
+      middleware: [axiosBearerAuthMiddleware(token)],
     });
   }
 

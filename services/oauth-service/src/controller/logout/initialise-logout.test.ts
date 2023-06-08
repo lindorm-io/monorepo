@@ -49,7 +49,7 @@ describe("oauthLogoutController", () => {
       },
       token: {
         idToken: {
-          client: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
+          metadata: { client: "097adea7-58d4-43cc-aeb3-f7f9879adb56" },
           token: "id.jwt.jwt",
         },
       },
@@ -112,7 +112,7 @@ describe("oauthLogoutController", () => {
 
   test("should throw on missing client id", async () => {
     ctx.data.clientId = undefined;
-    ctx.token.idToken.client = undefined;
+    ctx.token.idToken.metadata.client = undefined;
 
     await expect(oauthLogoutController(ctx)).rejects.toThrow(ClientError);
   });

@@ -121,8 +121,8 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     methods: recommendedMethods,
     strategies: recommendedStrategies,
   } = filterAcrValues({
-    acrArray: idToken?.authContextClass ? [idToken.authContextClass] : [],
-    amrArray: idToken?.authMethodsReference,
+    acrArray: idToken?.metadata.authContextClass ? [idToken.metadata.authContextClass] : [],
+    amrArray: idToken?.metadata.authMethodsReference,
   });
 
   const defaultAudiences = uniqArray(
@@ -133,7 +133,9 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
     configuration.services.identity_service.client_id,
   );
 
-  const audiences = idToken ? uniqArray(idToken.audiences, defaultAudiences) : defaultAudiences;
+  const audiences = idToken
+    ? uniqArray(idToken.metadata.audiences, defaultAudiences)
+    : defaultAudiences;
 
   const browserSessions = await tryFindBrowserSessions(ctx, idToken);
   const browserSession = browserSessions.length === 1 ? browserSessions[0] : undefined;

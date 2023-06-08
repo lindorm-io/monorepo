@@ -17,7 +17,7 @@ describe("rejectChallengeController", () => {
       },
       token: {
         challengeSessionToken: {
-          session: "c6657f43-5794-4668-9a66-6ef6023c218a",
+          metadata: { session: "c6657f43-5794-4668-9a66-6ef6023c218a" },
         },
       },
     };

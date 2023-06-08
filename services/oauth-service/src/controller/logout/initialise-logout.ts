@@ -1,14 +1,14 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { InitialiseLogoutRequestData } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { JOI_JWT, JOI_STATE } from "../../common";
 import { LogoutSession } from "../../entity";
+import { tryFindBrowserSessions } from "../../handler";
+import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
 import { assertPostLogoutRedirectUri, createLogoutPendingUri } from "../../util";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
-import { tryFindBrowserSessions } from "../../handler";
 
 type RequestData = InitialiseLogoutRequestData;
 
@@ -34,17 +34,17 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
     token: { idToken },
   } = ctx;
 
-  if (clientId && idToken && clientId !== idToken.client) {
+  if (clientId && idToken && clientId !== idToken.metadata.client) {
     throw new ClientError("Invalid Client ID", {
       code: "invalid_client_id",
       debug: {
-        expect: idToken.client,
+        expect: idToken.metadata.client,
         actual: clientId,
       },
     });
   }
 
-  const combinedClientId = clientId || idToken?.client;
+  const combinedClientId = clientId || idToken?.metadata.client;
 
   if (!combinedClientId) {
     throw new ClientError("Client not found", {

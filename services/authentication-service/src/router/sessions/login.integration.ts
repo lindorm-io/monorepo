@@ -75,20 +75,20 @@ describe("/sessions/login", () => {
   });
 
   test("should confirm and redirect", async () => {
-    const authToken = createOpaqueToken();
+    const authenticationToken = createOpaqueToken();
 
     await TEST_AUTHENTICATION_CONFIRMATION_TOKEN_CACHE.create(
       createTestAuthenticationConfirmationToken({
-        id: authToken.id,
+        id: authenticationToken.id,
         sessionId: "9937434e-aacb-489c-adc9-faa945be8145",
-        signature: authToken.signature,
+        signature: authenticationToken.signature,
       }),
     );
 
     const response = await request(server.callback())
       .post("/sessions/login/dd23a1f5-1a31-479b-a81e-2f20945061d8/confirm")
       .send({
-        authentication_confirmation_token: authToken.token,
+        token: authenticationToken.token,
       })
       .expect(200);
 

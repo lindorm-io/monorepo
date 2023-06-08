@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
-import { getPendingRdcSessionsController } from "./get-pending";
-import { createTestRdcSession } from "../../fixtures/entity";
-import { createMockRedisRepository } from "@lindorm-io/redis";
 import { RdcSessionMode, SessionStatus } from "@lindorm-io/common-types";
+import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
+import { createTestRdcSession } from "../../fixtures/entity";
+import { getPendingRdcSessionsController } from "./get-pending";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

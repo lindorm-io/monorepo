@@ -1,6 +1,6 @@
-import { acknowledgeRdcController } from "./acknowledge";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
+import { acknowledgeRdcController } from "./acknowledge";
 
 jest.mock("../../middleware");
 

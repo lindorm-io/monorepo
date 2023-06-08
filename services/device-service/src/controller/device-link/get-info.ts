@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { DeviceLinkAttributes } from "../../entity";
 import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { DeviceLinkAttributes } from "../../entity";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   id: string;

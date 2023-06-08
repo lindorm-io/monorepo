@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestDeviceLink } from "../../fixtures/entity";
-import { updateDeviceLinkBiometryController } from "./update-biometry";
 import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import { updateDeviceLinkBiometryController } from "./update-biometry";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

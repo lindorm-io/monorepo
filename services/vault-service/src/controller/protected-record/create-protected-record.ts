@@ -1,15 +1,15 @@
-import Joi from "joi";
-import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ProtectedRecord } from "../../entity";
-import { ServerKoaController } from "../../types";
-import { randomString } from "@lindorm-io/random";
-import { stringifyBlob } from "@lindorm-io/string-blob";
 import {
   CreateProtectedRecordRequestBody,
   CreateProtectedRecordResponse,
 } from "@lindorm-io/common-types";
+import { CryptoAES } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { randomString } from "@lindorm-io/random";
+import { stringifyBlob } from "@lindorm-io/string-blob";
+import Joi from "joi";
+import { ProtectedRecord } from "../../entity";
+import { ServerKoaController } from "../../types";
 
 type RequestData = CreateProtectedRecordRequestBody;
 
@@ -30,7 +30,10 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
     data: { id, data, expires },
     mongo: { protectedRecordRepository },
     token: {
-      bearerToken: { subject, subjectHint },
+      bearerToken: {
+        metadata: { subjectHint },
+        subject,
+      },
     },
   } = ctx;
 

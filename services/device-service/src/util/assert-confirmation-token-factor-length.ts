@@ -1,8 +1,9 @@
 import { ClientError } from "@lindorm-io/errors";
-import { VerifiedChallengeConfirmationToken } from "../common";
+import { JwtVerify } from "@lindorm-io/jwt";
+import { ChallengeConfirmationTokenClaims } from "../common";
 
 export const assertConfirmationTokenFactorLength = (
-  challengeConfirmationToken: VerifiedChallengeConfirmationToken,
+  challengeConfirmationToken: JwtVerify<ChallengeConfirmationTokenClaims>,
   minimumFactorLength: number,
 ): void => {
   if (challengeConfirmationToken.claims.factors.length >= minimumFactorLength) {

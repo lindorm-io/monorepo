@@ -1,8 +1,8 @@
-import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
-import { acknowledgeStrategyController } from "./acknowledge-strategy";
 import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
+import { acknowledgeStrategyController } from "./acknowledge-strategy";
 
 jest.mock("../../strategies");
 

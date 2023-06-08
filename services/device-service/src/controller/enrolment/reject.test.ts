@@ -21,7 +21,7 @@ describe("rejectEnrolmentController", () => {
           subject: "b799b044-16db-495a-b7e1-2cf3175d4b54",
         },
         enrolmentSessionToken: {
-          session: "7af9ad76-cd7a-4738-8952-1fdc17259176",
+          metadata: { session: "7af9ad76-cd7a-4738-8952-1fdc17259176" },
         },
       },
     };

@@ -1,10 +1,3 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { clientCredentialsMiddleware } from "../../middleware";
-import { configuration } from "../../server/configuration";
-import { difference } from "lodash";
-import { ClientError } from "@lindorm-io/errors";
 import {
   AcknowledgeRdcRequestParams,
   AcknowledgeRdcResponse,
@@ -14,6 +7,13 @@ import {
   SessionStatus,
   SubjectHint,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { difference } from "lodash";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = AcknowledgeRdcRequestParams;
 

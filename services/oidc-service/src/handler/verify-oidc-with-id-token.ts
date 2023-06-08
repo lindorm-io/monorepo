@@ -1,9 +1,9 @@
-import { OidcSession } from "../entity";
-import { ServerError } from "@lindorm-io/errors";
-import { ServerKoaContext } from "../types";
-import { configuration } from "../server/configuration";
-import { find } from "lodash";
 import { OpenIdClaims } from "@lindorm-io/common-types";
+import { ServerError } from "@lindorm-io/errors";
+import { find } from "lodash";
+import { OidcSession } from "../entity";
+import { configuration } from "../server/configuration";
+import { ServerKoaContext } from "../types";
 
 export const verifyOidcWithIdToken = async (
   ctx: ServerKoaContext,
@@ -22,7 +22,7 @@ export const verifyOidcWithIdToken = async (
 
   const { client_id: clientId, token_issuer: issuer } = config;
 
-  const { subject: sub, claims } = jwt.verify<Omit<OpenIdClaims, "sub">>(idToken, {
+  const { claims, subject: sub } = jwt.verify<Omit<OpenIdClaims, "sub">>(idToken, {
     audience: clientId,
     issuer,
     ...(oidcSession.nonce ? { nonce: oidcSession.nonce } : {}),

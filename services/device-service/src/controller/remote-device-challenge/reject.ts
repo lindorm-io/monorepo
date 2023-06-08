@@ -1,9 +1,3 @@
-import Joi from "joi";
-import { ServerKoaController } from "../../types";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_JWT } from "../../common";
-import { clientCredentialsMiddleware } from "../../middleware";
-import { updateEnrolmentStatus } from "../../handler";
 import {
   RdcSessionType,
   RejectRdcRequestBody,
@@ -11,6 +5,12 @@ import {
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_JWT } from "../../common";
+import { updateEnrolmentStatus } from "../../handler";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaController } from "../../types";
 
 type RequestData = RejectRdcRequestParams & RejectRdcRequestBody;
 
@@ -45,7 +45,7 @@ export const rejectRdcController: ServerKoaController<RequestData> = async (
     });
   }
 
-  if (rdcSession.id !== rdcSessionToken.session) {
+  if (rdcSession.id !== rdcSessionToken.metadata.session) {
     throw new ClientError("Invalid session token");
   }
 

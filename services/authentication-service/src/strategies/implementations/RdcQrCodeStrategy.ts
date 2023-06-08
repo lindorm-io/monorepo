@@ -105,7 +105,9 @@ export class RdcQrCodeStrategy implements StrategyHandler {
       });
     }
 
-    const { subject } = jwt.verify(challengeConfirmationToken, {
+    const {
+      claims: { subject },
+    } = jwt.verify(challengeConfirmationToken, {
       audience: configuration.oauth.client_id,
       issuer: configuration.services.device_service.issuer,
       nonce: strategySession.nonce,

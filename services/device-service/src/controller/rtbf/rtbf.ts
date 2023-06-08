@@ -1,6 +1,6 @@
-import { ServerKoaController } from "../../types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { destroyDeviceLinkCallback } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 export const rtbfController: ServerKoaController = async (ctx): ControllerResponse => {
   const {

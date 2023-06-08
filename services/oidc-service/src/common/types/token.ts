@@ -1,12 +1,8 @@
-import { ChallengeStrategy, Dict, LindormClaims, PSD2Factor } from "@lindorm-io/common-types";
-import { JwtDecodeData } from "@lindorm-io/jwt";
+import { ChallengeStrategy, Dict, PSD2Factor } from "@lindorm-io/common-types";
 
 export interface AuthenticationConfirmationTokenClaims {
+  confirmedIdentifiers: Array<string>;
   country: string | null;
-  maximumLoa: number;
-  remember: boolean;
-  sso: boolean;
-  verifiedIdentifiers: Array<string>;
 }
 
 export interface ChallengeConfirmationTokenClaims {
@@ -19,12 +15,3 @@ export interface ChallengeConfirmationTokenClaims {
 export interface RdcSessionTokenClaims {
   ext: Dict;
 }
-
-export type VerifiedAuthenticationConfirmationToken =
-  JwtDecodeData<AuthenticationConfirmationTokenClaims>;
-
-export type VerifiedChallengeConfirmationToken = JwtDecodeData<ChallengeConfirmationTokenClaims>;
-
-export type VerifiedRdcSessionToken = JwtDecodeData<RdcSessionTokenClaims>;
-
-export type VerifiedIdentityToken = JwtDecodeData<LindormClaims>;
