@@ -1,12 +1,7 @@
 import { createMockLogger } from "@lindorm-io/winston";
+import { Identity } from "../../entity";
 import { createTestDisplayName, createTestIdentity } from "../../fixtures/entity";
 import { updateIdentityDisplayName } from "./update-identity-display-name";
-
-jest.mock("@lindorm-io/random", () => ({
-  ...(jest.requireActual("@lindorm-io/random") as object),
-
-  randomNumber: jest.fn().mockImplementation(async () => 4444),
-}));
 
 describe("updateIdentityDisplayName", () => {
   let ctx: any;
@@ -17,15 +12,9 @@ describe("updateIdentityDisplayName", () => {
       logger: createMockLogger(),
       mongo: {
         displayNameRepository: {
-          find: jest.fn().mockImplementation(async (options) =>
-            createTestDisplayName({
-              numbers: [1234, 2345, 3456, 4567, 5678, 6789],
-              ...options,
-            }),
-          ),
           findOrCreate: jest.fn().mockImplementation(async (options) =>
             createTestDisplayName({
-              numbers: [1234, 2345, 3456, 4567, 5678, 6789],
+              number: 1234,
               ...options,
             }),
           ),
@@ -36,33 +25,21 @@ describe("updateIdentityDisplayName", () => {
     identity = createTestIdentity({
       displayName: {
         name: "oldName",
-        number: 1234,
+        number: 456,
       },
     });
   });
 
   test("should update display name entity", async () => {
-    await expect(updateIdentityDisplayName(ctx, identity, "newName")).resolves.toBeUndefined();
-
-    expect(ctx.mongo.displayNameRepository.update.mock.calls[0][0]).toStrictEqual(
-      expect.objectContaining({
-        name: "oldName",
-        numbers: [2345, 3456, 4567, 5678, 6789],
-      }),
-    );
-
-    expect(ctx.mongo.displayNameRepository.update.mock.calls[1][0]).toStrictEqual(
-      expect.objectContaining({
-        name: "newName",
-        numbers: expect.arrayContaining([4444]),
-      }),
+    await expect(updateIdentityDisplayName(ctx, identity, "newName")).resolves.toStrictEqual(
+      expect.any(Identity),
     );
 
     expect(identity).toStrictEqual(
       expect.objectContaining({
         displayName: {
           name: "newName",
-          number: 4444,
+          number: 1235,
         },
       }),
     );

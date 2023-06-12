@@ -160,7 +160,7 @@ describe("/admin/identities", () => {
     ).resolves.toStrictEqual(
       expect.objectContaining({
         name: "NewDisplayName",
-        numbers: [expect.any(Number)],
+        number: 1,
         revision: 1,
       }),
     );

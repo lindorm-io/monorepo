@@ -62,9 +62,10 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
       website,
       zoneInfo,
     },
-    entity: { identity },
     mongo: { identityRepository },
   } = ctx;
+
+  let identity = ctx.entity.identity;
 
   if (active !== undefined) {
     identity.active = active;
@@ -79,7 +80,7 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     displayName !== null &&
     displayName !== identity.displayName.name
   ) {
-    await updateIdentityDisplayName(ctx, identity, displayName);
+    identity = await updateIdentityDisplayName(ctx, identity, displayName);
   }
 
   if (familyName !== undefined) {
@@ -122,16 +123,16 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
     identity.preferredAccessibility = preferredAccessibility;
   }
 
+  if (preferredName !== undefined) {
+    identity.preferredName = preferredName;
+  }
+
   if (profile !== undefined) {
     identity.profile = profile;
   }
 
   if (pronouns !== undefined) {
     identity.pronouns = pronouns;
-  }
-
-  if (preferredName !== undefined) {
-    identity.preferredName = preferredName;
   }
 
   if (website !== undefined) {

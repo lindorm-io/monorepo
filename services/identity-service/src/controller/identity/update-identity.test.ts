@@ -46,6 +46,8 @@ describe("updateIdentityController", () => {
     updateIdentityDisplayName.mockImplementation(async (_, identity, displayName) => {
       identity.displayName.name = displayName;
       identity.displayName.number = 9999;
+
+      return identity;
     });
   });
 
@@ -56,6 +58,7 @@ describe("updateIdentityController", () => {
     expect(ctx.mongo.identityRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
         active: false,
+        avatarUri: "new-avatar",
         birthDate: "new-birthDate",
         displayName: {
           name: "new-displayName",
@@ -64,16 +67,15 @@ describe("updateIdentityController", () => {
         familyName: "new-familyName",
         gender: "new-gender",
         givenName: "new-givenName",
-        avatarUri: "new-avatar",
         locale: "new-locale",
         middleName: "new-middleName",
         namingSystem: "new-namingSystem",
         nickname: "new-nickname",
         picture: "new-picture",
         preferredAccessibility: ["new-setting"],
+        preferredName: "new-preferredName",
         profile: "new-profile",
         pronouns: "new-pronouns",
-        preferredName: "new-preferredName",
         website: "new-website",
         zoneInfo: "new-zoneInfo",
       }),

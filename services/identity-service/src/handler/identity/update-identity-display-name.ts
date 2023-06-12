@@ -1,34 +1,21 @@
-import { ServerKoaContext } from "../../types";
 import { Identity } from "../../entity";
+import { ServerKoaContext } from "../../types";
 
 export const updateIdentityDisplayName = async (
   ctx: ServerKoaContext,
   identity: Identity,
-  displayName: string,
-): Promise<void> => {
+  name: string,
+): Promise<Identity> => {
   const {
     mongo: { displayNameRepository },
   } = ctx;
 
-  if (identity.displayName.name && identity.displayName.number) {
-    const current = await displayNameRepository.find({
-      name: identity.displayName.name,
-    });
+  const displayName = await displayNameRepository.findOrCreate({ name });
+  displayName.number = displayName.number + 1;
 
-    current.remove(identity.displayName.number);
+  await displayNameRepository.update(displayName);
 
-    await displayNameRepository.update(current);
-  }
+  identity.displayName = { name, number: displayName.number };
 
-  const entity = await displayNameRepository.findOrCreate({ name: displayName });
-  const number = await entity.generateNumber();
-
-  entity.add(number);
-
-  await displayNameRepository.update(entity);
-
-  identity.displayName = {
-    name: displayName,
-    number,
-  };
+  return identity;
 };
