@@ -1,17 +1,18 @@
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
-import { GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
+import { Dict, GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
-import { ClaimsSession, ClientSession } from "../../entity";
+import { ClaimsSession, Client, ClientSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateServerCredentialsJwt } from "../token";
 
 export const getIdentityClaims = async (
   ctx: ServerKoaContext,
+  client: Client,
   clientSession: ClientSession,
 ): Promise<GetClaimsResponse> => {
   const {
-    axios: { identityClient },
+    axios: { axiosClient, identityClient },
     redis: { claimsSessionCache },
   } = ctx;
 
@@ -30,18 +31,35 @@ export const getIdentityClaims = async (
   );
 
   const query = { session: claimsSession.id };
-  const middleware = [
-    axiosBearerAuthMiddleware(
-      generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
-    ),
-  ];
 
-  const { data } = await identityClient.get<GetClaimsResponse, never, GetClaimsQuery>(
-    configuration.services.identity_service.routes.claims,
-    { query, middleware },
-  );
+  const { data: identityClaims } = await identityClient.get<
+    GetClaimsResponse,
+    never,
+    GetClaimsQuery
+  >(configuration.services.identity_service.routes.claims, {
+    query,
+    middleware: [
+      axiosBearerAuthMiddleware(
+        generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
+      ),
+    ],
+  });
+
+  let clientClaims: Dict = {};
+
+  if (client.claimsUri) {
+    const { data } = await axiosClient.get<GetClaimsResponse, never, GetClaimsQuery>(
+      client.claimsUri,
+      {
+        query,
+        middleware: [axiosBearerAuthMiddleware(generateServerCredentialsJwt(ctx, [client.id]))],
+      },
+    );
+
+    clientClaims = data;
+  }
 
   await claimsSessionCache.destroy(claimsSession);
 
-  return data;
+  return { ...clientClaims, ...identityClaims };
 };

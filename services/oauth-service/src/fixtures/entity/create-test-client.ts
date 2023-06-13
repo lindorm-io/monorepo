@@ -55,8 +55,9 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
 
     active: true,
     backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
+    claimsUri: "https://test.client.lindorm.io/claims",
     description: "Client description",
-    host: "https://test.client.lindorm.io",
+    domain: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",
     name: "ClientName",
     opaqueAccessToken: true,

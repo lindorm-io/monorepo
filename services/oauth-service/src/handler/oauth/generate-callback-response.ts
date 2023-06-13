@@ -29,7 +29,7 @@ export const generateCallbackResponse = async (
 ): ControllerResponse => {
   const data: Partial<CallbackData> = {};
 
-  const { active, ...claims } = await getIdentityClaims(ctx, clientSession);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, clientSession);
 
   if (!active) {
     throw new ClientError("Invalid identity", {

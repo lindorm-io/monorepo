@@ -1,6 +1,10 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
-import { createTestClaimsSession, createTestClientSession } from "../../fixtures/entity";
+import {
+  createTestClaimsSession,
+  createTestClient,
+  createTestClientSession,
+} from "../../fixtures/entity";
 import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
 import { getIdentityClaims } from "./get-identity-claims";
 
@@ -14,6 +18,15 @@ describe("getIdentityClaims", () => {
   beforeEach(() => {
     ctx = {
       axios: {
+        axiosClient: {
+          get: jest.fn().mockResolvedValue({
+            data: {
+              customThingOne: "custom_thing_one",
+              customThingTwo: "custom_thing_two",
+              customThingThree: { foo: "bar" },
+            },
+          }),
+        },
         identityClient: {
           get: jest.fn().mockResolvedValue({
             data: TEST_GET_USERINFO_RESPONSE,
@@ -29,7 +42,9 @@ describe("getIdentityClaims", () => {
   });
 
   test("should resolve", async () => {
-    await expect(getIdentityClaims(ctx, createTestClientSession())).resolves.toStrictEqual({
+    await expect(
+      getIdentityClaims(ctx, createTestClient(), createTestClientSession()),
+    ).resolves.toStrictEqual({
       active: true,
       address: {
         careOf: "careOf",
@@ -42,6 +57,11 @@ describe("getIdentityClaims", () => {
       },
       avatarUri: "https://avatar.url/",
       birthDate: "2000-01-01",
+      customThingOne: "custom_thing_one",
+      customThingThree: {
+        foo: "bar",
+      },
+      customThingTwo: "custom_thing_two",
       displayName: "displayName#8441",
       email: "test@lindorm.io",
       emailVerified: true,
@@ -51,6 +71,8 @@ describe("getIdentityClaims", () => {
       locale: "sv-SE",
       middleName: "middleName",
       name: "givenName familyName",
+      nationalIdentityNumber: "198056702895",
+      nationalIdentityNumberVerified: true,
       nickname: "nickname",
       phoneNumber: "+46705498721",
       phoneNumberVerified: true,
@@ -60,6 +82,7 @@ describe("getIdentityClaims", () => {
       profile: "https://profile.url/",
       pronouns: "she/her",
       socialSecurityNumber: "198056702895",
+      socialSecurityNumberVerified: false,
       sub: "d821cde6-250f-4918-ad55-877a7abf0271",
       updatedAt: 1609488000,
       username: "identityUsername",

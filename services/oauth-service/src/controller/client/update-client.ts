@@ -18,11 +18,12 @@ type RequestData = {
   allowed: ClientAllowed;
   audiences: ClientAudiences;
   backChannelLogoutUri: string | null;
+  claimsUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
   expiry: ClientExpiry;
   frontChannelLogoutUri: string | null;
-  host: string;
+  domain: string;
   logoUri: string | null;
   name: string;
   postLogoutUris: Array<string>;
@@ -61,9 +62,10 @@ export const updateClientSchema = Joi.object<RequestData>()
 
     active: Joi.boolean(),
     backChannelLogoutUri: Joi.string().uri(),
+    claimsUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
-    host: Joi.string().uri(),
+    domain: Joi.string().uri(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
@@ -86,11 +88,12 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       allowed,
       audiences,
       backChannelLogoutUri,
+      claimsUri,
       defaults,
       description,
       expiry,
       frontChannelLogoutUri,
-      host,
+      domain,
       logoUri,
       name,
       postLogoutUris,
@@ -123,9 +126,10 @@ export const updateClientController: ServerKoaController<RequestData> = async (
 
   if (active !== undefined) client.active = active;
   if (backChannelLogoutUri !== undefined) client.backChannelLogoutUri = backChannelLogoutUri;
+  if (claimsUri !== undefined) client.claimsUri = claimsUri;
   if (description !== undefined) client.description = description;
   if (frontChannelLogoutUri !== undefined) client.frontChannelLogoutUri = frontChannelLogoutUri;
-  if (host !== undefined) client.host = host;
+  if (domain !== undefined) client.domain = domain;
   if (logoUri !== undefined) client.logoUri = logoUri;
   if (name !== undefined) client.name = name;
   if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;

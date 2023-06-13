@@ -21,7 +21,7 @@ describe("createClientController", () => {
     ctx = {
       data: {
         description: "description",
-        host: "host",
+        domain: "domain",
         logoutUri: "logoutUri",
         name: "name",
         redirectUris: ["redirectUri"],

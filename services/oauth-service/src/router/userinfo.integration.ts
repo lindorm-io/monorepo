@@ -2,14 +2,14 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { TEST_GET_USERINFO_RESPONSE } from "../fixtures/data";
-import { server } from "../server/server";
+import { createTestAccessToken, createTestClientSession } from "../fixtures/entity";
 import {
-  getTestAccessToken,
-  setupIntegration,
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
+  getTestAccessToken,
+  setupIntegration,
 } from "../fixtures/integration";
-import { createTestAccessToken, createTestClientSession } from "../fixtures/entity";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -54,6 +54,7 @@ describe("/userinfo", () => {
         region: "region",
         street_address: "streetAddress1\nstreetAddress2",
       },
+      avatar_uri: "https://avatar.url/",
       birth_date: "2000-01-01",
       display_name: "displayName#8441",
       email: "test@lindorm.io",
@@ -61,10 +62,11 @@ describe("/userinfo", () => {
       family_name: "familyName",
       gender: "gender",
       given_name: "givenName",
-      avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
       middle_name: "middleName",
       name: "givenName familyName",
+      national_identity_number: "198056702895",
+      national_identity_number_verified: true,
       nickname: "nickname",
       phone_number: "+46705498721",
       phone_number_verified: true,
@@ -74,6 +76,7 @@ describe("/userinfo", () => {
       profile: "https://profile.url/",
       pronouns: "she/her",
       social_security_number: "198056702895",
+      social_security_number_verified: false,
       sub: "d821cde6-250f-4918-ad55-877a7abf0271",
       updated_at: 1609488000,
       username: "identityUsername",
@@ -112,6 +115,7 @@ describe("/userinfo", () => {
         region: "region",
         street_address: "streetAddress1\nstreetAddress2",
       },
+      avatar_uri: "https://avatar.url/",
       birth_date: "2000-01-01",
       display_name: "displayName#8441",
       email: "test@lindorm.io",
@@ -119,10 +123,11 @@ describe("/userinfo", () => {
       family_name: "familyName",
       gender: "gender",
       given_name: "givenName",
-      avatar_uri: "https://avatar.url/",
       locale: "sv-SE",
       middle_name: "middleName",
       name: "givenName familyName",
+      national_identity_number: "198056702895",
+      national_identity_number_verified: true,
       nickname: "nickname",
       phone_number: "+46705498721",
       phone_number_verified: true,
@@ -132,6 +137,7 @@ describe("/userinfo", () => {
       profile: "https://profile.url/",
       pronouns: "she/her",
       social_security_number: "198056702895",
+      social_security_number_verified: false,
       sub: "d821cde6-250f-4918-ad55-877a7abf0271",
       updated_at: 1609488000,
       username: "identityUsername",

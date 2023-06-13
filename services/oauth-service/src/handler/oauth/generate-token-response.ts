@@ -14,7 +14,7 @@ export const generateTokenResponse = async (
 ): Promise<Partial<OpenIdTokenResponseBody>> => {
   const body: Partial<OpenIdTokenResponseBody> = {};
 
-  const { active, ...claims } = await getIdentityClaims(ctx, clientSession);
+  const { active, ...claims } = await getIdentityClaims(ctx, client, clientSession);
 
   if (!active) {
     throw new ClientError("Invalid identity", {

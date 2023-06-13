@@ -18,7 +18,7 @@ import { ServerKoaController } from "../../types";
 
 type RequestData = {
   description: string;
-  host: string;
+  domain: string;
   name: string;
   profile: OpenIdClientProfile;
   tenantId: string;
@@ -33,7 +33,7 @@ type ResponseBody = {
 export const createClientSchema = Joi.object<RequestData>()
   .keys({
     description: Joi.string().required(),
-    host: Joi.string().uri().required(),
+    domain: Joi.string().uri().required(),
     name: Joi.string().required(),
     profile: Joi.string()
       .valid(...Object.values(OpenIdClientProfile))
@@ -49,7 +49,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { description, host, name, profile, type },
+    data: { description, domain, name, profile, type },
     entity: { tenant },
     mongo: { clientRepository },
   } = ctx;
@@ -107,7 +107,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
 
       active: true,
       description,
-      host,
+      domain,
       name,
       opaqueAccessToken: true,
       profile,

@@ -69,11 +69,12 @@ export type ClientAttributes = EntityAttributes & {
   authenticationAssertion: ClientAuthenticationAssertion;
   authorizationAssertion: ClientAuthorizationAssertion;
   backChannelLogoutUri: string | null;
+  claimsUri: string | null;
   defaults: ClientDefaults;
   description: string | null;
+  domain: string;
   expiry: ClientExpiry;
   frontChannelLogoutUri: string | null;
-  host: string;
   logoUri: string | null;
   name: string;
   opaqueAccessToken: boolean;
@@ -95,6 +96,7 @@ export type ClientOptions = Optional<
   | EntityKeys
   | "active"
   | "backChannelLogoutUri"
+  | "claimsUri"
   | "description"
   | "frontChannelLogoutUri"
   | "logoUri"
@@ -163,9 +165,10 @@ const schema = Joi.object<ClientAttributes>()
 
     active: Joi.boolean().required(),
     backChannelLogoutUri: Joi.string().uri().required(),
+    claimsUri: Joi.string().uri().required(),
     description: Joi.string().allow(null).required(),
+    domain: Joi.string().uri().required(),
     frontChannelLogoutUri: Joi.string().uri().allow(null).required(),
-    host: Joi.string().uri().required(),
     logoUri: Joi.string().uri().allow(null).required(),
     name: Joi.string().required(),
     opaqueAccessToken: Joi.boolean().required(),
@@ -194,11 +197,12 @@ export class Client extends LindormEntity<ClientAttributes> {
   public authenticationAssertion: ClientAuthenticationAssertion;
   public authorizationAssertion: ClientAuthorizationAssertion;
   public backChannelLogoutUri: string | null;
+  public claimsUri: string | null;
   public defaults: ClientDefaults;
   public description: string | null;
   public expiry: ClientExpiry;
   public frontChannelLogoutUri: string | null;
-  public host: string;
+  public domain: string;
   public logoUri: string | null;
   public name: string;
   public opaqueAccessToken: boolean;
@@ -223,11 +227,12 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.authenticationAssertion = options.authenticationAssertion;
     this.authorizationAssertion = options.authorizationAssertion;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
+    this.claimsUri = options.claimsUri || null;
     this.defaults = options.defaults;
     this.description = options.description || null;
+    this.domain = options.domain;
     this.expiry = options.expiry;
     this.frontChannelLogoutUri = options.frontChannelLogoutUri || null;
-    this.host = options.host;
     this.logoUri = options.logoUri || null;
     this.name = options.name;
     this.opaqueAccessToken = options.opaqueAccessToken === true;
@@ -258,11 +263,12 @@ export class Client extends LindormEntity<ClientAttributes> {
       authenticationAssertion: this.authenticationAssertion,
       authorizationAssertion: this.authorizationAssertion,
       backChannelLogoutUri: this.backChannelLogoutUri,
+      claimsUri: this.claimsUri,
       defaults: this.defaults,
       description: this.description,
+      domain: this.domain,
       expiry: this.expiry,
       frontChannelLogoutUri: this.frontChannelLogoutUri,
-      host: this.host,
       logoUri: this.logoUri,
       name: this.name,
       opaqueAccessToken: this.opaqueAccessToken,
