@@ -43,7 +43,6 @@ export class JWT {
   public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSign {
     const {
       id = randomUUID(),
-      accessToken,
       adjustedAccessLevel,
       audiences,
       authContextClass,
@@ -52,7 +51,6 @@ export class JWT {
       authTime,
       claims,
       client,
-      code,
       issuedAt,
       jwksUrl = this.jwksUrl,
       keyType,
@@ -70,8 +68,17 @@ export class JWT {
 
     const { expires, expiresIn, expiresUnix, now } = expiryObject(options.expiry);
 
-    const accessTokenHash = accessToken ? this.createHash(accessToken, 128) : undefined;
-    const codeHash = code ? this.createHash(code, 256) : undefined;
+    const accessTokenHash = options.accessTokenHash
+      ? options.accessTokenHash
+      : options.accessToken
+      ? this.createHash(options.accessToken, 128)
+      : undefined;
+
+    const codeHash = options.codeHash
+      ? options.codeHash
+      : options.code
+      ? this.createHash(options.code, 256)
+      : undefined;
 
     this.logger.debug("Signing token", {
       options,
@@ -324,7 +331,7 @@ export class JWT {
     };
   }
 
-  private createHash(input: string, bits: number, keyType?: KeyType): string {
+  public createHash(input: string, bits: number, keyType?: KeyType): string {
     const key = this.getSigningKey(keyType);
     const alg = getHashAlgFromKey(key);
     const buffer = createHash(alg).update(input, "utf8").digest();

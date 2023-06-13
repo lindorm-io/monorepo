@@ -5,6 +5,7 @@ import { KeyType } from "@lindorm-io/key-pair";
 export type JwtSignOptions<Claims = Record<string, never>> = {
   id?: string;
   accessToken?: string;
+  accessTokenHash?: string;
   adjustedAccessLevel?: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass?: string;
@@ -14,6 +15,7 @@ export type JwtSignOptions<Claims = Record<string, never>> = {
   claims?: Claims;
   client?: string;
   code?: string;
+  codeHash?: string;
   expiry: Expiry;
   issuedAt?: Date;
   jwksUrl?: string;
