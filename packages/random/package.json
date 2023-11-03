@@ -10,6 +10,13 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "example:hex": "ts-node ./examples/hex",
+    "example:integer": "ts-node ./examples/integer",
+    "example:number": "ts-node ./examples/number",
+    "example:secret": "ts-node ./examples/secret",
+    "example:string": "ts-node ./examples/string",
+    "example:token": "ts-node ./examples/token",
+    "example:unreserved": "ts-node ./examples/unreserved",
     "test": "jest --watch --",
     "test:ci": "yarn test:unit",
     "test:unit": "jest --forceExit",
