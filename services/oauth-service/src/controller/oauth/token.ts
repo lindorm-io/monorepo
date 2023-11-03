@@ -41,7 +41,7 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
     entity: { client },
   } = ctx;
 
-  if (!client.allowed.grantTypes.includes(grantType as OpenIdGrantType)) {
+  if (!client.allowed.grantTypes.includes(grantType)) {
     throw new ClientError("Invalid Grant Type", {
       code: "invalid_request",
       debug: {
@@ -53,9 +53,6 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
   }
 
   let body: Partial<ResponseBody> = {};
-
-  ctx.set("Cache-Control", "no-store");
-  ctx.set("Pragma", "no-cache");
 
   switch (grantType) {
     case OpenIdGrantType.AUTHENTICATION_TOKEN:

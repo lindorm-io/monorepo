@@ -9,6 +9,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
+import { difference } from "lodash";
 import { JOI_COUNTRY_CODE, JOI_NONCE, JOI_STATE } from "../../common";
 import {
   JOI_DISPLAY_MODE,
@@ -105,6 +106,20 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   const prompts = prompt ? (prompt.toLowerCase().split(" ") as Array<OpenIdPromptMode>) : [];
   const responseTypes = responseType.toLowerCase().split(" ") as Array<OpenIdResponseType>;
   const scopes = scope.toLowerCase().split(" ");
+
+  if (codeChallengeMethod && !client.allowed.codeChallengeMethods.includes(codeChallengeMethod)) {
+    throw new ClientError("Invalid code challenge method", {
+      code: "invalid_request",
+    });
+  }
+
+  const diff = difference(responseTypes, client.allowed.responseTypes);
+
+  if (diff.length) {
+    throw new ClientError("Invalid response types", {
+      code: "invalid_request",
+    });
+  }
 
   assertRedirectUri(client, redirectUri);
 

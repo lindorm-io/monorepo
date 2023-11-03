@@ -9,6 +9,7 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   OpenIdScope,
+  PKCEMethod,
 } from "@lindorm-io/common-types";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { randomString } from "@lindorm-io/random";
@@ -19,6 +20,7 @@ import { Client, ClientAttributes } from "../../entity";
 export const createTestClient = (options: Partial<ClientAttributes> = {}): Client =>
   new Client({
     allowed: {
+      codeChallengeMethods: Object.values(PKCEMethod),
       grantTypes: Object.values(OpenIdGrantType),
       methods: Object.values(AuthenticationMethod),
       responseTypes: Object.values(OpenIdResponseType),
@@ -40,6 +42,11 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       issuer: "https://test.client.authorization.issuer",
       secret: randomString(32),
     },
+    customClaims: {
+      uri: "https://test.client.lindorm.io/claims",
+      username: null,
+      password: null,
+    },
     defaults: {
       displayMode: OpenIdDisplayMode.POPUP,
       levelOfAssurance: 3,
@@ -55,7 +62,6 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
 
     active: true,
     backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
-    claimsUri: "https://test.client.lindorm.io/claims",
     description: "Client description",
     domain: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",

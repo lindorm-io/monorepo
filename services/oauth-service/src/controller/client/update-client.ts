@@ -9,7 +9,13 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../../constant";
-import { ClientAllowed, ClientAudiences, ClientDefaults, ClientExpiry } from "../../entity";
+import {
+  ClientAllowed,
+  ClientAudiences,
+  ClientCustomClaims,
+  ClientDefaults,
+  ClientExpiry,
+} from "../../entity";
 import { Scope, ServerKoaController } from "../../types";
 
 type RequestData = {
@@ -18,7 +24,7 @@ type RequestData = {
   allowed: ClientAllowed;
   audiences: ClientAudiences;
   backChannelLogoutUri: string | null;
-  claimsUri: string | null;
+  customClaims: ClientCustomClaims;
   defaults: ClientDefaults;
   description: string | null;
   expiry: ClientExpiry;
@@ -49,6 +55,11 @@ export const updateClientSchema = Joi.object<RequestData>()
       client: Joi.array().items(Joi.string().guid()),
       identity: Joi.array().items(Joi.string().guid()),
     }),
+    customClaims: Joi.object().keys({
+      uri: Joi.string().uri().allow(null),
+      username: Joi.string().allow(null),
+      password: Joi.string().allow(null),
+    }),
     defaults: Joi.object().keys({
       displayMode: JOI_DISPLAY_MODE,
       levelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
@@ -62,7 +73,6 @@ export const updateClientSchema = Joi.object<RequestData>()
 
     active: Joi.boolean(),
     backChannelLogoutUri: Joi.string().uri(),
-    claimsUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
     domain: Joi.string().uri(),
@@ -88,7 +98,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       allowed,
       audiences,
       backChannelLogoutUri,
-      claimsUri,
+      customClaims,
       defaults,
       description,
       expiry,
@@ -109,12 +119,20 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     mongo: { clientRepository },
   } = ctx;
 
+  if (allowed?.codeChallengeMethods !== undefined)
+    client.allowed.codeChallengeMethods = allowed.codeChallengeMethods;
   if (allowed?.grantTypes !== undefined) client.allowed.grantTypes = allowed.grantTypes;
+  if (allowed?.methods !== undefined) client.allowed.methods = allowed.methods;
   if (allowed?.responseTypes !== undefined) client.allowed.responseTypes = allowed.responseTypes;
   if (allowed?.scopes !== undefined) client.allowed.scopes = allowed.scopes;
+  if (allowed?.strategies !== undefined) client.allowed.strategies = allowed.strategies;
 
   if (audiences?.credentials !== undefined) client.audiences.credentials = audiences.credentials;
   if (audiences?.identity !== undefined) client.audiences.identity = audiences.identity;
+
+  if (customClaims?.uri !== undefined) client.customClaims.uri = customClaims.uri;
+  if (customClaims?.username !== undefined) client.customClaims.username = customClaims.username;
+  if (customClaims?.password !== undefined) client.customClaims.password = customClaims.password;
 
   if (defaults?.displayMode !== undefined) client.defaults.displayMode = defaults.displayMode;
   if (defaults?.levelOfAssurance) client.defaults.levelOfAssurance = defaults.levelOfAssurance;
@@ -126,7 +144,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
 
   if (active !== undefined) client.active = active;
   if (backChannelLogoutUri !== undefined) client.backChannelLogoutUri = backChannelLogoutUri;
-  if (claimsUri !== undefined) client.claimsUri = claimsUri;
   if (description !== undefined) client.description = description;
   if (frontChannelLogoutUri !== undefined) client.frontChannelLogoutUri = frontChannelLogoutUri;
   if (domain !== undefined) client.domain = domain;

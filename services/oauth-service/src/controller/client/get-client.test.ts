@@ -25,6 +25,7 @@ describe("getClientInfoController", () => {
       body: {
         active: true,
         allowed: {
+          codeChallengeMethods: ["plain", "S256"],
           grantTypes: [
             "urn:ietf:params:oauth:grant-type:authentication-token",
             "authorization_code",
@@ -43,7 +44,7 @@ describe("getClientInfoController", () => {
             "phone",
             "recovery",
             "session_link",
-            "totp",
+            "time_based_otp",
             "webauthn",
           ],
           responseTypes: ["code", "id_token", "token"],
@@ -85,7 +86,11 @@ describe("getClientInfoController", () => {
           identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
         },
         backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
-        claimsUri: "https://test.client.lindorm.io/claims",
+        customClaims: {
+          uri: "https://test.client.lindorm.io/claims",
+          username: null,
+          password: null,
+        },
         defaults: {
           displayMode: "popup",
           levelOfAssurance: 3,

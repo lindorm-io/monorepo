@@ -1,5 +1,6 @@
 import { OpenIdClientType } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
+import { Algorithm } from "@lindorm-io/key-pair";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";
 import { Client } from "../../entity";
 import { verifyAssertionId } from "../../handler";
@@ -62,7 +63,7 @@ export const authenticateClientMiddleware: ServerKoaMiddleware = async (
       const verified = jwt.verify(assertion, {
         algorithms: client.authenticationAssertion.algorithm
           ? [client.authenticationAssertion.algorithm]
-          : ["HS256"],
+          : [Algorithm.HS256],
         audience: configuration.oauth.client_id,
         clockTolerance: 10,
         issuer: client.authenticationAssertion.issuer

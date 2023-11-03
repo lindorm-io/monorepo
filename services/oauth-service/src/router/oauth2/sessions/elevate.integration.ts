@@ -74,7 +74,7 @@ describe("/oauth2/sessions/elevate", () => {
         id_token_hint: idToken,
         redirect_uri: "https://test.client.lindorm.io/redirect",
         state,
-        methods: "password totp",
+        methods: "password time_based_otp",
         ui_locales: "sv-SE en-GB",
       })
       .set("Authorization", `Bearer ${opaqueToken.token}`)

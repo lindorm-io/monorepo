@@ -9,6 +9,7 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   OpenIdScope,
+  PKCEMethod,
 } from "@lindorm-io/common-types";
 import { Client, Tenant } from "../entity";
 import { ClientRepository, TenantRepository } from "../infrastructure";
@@ -59,18 +60,20 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.authenticationService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
         scopes: [],
         strategies: [],
       },
-      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
-      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -98,18 +101,20 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.communicationService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
         scopes: [],
         strategies: [],
       },
-      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
-      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -137,18 +142,20 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.deviceService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
         scopes: [],
         strategies: [],
       },
-      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
-      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -176,18 +183,20 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.identityService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
         scopes: [],
         strategies: [],
       },
-      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
-      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -215,18 +224,20 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.oidcService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
         scopes: [],
         strategies: [],
       },
-      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
-      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
       audiences: {
         credentials: Object.values(ids),
         identity: [],
       },
+      authenticationAssertion: { algorithm: null, issuer: null, secret: null },
+      authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -254,6 +265,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.vaultService,
       allowed: {
+        codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
         methods: [],
         responseTypes: [],
@@ -266,6 +278,7 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,
@@ -293,6 +306,7 @@ const main = async (): Promise<void> => {
     new Client({
       id: ids.authApplication,
       allowed: {
+        codeChallengeMethods: [PKCEMethod.SHA256],
         grantTypes: [OpenIdGrantType.AUTHORIZATION_CODE, OpenIdGrantType.REFRESH_TOKEN],
         methods: Object.values(AuthenticationMethod),
         responseTypes: Object.values(OpenIdResponseType),
@@ -305,6 +319,7 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
         levelOfAssurance: 1,

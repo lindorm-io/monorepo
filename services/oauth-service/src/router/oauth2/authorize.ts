@@ -1,7 +1,7 @@
-import { ERROR_REDIRECT_URI } from "../../constant";
 import { redirectErrorMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { clientEntityMiddleware, idTokenMiddleware } from "../../middleware";
+import { ERROR_REDIRECT_URI } from "../../constant";
 import { oauthAuthorizeController, oauthAuthorizeSchema } from "../../controller";
+import { clientEntityMiddleware, idTokenMiddleware } from "../../middleware";
 
 export const router = new Router<any, any>();
 

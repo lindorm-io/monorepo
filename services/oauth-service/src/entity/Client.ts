@@ -9,23 +9,19 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   Optional,
+  PKCEMethod,
   ScopeDescription,
 } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
-import { JOI_ARGON_STRING, JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../common";
-import {
-  JOI_DISPLAY_MODE,
-  JOI_EXPIRY_REGEX,
-  JOI_GRANT_TYPE,
-  JOI_RESPONSE_MODE,
-  JOI_RESPONSE_TYPE,
-} from "../constant";
+import { JOI_ARGON_STRING, JOI_SCOPE_DESCRIPTION } from "../common";
+import { JOI_EXPIRY_REGEX } from "../constant";
 import { Scope } from "../types";
 
 export type ClientAllowed = {
+  codeChallengeMethods: Array<PKCEMethod>;
   grantTypes: Array<OpenIdGrantType>;
   methods: Array<AuthenticationMethod>;
   responseTypes: Array<OpenIdResponseType>;
@@ -50,6 +46,12 @@ export type ClientAudiences = {
   identity: Array<string>;
 };
 
+export type ClientCustomClaims = {
+  uri: string | null;
+  username: string | null;
+  password: string | null;
+};
+
 export type ClientDefaults = {
   displayMode: OpenIdDisplayMode;
   levelOfAssurance: LevelOfAssurance;
@@ -69,7 +71,7 @@ export type ClientAttributes = EntityAttributes & {
   authenticationAssertion: ClientAuthenticationAssertion;
   authorizationAssertion: ClientAuthorizationAssertion;
   backChannelLogoutUri: string | null;
-  claimsUri: string | null;
+  customClaims: ClientCustomClaims;
   defaults: ClientDefaults;
   description: string | null;
   domain: string;
@@ -96,7 +98,6 @@ export type ClientOptions = Optional<
   | EntityKeys
   | "active"
   | "backChannelLogoutUri"
-  | "claimsUri"
   | "description"
   | "frontChannelLogoutUri"
   | "logoUri"
@@ -115,9 +116,16 @@ const schema = Joi.object<ClientAttributes>()
 
     allowed: Joi.object()
       .keys({
-        grantTypes: Joi.array().items(JOI_GRANT_TYPE).required(),
+        codeChallengeMethods: Joi.array()
+          .items(Joi.string().valid(...Object.values(PKCEMethod)))
+          .required(),
+        grantTypes: Joi.array()
+          .items(Joi.string().valid(...Object.values(OpenIdGrantType)))
+          .required(),
         methods: Joi.array().items(Joi.string()).required(),
-        responseTypes: Joi.array().items(JOI_RESPONSE_TYPE).required(),
+        responseTypes: Joi.array()
+          .items(Joi.string().valid(...Object.values(OpenIdResponseType)))
+          .required(),
         scopes: Joi.array().items(Joi.string()).required(),
         strategies: Joi.array().items(Joi.string()).required(),
       })
@@ -148,11 +156,22 @@ const schema = Joi.object<ClientAttributes>()
         secret: Joi.string().allow(null).required(),
       })
       .required(),
+    customClaims: Joi.object()
+      .keys({
+        uri: Joi.string().uri().allow(null).required(),
+        username: Joi.string().allow(null).required(),
+        password: Joi.string().allow(null).required(),
+      })
+      .required(),
     defaults: Joi.object()
       .keys({
-        displayMode: JOI_DISPLAY_MODE.required(),
-        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
-        responseMode: JOI_RESPONSE_MODE.required(),
+        displayMode: Joi.string()
+          .valid(...Object.values(OpenIdDisplayMode))
+          .required(),
+        levelOfAssurance: Joi.number().valid(0, 1, 2, 3, 4).required(),
+        responseMode: Joi.string()
+          .valid(...Object.values(OpenIdResponseMode))
+          .required(),
       })
       .required(),
     expiry: Joi.object()
@@ -165,7 +184,6 @@ const schema = Joi.object<ClientAttributes>()
 
     active: Joi.boolean().required(),
     backChannelLogoutUri: Joi.string().uri().required(),
-    claimsUri: Joi.string().uri().required(),
     description: Joi.string().allow(null).required(),
     domain: Joi.string().uri().required(),
     frontChannelLogoutUri: Joi.string().uri().allow(null).required(),
@@ -197,7 +215,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public authenticationAssertion: ClientAuthenticationAssertion;
   public authorizationAssertion: ClientAuthorizationAssertion;
   public backChannelLogoutUri: string | null;
-  public claimsUri: string | null;
+  public customClaims: ClientCustomClaims;
   public defaults: ClientDefaults;
   public description: string | null;
   public expiry: ClientExpiry;
@@ -227,7 +245,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.authenticationAssertion = options.authenticationAssertion;
     this.authorizationAssertion = options.authorizationAssertion;
     this.backChannelLogoutUri = options.backChannelLogoutUri || null;
-    this.claimsUri = options.claimsUri || null;
+    this.customClaims = options.customClaims;
     this.defaults = options.defaults;
     this.description = options.description || null;
     this.domain = options.domain;
@@ -263,7 +281,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       authenticationAssertion: this.authenticationAssertion,
       authorizationAssertion: this.authorizationAssertion,
       backChannelLogoutUri: this.backChannelLogoutUri,
-      claimsUri: this.claimsUri,
+      customClaims: this.customClaims,
       defaults: this.defaults,
       description: this.description,
       domain: this.domain,

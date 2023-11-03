@@ -13,13 +13,21 @@ describe("updateClientController", () => {
     ctx = {
       data: {
         allowed: {
+          codeChallengeMethods: ["plain"],
           grantTypes: ["authorization_code"],
+          methods: ["email"],
           responseTypes: ["code"],
           scopes: ["openid"],
+          strategies: ["email_otp"],
         },
         audiences: {
           credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
           identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
+        },
+        customClaims: {
+          uri: "https://claimsUri",
+          username: "username",
+          password: "password",
         },
         defaults: {
           audiences: ["429bc448-cc01-43db-90f2-486bc19c5018"],
@@ -35,7 +43,6 @@ describe("updateClientController", () => {
 
         active: false,
         backChannelLogoutUri: "https://backChannelLogoutUri",
-        claimsUri: "https://claimsUri",
         description: "updated description",
         domain: "https://domain",
         frontChannelLogoutUri: "https://frontChannelLogoutUri",
@@ -66,47 +73,23 @@ describe("updateClientController", () => {
       expect.objectContaining({
         active: false,
         allowed: {
+          codeChallengeMethods: ["plain"],
           grantTypes: ["authorization_code"],
-          methods: [
-            "bank_id_se",
-            "device_link",
-            "email",
-            "mfa_cookie",
-            "password",
-            "phone",
-            "recovery",
-            "session_link",
-            "totp",
-            "webauthn",
-          ],
+          methods: ["email"],
           responseTypes: ["code"],
           scopes: ["openid"],
-          strategies: [
-            "bank_id_se",
-            "device_challenge",
-            "email_code",
-            "email_otp",
-            "mfa_cookie",
-            "password",
-            "password_browser_link",
-            "phone_code",
-            "phone_otp",
-            "rdc_push_notification",
-            "rdc_qr_code",
-            "recovery_code",
-            "session_display_code",
-            "session_otp",
-            "session_qr_code",
-            "time_based_otp",
-            "webauthn",
-          ],
+          strategies: ["email_otp"],
         },
         audiences: {
           credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
           identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
         },
         backChannelLogoutUri: "https://backChannelLogoutUri",
-        claimsUri: "https://claimsUri",
+        customClaims: {
+          uri: "https://claimsUri",
+          username: "username",
+          password: "password",
+        },
         defaults: {
           displayMode: "wap",
           levelOfAssurance: 1,

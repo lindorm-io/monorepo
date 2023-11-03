@@ -65,7 +65,7 @@ describe("oauthAuthorizeController", () => {
         acrValues: "3 phone session email",
         clientId: "clientId",
         codeChallenge: "codeChallenge",
-        codeChallengeMethod: "codeChallengeMethod",
+        codeChallengeMethod: "S256",
         country: "se",
         display: "popup",
         idTokenHint: "id.jwt.jwt",
@@ -158,7 +158,7 @@ describe("oauthAuthorizeController", () => {
         clientId: "0930e3aa-a00c-4cd1-9d29-57b90e20cd95",
         code: {
           codeChallenge: "codeChallenge",
-          codeChallengeMethod: "codeChallengeMethod",
+          codeChallengeMethod: "S256",
         },
         confirmedConsent: {
           audiences: [],

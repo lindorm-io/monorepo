@@ -1,4 +1,4 @@
-import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
+import { axiosBasicAuthMiddleware, axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { Dict, GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
 import { ClaimsSession, Client, ClientSession } from "../../entity";
@@ -47,13 +47,18 @@ export const getIdentityClaims = async (
 
   let clientClaims: Dict = {};
 
-  if (client.claimsUri) {
+  if (client.customClaims.uri) {
+    const middleware =
+      client.customClaims.username && client.customClaims.password
+        ? axiosBasicAuthMiddleware({
+            username: client.customClaims.username,
+            password: client.customClaims.password,
+          })
+        : axiosBearerAuthMiddleware(generateServerCredentialsJwt(ctx, [client.id]));
+
     const { data } = await axiosClient.get<GetClaimsResponse, never, GetClaimsQuery>(
-      client.claimsUri,
-      {
-        query,
-        middleware: [axiosBearerAuthMiddleware(generateServerCredentialsJwt(ctx, [client.id]))],
-      },
+      client.customClaims.uri,
+      { query, middleware: [middleware] },
     );
 
     clientClaims = data;

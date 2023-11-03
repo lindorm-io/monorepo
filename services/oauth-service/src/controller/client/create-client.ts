@@ -6,6 +6,7 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   OpenIdScope,
+  PKCEMethod,
 } from "@lindorm-io/common-types";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { randomUnreserved } from "@lindorm-io/random";
@@ -61,6 +62,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
     new Client({
       id,
       allowed: {
+        codeChallengeMethods: [PKCEMethod.SHA256],
         grantTypes: [
           OpenIdGrantType.AUTHORIZATION_CODE,
           OpenIdGrantType.CLIENT_CREDENTIALS,
@@ -91,6 +93,12 @@ export const createClientController: ServerKoaController<RequestData> = async (
         algorithm: null,
         issuer: null,
         secret: null,
+      },
+
+      customClaims: {
+        uri: null,
+        username: null,
+        password: null,
       },
 
       defaults: {
