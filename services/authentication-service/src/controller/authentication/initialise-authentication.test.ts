@@ -41,7 +41,7 @@ describe("initialiseAuthenticationController", () => {
   test("should resolve with session linked to elevation", async () => {
     ctx.data = {
       codeChallenge: "codeChallenge",
-      codeChallengeMethod: "codeChallengeMethod",
+      codeChallengeMethod: "S256",
       elevationSessionId: "47d079fc-578b-4981-a820-078b75c0176f",
     };
 
@@ -57,7 +57,7 @@ describe("initialiseAuthenticationController", () => {
   test("should resolve with session linked to oauth", async () => {
     ctx.data = {
       codeChallenge: "codeChallenge",
-      codeChallengeMethod: "codeChallengeMethod",
+      codeChallengeMethod: "S256",
       oauthSessionId: "5d420f28-baab-407c-8412-62c0111dd605",
     };
 
@@ -74,7 +74,7 @@ describe("initialiseAuthenticationController", () => {
     ctx.data = {
       clientId: "5a30f38c-bfcb-4bd3-a76f-6fdce87e7a82",
       codeChallenge: "codeChallenge",
-      codeChallengeMethod: "codeChallengeMethod",
+      codeChallengeMethod: "S256",
       country: "se",
       identityId: "71781faf-5195-4cd9-8200-5a54b9ddcdc6",
       levelOfAssurance: 4,

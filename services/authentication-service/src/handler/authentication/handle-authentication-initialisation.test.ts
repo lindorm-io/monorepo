@@ -1,7 +1,7 @@
+import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import { AuthenticationSession } from "../../entity";
-import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 import { resolveAllowedStrategies as _resolveAllowedStrategies } from "./resolve-allowed-strategies";
@@ -33,7 +33,7 @@ describe("handleAuthenticationInitialisation", () => {
       identityId: "71781faf-5195-4cd9-8200-5a54b9ddcdc6",
       nonce: "nonce",
       codeChallenge: "codeChallenge",
-      codeChallengeMethod: "codeChallengeMethod",
+      codeChallengeMethod: "S256",
       requiredLevel: 4,
       requiredMethods: ["email"],
     };

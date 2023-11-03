@@ -1,6 +1,6 @@
-import { getMethodsFromStrategies } from "./get-methods-from-strategies";
-import { createTestAuthenticationSession } from "../fixtures/entity";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { createTestAuthenticationSession } from "../fixtures/entity";
+import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 
 describe("getMethodsFromStrategies", () => {
   test.failing("should resolve bank_id_se", () => {
@@ -96,14 +96,14 @@ describe("getMethodsFromStrategies", () => {
     ).toStrictEqual(["session_link"]);
   });
 
-  test("should resolve totp", () => {
+  test("should resolve time_based_otp", () => {
     expect(
       getMethodsFromStrategies(
         createTestAuthenticationSession({
           confirmedStrategies: [AuthenticationStrategy.TIME_BASED_OTP],
         }),
       ),
-    ).toStrictEqual(["totp"]);
+    ).toStrictEqual(["time_based_otp"]);
   });
 
   test.failing("should resolve webauthn", () => {
