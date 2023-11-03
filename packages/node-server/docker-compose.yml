@@ -4,8 +4,6 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: redis_9
-    labels:
-      - redis
+    container_name: redis_INicqdYU
     ports:
       - "5009:6379"

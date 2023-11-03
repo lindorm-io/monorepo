@@ -4,9 +4,7 @@ services:
   postgres:
     image: postgres
     restart: always
-    container_name: postgres_10
-    labels:
-      - postgres
+    container_name: postgres_9UFKRWFC
     ports:
       - "5010:5432"
     environment:

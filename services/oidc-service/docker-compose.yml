@@ -4,7 +4,5 @@ services:
   redis:
     image: redis
     container_name: redis_test
-    labels:
-      - redis
     ports:
       - "6379:6379"

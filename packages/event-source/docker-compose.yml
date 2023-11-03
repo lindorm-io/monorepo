@@ -4,9 +4,7 @@ services:
   mongo:
     image: mongo
     restart: always
-    container_name: mongo_4
-    labels:
-      - mongo
+    container_name: mongo_hbqYxzId
     ports:
       - "5004:27017"
     environment:
@@ -16,9 +14,7 @@ services:
   postgres:
     image: postgres
     restart: always
-    container_name: postgres_3
-    labels:
-      - postgres
+    container_name: postgres_hbqYxzId
     ports:
       - "5003:5432"
     environment:
@@ -29,8 +25,6 @@ services:
   rabbitmq:
     image: rabbitmq
     restart: always
-    container_name: rabbitmq_2
-    labels:
-      - rabbitmq
+    container_name: rabbitmq_hbqYxzId
     ports:
       - "5002:5672"

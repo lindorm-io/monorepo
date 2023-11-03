@@ -4,9 +4,7 @@ services:
   mongo:
     image: mongo
     restart: always
-    container_name: mongo_8
-    labels:
-      - mongo
+    container_name: mongo_94iSCVcH
     ports:
       - "5008:27017"
     environment:

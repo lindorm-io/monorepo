@@ -4,8 +4,6 @@ services:
   mongo:
     image: mongo
     container_name: mongo_dev
-    labels:
-      - mongo
     ports:
       - "27017:27017"
     environment:
@@ -17,8 +15,6 @@ services:
   redis:
     image: redis
     container_name: redis_dev
-    labels:
-      - redis
     ports:
       - "6379:6379"
     volumes:

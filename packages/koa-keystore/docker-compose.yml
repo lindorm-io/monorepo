@@ -4,9 +4,7 @@ services:
   mongo:
     image: mongo
     restart: always
-    container_name: mongo_6
-    labels:
-      - mongo
+    container_name: mongo_Vi14uVKC
     ports:
       - "5006:27017"
     environment:
@@ -16,8 +14,6 @@ services:
   redis:
     image: redis
     restart: always
-    container_name: redis_5
-    labels:
-      - redis
+    container_name: redis_Vi14uVKC
     ports:
       - "5005:6379"

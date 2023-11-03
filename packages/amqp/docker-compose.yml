@@ -4,8 +4,6 @@ services:
   rabbitmq:
     image: rabbitmq
     restart: always
-    container_name: rabbitmq_1
-    labels:
-      - rabbitmq
+    container_name: rabbitmq_SOSoWtWu
     ports:
       - "5001:5672"
