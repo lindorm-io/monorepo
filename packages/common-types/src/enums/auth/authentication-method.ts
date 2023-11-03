@@ -7,6 +7,6 @@ export enum AuthenticationMethod {
   PHONE = "phone",
   RECOVERY = "recovery",
   SESSION_LINK = "session_link",
-  TIME_BASED_OTP = "totp",
+  TIME_BASED_OTP = "time_based_otp",
   WEBAUTHN = "webauthn",
 }

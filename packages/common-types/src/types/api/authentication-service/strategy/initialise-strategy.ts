@@ -1,5 +1,5 @@
-import { AuthStrategyConfig } from "../../../auth";
 import { AuthenticationStrategy, IdentifierType } from "../../../../enums";
+import { AuthStrategyConfig } from "../../../auth";
 import { StandardRequestParamsWithId } from "../../standard";
 
 export type InitialiseStrategyRequestParams = StandardRequestParamsWithId;
