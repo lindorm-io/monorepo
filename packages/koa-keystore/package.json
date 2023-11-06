@@ -36,15 +36,15 @@
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
-    "@types/express-useragent": "^1.0.2",
+    "@types/express-useragent": "^1.0.4",
     "@types/ioredis": "^5.0.0",
-    "@types/koa": "^2.13.6",
-    "@types/koa-bodyparser": "^4.3.10",
-    "@types/koa-router": "^7.4.4",
+    "@types/koa": "^2.13.10",
+    "@types/koa-bodyparser": "^4.3.11",
+    "@types/koa-router": "^7.4.6",
     "compd": "^4.1.1",
-    "koa": "^2.14.1",
-    "koa-bodyparser": "^4.4.0",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1",
     "mongodb": "^5.1.0",
-    "nock": "^13.3.0"
+    "nock": "^13.3.8"
   }
 }

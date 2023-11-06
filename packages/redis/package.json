@@ -28,13 +28,13 @@
     "@lindorm-io/errors": "^0.1.20",
     "@lindorm-io/string-blob": "^0.0.27",
     "date-fns": "^2.29.3",
-    "ioredis": "^5.3.1",
+    "ioredis": "^5.3.2",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
     "@types/ioredis": "^5.0.0",
-    "@types/lodash": "^4.14.192",
+    "@types/lodash": "^4.14.200",
     "compd": "^4.1.1",
     "redis-commands": "^1.7.0"
   }

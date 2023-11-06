@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
-    "koa": "^2.14.1",
-    "koa-bodyparser": "^4.4.0"
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1"
   }
 }

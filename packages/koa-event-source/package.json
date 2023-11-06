@@ -25,12 +25,12 @@
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
-    "@types/express-useragent": "^1.0.2",
-    "@types/jsonwebtoken": "^9.0.1",
-    "@types/koa": "^2.13.6",
-    "@types/koa-bodyparser": "^4.3.10",
-    "@types/koa-router": "^7.4.4",
-    "koa": "^2.14.1",
-    "koa-bodyparser": "^4.4.0"
+    "@types/express-useragent": "^1.0.4",
+    "@types/jsonwebtoken": "^9.0.4",
+    "@types/koa": "^2.13.10",
+    "@types/koa-bodyparser": "^4.3.11",
+    "@types/koa-router": "^7.4.6",
+    "koa": "^2.14.2",
+    "koa-bodyparser": "^4.4.1"
   }
 }
