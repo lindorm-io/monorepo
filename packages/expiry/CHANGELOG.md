@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/expiry@0.2.0...@lindorm-io/expiry@0.2.1) (2023-11-06)
+
+### Bug Fixes
+
+- replace string-time ([d56157d](https://github.com/lindorm-io/monorepo/commit/d56157dd05703e8a8b168a18e0ae8938d83b6cfa))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/expiry@0.1.6...@lindorm-io/expiry@0.2.0) (2023-06-01)
 
 ### Features

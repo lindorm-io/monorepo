@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-memory@0.9.5...@lindorm-io/koa-memory@0.9.6) (2023-11-06)
+
+**Note:** Version bump only for package @lindorm-io/koa-memory
+
 ## [0.9.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-memory@0.9.4...@lindorm-io/koa-memory@0.9.5) (2023-06-01)
 
 **Note:** Version bump only for package @lindorm-io/koa-memory

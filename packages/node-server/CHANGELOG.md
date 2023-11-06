@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.8.0...@lindorm-io/node-server@0.8.1) (2023-11-06)
+
+### Bug Fixes
+
+- improve context ([5f9702f](https://github.com/lindorm-io/monorepo/commit/5f9702f4ce08fddc82a9333da88850244df1815e))
+- update major dependencies ([f07a6e6](https://github.com/lindorm-io/monorepo/commit/f07a6e66e22e5859731fe8d72ade3585445de826))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.7.0...@lindorm-io/node-server@0.8.0) (2023-06-01)
 
 ### Bug Fixes

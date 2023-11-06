@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.17](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/yaml-typing@0.0.16...@lindorm-io/yaml-typing@0.0.17) (2023-11-06)
+
+### Bug Fixes
+
+- update major dependencies ([f07a6e6](https://github.com/lindorm-io/monorepo/commit/f07a6e66e22e5859731fe8d72ade3585445de826))
+
 ## [0.0.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/yaml-typing@0.0.15...@lindorm-io/yaml-typing@0.0.16) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/yaml-typing

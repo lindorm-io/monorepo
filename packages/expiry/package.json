@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/expiry",
   "description": "Expiry utilities for lindorm.io",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,7 +19,7 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/readable-time": "^0.1.0",
+    "@lindorm-io/readable-time": "^0.1.1",
     "date-fns": "^2.30.0"
   }
 }

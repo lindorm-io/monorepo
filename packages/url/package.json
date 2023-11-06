@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/url",
   "description": "URL utilities for lindorm.io",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,10 +19,10 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/case": "^0.1.9",
+    "@lindorm-io/case": "^0.2.0",
     "@lindorm-io/core": "^0.8.11"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.3.1"
+    "@lindorm-io/common-types": "^0.3.2"
   }
 }

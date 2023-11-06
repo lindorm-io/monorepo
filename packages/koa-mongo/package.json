@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-mongo",
   "description": "Mongo repository middleware for @lindorm-io/koa applications",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,15 +19,15 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/case": "^0.1.9",
-    "@lindorm-io/entity": "^0.3.12",
-    "@lindorm-io/errors": "^0.1.20",
-    "@lindorm-io/koa": "^0.17.1",
-    "@lindorm-io/mongo": "^0.12.4",
+    "@lindorm-io/case": "^0.2.0",
+    "@lindorm-io/entity": "^0.3.13",
+    "@lindorm-io/errors": "^0.1.21",
+    "@lindorm-io/koa": "^0.17.2",
+    "@lindorm-io/mongo": "^0.12.5",
     "object-path": "^0.11.8"
   },
   "devDependencies": {
-    "@lindorm-io/core-logger": "^0.2.8",
+    "@lindorm-io/core-logger": "^0.2.9",
     "@types/express-useragent": "^1.0.4",
     "@types/jsonwebtoken": "^9.0.4",
     "@types/koa": "^2.13.10",

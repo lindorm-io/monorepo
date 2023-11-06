@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/case@0.1.9...@lindorm-io/case@0.2.0) (2023-11-06)
+
+### Features
+
+- update transformation modes ([51faed0](https://github.com/lindorm-io/monorepo/commit/51faed023f791659df53da3f6826dbb54bbe902f))
+
 ## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/case@0.1.8...@lindorm-io/case@0.1.9) (2023-04-01)
 
 **Note:** Version bump only for package @lindorm-io/case

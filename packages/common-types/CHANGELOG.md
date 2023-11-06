@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.1...@lindorm-io/common-types@0.3.2) (2023-11-06)
+
+### Bug Fixes
+
+- add common enums with urn values ([f2f9a0b](https://github.com/lindorm-io/monorepo/commit/f2f9a0ba9ef5aa5de2be839470605f9f1d279c77))
+- rename types ([5899bad](https://github.com/lindorm-io/monorepo/commit/5899bada4056c0f7cc527aa873a6346449b42329))
+- update redirect data ([47a6dc7](https://github.com/lindorm-io/monorepo/commit/47a6dc76a4970a6369f766d5b8537f835a535b20))
+
 ## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.0...@lindorm-io/common-types@0.3.1) (2023-06-01)
 
 ### Bug Fixes

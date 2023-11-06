@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.19...@lindorm-io/event-source@0.3.0) (2023-11-06)
+
+### Bug Fixes
+
+- update major dependencies ([f07a6e6](https://github.com/lindorm-io/monorepo/commit/f07a6e66e22e5859731fe8d72ade3585445de826))
+
+### Features
+
+- new directory structure ([8b941e9](https://github.com/lindorm-io/monorepo/commit/8b941e92d0e0d19ab1681b654931c6c45d7ca895))
+
 ## [0.2.19](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.18...@lindorm-io/event-source@0.2.19) (2023-06-01)
 
 ### Bug Fixes

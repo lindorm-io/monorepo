@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.12.4...@lindorm-io/redis@0.12.5) (2023-11-06)
+
+**Note:** Version bump only for package @lindorm-io/redis
+
 ## [0.12.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/redis@0.12.3...@lindorm-io/redis@0.12.4) (2023-06-01)
 
 **Note:** Version bump only for package @lindorm-io/redis

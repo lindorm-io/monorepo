@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.10.0...@lindorm-io/jwt@0.11.0) (2023-11-06)
+
+### Bug Fixes
+
+- add hashes as options ([586bc26](https://github.com/lindorm-io/monorepo/commit/586bc266623ba6cbf0823f7fc3f38ad73cc2d7c1))
+- separate extra claims from payload ([b994f7b](https://github.com/lindorm-io/monorepo/commit/b994f7bb60451771af1a5b5ccf13aba1583667e7))
+- simplify payload ([9b6cb34](https://github.com/lindorm-io/monorepo/commit/9b6cb3419e051ffb1d008534bce72e026527df35))
+
+### Features
+
+- implement code hash ([916aefd](https://github.com/lindorm-io/monorepo/commit/916aefdd8d46f1c791551599a075fac1479a5d45))
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.9.3...@lindorm-io/jwt@0.10.0) (2023-06-01)
 
 ### Bug Fixes

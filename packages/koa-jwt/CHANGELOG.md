@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.6.5...@lindorm-io/koa-jwt@0.6.6) (2023-11-06)
+
+### Bug Fixes
+
+- simplify payload ([9b6cb34](https://github.com/lindorm-io/monorepo/commit/9b6cb3419e051ffb1d008534bce72e026527df35))
+- update type ([336413b](https://github.com/lindorm-io/monorepo/commit/336413b059d4db883d0449d17f0c4822d8d33862))
+
 ## [0.6.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.6.4...@lindorm-io/koa-jwt@0.6.5) (2023-06-01)
 
 ### Bug Fixes
