@@ -1,6 +1,5 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { Logger } from "@lindorm-io/core-logger";
-import { IMongoConnection, MongoConnectionOptions } from "../types";
 import {
   Collection,
   CollectionOptions,
@@ -9,6 +8,7 @@ import {
   MongoClient,
   MongoClientOptions,
 } from "mongodb";
+import { IMongoConnection, MongoConnectionOptions } from "../types";
 
 export class MongoConnection
   extends ConnectionBase<MongoClient, MongoClientOptions>
@@ -38,7 +38,6 @@ export class MongoConnection
         connectInterval,
         connectTimeout,
         connectOptions: {
-          keepAlive: true,
           maxPoolSize: 5,
           minPoolSize: 1,
           ...connectOptions,

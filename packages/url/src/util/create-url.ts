@@ -1,8 +1,8 @@
+import { TransformMode, transformCase } from "@lindorm-io/case";
 import { ParamsRecord, QueryRecord } from "@lindorm-io/common-types";
-import { transformCase, TransformMode } from "@lindorm-io/case";
+import { isObject } from "@lindorm-io/core";
 import { createBaseUrl } from "./create-base-url";
 import { extractSearchParams } from "./extract-search-params";
-import { isObject } from "@lindorm-io/core";
 
 type Options<Params = ParamsRecord, Query = QueryRecord> = {
   baseURL?: string;
@@ -48,7 +48,7 @@ const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params?: P
 const addQueryToURL = <Query = QueryRecord>(
   url: URL,
   query?: Query,
-  queryCaseTransform: TransformMode = "snake",
+  queryCaseTransform: TransformMode = TransformMode.SNAKE,
 ): URL => {
   if (!isObject(query)) {
     return url;

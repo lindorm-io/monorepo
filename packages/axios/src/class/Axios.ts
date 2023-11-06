@@ -66,7 +66,7 @@ export class Axios {
     };
     this.headers = options.headers || {};
     this.middleware = options.middleware || [];
-    this.queryCaseTransform = options.queryCaseTransform || "snake";
+    this.queryCaseTransform = options.queryCaseTransform || TransformMode.SNAKE;
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
       maximumMilliseconds:

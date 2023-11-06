@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import nock from "nock";
 import { axiosBasicAuthMiddleware } from "../middleware";
 import { Middleware } from "../types";
@@ -30,7 +31,7 @@ describe("Axios", () => {
             baseURL: "https://test.lindorm.io",
             client: { name: "TestClient" },
             headers: { "x-test-header": "test" },
-            queryCaseTransform: "snake",
+            queryCaseTransform: TransformMode.SNAKE,
             timeout: 5000,
             withCredentials: true,
           }),

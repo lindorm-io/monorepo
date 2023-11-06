@@ -1,11 +1,11 @@
-import { Axios } from "../../class";
+import { OpenIdConfigurationResponse, OpenIdGrantType } from "@lindorm-io/common-types";
 import { Logger } from "@lindorm-io/core-logger";
+import { Axios } from "../../class";
 import { Middleware, OAuthTokenResponseData } from "../../types";
+import { getUnixTime } from "../../util/private";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
 import { axiosRequestLoggerMiddleware } from "./axios-request-logger-middleware";
 import { axiosTransformBodyCaseMiddleware } from "./axios-transform-body-case-middleware";
-import { getUnixTime } from "../../util/private";
-import { OpenIdConfigurationResponse, OpenIdGrantType } from "@lindorm-io/common-types";
 
 export type AxiosClientCredentialsMiddlewareOptions = {
   host: string;
@@ -39,7 +39,7 @@ export const axiosClientCredentialsMiddleware = (
     port,
     middleware: [
       axiosRequestLoggerMiddleware(logger),
-      axiosTransformBodyCaseMiddleware("snake", "camel"),
+      axiosTransformBodyCaseMiddleware(),
       ...(useBasicAuth
         ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
         : []),

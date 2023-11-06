@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { createURL } from "./create-url";
 
 describe("createURL", () => {
@@ -103,7 +104,7 @@ describe("createURL", () => {
           queryFour: "string with spaces",
           queryFive: ["array", 987, false],
         },
-        queryCaseTransform: "snake",
+        queryCaseTransform: TransformMode.SNAKE,
       }).toString(),
     ).toBe(
       "https://lindorm.io/url/path?query_one=string&query_two=123456&query_three=true&query_four=string+with+spaces&query_five=array+987+false",
@@ -132,18 +133,18 @@ describe("createURL", () => {
         query: {
           QueryOne: "string",
         },
-        queryCaseTransform: "camel",
+        queryCaseTransform: TransformMode.CAMEL,
       }).toString(),
     ).toBe("https://lindorm.io/?queryOne=string");
   });
 
-  test("should transform query to param", () => {
+  test("should transform query to kebab", () => {
     expect(
       createURL("https://lindorm.io", {
         query: {
           QueryOne: "string",
         },
-        queryCaseTransform: "param",
+        queryCaseTransform: TransformMode.KEBAB,
       }).toString(),
     ).toBe("https://lindorm.io/?query-one=string");
   });
@@ -154,7 +155,7 @@ describe("createURL", () => {
         query: {
           queryOne: "string",
         },
-        queryCaseTransform: "pascal",
+        queryCaseTransform: TransformMode.PASCAL,
       }).toString(),
     ).toBe("https://lindorm.io/?QueryOne=string");
   });
@@ -165,7 +166,7 @@ describe("createURL", () => {
         query: {
           queryOne: "string",
         },
-        queryCaseTransform: "snake",
+        queryCaseTransform: TransformMode.SNAKE,
       }).toString(),
     ).toBe("https://lindorm.io/?query_one=string");
   });
@@ -179,7 +180,7 @@ describe("createURL", () => {
         query: {
           queryTwo: 123456,
         },
-        queryCaseTransform: "none",
+        queryCaseTransform: TransformMode.NONE,
       }).toString(),
     ).toBe("https://lindorm.io/test/one/two?query_one=string&queryTwo=123456");
   });

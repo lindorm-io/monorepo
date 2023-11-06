@@ -1,8 +1,8 @@
-import { Middleware } from "../../types";
 import { transformCase, TransformMode } from "@lindorm-io/case";
+import { Middleware } from "../../types";
 
 export const axiosTransformQueryCaseMiddleware =
-  (mode: TransformMode = "snake"): Middleware =>
+  (mode: TransformMode = TransformMode.SNAKE): Middleware =>
   async (ctx, next) => {
     ctx.req.query = transformCase(ctx.req.query, mode);
     await next();

@@ -1,7 +1,8 @@
-import { Controller, ControllerResponse } from "../../types";
-import { HttpStatus } from "../../constant";
+import { TransformMode } from "@lindorm-io/case";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { createURL } from "@lindorm-io/url";
+import { HttpStatus } from "../../constant";
+import { Controller, ControllerResponse } from "../../types";
 import { useController } from "./use-controller";
 
 describe("useController", () => {
@@ -96,7 +97,7 @@ describe("useController", () => {
           queryOne: "string",
           twoNumber: 22,
         },
-        queryCaseTransform: "snake",
+        queryCaseTransform: TransformMode.SNAKE,
       }),
     });
 
