@@ -25,7 +25,7 @@ While there are 40+ packages under the catalog `/packages` I would like to direc
 This package leverages amqplib to make a robust, and yet simple to use framework for handling pub/sub message queues such as RabbitMQ.
 
 ## Axios
-This package enhances the well known XMLR client axios and introduces some helpful tools to make life easier when handling configuration, dictionary key transformation, middleware, logging, and retries.
+This package enhances the well known XMLHTTPREQUEST client axios and introduces some helpful tools to make life easier when handling configuration, dictionary key transformation, middleware, logging, and retries.
 
 ## Event Source
 This package is heavily opinionated but simple to use framework for event sourcing. It includes both the event source storage, and the view model storage solutions, as well as saga and error handlers. It can store data in Mongo or Postgresql.
