@@ -1,4 +1,4 @@
-import { paramCase } from "./param-case";
+import { kebabCase } from "./kebab-case";
 
 const inputCamel = "camelCase";
 const inputParam = "param-case";
@@ -90,37 +90,37 @@ const inputObject = {
 
 describe("camelCase", () => {
   test("should convert camel case string", () => {
-    expect(paramCase(inputCamel)).toMatchSnapshot();
+    expect(kebabCase(inputCamel)).toMatchSnapshot();
   });
 
   test("should convert param case string", () => {
-    expect(paramCase(inputParam)).toMatchSnapshot();
+    expect(kebabCase(inputParam)).toMatchSnapshot();
   });
 
   test("should convert pascal case string", () => {
-    expect(paramCase(inputPascal)).toMatchSnapshot();
+    expect(kebabCase(inputPascal)).toMatchSnapshot();
   });
 
   test("should convert snake case string", () => {
-    expect(paramCase(inputSnake)).toMatchSnapshot();
+    expect(kebabCase(inputSnake)).toMatchSnapshot();
   });
 
   test("should convert array values", () => {
-    expect(paramCase(inputArray)).toMatchSnapshot();
+    expect(kebabCase(inputArray)).toMatchSnapshot();
   });
 
   test("should convert object keys to camelCase", () => {
-    expect(paramCase(inputObject)).toMatchSnapshot();
+    expect(kebabCase(inputObject)).toMatchSnapshot();
   });
 
   test("should throw on invalid type", () => {
     const number: any = 1234;
-    expect(() => paramCase(number)).toThrow(Error);
+    expect(() => kebabCase(number)).toThrow(Error);
 
     const error: any = new Error("error");
-    expect(() => paramCase(error)).toThrow(Error);
+    expect(() => kebabCase(error)).toThrow(Error);
 
     const date: any = new Date();
-    expect(() => paramCase(date)).toThrow(Error);
+    expect(() => kebabCase(date)).toThrow(Error);
   });
 });

@@ -1,0 +1,5 @@
+import { paramCase as fn } from "change-case";
+import { CaseInput } from "../types";
+import { convertCase } from "./private";
+
+export const kebabCase = <T = any>(input: CaseInput): T => convertCase(input, fn);

@@ -1,36 +1,37 @@
-import { CaseInput, TransformMode } from "../types";
+import { TransformMode } from "../enums/TransformMode";
+import { CaseInput } from "../types";
 import { camelCase } from "./camel-case";
+import { capitalCase } from "./capital-case";
 import { constantCase } from "./constant-case";
 import { dotCase } from "./dot-case";
-import { headerCase } from "./header-case";
-import { paramCase } from "./param-case";
+import { kebabCase } from "./kebab-case";
 import { pascalCase } from "./pascal-case";
 import { snakeCase } from "./snake-case";
 
-export const transformCase = <T>(input: CaseInput, mode: TransformMode = "none"): T => {
+export const transformCase = <T>(input: CaseInput, mode: TransformMode = TransformMode.NONE): T => {
   switch (mode) {
-    case "camel":
+    case TransformMode.CAMEL:
       return camelCase(input);
 
-    case "constant":
+    case TransformMode.CAPITAL:
+      return capitalCase(input);
+
+    case TransformMode.CONSTANT:
       return constantCase(input);
 
-    case "dot":
+    case TransformMode.DOT:
       return dotCase(input);
 
-    case "header":
-      return headerCase(input);
+    case TransformMode.KEBAB:
+      return kebabCase(input);
 
-    case "param":
-      return paramCase(input);
-
-    case "pascal":
+    case TransformMode.PASCAL:
       return pascalCase(input);
 
-    case "snake":
+    case TransformMode.SNAKE:
       return snakeCase(input);
 
-    case "none":
+    case TransformMode.NONE:
       return input as T;
 
     default:

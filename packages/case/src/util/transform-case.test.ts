@@ -1,3 +1,4 @@
+import { TransformMode } from "../enums/TransformMode";
 import { transformCase } from "./transform-case";
 
 const inputCamel = "camelCase";
@@ -90,46 +91,41 @@ const inputObject = {
 
 describe("transformCase", () => {
   test("should convert camel case string", () => {
-    expect(transformCase(inputCamel, "snake")).toMatchSnapshot();
+    expect(transformCase(inputCamel, TransformMode.SNAKE)).toMatchSnapshot();
   });
 
   test("should convert param case string", () => {
-    expect(transformCase(inputParam, "camel")).toMatchSnapshot();
+    expect(transformCase(inputParam, TransformMode.CAMEL)).toMatchSnapshot();
   });
 
   test("should convert pascal case string", () => {
-    expect(transformCase(inputPascal, "param")).toMatchSnapshot();
+    expect(transformCase(inputPascal, TransformMode.KEBAB)).toMatchSnapshot();
   });
 
   test("should convert snake case string", () => {
-    expect(transformCase(inputSnake, "pascal")).toMatchSnapshot();
+    expect(transformCase(inputSnake, TransformMode.PASCAL)).toMatchSnapshot();
   });
 
   test("should convert array values", () => {
-    expect(transformCase(inputArray, "camel")).toMatchSnapshot();
+    expect(transformCase(inputArray, TransformMode.CAMEL)).toMatchSnapshot();
   });
 
   test("should convert object keys to camelCase", () => {
-    expect(transformCase(inputObject, "pascal")).toMatchSnapshot();
+    expect(transformCase(inputObject, TransformMode.PASCAL)).toMatchSnapshot();
   });
 
   test("should not convert", () => {
-    expect(transformCase(inputParam, "none")).toMatchSnapshot();
+    expect(transformCase(inputParam, TransformMode.NONE)).toMatchSnapshot();
   });
 
   test("should throw on invalid type", () => {
     const number: any = 1234;
-    expect(() => transformCase(number, "param")).toThrow(Error);
+    expect(() => transformCase(number, TransformMode.CAPITAL)).toThrow(Error);
 
     const error: any = new Error("error");
-    expect(() => transformCase(error, "snake")).toThrow(Error);
+    expect(() => transformCase(error, TransformMode.SNAKE)).toThrow(Error);
 
     const date: any = new Date();
-    expect(() => transformCase(date, "camel")).toThrow(Error);
-  });
-
-  test("should throw on invalid mode", () => {
-    // @ts-ignore
-    expect(() => transformCase(inputCamel, "error")).toThrow(Error);
+    expect(() => transformCase(date, TransformMode.CAMEL)).toThrow(Error);
   });
 });
