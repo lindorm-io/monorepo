@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@lindorm-io/readable-time": "^0.1.0",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.30.0"
   }
 }

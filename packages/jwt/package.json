@@ -30,6 +30,6 @@
   "devDependencies": {
     "@lindorm-io/key-pair": "^0.7.0",
     "@types/jsonwebtoken": "^9.0.4",
-    "date-fns": "^2.29.3"
+    "date-fns": "^2.30.0"
   }
 }

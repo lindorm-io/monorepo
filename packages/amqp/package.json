@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
-    "@types/amqplib": "^0.10.1",
+    "@types/amqplib": "^0.10.3",
     "compd": "^4.1.1",
     "mock-amqplib": "^1.8.1"
   }

@@ -23,11 +23,11 @@
   "dependencies": {
     "@lindorm-io/core-connection": "^0.1.20",
     "@lindorm-io/errors": "^0.1.20",
-    "pg": "^8.10.0"
+    "pg": "^8.11.3"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",
-    "@types/pg": "^8.6.6",
+    "@types/pg": "^8.10.8",
     "compd": "^4.1.1"
   }
 }

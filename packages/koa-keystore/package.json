@@ -32,7 +32,7 @@
     "@lindorm-io/readable-time": "^0.1.0",
     "@lindorm-io/redis": "^0.12.4",
     "@lindorm-io/retry": "^0.1.5",
-    "joi": "^17.9.1"
+    "joi": "^17.11.0"
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.8",

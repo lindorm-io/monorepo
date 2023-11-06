@@ -24,7 +24,7 @@
     "@lindorm-io/middleware": "^0.1.4",
     "@lindorm-io/retry": "^0.1.5",
     "@lindorm-io/url": "^0.2.11",
-    "axios": "1.3.4",
+    "axios": "1.6.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
