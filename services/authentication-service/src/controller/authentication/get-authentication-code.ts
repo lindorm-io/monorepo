@@ -1,14 +1,14 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { argon } from "../../instance";
-import { randomString } from "@lindorm-io/random";
 import {
   GetAuthenticationCodeRequestParams,
   GetAuthenticationCodeResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { randomString } from "@lindorm-io/random";
+import Joi from "joi";
+import { argon } from "../../instance";
+import { ServerKoaController } from "../../types";
 
 type RequestData = GetAuthenticationCodeRequestParams;
 

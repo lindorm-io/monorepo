@@ -21,7 +21,6 @@ import { argon } from "../../instance";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import {
-  AcknowledgeStrategyOptions,
   AcknowledgeStrategyResult,
   AuthenticationStrategyConfig,
   ConfirmStrategyOptions,
@@ -102,12 +101,7 @@ export class EmailCodeStrategy implements StrategyHandler {
     };
   }
 
-  public async acknowledge(
-    ctx: ServerKoaContext,
-    authenticationSession: AuthenticationSession,
-    strategySession: StrategySession,
-    options: AcknowledgeStrategyOptions,
-  ): Promise<AcknowledgeStrategyResult> {
+  public async acknowledge(): Promise<AcknowledgeStrategyResult> {
     throw new ServerError("Strategy does not support this method");
   }
 

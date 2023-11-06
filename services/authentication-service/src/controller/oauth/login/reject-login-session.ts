@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { clientCredentialsMiddleware } from "../../../middleware";
 import { RejectLoginResponse } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { clientCredentialsMiddleware } from "../../../middleware";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = {
   id: string;

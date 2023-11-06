@@ -1,13 +1,13 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { generateClientConfig } from "../../util";
 import {
   GetAuthenticationRequestParams,
   GetAuthenticationResponse,
   SessionStatus,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
+import { generateClientConfig } from "../../util";
 
 type RequestData = GetAuthenticationRequestParams;
 

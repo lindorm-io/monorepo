@@ -1,8 +1,8 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
 import { PublicClientInfo, PublicTenantInfo, SessionStatus } from "@lindorm-io/common-types";
-import { ServerKoaController } from "../../../types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { getOauthLogoutSession } from "../../../handler";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = {
   id: string;

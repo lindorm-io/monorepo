@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { confirmOauthConsent } from "../../../handler";
 import {
   ConfirmConsentRequestBody,
   ConfirmConsentRequestParams,
   ConfirmConsentResponse,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { confirmOauthConsent } from "../../../handler";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = ConfirmConsentRequestParams & ConfirmConsentRequestBody;
 

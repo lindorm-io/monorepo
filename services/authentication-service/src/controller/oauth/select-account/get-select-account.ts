@@ -1,4 +1,9 @@
-import { PublicClientInfo, PublicTenantInfo, SelectAccountSession } from "@lindorm-io/common-types";
+import {
+  PublicClientInfo,
+  PublicTenantInfo,
+  SelectAccountSession,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { getOauthAuthorizationSession } from "../../../handler";
@@ -10,7 +15,7 @@ type RequestData = {
 
 type ResponseBody = {
   sessions: Array<SelectAccountSession>;
-
+  status: SessionStatus;
   client: PublicClientInfo;
   tenant: PublicTenantInfo;
 };
@@ -29,7 +34,7 @@ export const getSelectAccountController: ServerKoaController = async (
   } = ctx;
 
   const {
-    selectAccount: { sessions },
+    selectAccount: { status, sessions },
     client,
     tenant,
   } = await getOauthAuthorizationSession(ctx, id);
@@ -37,6 +42,7 @@ export const getSelectAccountController: ServerKoaController = async (
   return {
     body: {
       sessions,
+      status,
       client,
       tenant,
     },

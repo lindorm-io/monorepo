@@ -1,3 +1,4 @@
+import { OpenIdDisplayMode } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
@@ -34,6 +35,7 @@ describe("oauthLogoutController", () => {
       },
       data: {
         clientId: "097adea7-58d4-43cc-aeb3-f7f9879adb56",
+        displayMode: OpenIdDisplayMode.WAP,
         idTokenHint: "id.jwt.jwt",
         logoutHint: "logout_hint",
         postLogoutRedirectUri: "https://test.client.lindorm.io/logout",
@@ -86,6 +88,7 @@ describe("oauthLogoutController", () => {
           clientSessionId: null,
         },
         created: expect.any(Date),
+        displayMode: "wap",
         expires: new Date("2022-01-01T08:01:00.000Z"),
         idTokenHint: "id.jwt.jwt",
         identityId: expect.any(String),

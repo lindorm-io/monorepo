@@ -43,7 +43,10 @@ export const mockFetchOauthAuthorizationSession = (
     isRequired: true,
     status: SessionStatus.PENDING,
 
-    sessions: [{ selectId: randomUUID(), identityId: randomUUID() }],
+    sessions: [
+      { selectId: randomUUID(), identityId: randomUUID() },
+      { selectId: randomUUID(), identityId: randomUUID() },
+    ],
   },
 
   authorizationSession: {

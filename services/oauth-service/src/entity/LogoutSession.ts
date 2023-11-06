@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,7 +7,7 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 import Joi from "joi";
-import { JOI_JWT, JOI_SESSION_STATUS, JOI_STATE } from "../common";
+import { JOI_JWT, JOI_STATE } from "../common";
 
 type ConfirmedLogout = {
   browserSessionId: string | null;
@@ -22,6 +22,7 @@ type RequestedLogout = {
 export type LogoutSessionAttributes = EntityAttributes & {
   clientId: string | null;
   confirmedLogout: ConfirmedLogout;
+  displayMode: OpenIdDisplayMode;
   expires: Date;
   idTokenHint: string | null;
   identityId: string;
@@ -38,6 +39,7 @@ export type LogoutSessionOptions = Optional<
   LogoutSessionAttributes,
   | EntityKeys
   | "confirmedLogout"
+  | "displayMode"
   | "idTokenHint"
   | "logoutHint"
   | "postLogoutRedirectUri"
@@ -64,6 +66,9 @@ const schema = Joi.object<LogoutSessionAttributes>()
       .required(),
 
     clientId: Joi.string().guid().required(),
+    displayMode: Joi.string()
+      .valid(...Object.values(OpenIdDisplayMode))
+      .required(),
     expires: Joi.date().required(),
     idTokenHint: JOI_JWT.allow(null).required(),
     identityId: Joi.string().guid().required(),
@@ -71,7 +76,9 @@ const schema = Joi.object<LogoutSessionAttributes>()
     originalUri: Joi.string().uri().required(),
     postLogoutRedirectUri: Joi.string().uri().allow(null).required(),
     state: JOI_STATE.allow(null).required(),
-    status: JOI_SESSION_STATUS.required(),
+    status: Joi.string()
+      .valid(...Object.values(SessionStatus))
+      .required(),
     uiLocales: Joi.array().items(Joi.string()).required(),
   })
   .required();
@@ -79,6 +86,7 @@ const schema = Joi.object<LogoutSessionAttributes>()
 export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
   public readonly clientId: string | null;
   public readonly confirmedLogout: ConfirmedLogout;
+  public readonly displayMode: OpenIdDisplayMode;
   public readonly expires: Date;
   public readonly idTokenHint: string | null;
   public readonly identityId: string;
@@ -104,6 +112,7 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
     };
 
     this.clientId = options.clientId || null;
+    this.displayMode = options.displayMode || OpenIdDisplayMode.PAGE;
     this.expires = options.expires;
     this.idTokenHint = options.idTokenHint || null;
     this.identityId = options.identityId;
@@ -125,6 +134,7 @@ export class LogoutSession extends LindormEntity<LogoutSessionAttributes> {
 
       clientId: this.clientId,
       confirmedLogout: this.confirmedLogout,
+      displayMode: this.displayMode,
       expires: this.expires,
       idTokenHint: this.idTokenHint,
       identityId: this.identityId,

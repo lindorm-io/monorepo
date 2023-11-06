@@ -1,17 +1,23 @@
-import Joi from "joi";
+import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { SessionStatus } from "@lindorm-io/common-types";
-import { ServerKoaController } from "../../../types";
-import { configuration } from "../../../server/configuration";
 import { createURL } from "@lindorm-io/url";
+import Joi from "joi";
 import { getOauthLogoutRedirect, getOauthLogoutSession } from "../../../handler";
+import { configuration } from "../../../server/configuration";
+import { ServerKoaController } from "../../../types";
 
 interface RequestData {
+  display: OpenIdDisplayMode;
+  locales: string;
   session: string;
 }
 
 export const redirectLogoutSessionSchema = Joi.object<RequestData>()
   .keys({
+    display: Joi.string()
+      .valid(...Object.values(OpenIdDisplayMode))
+      .required(),
+    locales: Joi.string().required(),
     session: Joi.string().guid().required(),
   })
   .required();
@@ -20,7 +26,7 @@ export const redirectLogoutSessionController: ServerKoaController<RequestData> =
   ctx,
 ): ControllerResponse => {
   const {
-    data: { session },
+    data: { display, locales, session },
     logger,
   } = ctx;
 
@@ -40,7 +46,7 @@ export const redirectLogoutSessionController: ServerKoaController<RequestData> =
     redirect: createURL(configuration.frontend.routes.logout, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { session },
+      query: { display, locales, session },
     }),
   };
 };

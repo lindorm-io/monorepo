@@ -1,4 +1,4 @@
-import { InitialiseLogoutRequestData } from "@lindorm-io/common-types";
+import { InitialiseLogoutRequestData, OpenIdDisplayMode } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
 import { ControllerResponse } from "@lindorm-io/koa";
@@ -15,6 +15,7 @@ type RequestData = InitialiseLogoutRequestData;
 export const oauthLogoutSchema = Joi.object<RequestData>()
   .keys({
     clientId: Joi.string().guid(),
+    displayMode: Joi.string().valid(...Object.values(OpenIdDisplayMode)),
     idTokenHint: JOI_JWT,
     logoutHint: Joi.string(),
     postLogoutRedirectUri: Joi.string().uri(),
@@ -28,7 +29,15 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
 ): ControllerResponse => {
   const {
     redis: { logoutSessionCache },
-    data: { clientId, idTokenHint, logoutHint, postLogoutRedirectUri, state, uiLocales },
+    data: {
+      clientId,
+      displayMode,
+      idTokenHint,
+      logoutHint,
+      postLogoutRedirectUri,
+      state,
+      uiLocales,
+    },
     mongo: { clientRepository, clientSessionRepository },
     request: { originalUrl },
     token: { idToken },
@@ -93,6 +102,7 @@ export const oauthLogoutController: ServerKoaController<RequestData> = async (
       },
 
       clientId: client.id,
+      displayMode,
       expires,
       idTokenHint: idToken ? idToken.token : null,
       identityId: browserSession.identityId,

@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { confirmOauthLogout } from "../../../handler";
 import {
   ConfirmLogoutRequestBody,
   ConfirmLogoutRequestParams,
   ConfirmLogoutResponse,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { confirmOauthLogout } from "../../../handler";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = ConfirmLogoutRequestParams & ConfirmLogoutRequestBody;
 

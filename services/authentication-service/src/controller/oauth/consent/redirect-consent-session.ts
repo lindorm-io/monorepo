@@ -1,4 +1,4 @@
-import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdClientType, OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
 import Joi from "joi";
@@ -11,11 +11,17 @@ import { configuration } from "../../../server/configuration";
 import { ServerKoaController } from "../../../types";
 
 type RequestData = {
+  display: OpenIdDisplayMode;
+  locales: string;
   session: string;
 };
 
 export const redirectConsentSessionSchema = Joi.object<RequestData>()
   .keys({
+    display: Joi.string()
+      .valid(...Object.values(OpenIdDisplayMode))
+      .required(),
+    locales: Joi.string().required(),
     session: Joi.string().guid().required(),
   })
   .required();
@@ -24,7 +30,7 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
   ctx,
 ): ControllerResponse => {
   const {
-    data: { session },
+    data: { display, locales, session },
     logger,
   } = ctx;
 
@@ -54,7 +60,7 @@ export const redirectConsentSessionController: ServerKoaController<RequestData> 
     redirect: createURL(configuration.frontend.routes.consent, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { session },
+      query: { display, locales, session },
     }),
   };
 };

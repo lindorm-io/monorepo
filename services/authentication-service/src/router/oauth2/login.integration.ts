@@ -1,18 +1,22 @@
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  SessionStatus,
+} from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { server } from "../../server/server";
+import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { setupIntegration } from "../../fixtures/integration";
-import { SessionStatus } from "@lindorm-io/common-types";
-import { mockFetchOauthLogoutSession } from "../../fixtures/axios";
-import { randomUUID } from "crypto";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
-describe("/oauth/logout", () => {
+describe("/oauth2/login", () => {
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
@@ -32,14 +36,14 @@ describe("/oauth/logout", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .get((uri) => uri.startsWith("/admin/sessions/logout/") && uri.endsWith("/redirect"))
+    .get((uri) => uri.startsWith("/admin/sessions/authorization/") && uri.endsWith("/redirect"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-verify.url/",
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post((uri) => uri.startsWith("/admin/sessions/logout/") && uri.endsWith("/confirm"))
+    .post((uri) => uri.startsWith("/admin/sessions/login/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
@@ -47,42 +51,44 @@ describe("/oauth/logout", () => {
 
   test("should redirect to front end", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/admin/sessions/logout/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
-      .reply(200, mockFetchOauthLogoutSession());
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(200, mockFetchOauthAuthorizationSession());
 
     const response = await request(server.callback())
-      .get("/oauth/logout")
+      .get("/oauth2/login")
       .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://frontend.url");
-    expect(location.pathname).toBe("/api/logout");
+    expect(location.pathname).toBe("/api/login");
     expect(location.searchParams.get("session")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
   test("should redirect to verify endpoint on unexpected status", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get("/admin/sessions/logout/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
       .reply(
         200,
-        mockFetchOauthLogoutSession({
-          logout: {
+        mockFetchOauthAuthorizationSession({
+          login: {
+            isRequired: false,
             status: SessionStatus.CONFIRMED,
 
-            browserSession: {
-              id: randomUUID(),
-              connectedSessions: 3,
-            },
-            clientSession: {
-              id: randomUUID(),
-            },
+            identityId: randomUUID(),
+            minimumLevel: 2,
+            recommendedLevel: 2,
+            recommendedMethods: [AuthenticationMethod.EMAIL],
+            recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
+            requiredLevel: 2,
+            requiredMethods: [AuthenticationMethod.EMAIL],
+            requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
           },
         }),
       );
 
     const response = await request(server.callback())
-      .get("/oauth/logout")
+      .get("/oauth2/login")
       .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 

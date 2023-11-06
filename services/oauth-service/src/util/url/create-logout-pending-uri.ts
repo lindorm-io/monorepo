@@ -8,6 +8,7 @@ export const createLogoutPendingUri = (logoutSession: LogoutSession): string =>
     port: configuration.services.authentication_service.port,
     query: {
       session: logoutSession.id,
+      display: logoutSession.displayMode,
       locales: logoutSession.uiLocales,
     },
   }).toString();

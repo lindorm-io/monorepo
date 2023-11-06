@@ -1,5 +1,5 @@
-import Joi from "joi";
 import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
+import Joi from "joi";
 
 export const JOI_ARGON_STRING = Joi.string()
   .pattern(/^([$]argon2id[$]).+$/)
@@ -40,15 +40,6 @@ export const JOI_SCOPE_DESCRIPTION = Joi.object({
   description: Joi.string().required(),
 });
 
-export const JOI_SESSION_STATUS = Joi.string().valid(
-  SessionStatus.ACKNOWLEDGED,
-  SessionStatus.CODE,
-  SessionStatus.CONFIRMED,
-  SessionStatus.EXPIRED,
-  SessionStatus.PENDING,
-  SessionStatus.REJECTED,
-  SessionStatus.SKIP,
-  SessionStatus.VERIFIED,
-);
+export const JOI_SESSION_STATUS = Joi.string().valid(...Object.values(SessionStatus));
 
 export const JOI_STATE = Joi.string().min(16).max(256);

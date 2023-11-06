@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../../types";
-import { confirmOauthSelectAccount } from "../../../handler";
 import {
   ConfirmSelectAccountRequestBody,
   ConfirmSelectAccountRequestParams,
   ConfirmSelectAccountResponse,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { confirmOauthSelectAccount } from "../../../handler";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = ConfirmSelectAccountRequestParams & ConfirmSelectAccountRequestBody;
 

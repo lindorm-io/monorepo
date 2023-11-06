@@ -71,8 +71,6 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createSelectAccountRejectedUri(authorizationSession) };
 
     case SessionStatus.SKIP:
-      break;
-
     case SessionStatus.VERIFIED:
       break;
 
@@ -94,8 +92,6 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createLoginRejectedUri(authorizationSession) };
 
     case SessionStatus.SKIP:
-      break;
-
     case SessionStatus.VERIFIED:
       break;
 
@@ -121,8 +117,6 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createConsentRejectedUri(authorizationSession) };
 
     case SessionStatus.SKIP:
-      break;
-
     case SessionStatus.VERIFIED:
       break;
 

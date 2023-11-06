@@ -1,6 +1,7 @@
 import {
-  AuthenticationMethod,
-  AuthenticationStrategy,
+  LindormScope,
+  OpenIdClientType,
+  OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { randomUUID } from "crypto";
@@ -16,7 +17,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
-describe("/oauth/login", () => {
+describe("/oauth2/consent", () => {
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
@@ -43,7 +44,7 @@ describe("/oauth/login", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post((uri) => uri.startsWith("/admin/sessions/login/") && uri.endsWith("/confirm"))
+    .post((uri) => uri.startsWith("/admin/sessions/consent/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
@@ -55,44 +56,80 @@ describe("/oauth/login", () => {
       .reply(200, mockFetchOauthAuthorizationSession());
 
     const response = await request(server.callback())
-      .get("/oauth/login")
+      .get("/oauth2/consent")
       .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
+
     expect(location.origin).toBe("https://frontend.url");
-    expect(location.pathname).toBe("/api/login");
+    expect(location.pathname).toBe("/api/consent");
     expect(location.searchParams.get("session")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
   test("should redirect to verify endpoint on unexpected status", async () => {
     nock("https://oauth.test.lindorm.io")
-      .get(`/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8`)
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
       .reply(
         200,
         mockFetchOauthAuthorizationSession({
-          login: {
+          consent: {
             isRequired: false,
             status: SessionStatus.CONFIRMED,
 
-            identityId: randomUUID(),
-            minimumLevel: 2,
-            recommendedLevel: 2,
-            recommendedMethods: [AuthenticationMethod.EMAIL],
-            recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
-            requiredLevel: 2,
-            requiredMethods: [AuthenticationMethod.EMAIL],
-            requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
+            audiences: [randomUUID()],
+            optionalScopes: Object.values(LindormScope),
+            requiredScopes: Object.values(OpenIdScope),
+            scopeDescriptions: [],
           },
         }),
       );
 
     const response = await request(server.callback())
-      .get("/oauth/login")
+      .get("/oauth2/consent")
       .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
       .expect(302);
 
     const location = new URL(response.headers.location);
     expect(location.origin).toBe("https://oauth-redirect-verify.url");
+
+    expect(response.headers["set-cookie"]).toBeUndefined();
+  });
+
+  test("should confirm confidential clients and redirect", async () => {
+    nock("https://oauth.test.lindorm.io")
+      .get("/admin/sessions/authorization/28c0d2ce-a3b4-45d8-9845-89d60fe8fed8")
+      .reply(
+        200,
+        mockFetchOauthAuthorizationSession({
+          consent: {
+            isRequired: false,
+            status: SessionStatus.PENDING,
+
+            audiences: [randomUUID()],
+            optionalScopes: Object.values(LindormScope),
+            requiredScopes: Object.values(OpenIdScope),
+            scopeDescriptions: [],
+          },
+
+          client: {
+            id: randomUUID(),
+            logoUri: "https://test.client.com/logo.png",
+            name: "Test Client",
+            singleSignOn: true,
+            type: OpenIdClientType.CONFIDENTIAL,
+          },
+        }),
+      );
+
+    const response = await request(server.callback())
+      .get("/oauth2/consent")
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+      })
+      .expect(302);
+
+    const location = new URL(response.headers.location);
+    expect(location.origin).toBe("https://oauth-redirect-confirm.url");
   });
 });
