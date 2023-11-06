@@ -1,4 +1,19 @@
-# lindorm.io
+# Table of Contents
+- [Table of Contents](#table-of-contents)
+- [What do we have here?](#what-do-we-have-here)
+- [Interesting packages](#interesting-packages)
+  - [AMQP](#amqp)
+  - [Axios](#axios)
+  - [Event Source](#event-source)
+  - [JWT](#jwt)
+  - [Key Pair](#key-pair)
+  - [Koa](#koa)
+  - [Winston](#winston)
+- [Services](#services)
+  - [Authentication Service](#authentication-service)
+  - [Device Service](#device-service)
+  - [OAuth Service](#oauth-service)
+- [License](#license)
 
 # What do we have here?
 This is a monorepo containing multiple packages and services. It serves as a staging area for testing new ideas and improvements to existing packages, technologies, and frameworks. Everything is subject to change, and I welcome any and all feedback for improvements.
@@ -31,7 +46,7 @@ This package improves upon the winston logger package and primarily adds filteri
 Most of these services are currently being worked on to create a microservice architecture that can handle Authentication and Authorization in accordance with the OAuth2.0/OpenID Connect framework and specifications. I would like to highlight the following services:
 
 ## Authentication Service
-This service handles all authentication related flows a customer might run into. It is built to work in tandem with the OAuth Service but it is not a requirement. During an authentication flow, it will produce configuration for frontend to consume and render. The configuration holds a list of strategies sorted by the most prudent authentication strategy based on request details. Once the customer is authenticated, the service will generate an authentication token that can be used to either run your own session management, or to confirm an OAuth2.0 authorization session.
+This service handles all authentication related flows a customer might run into. It is built to work in tandem with the [OAuth Service](#oauth-service) but it is not a requirement. During an authentication flow, it will produce configuration for frontend to consume and render. The configuration holds a list of strategies sorted by the most prudent authentication strategy based on request details. Once the customer is authenticated, the service will generate an authentication token that can be used to either run your own session management, or to confirm an OAuth2.0 authorization session.
 
 - [Authentication using Strategies with lindorm.io](https://swimlanes.io/u/2TTffs950)
 - [Authentication using OIDC with lindorm.io](https://swimlanes.io/u/9uyMcHXMX)
@@ -44,7 +59,7 @@ This service is an attempt to create something that is similar to BankID. A secu
 - [Remote Device Challenge with lindorm.io](https://swimlanes.io/u/oO2OfOlAH)
 
 ## OAuth Service
-This service handles all authorization related flows in accordance with the [OpenID Connect Specifications](https://openid.net). It is built to run independently in a microservice environment, where authentication is handled by another service (see above).
+This service handles all authorization related flows in accordance with the [OpenID Connect Specifications](https://openid.net). It is built to run independently in a microservice environment, where authentication is handled by another service such as the aforementioned [Authentication Service](#authentication-service).
 
 - [Authorization with lindorm.io](https://swimlanes.io/u/KQMGNBzbl)
 - [Logout with lindorm.io](https://swimlanes.io/u/o-xTVGSml)
