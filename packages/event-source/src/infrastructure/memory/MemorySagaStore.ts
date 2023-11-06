@@ -1,4 +1,3 @@
-import { IN_MEMORY_SAGA_CAUSATION_STORE, IN_MEMORY_SAGA_STORE } from "./in-memory";
 import {
   IMessage,
   ISagaStore,
@@ -9,6 +8,7 @@ import {
   SagaUpdateData,
   SagaUpdateFilter,
 } from "../../types";
+import { IN_MEMORY_SAGA_CAUSATION_STORE, IN_MEMORY_SAGA_STORE } from "./in-memory";
 
 export class MemorySagaStore implements ISagaStore {
   public async causationExists(identifier: SagaIdentifier, causation: IMessage): Promise<boolean> {
@@ -25,7 +25,7 @@ export class MemorySagaStore implements ISagaStore {
     updateFilter: SagaUpdateFilter,
     data: SagaClearMessagesToDispatchData,
   ): Promise<void> {
-    const fn = (x: SagaStoreAttributes) =>
+    const fn = (x: SagaStoreAttributes): boolean =>
       x.id === updateFilter.id &&
       x.name === updateFilter.name &&
       x.context === updateFilter.context &&
@@ -46,7 +46,7 @@ export class MemorySagaStore implements ISagaStore {
     updateFilter: SagaUpdateFilter,
     data: SagaClearProcessedCausationIdsData,
   ): Promise<void> {
-    const fn = (x: SagaStoreAttributes) =>
+    const fn = (x: SagaStoreAttributes): boolean =>
       x.id === updateFilter.id &&
       x.name === updateFilter.name &&
       x.context === updateFilter.context &&
@@ -99,7 +99,7 @@ export class MemorySagaStore implements ISagaStore {
   }
 
   public async update(updateFilter: SagaUpdateFilter, data: SagaUpdateData): Promise<void> {
-    const fn = (x: SagaStoreAttributes) =>
+    const fn = (x: SagaStoreAttributes): boolean =>
       x.id === updateFilter.id &&
       x.name === updateFilter.name &&
       x.context === updateFilter.context &&

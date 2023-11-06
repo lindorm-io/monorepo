@@ -1,21 +1,21 @@
-import { DomainEvent } from "../../message";
-import { MemoryViewStore } from "./MemoryViewStore";
+import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
+import { filter, find } from "lodash";
 import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { TEST_COMMAND } from "../../fixtures/command.fixture";
 import { TEST_VIEW_IDENTIFIER } from "../../fixtures/view.fixture";
-import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
-import { filter, find } from "lodash";
-import { randomString } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
+import { DomainEvent } from "../../message";
 import {
   AggregateIdentifier,
-  ViewStoreAttributes,
   ViewCausationAttributes,
   ViewClearProcessedCausationIdsData,
   ViewIdentifier,
+  ViewStoreAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { MemoryViewStore } from "./MemoryViewStore";
+import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 
 describe("MemoryViewStore", () => {
   let aggregateIdentifier: AggregateIdentifier;
@@ -88,9 +88,7 @@ describe("MemoryViewStore", () => {
       revision: 2,
     };
 
-    await expect(
-      store.clearProcessedCausationIds(filter, update, { type: "memory" }),
-    ).resolves.toBeUndefined();
+    await expect(store.clearProcessedCausationIds(filter, update)).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
@@ -118,7 +116,7 @@ describe("MemoryViewStore", () => {
 
     IN_MEMORY_VIEW_STORE.push(attributes);
 
-    await expect(store.find(viewIdentifier, { type: "memory" })).resolves.toStrictEqual(
+    await expect(store.find(viewIdentifier)).resolves.toStrictEqual(
       expect.objectContaining({
         hash: attributes.hash,
         meta: { meta: true },
@@ -142,7 +140,7 @@ describe("MemoryViewStore", () => {
       updated_at: new Date(),
     };
 
-    await expect(store.insert(attributes, { type: "memory" })).resolves.toBeUndefined();
+    await expect(store.insert(attributes)).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({
@@ -209,7 +207,7 @@ describe("MemoryViewStore", () => {
       state: { updated: true },
     };
 
-    await expect(store.update(filter, update, { type: "memory" })).resolves.toBeUndefined();
+    await expect(store.update(filter, update)).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_VIEW_STORE, viewIdentifier)).toStrictEqual(
       expect.objectContaining({

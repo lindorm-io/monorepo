@@ -1,6 +1,6 @@
-import { IAmqpConnection, IMessage, ISubscription } from "../types";
-import { MessageBusBase } from "../infrastructure";
 import { Logger } from "@lindorm-io/core-logger";
+import { MessageBusBase } from "../infrastructure";
+import { IAmqpConnection, IMessage } from "../types";
 
 export class TestMessageBus extends MessageBusBase {
   public constructor(connection: IAmqpConnection, logger: Logger) {
@@ -11,11 +11,11 @@ export class TestMessageBus extends MessageBusBase {
     return message;
   }
 
-  protected async validateMessage(message: IMessage): Promise<void> {
+  protected async validateMessage(): Promise<void> {
     return;
   }
 
-  protected async validateSubscription(subscription: ISubscription): Promise<void> {
+  protected async validateSubscription(): Promise<void> {
     return;
   }
 }

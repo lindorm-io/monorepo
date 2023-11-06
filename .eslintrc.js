@@ -35,10 +35,19 @@ module.exports = {
     "node_modules",
   ],
   rules: {
-    "comma-dangle": ["error", "always-multiline"],
     "@typescript-eslint/ban-ts-comment": 0,
-    "@typescript-eslint/explicit-member-accessibility": ["error"],
     "@typescript-eslint/explicit-function-return-type": ["warn"],
+    "@typescript-eslint/explicit-member-accessibility": ["error"],
     "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        args: "after-used",
+        destructuredArrayIgnorePattern: "^_",
+        ignoreRestSiblings: true,
+        vars: "all",
+      },
+    ],
+    "comma-dangle": ["error", "always-multiline"],
   },
 };

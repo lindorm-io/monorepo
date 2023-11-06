@@ -1,14 +1,13 @@
-import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 import {
   IMessage,
   IViewStore,
   ViewClearProcessedCausationIdsData,
-  ViewEventHandlerAdapter,
   ViewIdentifier,
   ViewStoreAttributes,
   ViewUpdateData,
   ViewUpdateFilter,
 } from "../../types";
+import { IN_MEMORY_VIEW_CAUSATION_STORE, IN_MEMORY_VIEW_STORE } from "./in-memory";
 
 export class MemoryViewStore implements IViewStore {
   public async causationExists(identifier: ViewIdentifier, causation: IMessage): Promise<boolean> {
@@ -24,9 +23,8 @@ export class MemoryViewStore implements IViewStore {
   public async clearProcessedCausationIds(
     updateFilter: ViewUpdateFilter,
     data: ViewClearProcessedCausationIdsData,
-    adapter: ViewEventHandlerAdapter,
   ): Promise<void> {
-    const fn = (x: ViewStoreAttributes) =>
+    const fn = (x: ViewStoreAttributes): boolean =>
       x.id === updateFilter.id &&
       x.name === updateFilter.name &&
       x.context === updateFilter.context &&
@@ -43,20 +41,14 @@ export class MemoryViewStore implements IViewStore {
     IN_MEMORY_VIEW_STORE[index] = { ...found, ...data };
   }
 
-  public async find(
-    identifier: ViewIdentifier,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<ViewStoreAttributes | undefined> {
+  public async find(identifier: ViewIdentifier): Promise<ViewStoreAttributes | undefined> {
     return IN_MEMORY_VIEW_STORE.find(
       (x) =>
         x.id === identifier.id && x.name === identifier.name && x.context === identifier.context,
     );
   }
 
-  public async insert(
-    attributes: ViewStoreAttributes,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
+  public async insert(attributes: ViewStoreAttributes): Promise<void> {
     const found = IN_MEMORY_VIEW_STORE.find(
       (x) =>
         x.id === attributes.id && x.name === attributes.name && x.context === attributes.context,
@@ -84,12 +76,8 @@ export class MemoryViewStore implements IViewStore {
     }
   }
 
-  public async update(
-    updateFilter: ViewUpdateFilter,
-    data: ViewUpdateData,
-    adapter: ViewEventHandlerAdapter,
-  ): Promise<void> {
-    const fn = (x: ViewStoreAttributes) =>
+  public async update(updateFilter: ViewUpdateFilter, data: ViewUpdateData): Promise<void> {
+    const fn = (x: ViewStoreAttributes): boolean =>
       x.id === updateFilter.id &&
       x.name === updateFilter.name &&
       x.context === updateFilter.context &&

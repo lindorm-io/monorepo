@@ -1,13 +1,13 @@
+import { HttpStatus } from "@lindorm-io/koa";
 import Router from "koa-router";
 import { LindormNodeServerContext } from "../types";
-import { HttpStatus } from "@lindorm-io/koa";
 
 export const createWellKnownJwksRouter = <
   Context extends LindormNodeServerContext = LindormNodeServerContext,
 >(
   exposeExternal = false,
-): Router => {
-  const router = new Router<unknown, any>();
+): Router<Context> => {
+  const router = new Router<Context, any>();
 
   router.get("/", async (ctx): Promise<void> => {
     ctx.body = { keys: ctx.keystore.getJWKS({ exposeExternal }) };
