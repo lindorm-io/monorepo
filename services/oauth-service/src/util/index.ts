@@ -1,7 +1,6 @@
 export * from "./assert";
 export * from "./authorization";
 export * from "./extract-acr-values";
-export * from "./filter-acr-values";
 export * from "./get-adjusted-access-level";
 export * from "./get-authentication-level-from-level-of-assurance";
 export * from "./get-level-of-assurance-from-authentication-level";
