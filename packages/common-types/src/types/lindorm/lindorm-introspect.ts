@@ -1,10 +1,12 @@
+import { AuthenticationFactor, AuthenticationLevel, AuthenticationMethod } from "../../enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../auth";
 import { OpenIdIntrospectResponseBody } from "../open-id";
 
 export type LindormIntrospectResponseBody = OpenIdIntrospectResponseBody & {
   aal: AdjustedAccessLevel;
-  acr: string | null;
-  amr: Array<string>;
+  acr: AuthenticationLevel | null;
+  afr: AuthenticationFactor | null;
+  amr: Array<AuthenticationMethod>;
   authTime: number | null;
   azp: string | null;
   loa: LevelOfAssurance;

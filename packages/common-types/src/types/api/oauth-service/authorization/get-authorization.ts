@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   LindormScope,
@@ -35,14 +36,12 @@ export type GetAuthorizationResponse = {
     isRequired: boolean;
     status: SessionStatus;
 
+    factors: Array<AuthenticationFactor>;
     identityId: string | null;
-    minimumLevel: LevelOfAssurance;
-    recommendedLevel: LevelOfAssurance;
-    recommendedMethods: Array<AuthenticationMethod>;
-    recommendedStrategies: Array<AuthenticationStrategy>;
-    requiredLevel: LevelOfAssurance;
-    requiredMethods: Array<AuthenticationMethod>;
-    requiredStrategies: Array<AuthenticationStrategy>;
+    levelOfAssurance: LevelOfAssurance;
+    methods: Array<AuthenticationMethod>;
+    minimumLevelOfAssurance: LevelOfAssurance;
+    strategies: Array<AuthenticationStrategy>;
   };
 
   selectAccount: {
@@ -70,23 +69,27 @@ export type GetAuthorizationResponse = {
   browserSession: {
     id: string | null;
     adjustedAccessLevel: AdjustedAccessLevel;
+    factors: Array<AuthenticationFactor>;
     identityId: string | null;
     latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
     remember: boolean;
     singleSignOn: boolean;
+    strategies: Array<AuthenticationStrategy>;
   };
 
   clientSession: {
     id: string | null;
     adjustedAccessLevel: AdjustedAccessLevel;
     audiences: Array<string>;
+    factors: Array<AuthenticationFactor>;
     identityId: string | null;
     latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
     scopes: Array<OpenIdScope | LindormScope | string>;
+    strategies: Array<AuthenticationStrategy>;
   };
 
   client: PublicClientInfo;

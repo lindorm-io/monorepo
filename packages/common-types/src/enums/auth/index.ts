@@ -1,4 +1,5 @@
 export * from "./authentication-factor";
+export * from "./authentication-level";
 export * from "./authentication-method";
 export * from "./authentication-mode";
 export * from "./authentication-strategy";

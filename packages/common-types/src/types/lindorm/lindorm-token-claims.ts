@@ -3,6 +3,7 @@ import { StandardJwtClaims } from "../jwt";
 
 type CustomClaims = {
   aal?: number; // adjusted access level
+  afr?: string; // auth factor reference
   cid?: string; // client id
   loa?: number; // level of assurance
   scope?: string;

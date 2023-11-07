@@ -1,4 +1,8 @@
-import { AuthenticationMethod } from "../../../../enums";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "../../../../enums";
 import { LevelOfAssurance } from "../../../auth";
 
 export type GetAuthenticationTokenQuery = {
@@ -6,9 +10,11 @@ export type GetAuthenticationTokenQuery = {
 };
 
 export type GetAuthenticationTokenResponse = {
+  factors: Array<AuthenticationFactor>;
   identityId: string;
   latestAuthentication: string;
   levelOfAssurance: LevelOfAssurance;
   methods: Array<AuthenticationMethod>;
   nonce: string;
+  strategies: Array<AuthenticationStrategy>;
 };

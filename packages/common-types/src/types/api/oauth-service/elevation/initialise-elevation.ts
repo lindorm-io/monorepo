@@ -1,4 +1,9 @@
-import { AuthenticationMethod, OpenIdDisplayMode } from "../../../../enums";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  OpenIdDisplayMode,
+} from "../../../../enums";
 import { LevelOfAssurance } from "../../../auth";
 
 interface InitialiseElevationSessionRequestData {
@@ -6,20 +11,22 @@ interface InitialiseElevationSessionRequestData {
   clientId: string;
   country?: string;
   idTokenHint?: string;
-  levelOfAssurance?: LevelOfAssurance;
   nonce?: string;
 }
 
 export interface InitialiseElevationSessionRequestBody
   extends InitialiseElevationSessionRequestData {
+  factors?: Array<AuthenticationFactor>;
+  levelOfAssurance?: LevelOfAssurance;
   methods?: Array<AuthenticationMethod>;
+  strategies?: Array<AuthenticationStrategy>;
   uiLocales?: Array<string>;
 }
 
 export interface InitialiseElevationSessionRequestQuery
   extends InitialiseElevationSessionRequestData {
+  acrValues?: string;
   display?: OpenIdDisplayMode;
-  methods?: string;
   redirectUri: string;
   state: string;
   uiLocales?: string;
