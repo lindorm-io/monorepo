@@ -11,7 +11,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
-describe("/sessions/consent", () => {
+describe("/sessions/select-account", () => {
   beforeAll(setupIntegration);
 
   nock("https://oauth.test.lindorm.io")
