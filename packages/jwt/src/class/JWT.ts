@@ -46,6 +46,7 @@ export class JWT {
       adjustedAccessLevel,
       audiences,
       authContextClass,
+      authFactorReference,
       authMethodsReference,
       authorizedParty,
       authTime,
@@ -97,6 +98,7 @@ export class JWT {
 
       // optional standard claims
       acr: authContextClass,
+      afr: authFactorReference,
       amr: authMethodsReference,
       at_hash: accessTokenHash,
       auth_time: authTime,
@@ -266,6 +268,7 @@ export class JWT {
     const {
       aal,
       acr,
+      afr,
       amr,
       at_hash,
       aud,
@@ -306,6 +309,7 @@ export class JWT {
         adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
         audiences: aud,
         authContextClass: acr || null,
+        authFactorReference: afr || null,
         authMethodsReference: amr || [],
         authorizedParty: azp || null,
         authTime: auth_time || null,

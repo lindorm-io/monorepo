@@ -13,6 +13,7 @@ export type JwtDecodeMetadata = {
   adjustedAccessLevel: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass: string | null;
+  authFactorReference: string | null;
   authMethodsReference: Array<string>;
   authorizedParty: string | null;
   authTime: number | null;

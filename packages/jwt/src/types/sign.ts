@@ -9,6 +9,7 @@ export type JwtSignOptions<Claims = Record<string, never>> = {
   adjustedAccessLevel?: AdjustedAccessLevel;
   audiences: Array<string>;
   authContextClass?: string;
+  authFactorReference?: string;
   authMethodsReference?: Array<string>;
   authorizedParty?: string;
   authTime?: number;
