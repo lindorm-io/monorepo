@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -26,6 +27,7 @@ import {
 
 export class PasswordStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.ONE_FACTOR,
     hintType: "email",
     identifierType: IdentifierType.USERNAME,
     loa: 2,

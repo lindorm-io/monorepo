@@ -4,6 +4,8 @@ export * from "./verify-identity-id";
 export * from "./verify-max-age";
 export * from "./verify-prompt-mode";
 export * from "./verify-required-audiences";
+export * from "./verify-required-factors";
 export * from "./verify-required-methods";
 export * from "./verify-required-scopes";
+export * from "./verify-required-strategies";
 export * from "./verify-session-expiry";

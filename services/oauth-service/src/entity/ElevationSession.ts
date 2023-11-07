@@ -1,5 +1,7 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
+  AuthenticationStrategy,
   LevelOfAssurance,
   OpenIdDisplayMode,
   SessionStatus,
@@ -25,17 +27,20 @@ import {
 import { JOI_DISPLAY_MODE } from "../constant";
 
 type ConfirmedAuthentication = {
+  factors: Array<AuthenticationFactor>;
   latestAuthentication: Date | null;
   levelOfAssurance: LevelOfAssurance;
+  metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 type RequestedAuthentication = {
-  minimumLevel: LevelOfAssurance;
-  recommendedLevel: LevelOfAssurance;
-  recommendedMethods: Array<AuthenticationMethod>;
-  requiredLevel: LevelOfAssurance;
-  requiredMethods: Array<AuthenticationMethod>;
+  factors: Array<AuthenticationFactor>;
+  levelOfAssurance: LevelOfAssurance;
+  methods: Array<AuthenticationMethod>;
+  minimumLevelOfAssurance: LevelOfAssurance;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 export type ElevationSessionAttributes = EntityAttributes & {
@@ -70,7 +75,6 @@ export type ElevationSessionOptions = Optional<
   | "nonce"
   | "redirectUri"
   | "clientSessionId"
-  | "requestedAuthentication"
   | "state"
   | "status"
   | "uiLocales"
@@ -82,18 +86,21 @@ const schema = Joi.object<ElevationSessionAttributes>()
 
     confirmedAuthentication: Joi.object<ConfirmedAuthentication>()
       .keys({
+        factors: Joi.array().items(Joi.string().lowercase()).required(),
         latestAuthentication: Joi.date().allow(null).required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        metadata: Joi.object().required(),
         methods: Joi.array().items(Joi.string()).required(),
+        strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     requestedAuthentication: Joi.object<RequestedAuthentication>()
       .keys({
-        minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
-        requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
+        factors: Joi.array().items(Joi.string().lowercase()).required(),
+        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        methods: Joi.array().items(Joi.string()).required(),
+        minimumLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
 
@@ -138,20 +145,19 @@ export class ElevationSession extends LindormEntity<ElevationSessionAttributes> 
     super(options);
 
     this.confirmedAuthentication = {
+      factors: options.confirmedAuthentication?.factors || [],
       latestAuthentication: options.confirmedAuthentication?.latestAuthentication || null,
       levelOfAssurance: options.confirmedAuthentication?.levelOfAssurance || 0,
+      metadata: options.confirmedAuthentication?.metadata || {},
       methods: options.confirmedAuthentication?.methods || [],
+      strategies: options.confirmedAuthentication?.strategies || [],
     };
     this.requestedAuthentication = {
-      minimumLevel:
-        options.requestedAuthentication?.minimumLevel &&
-        options.requestedAuthentication.minimumLevel > 0
-          ? options.requestedAuthentication?.minimumLevel
-          : 1,
-      recommendedLevel: options.requestedAuthentication?.recommendedLevel || 1,
-      recommendedMethods: options.requestedAuthentication?.recommendedMethods || [],
-      requiredLevel: options.requestedAuthentication?.requiredLevel || 1,
-      requiredMethods: options.requestedAuthentication?.requiredMethods || [],
+      factors: options.requestedAuthentication.factors,
+      levelOfAssurance: options.requestedAuthentication.levelOfAssurance,
+      methods: options.requestedAuthentication.methods,
+      minimumLevelOfAssurance: options.requestedAuthentication.minimumLevelOfAssurance,
+      strategies: options.requestedAuthentication.strategies,
     };
 
     this.browserSessionId = options.browserSessionId || null;

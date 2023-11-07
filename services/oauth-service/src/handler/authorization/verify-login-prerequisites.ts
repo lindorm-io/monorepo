@@ -4,7 +4,9 @@ import {
   verifyAccessLevel,
   verifyIdentityId,
   verifyMaxAge,
+  verifyRequiredFactors,
   verifyRequiredMethods,
+  verifyRequiredStrategies,
   verifySessionExpiry,
 } from "../../util";
 
@@ -30,8 +32,18 @@ export const verifyLoginPrerequisites = (
     return false;
   }
 
+  if (!verifyRequiredFactors(authorizationSession, session)) {
+    logger.debug("Login required [required factors]");
+    return false;
+  }
+
   if (!verifyRequiredMethods(authorizationSession, session)) {
     logger.debug("Login required [required methods]");
+    return false;
+  }
+
+  if (!verifyRequiredStrategies(authorizationSession, session)) {
+    logger.debug("Login required [required strategies]");
     return false;
   }
 

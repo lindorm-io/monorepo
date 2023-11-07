@@ -1,4 +1,9 @@
-import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -26,9 +31,11 @@ describe("confirmElevationController", () => {
         elevationSessionCache: createMockRedisRepository(createTestElevationSession),
       },
       data: {
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
-        levelOfAssurance: 3,
+        levelOfAssurance: 4,
         methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+        strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
       },
       entity: {
         elevationSession: createTestElevationSession({
@@ -50,9 +57,11 @@ describe("confirmElevationController", () => {
     expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
+          factors: [AuthenticationFactor.TWO_FACTOR],
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
-          levelOfAssurance: 3,
+          levelOfAssurance: 4,
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
         },
         status: SessionStatus.CONFIRMED,
       }),
@@ -70,9 +79,11 @@ describe("confirmElevationController", () => {
     expect(ctx.redis.elevationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedAuthentication: {
+          factors: [AuthenticationFactor.TWO_FACTOR],
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
-          levelOfAssurance: 3,
+          levelOfAssurance: 4,
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
         },
         status: SessionStatus.CONFIRMED,
       }),

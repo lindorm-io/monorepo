@@ -39,7 +39,7 @@ import {
   createConsentPendingUri,
   createLoginPendingUri,
   createSelectAccountPendingUri,
-  filterAcrValues,
+  extractAcrValues,
 } from "../../util";
 
 type RequestData = AuthorizeRequestQuery;
@@ -125,20 +125,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
 
   const expires = expiryDate(configuration.defaults.expiry.authorization_session);
 
-  const {
-    levelOfAssurance: requiredLevel,
-    methods: requiredMethods,
-    strategies: requiredStrategies,
-  } = filterAcrValues({ acrString: acrValues });
-
-  const {
-    levelOfAssurance: recommendedLevel,
-    methods: recommendedMethods,
-    strategies: recommendedStrategies,
-  } = filterAcrValues({
-    acrArray: idToken?.metadata.authContextClass ? [idToken.metadata.authContextClass] : [],
-    amrArray: idToken?.metadata.authMethodsReference,
-  });
+  const { factors, levelOfAssurance, methods, strategies } = extractAcrValues(acrValues);
 
   const defaultAudiences = uniqArray(
     client.id,
@@ -166,14 +153,12 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       scopes,
     },
     requestedLogin: {
+      factors,
       identityId: idToken ? idToken.subject : null,
-      minimumLevel: client.defaults.levelOfAssurance,
-      recommendedLevel,
-      recommendedMethods,
-      recommendedStrategies,
-      requiredLevel,
-      requiredMethods,
-      requiredStrategies,
+      levelOfAssurance,
+      methods,
+      minimumLevelOfAssurance: client.defaults.levelOfAssurance,
+      strategies,
     },
     requestedSelectAccount: {
       browserSessions: browserSessions.map((x) => ({

@@ -1,5 +1,7 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
+  AuthenticationStrategy,
   FindIdentityRequestQuery,
   FindIdentityResponse,
   VerifyPasswordRequestBody,
@@ -89,11 +91,13 @@ export const resolvePasswordGrantController: ServerKoaController<RequestData> = 
 
   return {
     body: {
+      factors: [AuthenticationFactor.ONE_FACTOR],
       identityId,
       latestAuthentication: new Date().toISOString(),
-      levelOfAssurance: 2,
+      levelOfAssurance: 1,
       methods: [AuthenticationMethod.PASSWORD],
       nonce: randomHex(16),
+      strategies: [AuthenticationStrategy.PASSWORD],
     },
   };
 };

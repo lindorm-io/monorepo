@@ -1,6 +1,14 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
+import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {
+  createTestBrowserSession,
   createTestClient,
+  createTestClientSession,
   createTestElevationSession,
   createTestTenant,
 } from "../../fixtures/entity";
@@ -26,6 +34,21 @@ describe("getElevationDataController", () => {
           id: "f23028ac-6d61-4bc7-b0cf-8ef00cf92303",
         }),
       },
+      mongo: {
+        browserSessionRepository: createMockMongoRepository(() =>
+          createTestBrowserSession({
+            id: "ea1be311-26b3-4a75-8911-2ca1451bfee0",
+            identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
+          }),
+        ),
+        clientSessionRepository: createMockMongoRepository(() =>
+          createTestClientSession({
+            id: "f37c5ac7-c8da-42e3-ac3b-35e9dc523d9b",
+            audiences: ["d47d233e-9d77-4538-be99-379207440889"],
+            identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
+          }),
+        ),
+      },
     };
   });
 
@@ -36,11 +59,11 @@ describe("getElevationDataController", () => {
           isRequired: true,
           status: "pending",
 
-          minimumLevel: 1,
-          recommendedLevel: 1,
-          recommendedMethods: ["email", "phone"],
-          requiredLevel: 2,
-          requiredMethods: ["email"],
+          factors: [AuthenticationFactor.TWO_FACTOR],
+          levelOfAssurance: 4,
+          methods: [AuthenticationMethod.EMAIL],
+          minimumLevelOfAssurance: 2,
+          strategies: [AuthenticationStrategy.PHONE_OTP],
         },
 
         elevationSession: {
@@ -53,6 +76,32 @@ describe("getElevationDataController", () => {
           identityId: "9a55d16f-42ee-4b15-b228-7d02e8df31b7",
           nonce: "QxEQ4H21R-gslTwr",
           uiLocales: ["sv-SE", "en-GB"],
+        },
+
+        browserSession: {
+          id: "ea1be311-26b3-4a75-8911-2ca1451bfee0",
+          adjustedAccessLevel: 2,
+          factors: [AuthenticationFactor.TWO_FACTOR],
+          identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
+          latestAuthentication: "2021-01-01T07:59:00.000Z",
+          levelOfAssurance: 2,
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          remember: true,
+          singleSignOn: true,
+          strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
+        },
+
+        clientSession: {
+          id: "f37c5ac7-c8da-42e3-ac3b-35e9dc523d9b",
+          adjustedAccessLevel: 2,
+          audiences: ["d47d233e-9d77-4538-be99-379207440889"],
+          factors: [AuthenticationFactor.TWO_FACTOR],
+          identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
+          latestAuthentication: "2021-01-01T07:59:00.000Z",
+          levelOfAssurance: 2,
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          scopes: ["openid", "profile"],
+          strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
         },
 
         client: {

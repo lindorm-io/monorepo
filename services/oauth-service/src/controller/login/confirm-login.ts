@@ -16,12 +16,14 @@ type ResponseBody = ConfirmLoginResponse;
 export const confirmLoginSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
+    factors: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     metadata: Joi.object().required(),
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
     singleSignOn: Joi.boolean().required(),
+    strategies: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
@@ -30,7 +32,16 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
 ): ControllerResponse<ResponseBody> => {
   const {
     redis: { authorizationSessionCache },
-    data: { identityId, levelOfAssurance, metadata, methods, remember, singleSignOn },
+    data: {
+      factors,
+      identityId,
+      levelOfAssurance,
+      metadata,
+      methods,
+      remember,
+      singleSignOn,
+      strategies,
+    },
     entity: { authorizationSession },
     logger,
   } = ctx;
@@ -40,6 +51,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
   logger.debug("Updating authorization session");
 
   authorizationSession.confirmLogin({
+    factors,
     identityId,
     latestAuthentication: new Date(),
     levelOfAssurance,
@@ -47,6 +59,7 @@ export const confirmLoginController: ServerKoaController<RequestData> = async (
     methods,
     remember,
     singleSignOn,
+    strategies,
   });
 
   await authorizationSessionCache.update(authorizationSession);

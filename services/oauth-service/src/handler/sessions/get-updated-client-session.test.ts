@@ -1,4 +1,9 @@
-import { AuthenticationMethod, OpenIdScope } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  OpenIdScope,
+} from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
@@ -39,6 +44,7 @@ describe("getUpdatedClientSession", () => {
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
       },
       confirmedLogin: {
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
@@ -50,6 +56,11 @@ describe("getUpdatedClientSession", () => {
         ],
         remember: false,
         singleSignOn: false,
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       },
       clientSessionId: "052ef2f3-01d8-4e0c-9c3c-8daae8a8e541",
       browserSessionId: "52f23e8f-68c5-4c17-b6cf-05b17d3de8f5",
@@ -74,13 +85,23 @@ describe("getUpdatedClientSession", () => {
         audiences: ["6c04e67f-7911-4692-ab3b-f7b3f3178a40", "968db71c-3ea5-446a-a38e-cf614ec3168c"],
         browserSessionId: "52f23e8f-68c5-4c17-b6cf-05b17d3de8f5",
         clientId: "9944553e-73e4-498f-b246-94ae3fb79d98",
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
         metadata: { metadata: true },
-        methods: ["email", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         nonce: "pXPZUkDnAapOvKJg",
         scopes: ["openid", "profile"],
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
         tenantId: "db7227ef-e88d-4282-9934-f6956777f31d",
         type: "ephemeral",
       }),
@@ -124,11 +145,13 @@ describe("getUpdatedClientSession", () => {
     ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
         audiences: ["0711b0ea-dd30-457c-b73c-92283762ef55"],
+        factors: [AuthenticationFactor.ONE_FACTOR],
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
         levelOfAssurance: 1,
         methods: [AuthenticationMethod.PASSWORD],
         scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+        strategies: [AuthenticationStrategy.PASSWORD],
       }),
     );
 
@@ -143,9 +166,19 @@ describe("getUpdatedClientSession", () => {
           "6c04e67f-7911-4692-ab3b-f7b3f3178a40",
           "968db71c-3ea5-446a-a38e-cf614ec3168c",
         ],
+        factors: [AuthenticationFactor.TWO_FACTOR],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
-        methods: ["email", "password", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       }),
     );
   });
@@ -155,10 +188,12 @@ describe("getUpdatedClientSession", () => {
 
     ctx.mongo.clientSessionRepository.find.mockResolvedValueOnce(
       createTestClientSession({
+        factors: [AuthenticationFactor.ONE_FACTOR],
         identityId: "34a10f02-a5a8-40c5-a0be-63a9158f712e",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
         methods: [AuthenticationMethod.PASSWORD],
+        strategies: [AuthenticationStrategy.PASSWORD],
       }),
     );
 
@@ -168,9 +203,19 @@ describe("getUpdatedClientSession", () => {
 
     expect(ctx.mongo.clientSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        factors: [AuthenticationFactor.TWO_FACTOR],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["email", "password", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       }),
     );
   });

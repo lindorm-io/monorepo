@@ -1,3 +1,4 @@
+import { AuthenticationMethod } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getUnixTime } from "date-fns";
@@ -30,13 +31,11 @@ describe("handleJwtBearerGrant", () => {
       },
       jwt: {
         verify: jest.fn().mockReturnValue({
-          auth: {
-            authMethodsReference: ["email"],
-          },
           claims: {
             subject: "bb51ea97-6003-4c6b-aedc-d121ea93e17d",
           },
           metadata: {
+            authMethodsReference: [AuthenticationMethod.EMAIL],
             expires: getUnixTime(new Date("2021-01-01T09:00:00.000Z")),
           },
         }),

@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -31,6 +32,7 @@ import {
 
 export class PhoneCodeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.ONE_FACTOR,
     hintType: "phone",
     identifierType: IdentifierType.PHONE,
     loa: 2,

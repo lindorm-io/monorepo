@@ -1,7 +1,7 @@
-import { getStrategyController } from "./get-strategy";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestStrategySession } from "../../fixtures/entity";
-import { EntityNotFoundError } from "@lindorm-io/entity";
+import { getStrategyController } from "./get-strategy";
 
 describe("getStrategyInfoController", () => {
   let ctx: any;
@@ -21,7 +21,7 @@ describe("getStrategyInfoController", () => {
     await expect(getStrategyController(ctx)).resolves.toStrictEqual({
       body: {
         expires: "2022-01-01T08:00:00.000Z",
-        strategy: "email_otp",
+        strategy: "urn:lindorm:auth:strategy:email-otp",
         status: "pending",
       },
     });

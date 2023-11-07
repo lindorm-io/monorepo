@@ -17,6 +17,7 @@ import { ServerKoaController } from "../../types";
 import {
   calculateLevelOfAssurance,
   canGenerateMfaCookie,
+  getFactorsFromStrategies,
   getMethodsFromStrategies,
 } from "../../util";
 
@@ -93,6 +94,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
       confirmedIdentifiers: authenticationSession.confirmedIdentifiers,
       country: authenticationSession.country,
       expires,
+      factors: getFactorsFromStrategies(authenticationSession),
       identityId: authenticationSession.identityId,
       levelOfAssurance: level,
       maximumLevelOfAssurance: maximum,
@@ -103,6 +105,7 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
       sessionId: authenticationSession.id,
       signature: opaqueToken.signature,
       singleSignOn: authenticationSession.sso,
+      strategies: authenticationSession.confirmedStrategies,
     }),
   );
 

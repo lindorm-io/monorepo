@@ -28,12 +28,14 @@ export const getClaimsSessionController: ServerKoaController<RequestData> = asyn
         adjustedAccessLevel: getAdjustedAccessLevel(claimsSession),
         audiences: claimsSession.audiences,
         expires: claimsSession.expires.toISOString(),
+        factors: claimsSession.factors,
         identityId: claimsSession.identityId,
         latestAuthentication: claimsSession.latestAuthentication.toISOString(),
         levelOfAssurance: claimsSession.levelOfAssurance,
         metadata: claimsSession.metadata,
         methods: claimsSession.methods,
         scopes: claimsSession.scopes,
+        strategies: claimsSession.strategies,
       },
 
       client: {

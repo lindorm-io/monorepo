@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -21,6 +22,7 @@ import {
 
 export class DeviceChallengeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.PHISHING_RESISTANT_HARDWARE,
     hintType: "none",
     identifierType: "none",
     loa: 3,

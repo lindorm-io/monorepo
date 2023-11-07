@@ -1,4 +1,9 @@
-import { OpenIdGrantType } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  OpenIdGrantType,
+} from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { randomHex } from "@lindorm-io/random";
@@ -9,7 +14,7 @@ import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { ClientSessionType } from "../../enum";
-import { getTestData, TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
+import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../fixtures/data";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
@@ -20,7 +25,6 @@ import {
   createTestTenant,
 } from "../../fixtures/entity";
 import {
-  setupIntegration,
   TEST_ARGON,
   TEST_AUTHORIZATION_CODE_CACHE,
   TEST_AUTHORIZATION_SESSION_CACHE,
@@ -29,6 +33,7 @@ import {
   TEST_CLIENT_SESSION_REPOSITORY,
   TEST_OPAQUE_TOKEN_CACHE,
   TEST_TENANT_REPOSITORY,
+  setupIntegration,
 } from "../../fixtures/integration";
 import { configuration } from "../../server/configuration";
 import { server } from "../../server/server";
@@ -46,11 +51,13 @@ describe("/oauth2/token", () => {
     .query(true)
     .times(1)
     .reply(200, {
+      factors: [AuthenticationFactor.ONE_FACTOR],
       identityId: randomUUID(),
       latestAuthentication: new Date().toISOString(),
       levelOfAssurance: 2,
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       nonce: randomHex(16),
+      strategies: [AuthenticationStrategy.EMAIL_CODE],
     });
 
   nock("https://authentication.test.lindorm.io")
@@ -58,11 +65,13 @@ describe("/oauth2/token", () => {
     .query(true)
     .times(1)
     .reply(200, {
+      factors: [AuthenticationFactor.ONE_FACTOR],
       identityId: randomUUID(),
       latestAuthentication: new Date().toISOString(),
       levelOfAssurance: 2,
-      methods: ["email"],
+      methods: [AuthenticationMethod.EMAIL],
       nonce: randomHex(16),
+      strategies: [AuthenticationStrategy.EMAIL_CODE],
     });
 
   nock("https://identity.test.lindorm.io")
@@ -144,7 +153,7 @@ describe("/oauth2/token", () => {
 
     await TEST_AUTHORIZATION_CODE_CACHE.create(
       createTestAuthorizationCode({
-        AuthorizationSessionId: authorizationSession.id,
+        authorizationSessionId: authorizationSession.id,
         code,
         expires: new Date("2021-01-01T08:01:00.000Z"),
       }),

@@ -1,9 +1,11 @@
-import { AuthenticationMethod, AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import { JWT } from "@lindorm-io/jwt";
 import Joi from "joi";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
 import { AuthenticationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
+import { filterAuthenticationMethods, filterAuthenticationStrategies } from "../../util";
 import { getOauthElevationSession } from "../oauth-service";
 import { handleAuthenticationInitialisation } from "./handle-authentication-initialisation";
 
@@ -30,18 +32,14 @@ export const initialiseElevateAuthenticationSession = async (
   const { codeChallenge, codeChallengeMethod, elevationSessionId } = options;
 
   const {
-    elevation: {
-      minimumLevel,
-      recommendedLevel,
-      recommendedMethods,
-      requiredLevel,
-      requiredMethods,
-    },
-    elevationSession: { authenticationHint, country, expires, identityId, nonce },
+    elevation: { factors, levelOfAssurance, methods, minimumLevelOfAssurance, strategies },
+    elevationSession: { authenticationHint, country, expires, identityId, idTokenHint, nonce },
   } = await getOauthElevationSession(ctx, elevationSessionId);
 
   const emailHint = authenticationHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = authenticationHint?.find((item: string) => REGEX_PHONE.test(item));
+
+  const idToken = idTokenHint ? JWT.decodePayload(idTokenHint) : undefined;
 
   return await handleAuthenticationInitialisation(ctx, {
     id: elevationSessionId,
@@ -52,17 +50,15 @@ export const initialiseElevateAuthenticationSession = async (
     emailHint,
     expires: new Date(expires),
     identityId,
-    minimumLevel,
+    idTokenLevelOfAssurance: idToken?.metadata.levelOfAssurance,
+    idTokenMethods: filterAuthenticationMethods(idToken?.metadata.authMethodsReference),
+    minimumLevelOfAssurance,
     mode: AuthenticationMode.OAUTH,
     nonce,
     phoneHint,
-    recommendedLevel,
-    recommendedMethods: recommendedMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethod).includes(key),
-    ) as Array<AuthenticationMethod>,
-    requiredLevel,
-    requiredMethods: requiredMethods.filter((key: AuthenticationMethod) =>
-      Object.values(AuthenticationMethod).includes(key),
-    ) as Array<AuthenticationMethod>,
+    requiredFactors: factors,
+    requiredLevelOfAssurance: levelOfAssurance,
+    requiredMethods: filterAuthenticationMethods(methods),
+    requiredStrategies: filterAuthenticationStrategies(strategies),
   });
 };

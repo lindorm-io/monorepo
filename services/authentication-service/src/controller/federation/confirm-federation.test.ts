@@ -79,7 +79,7 @@ describe("confirmFederationController", () => {
         identityId: expect.any(String),
         confirmedFederationLevel: 5,
         confirmedFederationProvider: "provider",
-        allowedStrategies: ["bank_id_se"],
+        allowedStrategies: ["urn:lindorm:auth:strategy:bank-id-se"],
         status: SessionStatus.CONFIRMED,
       }),
     );

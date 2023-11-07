@@ -15,9 +15,12 @@ type RequestData = ConfirmElevationSessionRequestParams & ConfirmElevationSessio
 export const confirmElevationSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
+    factors: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    metadata: Joi.object().required(),
     methods: Joi.array().items(Joi.string().lowercase()).required(),
+    strategies: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
@@ -26,7 +29,7 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
 ): ControllerResponse => {
   const {
     redis: { elevationSessionCache },
-    data: { identityId, levelOfAssurance, methods },
+    data: { factors, identityId, levelOfAssurance, metadata, methods, strategies },
     entity: { elevationSession },
     logger,
   } = ctx;
@@ -43,21 +46,21 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
     });
   }
 
-  if (levelOfAssurance < elevationSession.requestedAuthentication.minimumLevel) {
+  if (levelOfAssurance < elevationSession.requestedAuthentication.minimumLevelOfAssurance) {
     throw new ClientError("Invalid level", {
       description: "The provided LOA value is below minimum value",
       data: {
-        expect: elevationSession.requestedAuthentication.minimumLevel,
+        expect: elevationSession.requestedAuthentication.minimumLevelOfAssurance,
         actual: levelOfAssurance,
       },
     });
   }
 
-  if (levelOfAssurance < elevationSession.requestedAuthentication.requiredLevel) {
+  if (levelOfAssurance < elevationSession.requestedAuthentication.levelOfAssurance) {
     throw new ClientError("Invalid level", {
       description: "The provided LOA value is below the defined required value",
       data: {
-        expect: elevationSession.requestedAuthentication.requiredLevel,
+        expect: elevationSession.requestedAuthentication.levelOfAssurance,
         actual: levelOfAssurance,
       },
     });
@@ -65,9 +68,12 @@ export const confirmElevationController: ServerKoaController<RequestData> = asyn
 
   logger.debug("Updating elevation session");
 
+  elevationSession.confirmedAuthentication.factors = factors;
   elevationSession.confirmedAuthentication.latestAuthentication = new Date();
   elevationSession.confirmedAuthentication.levelOfAssurance = levelOfAssurance;
+  elevationSession.confirmedAuthentication.metadata = metadata;
   elevationSession.confirmedAuthentication.methods = methods;
+  elevationSession.confirmedAuthentication.strategies = strategies;
 
   elevationSession.status = SessionStatus.CONFIRMED;
 

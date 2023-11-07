@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthMethodInitialiseHint,
@@ -7,6 +8,7 @@ import {
 } from "@lindorm-io/common-types";
 
 export type AuthenticationStrategyConfig = {
+  factor: AuthenticationFactor;
   hintType: AuthMethodInitialiseHint;
   identifierType: IdentifierType | "none";
   loa: LevelOfAssurance;

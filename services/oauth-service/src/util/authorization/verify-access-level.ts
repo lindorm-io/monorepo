@@ -10,7 +10,7 @@ export const verifyAccessLevel = (
   const adjustedAccessLevel = getAdjustedAccessLevel(session);
 
   return (
-    adjustedAccessLevel >= authorizationSession.requestedLogin.minimumLevel &&
-    adjustedAccessLevel >= authorizationSession.requestedLogin.requiredLevel
+    adjustedAccessLevel >= authorizationSession.requestedLogin.minimumLevelOfAssurance &&
+    adjustedAccessLevel >= authorizationSession.requestedLogin.levelOfAssurance
   );
 };

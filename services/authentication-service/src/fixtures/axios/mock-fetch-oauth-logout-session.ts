@@ -19,7 +19,7 @@ export const mockFetchOauthLogoutSession = (
   logoutSession: {
     id: randomUUID(),
     expires: "2022-01-01T04:00:00.000Z",
-    idTokenHint: "id.jwt.jwt",
+    idTokenHint: null,
     identityId: randomUUID(),
     logoutHint: "test@lindorm.io",
     originalUri: "https://oauth.lindorm.io/oauth2/logout?query=query",

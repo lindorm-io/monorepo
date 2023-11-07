@@ -15,10 +15,16 @@ export const confirmOauthElevation = async (
     axios: { oauthClient },
   } = ctx;
 
+  const { factors, identityId, levelOfAssurance, metadata, methods, strategies } =
+    authenticationConfirmationToken;
+
   const body: ConfirmElevationSessionRequestBody = {
-    identityId: authenticationConfirmationToken.identityId,
-    levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
-    methods: authenticationConfirmationToken.methods,
+    factors,
+    identityId,
+    levelOfAssurance,
+    metadata,
+    methods,
+    strategies,
   };
 
   const { data } = await oauthClient.post<

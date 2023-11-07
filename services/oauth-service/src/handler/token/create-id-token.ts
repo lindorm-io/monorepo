@@ -4,6 +4,7 @@ import { JwtSign } from "@lindorm-io/jwt";
 import { getUnixTime, isAfter } from "date-fns";
 import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
+import { getAuthenticationLevelFromLevelOfAssurance, getPrimaryFactor } from "../../util";
 
 export const createIdToken = (
   ctx: ServerKoaContext,
@@ -20,7 +21,8 @@ export const createIdToken = (
   return jwt.sign({
     accessToken,
     audiences: clientSession.audiences,
-    authContextClass: `loa_${clientSession.levelOfAssurance}`,
+    authContextClass: getAuthenticationLevelFromLevelOfAssurance(clientSession.levelOfAssurance),
+    authFactorReference: getPrimaryFactor(clientSession.factors),
     authMethodsReference: clientSession.methods,
     authorizedParty: client.id,
     authTime: getUnixTime(clientSession.latestAuthentication),

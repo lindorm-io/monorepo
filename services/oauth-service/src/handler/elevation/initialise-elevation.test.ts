@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
@@ -66,11 +71,13 @@ describe("initialiseElevation", () => {
       authenticationHint: "0701234567",
       country: "dk",
       display: "popup",
+      factors: [AuthenticationFactor.PHISHING_RESISTANT],
       levelOfAssurance: 4,
-      methods: ["phone"],
+      methods: [AuthenticationMethod.PASSWORD],
       nonce: "QxEQ4H21R-gslTwr",
       redirectUri: "https://test.client.lindorm.io/redirect",
       state: "l7wj9qEP90kfbAGa",
+      strategies: [AuthenticationStrategy.PASSWORD_BROWSER_LINK],
       uiLocales: ["da-DK"],
     };
 
@@ -89,9 +96,12 @@ describe("initialiseElevation", () => {
         clientId: "be55601a-8034-4dde-a039-e8a42e8280d9",
         clientSessionId: "e9c91056-01e8-4396-bc60-e231ad743688",
         confirmedAuthentication: {
+          factors: [],
           latestAuthentication: null,
           levelOfAssurance: 0,
+          metadata: {},
           methods: [],
+          strategies: [],
         },
         country: "dk",
         displayMode: "popup",
@@ -101,11 +111,11 @@ describe("initialiseElevation", () => {
         nonce: "QxEQ4H21R-gslTwr",
         redirectUri: "https://test.client.lindorm.io/redirect",
         requestedAuthentication: {
-          minimumLevel: 1,
-          recommendedLevel: 2,
-          recommendedMethods: ["email"],
-          requiredLevel: 4,
-          requiredMethods: ["phone"],
+          factors: [AuthenticationFactor.PHISHING_RESISTANT],
+          methods: [AuthenticationMethod.PASSWORD],
+          minimumLevelOfAssurance: 1,
+          levelOfAssurance: 4,
+          strategies: [AuthenticationStrategy.PASSWORD_BROWSER_LINK],
         },
         state: "l7wj9qEP90kfbAGa",
         status: "pending",
@@ -128,9 +138,12 @@ describe("initialiseElevation", () => {
         browserSessionId: "45cdaf0a-805c-43c8-9e1f-3b30246e9ab3",
         clientId: "be55601a-8034-4dde-a039-e8a42e8280d9",
         confirmedAuthentication: {
+          factors: [],
           latestAuthentication: null,
           levelOfAssurance: 0,
+          metadata: {},
           methods: [],
+          strategies: [],
         },
         country: null,
         displayMode: "page",
@@ -141,11 +154,11 @@ describe("initialiseElevation", () => {
         redirectUri: null,
         clientSessionId: "e9c91056-01e8-4396-bc60-e231ad743688",
         requestedAuthentication: {
-          minimumLevel: 1,
-          recommendedLevel: 1,
-          recommendedMethods: [],
-          requiredLevel: 1,
-          requiredMethods: [],
+          factors: [],
+          methods: [],
+          minimumLevelOfAssurance: 1,
+          levelOfAssurance: 0,
+          strategies: [],
         },
         state: null,
         status: "pending",

@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   GetAuthorizationResponse,
@@ -29,14 +30,12 @@ export const mockFetchOauthAuthorizationSession = (
     isRequired: true,
     status: SessionStatus.PENDING,
 
+    factors: [AuthenticationFactor.ONE_FACTOR],
     identityId: randomUUID(),
-    minimumLevel: 2,
-    recommendedLevel: 2,
-    recommendedMethods: [AuthenticationMethod.EMAIL],
-    recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
-    requiredLevel: 2,
-    requiredMethods: [AuthenticationMethod.EMAIL],
-    requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
+    levelOfAssurance: 2,
+    methods: [AuthenticationMethod.EMAIL],
+    minimumLevelOfAssurance: 2,
+    strategies: [AuthenticationStrategy.EMAIL_OTP],
   },
 
   selectAccount: {
@@ -54,7 +53,7 @@ export const mockFetchOauthAuthorizationSession = (
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,
     expires: "2022-01-01T04:00:00.000Z",
-    idTokenHint: "id.jwt.jwt",
+    idTokenHint: null,
     loginHint: ["test@lindorm.io"],
     maxAge: 500,
     nonce: randomString(16),
@@ -71,23 +70,27 @@ export const mockFetchOauthAuthorizationSession = (
   browserSession: {
     id: randomUUID(),
     adjustedAccessLevel: 3,
+    factors: [AuthenticationFactor.ONE_FACTOR],
     identityId: randomUUID(),
     latestAuthentication: new Date().toISOString(),
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL],
     remember: true,
     singleSignOn: true,
+    strategies: [AuthenticationStrategy.EMAIL_CODE],
   },
 
   clientSession: {
     id: randomUUID(),
     adjustedAccessLevel: 3,
     audiences: [randomUUID()],
+    factors: [AuthenticationFactor.ONE_FACTOR],
     identityId: randomUUID(),
     latestAuthentication: new Date().toISOString(),
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL],
     scopes: Object.values(OpenIdScope),
+    strategies: [AuthenticationStrategy.EMAIL_CODE],
   },
 
   client: {

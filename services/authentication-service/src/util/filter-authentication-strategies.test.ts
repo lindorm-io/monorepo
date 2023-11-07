@@ -5,6 +5,6 @@ describe("filterAuthenticationStrategies", () => {
   test("should resolve only authentication strategies", () => {
     expect(
       filterAuthenticationStrategies([AuthenticationStrategy.EMAIL_CODE, "something", "wrong"]),
-    ).toStrictEqual(["email_code"]);
+    ).toStrictEqual(["urn:lindorm:auth:strategy:email-code"]);
   });
 });

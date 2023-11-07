@@ -38,11 +38,13 @@ export const getIdentitySessionsController: ServerKoaController<RequestData> = a
     sessions.push({
       id: session.id,
       adjustedAccessLevel: getAdjustedAccessLevel(session),
+      factors: session.factors,
       latestAuthentication: session.latestAuthentication.toISOString(),
       levelOfAssurance: session.levelOfAssurance,
       metadata: session.metadata,
       methods: session.methods,
       scopes: session.scopes,
+      strategies: session.strategies,
       type: session.type,
 
       client: {

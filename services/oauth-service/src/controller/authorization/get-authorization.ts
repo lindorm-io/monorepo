@@ -58,14 +58,12 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
         isRequired: loginRequired,
         status: authorizationSession.status.login,
 
+        factors: authorizationSession.requestedLogin.factors,
         identityId: authorizationSession.requestedLogin.identityId,
-        minimumLevel: authorizationSession.requestedLogin.minimumLevel,
-        recommendedLevel: authorizationSession.requestedLogin.recommendedLevel,
-        recommendedMethods: authorizationSession.requestedLogin.recommendedMethods,
-        recommendedStrategies: authorizationSession.requestedLogin.recommendedStrategies,
-        requiredLevel: authorizationSession.requestedLogin.requiredLevel,
-        requiredMethods: authorizationSession.requestedLogin.requiredMethods,
-        requiredStrategies: authorizationSession.requestedLogin.requiredStrategies,
+        levelOfAssurance: authorizationSession.requestedLogin.levelOfAssurance,
+        methods: authorizationSession.requestedLogin.methods,
+        minimumLevelOfAssurance: authorizationSession.requestedLogin.minimumLevelOfAssurance,
+        strategies: authorizationSession.requestedLogin.strategies,
       },
 
       selectAccount: {
@@ -96,23 +94,27 @@ export const getAuthorizationController: ServerKoaController<RequestData> = asyn
       browserSession: {
         id: browserSession?.id || null,
         adjustedAccessLevel: browserSession ? getAdjustedAccessLevel(browserSession) : 0,
+        factors: browserSession?.factors || [],
         identityId: browserSession?.identityId || null,
         latestAuthentication: browserSession?.latestAuthentication.toISOString() || null,
         levelOfAssurance: browserSession?.levelOfAssurance || 0,
         methods: browserSession?.methods || [],
         remember: browserSession?.remember || false,
         singleSignOn: browserSession?.singleSignOn || false,
+        strategies: browserSession?.strategies || [],
       },
 
       clientSession: {
         id: clientSession?.id || null,
         adjustedAccessLevel: clientSession ? getAdjustedAccessLevel(clientSession) : 0,
         audiences: clientSession?.audiences || [],
+        factors: clientSession?.factors || [],
         identityId: clientSession?.identityId || null,
         latestAuthentication: clientSession?.latestAuthentication.toISOString() || null,
         levelOfAssurance: clientSession?.levelOfAssurance || 0,
         methods: clientSession?.methods || [],
         scopes: clientSession?.scopes || [],
+        strategies: clientSession?.strategies || [],
       },
 
       client: {

@@ -1,6 +1,6 @@
-import MockDate from "mockdate";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
 import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { getStrategyHandler as _getStrategyHandler } from "../../strategies";
 import { initialiseStrategyController } from "./initialise-strategy";
@@ -24,7 +24,7 @@ describe("initialiseStrategyController", () => {
         nin: "nin",
         nonce: "nonce",
         phoneNumber: "phoneNumber",
-        strategy: "device_challenge",
+        strategy: AuthenticationStrategy.DEVICE_CHALLENGE,
         username: "username",
       },
       entity: {

@@ -1,24 +1,24 @@
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
-import { server } from "../../server/server";
-import { randomUUID } from "crypto";
 import {
   createTestAccount,
   createTestAuthenticationSession,
   createTestStrategySession,
 } from "../../fixtures/entity";
 import {
-  getTestAccessToken,
-  getTestChallengeConfirmationToken,
-  getTestStrategySessionToken,
-  setupIntegration,
   TEST_ACCOUNT_REPOSITORY,
   TEST_ARGON,
   TEST_AUTHENTICATION_SESSION_CACHE,
   TEST_STRATEGY_SESSION_CACHE,
+  getTestAccessToken,
+  getTestChallengeConfirmationToken,
+  getTestStrategySessionToken,
+  setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -88,7 +88,7 @@ describe("/sessions/strategy", () => {
 
     expect(response.body).toStrictEqual({
       expires: "2022-01-01T08:00:00.000Z",
-      strategy: "email_otp",
+      strategy: AuthenticationStrategy.EMAIL_OTP,
       status: "pending",
     });
   });
@@ -138,7 +138,7 @@ describe("/sessions/strategy", () => {
         allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         identityId: account.id,
         remember: false,
-        requiredLevel: 4,
+        requiredLevelOfAssurance: 4,
       }),
     );
 
@@ -172,8 +172,13 @@ describe("/sessions/strategy", () => {
       TEST_AUTHENTICATION_SESSION_CACHE.find({ id: authenticationSession.id }),
     ).resolves.toStrictEqual(
       expect.objectContaining({
-        allowedStrategies: ["email_code", "email_otp", "phone_otp", "time_based_otp"],
-        confirmedStrategies: ["device_challenge"],
+        allowedStrategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.EMAIL_OTP,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.TIME_BASED_OTP,
+        ],
+        confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         identityId: account.id,
         remember: true,
         status: "pending",

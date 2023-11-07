@@ -1,8 +1,4 @@
-import Joi from "joi";
 import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
-import { JOI_AUTHENTICATION_STRATEGY } from "../constant";
-import { JOI_SESSION_STATUS } from "../common";
-import { randomString } from "@lindorm-io/random";
 import {
   EntityAttributes,
   EntityKeys,
@@ -10,6 +6,10 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { randomString } from "@lindorm-io/random";
+import Joi from "joi";
+import { JOI_SESSION_STATUS } from "../common";
+import { JOI_AUTHENTICATION_STRATEGY } from "../constant";
 
 export type StrategySessionAttributes = EntityAttributes & {
   authenticationSessionId: string;

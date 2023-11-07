@@ -1,10 +1,10 @@
-import { AuthenticationSession, MfaCookieSession } from "../../entity";
 import { Environment } from "@lindorm-io/common-types";
+import { expiryDate } from "@lindorm-io/expiry";
 import { MFA_COOKIE_NAME } from "../../constant";
+import { AuthenticationSession, MfaCookieSession } from "../../entity";
+import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { calculateLevelOfAssurance, getMethodsFromStrategies } from "../../util";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
 
 export const generateMfaCookie = async (
   ctx: ServerKoaContext,
@@ -28,6 +28,7 @@ export const generateMfaCookie = async (
       identityId: authenticationSession.identityId,
       levelOfAssurance: level,
       methods,
+      strategies: authenticationSession.confirmedStrategies,
     }),
   );
 

@@ -35,7 +35,7 @@ export const handleAuthorizationCodeGrant = async (
   }
 
   const authorizationSession = await authorizationSessionCache.find({
-    id: authorizationCode.AuthorizationSessionId,
+    id: authorizationCode.authorizationSessionId,
   });
 
   const { codeChallenge, codeChallengeMethod } = authorizationSession.code;

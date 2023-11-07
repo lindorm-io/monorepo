@@ -29,11 +29,11 @@ export const calculateAuthenticationStatus = (
 
   const { level } = calculateLevelOfAssurance(authenticationSession);
 
-  if (level < authenticationSession.minimumLevel) {
+  if (level < authenticationSession.minimumLevelOfAssurance) {
     return SessionStatus.PENDING;
   }
 
-  if (level < authenticationSession.requiredLevel) {
+  if (level < authenticationSession.requiredLevelOfAssurance) {
     return SessionStatus.PENDING;
   }
 
@@ -45,7 +45,7 @@ export const calculateAuthenticationStatus = (
     return SessionStatus.CONFIRMED;
   }
 
-  if (level >= authenticationSession.recommendedLevel) {
+  if (level >= authenticationSession.idTokenLevelOfAssurance) {
     return SessionStatus.CONFIRMED;
   }
 

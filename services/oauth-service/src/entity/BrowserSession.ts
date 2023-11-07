@@ -1,4 +1,9 @@
-import { AuthenticationMethod, LevelOfAssurance } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  LevelOfAssurance,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -10,6 +15,7 @@ import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE } from "../common";
 
 export type BrowserSessionAttributes = EntityAttributes & {
+  factors: Array<AuthenticationFactor>;
   identityId: string;
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
@@ -17,6 +23,7 @@ export type BrowserSessionAttributes = EntityAttributes & {
   methods: Array<AuthenticationMethod>;
   remember: boolean;
   singleSignOn: boolean;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 export type BrowserSessionOptions = Optional<BrowserSessionAttributes, EntityKeys>;
@@ -25,6 +32,7 @@ const schema = Joi.object<BrowserSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
+    factors: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
@@ -32,6 +40,7 @@ const schema = Joi.object<BrowserSessionAttributes>()
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     remember: Joi.boolean().required(),
     singleSignOn: Joi.boolean().required(),
+    strategies: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
@@ -39,15 +48,18 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
   public readonly identityId: string;
   public readonly metadata: Record<string, any>;
 
+  public factors: Array<AuthenticationFactor>;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
   public methods: Array<AuthenticationMethod>;
   public remember: boolean;
   public singleSignOn: boolean;
+  public strategies: Array<AuthenticationStrategy>;
 
   public constructor(options: BrowserSessionOptions) {
     super(options);
 
+    this.factors = options.factors;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication;
     this.levelOfAssurance = options.levelOfAssurance;
@@ -55,6 +67,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
     this.methods = options.methods;
     this.remember = options.remember === true;
     this.singleSignOn = options.singleSignOn === true;
+    this.strategies = options.strategies;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -65,6 +78,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
     return {
       ...this.defaultJSON(),
 
+      factors: this.factors,
       identityId: this.identityId,
       latestAuthentication: this.latestAuthentication,
       levelOfAssurance: this.levelOfAssurance,
@@ -72,6 +86,7 @@ export class BrowserSession extends LindormEntity<BrowserSessionAttributes> {
       methods: this.methods,
       remember: this.remember,
       singleSignOn: this.singleSignOn,
+      strategies: this.strategies,
     };
   }
 }

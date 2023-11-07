@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdDisplayMode,
@@ -35,14 +36,12 @@ export const createTestAuthorizationSession = (
       ...(options.requestedConsent || {}),
     },
     requestedLogin: {
+      factors: [AuthenticationFactor.TWO_FACTOR],
       identityId: randomUUID(),
-      minimumLevel: 2,
-      recommendedLevel: 2,
-      recommendedMethods: [AuthenticationMethod.EMAIL],
-      recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
-      requiredLevel: 3,
-      requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-      requiredStrategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
+      levelOfAssurance: 4,
+      methods: [AuthenticationMethod.EMAIL],
+      minimumLevelOfAssurance: 2,
+      strategies: [AuthenticationStrategy.PHONE_OTP],
       ...(options.requestedLogin || {}),
     },
     requestedSelectAccount: {

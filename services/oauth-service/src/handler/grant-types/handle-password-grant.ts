@@ -73,6 +73,7 @@ export const handlePasswordGrant = async (
       authorizationGrant: OpenIdGrantType.PASSWORD,
       clientId: client.id,
       expires: expiryDate("4 years"),
+      factors: data.factors,
       identityId: data.identityId,
       latestAuthentication: new Date(data.latestAuthentication),
       levelOfAssurance: data.levelOfAssurance,
@@ -80,6 +81,7 @@ export const handlePasswordGrant = async (
       methods: data.methods,
       nonce: data.nonce,
       scopes,
+      strategies: data.strategies,
       tenantId: client.tenantId,
       type: scopes.includes(OpenIdScope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH

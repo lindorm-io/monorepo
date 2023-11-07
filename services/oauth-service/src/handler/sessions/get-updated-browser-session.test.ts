@@ -1,4 +1,8 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { AuthorizationSession, BrowserSession } from "../../entity";
@@ -20,6 +24,7 @@ describe("getUpdatedBrowserSession", () => {
 
     authorizationSession = createTestAuthorizationSession({
       confirmedLogin: {
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
@@ -31,6 +36,11 @@ describe("getUpdatedBrowserSession", () => {
         ],
         remember: true,
         singleSignOn: true,
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       },
       browserSessionId: "052ef2f3-01d8-4e0c-9c3c-8daae8a8e541",
     });
@@ -45,12 +55,22 @@ describe("getUpdatedBrowserSession", () => {
 
     expect(ctx.mongo.browserSessionRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
-        methods: ["email", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         remember: true,
         singleSignOn: true,
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       }),
     );
   });
@@ -76,12 +96,14 @@ describe("getUpdatedBrowserSession", () => {
   test("should resolve updated browser session", async () => {
     ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
+        factors: [AuthenticationFactor.ONE_FACTOR],
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 1,
         methods: [AuthenticationMethod.PASSWORD],
         remember: false,
         singleSignOn: false,
+        strategies: [AuthenticationStrategy.PASSWORD],
       }),
     );
 
@@ -91,11 +113,23 @@ describe("getUpdatedBrowserSession", () => {
 
     expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        factors: [AuthenticationFactor.ONE_FACTOR, AuthenticationFactor.TWO_FACTOR],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 3,
-        methods: ["email", "password", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PASSWORD,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         remember: true,
         singleSignOn: true,
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PASSWORD,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       }),
     );
   });
@@ -107,12 +141,14 @@ describe("getUpdatedBrowserSession", () => {
 
     ctx.mongo.browserSessionRepository.find.mockResolvedValueOnce(
       createTestBrowserSession({
+        factors: [AuthenticationFactor.ONE_FACTOR],
         identityId: "7a658184-a059-478d-a003-9a50c411ef64",
         latestAuthentication: new Date("2020-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
         methods: [AuthenticationMethod.PASSWORD],
         remember: true,
         singleSignOn: true,
+        strategies: [AuthenticationStrategy.PASSWORD],
       }),
     );
 
@@ -122,11 +158,23 @@ describe("getUpdatedBrowserSession", () => {
 
     expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        factors: [AuthenticationFactor.ONE_FACTOR, AuthenticationFactor.TWO_FACTOR],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: ["email", "password", "phone", "session_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PASSWORD,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.SESSION_LINK,
+        ],
         remember: true,
         singleSignOn: true,
+        strategies: [
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PASSWORD,
+          AuthenticationStrategy.PHONE_OTP,
+          AuthenticationStrategy.SESSION_OTP,
+        ],
       }),
     );
   });

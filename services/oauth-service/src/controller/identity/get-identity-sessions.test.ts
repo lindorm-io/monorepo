@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { createTestClient, createTestClientSession, createTestTenant } from "../../fixtures/entity";
@@ -54,6 +59,7 @@ describe("getIdentitySessions", () => {
           {
             id: "bd672cb2-669c-4519-9ba1-5850e8974e19",
             adjustedAccessLevel: 1,
+            factors: [AuthenticationFactor.TWO_FACTOR],
             latestAuthentication: "2021-01-01T07:59:00.000Z",
             levelOfAssurance: 1,
             metadata: {
@@ -61,8 +67,9 @@ describe("getIdentitySessions", () => {
               ip: "10.0.0.1",
               platform: "iOS",
             },
-            methods: ["email", "phone"],
+            methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
             scopes: ["openid", "profile"],
+            strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
             type: "refresh",
 
             client: {
@@ -81,6 +88,7 @@ describe("getIdentitySessions", () => {
           {
             id: "e1e16e28-28f5-4357-baee-2251e6a746b2",
             adjustedAccessLevel: 1,
+            factors: [AuthenticationFactor.TWO_FACTOR],
             latestAuthentication: "2021-01-01T07:59:00.000Z",
             levelOfAssurance: 2,
             metadata: {
@@ -88,8 +96,9 @@ describe("getIdentitySessions", () => {
               ip: "10.0.0.1",
               platform: "iOS",
             },
-            methods: ["email", "phone"],
+            methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
             scopes: ["openid", "profile"],
+            strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
             type: "refresh",
 
             client: {
@@ -108,6 +117,7 @@ describe("getIdentitySessions", () => {
           {
             id: "abc98c7d-c557-424e-a810-eb2cd138b7df",
             adjustedAccessLevel: 1,
+            factors: [AuthenticationFactor.TWO_FACTOR],
             latestAuthentication: "2021-01-01T07:59:00.000Z",
             levelOfAssurance: 3,
             metadata: {
@@ -115,8 +125,9 @@ describe("getIdentitySessions", () => {
               ip: "10.0.0.1",
               platform: "iOS",
             },
-            methods: ["email", "phone"],
+            methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
             scopes: ["openid", "profile"],
+            strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
             type: "refresh",
 
             client: {
@@ -135,6 +146,7 @@ describe("getIdentitySessions", () => {
           {
             id: "5a0ded8b-3f6e-4b4a-aea5-7ecf5ddbb676",
             adjustedAccessLevel: 1,
+            factors: [AuthenticationFactor.TWO_FACTOR],
             latestAuthentication: "2021-01-01T07:59:00.000Z",
             levelOfAssurance: 4,
             metadata: {
@@ -142,8 +154,9 @@ describe("getIdentitySessions", () => {
               ip: "10.0.0.1",
               platform: "iOS",
             },
-            methods: ["email", "phone"],
+            methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
             scopes: ["openid", "profile"],
+            strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
             type: "refresh",
 
             client: {

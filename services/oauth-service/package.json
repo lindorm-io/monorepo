@@ -30,6 +30,7 @@
   "dependencies": {
     "@lindorm-io/axios": "^0.6.7",
     "@lindorm-io/common-types": "^0.3.2",
+    "@lindorm-io/case": "^0.2.0",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/crypto": "^0.1.34",
     "@lindorm-io/entity": "^0.3.13",

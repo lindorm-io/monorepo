@@ -47,12 +47,24 @@ export const updateBrowserSessionElevation = async (
     });
   }
 
+  browserSession.factors = uniqArray(
+    browserSession.factors,
+    elevationSession.confirmedAuthentication.factors,
+  );
+
   browserSession.latestAuthentication =
     elevationSession.confirmedAuthentication.latestAuthentication;
+
   browserSession.levelOfAssurance = elevationSession.confirmedAuthentication.levelOfAssurance;
+
   browserSession.methods = uniqArray(
     browserSession.methods,
     elevationSession.confirmedAuthentication.methods,
+  );
+
+  browserSession.strategies = uniqArray(
+    browserSession.strategies,
+    elevationSession.confirmedAuthentication.strategies,
   );
 
   await browserSessionRepository.update(browserSession);

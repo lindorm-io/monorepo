@@ -15,8 +15,16 @@ export const confirmOauthLogin = async (
     axios: { oauthClient },
   } = ctx;
 
-  const { identityId, levelOfAssurance, metadata, methods, remember, singleSignOn } =
-    authenticationConfirmationToken;
+  const {
+    factors,
+    identityId,
+    levelOfAssurance,
+    metadata,
+    methods,
+    remember,
+    singleSignOn,
+    strategies,
+  } = authenticationConfirmationToken;
 
   const { data } = await oauthClient.post<
     ConfirmLoginResponse,
@@ -26,12 +34,14 @@ export const confirmOauthLogin = async (
   >("/admin/sessions/login/:id/confirm", {
     params: { id: authenticationConfirmationToken.sessionId },
     body: {
+      factors,
       identityId,
       levelOfAssurance,
       metadata,
       methods,
       remember,
       singleSignOn,
+      strategies,
     },
     middleware: [clientCredentialsMiddleware()],
   });

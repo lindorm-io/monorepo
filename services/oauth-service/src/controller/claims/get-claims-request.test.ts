@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import { createTestClaimsSession, createTestClient, createTestTenant } from "../../fixtures/entity";
 import { getClaimsSessionController } from "./get-claims-request";
@@ -34,6 +39,7 @@ describe("getClaimsSessionController", () => {
           adjustedAccessLevel: 2,
           audiences: ["5d109728-b5db-42cc-b93c-44c78994678d"],
           expires: "2021-01-02T08:00:00.000Z",
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: "41da1da6-cf20-4744-893d-2b1615b222ad",
           latestAuthentication: "2021-01-01T07:59:00.000Z",
           levelOfAssurance: 2,
@@ -41,8 +47,9 @@ describe("getClaimsSessionController", () => {
             ip: "192.168.0.1",
             platform: "iOS",
           },
-          methods: ["email", "phone"],
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           scopes: ["openid", "profile"],
+          strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
         },
 
         client: {

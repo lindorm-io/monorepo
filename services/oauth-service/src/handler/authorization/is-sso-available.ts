@@ -6,7 +6,9 @@ import {
   verifyIdentityId,
   verifyMaxAge,
   verifyPromptMode,
+  verifyRequiredFactors,
   verifyRequiredMethods,
+  verifyRequiredStrategies,
   verifySessionExpiry,
 } from "../../util";
 
@@ -48,8 +50,18 @@ export const isSsoAvailable = (
     return false;
   }
 
+  if (!verifyRequiredFactors(authorizationSession, browserSession)) {
+    logger.debug("SSO not available [required factors]");
+    return false;
+  }
+
   if (!verifyRequiredMethods(authorizationSession, browserSession)) {
     logger.debug("SSO not available [required methods]");
+    return false;
+  }
+
+  if (!verifyRequiredStrategies(authorizationSession, browserSession)) {
+    logger.debug("SSO not available [required strategies]");
     return false;
   }
 

@@ -1,4 +1,10 @@
-import { AuthenticationMethod, Dict, LevelOfAssurance } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  Dict,
+  LevelOfAssurance,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -14,6 +20,7 @@ export type AuthenticationConfirmationTokenAttributes = EntityAttributes & {
   confirmedIdentifiers: Array<string>;
   country: string | null;
   expires: Date;
+  factors: Array<AuthenticationFactor>;
   identityId: string;
   levelOfAssurance: LevelOfAssurance;
   maximumLevelOfAssurance: LevelOfAssurance;
@@ -24,6 +31,7 @@ export type AuthenticationConfirmationTokenAttributes = EntityAttributes & {
   sessionId: string;
   signature: string;
   singleSignOn: boolean;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 export type AuthenticationConfirmationTokenOptions = Optional<
@@ -39,6 +47,7 @@ const schema = Joi.object<AuthenticationConfirmationTokenAttributes>()
     confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
     country: Joi.string().allow(null).required(),
     expires: Joi.date().required(),
+    factors: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
     maximumLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
@@ -49,6 +58,7 @@ const schema = Joi.object<AuthenticationConfirmationTokenAttributes>()
     sessionId: Joi.string().guid().required(),
     signature: Joi.string().length(128).required(),
     singleSignOn: Joi.boolean().required(),
+    strategies: Joi.array().items(Joi.string().lowercase()).required(),
   })
   .required();
 
@@ -57,6 +67,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
   public readonly confirmedIdentifiers: Array<string>;
   public readonly country: string | null;
   public readonly expires: Date;
+  public readonly factors: Array<AuthenticationFactor>;
   public readonly identityId: string;
   public readonly levelOfAssurance: LevelOfAssurance;
   public readonly maximumLevelOfAssurance: LevelOfAssurance;
@@ -67,6 +78,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
   public readonly sessionId: string;
   public readonly signature: string;
   public readonly singleSignOn: boolean;
+  public readonly strategies: Array<AuthenticationStrategy>;
 
   public constructor(options: AuthenticationConfirmationTokenOptions) {
     super(options);
@@ -75,6 +87,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
     this.confirmedIdentifiers = options.confirmedIdentifiers;
     this.country = options.country;
     this.expires = options.expires;
+    this.factors = options.factors;
     this.identityId = options.identityId;
     this.levelOfAssurance = options.levelOfAssurance;
     this.maximumLevelOfAssurance = options.maximumLevelOfAssurance;
@@ -85,6 +98,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
     this.sessionId = options.sessionId;
     this.signature = options.signature;
     this.singleSignOn = options.singleSignOn;
+    this.strategies = options.strategies;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -99,6 +113,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
       confirmedIdentifiers: this.confirmedIdentifiers,
       country: this.country,
       expires: this.expires,
+      factors: this.factors,
       identityId: this.identityId,
       levelOfAssurance: this.levelOfAssurance,
       maximumLevelOfAssurance: this.maximumLevelOfAssurance,
@@ -109,6 +124,7 @@ export class AuthenticationConfirmationToken extends LindormEntity<Authenticatio
       sessionId: this.sessionId,
       signature: this.signature,
       singleSignOn: this.singleSignOn,
+      strategies: this.strategies,
     };
   }
 }

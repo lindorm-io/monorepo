@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -23,6 +24,7 @@ import { createOtp } from "../../util";
 
 export class SessionOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.ONE_FACTOR,
     hintType: "none",
     identifierType: "none",
     loa: 2,

@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdScope,
@@ -51,17 +52,12 @@ describe("getAuthorizationController", () => {
             ],
           },
           requestedLogin: {
+            factors: [AuthenticationFactor.TWO_FACTOR],
             identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
-            minimumLevel: 2,
-            recommendedLevel: 2,
-            recommendedMethods: [AuthenticationMethod.EMAIL],
-            recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
-            requiredLevel: 3,
-            requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-            requiredStrategies: [
-              AuthenticationStrategy.EMAIL_CODE,
-              AuthenticationStrategy.PHONE_OTP,
-            ],
+            levelOfAssurance: 4,
+            methods: [AuthenticationMethod.EMAIL],
+            minimumLevelOfAssurance: 2,
+            strategies: [AuthenticationStrategy.PHONE_OTP],
           },
           requestedSelectAccount: {
             browserSessions: [
@@ -131,14 +127,12 @@ describe("getAuthorizationController", () => {
           isRequired: true,
           status: "pending",
 
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
-          minimumLevel: 2,
-          recommendedLevel: 2,
-          recommendedMethods: ["email"],
-          recommendedStrategies: ["email_code"],
-          requiredLevel: 3,
-          requiredMethods: ["email", "phone"],
-          requiredStrategies: ["email_code", "phone_otp"],
+          levelOfAssurance: 4,
+          methods: [AuthenticationMethod.EMAIL],
+          minimumLevelOfAssurance: 2,
+          strategies: [AuthenticationStrategy.PHONE_OTP],
         },
 
         selectAccount: {
@@ -171,23 +165,27 @@ describe("getAuthorizationController", () => {
         browserSession: {
           id: "ea1be311-26b3-4a75-8911-2ca1451bfee0",
           adjustedAccessLevel: 0,
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
           latestAuthentication: "2021-01-01T07:59:00.000Z",
           levelOfAssurance: 2,
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
           singleSignOn: true,
+          strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
         },
 
         clientSession: {
           id: "f37c5ac7-c8da-42e3-ac3b-35e9dc523d9b",
           adjustedAccessLevel: 0,
           audiences: ["d47d233e-9d77-4538-be99-379207440889"],
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: "46ef3e1b-032f-4c32-ac4d-fc7e8c65d093",
           latestAuthentication: "2021-01-01T07:59:00.000Z",
           levelOfAssurance: 2,
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           scopes: ["openid", "profile"],
+          strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
         },
 
         client: {

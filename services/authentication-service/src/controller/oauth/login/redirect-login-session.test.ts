@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   SessionStatus,
@@ -58,14 +59,12 @@ describe("redirectLoginSessionController", () => {
           isRequired: true,
           status: SessionStatus.CONFIRMED,
 
+          factors: [AuthenticationFactor.ONE_FACTOR],
           identityId: randomUUID(),
-          minimumLevel: 2,
-          recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.EMAIL],
-          recommendedStrategies: [AuthenticationStrategy.EMAIL_CODE],
-          requiredLevel: 2,
-          requiredMethods: [AuthenticationMethod.EMAIL],
-          requiredStrategies: [AuthenticationStrategy.EMAIL_OTP],
+          levelOfAssurance: 2,
+          methods: [AuthenticationMethod.EMAIL],
+          minimumLevelOfAssurance: 2,
+          strategies: [AuthenticationStrategy.EMAIL_OTP],
         },
       }),
     );

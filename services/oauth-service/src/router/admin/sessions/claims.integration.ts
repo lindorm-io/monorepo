@@ -49,6 +49,7 @@ describe("/admin/sessions/claims", () => {
         adjusted_access_level: 2,
         audiences: [expect.any(String)],
         expires: "2021-01-02T08:00:00.000Z",
+        factors: ["urn:lindorm:auth:acr:2fa"],
         identity_id: expect.any(String),
         latest_authentication: "2021-01-01T07:59:00.000Z",
         level_of_assurance: 2,
@@ -56,8 +57,9 @@ describe("/admin/sessions/claims", () => {
           ip: "192.168.0.1",
           platform: "iOS",
         },
-        methods: ["email", "phone"],
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
         scopes: ["openid", "profile"],
+        strategies: ["urn:lindorm:auth:strategy:email-code", "urn:lindorm:auth:strategy:phone-otp"],
       },
 
       client: {

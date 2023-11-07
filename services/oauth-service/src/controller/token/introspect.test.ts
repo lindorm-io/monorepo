@@ -1,3 +1,4 @@
+import { AuthenticationFactor, AuthenticationLevel } from "@lindorm-io/common-types";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {
@@ -6,7 +7,11 @@ import {
   createTestClientSession,
 } from "../../fixtures/entity";
 import { resolveTokenSession as _resolveTokenSession } from "../../handler";
-import { getAdjustedAccessLevel as _getAdjustedAccessLevel } from "../../util";
+import {
+  getAdjustedAccessLevel as _getAdjustedAccessLevel,
+  getPrimaryFactor as _getPrimaryFactor,
+  getAuthenticationLevelFromLevelOfAssurance as _mapUrnFromLevelOfAssurance,
+} from "../../util";
 import { tokenIntrospectController } from "./introspect";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -15,6 +20,8 @@ jest.mock("../../handler");
 jest.mock("../../util");
 
 const getAdjustedAccessLevel = _getAdjustedAccessLevel as jest.Mock;
+const getPrimaryFactor = _getPrimaryFactor as jest.Mock;
+const mapUrnFromLevelOfAssurance = _mapUrnFromLevelOfAssurance as jest.Mock;
 const resolveTokenSession = _resolveTokenSession as jest.Mock;
 
 describe("introspectController", () => {
@@ -32,6 +39,8 @@ describe("introspectController", () => {
     };
 
     getAdjustedAccessLevel.mockReturnValue(1);
+    getPrimaryFactor.mockReturnValue(AuthenticationFactor.TWO_FACTOR);
+    mapUrnFromLevelOfAssurance.mockReturnValue(AuthenticationLevel.LOA_3);
     resolveTokenSession.mockResolvedValue(
       createTestAccessToken({
         id: "b82a1243-e25d-47f3-9fbd-35c15de54cd0",
@@ -58,8 +67,9 @@ describe("introspectController", () => {
       body: {
         active: true,
         aal: 1,
-        acr: "loa_2",
-        amr: ["email", "phone"],
+        acr: "urn:lindorm:auth:acr:loa:3",
+        afr: "urn:lindorm:auth:acr:2fa",
+        amr: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
         aud: [
           "6ea68f3d-e31e-4882-85a5-0a617f431fdd",
           "85719f0b-2f8b-478a-86c1-6586843c490b",
@@ -96,6 +106,7 @@ describe("introspectController", () => {
         active: false,
         aal: 0,
         acr: null,
+        afr: null,
         amr: [],
         aud: [],
         authTime: 0,

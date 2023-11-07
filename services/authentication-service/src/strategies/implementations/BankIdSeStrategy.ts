@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
 } from "@lindorm-io/common-types";
@@ -16,6 +17,7 @@ import {
 
 export class BankIdSeStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.PHISHING_RESISTANT_HARDWARE,
     hintType: "none",
     identifierType: "none",
     loa: 2,

@@ -1,4 +1,10 @@
-import { AuthenticationMethod, SessionStatus } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationLevel,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { createOpaqueToken } from "@lindorm-io/jwt";
 import { randomUnreserved } from "@lindorm-io/random";
 import MockDate from "mockdate";
@@ -70,12 +76,17 @@ describe("/oauth2/sessions/elevate", () => {
     const response = await request(server.callback())
       .get("/oauth2/sessions/elevate")
       .query({
+        acr_values: [
+          AuthenticationLevel.LOA_3,
+          AuthenticationFactor.PHISHING_RESISTANT,
+          AuthenticationMethod.PASSWORD,
+          AuthenticationStrategy.TIME_BASED_OTP,
+        ].join(" "),
         client_id: client.id,
         id_token_hint: idToken,
         redirect_uri: "https://test.client.lindorm.io/redirect",
         state,
-        methods: "password time_based_otp",
-        ui_locales: "sv-SE en-GB",
+        ui_locales: ["sv-SE", "en-GB"].join(" "),
       })
       .set("Authorization", `Bearer ${opaqueToken.token}`)
       .set("Cookie", [
@@ -101,9 +112,12 @@ describe("/oauth2/sessions/elevate", () => {
         clientId: client.id,
         clientSessionId: clientSession.id,
         confirmedAuthentication: {
+          factors: [],
           latestAuthentication: null,
           levelOfAssurance: 0,
+          metadata: {},
           methods: [],
+          strategies: [],
         },
         country: null,
         displayMode: "page",
@@ -113,11 +127,11 @@ describe("/oauth2/sessions/elevate", () => {
         nonce: expect.any(String),
         redirectUri: "https://test.client.lindorm.io/redirect",
         requestedAuthentication: {
-          minimumLevel: 1,
-          recommendedLevel: 3,
-          recommendedMethods: ["email", "phone"],
-          requiredLevel: 1,
-          requiredMethods: [AuthenticationMethod.PASSWORD, AuthenticationMethod.TIME_BASED_OTP],
+          factors: ["urn:lindorm:auth:acr:phr"],
+          levelOfAssurance: 3,
+          methods: ["urn:lindorm:auth:method:password"],
+          minimumLevelOfAssurance: 1,
+          strategies: ["urn:lindorm:auth:strategy:time-based-otp"],
         },
         state: state,
         status: "pending",
@@ -153,9 +167,11 @@ describe("/oauth2/sessions/elevate", () => {
         authentication_hint: ["email@lindorm.io"],
         client_id: client.id,
         country: "se",
+        factors: [AuthenticationFactor.PHISHING_RESISTANT_HARDWARE],
         level_of_assurance: 4,
         methods: [AuthenticationMethod.BANK_ID_SE],
         nonce: "QxEQ4H21R-gslTwr",
+        strategies: [AuthenticationStrategy.BANK_ID_SE],
         ui_locales: ["sv-SE"],
       })
       .expect(200);
@@ -173,9 +189,12 @@ describe("/oauth2/sessions/elevate", () => {
         clientId: client.id,
         clientSessionId: clientSession.id,
         confirmedAuthentication: {
+          factors: [],
           latestAuthentication: null,
           levelOfAssurance: 0,
+          metadata: {},
           methods: [],
+          strategies: [],
         },
         country: "se",
         displayMode: "page",
@@ -185,11 +204,11 @@ describe("/oauth2/sessions/elevate", () => {
         nonce: "QxEQ4H21R-gslTwr",
         redirectUri: null,
         requestedAuthentication: {
-          minimumLevel: 1,
-          recommendedLevel: 1,
-          recommendedMethods: [],
-          requiredLevel: 4,
-          requiredMethods: [AuthenticationMethod.BANK_ID_SE],
+          factors: ["urn:lindorm:auth:acr:phrh"],
+          levelOfAssurance: 4,
+          methods: ["urn:lindorm:auth:method:bank-id-se"],
+          minimumLevelOfAssurance: 1,
+          strategies: ["urn:lindorm:auth:strategy:bank-id-se"],
         },
         state: null,
         status: "pending",
@@ -221,16 +240,15 @@ describe("/oauth2/sessions/elevate", () => {
     const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
       createTestElevationSession({
         confirmedAuthentication: {
+          factors: [
+            AuthenticationFactor.TWO_FACTOR,
+            AuthenticationFactor.PHISHING_RESISTANT_HARDWARE,
+          ],
           latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
           levelOfAssurance: 4,
+          metadata: {},
           methods: [AuthenticationMethod.BANK_ID_SE],
-        },
-        requestedAuthentication: {
-          minimumLevel: 1,
-          recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.PASSWORD],
-          requiredLevel: 4,
-          requiredMethods: [AuthenticationMethod.BANK_ID_SE],
+          strategies: [AuthenticationStrategy.BANK_ID_SE],
         },
 
         browserSessionId: browserSession.id,
@@ -263,7 +281,17 @@ describe("/oauth2/sessions/elevate", () => {
       expect.objectContaining({
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
-        methods: [AuthenticationMethod.BANK_ID_SE, "email", "phone"],
+        factors: ["urn:lindorm:auth:acr:2fa", "urn:lindorm:auth:acr:phrh"],
+        methods: [
+          "urn:lindorm:auth:method:bank-id-se",
+          "urn:lindorm:auth:method:email",
+          "urn:lindorm:auth:method:phone",
+        ],
+        strategies: [
+          "urn:lindorm:auth:strategy:bank-id-se",
+          "urn:lindorm:auth:strategy:email-code",
+          "urn:lindorm:auth:strategy:phone-otp",
+        ],
       }),
     );
   });

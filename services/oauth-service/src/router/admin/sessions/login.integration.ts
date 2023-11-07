@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
@@ -37,12 +42,14 @@ describe("/admin/sessions/login", () => {
       .post(`/admin/sessions/login/${authorizationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
+        factors: [AuthenticationFactor.TWO_FACTOR],
         identity_id: randomUUID(),
         level_of_assurance: 2,
         metadata: { ip: "127.0.0.1" },
-        methods: ["email_otp", "phone_otp"],
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.TIME_BASED_OTP],
         remember: true,
         singleSignOn: true,
+        strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.TIME_BASED_OTP],
       })
       .expect(200);
 

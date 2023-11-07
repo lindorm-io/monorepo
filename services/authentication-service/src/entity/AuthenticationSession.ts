@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationMode,
   AuthenticationStrategy,
@@ -16,11 +17,7 @@ import {
 } from "@lindorm-io/entity";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE, JOI_SESSION_STATUS } from "../common";
-import {
-  JOI_AUTHENTICATION_METHOD,
-  JOI_AUTHENTICATION_STRATEGY,
-  JOI_PKCE_METHOD,
-} from "../constant";
+import { JOI_PKCE_METHOD } from "../constant";
 
 export type AuthenticationSessionAttributes = EntityAttributes & {
   allowedStrategies: Array<AuthenticationStrategy>;
@@ -28,24 +25,24 @@ export type AuthenticationSessionAttributes = EntityAttributes & {
   code: string | null;
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
-  confirmedIdentifiers: Array<string>;
   confirmedFederationLevel: LevelOfAssurance;
   confirmedFederationProvider: string | null;
+  confirmedIdentifiers: Array<string>;
   confirmedStrategies: Array<AuthenticationStrategy>;
   country: string | null;
   emailHint: string | null;
   expires: Date;
   identityId: string | null;
+  idTokenLevelOfAssurance: LevelOfAssurance;
+  idTokenMethods: Array<AuthenticationMethod>;
   metadata: Dict;
-  minimumLevel: LevelOfAssurance;
+  minimumLevelOfAssurance: LevelOfAssurance;
   mode: AuthenticationMode;
   nonce: string | null;
   phoneHint: string | null;
-  recommendedLevel: LevelOfAssurance;
-  recommendedMethods: Array<AuthenticationMethod>;
-  recommendedStrategies: Array<AuthenticationStrategy>;
   remember: boolean;
-  requiredLevel: LevelOfAssurance;
+  requiredFactors: Array<AuthenticationFactor>;
+  requiredLevelOfAssurance: LevelOfAssurance;
   requiredMethods: Array<AuthenticationMethod>;
   requiredStrategies: Array<AuthenticationStrategy>;
   sso: boolean;
@@ -57,22 +54,22 @@ export type AuthenticationSessionOptions = Optional<
   | EntityKeys
   | "allowedStrategies"
   | "code"
-  | "confirmedIdentifiers"
   | "confirmedFederationLevel"
   | "confirmedFederationProvider"
+  | "confirmedIdentifiers"
   | "confirmedStrategies"
   | "country"
   | "emailHint"
   | "identityId"
+  | "idTokenLevelOfAssurance"
+  | "idTokenMethods"
   | "metadata"
-  | "minimumLevel"
+  | "minimumLevelOfAssurance"
   | "nonce"
   | "phoneHint"
-  | "recommendedLevel"
-  | "recommendedMethods"
-  | "recommendedStrategies"
   | "remember"
-  | "requiredLevel"
+  | "requiredFactors"
+  | "requiredLevelOfAssurance"
   | "requiredMethods"
   | "requiredStrategies"
   | "sso"
@@ -83,33 +80,33 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    allowedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
+    allowedStrategies: Joi.array().items(Joi.string().lowercase()).required(),
     clientId: Joi.string().guid().required(),
     code: Joi.string().allow(null).required(),
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
-    confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
     confirmedFederationLevel: JOI_LEVEL_OF_ASSURANCE.required(),
     confirmedFederationProvider: Joi.string().allow(null).required(),
-    confirmedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
+    confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
+    confirmedStrategies: Joi.array().items(Joi.string().lowercase()).required(),
     country: Joi.string().lowercase().length(2).allow(null).required(),
     emailHint: Joi.string().allow(null).required(),
     expires: Joi.date().required(),
     identityId: Joi.string().guid().allow(null).required(),
+    idTokenLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    idTokenMethods: Joi.array().items(Joi.string().lowercase()).required(),
     metadata: Joi.object().required(),
-    minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    minimumLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
     mode: Joi.string()
       .valid(AuthenticationMode.ELEVATE, AuthenticationMode.NONE, AuthenticationMode.OAUTH)
       .required(),
     nonce: Joi.string().allow(null).required(),
     phoneHint: Joi.string().allow(null).required(),
-    recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-    recommendedMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
-    recommendedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     remember: Joi.boolean().required(),
-    requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-    requiredMethods: Joi.array().items(JOI_AUTHENTICATION_METHOD).required(),
-    requiredStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
+    requiredFactors: Joi.array().items(Joi.string().lowercase()).required(),
+    requiredLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+    requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
+    requiredStrategies: Joi.array().items(Joi.string().lowercase()).required(),
     sso: Joi.boolean().required(),
     status: JOI_SESSION_STATUS.required(),
   })
@@ -125,14 +122,14 @@ export class AuthenticationSession
   public readonly country: string | null;
   public readonly emailHint: string | null;
   public readonly expires: Date;
-  public readonly minimumLevel: LevelOfAssurance;
+  public readonly idTokenLevelOfAssurance: LevelOfAssurance;
+  public readonly idTokenMethods: Array<AuthenticationMethod>;
+  public readonly minimumLevelOfAssurance: LevelOfAssurance;
   public readonly mode: AuthenticationMode;
   public readonly nonce: string | null;
   public readonly phoneHint: string | null;
-  public readonly recommendedLevel: LevelOfAssurance;
-  public readonly recommendedMethods: Array<AuthenticationMethod>;
-  public readonly recommendedStrategies: Array<AuthenticationStrategy>;
-  public readonly requiredLevel: LevelOfAssurance;
+  public readonly requiredFactors: Array<AuthenticationFactor>;
+  public readonly requiredLevelOfAssurance: LevelOfAssurance;
   public readonly requiredMethods: Array<AuthenticationMethod>;
   public readonly requiredStrategies: Array<AuthenticationStrategy>;
 
@@ -156,24 +153,24 @@ export class AuthenticationSession
     this.code = options.code || null;
     this.codeChallenge = options.codeChallenge;
     this.codeChallengeMethod = options.codeChallengeMethod;
-    this.confirmedIdentifiers = options.confirmedIdentifiers || [];
     this.confirmedFederationLevel = options.confirmedFederationLevel || 0;
     this.confirmedFederationProvider = options.confirmedFederationProvider || null;
+    this.confirmedIdentifiers = options.confirmedIdentifiers || [];
     this.confirmedStrategies = options.confirmedStrategies || [];
     this.country = options.country || null;
     this.emailHint = options.emailHint || null;
     this.expires = options.expires;
     this.identityId = options.identityId || null;
-    this.minimumLevel = options.minimumLevel || 1;
+    this.idTokenLevelOfAssurance = options.idTokenLevelOfAssurance || 1;
+    this.idTokenMethods = options.idTokenMethods || [];
     this.metadata = options.metadata || {};
+    this.minimumLevelOfAssurance = options.minimumLevelOfAssurance || 1;
     this.mode = options.mode;
     this.nonce = options.nonce || null;
     this.phoneHint = options.phoneHint || null;
-    this.recommendedLevel = options.recommendedLevel || 1;
-    this.recommendedMethods = options.recommendedMethods || [];
-    this.recommendedStrategies = options.recommendedStrategies || [];
     this.remember = options.remember === true;
-    this.requiredLevel = options.requiredLevel || 1;
+    this.requiredFactors = options.requiredFactors || [];
+    this.requiredLevelOfAssurance = options.requiredLevelOfAssurance || 1;
     this.requiredMethods = options.requiredMethods || [];
     this.requiredStrategies = options.requiredStrategies || [];
     this.sso = options.sso === true;
@@ -197,24 +194,24 @@ export class AuthenticationSession
       code: this.code,
       codeChallenge: this.codeChallenge,
       codeChallengeMethod: this.codeChallengeMethod,
-      confirmedIdentifiers: this.confirmedIdentifiers,
       confirmedFederationLevel: this.confirmedFederationLevel,
       confirmedFederationProvider: this.confirmedFederationProvider,
+      confirmedIdentifiers: this.confirmedIdentifiers,
       confirmedStrategies: this.confirmedStrategies,
       country: this.country,
       emailHint: this.emailHint,
       expires: this.expires,
       identityId: this.identityId,
+      idTokenLevelOfAssurance: this.idTokenLevelOfAssurance,
+      idTokenMethods: this.idTokenMethods,
       metadata: this.metadata,
-      minimumLevel: this.minimumLevel,
+      minimumLevelOfAssurance: this.minimumLevelOfAssurance,
       mode: this.mode,
       nonce: this.nonce,
       phoneHint: this.phoneHint,
-      recommendedLevel: this.recommendedLevel,
-      recommendedMethods: this.recommendedMethods,
-      recommendedStrategies: this.recommendedStrategies,
       remember: this.remember,
-      requiredLevel: this.requiredLevel,
+      requiredFactors: this.requiredFactors,
+      requiredLevelOfAssurance: this.requiredLevelOfAssurance,
       requiredMethods: this.requiredMethods,
       requiredStrategies: this.requiredStrategies,
       sso: this.sso,

@@ -21,12 +21,14 @@ export const getIdentityClaims = async (
       audiences: clientSession.audiences,
       clientId: clientSession.clientId,
       expires: expiryDate(configuration.defaults.expiry.claims_session),
+      factors: clientSession.factors,
       identityId: clientSession.identityId,
       latestAuthentication: clientSession.latestAuthentication,
       levelOfAssurance: clientSession.levelOfAssurance,
       metadata: clientSession.metadata,
       methods: clientSession.methods,
       scopes: clientSession.scopes,
+      strategies: clientSession.strategies,
     }),
   );
 

@@ -44,13 +44,18 @@ export const resolveAuthenticationTokenGrantController: ServerKoaController<Requ
     });
   }
 
+  const { created, factors, identityId, levelOfAssurance, methods, nonce, strategies } =
+    authenticationConfirmationToken;
+
   return {
     body: {
-      identityId: authenticationConfirmationToken.identityId,
-      latestAuthentication: authenticationConfirmationToken.created.toISOString(),
-      levelOfAssurance: authenticationConfirmationToken.levelOfAssurance,
-      methods: authenticationConfirmationToken.methods,
-      nonce: authenticationConfirmationToken.nonce,
+      factors,
+      identityId,
+      latestAuthentication: created.toISOString(),
+      levelOfAssurance,
+      methods,
+      nonce,
+      strategies,
     },
   };
 };

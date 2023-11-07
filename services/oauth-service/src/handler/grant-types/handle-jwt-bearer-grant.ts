@@ -62,6 +62,10 @@ export const handleJwtBearerGrant = async (
 
   await verifyAssertionId(ctx, verified.id);
 
+  const methods = verified.metadata.authMethodsReference.filter((x: any) =>
+    Object.values(AuthenticationMethod).includes(x),
+  ) as Array<AuthenticationMethod>;
+
   const clientSession = await clientSessionRepository.create(
     new ClientSession({
       audiences: uniqArray(
@@ -74,13 +78,15 @@ export const handleJwtBearerGrant = async (
       authorizationGrant: OpenIdGrantType.JWT_BEARER,
       clientId: client.id,
       expires: new Date(verified.metadata.expires * 1000),
+      factors: [],
       identityId: verified.subject,
       latestAuthentication: new Date(),
       levelOfAssurance: 1,
       metadata: {},
-      methods: verified.metadata.authMethodsReference as Array<AuthenticationMethod>,
+      methods,
       nonce: randomHex(16),
       scopes,
+      strategies: [],
       tenantId: client.tenantId,
       type: ClientSessionType.EPHEMERAL,
     }),

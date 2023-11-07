@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -29,6 +30,7 @@ import { createOtp } from "../../util";
 
 export class PhoneOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.ONE_FACTOR,
     hintType: "phone",
     identifierType: IdentifierType.PHONE,
     loa: 2,

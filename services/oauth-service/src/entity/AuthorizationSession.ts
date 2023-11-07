@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   LevelOfAssurance,
@@ -53,6 +54,7 @@ type ConfirmedConsent = {
 };
 
 type ConfirmedLogin = {
+  factors: Array<AuthenticationFactor>;
   identityId: string | null;
   latestAuthentication: Date | null;
   levelOfAssurance: LevelOfAssurance;
@@ -60,6 +62,7 @@ type ConfirmedLogin = {
   methods: Array<AuthenticationMethod>;
   remember: boolean;
   singleSignOn: boolean;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 type RequestedConsent = {
@@ -68,14 +71,12 @@ type RequestedConsent = {
 };
 
 type RequestedLogin = {
+  factors: Array<AuthenticationFactor>;
   identityId: string | null;
-  minimumLevel: LevelOfAssurance;
-  recommendedLevel: LevelOfAssurance;
-  recommendedMethods: Array<AuthenticationMethod>;
-  recommendedStrategies: Array<AuthenticationStrategy>;
-  requiredLevel: LevelOfAssurance;
-  requiredMethods: Array<AuthenticationMethod>;
-  requiredStrategies: Array<AuthenticationStrategy>;
+  levelOfAssurance: LevelOfAssurance;
+  methods: Array<AuthenticationMethod>;
+  minimumLevelOfAssurance: LevelOfAssurance;
+  strategies: Array<AuthenticationStrategy>;
 };
 
 type RequestedSelectAccount = {
@@ -157,13 +158,15 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
     confirmedLogin: Joi.object<ConfirmedLogin>()
       .keys({
+        factors: Joi.array().items(Joi.string().lowercase()).required(),
         identityId: Joi.string().guid().allow(null).required(),
         latestAuthentication: Joi.date().allow(null).required(),
         levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
         metadata: Joi.object().required(),
-        methods: Joi.array().items(Joi.string()).required(),
+        methods: Joi.array().items(Joi.string().lowercase()).required(),
         remember: Joi.boolean().required(),
         singleSignOn: Joi.boolean().required(),
+        strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     requestedConsent: Joi.object<RequestedConsent>()
@@ -174,14 +177,12 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
       .required(),
     requestedLogin: Joi.object<RequestedLogin>()
       .keys({
+        factors: Joi.array().items(Joi.string().lowercase()).required(),
         identityId: Joi.string().guid().allow(null).required(),
-        minimumLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        recommendedLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        recommendedMethods: Joi.array().items(Joi.string().lowercase()).required(),
-        recommendedStrategies: Joi.array().items(Joi.string().lowercase()).required(),
-        requiredLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-        requiredMethods: Joi.array().items(Joi.string().lowercase()).required(),
-        requiredStrategies: Joi.array().items(Joi.string().lowercase()).required(),
+        levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        methods: Joi.array().items(Joi.string()).required(),
+        minimumLevelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
+        strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     requestedSelectAccount: Joi.object<RequestedSelectAccount>()
@@ -266,6 +267,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       scopes: options.confirmedConsent?.scopes || [],
     };
     this.confirmedLogin = {
+      factors: options.confirmedLogin?.factors || [],
       identityId: options.confirmedLogin?.identityId || null,
       latestAuthentication: options.confirmedLogin?.latestAuthentication || null,
       levelOfAssurance: options.confirmedLogin?.levelOfAssurance || 0,
@@ -273,20 +275,19 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
       methods: options.confirmedLogin?.methods || [],
       remember: options.confirmedLogin?.remember === true,
       singleSignOn: options.confirmedLogin?.singleSignOn === true,
+      strategies: options.confirmedLogin?.strategies || [],
     };
     this.requestedConsent = {
       audiences: options.requestedConsent.audiences,
       scopes: options.requestedConsent.scopes,
     };
     this.requestedLogin = {
+      factors: options.requestedLogin.factors,
       identityId: options.requestedLogin.identityId,
-      minimumLevel: options.requestedLogin.minimumLevel,
-      recommendedLevel: options.requestedLogin.recommendedLevel,
-      recommendedMethods: options.requestedLogin.recommendedMethods,
-      recommendedStrategies: options.requestedLogin.recommendedStrategies,
-      requiredLevel: options.requestedLogin.requiredLevel,
-      requiredMethods: options.requestedLogin.requiredMethods,
-      requiredStrategies: options.requestedLogin.requiredStrategies,
+      levelOfAssurance: options.requestedLogin.levelOfAssurance,
+      methods: options.requestedLogin.methods,
+      minimumLevelOfAssurance: options.requestedLogin.minimumLevelOfAssurance,
+      strategies: options.requestedLogin.strategies,
     };
     this.requestedSelectAccount = {
       browserSessions: options.requestedSelectAccount.browserSessions,
@@ -361,6 +362,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
   }
 
   public confirmLogin(data: ConfirmedLogin): void {
+    this.confirmedLogin.factors = data.factors;
     this.confirmedLogin.identityId = data.identityId;
     this.confirmedLogin.latestAuthentication = data.latestAuthentication;
     this.confirmedLogin.levelOfAssurance = data.levelOfAssurance;
@@ -368,6 +370,7 @@ export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttr
     this.confirmedLogin.methods = data.methods;
     this.confirmedLogin.remember = data.remember;
     this.confirmedLogin.singleSignOn = data.singleSignOn;
+    this.confirmedLogin.strategies = data.strategies;
 
     this.status.login = SessionStatus.CONFIRMED;
   }

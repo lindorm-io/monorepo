@@ -14,34 +14,34 @@ describe("verifyRequiredMethods", () => {
   });
 
   test("should return true when authorization session has no required methods", () => {
-    authorizationSession.requestedLogin.requiredMethods = [];
+    authorizationSession.requestedLogin.methods = [];
 
     expect(verifyRequiredMethods(authorizationSession, browserSession)).toBe(true);
   });
 
   test("should return true when methods match", () => {
-    authorizationSession.requestedLogin.requiredMethods = [AuthenticationMethod.BANK_ID_SE];
+    authorizationSession.requestedLogin.methods = [AuthenticationMethod.BANK_ID_SE];
     browserSession.methods = [AuthenticationMethod.BANK_ID_SE];
 
     expect(verifyRequiredMethods(authorizationSession, browserSession)).toBe(true);
   });
 
   test("should return true with many methods", () => {
-    authorizationSession.requestedLogin.requiredMethods = [AuthenticationMethod.BANK_ID_SE];
+    authorizationSession.requestedLogin.methods = [AuthenticationMethod.BANK_ID_SE];
     browserSession.methods = Object.values(AuthenticationMethod);
 
     expect(verifyRequiredMethods(authorizationSession, browserSession)).toBe(true);
   });
 
   test("should return false when session has no methods", () => {
-    authorizationSession.requestedLogin.requiredMethods = [AuthenticationMethod.BANK_ID_SE];
+    authorizationSession.requestedLogin.methods = [AuthenticationMethod.BANK_ID_SE];
     browserSession.methods = [];
 
     expect(verifyRequiredMethods(authorizationSession, browserSession)).toBe(false);
   });
 
   test("should return false when session has missing methods", () => {
-    authorizationSession.requestedLogin.requiredMethods = [AuthenticationMethod.DEVICE_LINK];
+    authorizationSession.requestedLogin.methods = [AuthenticationMethod.DEVICE_LINK];
     browserSession.methods = [AuthenticationMethod.BANK_ID_SE];
 
     expect(verifyRequiredMethods(authorizationSession, browserSession)).toBe(false);

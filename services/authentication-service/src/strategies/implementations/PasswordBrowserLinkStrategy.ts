@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -27,6 +28,7 @@ import {
 
 export class PasswordBrowserLinkStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.ONE_FACTOR,
     hintType: "none",
     identifierType: IdentifierType.USERNAME,
     loa: 3,

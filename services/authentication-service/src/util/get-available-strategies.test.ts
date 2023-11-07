@@ -1,6 +1,6 @@
-import { getAvailableStrategies } from "./get-available-strategies";
-import { createTestAuthenticationSession } from "../fixtures/entity";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { createTestAuthenticationSession } from "../fixtures/entity";
+import { getAvailableStrategies } from "./get-available-strategies";
 
 describe("getAvailableStrategies", () => {
   test("should resolve primary", () => {
@@ -11,16 +11,16 @@ describe("getAvailableStrategies", () => {
         }),
       ),
     ).toStrictEqual([
-      "device_challenge",
-      "email_code",
-      "email_otp",
-      "password_browser_link",
-      "password",
-      "phone_code",
-      "phone_otp",
-      "rdc_qr_code",
-      "session_display_code",
-      "session_qr_code",
+      "urn:lindorm:auth:strategy:device-challenge",
+      "urn:lindorm:auth:strategy:email-code",
+      "urn:lindorm:auth:strategy:email-otp",
+      "urn:lindorm:auth:strategy:password-browser-link",
+      "urn:lindorm:auth:strategy:password",
+      "urn:lindorm:auth:strategy:phone-code",
+      "urn:lindorm:auth:strategy:phone-otp",
+      "urn:lindorm:auth:strategy:rdc-qr-code",
+      "urn:lindorm:auth:strategy:session-display-code",
+      "urn:lindorm:auth:strategy:session-qr-code",
     ]);
   });
 
@@ -32,16 +32,16 @@ describe("getAvailableStrategies", () => {
         }),
       ),
     ).toStrictEqual([
-      "email_code",
-      "email_otp",
-      "mfa_cookie",
-      "phone_code",
-      "phone_otp",
-      "rdc_push_notification",
-      "recovery_code",
-      "session_display_code",
-      "session_otp",
-      "time_based_otp",
+      "urn:lindorm:auth:strategy:email-code",
+      "urn:lindorm:auth:strategy:email-otp",
+      "urn:lindorm:auth:strategy:mfa-cookie",
+      "urn:lindorm:auth:strategy:phone-code",
+      "urn:lindorm:auth:strategy:phone-otp",
+      "urn:lindorm:auth:strategy:rdc-push-notification",
+      "urn:lindorm:auth:strategy:recovery-code",
+      "urn:lindorm:auth:strategy:session-display-code",
+      "urn:lindorm:auth:strategy:session-otp",
+      "urn:lindorm:auth:strategy:time-based-otp",
     ]);
   });
 
@@ -53,14 +53,14 @@ describe("getAvailableStrategies", () => {
         }),
       ),
     ).toStrictEqual([
-      "mfa_cookie",
-      "phone_code",
-      "phone_otp",
-      "rdc_push_notification",
-      "recovery_code",
-      "session_display_code",
-      "session_otp",
-      "time_based_otp",
+      "urn:lindorm:auth:strategy:mfa-cookie",
+      "urn:lindorm:auth:strategy:phone-code",
+      "urn:lindorm:auth:strategy:phone-otp",
+      "urn:lindorm:auth:strategy:rdc-push-notification",
+      "urn:lindorm:auth:strategy:recovery-code",
+      "urn:lindorm:auth:strategy:session-display-code",
+      "urn:lindorm:auth:strategy:session-otp",
+      "urn:lindorm:auth:strategy:time-based-otp",
     ]);
   });
 });

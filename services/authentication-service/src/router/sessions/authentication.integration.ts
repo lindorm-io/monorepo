@@ -1,4 +1,8 @@
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { randomString } from "@lindorm-io/random";
 import { createURL } from "@lindorm-io/url";
@@ -80,7 +84,11 @@ describe("/sessions/authentication", () => {
         identity_id: "4c875493-575a-4660-94d6-432787597ea2",
         level_of_assurance: 3,
         login_hint: ["test@lindorm.io", "+46701234567"],
-        methods: ["email", "phone", "device_link"],
+        methods: [
+          AuthenticationMethod.EMAIL,
+          AuthenticationMethod.PHONE,
+          AuthenticationMethod.DEVICE_LINK,
+        ],
         nonce: nonce,
       })
       .expect(200);
@@ -119,16 +127,38 @@ describe("/sessions/authentication", () => {
     expect(response.body).toStrictEqual({
       config: [
         {
+          hint: null,
+          hint_type: "none",
+          identifier_type: "none",
+          method: "urn:lindorm:auth:method:device-link",
+          rank: 1,
+          recommended: false,
+          required: true,
+          strategies: [
+            {
+              strategy: "urn:lindorm:auth:strategy:device-challenge",
+              weight: 900000,
+            },
+          ],
+          weight: 900000,
+        },
+        {
           hint: "test@lindorm.io",
           hint_type: "email",
           identifier_type: "email",
-          method: "email",
-          rank: 1,
+          method: "urn:lindorm:auth:method:email",
+          rank: 2,
           recommended: true,
           required: false,
           strategies: [
-            { strategy: "email_otp", weight: 750 },
-            { strategy: "email_code", weight: 250 },
+            {
+              strategy: "urn:lindorm:auth:strategy:email-otp",
+              weight: 750,
+            },
+            {
+              strategy: "urn:lindorm:auth:strategy:email-code",
+              weight: 250,
+            },
           ],
           weight: 750,
         },
@@ -136,26 +166,21 @@ describe("/sessions/authentication", () => {
           hint: "0701234567",
           hint_type: "phone",
           identifier_type: "phone",
-          method: "phone",
-          rank: 2,
+          method: "urn:lindorm:auth:method:phone",
+          rank: 3,
           recommended: true,
           required: false,
           strategies: [
-            { strategy: "phone_otp", weight: 500 },
-            { strategy: "phone_code", weight: 250 },
+            {
+              strategy: "urn:lindorm:auth:strategy:phone-otp",
+              weight: 500,
+            },
+            {
+              strategy: "urn:lindorm:auth:strategy:phone-code",
+              weight: 250,
+            },
           ],
           weight: 500,
-        },
-        {
-          hint: null,
-          hint_type: "none",
-          identifier_type: "none",
-          method: "device_link",
-          rank: 3,
-          recommended: false,
-          required: false,
-          strategies: [{ strategy: "device_challenge", weight: 90 }],
-          weight: 90,
         },
       ],
 

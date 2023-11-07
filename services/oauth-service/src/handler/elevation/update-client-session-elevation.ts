@@ -1,4 +1,3 @@
-import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
 import { ElevationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
@@ -35,13 +34,16 @@ export const updateClientSessionElevation = async (
     });
   }
 
+  clientSession.factors = elevationSession.confirmedAuthentication.factors;
+
   clientSession.latestAuthentication =
     elevationSession.confirmedAuthentication.latestAuthentication;
+
   clientSession.levelOfAssurance = elevationSession.confirmedAuthentication.levelOfAssurance;
-  clientSession.methods = uniqArray(
-    clientSession.methods,
-    elevationSession.confirmedAuthentication.methods,
-  );
+
+  clientSession.methods = elevationSession.confirmedAuthentication.methods;
+
+  clientSession.strategies = elevationSession.confirmedAuthentication.strategies;
 
   await clientSessionRepository.update(clientSession);
 };

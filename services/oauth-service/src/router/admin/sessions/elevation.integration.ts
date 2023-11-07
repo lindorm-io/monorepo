@@ -1,4 +1,8 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import MockDate from "mockdate";
 import request from "supertest";
 import {
@@ -43,11 +47,11 @@ describe("/admin/sessions/elevation", () => {
     const elevationSession = await TEST_ELEVATION_SESSION_CACHE.create(
       createTestElevationSession({
         requestedAuthentication: {
-          minimumLevel: 2,
-          recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.EMAIL],
-          requiredLevel: 3,
-          requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          levelOfAssurance: 3,
+          factors: [AuthenticationFactor.TWO_FACTOR],
+          methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+          minimumLevelOfAssurance: 2,
+          strategies: [AuthenticationStrategy.PHONE_OTP],
         },
 
         browserSessionId: browserSession.id,
@@ -72,11 +76,11 @@ describe("/admin/sessions/elevation", () => {
         is_required: true,
         status: "pending",
 
-        minimum_level: 2,
-        recommended_level: 2,
-        recommended_methods: [AuthenticationMethod.EMAIL],
-        required_level: 3,
-        required_methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+        factors: ["urn:lindorm:auth:acr:2fa"],
+        level_of_assurance: 3,
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
+        minimum_level_of_assurance: 2,
+        strategies: ["urn:lindorm:auth:strategy:phone-otp"],
       },
 
       elevation_session: {
@@ -89,6 +93,32 @@ describe("/admin/sessions/elevation", () => {
         identity_id: elevationSession.identityId,
         nonce: "fQUsgtHGmWCwmCCZ",
         ui_locales: ["sv-SE", "en-GB"],
+      },
+
+      browser_session: {
+        id: browserSession.id,
+        adjusted_access_level: 2,
+        factors: ["urn:lindorm:auth:acr:2fa"],
+        identity_id: browserSession.identityId,
+        latest_authentication: "2021-01-01T07:59:00.000Z",
+        level_of_assurance: 2,
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
+        remember: true,
+        single_sign_on: true,
+        strategies: ["urn:lindorm:auth:strategy:email-code", "urn:lindorm:auth:strategy:phone-otp"],
+      },
+
+      client_session: {
+        id: clientSession.id,
+        adjusted_access_level: 2,
+        audiences: [expect.any(String)],
+        factors: ["urn:lindorm:auth:acr:2fa"],
+        identity_id: clientSession.identityId,
+        latest_authentication: "2021-01-01T07:59:00.000Z",
+        level_of_assurance: 2,
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
+        scopes: ["openid", "profile"],
+        strategies: ["urn:lindorm:auth:strategy:email-code", "urn:lindorm:auth:strategy:phone-otp"],
       },
 
       client: {
@@ -123,9 +153,12 @@ describe("/admin/sessions/elevation", () => {
       .post(`/admin/sessions/elevation/${elevationSession.id}/confirm`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
+        factors: [AuthenticationFactor.ONE_FACTOR],
         identity_id: elevationSession.identityId,
-        level_of_assurance: 2,
-        methods: ["email_otp", "phone_otp"],
+        level_of_assurance: 4,
+        metadata: {},
+        methods: [AuthenticationMethod.EMAIL],
+        strategies: [AuthenticationStrategy.EMAIL_CODE],
       })
       .expect(200);
 

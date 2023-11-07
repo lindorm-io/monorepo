@@ -23,10 +23,12 @@ export const initialisePostElevationSchema = Joi.object<RequestData>()
     authenticationHint: Joi.array().items(Joi.string()),
     clientId: Joi.string().guid().required(),
     country: JOI_COUNTRY_CODE,
+    factors: Joi.array().items(Joi.string().lowercase()),
     idTokenHint: JOI_JWT,
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE,
-    methods: Joi.array().items(Joi.string()),
+    methods: Joi.array().items(Joi.string().lowercase()),
     nonce: JOI_NONCE,
+    strategies: Joi.array().items(Joi.string().lowercase()),
     uiLocales: Joi.array().items(JOI_LOCALE),
   })
   .options({ abortEarly: false })
@@ -36,15 +38,26 @@ export const initialisePostElevationController: ServerKoaController<RequestData>
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    data: { authenticationHint, country, levelOfAssurance, methods, nonce, uiLocales },
+    data: {
+      authenticationHint,
+      country,
+      factors,
+      levelOfAssurance,
+      methods,
+      nonce,
+      strategies,
+      uiLocales,
+    },
   } = ctx;
 
   const elevationSession = await initialiseElevation(ctx, {
     authenticationHint,
     country,
+    factors,
     levelOfAssurance,
     methods,
     nonce,
+    strategies,
     uiLocales,
   });
 

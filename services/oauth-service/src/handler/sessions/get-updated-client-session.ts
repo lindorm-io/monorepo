@@ -52,6 +52,7 @@ const createClientSession = async (
       browserSessionId: authorizationSession.browserSessionId,
       clientId: client.id,
       expires: expiryDate("4 years"),
+      factors: authorizationSession.confirmedLogin.factors,
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
@@ -59,6 +60,7 @@ const createClientSession = async (
       methods: authorizationSession.confirmedLogin.methods,
       nonce: authorizationSession.nonce,
       scopes: authorizationSession.confirmedConsent.scopes,
+      strategies: authorizationSession.confirmedLogin.strategies,
       tenantId: client.tenantId,
       type: authorizationSession.confirmedConsent.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH
@@ -115,6 +117,8 @@ const updateClientSession = async (
 
   clientSession.expires = expiryDate("4 years");
 
+  clientSession.factors = authorizationSession.confirmedLogin.factors;
+
   clientSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
 
   clientSession.levelOfAssurance =
@@ -122,10 +126,7 @@ const updateClientSession = async (
       ? authorizationSession.confirmedLogin.levelOfAssurance
       : clientSession.levelOfAssurance;
 
-  clientSession.methods = uniqArray(
-    clientSession.methods,
-    authorizationSession.confirmedLogin.methods,
-  );
+  clientSession.methods = authorizationSession.confirmedLogin.methods;
 
   clientSession.nonce = authorizationSession.nonce;
 
@@ -133,6 +134,8 @@ const updateClientSession = async (
     clientSession.scopes,
     authorizationSession.confirmedConsent.scopes,
   );
+
+  clientSession.strategies = authorizationSession.confirmedLogin.strategies;
 
   clientSession.type = authorizationSession.confirmedConsent.scopes.includes(
     OpenIdScope.OFFLINE_ACCESS,

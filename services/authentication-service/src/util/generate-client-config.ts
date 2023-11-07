@@ -28,16 +28,11 @@ export const generateClientConfig = (
     let required = false;
     let weight = config.weight;
 
-    if (authenticationSession.requiredLevel === config.loa) {
+    if (authenticationSession.requiredLevelOfAssurance === config.loa) {
       weight = weight * 5;
     }
 
-    if (authenticationSession.recommendedMethods.includes(config.method)) {
-      recommended = true;
-      weight = weight * 25;
-    }
-
-    if (authenticationSession.recommendedStrategies.includes(config.strategy)) {
+    if (authenticationSession.idTokenMethods.includes(config.method)) {
       recommended = true;
       weight = weight * 25;
     }

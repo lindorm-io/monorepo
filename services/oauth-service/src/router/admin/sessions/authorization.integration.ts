@@ -1,4 +1,5 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdScope,
@@ -51,14 +52,12 @@ describe("/admin/sessions/authorization", () => {
           scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE, OpenIdScope.PROFILE],
         },
         requestedLogin: {
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: browserSession.identityId,
-          minimumLevel: 2,
-          recommendedLevel: 2,
-          recommendedMethods: [AuthenticationMethod.SESSION_LINK],
-          recommendedStrategies: [AuthenticationStrategy.SESSION_OTP],
-          requiredLevel: 3,
-          requiredMethods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-          requiredStrategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
+          levelOfAssurance: 4,
+          methods: [AuthenticationMethod.EMAIL],
+          minimumLevelOfAssurance: 2,
+          strategies: [AuthenticationStrategy.PHONE_OTP],
         },
         requestedSelectAccount: {
           browserSessions: [
@@ -104,14 +103,12 @@ describe("/admin/sessions/authorization", () => {
         is_required: true,
         status: "pending",
 
+        factors: ["urn:lindorm:auth:acr:2fa"],
         identity_id: browserSession.identityId,
-        minimum_level: 2,
-        recommended_level: 2,
-        recommended_methods: ["session_link"],
-        recommended_strategies: ["session_otp"],
-        required_level: 3,
-        required_methods: ["email", "phone"],
-        required_strategies: ["email_code", "phone_otp"],
+        level_of_assurance: 4,
+        methods: ["urn:lindorm:auth:method:email"],
+        minimum_level_of_assurance: 2,
+        strategies: ["urn:lindorm:auth:strategy:phone-otp"],
       },
 
       select_account: {
@@ -144,23 +141,27 @@ describe("/admin/sessions/authorization", () => {
       browser_session: {
         id: browserSession.id,
         adjusted_access_level: 2,
+        factors: ["urn:lindorm:auth:acr:2fa"],
         identity_id: browserSession.identityId,
         latest_authentication: "2021-01-01T07:59:00.000Z",
         level_of_assurance: 2,
-        methods: ["email", "phone"],
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
         remember: true,
         single_sign_on: true,
+        strategies: ["urn:lindorm:auth:strategy:email-code", "urn:lindorm:auth:strategy:phone-otp"],
       },
 
       client_session: {
         id: clientSession.id,
         adjusted_access_level: 2,
         audiences: ["4b697e26-2bcf-48ee-9949-c973eb59f552"],
+        factors: ["urn:lindorm:auth:acr:2fa"],
         identity_id: clientSession.identityId,
         latest_authentication: "2021-01-01T07:59:00.000Z",
         level_of_assurance: 2,
-        methods: ["email", "phone"],
+        methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
         scopes: ["openid", "profile"],
+        strategies: ["urn:lindorm:auth:strategy:email-code", "urn:lindorm:auth:strategy:phone-otp"],
       },
 
       client: {

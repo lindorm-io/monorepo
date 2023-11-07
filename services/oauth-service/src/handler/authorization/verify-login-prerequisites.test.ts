@@ -5,7 +5,9 @@ import {
   verifyAccessLevel as _verifyAccessLevel,
   verifyIdentityId as _verifyIdentityId,
   verifyMaxAge as _verifyMaxAge,
+  verifyRequiredFactors as _verifyRequiredFactors,
   verifyRequiredMethods as _verifyRequiredMethods,
+  verifyRequiredStrategies as _verifyRequiredStrategies,
   verifySessionExpiry as _verifySessionExpiry,
 } from "../../util";
 import { verifyLoginPrerequisites } from "./verify-login-prerequisites";
@@ -15,7 +17,9 @@ jest.mock("../../util");
 const verifyAccessLevel = _verifyAccessLevel as jest.Mock;
 const verifyIdentityId = _verifyIdentityId as jest.Mock;
 const verifyMaxAge = _verifyMaxAge as jest.Mock;
+const verifyRequiredFactors = _verifyRequiredFactors as jest.Mock;
 const verifyRequiredMethods = _verifyRequiredMethods as jest.Mock;
+const verifyRequiredStrategies = _verifyRequiredStrategies as jest.Mock;
 const verifySessionExpiry = _verifySessionExpiry as jest.Mock;
 
 describe("verifyLoginPrerequisites", () => {
@@ -34,7 +38,9 @@ describe("verifyLoginPrerequisites", () => {
     verifyAccessLevel.mockReturnValue(true);
     verifyIdentityId.mockReturnValue(true);
     verifyMaxAge.mockReturnValue(true);
+    verifyRequiredFactors.mockReturnValue(true);
     verifyRequiredMethods.mockReturnValue(true);
+    verifyRequiredStrategies.mockReturnValue(true);
     verifySessionExpiry.mockReturnValue(true);
   });
 
@@ -58,8 +64,20 @@ describe("verifyLoginPrerequisites", () => {
     expect(verifyLoginPrerequisites(ctx, authorizationSession, browserSession)).toBe(false);
   });
 
+  test("should return false on required factors returning false", () => {
+    verifyRequiredFactors.mockReturnValue(false);
+
+    expect(verifyLoginPrerequisites(ctx, authorizationSession, browserSession)).toBe(false);
+  });
+
   test("should return false on required methods returning false", () => {
     verifyRequiredMethods.mockReturnValue(false);
+
+    expect(verifyLoginPrerequisites(ctx, authorizationSession, browserSession)).toBe(false);
+  });
+
+  test("should return false on required strategies returning false", () => {
+    verifyRequiredStrategies.mockReturnValue(false);
 
     expect(verifyLoginPrerequisites(ctx, authorizationSession, browserSession)).toBe(false);
   });

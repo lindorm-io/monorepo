@@ -58,9 +58,10 @@ describe("/introspect", () => {
 
     expect(response.body).toStrictEqual({
       aal: 2,
-      acr: "loa_2",
+      acr: "urn:lindorm:auth:acr:loa:2",
       active: true,
-      amr: ["email", "phone"],
+      afr: "urn:lindorm:auth:acr:2fa",
+      amr: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
       aud: [
         expect.any(String),
         expect.any(String),
@@ -122,9 +123,10 @@ describe("/introspect", () => {
 
     expect(response.body).toStrictEqual({
       aal: 2,
-      acr: "loa_2",
+      acr: "urn:lindorm:auth:acr:loa:2",
       active: true,
-      amr: ["email", "phone"],
+      afr: "urn:lindorm:auth:acr:2fa",
+      amr: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
       aud: [
         expect.any(String),
         expect.any(String),
@@ -184,9 +186,10 @@ describe("/introspect", () => {
 
     expect(response.body).toStrictEqual({
       aal: 2,
-      acr: "loa_2",
+      acr: "urn:lindorm:auth:acr:loa:2",
       active: true,
-      amr: ["email", "phone"],
+      afr: "urn:lindorm:auth:acr:2fa",
+      amr: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
       aud: [
         expect.any(String),
         expect.any(String),

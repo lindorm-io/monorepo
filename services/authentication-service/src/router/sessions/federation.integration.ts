@@ -47,9 +47,11 @@ describe("/sessions/federation", () => {
         id: "16eb29d7-9f02-4883-8973-004870b6901c",
         allowedStrategies: [],
         identityId: "6a45c383-fd41-4a9e-b76d-c8acb99ea88c",
-        minimumLevel: 1,
-        requiredLevel: 1,
+        minimumLevelOfAssurance: 1,
+        requiredLevelOfAssurance: 1,
+        requiredFactors: [],
         requiredMethods: [],
+        requiredStrategies: [],
       }),
     );
 

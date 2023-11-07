@@ -16,7 +16,7 @@ export const generateAuthorizationCode = async (
 
   await authorizationCodeCache.create(
     new AuthorizationCode({
-      AuthorizationSessionId: authorizationSession.id,
+      authorizationSessionId: authorizationSession.id,
       code,
       expires: expiryDate(configuration.defaults.expiry.code_session),
     }),

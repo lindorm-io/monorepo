@@ -6,4 +6,5 @@ export * from "./filter-authentication-methods";
 export * from "./filter-authentication-strategies";
 export * from "./generate-client-config";
 export * from "./get-available-strategies";
+export * from "./get-factors-from-strategies";
 export * from "./get-methods-from-strategies";

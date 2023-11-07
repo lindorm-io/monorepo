@@ -3,6 +3,7 @@ import { createTestAuthenticationSession } from "../fixtures/entity";
 import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 
 describe("getMethodsFromStrategies", () => {
+  // TODO enable when bankid is implemented
   test.failing("should resolve bank_id_se", () => {
     expect(
       getMethodsFromStrategies(
@@ -10,7 +11,7 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.BANK_ID_SE],
         }),
       ),
-    ).toStrictEqual(["bank_id_se"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:bank-id-se"]);
   });
 
   test("should resolve device_link", () => {
@@ -20,7 +21,7 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
         }),
       ),
-    ).toStrictEqual(["device_link"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:device-link"]);
   });
 
   test("should resolve email", () => {
@@ -33,7 +34,7 @@ describe("getMethodsFromStrategies", () => {
           ],
         }),
       ),
-    ).toStrictEqual(["email"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:email"]);
   });
 
   test("should resolve mfa_cookie", () => {
@@ -43,7 +44,7 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.MFA_COOKIE],
         }),
       ),
-    ).toStrictEqual(["mfa_cookie"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:mfa-cookie"]);
   });
 
   test("should resolve password", () => {
@@ -56,7 +57,7 @@ describe("getMethodsFromStrategies", () => {
           ],
         }),
       ),
-    ).toStrictEqual(["password"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:password"]);
   });
 
   test("should resolve phone", () => {
@@ -69,7 +70,7 @@ describe("getMethodsFromStrategies", () => {
           ],
         }),
       ),
-    ).toStrictEqual(["phone"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:phone"]);
   });
 
   test("should resolve recovery", () => {
@@ -79,7 +80,7 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.RECOVERY_CODE],
         }),
       ),
-    ).toStrictEqual(["recovery"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:recovery"]);
   });
 
   test("should resolve session_link", () => {
@@ -93,7 +94,7 @@ describe("getMethodsFromStrategies", () => {
           ],
         }),
       ),
-    ).toStrictEqual(["session_link"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:session-link"]);
   });
 
   test("should resolve time_based_otp", () => {
@@ -103,9 +104,10 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.TIME_BASED_OTP],
         }),
       ),
-    ).toStrictEqual(["time_based_otp"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:totp"]);
   });
 
+  // TODO enable when webauthn is implemented
   test.failing("should resolve webauthn", () => {
     expect(
       getMethodsFromStrategies(
@@ -113,6 +115,6 @@ describe("getMethodsFromStrategies", () => {
           confirmedStrategies: [AuthenticationStrategy.WEBAUTHN],
         }),
       ),
-    ).toStrictEqual(["webauthn"]);
+    ).toStrictEqual(["urn:lindorm:auth:method:webauthn"]);
   });
 });

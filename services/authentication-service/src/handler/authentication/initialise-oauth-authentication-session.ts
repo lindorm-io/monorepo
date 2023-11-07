@@ -1,4 +1,5 @@
 import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import { JWT } from "@lindorm-io/jwt";
 import Joi from "joi";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
 import { AuthenticationSession } from "../../entity";
@@ -31,21 +32,15 @@ export const initialiseOauthAuthenticationSession = async (
   const { codeChallenge, codeChallengeMethod, oauthSessionId } = options;
 
   const {
-    login: {
-      identityId,
-      minimumLevel,
-      recommendedLevel,
-      recommendedMethods,
-      recommendedStrategies,
-      requiredLevel,
-      requiredMethods,
-      requiredStrategies,
-    },
-    authorizationSession: { country, expires, loginHint, nonce },
+    login: { factors, identityId, levelOfAssurance, methods, minimumLevelOfAssurance, strategies },
+    authorizationSession: { country, expires, idTokenHint, loginHint, nonce },
   } = await getOauthAuthorizationSession(ctx, oauthSessionId);
 
   const emailHint = loginHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = loginHint?.find((item: string) => REGEX_PHONE.test(item));
+
+  console.log(idTokenHint);
+  const idToken = idTokenHint ? JWT.decodePayload(idTokenHint) : undefined;
 
   return await handleAuthenticationInitialisation(ctx, {
     id: oauthSessionId,
@@ -56,15 +51,15 @@ export const initialiseOauthAuthenticationSession = async (
     emailHint,
     expires: new Date(expires),
     identityId,
-    minimumLevel,
+    idTokenLevelOfAssurance: idToken?.metadata.levelOfAssurance,
+    idTokenMethods: filterAuthenticationMethods(idToken?.metadata.authMethodsReference),
+    minimumLevelOfAssurance,
     mode: AuthenticationMode.OAUTH,
     nonce,
     phoneHint,
-    recommendedLevel,
-    recommendedMethods: filterAuthenticationMethods(recommendedMethods),
-    recommendedStrategies: filterAuthenticationStrategies(recommendedStrategies),
-    requiredLevel,
-    requiredMethods: filterAuthenticationMethods(requiredMethods),
-    requiredStrategies: filterAuthenticationStrategies(requiredStrategies),
+    requiredFactors: factors,
+    requiredLevelOfAssurance: levelOfAssurance,
+    requiredMethods: filterAuthenticationMethods(methods),
+    requiredStrategies: filterAuthenticationStrategies(strategies),
   });
 };

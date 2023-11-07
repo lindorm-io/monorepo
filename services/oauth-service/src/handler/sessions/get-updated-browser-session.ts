@@ -27,6 +27,7 @@ const createBrowserSession = async (
 
   return await browserSessionRepository.create(
     new BrowserSession({
+      factors: authorizationSession.confirmedLogin.factors,
       identityId: authorizationSession.confirmedLogin.identityId,
       latestAuthentication: authorizationSession.confirmedLogin.latestAuthentication,
       levelOfAssurance: authorizationSession.confirmedLogin.levelOfAssurance,
@@ -34,6 +35,7 @@ const createBrowserSession = async (
       methods: authorizationSession.confirmedLogin.methods,
       remember: authorizationSession.confirmedLogin.remember,
       singleSignOn: authorizationSession.confirmedLogin.singleSignOn,
+      strategies: authorizationSession.confirmedLogin.strategies,
     }),
   );
 };
@@ -61,6 +63,11 @@ const updateBrowserSession = async (
     });
   }
 
+  browserSession.factors = uniqArray(
+    browserSession.factors,
+    authorizationSession.confirmedLogin.factors,
+  );
+
   browserSession.latestAuthentication = authorizationSession.confirmedLogin.latestAuthentication;
 
   browserSession.levelOfAssurance =
@@ -76,6 +83,11 @@ const updateBrowserSession = async (
   browserSession.remember = browserSession.remember
     ? browserSession.remember
     : authorizationSession.confirmedLogin.remember;
+
+  browserSession.strategies = uniqArray(
+    browserSession.strategies,
+    authorizationSession.confirmedLogin.strategies,
+  );
 
   browserSession.singleSignOn = browserSession.singleSignOn
     ? browserSession.singleSignOn

@@ -1,8 +1,11 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
+  AuthenticationStrategy,
   GetElevationSessionResponse,
   OpenIdClientType,
   OpenIdDisplayMode,
+  OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
@@ -15,11 +18,11 @@ export const mockFetchOauthElevationSession = (
     isRequired: true,
     status: SessionStatus.PENDING,
 
-    minimumLevel: 2,
-    recommendedLevel: 2,
-    recommendedMethods: [AuthenticationMethod.EMAIL],
-    requiredLevel: 2,
-    requiredMethods: [AuthenticationMethod.EMAIL],
+    factors: [AuthenticationFactor.ONE_FACTOR],
+    levelOfAssurance: 2,
+    methods: [AuthenticationMethod.EMAIL],
+    minimumLevelOfAssurance: 2,
+    strategies: [AuthenticationStrategy.EMAIL_OTP],
   },
 
   elevationSession: {
@@ -28,10 +31,36 @@ export const mockFetchOauthElevationSession = (
     country: "se",
     displayMode: OpenIdDisplayMode.PAGE,
     expires: "2022-01-01T04:00:00.000Z",
-    idTokenHint: "id.jwt.jwt",
+    idTokenHint: null,
     identityId: randomUUID(),
     nonce: randomString(16),
     uiLocales: ["en-GB", "sv-SE"],
+  },
+
+  browserSession: {
+    id: randomUUID(),
+    adjustedAccessLevel: 2,
+    factors: [AuthenticationFactor.TWO_FACTOR],
+    identityId: randomUUID(),
+    latestAuthentication: "2021-01-01T07:59:00.000Z",
+    levelOfAssurance: 2,
+    methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+    remember: true,
+    singleSignOn: true,
+    strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
+  },
+
+  clientSession: {
+    id: randomUUID(),
+    adjustedAccessLevel: 2,
+    audiences: [randomUUID()],
+    factors: [AuthenticationFactor.TWO_FACTOR],
+    identityId: randomUUID(),
+    latestAuthentication: "2021-01-01T07:59:00.000Z",
+    levelOfAssurance: 2,
+    methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
+    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+    strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
   },
 
   client: {

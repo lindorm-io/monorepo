@@ -10,7 +10,9 @@ import {
   verifyIdentityId as _verifyIdentityId,
   verifyMaxAge as _verifyMaxAge,
   verifyPromptMode as _verifyPromptMode,
+  verifyRequiredFactors as _verifyRequiredFactors,
   verifyRequiredMethods as _verifyRequiredMethods,
+  verifyRequiredStrategies as _verifyRequiredStrategies,
   verifySessionExpiry as _verifySessionExpiry,
 } from "../../util";
 import { isSsoAvailable } from "./is-sso-available";
@@ -21,7 +23,9 @@ const verifyAccessLevel = _verifyAccessLevel as jest.Mock;
 const verifyIdentityId = _verifyIdentityId as jest.Mock;
 const verifyMaxAge = _verifyMaxAge as jest.Mock;
 const verifyPromptMode = _verifyPromptMode as jest.Mock;
+const verifyRequiredFactors = _verifyRequiredFactors as jest.Mock;
 const verifyRequiredMethods = _verifyRequiredMethods as jest.Mock;
+const verifyRequiredStrategies = _verifyRequiredStrategies as jest.Mock;
 const verifySessionExpiry = _verifySessionExpiry as jest.Mock;
 
 describe("isSsoAvailable", () => {
@@ -43,7 +47,9 @@ describe("isSsoAvailable", () => {
     verifyIdentityId.mockReturnValue(true);
     verifyMaxAge.mockReturnValue(true);
     verifyPromptMode.mockReturnValue(true);
+    verifyRequiredFactors.mockReturnValue(true);
     verifyRequiredMethods.mockReturnValue(true);
+    verifyRequiredStrategies.mockReturnValue(true);
     verifySessionExpiry.mockReturnValue(true);
   });
 
@@ -85,8 +91,20 @@ describe("isSsoAvailable", () => {
     expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });
 
+  test("should return false on required factors returning false", () => {
+    verifyRequiredFactors.mockReturnValue(false);
+
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
+  });
+
   test("should return false on required methods returning false", () => {
     verifyRequiredMethods.mockReturnValue(false);
+
+    expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
+  });
+
+  test("should return false on required strategies returning false", () => {
+    verifyRequiredStrategies.mockReturnValue(false);
 
     expect(isSsoAvailable(ctx, authorizationSession, client, browserSession)).toBe(false);
   });

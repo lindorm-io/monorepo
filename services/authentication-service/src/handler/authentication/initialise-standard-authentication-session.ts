@@ -84,7 +84,7 @@ export const initialiseStandardAuthenticationSession = async (
     nonce,
     mode: AuthenticationMode.NONE,
     phoneHint,
-    requiredLevel: levelOfAssurance,
+    requiredLevelOfAssurance: levelOfAssurance,
     requiredMethods: filterAuthenticationMethods(methods),
     requiredStrategies: filterAuthenticationStrategies(strategies),
   });

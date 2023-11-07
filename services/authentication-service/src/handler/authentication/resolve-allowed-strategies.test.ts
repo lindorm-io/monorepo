@@ -1,8 +1,8 @@
+import { createMockLogger } from "@lindorm-io/winston";
 import { createTestAccount, createTestAuthenticationSession } from "../../fixtures/entity";
 import { getValidDeviceLinks as _getValidDeviceLinks } from "./get-valid-device-links";
 import { getValidIdentitySessions as _getValidIdentitySessions } from "./get-valid-identity-sessions";
 import { resolveAllowedStrategies } from "./resolve-allowed-strategies";
-import { createMockLogger } from "@lindorm-io/winston";
 
 jest.mock("./get-valid-device-links");
 jest.mock("./get-valid-identity-sessions");
@@ -37,13 +37,13 @@ describe("resolveAllowedMethods", () => {
     await expect(
       resolveAllowedStrategies(ctx, authenticationSession, account),
     ).resolves.toStrictEqual([
-      "device_challenge",
-      "email_code",
-      "email_otp",
-      "password_browser_link",
-      "phone_otp",
-      "rdc_qr_code",
-      "session_display_code",
+      "urn:lindorm:auth:strategy:device-challenge",
+      "urn:lindorm:auth:strategy:email-code",
+      "urn:lindorm:auth:strategy:email-otp",
+      "urn:lindorm:auth:strategy:password-browser-link",
+      "urn:lindorm:auth:strategy:phone-otp",
+      "urn:lindorm:auth:strategy:rdc-qr-code",
+      "urn:lindorm:auth:strategy:session-display-code",
     ]);
   });
 });

@@ -122,12 +122,12 @@ const schema = Joi.object<ClientAttributes>()
         grantTypes: Joi.array()
           .items(Joi.string().valid(...Object.values(OpenIdGrantType)))
           .required(),
-        methods: Joi.array().items(Joi.string()).required(),
+        methods: Joi.array().items(Joi.string().lowercase()).required(),
         responseTypes: Joi.array()
           .items(Joi.string().valid(...Object.values(OpenIdResponseType)))
           .required(),
         scopes: Joi.array().items(Joi.string()).required(),
-        strategies: Joi.array().items(Joi.string()).required(),
+        strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
     audiences: Joi.object()

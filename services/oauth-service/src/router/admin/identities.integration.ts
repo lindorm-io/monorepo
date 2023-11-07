@@ -91,10 +91,15 @@ describe("/admin/identities", () => {
         {
           adjusted_access_level: 1,
           id: refresh1.id,
+          factors: ["urn:lindorm:auth:acr:2fa"],
           latest_authentication: "2021-01-01T07:59:00.000Z",
           level_of_assurance: 1,
-          methods: ["email", "phone"],
+          methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
           scopes: ["openid", "profile"],
+          strategies: [
+            "urn:lindorm:auth:strategy:email-code",
+            "urn:lindorm:auth:strategy:phone-otp",
+          ],
           type: "refresh",
           metadata: {
             device_name: "Test Device",
@@ -118,10 +123,15 @@ describe("/admin/identities", () => {
         {
           adjusted_access_level: 2,
           id: refresh2.id,
+          factors: ["urn:lindorm:auth:acr:2fa"],
           latest_authentication: "2021-01-01T07:59:00.000Z",
           level_of_assurance: 2,
-          methods: ["email", "phone"],
+          methods: ["urn:lindorm:auth:method:email", "urn:lindorm:auth:method:phone"],
           scopes: ["openid", "profile"],
+          strategies: [
+            "urn:lindorm:auth:strategy:email-code",
+            "urn:lindorm:auth:strategy:phone-otp",
+          ],
           type: "refresh",
           metadata: {
             device_name: "Test Device",

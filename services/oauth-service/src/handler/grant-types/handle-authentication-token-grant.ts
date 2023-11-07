@@ -88,6 +88,7 @@ export const handleAuthenticationTokenGrant = async (
       authorizationGrant: OpenIdGrantType.AUTHENTICATION_TOKEN,
       clientId: client.id,
       expires: expiryDate("4 years"),
+      factors: data.factors,
       identityId: data.identityId,
       latestAuthentication: new Date(data.latestAuthentication),
       levelOfAssurance: data.levelOfAssurance,
@@ -95,6 +96,7 @@ export const handleAuthenticationTokenGrant = async (
       methods: data.methods,
       nonce: data.nonce,
       scopes: authenticationTokenSession.scopes,
+      strategies: data.strategies,
       tenantId: client.tenantId,
       type: authenticationTokenSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH

@@ -1,4 +1,9 @@
-import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  IdentifierType,
+  SessionStatus,
+} from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import {
@@ -44,7 +49,7 @@ describe("confirmStrategyController", () => {
           allowedStrategies: [AuthenticationStrategy.DEVICE_CHALLENGE],
           identityId: null,
           confirmedIdentifiers: ["test@lindorm.io"],
-          requiredLevel: 1,
+          requiredLevelOfAssurance: 1,
           status: SessionStatus.PENDING,
         }),
         strategySession: createTestStrategySession({
@@ -69,7 +74,7 @@ describe("confirmStrategyController", () => {
         }),
     }));
     calculateAuthenticationStatus.mockReturnValue("confirmed");
-    resolveAllowedMethods.mockResolvedValue(["device_challenge"]);
+    resolveAllowedMethods.mockResolvedValue([AuthenticationMethod.DEVICE_LINK]);
   });
 
   test("should resolve", async () => {
@@ -77,9 +82,9 @@ describe("confirmStrategyController", () => {
 
     expect(ctx.redis.authenticationSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedStrategies: ["device_challenge"],
+        allowedStrategies: ["urn:lindorm:auth:strategy:device-challenge"],
         confirmedIdentifiers: ["test@lindorm.io", "username"],
-        confirmedStrategies: ["password"],
+        confirmedStrategies: ["urn:lindorm:auth:strategy:password"],
         identityId: "c9cfca6e-c4f5-43b1-b42f-050900e50d60",
         remember: true,
         status: SessionStatus.CONFIRMED,

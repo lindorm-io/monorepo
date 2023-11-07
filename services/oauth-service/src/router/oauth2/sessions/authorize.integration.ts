@@ -1,5 +1,7 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
+  AuthenticationStrategy,
   OpenIdResponseMode,
   OpenIdScope,
   SessionStatus,
@@ -75,6 +77,7 @@ describe("/oauth2/sessions/authorize", () => {
           scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: clientSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
@@ -82,6 +85,7 @@ describe("/oauth2/sessions/authorize", () => {
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
           singleSignOn: true,
+          strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
         },
         responseMode: OpenIdResponseMode.QUERY,
         status: {
@@ -160,6 +164,7 @@ describe("/oauth2/sessions/authorize", () => {
           scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
         },
         confirmedLogin: {
+          factors: [AuthenticationFactor.TWO_FACTOR],
           identityId: clientSession.identityId,
           latestAuthentication: new Date(),
           levelOfAssurance: 3,
@@ -167,6 +172,7 @@ describe("/oauth2/sessions/authorize", () => {
           methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
           remember: true,
           singleSignOn: true,
+          strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.PHONE_OTP],
         },
         responseMode: OpenIdResponseMode.FORM_POST,
         status: {

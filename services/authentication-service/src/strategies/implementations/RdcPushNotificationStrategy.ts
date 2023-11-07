@@ -1,5 +1,6 @@
 import {
   AuthStrategyConfig,
+  AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
@@ -24,6 +25,7 @@ import {
 
 export class RdcPushNotificationStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
+    factor: AuthenticationFactor.PHISHING_RESISTANT,
     hintType: "none",
     identifierType: "none",
     loa: 3,

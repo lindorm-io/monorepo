@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationLevel,
+  AuthenticationMethod,
+} from "@lindorm-io/common-types";
 import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 import { createIdToken } from "./create-id-token";
 
@@ -22,8 +27,9 @@ describe("createIdToken", () => {
     expect(ctx.jwt.sign).toHaveBeenCalledWith({
       accessToken: undefined,
       audiences: [expect.any(String)],
-      authContextClass: "loa_2",
-      authMethodsReference: ["email", "phone"],
+      authContextClass: AuthenticationLevel.LOA_2,
+      authFactorReference: AuthenticationFactor.TWO_FACTOR,
+      authMethodsReference: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       authTime: 1609487940,
       authorizedParty: expect.any(String),
       claims: {
@@ -58,8 +64,9 @@ describe("createIdToken", () => {
     expect(ctx.jwt.sign).toHaveBeenCalledWith({
       accessToken: "accessToken",
       audiences: [expect.any(String)],
-      authContextClass: "loa_2",
-      authMethodsReference: ["email", "phone"],
+      authContextClass: AuthenticationLevel.LOA_2,
+      authFactorReference: AuthenticationFactor.TWO_FACTOR,
+      authMethodsReference: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       authTime: 1609487940,
       authorizedParty: expect.any(String),
       claims: {
@@ -96,8 +103,9 @@ describe("createIdToken", () => {
     expect(ctx.jwt.sign).toHaveBeenCalledWith({
       accessToken: "accessToken",
       audiences: [expect.any(String)],
-      authContextClass: "loa_2",
-      authMethodsReference: ["email", "phone"],
+      authContextClass: AuthenticationLevel.LOA_2,
+      authFactorReference: AuthenticationFactor.TWO_FACTOR,
+      authMethodsReference: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
       authTime: 1609487940,
       authorizedParty: expect.any(String),
       claims: {

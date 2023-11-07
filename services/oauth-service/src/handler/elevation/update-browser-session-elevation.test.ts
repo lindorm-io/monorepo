@@ -1,4 +1,8 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
@@ -29,9 +33,12 @@ describe("updateBrowserSessionElevation", () => {
 
     elevationSession = createTestElevationSession({
       confirmedAuthentication: {
+        factors: [AuthenticationFactor.PHISHING_RESISTANT_HARDWARE],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
+        metadata: {},
         methods: [AuthenticationMethod.BANK_ID_SE],
+        strategies: [AuthenticationStrategy.BANK_ID_SE],
       },
 
       browserSessionId: "06715391-bea3-47db-acf4-ffa1f500bcc8",
@@ -58,12 +65,21 @@ describe("updateBrowserSessionElevation", () => {
 
     expect(ctx.mongo.browserSessionRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
+        factors: [
+          AuthenticationFactor.TWO_FACTOR,
+          AuthenticationFactor.PHISHING_RESISTANT_HARDWARE,
+        ],
         latestAuthentication: new Date("2021-01-01T08:00:00.000Z"),
         levelOfAssurance: 4,
         methods: [
           AuthenticationMethod.BANK_ID_SE,
           AuthenticationMethod.EMAIL,
           AuthenticationMethod.PHONE,
+        ],
+        strategies: [
+          AuthenticationStrategy.BANK_ID_SE,
+          AuthenticationStrategy.EMAIL_CODE,
+          AuthenticationStrategy.PHONE_OTP,
         ],
       }),
     );

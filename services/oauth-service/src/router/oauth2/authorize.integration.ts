@@ -1,3 +1,9 @@
+import {
+  AuthenticationFactor,
+  AuthenticationLevel,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { baseHash } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -5,10 +11,10 @@ import request from "supertest";
 import { getTestData } from "../../fixtures/data";
 import { createTestClient } from "../../fixtures/entity";
 import {
-  getTestIdToken,
-  setupIntegration,
   TEST_AUTHORIZATION_SESSION_CACHE,
   TEST_CLIENT_REPOSITORY,
+  getTestIdToken,
+  setupIntegration,
 } from "../../fixtures/integration";
 import { configuration } from "../../server/configuration";
 import { server } from "../../server/server";
@@ -42,7 +48,13 @@ describe("/oauth2/authorize", () => {
     const response = await request(server.callback())
       .get("/oauth2/authorize")
       .query({
-        acr_values: ["loa_3", "session", "email", "phone"].join(" "),
+        acr_values: [
+          AuthenticationLevel.LOA_3,
+          AuthenticationFactor.TWO_FACTOR,
+          AuthenticationMethod.SESSION_LINK,
+          AuthenticationMethod.PHONE,
+          AuthenticationStrategy.EMAIL_CODE,
+        ].join(" "),
         client_id: client.id,
         code_challenge: codeChallenge,
         code_challenge_method: codeChallengeMethod,
@@ -87,6 +99,7 @@ describe("/oauth2/authorize", () => {
           scopes: [],
         },
         confirmedLogin: {
+          factors: [],
           identityId: null,
           latestAuthentication: null,
           levelOfAssurance: 0,
@@ -94,6 +107,7 @@ describe("/oauth2/authorize", () => {
           methods: [],
           remember: false,
           singleSignOn: false,
+          strategies: [],
         },
         country: null,
         displayMode: "page",
@@ -111,14 +125,12 @@ describe("/oauth2/authorize", () => {
           scopes: ["address", "email", "offline_access", "openid", "phone", "profile"],
         },
         requestedLogin: {
+          factors: ["urn:lindorm:auth:acr:2fa"],
           identityId: identityId,
-          minimumLevel: 3,
-          recommendedLevel: 3,
-          recommendedMethods: ["email", "phone"],
-          recommendedStrategies: [],
-          requiredLevel: 3,
-          requiredMethods: ["email", "phone"],
-          requiredStrategies: [],
+          levelOfAssurance: 3,
+          methods: ["urn:lindorm:auth:method:session-link", "urn:lindorm:auth:method:phone"],
+          minimumLevelOfAssurance: 3,
+          strategies: ["urn:lindorm:auth:strategy:email-code"],
         },
         requestedSelectAccount: {
           browserSessions: [],

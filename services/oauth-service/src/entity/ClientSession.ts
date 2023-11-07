@@ -1,4 +1,10 @@
-import { AuthenticationMethod, LevelOfAssurance, OpenIdGrantType } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  LevelOfAssurance,
+  OpenIdGrantType,
+} from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -19,6 +25,7 @@ export type ClientSessionAttributes = EntityAttributes & {
   clientId: string;
   code: string | null;
   expires: Date;
+  factors: Array<AuthenticationFactor>;
   identityId: string;
   latestAuthentication: Date;
   levelOfAssurance: LevelOfAssurance;
@@ -26,6 +33,7 @@ export type ClientSessionAttributes = EntityAttributes & {
   methods: Array<AuthenticationMethod>;
   nonce: string;
   scopes: Array<Scope>;
+  strategies: Array<AuthenticationStrategy>;
   tenantId: string;
   type: ClientSessionType;
 };
@@ -47,13 +55,14 @@ const schema = Joi.object<ClientSessionAttributes>()
     ...JOI_ENTITY_BASE,
 
     audiences: Joi.array().items(Joi.string().guid()).required(),
-    browserSessionId: Joi.string().guid().allow(null).required(),
-    expires: Joi.date().required(),
     authorizationGrant: Joi.string()
       .valid(...Object.values(OpenIdGrantType))
       .required(),
+    browserSessionId: Joi.string().guid().allow(null).required(),
     clientId: Joi.string().guid().required(),
     code: Joi.string().allow(null).required(),
+    expires: Joi.date().required(),
+    factors: Joi.array().items(Joi.string().lowercase()).required(),
     identityId: Joi.string().guid().required(),
     latestAuthentication: Joi.date().required(),
     levelOfAssurance: JOI_LEVEL_OF_ASSURANCE.required(),
@@ -61,6 +70,7 @@ const schema = Joi.object<ClientSessionAttributes>()
     methods: Joi.array().items(Joi.string().lowercase()).required(),
     nonce: JOI_NONCE.required(),
     scopes: Joi.array().items(Joi.string().lowercase()).required(),
+    strategies: Joi.array().items(Joi.string().lowercase()).required(),
     tenantId: Joi.string().guid().required(),
     type: Joi.string()
       .valid(...Object.values(ClientSessionType))
@@ -79,11 +89,13 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
   public audiences: Array<string>;
   public code: string | null;
   public expires: Date;
+  public factors: Array<AuthenticationFactor>;
   public latestAuthentication: Date;
   public levelOfAssurance: LevelOfAssurance;
   public methods: Array<AuthenticationMethod>;
   public nonce: string;
   public scopes: Array<Scope>;
+  public strategies: Array<AuthenticationStrategy>;
   public type: ClientSessionType;
 
   public constructor(options: ClientSessionOptions) {
@@ -95,6 +107,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     this.clientId = options.clientId;
     this.code = options.code || null;
     this.expires = options.expires;
+    this.factors = options.factors;
     this.identityId = options.identityId;
     this.latestAuthentication = options.latestAuthentication || new Date();
     this.levelOfAssurance = options.levelOfAssurance;
@@ -102,6 +115,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
     this.methods = options.methods || [];
     this.nonce = options.nonce || randomUnreserved(16);
     this.scopes = options.scopes || [];
+    this.strategies = options.strategies;
     this.tenantId = options.tenantId;
     this.type = options.type;
   }
@@ -120,6 +134,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
       clientId: this.clientId,
       code: this.code,
       expires: this.expires,
+      factors: this.factors,
       identityId: this.identityId,
       latestAuthentication: this.latestAuthentication,
       levelOfAssurance: this.levelOfAssurance,
@@ -127,6 +142,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
       methods: this.methods,
       nonce: this.nonce,
       scopes: this.scopes,
+      strategies: this.strategies,
       tenantId: this.tenantId,
       type: this.type,
     };

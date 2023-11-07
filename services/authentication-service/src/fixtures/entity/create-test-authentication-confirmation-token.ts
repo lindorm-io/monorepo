@@ -1,4 +1,8 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { randomString, randomToken } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import {
@@ -14,6 +18,7 @@ export const createTestAuthenticationConfirmationToken = (
     confirmedIdentifiers: ["test@lindorm.io", "0701234567"],
     country: "se",
     expires: new Date("2022-01-01T08:01:00.000Z"),
+    factors: [AuthenticationFactor.TWO_FACTOR],
     identityId: randomUUID(),
     levelOfAssurance: 1,
     maximumLevelOfAssurance: 1,
@@ -24,6 +29,7 @@ export const createTestAuthenticationConfirmationToken = (
     sessionId: randomUUID(),
     signature: randomToken(128),
     singleSignOn: true,
+    strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
 
     ...options,
   });

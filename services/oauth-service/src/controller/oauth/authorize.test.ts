@@ -1,3 +1,8 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+} from "@lindorm-io/common-types";
 import { randomUnreserved as _randomUnreserved } from "@lindorm-io/random";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
@@ -25,7 +30,7 @@ import {
   createConsentPendingUri as _createConsentPendingUri,
   createLoginPendingUri as _createLoginPendingUri,
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
-  filterAcrValues as _filterAcrValues,
+  extractAcrValues as _extractAcrValues,
 } from "../../util";
 import { oauthAuthorizeController } from "./authorize";
 
@@ -43,7 +48,7 @@ const createAuthorizationVerifyUri = _createAuthorizationVerifyUri as jest.Mock;
 const createConsentPendingUri = _createConsentPendingUri as jest.Mock;
 const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
 const createSelectAccountPendingUri = _createSelectAccountPendingUri as jest.Mock;
-const filterAcrValues = _filterAcrValues as jest.Mock;
+const extractAcrValues = _extractAcrValues as jest.Mock;
 const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
 const isSsoAvailable = _isSsoAvailable as jest.Mock;
@@ -133,9 +138,11 @@ describe("oauthAuthorizeController", () => {
     createConsentPendingUri.mockReturnValue("createConsentPendingUri");
     createLoginPendingUri.mockReturnValue("createLoginPendingUri");
     createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
-    filterAcrValues.mockReturnValue({
+    extractAcrValues.mockReturnValue({
+      factors: [AuthenticationFactor.PHISHING_RESISTANT],
       levelOfAssurance: 3,
-      methods: ["phone", "session", "email"],
+      methods: [AuthenticationMethod.TIME_BASED_OTP],
+      strategies: [AuthenticationStrategy.TIME_BASED_OTP],
     });
     isConsentRequired.mockReturnValue(false);
     isLoginRequired.mockReturnValue(false);
@@ -165,6 +172,7 @@ describe("oauthAuthorizeController", () => {
           scopes: [],
         },
         confirmedLogin: {
+          factors: [],
           identityId: null,
           latestAuthentication: null,
           levelOfAssurance: 0,
@@ -172,6 +180,7 @@ describe("oauthAuthorizeController", () => {
           methods: [],
           remember: false,
           singleSignOn: false,
+          strategies: [],
         },
         country: "se",
         displayMode: "popup",
@@ -198,12 +207,12 @@ describe("oauthAuthorizeController", () => {
           scopes: ["openid", "offline_access"],
         },
         requestedLogin: {
+          factors: [AuthenticationFactor.PHISHING_RESISTANT],
           identityId: "9c0eb0e6-989a-4bcb-a9a6-bc819c6ee3e9",
-          minimumLevel: 3,
-          recommendedLevel: 3,
-          recommendedMethods: ["phone", "session", "email"],
-          requiredLevel: 3,
-          requiredMethods: ["phone", "session", "email"],
+          levelOfAssurance: 3,
+          methods: [AuthenticationMethod.TIME_BASED_OTP],
+          minimumLevelOfAssurance: 3,
+          strategies: [AuthenticationStrategy.TIME_BASED_OTP],
         },
         requestedSelectAccount: {
           browserSessions: [
@@ -230,10 +239,12 @@ describe("oauthAuthorizeController", () => {
     tryFindBrowserSessions.mockResolvedValue([]);
     tryFindClientSession.mockResolvedValue(undefined);
 
-    filterAcrValues.mockImplementation(() => ({
-      requiredMethods: [],
+    extractAcrValues.mockReturnValue({
+      factors: [],
       levelOfAssurance: 0,
-    }));
+      methods: [],
+      strategies: [],
+    });
 
     ctx.data = {
       redirectUri: "https://test.lindorm.io/redirect",
@@ -261,6 +272,7 @@ describe("oauthAuthorizeController", () => {
           scopes: [],
         },
         confirmedLogin: {
+          factors: [],
           identityId: null,
           latestAuthentication: null,
           levelOfAssurance: 0,
@@ -268,6 +280,7 @@ describe("oauthAuthorizeController", () => {
           methods: [],
           remember: false,
           singleSignOn: false,
+          strategies: [],
         },
         country: null,
         displayMode: "popup",
@@ -292,12 +305,12 @@ describe("oauthAuthorizeController", () => {
           scopes: ["openid", "offline_access"],
         },
         requestedLogin: {
+          factors: [],
           identityId: null,
-          minimumLevel: 3,
-          recommendedLevel: 0,
-          recommendedMethods: undefined,
-          requiredLevel: 0,
-          requiredMethods: undefined,
+          levelOfAssurance: 0,
+          methods: [],
+          minimumLevelOfAssurance: 3,
+          strategies: [],
         },
         requestedSelectAccount: {
           browserSessions: [],

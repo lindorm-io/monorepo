@@ -1,5 +1,7 @@
 import {
+  AuthenticationFactor,
   AuthenticationMethod,
+  AuthenticationStrategy,
   LevelOfAssurance,
   OpenIdDisplayMode,
 } from "@lindorm-io/common-types";
@@ -15,11 +17,13 @@ type Options = {
   authenticationHint?: Array<string>;
   country?: string;
   display?: OpenIdDisplayMode;
+  factors?: Array<AuthenticationFactor>;
   levelOfAssurance?: LevelOfAssurance;
   methods?: Array<AuthenticationMethod>;
   nonce?: string;
   redirectUri?: string;
   state?: string;
+  strategies?: Array<AuthenticationStrategy>;
   uiLocales?: Array<string>;
 };
 
@@ -38,11 +42,13 @@ export const initialiseElevation = async (
     authenticationHint,
     country,
     display,
+    factors,
     levelOfAssurance,
     methods,
     nonce,
     redirectUri,
     state,
+    strategies,
     uiLocales,
   } = options;
 
@@ -59,15 +65,19 @@ export const initialiseElevation = async (
     : undefined;
 
   const adjustedAccessLevel = getAdjustedAccessLevel(clientSession);
+  const calculatedMinimumLoa = clientSession.levelOfAssurance - adjustedAccessLevel;
+  const minimumLevelOfAssurance = (
+    calculatedMinimumLoa > 0 ? calculatedMinimumLoa : 1
+  ) as LevelOfAssurance;
 
   return await elevationSessionCache.create(
     new ElevationSession({
       requestedAuthentication: {
-        minimumLevel: (clientSession.levelOfAssurance - adjustedAccessLevel) as LevelOfAssurance,
-        recommendedLevel: idToken?.metadata.levelOfAssurance || 0,
-        recommendedMethods: idToken?.metadata.authMethodsReference as Array<AuthenticationMethod>,
-        requiredLevel: levelOfAssurance || 0,
-        requiredMethods: methods || [],
+        factors: factors || [],
+        methods: methods || [],
+        minimumLevelOfAssurance,
+        levelOfAssurance: levelOfAssurance || 0,
+        strategies: strategies || [],
       },
       authenticationHint: removeEmptyFromArray(
         uniqArray(
@@ -77,7 +87,6 @@ export const initialiseElevation = async (
           idToken?.claims?.username,
         ),
       ),
-
       browserSessionId: browserSession?.id,
       clientId: client.id,
       clientSessionId: clientSession.id,

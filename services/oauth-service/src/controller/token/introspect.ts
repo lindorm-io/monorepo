@@ -6,7 +6,11 @@ import Joi from "joi";
 import { resolveTokenSession } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
-import { getAdjustedAccessLevel } from "../../util";
+import {
+  getAdjustedAccessLevel,
+  getAuthenticationLevelFromLevelOfAssurance,
+  getPrimaryFactor,
+} from "../../util";
 
 type RequestData = TokenIntrospectRequestBody;
 
@@ -40,7 +44,8 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
       body: {
         active: exp - now > 0 && now - iat >= 0,
         aal: getAdjustedAccessLevel(clientSession),
-        acr: `loa_${clientSession.levelOfAssurance}`,
+        acr: getAuthenticationLevelFromLevelOfAssurance(clientSession.levelOfAssurance),
+        afr: getPrimaryFactor(clientSession.factors),
         amr: clientSession.methods,
         aud: uniqArray(
           client.id,
@@ -74,6 +79,7 @@ export const tokenIntrospectController: ServerKoaController<RequestData> = async
         active: false,
         aal: 0,
         acr: null,
+        afr: null,
         amr: [],
         aud: [],
         authTime: 0,

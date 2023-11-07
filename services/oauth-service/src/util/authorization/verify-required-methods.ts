@@ -5,8 +5,8 @@ export const verifyRequiredMethods = (
   authorizationSession: AuthorizationSession,
   session: BrowserSession | ClientSession,
 ): boolean => {
-  if (!authorizationSession.requestedLogin.requiredMethods.length) return true;
+  if (!authorizationSession.requestedLogin.methods.length) return true;
   if (!session.methods.length) return false;
 
-  return !difference(authorizationSession.requestedLogin.requiredMethods, session.methods).length;
+  return !difference(authorizationSession.requestedLogin.methods, session.methods).length;
 };
