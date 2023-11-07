@@ -1,6 +1,7 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
+  OpenIdDisplayMode,
   SessionStatus,
 } from "@lindorm-io/common-types";
 import { randomUUID } from "crypto";
@@ -56,7 +57,11 @@ describe("/oauth2/login", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/login")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -89,7 +94,11 @@ describe("/oauth2/login", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/login")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);

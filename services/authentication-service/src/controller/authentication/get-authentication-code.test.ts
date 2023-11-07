@@ -1,16 +1,16 @@
+import { SessionStatus } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestAuthenticationSession } from "../../fixtures/entity";
 import { getAuthenticationCodeController } from "./get-authentication-code";
-import { SessionStatus } from "@lindorm-io/common-types";
-import { ClientError } from "@lindorm-io/errors";
 
 describe("getAuthenticationCodeController", () => {
   let ctx: any;
 
   beforeEach(() => {
     const authenticationSession = createTestAuthenticationSession({
-      confirmedOidcLevel: 0,
-      confirmedOidcProvider: null,
+      confirmedFederationLevel: 0,
+      confirmedFederationProvider: null,
       confirmedStrategies: [],
       status: SessionStatus.CONFIRMED,
     });

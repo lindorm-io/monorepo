@@ -49,7 +49,7 @@ Most of these services are currently being worked on to create a microservice ar
 This service handles all authentication related flows a customer might run into. It is built to work in tandem with the [OAuth Service](#oauth-service) but it is not a requirement. During an authentication flow, it will produce configuration for frontend to consume and render. The configuration holds a list of strategies sorted by the most prudent authentication strategy based on request details. Once the customer is authenticated, the service will generate an authentication token that can be used to either run your own session management, or to confirm an OAuth2.0 authorization session.
 
 - [Authentication using Strategies with lindorm.io](https://swimlanes.io/u/2TTffs950)
-- [Authentication using OIDC with lindorm.io](https://swimlanes.io/u/9uyMcHXMX)
+- [Authentication using Federation with lindorm.io](https://swimlanes.io/u/9uyMcHXMX)
 
 ## Device Service
 This service is an attempt to create something that is similar to BankID. A secure device (such as a phone or tablet) can be registered (or enrolled) into the service. With this enrolment it can issue and sign device challenges with a stored RSA public/private keypair, which can be used for multi factor authentication according to the EU PSD2 standards: Possession, Knowledge, and Inherence.

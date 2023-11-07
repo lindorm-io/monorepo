@@ -1,4 +1,3 @@
-import { authenticationSessionEntityMiddleware } from "../../middleware";
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
 import {
   getAuthenticationCodeController,
@@ -7,8 +6,8 @@ import {
   getAuthenticationSchema,
   initialiseAuthenticationController,
   initialiseAuthenticationSchema,
-  initialiseOidcController,
-  initialiseOidcSchema,
+  initialiseFederationController,
+  initialiseFederationSchema,
   initialiseStrategyController,
   initialiseStrategySchema,
   rejectAuthenticationController,
@@ -16,6 +15,7 @@ import {
   verifyAuthenticationController,
   verifyAuthenticationSchema,
 } from "../../controller";
+import { authenticationSessionEntityMiddleware } from "../../middleware";
 
 export const router = new Router<any, any>();
 
@@ -42,11 +42,11 @@ router.get(
 );
 
 router.get(
-  "/:id/oidc",
+  "/:id/federation",
   paramsMiddleware,
-  useSchema(initialiseOidcSchema),
+  useSchema(initialiseFederationSchema),
   authenticationSessionEntityMiddleware("data.id"),
-  useController(initialiseOidcController),
+  useController(initialiseFederationController),
 );
 
 router.post(

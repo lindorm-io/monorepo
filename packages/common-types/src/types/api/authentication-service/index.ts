@@ -1,3 +1,3 @@
 export * from "./authentication";
-export * from "./oidc";
+export * from "./federation";
 export * from "./strategy";

@@ -29,7 +29,7 @@ interface Routes {
   error: string;
   login: string;
   logout: string;
-  oidc: string;
+  federation: string;
   select_account: string;
 }
 
@@ -69,7 +69,7 @@ interface Services {
   device_service: Service;
   identity_service: Service;
   oauth_service: Service;
-  oidc_service: Service;
+  federation_service: Service;
   vault_service: Service;
 }
 

@@ -34,7 +34,7 @@ interface ServerAxios extends LindormNodeServerAxios {
   deviceClient: Axios;
   identityClient: Axios;
   oauthClient: Axios;
-  oidcClient: Axios;
+  federationClient: Axios;
   vaultClient: Axios;
 }
 

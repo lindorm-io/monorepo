@@ -1,4 +1,4 @@
-import { LindormScope, OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -39,7 +39,7 @@ describe("/oauth2/select-account", () => {
     });
 
   nock("https://oauth.test.lindorm.io")
-    .post((uri) => uri.startsWith("/admin/sessions/consent/") && uri.endsWith("/confirm"))
+    .post((uri) => uri.startsWith("/admin/sessions/select-account/") && uri.endsWith("/confirm"))
     .times(999)
     .reply(200, {
       redirectTo: "https://oauth-redirect-confirm.url/",
@@ -52,13 +52,17 @@ describe("/oauth2/select-account", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/select-account")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
 
     expect(location.origin).toBe("https://frontend.url");
-    expect(location.pathname).toBe("/api/consent");
+    expect(location.pathname).toBe("/api/select-account");
     expect(location.searchParams.get("session")).toBe("28c0d2ce-a3b4-45d8-9845-89d60fe8fed8");
   });
 
@@ -68,21 +72,22 @@ describe("/oauth2/select-account", () => {
       .reply(
         200,
         mockFetchOauthAuthorizationSession({
-          consent: {
+          selectAccount: {
             isRequired: false,
             status: SessionStatus.CONFIRMED,
 
-            audiences: [randomUUID()],
-            optionalScopes: Object.values(LindormScope),
-            requiredScopes: Object.values(OpenIdScope),
-            scopeDescriptions: [],
+            sessions: [{ identityId: randomUUID(), selectId: randomUUID() }],
           },
         }),
       );
 
     const response = await request(server.callback())
       .get("/oauth2/select-account")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);

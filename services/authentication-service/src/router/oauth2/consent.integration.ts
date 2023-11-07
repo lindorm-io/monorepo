@@ -1,6 +1,7 @@
 import {
   LindormScope,
   OpenIdClientType,
+  OpenIdDisplayMode,
   OpenIdScope,
   SessionStatus,
 } from "@lindorm-io/common-types";
@@ -57,7 +58,11 @@ describe("/oauth2/consent", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/consent")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -87,7 +92,11 @@ describe("/oauth2/consent", () => {
 
     const response = await request(server.callback())
       .get("/oauth2/consent")
-      .query({ session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8" })
+      .query({
+        session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
+      })
       .expect(302);
 
     const location = new URL(response.headers.location);
@@ -126,6 +135,8 @@ describe("/oauth2/consent", () => {
       .get("/oauth2/consent")
       .query({
         session: "28c0d2ce-a3b4-45d8-9845-89d60fe8fed8",
+        display: OpenIdDisplayMode.PAGE,
+        locales: "sv-SE en-GB",
       })
       .expect(302);
 

@@ -1,0 +1,40 @@
+frontend:
+  host: localhost
+  routes:
+    error: /error
+
+logger:
+  level: silly
+  colours: false
+  readable: false
+  timestamp: true
+
+oauth:
+  client_id: id
+  client_secret: secret
+
+federation_providers: []
+
+redis:
+  host: localhost
+  port: 6379
+  namespace: federation_service
+
+server:
+  domain: https://lindorm.io
+  environment: development
+  issuer: https://federation.lindorm.io
+  host: http://localhost
+  keys: []
+  port: 3000
+  workers: false
+
+services:
+  identity_service:
+    client_name: identityClient
+    issuer: https://identity.lindorm.io
+    host: http://localhost
+  oauth_service:
+    client_name: oauthClient
+    issuer: https://oauth.lindorm.io
+    host: http://localhost

@@ -1,6 +1,6 @@
-import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
-import { createTestAuthenticationSession } from "../fixtures/entity";
 import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { createTestAuthenticationSession } from "../fixtures/entity";
+import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 
 describe("calculateLevelOfAssurance", () => {
   test("should resolve with max value", () => {
@@ -42,7 +42,7 @@ describe("calculateLevelOfAssurance", () => {
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
           confirmedStrategies: [],
-          confirmedOidcLevel: 4,
+          confirmedFederationLevel: 4,
         }),
       ),
     ).toStrictEqual({ level: 4, maximum: 4 });
@@ -53,7 +53,7 @@ describe("calculateLevelOfAssurance", () => {
       calculateLevelOfAssurance(
         createTestAuthenticationSession({
           confirmedStrategies: [AuthenticationStrategy.MFA_COOKIE],
-          confirmedOidcLevel: 2,
+          confirmedFederationLevel: 2,
         }),
       ),
     ).toStrictEqual({ level: 3, maximum: 3 });

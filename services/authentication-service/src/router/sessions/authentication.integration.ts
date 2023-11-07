@@ -47,11 +47,11 @@ describe("/sessions/authentication", () => {
     .get((uri) => uri.startsWith("/admin/sessions/authorization/"))
     .reply(200, mockFetchOauthAuthorizationSession());
 
-  nock("https://oidc.test.lindorm.io").post("/admin/sessions").times(999).reply(200, {
-    redirect_to: "https://oidc-redirect.url",
+  nock("https://federation.test.lindorm.io").post("/admin/sessions").times(999).reply(200, {
+    redirect_to: "https://federation-redirect.url",
   });
 
-  nock("https://oidc.test.lindorm.io")
+  nock("https://federation.test.lindorm.io")
     .get((uri) => uri.startsWith("/admin/sessions"))
     .times(999)
     .reply(200, {
@@ -60,7 +60,7 @@ describe("/sessions/authentication", () => {
       provider: "apple",
     });
 
-  nock("https://oidc.test.lindorm.io")
+  nock("https://federation.test.lindorm.io")
     .get("/providers")
     .times(999)
     .reply(200, {
@@ -161,7 +161,7 @@ describe("/sessions/authentication", () => {
 
       expires: "2022-01-01T08:00:00.000Z",
       mode: "oauth",
-      oidc_providers: ["apple", "google", "microsoft"],
+      federation_providers: ["apple", "google", "microsoft"],
       status: "pending",
     });
   });
@@ -188,12 +188,12 @@ describe("/sessions/authentication", () => {
     await expect(argon.assert(response.body.code, found.code!)).resolves.not.toThrow();
   });
 
-  test("should resolve redirect to oidc", async () => {
+  test("should resolve redirect to federation", async () => {
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession(),
     );
 
-    const url = createURL("/sessions/authentication/:id/oidc", {
+    const url = createURL("/sessions/authentication/:id/federation", {
       host: "https://test.test",
       params: {
         id: authenticationSession.id,
@@ -209,7 +209,7 @@ describe("/sessions/authentication", () => {
     const response = await request(server.callback()).get(url).expect(302);
 
     const location = new URL(response.headers.location);
-    expect(location.origin).toBe("https://oidc-redirect.url");
+    expect(location.origin).toBe("https://federation-redirect.url");
   });
 
   test("should create new strategy session", async () => {

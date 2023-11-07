@@ -67,8 +67,8 @@ export const verifyAuthenticationController: ServerKoaController<RequestData> = 
   const { level, maximum } = calculateLevelOfAssurance(authenticationSession);
   const authMethodsReference: Array<string> = getMethodsFromStrategies(authenticationSession);
 
-  if (authenticationSession.confirmedOidcProvider) {
-    authMethodsReference.push("oidc");
+  if (authenticationSession.confirmedFederationProvider) {
+    authMethodsReference.push("federation");
   }
 
   if (!authenticationSession.nonce) {

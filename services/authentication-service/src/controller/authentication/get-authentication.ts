@@ -23,7 +23,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
-    axios: { oidcClient },
+    axios: { federationClient },
     entity: { authenticationSession },
   } = ctx;
 
@@ -43,7 +43,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
         config: [],
         expires: authenticationSession.expires.toISOString(),
         mode: authenticationSession.mode,
-        oidcProviders: [],
+        federationProviders: [],
         status: authenticationSession.status,
       },
     };
@@ -51,18 +51,18 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
 
   const clientConfig = generateClientConfig(authenticationSession);
 
-  let oidcProviders = [];
+  let federationProviders = [];
 
   if (
-    !authenticationSession.confirmedOidcProvider &&
-    !authenticationSession.confirmedOidcLevel &&
+    !authenticationSession.confirmedFederationProvider &&
+    !authenticationSession.confirmedFederationLevel &&
     !authenticationSession.confirmedStrategies.length
   ) {
     const {
       data: { providers },
-    } = await oidcClient.get("/providers");
+    } = await federationClient.get("/providers");
 
-    oidcProviders = providers;
+    federationProviders = providers;
   }
 
   return {
@@ -70,7 +70,7 @@ export const getAuthenticationController: ServerKoaController<RequestData> = asy
       config: clientConfig,
       expires: authenticationSession.expires.toISOString(),
       mode: authenticationSession.mode,
-      oidcProviders,
+      federationProviders,
       status: authenticationSession.status,
     },
   };

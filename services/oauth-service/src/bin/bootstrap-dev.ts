@@ -21,7 +21,7 @@ const ids = {
   communicationService: "aec0a293-4371-450a-bcfa-0f60f1f51a65",
   deviceService: "8da48653-ba29-416e-b882-393b60dce178",
   identityService: "9993fa84-bedf-4a93-a421-1f63719cd9d3",
-  oidcService: "3e0ab7aa-f445-4031-ad27-d87ff23d2ce2",
+  federationService: "3e0ab7aa-f445-4031-ad27-d87ff23d2ce2",
   vaultService: "c233687a-c610-412c-985b-5f6e95fbf47d",
   authApplication: "1061f927-d799-487d-bc30-0061dff84447",
 };
@@ -31,7 +31,7 @@ const secrets = {
   communicationService: "2pBUdV9qyAEh1efe_8sMZUFXw2HPDkct9209UWVLSloY-Rt9fzn_N2wjKbAy-MOX",
   deviceService: "v5ifdZHwIXV12AlZ7FC8vc1AwgeEqgxNXf5EjmhPyycgKq6U0iIqtZRxIhC2wE1W",
   identityService: "NnvjOhoTd7SQtuSzKgPU6LoB7mRUjR3i4I5vJVGxJXwuxE6RxP3X2Md5Yv9w6RSF",
-  oidcService: "rjasuBK8yLFR68_n6J_ySa0WA3gwAQN-NHEvVxAMzQDeuqP_lxHY4LN-JTmeXp7R",
+  federationService: "rjasuBK8yLFR68_n6J_ySa0WA3gwAQN-NHEvVxAMzQDeuqP_lxHY4LN-JTmeXp7R",
   vaultService: "oRGyqy9VzNFrZKLXs5VV5Gl8gLLXYI4QcLUfO6oEDz7VUMaCwY6srKnqUHha7jha",
   authApplication: "t3WZCoXASEkk5PTh8hQ_ThOySjbYz7hhHauyz0ZtMelW5TDGt2UhbDctFoD-KAU8",
 };
@@ -222,7 +222,7 @@ const main = async (): Promise<void> => {
 
   await repositories.client.create(
     new Client({
-      id: ids.oidcService,
+      id: ids.federationService,
       allowed: {
         codeChallengeMethods: [],
         grantTypes: [OpenIdGrantType.CLIENT_CREDENTIALS],
@@ -251,9 +251,9 @@ const main = async (): Promise<void> => {
       active: true,
       backChannelLogoutUri: "http://localhost/logout",
       domain: "http://localhost",
-      name: "lindorm.io/oidc-service",
+      name: "lindorm.io/federation-service",
       profile: OpenIdClientProfile.USER_AGENT_BASED_APPLICATION,
-      secret: await argon.encrypt(secrets.oidcService),
+      secret: await argon.encrypt(secrets.federationService),
       singleSignOn: true,
       tenantId: tenant.id,
       trusted: true,
@@ -368,9 +368,9 @@ const main = async (): Promise<void> => {
         id: ids.identityService,
         secret: secrets.identityService,
       },
-      oidc: {
-        id: ids.oidcService,
-        secret: secrets.oidcService,
+      federation: {
+        id: ids.federationService,
+        secret: secrets.federationService,
       },
       vault: {
         id: ids.vaultService,

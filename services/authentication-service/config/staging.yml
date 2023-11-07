@@ -18,7 +18,7 @@ services:
     host: https://identity.staging.lindorm.io
   oauth_service:
     host: https://oauth.staging.lindorm.io
-  oidc_service:
-    host: https://oidc.staging.lindorm.io
+  federation_service:
+    host: https://federation.staging.lindorm.io
   vault_service:
     host: https://vault.staging.lindorm.io

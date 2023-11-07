@@ -14,14 +14,14 @@ describe("getAuthenticationController", () => {
 
   beforeEach(() => {
     const authenticationSession = createTestAuthenticationSession({
-      confirmedOidcLevel: 0,
-      confirmedOidcProvider: null,
+      confirmedFederationLevel: 0,
+      confirmedFederationProvider: null,
       confirmedStrategies: [],
     });
 
     ctx = {
       axios: {
-        oidcClient: {
+        federationClient: {
           get: jest.fn().mockResolvedValue({
             data: {
               providers: ["apple", "google", "microsoft"],
@@ -46,7 +46,7 @@ describe("getAuthenticationController", () => {
         config: "CLIENT_CONFIG",
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
-        oidcProviders: ["apple", "google", "microsoft"],
+        federationProviders: ["apple", "google", "microsoft"],
         status: "pending",
       },
     });
@@ -54,8 +54,8 @@ describe("getAuthenticationController", () => {
 
   test("should resolve without providers", async () => {
     ctx.entity.authenticationSession = createTestAuthenticationSession({
-      confirmedOidcLevel: 2,
-      confirmedOidcProvider: "apple",
+      confirmedFederationLevel: 2,
+      confirmedFederationProvider: "apple",
       confirmedStrategies: [],
     });
 
@@ -64,7 +64,7 @@ describe("getAuthenticationController", () => {
         config: "CLIENT_CONFIG",
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
-        oidcProviders: [],
+        federationProviders: [],
         status: "pending",
       },
     });
@@ -78,7 +78,7 @@ describe("getAuthenticationController", () => {
         config: [],
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
-        oidcProviders: [],
+        federationProviders: [],
         status: "code",
       },
     });
@@ -92,7 +92,7 @@ describe("getAuthenticationController", () => {
         config: [],
         expires: "2022-01-01T08:00:00.000Z",
         mode: "oauth",
-        oidcProviders: [],
+        federationProviders: [],
         status: "confirmed",
       },
     });

@@ -24,9 +24,9 @@ services:
       - redis:redis
       - communication_service:communication-service
       - device_service:device-service
+      - federation_service:federation-service
       - identity_service:identity-service
       - oauth_service:oauth-service
-      - oidc_service:oidc-service
       - vault_service:vault-service
     ports:
       - "3000:3000"
@@ -106,9 +106,9 @@ services:
     volumes:
       - ./config/oauth-service:/app/volumes/config
 
-  oidc_service:
-    image: lindorm-io/oidc-service
-    container_name: oidc_service
+  federation_service:
+    image: lindorm-io/federation-service
+    container_name: federation_service
     links:
       - mongo:mongo
       - redis:redis
@@ -121,7 +121,7 @@ services:
       - NODE_CONFIG_ENV=example
       - NODE_ENV=development
     volumes:
-      - ./config/oidc-service:/app/volumes/config
+      - ./config/federation-service:/app/volumes/config
 
   vault_service:
     image: lindorm-io/vault-service

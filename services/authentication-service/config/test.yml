@@ -40,7 +40,7 @@ services:
     host: https://identity.test.lindorm.io
   oauth_service:
     host: https://oauth.test.lindorm.io
-  oidc_service:
-    host: https://oidc.test.lindorm.io
+  federation_service:
+    host: https://federation.test.lindorm.io
   vault_service:
     host: https://vault.test.lindorm.io

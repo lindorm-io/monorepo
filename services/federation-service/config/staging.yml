@@ -1,0 +1,16 @@
+redis:
+  username: username
+  password: password
+
+server:
+  domain: https://staging.lindorm.io
+  environment: staging
+  issuer: https://federation.staging.lindorm.io
+  host: https://federation.staging.lindorm.io
+  workers: true
+
+services:
+  identity_service:
+    host: https://identity.staging.lindorm.io
+  oauth_service:
+    host: https://oauth.staging.lindorm.io

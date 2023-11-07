@@ -29,8 +29,8 @@ export type AuthenticationSessionAttributes = EntityAttributes & {
   codeChallenge: string;
   codeChallengeMethod: PKCEMethod;
   confirmedIdentifiers: Array<string>;
-  confirmedOidcLevel: LevelOfAssurance;
-  confirmedOidcProvider: string | null;
+  confirmedFederationLevel: LevelOfAssurance;
+  confirmedFederationProvider: string | null;
   confirmedStrategies: Array<AuthenticationStrategy>;
   country: string | null;
   emailHint: string | null;
@@ -58,8 +58,8 @@ export type AuthenticationSessionOptions = Optional<
   | "allowedStrategies"
   | "code"
   | "confirmedIdentifiers"
-  | "confirmedOidcLevel"
-  | "confirmedOidcProvider"
+  | "confirmedFederationLevel"
+  | "confirmedFederationProvider"
   | "confirmedStrategies"
   | "country"
   | "emailHint"
@@ -89,8 +89,8 @@ const schema = Joi.object<AuthenticationSessionAttributes>()
     codeChallenge: Joi.string().required(),
     codeChallengeMethod: JOI_PKCE_METHOD.required(),
     confirmedIdentifiers: Joi.array().items(Joi.string()).required(),
-    confirmedOidcLevel: JOI_LEVEL_OF_ASSURANCE.required(),
-    confirmedOidcProvider: Joi.string().allow(null).required(),
+    confirmedFederationLevel: JOI_LEVEL_OF_ASSURANCE.required(),
+    confirmedFederationProvider: Joi.string().allow(null).required(),
     confirmedStrategies: Joi.array().items(JOI_AUTHENTICATION_STRATEGY).required(),
     country: Joi.string().lowercase().length(2).allow(null).required(),
     emailHint: Joi.string().allow(null).required(),
@@ -139,8 +139,8 @@ export class AuthenticationSession
   public allowedStrategies: Array<AuthenticationStrategy>;
   public code: string | null;
   public confirmedIdentifiers: Array<string>;
-  public confirmedOidcLevel: LevelOfAssurance;
-  public confirmedOidcProvider: string | null;
+  public confirmedFederationLevel: LevelOfAssurance;
+  public confirmedFederationProvider: string | null;
   public confirmedStrategies: Array<AuthenticationStrategy>;
   public identityId: string | null;
   public metadata: Dict;
@@ -157,8 +157,8 @@ export class AuthenticationSession
     this.codeChallenge = options.codeChallenge;
     this.codeChallengeMethod = options.codeChallengeMethod;
     this.confirmedIdentifiers = options.confirmedIdentifiers || [];
-    this.confirmedOidcLevel = options.confirmedOidcLevel || 0;
-    this.confirmedOidcProvider = options.confirmedOidcProvider || null;
+    this.confirmedFederationLevel = options.confirmedFederationLevel || 0;
+    this.confirmedFederationProvider = options.confirmedFederationProvider || null;
     this.confirmedStrategies = options.confirmedStrategies || [];
     this.country = options.country || null;
     this.emailHint = options.emailHint || null;
@@ -198,8 +198,8 @@ export class AuthenticationSession
       codeChallenge: this.codeChallenge,
       codeChallengeMethod: this.codeChallengeMethod,
       confirmedIdentifiers: this.confirmedIdentifiers,
-      confirmedOidcLevel: this.confirmedOidcLevel,
-      confirmedOidcProvider: this.confirmedOidcProvider,
+      confirmedFederationLevel: this.confirmedFederationLevel,
+      confirmedFederationProvider: this.confirmedFederationProvider,
       confirmedStrategies: this.confirmedStrategies,
       country: this.country,
       emailHint: this.emailHint,

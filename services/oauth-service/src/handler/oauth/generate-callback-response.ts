@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { expiresIn } from "@lindorm-io/expiry";
@@ -80,7 +81,7 @@ export const generateCallbackResponse = async (
       return {
         redirect: createURL(authorizationSession.redirectUri, {
           query: data,
-          queryCaseTransform: "snake",
+          queryCaseTransform: TransformMode.SNAKE,
         })
           .toString()
           .replace("?", "#"),
@@ -90,7 +91,7 @@ export const generateCallbackResponse = async (
       return {
         redirect: createURL(authorizationSession.redirectUri, {
           query: data,
-          queryCaseTransform: "snake",
+          queryCaseTransform: TransformMode.SNAKE,
         }).toString(),
       };
 

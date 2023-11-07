@@ -19,8 +19,8 @@
     "build": "lerna run build",
     "build:changed": "lerna run --since --include-dependents build",
     "dev": "compd --file docker-compose.yml yarn dev:compd",
-    "dev:bootstrap": "concurrently -n authentication,communication,device,identity,oauth,oidc,vault 'yarn --cwd services/authentication-service dev:bootstrap' 'yarn --cwd services/communication-service dev:bootstrap' 'yarn --cwd services/device-service dev:bootstrap' 'yarn --cwd services/identity-service dev:bootstrap' 'yarn --cwd services/oauth-service dev:bootstrap' 'yarn --cwd services/oidc-service dev:bootstrap' 'yarn --cwd services/vault-service dev:bootstrap' --kill-others-on-fail",
-    "dev:compd": "concurrently -n authentication,communication,device,identity,oauth,oidc,vault 'yarn --cwd services/authentication-service dev' 'yarn --cwd services/communication-service dev' 'yarn --cwd services/device-service dev' 'yarn --cwd services/identity-service dev' 'yarn --cwd services/oauth-service dev' 'yarn --cwd services/oidc-service dev' 'yarn --cwd services/vault-service dev' --kill-others-on-fail",
+    "dev:bootstrap": "concurrently -n authentication,communication,device,identity,oauth,federation,vault 'yarn --cwd services/authentication-service dev:bootstrap' 'yarn --cwd services/communication-service dev:bootstrap' 'yarn --cwd services/device-service dev:bootstrap' 'yarn --cwd services/identity-service dev:bootstrap' 'yarn --cwd services/oauth-service dev:bootstrap' 'yarn --cwd services/federation-service dev:bootstrap' 'yarn --cwd services/vault-service dev:bootstrap' --kill-others-on-fail",
+    "dev:compd": "concurrently -n authentication,communication,device,identity,oauth,federation,vault 'yarn --cwd services/authentication-service dev' 'yarn --cwd services/communication-service dev' 'yarn --cwd services/device-service dev' 'yarn --cwd services/identity-service dev' 'yarn --cwd services/oauth-service dev' 'yarn --cwd services/federation-service dev' 'yarn --cwd services/vault-service dev' --kill-others-on-fail",
     "lint": "lerna exec -- eslint . --ext .ts",
     "lint:changed": "lerna exec --since --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
     "prepare": "husky install",
@@ -62,11 +62,11 @@
     "typescript": "^5.2.2"
   },
   "engines": {
-    "node": ">=20.9.0",
+    "node": ">=19.9.0",
     "yarn": ">=1.22.17"
   },
   "volta": {
-    "node": "20.9.0",
+    "node": "19.9.0",
     "yarn": "1.22.17"
   },
   "husky": {
