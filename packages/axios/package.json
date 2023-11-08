@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.2.0",
+    "@lindorm-io/common-types": "^0.3.2",
     "@lindorm-io/middleware": "^0.1.5",
     "@lindorm-io/retry": "^0.1.5",
     "@lindorm-io/url": "^0.2.12",
@@ -28,7 +29,6 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@lindorm-io/common-types": "^0.3.2",
     "@lindorm-io/console-logger": "^0.1.9",
     "@lindorm-io/core-logger": "^0.2.9",
     "@types/uuid": "^9.0.6",
