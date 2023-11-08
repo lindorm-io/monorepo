@@ -1,18 +1,5 @@
-import Joi from "joi";
-import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
-import { JoseData, JWK, KeyJWK } from "../types";
-import { KeyPairError } from "../error";
 import { camelCase, snakeCase } from "@lindorm-io/case";
-import { decodeKeys, encodeKeys } from "../util";
-import { fromUnixTime, getUnixTime } from "date-fns";
-import { orderBy } from "lodash";
 import { removeUndefinedFromObject } from "@lindorm-io/core";
-import {
-  JOI_KEY_ALGORITHM,
-  JOI_KEY_ALGORITHMS,
-  JOI_KEY_NAMED_CURVE,
-  JOI_KEY_TYPE,
-} from "../constant";
 import {
   EntityAttributes,
   EntityKeys,
@@ -20,34 +7,44 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { fromUnixTime, getUnixTime } from "date-fns";
+import Joi from "joi";
+import { orderBy } from "lodash";
+import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
+import { KeyPairError } from "../error";
+import { JWK, JoseData, KeyJWK } from "../types";
+import { decodeKeys, encodeKeys } from "../util";
 
 export interface KeyPairAttributes extends EntityAttributes {
   algorithms: Array<Algorithm>;
-  allowed: Date;
-  expires: Date | null;
-  external: boolean;
+  expiresAt: Date | null;
+  isExternal: boolean;
   namedCurve: NamedCurve | null;
+  notBefore: Date;
   operations: Array<KeyOperation>;
-  origin: string | null;
+  originUri: string | null;
+  ownerId: string | null;
   passphrase: string | null;
   preferredAlgorithm: Algorithm;
   privateKey: string | null;
-  publicKey: string;
+  publicKey: string | null;
   type: KeyType;
 }
 
 export type KeyPairOptions = Optional<
   KeyPairAttributes,
   | EntityKeys
-  | "allowed"
-  | "expires"
-  | "external"
+  | "expiresAt"
+  | "isExternal"
   | "namedCurve"
+  | "notBefore"
   | "operations"
-  | "origin"
+  | "originUri"
+  | "ownerId"
   | "passphrase"
   | "preferredAlgorithm"
   | "privateKey"
+  | "publicKey"
 >;
 
 interface CalculateOperationsOptions {
@@ -60,36 +57,47 @@ const schema = Joi.object<KeyPairAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    algorithms: JOI_KEY_ALGORITHMS.required(),
-    allowed: Joi.date().required(),
-    expires: Joi.date().allow(null).required(),
-    external: Joi.boolean().required(),
-    namedCurve: JOI_KEY_NAMED_CURVE.allow(null).required(),
+    algorithms: Joi.array()
+      .items(Joi.string().valid(...Object.values(Algorithm)))
+      .required(),
+    expiresAt: Joi.date().allow(null).required(),
+    isExternal: Joi.boolean().required(),
+    namedCurve: Joi.string()
+      .valid(...Object.values(NamedCurve))
+      .allow(null)
+      .required(),
+    notBefore: Joi.date().required(),
     operations: Joi.array().items(Joi.string()).required(),
-    origin: Joi.string().uri().allow(null).required(),
+    originUri: Joi.string().uri().allow(null).required(),
+    ownerId: Joi.string().guid().allow(null).required(),
     passphrase: Joi.string().allow(null).required(),
-    preferredAlgorithm: JOI_KEY_ALGORITHM.required(),
+    preferredAlgorithm: Joi.string()
+      .valid(...Object.values(Algorithm))
+      .required(),
     privateKey: Joi.string().allow(null).required(),
-    publicKey: Joi.string().required(),
-    type: JOI_KEY_TYPE.required(),
+    publicKey: Joi.string().allow(null).required(),
+    type: Joi.string()
+      .valid(...Object.values(KeyType))
+      .required(),
   })
   .required();
 
 export class KeyPair extends LindormEntity<KeyPairAttributes> {
   public readonly algorithms: Array<Algorithm>;
-  public readonly external: boolean;
+  public readonly isExternal: boolean;
   public readonly namedCurve: NamedCurve | null;
   public readonly operations: Array<KeyOperation>;
-  public readonly origin: string | null;
+  public readonly originUri: string | null;
+  public readonly ownerId: string | null;
   public readonly passphrase: string | null;
   public readonly privateKey: string | null;
-  public readonly publicKey: string;
+  public readonly publicKey: string | null;
   public readonly type: KeyType;
 
   private _preferredAlgorithm: Algorithm;
 
-  public allowed: Date;
-  public expires: Date | null;
+  public notBefore: Date;
+  public expiresAt: Date | null;
 
   public constructor(options: KeyPairOptions) {
     super(options);
@@ -99,17 +107,18 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       orderBy(options.algorithms, [(item): Algorithm => item], ["desc"])[0];
 
     this.algorithms = options.algorithms;
-    this.allowed = options.allowed || this.created;
-    this.expires = options.expires || null;
-    this.external = options.external === true;
+    this.expiresAt = options.expiresAt || null;
+    this.isExternal = options.isExternal === true;
     this.namedCurve = options.namedCurve || null;
+    this.notBefore = options.notBefore || this.created;
     this.operations = options.operations?.length
       ? options.operations
       : KeyPair.calculateOperations(options);
-    this.origin = options.origin || null;
+    this.originUri = options.originUri || null;
+    this.ownerId = options.ownerId || null;
     this.passphrase = options.passphrase || null;
     this.privateKey = options.privateKey || null;
-    this.publicKey = options.publicKey;
+    this.publicKey = options.publicKey || null;
     this.type = options.type;
   }
 
@@ -139,12 +148,13 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
       ...this.defaultJSON(),
 
       algorithms: this.algorithms,
-      allowed: this.allowed,
-      expires: this.expires,
-      external: this.external,
+      expiresAt: this.expiresAt,
+      isExternal: this.isExternal,
       namedCurve: this.namedCurve,
+      notBefore: this.notBefore,
       operations: this.operations,
-      origin: this.origin,
+      originUri: this.originUri,
+      ownerId: this.ownerId,
       passphrase: this.passphrase,
       preferredAlgorithm: this.preferredAlgorithm,
       privateKey: this.privateKey,
@@ -154,6 +164,10 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
   }
 
   public toJWK(exposePrivateKey = false): JWK {
+    if (!this.publicKey) {
+      throw new KeyPairError("KeyPair has no public key");
+    }
+
     const data: KeyJWK = encodeKeys({
       exposePrivateKey,
       namedCurve: this.namedCurve,
@@ -171,14 +185,15 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     return removeUndefinedFromObject(
       snakeCase({
         alg: this.preferredAlgorithm,
-        allowedFrom: getUnixTime(this.allowed),
         createdAt: getUnixTime(this.created),
         crv: this.namedCurve ? this.namedCurve : undefined,
-        expiresAt: this.expires ? getUnixTime(this.expires) : undefined,
+        expiresAt: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
         keyOps,
         kid: this.id,
         kty: this.type,
-        origin: this.origin ? this.origin : undefined,
+        notBefore: getUnixTime(this.notBefore),
+        originUri: this.originUri ? this.originUri : undefined,
+        ownerId: this.ownerId ? this.ownerId : undefined,
         use: "sig",
         ...data,
       }),
@@ -192,13 +207,14 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     return new KeyPair({
       id: jwk.kid,
       algorithms: [jwk.alg as Algorithm],
-      allowed: jwk.allowedFrom ? fromUnixTime(jwk.allowedFrom) : undefined,
       created: jwk.createdAt ? fromUnixTime(jwk.createdAt) : undefined,
-      expires: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
-      external: true,
-      operations: jwk.keyOps as Array<KeyOperation>,
+      expiresAt: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
+      isExternal: true,
       namedCurve: jwk.crv ? (jwk.crv as NamedCurve) : undefined,
-      origin: jwk.origin,
+      notBefore: jwk.notBefore ? fromUnixTime(jwk.notBefore) : undefined,
+      operations: jwk.keyOps as Array<KeyOperation>,
+      originUri: jwk.originUri,
+      ownerId: jwk.ownerId,
       preferredAlgorithm: jwk.alg as Algorithm,
       type: jwk.kty as KeyType,
       ...data,

@@ -36,8 +36,8 @@ export const keyPairMongoMemoryWorker = (options: Options): IntervalWorker => {
         const memoryCache = new KeyPairMemoryCache(memoryDatabase, logger);
 
         for (const entity of array) {
-          if (!entity.expires) {
-            entity.expires = addSeconds(expiryDate(workerInterval), 15);
+          if (!entity.expiresAt) {
+            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
           await memoryCache.upsert(entity);
         }

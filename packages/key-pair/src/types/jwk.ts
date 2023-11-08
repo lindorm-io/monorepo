@@ -10,10 +10,11 @@ export interface DefaultJWK {
 }
 
 export interface LindormJWK extends DefaultJWK {
-  allowedFrom?: number;
   createdAt?: number;
   expiresAt?: number;
-  origin?: string;
+  notBefore?: number;
+  originUri?: string;
+  ownerId?: string;
 }
 
 export interface EllipticalJWK {

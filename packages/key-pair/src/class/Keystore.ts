@@ -1,14 +1,16 @@
 import { orderBy, uniqBy } from "lodash";
 import { KeyPair } from "../entity";
-import { Algorithm, KeyType } from "../enum";
+import { KeyType } from "../enum";
 import { KeystoreError } from "../error";
 import { JWK } from "../types";
 import {
   isKeyAllowed,
   isKeyCorrectType,
   isKeyExpired,
+  isKeyJwkCompatible,
   isKeyNotExpired,
   isKeyPrivate,
+  isKeyPublic,
   isKeySigning,
 } from "../util";
 
@@ -54,12 +56,11 @@ export class Keystore {
   }
 
   public getJWKS(options: Partial<GetJWKSOptions> = {}): Array<JWK> {
+    const publicKeys = this.getKeys().filter(isKeyPublic).filter(isKeyJwkCompatible);
     const keys: Array<JWK> = [];
 
-    for (const keyPair of this.getKeys()) {
-      if (!options.exposeExternal && keyPair.external) continue;
-      if ([Algorithm.HS256, Algorithm.HS384, Algorithm.HS512].includes(keyPair.preferredAlgorithm))
-        continue;
+    for (const keyPair of publicKeys) {
+      if (!options.exposeExternal && keyPair.isExternal) continue;
 
       keys.push(keyPair.toJWK(options.exposePrivate));
     }
@@ -123,10 +124,10 @@ export class Keystore {
   // static
 
   public static getTTL(key: KeyPair): TTL | undefined {
-    if (!key.expires) return undefined;
+    if (!key.expiresAt) return undefined;
     if (isKeyExpired(key)) return undefined;
 
-    const ttl = key.expires.getTime() - new Date().getTime();
+    const ttl = key.expiresAt.getTime() - new Date().getTime();
 
     return {
       seconds: Math.round(ttl / 1000),

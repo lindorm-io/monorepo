@@ -1,8 +1,5 @@
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { KeyPairMongoRepository } from "./KeyPairMongoRepository";
-import { MongoConnection } from "@lindorm-io/mongo";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { randomUUID } from "crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import {
   Algorithm,
   createTestKeyPair,
@@ -10,6 +7,9 @@ import {
   KeyPair,
   KeyType,
 } from "@lindorm-io/key-pair";
+import { MongoConnection } from "@lindorm-io/mongo";
+import { randomUUID } from "crypto";
+import { KeyPairMongoRepository } from "./KeyPairMongoRepository";
 
 describe("KeyPairRepository", () => {
   let repository: KeyPairMongoRepository;
@@ -57,7 +57,7 @@ describe("KeyPairRepository", () => {
   });
 
   test("should update", async () => {
-    entity.expires = new Date("2099-01-01T08:00:00.000Z");
+    entity.expiresAt = new Date("2099-01-01T08:00:00.000Z");
 
     await expect(repository.update(entity)).resolves.toStrictEqual(expect.any(KeyPair));
   });

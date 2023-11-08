@@ -70,8 +70,8 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
         );
 
         for (const entity of keys) {
-          if (!entity.expires) {
-            entity.expires = addSeconds(expiryDate(workerInterval), 15);
+          if (!entity.expiresAt) {
+            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
           await redisRepository.upsert(entity);
         }

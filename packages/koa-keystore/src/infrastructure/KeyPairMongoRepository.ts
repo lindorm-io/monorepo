@@ -1,6 +1,6 @@
-import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
-import { KeyPair, KeyPairAttributes } from "@lindorm-io/key-pair";
 import { Logger } from "@lindorm-io/core-logger";
+import { KeyPair, KeyPairAttributes } from "@lindorm-io/key-pair";
+import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 
 export class KeyPairMongoRepository extends MongoRepositoryBase<KeyPairAttributes, KeyPair> {
   public constructor(connection: IMongoConnection, logger: Logger) {
@@ -8,11 +8,15 @@ export class KeyPairMongoRepository extends MongoRepositoryBase<KeyPairAttribute
       entityName: "KeyPair",
       indices: [
         {
-          index: { expires: 1 },
+          index: { expiresAt: 1 },
           options: { unique: false },
         },
         {
-          index: { external: 1 },
+          index: { isExternal: 1 },
+          options: { unique: false },
+        },
+        {
+          index: { notBefore: 1 },
           options: { unique: false },
         },
         {

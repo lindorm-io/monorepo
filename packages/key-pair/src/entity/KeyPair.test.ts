@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { KeyPair } from "./KeyPair";
 import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { KeyPair } from "./KeyPair";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
@@ -52,9 +52,11 @@ describe("KeyPair.ts", () => {
       id: "259ff47d-e334-4784-a478-04bf6d6b5d84",
       algorithms: [Algorithm.ES512, Algorithm.ES384, Algorithm.ES256],
       created: new Date("2019-01-01T08:00:00.000Z"),
-      allowed: new Date("2019-01-01T08:00:00.000Z"),
-      expires: new Date("2020-01-01T08:00:00.000Z"),
+      expiresAt: new Date("2020-01-01T08:00:00.000Z"),
       namedCurve: NamedCurve.P521,
+      notBefore: new Date("2019-01-01T08:00:00.000Z"),
+      originUri: "https://origin.uri",
+      ownerId: "e4edc190-6dbc-47eb-b144-2e9624f91f4a",
       privateKey: "privateKey",
       publicKey: "publicKey",
       type: KeyType.EC,
@@ -76,22 +78,22 @@ describe("KeyPair.ts", () => {
     ).toMatchSnapshot();
   });
 
-  test("should get/set allowed", () => {
-    expect(keyPair.allowed).toStrictEqual(new Date("2019-01-01T08:00:00.000Z"));
+  test("should get/set notBefore", () => {
+    expect(keyPair.notBefore).toStrictEqual(new Date("2019-01-01T08:00:00.000Z"));
 
-    const allowed = new Date("2019-03-01T08:00:00.000Z");
-    keyPair.allowed = allowed;
+    const notBefore = new Date("2019-03-01T08:00:00.000Z");
+    keyPair.notBefore = notBefore;
 
-    expect(keyPair.allowed).toBe(allowed);
+    expect(keyPair.notBefore).toBe(notBefore);
   });
 
-  test("should get/set expires", () => {
-    expect(keyPair.expires).toStrictEqual(new Date("2020-01-01T08:00:00.000Z"));
+  test("should get/set expiresAt", () => {
+    expect(keyPair.expiresAt).toStrictEqual(new Date("2020-01-01T08:00:00.000Z"));
 
-    const expires = new Date("2021-01-01T00:00:01.000Z");
-    keyPair.expires = expires;
+    const expiresAt = new Date("2021-01-01T00:00:01.000Z");
+    keyPair.expiresAt = expiresAt;
 
-    expect(keyPair.expires).toBe(expires);
+    expect(keyPair.expiresAt).toBe(expiresAt);
   });
 
   test("should get/set preferredAlgorithm", () => {

@@ -5,11 +5,13 @@ export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyP
   new KeyPair({
     id: "7531da89-12e9-403e-925a-5da49100635c",
     algorithms: [Algorithm.ES512],
-    allowed: new Date("2020-01-01T08:00:00.000Z"),
     created: new Date("2020-01-01T08:00:00.000Z"),
-    expires: new Date("2029-01-01T08:00:00.000Z"),
-    external: false,
+    expiresAt: new Date("2029-01-01T08:00:00.000Z"),
+    isExternal: false,
     namedCurve: NamedCurve.P521,
+    notBefore: new Date("2020-01-01T08:00:00.000Z"),
+    originUri: "https://example.com",
+    ownerId: "783f4859-562e-41e5-9c81-a392c12344c0",
     privateKey:
       "-----BEGIN PRIVATE KEY-----\n" +
       "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBGma7xGZpaAngFXf3\n" +
@@ -35,10 +37,12 @@ export const createTestKeyPairHS = (options: Partial<KeyPairOptions> = {}): KeyP
   new KeyPair({
     id: "aa08b86a-3550-4893-8021-9a18efcd1532",
     algorithms: [Algorithm.HS512],
-    allowed: new Date("2020-01-01T07:00:00.000Z"),
     created: new Date("2020-01-01T07:00:00.000Z"),
-    expires: new Date("2029-01-01T08:00:00.000Z"),
-    external: false,
+    expiresAt: new Date("2029-01-01T08:00:00.000Z"),
+    isExternal: false,
+    notBefore: new Date("2020-01-01T07:00:00.000Z"),
+    originUri: "https://example.com",
+    ownerId: "6e0e4a96-8bf6-46ab-90f4-17c3c3abf174",
     privateKey:
       "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
     publicKey:
@@ -52,10 +56,12 @@ export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): Key
   new KeyPair({
     id: "e6301473-e347-4035-8084-8645d034e4a3",
     algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
-    allowed: new Date("2020-01-01T07:00:00.000Z"),
     created: new Date("2020-01-01T07:00:00.000Z"),
-    expires: new Date("2029-01-01T08:00:00.000Z"),
-    external: false,
+    expiresAt: new Date("2029-01-01T08:00:00.000Z"),
+    isExternal: false,
+    notBefore: new Date("2020-01-01T07:00:00.000Z"),
+    originUri: "https://example.com",
+    ownerId: "ffe189e0-c82e-42d1-84ea-1bf4d4d07117",
     passphrase: "",
     privateKey:
       "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" +

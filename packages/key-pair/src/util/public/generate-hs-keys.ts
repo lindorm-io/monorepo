@@ -9,7 +9,6 @@ export type GenerateHsKeysOptions = {
 export type GenerateHsKeysData = {
   algorithms: Array<Algorithm>;
   privateKey: string;
-  publicKey: string;
   type: KeyType;
 };
 
@@ -18,12 +17,10 @@ export const generateHsKeys = (options: GenerateHsKeysOptions = {}): GenerateHsK
 
   const algorithms = [algorithm];
   const privateKey = randomUnreserved(length);
-  const publicKey = privateKey;
 
   return {
     algorithms,
     privateKey,
-    publicKey,
     type: KeyType.HS,
   };
 };

@@ -1,9 +1,9 @@
-import { KeyPair } from "../../entity";
 import { isAfter } from "date-fns";
+import { KeyPair } from "../../entity";
 import { KeyOperation, KeyType } from "../../enum";
 
 export const isKeyAllowed = (key: KeyPair): boolean =>
-  !!key.allowed && isAfter(new Date(), key.allowed);
+  !!key.notBefore && isAfter(new Date(), key.notBefore);
 
 export const isKeyCorrectType =
   (type?: KeyType) =>
@@ -11,9 +11,14 @@ export const isKeyCorrectType =
     !type || type === key.type;
 
 export const isKeyExpired = (key: KeyPair): boolean =>
-  !!key.expires && isAfter(new Date(), key.expires);
+  !!key.expiresAt && isAfter(new Date(), key.expiresAt);
 
 export const isKeyNotExpired = (key: KeyPair): boolean => !isKeyExpired(key);
+
+export const isKeyJwkCompatible = (key: KeyPair): boolean =>
+  [KeyType.EC, KeyType.RSA].includes(key.type);
+
+export const isKeyPublic = (key: KeyPair): boolean => typeof key.publicKey === "string";
 
 export const isKeyPrivate = (key: KeyPair): boolean => typeof key.privateKey === "string";
 

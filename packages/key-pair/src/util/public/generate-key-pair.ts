@@ -7,18 +7,18 @@ import { GenerateRsaKeysOptions, generateRsaKeys } from "./generate-rsa-keys";
 type Options = GenerateEcKeysOptions &
   GenerateHsKeysOptions &
   GenerateRsaKeysOptions & {
-    origin?: string;
+    originUri?: string;
     type: KeyType;
   };
 
 export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
-  const { origin, type } = options;
+  const { originUri, type } = options;
 
   let algorithms: Array<Algorithm>;
   let namedCurve: NamedCurve | null = null;
   let passphrase: string | null = null;
   let privateKey: string;
-  let publicKey: string;
+  let publicKey: string | null = null;
 
   switch (type) {
     case KeyType.EC:
@@ -26,7 +26,7 @@ export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
       break;
 
     case KeyType.HS:
-      ({ algorithms, privateKey, publicKey } = generateHsKeys(options));
+      ({ algorithms, privateKey } = generateHsKeys(options));
       break;
 
     case KeyType.RSA:
@@ -40,7 +40,7 @@ export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
   return new KeyPair({
     algorithms,
     namedCurve,
-    origin,
+    originUri,
     passphrase,
     privateKey,
     publicKey,

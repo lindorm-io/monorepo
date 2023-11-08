@@ -36,8 +36,8 @@ export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
         const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
 
         for (const entity of array) {
-          if (!entity.expires) {
-            entity.expires = addSeconds(expiryDate(workerInterval), 15);
+          if (!entity.expiresAt) {
+            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
           await redisRepository.upsert(entity);
         }

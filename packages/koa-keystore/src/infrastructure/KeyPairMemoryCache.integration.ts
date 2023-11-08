@@ -1,8 +1,5 @@
-import MockDate from "mockdate";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { KeyPairMemoryCache } from "./KeyPairMemoryCache";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { randomUUID } from "crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
 import {
   Algorithm,
@@ -11,6 +8,9 @@ import {
   KeyPair,
   KeyType,
 } from "@lindorm-io/key-pair";
+import { randomUUID } from "crypto";
+import MockDate from "mockdate";
+import { KeyPairMemoryCache } from "./KeyPairMemoryCache";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
@@ -28,7 +28,7 @@ describe("KeyPairMemory", () => {
 
   beforeEach(async () => {
     entity = await cache.create(
-      createTestKeyPair({ id: randomUUID(), expires: new Date("2022-01-01T08:15:00.000Z") }),
+      createTestKeyPair({ id: randomUUID(), expiresAt: new Date("2022-01-01T08:15:00.000Z") }),
     );
   });
 
@@ -47,7 +47,7 @@ describe("KeyPairMemory", () => {
   });
 
   test("should update with expiry", async () => {
-    entity.expires = new Date("2022-01-01T08:30:00.000Z");
+    entity.expiresAt = new Date("2022-01-01T08:30:00.000Z");
 
     await expect(cache.update(entity)).resolves.toStrictEqual(expect.any(KeyPair));
     await expect(cache.ttl(entity)).resolves.toBe(1800);

@@ -10,13 +10,13 @@ import { KeyPairMongoRepository } from "../infrastructure";
 type Options = {
   keyExpiry?: ReadableTime;
   keyType?: KeyType;
+  logger: Logger;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
-  origin?: string;
+  originUri?: string;
   passphrase?: string;
   retry?: Partial<RetryOptions>;
   rotationInterval?: ReadableTime;
-  logger: Logger;
   workerInterval?: ReadableTime;
 };
 
@@ -26,7 +26,7 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
     keyType = KeyType.EC,
     mongoConnection,
     namedCurve = NamedCurve.P521,
-    origin,
+    originUri,
     passphrase = "",
     retry,
     rotationInterval = "30 days",
@@ -48,18 +48,18 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
 
           const keyPair = await generateKeyPair({
             namedCurve,
-            origin,
+            originUri,
             passphrase,
             type: keyType,
           });
 
-          keyPair.allowed = now;
-          keyPair.expires = add(now, readableDuration(keyExpiry));
+          keyPair.notBefore = now;
+          keyPair.expiresAt = add(now, readableDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
-            allowed: keyPair.allowed,
-            expires: keyPair.expires,
+            expiresAt: keyPair.expiresAt,
+            notBefore: keyPair.notBefore,
             type: keyPair.type,
           });
 
@@ -69,18 +69,18 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
         if (keys.length < 2) {
           const keyPair = await generateKeyPair({
             namedCurve,
-            origin,
+            originUri,
             passphrase,
             type: keyType,
           });
 
-          keyPair.allowed = add(now, readableDuration(rotationInterval));
-          keyPair.expires = add(keyPair.allowed, readableDuration(keyExpiry));
+          keyPair.notBefore = add(now, readableDuration(rotationInterval));
+          keyPair.expiresAt = add(keyPair.notBefore, readableDuration(keyExpiry));
 
           logger.verbose("Adding KeyPair to repository", {
             id: keyPair.id,
-            allowed: keyPair.allowed,
-            expires: keyPair.expires,
+            expiresAt: keyPair.expiresAt,
+            notBefore: keyPair.notBefore,
             type: keyPair.type,
           });
 

@@ -1,8 +1,8 @@
 import MockDate from "mockdate";
-import { Keystore } from "./Keystore";
-import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
 import { KeyPair } from "../entity";
+import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
 import { KeystoreError } from "../error";
+import { Keystore } from "./Keystore";
 
 MockDate.set("2021-02-01T08:00:00.000Z");
 
@@ -41,12 +41,20 @@ const privateKeyExternal = new KeyPair({
   id: "privateKeyExternal",
   algorithms: [Algorithm.ES384],
   created: new Date("2020-01-03T01:00:00.000Z"),
+  isExternal: true,
   namedCurve: NamedCurve.P384,
-  external: true,
-  origin: "https://private.origin.uri/",
+  originUri: "https://private.origin.uri/",
   privateKey: "privateKeyExternal-private-key",
   publicKey: "privateKeyExternal-public-key",
   type: KeyType.EC,
+});
+
+const privateKeyHS = new KeyPair({
+  id: "privateKeyHS",
+  algorithms: [Algorithm.HS256, Algorithm.HS384, Algorithm.HS512],
+  created: new Date("2020-01-04T01:00:10.000Z"),
+  privateKey: "privateKeyHS-private-key",
+  type: KeyType.HS,
 });
 
 const privateKeyRSA = new KeyPair({
@@ -62,7 +70,7 @@ const privateKeyExpired = new KeyPair({
   id: "privateKeyExpired",
   algorithms: [Algorithm.ES512],
   created: new Date("2020-01-05T01:00:00.000Z"),
-  expires: new Date("2020-02-01T00:00:00.000Z"),
+  expiresAt: new Date("2020-02-01T00:00:00.000Z"),
   namedCurve: NamedCurve.P521,
   privateKey: "privateKeyExpired-private-key",
   publicKey: "privateKeyExpired-public-key",
@@ -73,7 +81,7 @@ const privateKeyExpires = new KeyPair({
   id: "privateKeyExpires",
   algorithms: [Algorithm.ES512],
   created: new Date("2020-01-06T01:00:00.000Z"),
-  expires: new Date("2022-01-01T00:00:00.000Z"),
+  expiresAt: new Date("2022-01-01T00:00:00.000Z"),
   namedCurve: NamedCurve.P521,
   privateKey: "privateKeyExpires-private-key",
   publicKey: "privateKeyExpires-public-key",
@@ -83,9 +91,9 @@ const privateKeyExpires = new KeyPair({
 const privateKeyNotAllowed = new KeyPair({
   id: "privateKeyNotAllowed",
   algorithms: [Algorithm.ES512],
-  allowed: new Date("2099-01-01T01:00:00.000Z"),
   created: new Date("2020-01-07T01:00:00.000Z"),
   namedCurve: NamedCurve.P521,
+  notBefore: new Date("2099-01-01T01:00:00.000Z"),
   privateKey: "privateKeyNotAllowed-private-key",
   publicKey: "privateKeyNotAllowed-public-key",
   type: KeyType.EC,
@@ -113,9 +121,9 @@ const publicKeyExternal = new KeyPair({
   id: "publicKeyExternal",
   algorithms: [Algorithm.ES256],
   created: new Date("2020-01-09T01:00:00.000Z"),
-  external: true,
-  origin: "https://public.origin.uri/",
+  isExternal: true,
   namedCurve: NamedCurve.P256,
+  originUri: "https://public.origin.uri/",
   publicKey: "publicKeyExternal-public-key",
   type: KeyType.EC,
 });
@@ -132,7 +140,7 @@ const publicKeyExpired = new KeyPair({
   id: "publicKeyExpired",
   algorithms: [Algorithm.ES512],
   created: new Date("2020-01-11T01:00:00.000Z"),
-  expires: new Date("2020-02-01T00:00:00.000Z"),
+  expiresAt: new Date("2020-02-01T00:00:00.000Z"),
   namedCurve: NamedCurve.P521,
   publicKey: "publicKeyExpired-public-key",
   type: KeyType.EC,
@@ -142,7 +150,7 @@ const publicKeyExpires = new KeyPair({
   id: "publicKeyExpires",
   algorithms: [Algorithm.ES512],
   created: new Date("2020-01-12T01:00:00.000Z"),
-  expires: new Date("2022-01-01T00:00:00.000Z"),
+  expiresAt: new Date("2022-01-01T00:00:00.000Z"),
   namedCurve: NamedCurve.P521,
   publicKey: "publicKeyExpires-public-key",
   type: KeyType.EC,
@@ -151,9 +159,9 @@ const publicKeyExpires = new KeyPair({
 const publicKeyNotAllowed = new KeyPair({
   id: "publicKeyNotAllowed",
   algorithms: [Algorithm.ES512],
-  allowed: new Date("2099-01-01T01:00:00.000Z"),
   created: new Date("2020-01-13T01:00:00.000Z"),
   namedCurve: NamedCurve.P521,
+  notBefore: new Date("2099-01-01T01:00:00.000Z"),
   publicKey: "publicKeyNotAllowed-public-key",
   type: KeyType.EC,
 });
@@ -186,6 +194,7 @@ describe("Keystore.ts", () => {
       privateKey,
       privateKeyCopy,
       privateKeyExternal,
+      privateKeyHS,
       privateKeyRSA,
       privateKeyExpired,
       privateKeyExpires,
@@ -242,13 +251,18 @@ describe("Keystore.ts", () => {
         publicKeyExternal,
         publicKey,
         privateKeyExpires,
+        privateKeyHS,
         privateKeyRSA,
         privateKeyExternal,
         privateKey,
       ]);
     });
 
-    test("should return all unique keys of type", () => {
+    test("should return all unique keys of type HS", () => {
+      expect(keystore.getKeys(KeyType.HS)).toStrictEqual([privateKeyHS]);
+    });
+
+    test("should return all unique keys of type EC", () => {
       expect(keystore.getKeys(KeyType.EC)).toStrictEqual([
         publicKeyExpires,
         publicKeyExternal,
@@ -276,13 +290,14 @@ describe("Keystore.ts", () => {
     test("should return all keys that are private", () => {
       expect(keystore.getPrivateKeys()).toStrictEqual([
         privateKeyExpires,
+        privateKeyHS,
         privateKeyRSA,
-        privateKey,
         privateKeyExternal,
+        privateKey,
       ]);
     });
 
-    test("should return all keys that are private of type", () => {
+    test("should return all keys that are private of type RSA", () => {
       expect(keystore.getPrivateKeys(KeyType.RSA)).toStrictEqual([privateKeyRSA]);
     });
 
