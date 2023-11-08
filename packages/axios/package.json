@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -21,10 +21,10 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.2.0",
-    "@lindorm-io/common-types": "^0.3.2",
+    "@lindorm-io/common-types": "^0.3.3",
     "@lindorm-io/middleware": "^0.1.5",
     "@lindorm-io/retry": "^0.1.5",
-    "@lindorm-io/url": "^0.2.12",
+    "@lindorm-io/url": "^0.2.13",
     "axios": "1.6.0",
     "uuid": "^9.0.1"
   },

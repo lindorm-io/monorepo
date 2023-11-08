@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa",
   "description": "Koa App & Router for lindorm.io",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.2.0",
-    "@lindorm-io/common-types": "^0.3.2",
+    "@lindorm-io/common-types": "^0.3.3",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/retry": "^0.1.5",
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@lindorm-io/core-logger": "^0.2.9",
-    "@lindorm-io/url": "^0.2.12",
+    "@lindorm-io/url": "^0.2.13",
     "@types/express-useragent": "^1.0.4",
     "@types/koa": "^2.13.10",
     "@types/koa-bodyparser": "^4.3.11",

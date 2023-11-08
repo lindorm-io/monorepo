@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.7.1...@lindorm-io/key-pair@0.8.0) (2023-11-08)
+
+### Features
+
+- rename keys and add owner identifier ([8c92835](https://github.com/lindorm-io/monorepo/commit/8c92835f91378aa476d03d8cbb5c276c5324ee12))
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.7.0...@lindorm-io/key-pair@0.7.1) (2023-11-06)
 
 **Note:** Version bump only for package @lindorm-io/key-pair

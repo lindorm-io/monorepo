@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.0...@lindorm-io/jwt@0.11.1) (2023-11-08)
+
+### Bug Fixes
+
+- add auth factor reference value to jwt ([b0a7a37](https://github.com/lindorm-io/monorepo/commit/b0a7a37c8ed6e7031e4c972fee17cd280ba1c72c))
+- align with key-pair ([7058aa5](https://github.com/lindorm-io/monorepo/commit/7058aa5370c74086f3c2eba987f87ed9edbedf47))
+
 # [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.10.0...@lindorm-io/jwt@0.11.0) (2023-11-06)
 
 ### Bug Fixes
