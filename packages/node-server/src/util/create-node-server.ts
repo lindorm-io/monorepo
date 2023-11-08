@@ -214,7 +214,7 @@ export const createNodeServer = <
           keyType,
           logger: options.logger,
           mongoConnection,
-          origin: issuer,
+          originUri: issuer,
           retry: { maximumAttempts: 30 },
         }),
       );

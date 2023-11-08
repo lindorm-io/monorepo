@@ -1,9 +1,6 @@
-import MockDate from "mockdate";
-import { JWT } from "@lindorm-io/jwt";
-import { Metric } from "@lindorm-io/koa";
-import { ServerError } from "@lindorm-io/errors";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { jwtMiddleware } from "./jwt-middleware";
+import { ServerError } from "@lindorm-io/errors";
+import { JWT } from "@lindorm-io/jwt";
 import {
   Algorithm,
   KeyPair,
@@ -13,6 +10,9 @@ import {
   NamedCurve,
   createTestKeystore,
 } from "@lindorm-io/key-pair";
+import { Metric } from "@lindorm-io/koa";
+import MockDate from "mockdate";
+import { jwtMiddleware } from "./jwt-middleware";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -56,7 +56,7 @@ describe("jwtMiddleware", () => {
         new KeyPair({
           id: "59c9f0ac-115a-47b1-b635-a85f88729fc7",
           algorithms: [Algorithm.ES512],
-          expires: new Date("1980-01-01T00:00:00.000Z"),
+          expiresAt: new Date("1980-01-01T00:00:00.000Z"),
           namedCurve: NamedCurve.P521,
           privateKey: "privateKey",
           publicKey: "publicKey",

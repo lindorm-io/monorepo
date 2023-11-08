@@ -173,7 +173,14 @@ export class JWT {
       algorithms = options.algorithms || ["HS256"];
       publicKey = secret;
     } else if (payload.key.id) {
-      ({ algorithms, publicKey } = this.keystore.getKey(payload.key.id));
+      const found = this.keystore.getKey(payload.key.id);
+
+      if (!found.publicKey) {
+        throw new TokenError("Missing public key");
+      }
+
+      algorithms = found.algorithms;
+      publicKey = found.publicKey;
     } else {
       throw new TokenError("Missing keyId or secret");
     }
