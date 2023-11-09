@@ -94,6 +94,7 @@ describe("getIdentityResponse", () => {
       avatarUri: "https://avatar.url/",
       locale: "sv-SE",
       middleName: "Rio",
+      name: "Olivia Torsson",
       namingSystem: "given_family",
       nationalIdentityNumbers: [
         {

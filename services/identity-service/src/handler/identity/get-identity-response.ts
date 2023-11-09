@@ -2,7 +2,7 @@ import { IdentifierType } from "@lindorm-io/common-enums";
 import { GetIdentityResponse } from "@lindorm-io/common-types";
 import { Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { getDisplayName } from "../../util";
+import { getDisplayName, getName } from "../../util";
 
 export const getIdentityResponse = async (
   ctx: ServerKoaContext,
@@ -16,6 +16,28 @@ export const getIdentityResponse = async (
   const identifiers = await identifierRepository.findMany({ identityId: identity.id });
 
   return {
+    active: identity.active,
+    avatarUri: identity.avatarUri,
+    birthDate: identity.birthDate,
+    displayName: getDisplayName(identity),
+    familyName: identity.familyName,
+    gender: identity.gender,
+    givenName: identity.givenName,
+    locale: identity.locale,
+    middleName: identity.middleName,
+    name: getName(identity),
+    namingSystem: identity.namingSystem,
+    nickname: identity.nickname,
+    picture: identity.picture,
+    preferredAccessibility: identity.preferredAccessibility,
+    preferredName: identity.preferredName,
+    preferredUsername: identity.preferredUsername,
+    profile: identity.profile,
+    pronouns: identity.pronouns,
+    username: identity.username,
+    website: identity.website,
+    zoneInfo: identity.zoneInfo,
+
     addresses: addresses.map((x) => ({
       careOf: x.careOf,
       country: x.country,
@@ -68,26 +90,5 @@ export const getIdentityResponse = async (
         provider: x.provider,
         verified: x.verified,
       })),
-
-    active: identity.active,
-    birthDate: identity.birthDate,
-    displayName: getDisplayName(identity),
-    familyName: identity.familyName,
-    gender: identity.gender,
-    givenName: identity.givenName,
-    avatarUri: identity.avatarUri,
-    locale: identity.locale,
-    middleName: identity.middleName,
-    namingSystem: identity.namingSystem,
-    nickname: identity.nickname,
-    picture: identity.picture,
-    preferredAccessibility: identity.preferredAccessibility,
-    preferredUsername: identity.preferredUsername,
-    profile: identity.profile,
-    pronouns: identity.pronouns,
-    preferredName: identity.preferredName,
-    username: identity.username,
-    website: identity.website,
-    zoneInfo: identity.zoneInfo,
   };
 };
