@@ -1,3 +1,4 @@
+import { Environment, SessionStatus } from "@lindorm-io/common-enums";
 import { VerifyAuthorizationRequestQuery } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
@@ -17,7 +18,6 @@ import {
   createSelectAccountPendingUri,
   createSelectAccountRejectedUri,
 } from "../../util";
-import { Environment, SessionStatus } from "@lindorm-io/common-enums";
 
 type RequestData = VerifyAuthorizationRequestQuery;
 
@@ -58,15 +58,13 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
   }
 
   switch (authorizationSession.status.selectAccount) {
-    case SessionStatus.CONFIRMED:
-      break;
-
     case SessionStatus.PENDING:
       return { redirect: createSelectAccountPendingUri(authorizationSession) };
 
     case SessionStatus.REJECTED:
       return { redirect: createSelectAccountRejectedUri(authorizationSession) };
 
+    case SessionStatus.CONFIRMED:
     case SessionStatus.SKIP:
     case SessionStatus.VERIFIED:
       break;
