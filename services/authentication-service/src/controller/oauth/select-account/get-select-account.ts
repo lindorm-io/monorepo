@@ -1,20 +1,16 @@
-import { SessionStatus } from "@lindorm-io/common-enums";
-import { PublicClientInfo, PublicTenantInfo, SelectAccountSession } from "@lindorm-io/common-types";
+import {
+  GetSelectAccountRequestParams,
+  GetSelectAccountResponse,
+  SelectAccountDetails,
+} from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
-import { getOauthAuthorizationSession } from "../../../handler";
+import { getIdentity, getOauthAuthorizationSession } from "../../../handler";
 import { ServerKoaController } from "../../../types";
 
-type RequestData = {
-  id: string;
-};
+type RequestData = GetSelectAccountRequestParams;
 
-type ResponseBody = {
-  sessions: Array<SelectAccountSession>;
-  status: SessionStatus;
-  client: PublicClientInfo;
-  tenant: PublicTenantInfo;
-};
+type ResponseBody = GetSelectAccountResponse;
 
 export const getSelectAccountSchema = Joi.object<RequestData>()
   .keys({
@@ -29,16 +25,27 @@ export const getSelectAccountController: ServerKoaController = async (
     data: { id },
   } = ctx;
 
-  const {
-    selectAccount: { status, sessions },
-    client,
-    tenant,
-  } = await getOauthAuthorizationSession(ctx, id);
+  const { selectAccount, client, tenant } = await getOauthAuthorizationSession(ctx, id);
+
+  const sessions: Array<SelectAccountDetails> = [];
+
+  for (const session of selectAccount.sessions) {
+    const identity = await getIdentity(ctx, session.identityId);
+
+    sessions.push({
+      active: identity.active,
+      avatarUri: identity.avatarUri,
+      identityId: session.identityId,
+      name: identity.name,
+      picture: identity.picture,
+      selectId: session.selectId,
+    });
+  }
 
   return {
     body: {
       sessions,
-      status,
+      status: selectAccount.status,
       client,
       tenant,
     },

@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
+import { mockFetchIdentity, mockFetchOauthAuthorizationSession } from "../../fixtures/axios";
 import { setupIntegration } from "../../fixtures/integration";
 import { server } from "../../server/server";
 
@@ -49,23 +49,36 @@ describe("/sessions/select-account", () => {
       redirectTo: "https://oauth-redirect-reject.url/",
     });
 
+  nock("https://identity.test.lindorm.io")
+    .get((url) => url.startsWith("/admin/identities/"))
+    .times(999)
+    .reply(200, mockFetchIdentity());
+
   test("should resolve consent session data", async () => {
     const response = await request(server.callback())
       .get("/sessions/select-account/87fe3e05-44b8-44bf-ab93-656001d14fc6")
       .expect(200);
 
     expect(response.body).toStrictEqual({
+      status: "pending",
       sessions: [
         {
+          active: true,
+          avatar_uri: "https://avatar.url/",
           identity_id: expect.any(String),
+          name: "Oliver Torsson",
+          picture: "https://picture.url/",
           select_id: expect.any(String),
         },
         {
+          active: true,
+          avatar_uri: "https://avatar.url/",
           identity_id: expect.any(String),
+          name: "Oliver Torsson",
+          picture: "https://picture.url/",
           select_id: expect.any(String),
         },
       ],
-      status: "pending",
       client: {
         id: expect.any(String),
         logo_uri: "https://test.client.com/logo.png",

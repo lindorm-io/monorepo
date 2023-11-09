@@ -3,4 +3,6 @@ import { StandardRequestParamsWithId } from "../../standard";
 
 export type GetIdentityRequestParams = StandardRequestParamsWithId;
 
-export type GetIdentityResponse = LindormIdentity;
+export type GetIdentityResponse = LindormIdentity & {
+  name: string | null;
+};
