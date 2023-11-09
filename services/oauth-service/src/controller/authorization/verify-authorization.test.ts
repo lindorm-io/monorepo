@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";

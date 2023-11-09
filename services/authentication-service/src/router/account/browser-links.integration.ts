@@ -1,17 +1,17 @@
+import { Environment } from "@lindorm-io/common-enums";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { CryptoLayered } from "@lindorm-io/crypto";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { Environment } from "@lindorm-io/common-types";
 import { createTestAccount, createTestBrowserLink } from "../../fixtures/entity";
-import { server } from "../../server/server";
 import {
-  getTestAccessToken,
-  setupIntegration,
   TEST_ACCOUNT_REPOSITORY,
   TEST_BROWSER_LINK_REPOSITORY,
+  getTestAccessToken,
+  setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

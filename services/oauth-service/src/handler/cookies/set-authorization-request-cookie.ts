@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { AUTHORIZATION_SESSION_COOKIE_NAME, BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";

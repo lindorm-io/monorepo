@@ -5,7 +5,7 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import Joi from "joi";
 
 export const JOI_CODE = Joi.string().length(128);

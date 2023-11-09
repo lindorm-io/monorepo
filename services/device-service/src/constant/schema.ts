@@ -1,11 +1,11 @@
-import Joi from "joi";
 import {
   CertificateMethod,
   ChallengeStrategy,
-  RdcSessionMethod,
+  HttpMethod,
   RdcSessionMode,
   RdcSessionType,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import Joi from "joi";
 
 export const JOI_BIOMETRY = Joi.string().length(128);
 
@@ -29,17 +29,17 @@ export const JOI_DEVICE_METADATA = Joi.object({
 export const JOI_FACTORS = Joi.number().valid(1, 2);
 
 export const JOI_RDC_CONFIRM_METHOD = Joi.string().valid(
-  RdcSessionMethod.POST,
-  RdcSessionMethod.PUT,
-  RdcSessionMethod.PATCH,
+  HttpMethod.POST,
+  HttpMethod.PUT,
+  HttpMethod.PATCH,
 );
 
 export const JOI_RDC_REJECT_METHOD = Joi.string().valid(
-  RdcSessionMethod.DELETE,
-  RdcSessionMethod.GET,
-  RdcSessionMethod.PATCH,
-  RdcSessionMethod.POST,
-  RdcSessionMethod.PUT,
+  HttpMethod.DELETE,
+  HttpMethod.GET,
+  HttpMethod.PATCH,
+  HttpMethod.POST,
+  HttpMethod.PUT,
 );
 
 export const JOI_RDC_MODE = Joi.string().valid(

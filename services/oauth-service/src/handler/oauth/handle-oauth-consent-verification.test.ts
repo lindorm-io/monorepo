@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { AuthorizationSession, Client } from "../../entity";
@@ -31,7 +31,7 @@ describe("handleOauthConsentVerification", () => {
     };
 
     authorizationSession = createTestAuthorizationSession();
-    authorizationSession.confirmedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationSession.confirmedConsent.scopes = [Scope.OPENID];
 
     client = createTestClient();
 
@@ -55,7 +55,7 @@ describe("handleOauthConsentVerification", () => {
   });
 
   test("should resolve client session", async () => {
-    authorizationSession.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
+    authorizationSession.confirmedConsent.scopes.push(Scope.OFFLINE_ACCESS);
 
     await expect(
       handleOauthConsentVerification(ctx, authorizationSession, client),

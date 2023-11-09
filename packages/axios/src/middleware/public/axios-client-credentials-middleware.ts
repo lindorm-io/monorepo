@@ -1,4 +1,5 @@
-import { OpenIdConfigurationResponse, OpenIdGrantType } from "@lindorm-io/common-types";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
+import { OpenIdConfigurationResponse } from "@lindorm-io/common-types";
 import { Logger } from "@lindorm-io/core-logger";
 import { Axios } from "../../class";
 import { Middleware, OAuthTokenResponseData } from "../../types";

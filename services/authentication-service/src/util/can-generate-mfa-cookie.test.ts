@@ -1,6 +1,6 @@
-import { canGenerateMfaCookie } from "./can-generate-mfa-cookie";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { createTestAuthenticationSession } from "../fixtures/entity";
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { canGenerateMfaCookie } from "./can-generate-mfa-cookie";
 
 describe("canFlowGenerateMfaCookie", () => {
   test("should resolve true", () => {

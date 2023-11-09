@@ -2,10 +2,9 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  AuthMethodInitialiseHint,
   IdentifierType,
-  LevelOfAssurance,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { AuthMethodInitialiseHint, LevelOfAssurance } from "@lindorm-io/common-types";
 
 export type AuthenticationStrategyConfig = {
   factor: AuthenticationFactor;

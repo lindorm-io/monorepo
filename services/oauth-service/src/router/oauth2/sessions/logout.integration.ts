@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";

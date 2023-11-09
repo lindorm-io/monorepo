@@ -2,8 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import MockDate from "mockdate";
 import request from "supertest";
 import {
@@ -49,7 +49,7 @@ describe("/admin/sessions/authorization", () => {
       createTestAuthorizationSession({
         requestedConsent: {
           audiences: ["0d51b830-1c22-4eea-95cf-209505626d63"],
-          scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE, OpenIdScope.PROFILE],
+          scopes: [Scope.OPENID, Scope.PHONE, Scope.PROFILE],
         },
         requestedLogin: {
           factors: [AuthenticationFactor.TWO_FACTOR],

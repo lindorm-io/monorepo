@@ -1,16 +1,15 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
-  LindormScope,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
   OpenIdResponseMode,
   OpenIdResponseType,
-  OpenIdScope,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { Client, Tenant } from "../entity";
 import { ClientRepository, TenantRepository } from "../infrastructure";
 import { argon, mongoConnection, redisConnection } from "../instance";
@@ -310,7 +309,7 @@ const main = async (): Promise<void> => {
         grantTypes: [OpenIdGrantType.AUTHORIZATION_CODE, OpenIdGrantType.REFRESH_TOKEN],
         methods: Object.values(AuthenticationMethod),
         responseTypes: Object.values(OpenIdResponseType),
-        scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+        scopes: Object.values(Scope),
         strategies: Object.values(AuthenticationStrategy),
       },
       audiences: {

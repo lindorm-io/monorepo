@@ -1,5 +1,4 @@
-import Joi from "joi";
-import { IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,
@@ -7,6 +6,7 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
 
 export type IdentifierAttributes = EntityAttributes & {
   identityId: string;

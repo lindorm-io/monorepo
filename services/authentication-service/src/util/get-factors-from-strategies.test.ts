@@ -1,4 +1,4 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 import { getFactorsFromStrategies } from "./get-factors-from-strategies";
 

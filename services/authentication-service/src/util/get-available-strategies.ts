@@ -1,7 +1,7 @@
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { AuthenticationSession } from "../entity";
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
-import { AuthenticationStrategyConfig } from "../types";
 import { STRATEGY_CONFIG_LIST } from "../strategies";
+import { AuthenticationStrategyConfig } from "../types";
 import { getMethodsFromStrategies } from "./get-methods-from-strategies";
 
 const hasUnusedMethod =

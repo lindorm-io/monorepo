@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/winston";
 import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import {

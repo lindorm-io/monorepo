@@ -1,4 +1,4 @@
-import { OpenIdPromptMode } from "@lindorm-io/common-types";
+import { OpenIdPromptMode } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { AuthorizationSession } from "../../entity";
 import { createTestAuthorizationSession } from "../../fixtures/entity";

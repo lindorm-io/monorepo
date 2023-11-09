@@ -1,4 +1,4 @@
-import { OpenIdGrantType } from "@lindorm-io/common-types";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createTestClient } from "../../fixtures/entity";
 import {

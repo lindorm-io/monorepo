@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
@@ -62,7 +62,7 @@ describe("handleAuthorizationCodeGrant", () => {
         clientId: "26176fc1-8e86-41f4-a649-9375c3814f47",
         requestedConsent: {
           audiences: [randomUUID()],
-          scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL, OpenIdScope.OFFLINE_ACCESS],
+          scopes: [Scope.OPENID, Scope.EMAIL, Scope.OFFLINE_ACCESS],
         },
       }),
     );

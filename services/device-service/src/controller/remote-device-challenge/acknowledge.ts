@@ -1,11 +1,8 @@
+import { RdcSessionMode, SessionStatus, SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import {
   AcknowledgeRdcRequestParams,
   AcknowledgeRdcResponse,
-  DeviceTokenType,
   EmitSocketEventRequestBody,
-  RdcSessionMode,
-  SessionStatus,
-  SubjectHint,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
@@ -67,7 +64,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     sessionHint: "rdc",
     subject: bearerToken.subject,
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
+    type: TokenType.REMOTE_DEVICE_CHALLENGE,
   });
 
   const deviceLinks = difference<string>(rdcSession.deviceLinks, [metadata.device.linkId]);

@@ -1,4 +1,4 @@
-import { AuthenticationMethod, AuthenticationStrategy, PKCEMethod } from "@lindorm-io/common-types";
+import { AuthenticationMethod, AuthenticationStrategy, PKCEMethod } from "@lindorm-io/common-enums";
 import Joi from "joi";
 
 export const JOI_AUTHENTICATION_METHOD = Joi.string().valid(...Object.values(AuthenticationMethod));

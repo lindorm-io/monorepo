@@ -1,5 +1,5 @@
+import { Environment } from "@lindorm-io/common-enums";
 import { BrowserLink, BrowserLinkOptions } from "../../entity";
-import { Environment } from "@lindorm-io/common-types";
 
 export const createTestBrowserLink = (options: Partial<BrowserLinkOptions> = {}): BrowserLink =>
   new BrowserLink({

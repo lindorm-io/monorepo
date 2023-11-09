@@ -1,4 +1,5 @@
-import { RejectAuthenticationRequestParams, SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { RejectAuthenticationRequestParams } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ServerKoaController } from "../../types";

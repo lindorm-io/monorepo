@@ -1,8 +1,8 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
   AcknowledgeStrategyRequestBody,
   AcknowledgeStrategyRequestParams,
   AcknowledgeStrategyResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { Controller, ControllerResponse } from "@lindorm-io/koa";

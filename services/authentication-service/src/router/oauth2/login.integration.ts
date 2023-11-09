@@ -4,7 +4,7 @@ import {
   AuthenticationStrategy,
   OpenIdDisplayMode,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";

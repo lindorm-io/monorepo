@@ -1,11 +1,8 @@
+import { ChallengeStrategy, PSD2Factor, SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import {
-  ChallengeStrategy,
   ConfirmChallengeRequestBody,
   ConfirmChallengeRequestParams,
   ConfirmChallengeResponse,
-  DeviceTokenType,
-  PSD2Factor,
-  SubjectHint,
 } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
@@ -128,7 +125,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
       sessionHint: "challenge",
       subject: deviceLink.identityId,
       subjectHint: SubjectHint.IDENTITY,
-      type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+      type: TokenType.CHALLENGE_CONFIRMATION,
     });
 
   await challengeSessionCache.destroy(challengeSession);

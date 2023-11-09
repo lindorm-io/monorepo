@@ -1,7 +1,7 @@
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { Identifier, IdentifierAttributes, Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { IdentifierType } from "@lindorm-io/common-types";
 
 type Options = Pick<IdentifierAttributes, "type" | "value" | "verified"> &
   Partial<Pick<IdentifierAttributes, "label" | "provider">>;

@@ -1,9 +1,5 @@
-import {
-  GetUserinfoResponse,
-  LindormIdentityClaims,
-  LindormScope,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
+import { GetUserinfoResponse, LindormIdentityClaims } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { getUnixTime } from "date-fns";
 import { getIdentifierClaims } from "../../handler";
@@ -31,7 +27,7 @@ export const getUserinfoController: ServerKoaController = async (
     updatedAt: getUnixTime(identity.updated),
   };
 
-  if (!scopes.includes(OpenIdScope.OPENID)) {
+  if (!scopes.includes(Scope.OPENID)) {
     return { body: claims };
   }
 
@@ -44,21 +40,21 @@ export const getUserinfoController: ServerKoaController = async (
 
   for (const scope of scopes.sort()) {
     switch (scope) {
-      case OpenIdScope.ADDRESS:
+      case Scope.ADDRESS:
         claims.address = getAddress(primaryAddress);
         break;
 
-      case OpenIdScope.EMAIL:
+      case Scope.EMAIL:
         claims.email = identifierUserinfo.email;
         claims.emailVerified = identifierUserinfo.emailVerified;
         break;
 
-      case OpenIdScope.PHONE:
+      case Scope.PHONE:
         claims.phoneNumber = identifierUserinfo.phoneNumber;
         claims.phoneNumberVerified = identifierUserinfo.phoneNumberVerified;
         break;
 
-      case OpenIdScope.PROFILE:
+      case Scope.PROFILE:
         claims.birthDate = identity.birthDate;
         claims.familyName = identity.familyName;
         claims.gender = identity.gender;
@@ -76,27 +72,27 @@ export const getUserinfoController: ServerKoaController = async (
         claims.zoneInfo = identity.zoneInfo;
         break;
 
-      case LindormScope.ACCESSIBILITY:
+      case Scope.ACCESSIBILITY:
         claims.preferredAccessibility = identity.preferredAccessibility;
         break;
 
-      case LindormScope.NATIONAL_IDENTITY_NUMBER:
+      case Scope.NATIONAL_IDENTITY_NUMBER:
         claims.nationalIdentityNumber = identifierUserinfo.nationalIdentityNumber;
         claims.nationalIdentityNumberVerified = identifierUserinfo.nationalIdentityNumberVerified;
         break;
 
-      case LindormScope.PUBLIC:
+      case Scope.PUBLIC:
         claims.displayName = getDisplayName(identity);
         claims.avatarUri = identity.avatarUri;
         claims.pronouns = identity.pronouns;
         break;
 
-      case LindormScope.SOCIAL_SECURITY_NUMBER:
+      case Scope.SOCIAL_SECURITY_NUMBER:
         claims.socialSecurityNumber = identifierUserinfo.socialSecurityNumber;
         claims.socialSecurityNumberVerified = identifierUserinfo.socialSecurityNumberVerified;
         break;
 
-      case LindormScope.USERNAME:
+      case Scope.USERNAME:
         claims.username = identity.username;
         break;
 

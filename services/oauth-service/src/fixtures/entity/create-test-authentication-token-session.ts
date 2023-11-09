@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { createOpaqueToken } from "@lindorm-io/jwt";
 import { randomUUID } from "crypto";
 import { AuthenticationTokenSession, AuthenticationTokenSessionOptions } from "../../entity";
@@ -11,7 +11,7 @@ export const createTestAuthenticationTokenSession = (
     clientId: randomUUID(),
     expires: new Date("2021-01-02T08:00:00.000Z"),
     metadata: { ip: "192.168.0.1", platform: "iOS" },
-    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+    scopes: [Scope.OPENID, Scope.PROFILE],
     token: createOpaqueToken().token,
     ...options,
   });

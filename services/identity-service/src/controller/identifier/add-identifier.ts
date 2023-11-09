@@ -1,10 +1,11 @@
-import Joi from "joi";
-import { AddIdentifierRequestBody, IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { AddIdentifierRequestBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { JOI_IDENTIFIER_TYPE } from "../../constant";
-import { ServerKoaController } from "../../types";
 import { addGenericIdentifier, addUsernameIdentifier } from "../../handler";
+import { ServerKoaController } from "../../types";
 import { assertIdentifier } from "../../util";
 
 type RequestData = AddIdentifierRequestBody;

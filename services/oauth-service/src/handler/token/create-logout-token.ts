@@ -1,4 +1,4 @@
-import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import { JwtSign } from "@lindorm-io/jwt";
 import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
@@ -24,6 +24,6 @@ export const createLogoutToken = (
     subject: clientSession.identityId,
     subjectHint: SubjectHint.IDENTITY,
     tenant: client.tenantId,
-    type: OpenIdTokenType.LOGOUT,
+    type: TokenType.LOGOUT,
   });
 };

@@ -1,19 +1,19 @@
+import { ChallengeStrategy } from "@lindorm-io/common-enums";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { randomHex, randomNumber } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { CryptoLayered } from "@lindorm-io/crypto";
 import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
-import { randomNumber, randomHex } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
-import { server } from "../server/server";
-import { ChallengeStrategy } from "@lindorm-io/common-types";
 import {
+  TEST_CHALLENGE_SESSION_CACHE,
+  TEST_DEVICE_REPOSITORY,
   getTestChallengeSessionToken,
   setupIntegration,
   signTestChallenge,
-  TEST_CHALLENGE_SESSION_CACHE,
-  TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

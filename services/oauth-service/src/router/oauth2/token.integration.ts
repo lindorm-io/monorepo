@@ -3,7 +3,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdGrantType,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { randomHex } from "@lindorm-io/random";

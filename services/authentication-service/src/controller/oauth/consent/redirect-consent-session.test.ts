@@ -1,9 +1,4 @@
-import {
-  LindormScope,
-  OpenIdClientType,
-  OpenIdScope,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { OpenIdClientType, Scope, SessionStatus } from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";
@@ -54,8 +49,21 @@ describe("redirectConsentSessionController", () => {
           status: SessionStatus.CONFIRMED,
 
           audiences: [randomUUID()],
-          optionalScopes: Object.values(LindormScope),
-          requiredScopes: Object.values(OpenIdScope),
+          optionalScopes: [
+            Scope.ACCESSIBILITY,
+            Scope.NATIONAL_IDENTITY_NUMBER,
+            Scope.PUBLIC,
+            Scope.SOCIAL_SECURITY_NUMBER,
+            Scope.USERNAME,
+          ],
+          requiredScopes: [
+            Scope.ADDRESS,
+            Scope.EMAIL,
+            Scope.OFFLINE_ACCESS,
+            Scope.OPENID,
+            Scope.PHONE,
+            Scope.PROFILE,
+          ],
           scopeDescriptions: [],
         },
       }),

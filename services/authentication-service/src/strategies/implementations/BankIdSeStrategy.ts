@@ -1,9 +1,9 @@
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import {

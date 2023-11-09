@@ -1,9 +1,5 @@
-import {
-  PublicClientInfo,
-  PublicTenantInfo,
-  SelectAccountSession,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { PublicClientInfo, PublicTenantInfo, SelectAccountSession } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { getOauthAuthorizationSession } from "../../../handler";

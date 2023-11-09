@@ -3,7 +3,7 @@ import {
   AuthenticationLevel,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { extractAcrValues } from "./extract-acr-values";
 
 describe("filterAcrValues", () => {

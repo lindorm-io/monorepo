@@ -1,4 +1,4 @@
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";

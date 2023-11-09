@@ -1,4 +1,5 @@
-import { SessionStatus, VerifyElevationSessionRequestQuery } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { VerifyElevationSessionRequestQuery } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";

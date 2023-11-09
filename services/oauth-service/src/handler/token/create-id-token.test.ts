@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationLevel,
   AuthenticationMethod,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 import { createIdToken } from "./create-id-token";
 

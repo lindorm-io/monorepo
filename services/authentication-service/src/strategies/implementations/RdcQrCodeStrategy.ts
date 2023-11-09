@@ -1,14 +1,13 @@
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
-  DeviceTokenType,
-  InitialiseRdcSessionRequestBody,
   RdcSessionMode,
-} from "@lindorm-io/common-types";
+  TokenType,
+} from "@lindorm-io/common-enums";
+import { AuthStrategyConfig, InitialiseRdcSessionRequestBody } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { getRdcBody } from "../../handler";
@@ -114,7 +113,7 @@ export class RdcQrCodeStrategy implements StrategyHandler {
       issuer: configuration.services.device_service.issuer,
       nonce: strategySession.nonce,
       scopes: ["authentication"],
-      types: [DeviceTokenType.CHALLENGE_CONFIRMATION],
+      types: [TokenType.CHALLENGE_CONFIRMATION],
     });
 
     logger.debug("Resolving Account");

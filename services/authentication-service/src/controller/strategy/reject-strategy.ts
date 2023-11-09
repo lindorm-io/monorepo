@@ -1,7 +1,8 @@
-import Joi from "joi";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { RejectStrategyRequestParams } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { ServerKoaController } from "../../types";
-import { RejectStrategyRequestParams, SessionStatus } from "@lindorm-io/common-types";
 
 type RequestData = RejectStrategyRequestParams;
 

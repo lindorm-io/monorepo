@@ -1,4 +1,4 @@
-import { OpenIdClientType } from "@lindorm-io/common-types";
+import { OpenIdClientType } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { getCredentials } from "@lindorm-io/koa-basic-auth";

@@ -1,19 +1,19 @@
+import { ChallengeStrategy, PSD2Factor } from "@lindorm-io/common-enums";
+import { CryptoLayered } from "@lindorm-io/crypto";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { randomNumber, randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { ChallengeStrategy, PSD2Factor } from "@lindorm-io/common-types";
-import { CryptoLayered } from "@lindorm-io/crypto";
-import { EntityNotFoundError } from "@lindorm-io/entity";
 import { createTestDeviceLink } from "../fixtures/entity";
-import { randomNumber, randomString } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
-import { server } from "../server/server";
 import {
+  TEST_DEVICE_REPOSITORY,
   getTestAccessToken,
   getTestChallengeConfirmationToken,
   setupIntegration,
-  TEST_DEVICE_REPOSITORY,
 } from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

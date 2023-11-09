@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 import {
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,

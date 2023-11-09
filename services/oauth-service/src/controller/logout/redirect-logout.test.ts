@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { createTestLogoutSession } from "../../fixtures/entity";
 import {
   createLogoutPendingUri as _createLogoutPendingUri,

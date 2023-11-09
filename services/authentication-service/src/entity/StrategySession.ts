@@ -1,4 +1,4 @@
-import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
+import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,

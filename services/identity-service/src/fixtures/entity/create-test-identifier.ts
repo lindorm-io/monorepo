@@ -1,8 +1,8 @@
-import { Identifier, IdentifierOptions } from "../../entity";
-import { IdentifierType } from "@lindorm-io/common-types";
-import { configuration } from "../../server/configuration";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { randomNumber, randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { Identifier, IdentifierOptions } from "../../entity";
+import { configuration } from "../../server/configuration";
 
 export const createTestEmailIdentifier = (options: Partial<IdentifierOptions> = {}): Identifier =>
   new Identifier({

@@ -2,7 +2,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { randomString } from "@lindorm-io/random";
 import { createURL } from "@lindorm-io/url";

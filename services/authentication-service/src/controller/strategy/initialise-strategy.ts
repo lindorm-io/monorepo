@@ -1,16 +1,16 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
-import { ServerKoaController } from "../../types";
-import { StrategySession } from "../../entity";
-import { getStrategyHandler } from "../../strategies";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import {
-  IdentifierType,
   InitialiseStrategyRequestBody,
   InitialiseStrategyRequestParams,
   InitialiseStrategyResponse,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_AUTHENTICATION_STRATEGY } from "../../constant";
+import { StrategySession } from "../../entity";
+import { getStrategyHandler } from "../../strategies";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseStrategyRequestParams & InitialiseStrategyRequestBody;
 

@@ -1,12 +1,4 @@
-import Joi from "joi";
-import { DeviceMetadata } from "../types";
-import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
-import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
-import {
-  JOI_CERTIFICATE_CHALLENGE,
-  JOI_CERTIFICATE_METHOD,
-  JOI_DEVICE_METADATA,
-} from "../constant";
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,
@@ -14,6 +6,14 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import Joi from "joi";
+import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
+import {
+  JOI_CERTIFICATE_CHALLENGE,
+  JOI_CERTIFICATE_METHOD,
+  JOI_DEVICE_METADATA,
+} from "../constant";
+import { DeviceMetadata } from "../types";
 
 export interface EnrolmentSessionAttributes extends EntityAttributes {
   audiences: Array<string>;

@@ -1,12 +1,4 @@
-import {
-  AuthStrategyConfig,
-  AuthenticationFactor,
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-  EmitSocketEventRequestBody,
-} from "@lindorm-io/common-types";
+import { AuthStrategyConfig, EmitSocketEventRequestBody } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { getValidIdentitySessions } from "../../handler";
@@ -21,6 +13,13 @@ import {
   StrategyHandler,
 } from "../../types";
 import { createOtp } from "../../util";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-enums";
 
 export class SessionOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

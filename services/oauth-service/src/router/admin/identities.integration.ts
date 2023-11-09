@@ -1,4 +1,4 @@
-import { OpenIdClientType } from "@lindorm-io/common-types";
+import { OpenIdClientType } from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";

@@ -1,31 +1,29 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
-  LevelOfAssurance,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
   OpenIdResponseMode,
   OpenIdResponseType,
-  Optional,
   PKCEMethod,
-  ScopeDescription,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance, Optional, ScopeDescription } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_SCOPE_DESCRIPTION } from "../common";
 import { JOI_EXPIRY_REGEX } from "../constant";
-import { Scope } from "../types";
 
 export type ClientAllowed = {
   codeChallengeMethods: Array<PKCEMethod>;
   grantTypes: Array<OpenIdGrantType>;
   methods: Array<AuthenticationMethod>;
   responseTypes: Array<OpenIdResponseType>;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
   strategies: Array<AuthenticationStrategy>;
 };
 
@@ -83,7 +81,7 @@ export type ClientAttributes = EntityAttributes & {
   postLogoutUris: Array<string>;
   profile: OpenIdClientProfile;
   redirectUris: Array<string>;
-  requiredScopes: Array<Scope>;
+  requiredScopes: Array<Scope | string>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   secret: string;
@@ -227,7 +225,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public postLogoutUris: Array<string>;
   public profile: OpenIdClientProfile;
   public redirectUris: Array<string>;
-  public requiredScopes: Array<Scope>;
+  public requiredScopes: Array<Scope | string>;
   public rtbfUri: string | null;
   public scopeDescriptions: Array<ScopeDescription>;
   public secret: string;

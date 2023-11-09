@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: 0 */
 
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { Logger } from "@lindorm-io/core-logger";
 import { ScanData, StructureScanner } from "@lindorm-io/structure-scanner";
 import { Server as HttpServer, createServer } from "http";

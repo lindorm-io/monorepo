@@ -1,4 +1,5 @@
-import { OpenIdClientProfile, OpenIdClientType, ScopeDescription } from "@lindorm-io/common-types";
+import { OpenIdClientProfile, OpenIdClientType, Scope } from "@lindorm-io/common-enums";
+import { ScopeDescription } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE, JOI_SCOPE_DESCRIPTION } from "../../common";
@@ -16,7 +17,7 @@ import {
   ClientDefaults,
   ClientExpiry,
 } from "../../entity";
-import { Scope, ServerKoaController } from "../../types";
+import { ServerKoaController } from "../../types";
 
 type RequestData = {
   id: string;
@@ -35,7 +36,7 @@ type RequestData = {
   postLogoutUris: Array<string>;
   profile: OpenIdClientProfile;
   redirectUris: Array<string>;
-  requiredScopes: Array<Scope>;
+  requiredScopes: Array<Scope | string>;
   rtbfUri: string | null;
   scopeDescriptions: Array<ScopeDescription>;
   trusted: boolean;

@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import { BrowserSession, BrowserSessionOptions } from "../../entity";
 

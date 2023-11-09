@@ -1,13 +1,8 @@
+import { ChallengeStrategy, PSD2Factor, SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { ChallengeConfirmationTokenClaims } from "../common";
 import { configuration } from "../server/configuration";
 import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
-import { ChallengeConfirmationTokenClaims } from "../common";
-import {
-  ChallengeStrategy,
-  DeviceTokenType,
-  PSD2Factor,
-  SubjectHint,
-} from "@lindorm-io/common-types";
 
 const main = async (): Promise<void> => {
   const jwt = await getJwt();
@@ -27,7 +22,7 @@ const main = async (): Promise<void> => {
     sessionHint: "challenge",
     subject: "acbfce9e-072b-450f-b451-5915cdd17a33",
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+    type: TokenType.CHALLENGE_CONFIRMATION,
   });
 
   logger.info("Generated token", { token });

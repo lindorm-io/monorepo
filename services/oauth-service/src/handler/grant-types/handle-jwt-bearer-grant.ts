@@ -1,10 +1,5 @@
-import {
-  AuthenticationMethod,
-  OpenIdGrantType,
-  OpenIdScope,
-  TokenRequestBody,
-  TokenResponse,
-} from "@lindorm-io/common-types";
+import { AuthenticationMethod, OpenIdGrantType, Scope } from "@lindorm-io/common-enums";
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { randomHex } from "@lindorm-io/random";
@@ -31,7 +26,7 @@ export const handleJwtBearerGrant = async (
   }
 
   const split = scope ? scope.split(" ") : [];
-  const scopes = split.filter((s: any) => ![OpenIdScope.OFFLINE_ACCESS].includes(s));
+  const scopes = split.filter((s: any) => ![Scope.OFFLINE_ACCESS].includes(s));
   const diff = difference(scopes, client.allowed.scopes);
 
   if (diff.length) {

@@ -1,12 +1,12 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/winston";
-import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
 import { randomUUID } from "crypto";
-import { redirectLogoutSessionController } from "./redirect-logout-session";
+import { mockFetchOauthLogoutSession } from "../../../fixtures/axios";
 import {
   getOauthLogoutRedirect as _getOauthLogoutRedirect,
   getOauthLogoutSession as _getOauthLogoutSession,
 } from "../../../handler";
+import { redirectLogoutSessionController } from "./redirect-logout-session";
 
 jest.mock("../../../handler");
 

@@ -1,7 +1,6 @@
 import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
+import { OpenIdGrantType, Scope } from "@lindorm-io/common-enums";
 import {
-  OpenIdGrantType,
-  OpenIdScope,
   TokenRequestBody,
   TokenResponse,
   VerifyPasswordRequestBody,
@@ -83,7 +82,7 @@ export const handlePasswordGrant = async (
       scopes,
       strategies: data.strategies,
       tenantId: client.tenantId,
-      type: scopes.includes(OpenIdScope.OFFLINE_ACCESS)
+      type: scopes.includes(Scope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH
         : ClientSessionType.EPHEMERAL,
     }),

@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { Account, AuthenticationSession } from "../entity";
 import { calculateLevelOfAssurance } from "./calculate-level-of-assurance";
 import { getMethodsFromStrategies } from "./get-methods-from-strategies";

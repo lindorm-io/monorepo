@@ -1,9 +1,10 @@
-import Joi from "joi";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { SessionStatus, VerifyLogoutRequestQuery } from "@lindorm-io/common-types";
+import Joi from "joi";
 import { handleBrowserSessionLogout, handleClientSessionLogout } from "../../handler";
+import { ServerKoaController } from "../../types";
 import {
   createLogoutPendingUri,
   createLogoutRedirectUri,

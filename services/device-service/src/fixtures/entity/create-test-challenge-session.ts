@@ -1,6 +1,6 @@
-import { ChallengeSession, ChallengeSessionOptions } from "../../entity";
+import { ChallengeStrategy } from "@lindorm-io/common-enums";
 import { randomString } from "@lindorm-io/random";
-import { ChallengeStrategy } from "@lindorm-io/common-types";
+import { ChallengeSession, ChallengeSessionOptions } from "../../entity";
 
 export const createTestChallengeSession = (
   options: Partial<ChallengeSessionOptions> = {},

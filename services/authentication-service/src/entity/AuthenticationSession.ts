@@ -3,11 +3,10 @@ import {
   AuthenticationMethod,
   AuthenticationMode,
   AuthenticationStrategy,
-  Dict,
-  LevelOfAssurance,
   PKCEMethod,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { Dict, LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,

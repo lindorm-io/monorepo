@@ -1,6 +1,6 @@
-import { randomBaseString } from "./random-base-string";
+import { PKCEMethod } from "@lindorm-io/common-enums";
 import { createBaseHash } from "./create-base-hash";
-import { PKCEMethod } from "@lindorm-io/common-types";
+import { randomBaseString } from "./random-base-string";
 
 type Result = {
   challenge: string;

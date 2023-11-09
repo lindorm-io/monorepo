@@ -1,9 +1,9 @@
-import { IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestIdentity } from "../../fixtures/entity";
-import { findIdentityController } from "./find-identity";
 import { findIdentityWithIdentifier as _findIdentityWithIdentifier } from "../../handler";
-import { ClientError } from "@lindorm-io/errors";
+import { findIdentityController } from "./find-identity";
 
 jest.mock("../../handler");
 

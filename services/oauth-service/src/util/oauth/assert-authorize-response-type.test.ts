@@ -1,4 +1,4 @@
-import { OpenIdResponseType, PKCEMethod } from "@lindorm-io/common-types";
+import { OpenIdResponseType, PKCEMethod } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { AuthorizationSession, Client } from "../../entity";
 import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";

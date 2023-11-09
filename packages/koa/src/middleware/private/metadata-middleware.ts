@@ -1,7 +1,7 @@
-import { DefaultLindormMiddleware } from "../../types";
-import { Environment } from "@lindorm-io/common-types";
-import { MetadataHeader } from "../../enum";
+import { Environment } from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
+import { MetadataHeader } from "../../enum";
+import { DefaultLindormMiddleware } from "../../types";
 
 export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
   const geoIp = ctx.userAgent?.geoIp ? JSON.stringify(ctx.userAgent?.geoIp) : undefined;

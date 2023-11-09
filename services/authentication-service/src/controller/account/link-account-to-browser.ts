@@ -1,13 +1,13 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
+import { Environment } from "@lindorm-io/common-enums";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
-import { fetchAccountSalt } from "../../handler";
-import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
-import { expiryDate } from "@lindorm-io/expiry";
-import { BrowserLink } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
-import { Environment } from "@lindorm-io/common-types";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { BROWSER_LINK_COOKIE_NAME } from "../../constant";
+import { BrowserLink } from "../../entity";
+import { fetchAccountSalt } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   code: string;

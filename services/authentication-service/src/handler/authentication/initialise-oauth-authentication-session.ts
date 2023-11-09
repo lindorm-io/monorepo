@@ -1,4 +1,4 @@
-import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-enums";
 import { JWT } from "@lindorm-io/jwt";
 import Joi from "joi";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";
@@ -39,7 +39,6 @@ export const initialiseOauthAuthenticationSession = async (
   const emailHint = loginHint?.find((item: string) => REGEX_EMAIL.test(item));
   const phoneHint = loginHint?.find((item: string) => REGEX_PHONE.test(item));
 
-  console.log(idTokenHint);
   const idToken = idTokenHint ? JWT.decodePayload(idTokenHint) : undefined;
 
   return await handleAuthenticationInitialisation(ctx, {

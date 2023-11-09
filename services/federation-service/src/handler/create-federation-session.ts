@@ -1,4 +1,4 @@
-import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
+import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-enums";
 import { removeEmptyFromObject } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { createPKCE } from "@lindorm-io/node-pkce";

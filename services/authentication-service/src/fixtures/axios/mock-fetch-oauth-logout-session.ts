@@ -1,4 +1,5 @@
-import { GetLogoutResponse, OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-enums";
+import { GetLogoutResponse } from "@lindorm-io/common-types";
 import { randomUUID } from "crypto";
 
 export const mockFetchOauthLogoutSession = (

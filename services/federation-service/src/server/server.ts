@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { FederationSessionCache } from "../infrastructure";

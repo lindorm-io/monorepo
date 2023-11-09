@@ -1,7 +1,7 @@
-import { PKCEMethod } from "@lindorm-io/common-types";
-import { createHash } from "crypto";
+import { PKCEMethod } from "@lindorm-io/common-enums";
 import { encodeBase64Url } from "@lindorm-io/core";
 import { randomUnreserved } from "@lindorm-io/random";
+import { createHash } from "crypto";
 
 type Result = {
   code: string;

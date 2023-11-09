@@ -1,4 +1,5 @@
-import { OpenIdScope, OpenIdTokenResponseBody } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
+import { OpenIdTokenResponseBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { expiresIn } from "@lindorm-io/expiry";
 import { createOpaqueToken } from "@lindorm-io/jwt";
@@ -31,13 +32,13 @@ export const generateTokenResponse = async (
   body.expiresIn = expiresIn(accessToken.expires);
   body.tokenType = "Bearer";
 
-  if (clientSession.scopes.includes(OpenIdScope.OPENID)) {
+  if (clientSession.scopes.includes(Scope.OPENID)) {
     const { token: idToken } = createIdToken(ctx, client, clientSession, claims, body.accessToken);
 
     body.idToken = idToken;
   }
 
-  if (clientSession.scopes.includes(OpenIdScope.OFFLINE_ACCESS)) {
+  if (clientSession.scopes.includes(Scope.OFFLINE_ACCESS)) {
     const refreshOpaque = createOpaqueToken({ length: 192 });
     await generateRefreshToken(ctx, client, clientSession, refreshOpaque);
 

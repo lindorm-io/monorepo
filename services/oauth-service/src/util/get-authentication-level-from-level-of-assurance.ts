@@ -1,4 +1,5 @@
-import { AuthenticationLevel, LevelOfAssurance } from "@lindorm-io/common-types";
+import { AuthenticationLevel } from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 
 export const getAuthenticationLevelFromLevelOfAssurance = (
   loa: LevelOfAssurance,

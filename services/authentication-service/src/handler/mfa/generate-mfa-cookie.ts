@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { expiryDate } from "@lindorm-io/expiry";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { AuthenticationSession, MfaCookieSession } from "../../entity";

@@ -1,8 +1,8 @@
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { Identity } from "../../entity";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
 import { findIdentityWithIdentifier } from "./find-identity-with-identifier";
-import { Identity } from "../../entity";
-import { IdentifierType } from "@lindorm-io/common-types";
 
 describe("findIdentityWithIdentifier", () => {
   let ctx: any;

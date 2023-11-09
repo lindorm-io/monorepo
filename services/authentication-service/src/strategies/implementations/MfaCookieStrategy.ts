@@ -1,11 +1,11 @@
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { MFA_COOKIE_NAME } from "../../constant";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";

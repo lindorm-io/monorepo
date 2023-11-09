@@ -1,5 +1,5 @@
+import { IdentifierType, NamingSystem } from "@lindorm-io/common-enums";
 import Joi from "joi";
-import { IdentifierType, NamingSystem } from "@lindorm-io/common-types";
 
 export const JOI_BIRTHDATE = Joi.string().regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/);
 

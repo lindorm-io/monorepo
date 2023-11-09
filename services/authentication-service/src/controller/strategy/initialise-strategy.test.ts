@@ -1,4 +1,4 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";

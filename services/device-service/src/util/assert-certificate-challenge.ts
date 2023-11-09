@@ -1,4 +1,4 @@
-import { CertificateMethod } from "@lindorm-io/common-types";
+import { CertificateMethod } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createVerify } from "crypto";
 

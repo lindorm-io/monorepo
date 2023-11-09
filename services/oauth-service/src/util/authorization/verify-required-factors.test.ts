@@ -1,4 +1,4 @@
-import { AuthenticationFactor } from "@lindorm-io/common-types";
+import { AuthenticationFactor } from "@lindorm-io/common-enums";
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { verifyRequiredFactors } from "./verify-required-factors";

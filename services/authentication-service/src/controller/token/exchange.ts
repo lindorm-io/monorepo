@@ -1,9 +1,5 @@
-import {
-  AuthenticationTokenType,
-  SubjectHint,
-  TokenExchangeRequestBody,
-  TokenExchangeResponseBody,
-} from "@lindorm-io/common-types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { TokenExchangeRequestBody, TokenExchangeResponseBody } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { getUnixTime } from "date-fns";
 import Joi from "joi";
@@ -53,7 +49,7 @@ export const tokenExchangeController: ServerKoaController<RequestData> = async (
     session: authenticationConfirmationToken.sessionId,
     subject: authenticationConfirmationToken.identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
+    type: TokenType.AUTHENTICATION_CONFIRMATION,
   });
 
   return { body: { expiresIn, token: signed } };

@@ -1,7 +1,7 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
   RedirectAuthorizationRequestParams,
   RedirectAuthorizationResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";

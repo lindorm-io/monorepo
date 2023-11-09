@@ -1,8 +1,4 @@
-import {
-  Environment,
-  SessionStatus,
-  VerifyAuthorizationRequestQuery,
-} from "@lindorm-io/common-types";
+import { VerifyAuthorizationRequestQuery } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -21,6 +17,7 @@ import {
   createSelectAccountPendingUri,
   createSelectAccountRejectedUri,
 } from "../../util";
+import { Environment, SessionStatus } from "@lindorm-io/common-enums";
 
 type RequestData = VerifyAuthorizationRequestQuery;
 

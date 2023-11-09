@@ -1,15 +1,15 @@
-import { AuthenticationSession, StrategySession } from "../../entity";
-import { ServerKoaContext } from "../../types";
-import { clientCredentialsMiddleware } from "../../middleware";
-import { randomUUID } from "crypto";
-import { removeEmptyFromObject } from "@lindorm-io/core";
-import { ServerError } from "@lindorm-io/errors";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import {
   EnsureIdentityRequestParams,
   FindIdentityRequestQuery,
   FindIdentityResponse,
-  IdentifierType,
 } from "@lindorm-io/common-types";
+import { removeEmptyFromObject } from "@lindorm-io/core";
+import { ServerError } from "@lindorm-io/errors";
+import { randomUUID } from "crypto";
+import { AuthenticationSession, StrategySession } from "../../entity";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
 export const resolveIdentity = async (
   ctx: ServerKoaContext,

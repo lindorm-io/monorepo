@@ -3,7 +3,8 @@ import {
   axiosBasicAuthMiddleware,
   axiosBearerAuthMiddleware,
 } from "@lindorm-io/axios";
-import { OpenIdClaims, OpenIdGrantType } from "@lindorm-io/common-types";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
+import { OpenIdClaims } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { createURL } from "@lindorm-io/url";
 import { find } from "lodash";

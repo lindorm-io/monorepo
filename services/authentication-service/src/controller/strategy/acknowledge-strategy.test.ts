@@ -1,4 +1,4 @@
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createTestAuthenticationSession, createTestStrategySession } from "../../fixtures/entity";
 import { getStrategyHandler as _getStrategyHandler } from "../../strategies";

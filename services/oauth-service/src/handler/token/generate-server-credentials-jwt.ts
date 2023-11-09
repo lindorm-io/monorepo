@@ -1,4 +1,4 @@
-import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import { uniqArray } from "@lindorm-io/core";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
@@ -17,7 +17,7 @@ export const generateServerCredentialsJwt = (
     scopes,
     subject: configuration.oauth.client_id,
     subjectHint: SubjectHint.CLIENT,
-    type: OpenIdTokenType.ACCESS,
+    type: TokenType.ACCESS,
   });
 
   return token;

@@ -1,4 +1,5 @@
-import { GetIdentityResponse, IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { GetIdentityResponse } from "@lindorm-io/common-types";
 import { Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getDisplayName } from "../../util";

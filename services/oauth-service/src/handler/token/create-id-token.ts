@@ -1,4 +1,5 @@
-import { LindormIdentityClaims, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { LindormIdentityClaims } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
 import { JwtSign } from "@lindorm-io/jwt";
 import { getUnixTime, isAfter } from "date-fns";
@@ -38,6 +39,6 @@ export const createIdToken = (
     subject: clientSession.identityId,
     subjectHint: SubjectHint.IDENTITY,
     tenant: client.tenantId,
-    type: OpenIdTokenType.ID,
+    type: TokenType.ID,
   });
 };

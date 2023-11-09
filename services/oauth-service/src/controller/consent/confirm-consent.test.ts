@@ -1,4 +1,4 @@
-import { OpenIdScope, SessionStatus } from "@lindorm-io/common-types";
+import { Scope, SessionStatus } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
@@ -23,13 +23,27 @@ describe("confirmConsentController", () => {
       },
       data: {
         audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
-        scopes: ["address", "email", "offline_access", "openid", "phone", "private", "profile"],
+        scopes: [
+          Scope.ADDRESS,
+          Scope.EMAIL,
+          Scope.OFFLINE_ACCESS,
+          Scope.OPENID,
+          Scope.PHONE,
+          Scope.PROFILE,
+        ],
       },
       entity: {
         authorizationSession: createTestAuthorizationSession({
           requestedConsent: {
             audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
-            scopes: Object.values(OpenIdScope),
+            scopes: [
+              Scope.ADDRESS,
+              Scope.EMAIL,
+              Scope.OFFLINE_ACCESS,
+              Scope.OPENID,
+              Scope.PHONE,
+              Scope.PROFILE,
+            ],
           },
         }),
         client: createTestClient(),
@@ -49,7 +63,14 @@ describe("confirmConsentController", () => {
       expect.objectContaining({
         confirmedConsent: {
           audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
-          scopes: ["address", "email", "offline_access", "openid", "phone", "private", "profile"],
+          scopes: [
+            Scope.ADDRESS,
+            Scope.EMAIL,
+            Scope.OFFLINE_ACCESS,
+            Scope.OPENID,
+            Scope.PHONE,
+            Scope.PROFILE,
+          ],
         },
         status: expect.objectContaining({ consent: "confirmed" }),
       }),

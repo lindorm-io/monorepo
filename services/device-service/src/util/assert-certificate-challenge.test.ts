@@ -1,8 +1,8 @@
+import { CertificateMethod } from "@lindorm-io/common-enums";
+import { ClientError } from "@lindorm-io/errors";
+import { randomString } from "@lindorm-io/random";
 import { createSign } from "crypto";
 import { assertCertificateChallenge } from "./assert-certificate-challenge";
-import { randomString } from "@lindorm-io/random";
-import { ClientError } from "@lindorm-io/errors";
-import { CertificateMethod } from "@lindorm-io/common-types";
 
 const privateKey =
   "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" +

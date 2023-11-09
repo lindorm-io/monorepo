@@ -1,9 +1,9 @@
-import { LindormScope, OpenIdScope, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
-import { configuration } from "../../server/configuration";
-import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
-import { getUnixTime } from "date-fns";
+import { Scope, SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { JwtSignOptions, createTestJwt } from "@lindorm-io/jwt";
 import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
+import { getUnixTime } from "date-fns";
+import { configuration } from "../../server/configuration";
 
 export const getTestAccessToken = (options: Partial<JwtSignOptions> = {}): string => {
   const { token } = createTestJwt({
@@ -15,12 +15,12 @@ export const getTestAccessToken = (options: Partial<JwtSignOptions> = {}): strin
     expiry: "10 seconds",
     levelOfAssurance: 4,
     nonce: randomHex(16),
-    scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+    scopes: Object.values(Scope),
     sessionHint: "browser",
     session: randomUUID(),
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: OpenIdTokenType.ACCESS,
+    type: TokenType.ACCESS,
     ...options,
   });
   return token;
@@ -34,7 +34,7 @@ export const getTestClientCredentials = (options: Partial<JwtSignOptions> = {}):
     expiry: "10 seconds",
     subject: randomUUID(),
     subjectHint: SubjectHint.CLIENT,
-    type: OpenIdTokenType.ACCESS,
+    type: TokenType.ACCESS,
     ...options,
   });
   return token;

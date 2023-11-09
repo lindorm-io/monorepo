@@ -1,4 +1,4 @@
-import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { createTestAuthenticationSession } from "../fixtures/entity";
 import { generateClientConfig } from "./generate-client-config";
 

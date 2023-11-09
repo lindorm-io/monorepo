@@ -1,14 +1,11 @@
-import Joi from "joi";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { AddUserinfoRequestBody, AddUserinfoRequestParams } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
+import Joi from "joi";
 import { JOI_EMAIL, JOI_LOCALE, JOI_PHONE_NUMBER } from "../../common";
-import { ServerKoaController } from "../../types";
+import { JOI_BIRTHDATE, JOI_OPENID_ADDRESS, JOI_ZONE_INFO } from "../../constant";
 import { addAddressFromUserinfo, addGenericIdentifier } from "../../handler";
-import {
-  AddUserinfoRequestBody,
-  AddUserinfoRequestParams,
-  IdentifierType,
-} from "@lindorm-io/common-types";
+import { ServerKoaController } from "../../types";
 
 type RequestData = AddUserinfoRequestParams & AddUserinfoRequestBody;
 

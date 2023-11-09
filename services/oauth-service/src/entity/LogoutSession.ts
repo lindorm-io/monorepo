@@ -1,4 +1,4 @@
-import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,

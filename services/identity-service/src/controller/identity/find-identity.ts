@@ -1,14 +1,11 @@
-import Joi from "joi";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { FindIdentityRequestQuery, FindIdentityResponse } from "@lindorm-io/common-types";
+import { removeEmptyFromArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
+import Joi from "joi";
 import { findIdentityWithIdentifier } from "../../handler";
-import { removeEmptyFromArray } from "@lindorm-io/core";
-import {
-  FindIdentityRequestQuery,
-  FindIdentityResponse,
-  IdentifierType,
-} from "@lindorm-io/common-types";
+import { ServerKoaController } from "../../types";
 
 type RequestData = FindIdentityRequestQuery;
 

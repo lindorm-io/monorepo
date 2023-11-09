@@ -4,7 +4,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { createOpaqueToken } from "@lindorm-io/jwt";
 import { randomUnreserved } from "@lindorm-io/random";
 import MockDate from "mockdate";

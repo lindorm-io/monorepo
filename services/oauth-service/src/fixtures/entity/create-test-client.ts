@@ -1,16 +1,15 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
-  LindormScope,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdGrantType,
   OpenIdResponseMode,
   OpenIdResponseType,
-  OpenIdScope,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { Algorithm } from "@lindorm-io/key-pair";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
@@ -24,7 +23,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       grantTypes: Object.values(OpenIdGrantType),
       methods: Object.values(AuthenticationMethod),
       responseTypes: Object.values(OpenIdResponseType),
-      scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+      scopes: Object.values(Scope),
       strategies: Object.values(AuthenticationStrategy),
       ...(options.allowed || {}),
     },
@@ -70,7 +69,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     postLogoutUris: ["https://test.client.lindorm.io/logout"],
     profile: OpenIdClientProfile.USER_AGENT_BASED_APPLICATION,
     redirectUris: ["https://test.client.lindorm.io/redirect"],
-    requiredScopes: [OpenIdScope.OFFLINE_ACCESS, OpenIdScope.OPENID],
+    requiredScopes: [Scope.OFFLINE_ACCESS, Scope.OPENID],
     rtbfUri: "https://test.client.lindorm.io/rtbf",
     scopeDescriptions: [SCOPE_OPENID, SCOPE_PROFILE],
     secret:

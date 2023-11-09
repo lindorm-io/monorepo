@@ -1,4 +1,4 @@
-import { NamingSystem } from "@lindorm-io/common-types";
+import { NamingSystem } from "@lindorm-io/common-enums";
 import { ServerError } from "@lindorm-io/errors";
 import { Identity } from "../entity";
 

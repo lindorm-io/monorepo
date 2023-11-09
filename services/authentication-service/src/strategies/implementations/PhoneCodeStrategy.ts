@@ -1,13 +1,12 @@
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
   IdentifierType,
-  SendCodeRequestBody,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { AuthStrategyConfig, SendCodeRequestBody } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { randomString } from "@lindorm-io/random";
 import { createURL } from "@lindorm-io/url";

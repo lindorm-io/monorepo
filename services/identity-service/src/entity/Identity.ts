@@ -1,4 +1,4 @@
-import { NamingSystem } from "@lindorm-io/common-types";
+import { NamingSystem } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,

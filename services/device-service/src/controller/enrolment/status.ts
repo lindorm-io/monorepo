@@ -1,12 +1,12 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { EntityNotFoundError } from "@lindorm-io/entity";
-import { ServerKoaController } from "../../types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
   GetEnrolmentStatusRequestParams,
   GetEnrolmentStatusResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
+import { EntityNotFoundError } from "@lindorm-io/entity";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
 
 type RequestData = GetEnrolmentStatusRequestParams;
 

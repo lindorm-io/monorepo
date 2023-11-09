@@ -1,4 +1,4 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { verifyRequiredStrategies } from "./verify-required-strategies";

@@ -1,9 +1,5 @@
-import {
-  ConfirmRdcRequestBody,
-  ConfirmRdcRequestParams,
-  RdcSessionType,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { RdcSessionType, SessionStatus } from "@lindorm-io/common-enums";
+import { ConfirmRdcRequestBody, ConfirmRdcRequestParams } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";

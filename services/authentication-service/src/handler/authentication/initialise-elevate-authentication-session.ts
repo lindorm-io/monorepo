@@ -1,4 +1,4 @@
-import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-types";
+import { AuthenticationMode, PKCEMethod } from "@lindorm-io/common-enums";
 import { JWT } from "@lindorm-io/jwt";
 import Joi from "joi";
 import { JOI_PKCE_METHOD, REGEX_EMAIL, REGEX_PHONE } from "../../constant";

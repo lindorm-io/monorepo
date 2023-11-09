@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import MockDate from "mockdate";
 import { createTestClaimsSession, createTestClient, createTestTenant } from "../../fixtures/entity";
 import { getClaimsSessionController } from "./get-claims-request";

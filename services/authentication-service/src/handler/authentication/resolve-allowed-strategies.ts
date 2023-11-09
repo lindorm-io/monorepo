@@ -1,6 +1,6 @@
-import { Account, AuthenticationSession } from "../../entity";
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { BROWSER_LINK_COOKIE_NAME, MFA_COOKIE_NAME } from "../../constant";
+import { Account, AuthenticationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getAvailableStrategies } from "../../util";
 import { getValidDeviceLinks } from "./get-valid-device-links";

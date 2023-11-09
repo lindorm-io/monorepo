@@ -1,6 +1,6 @@
-import { ServerKoaContext } from "../../types";
+import { Environment } from "@lindorm-io/common-enums";
 import { BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { Environment } from "@lindorm-io/common-types";
+import { ServerKoaContext } from "../../types";
 
 export const getBrowserSessionCookies = (ctx: ServerKoaContext): Array<string> => {
   const {

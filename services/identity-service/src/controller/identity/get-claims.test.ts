@@ -1,4 +1,4 @@
-import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
@@ -54,7 +54,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID],
+        scopes: [Scope.OPENID],
       },
     });
   });
@@ -73,7 +73,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, OpenIdScope.ADDRESS],
+        scopes: [Scope.OPENID, Scope.ADDRESS],
       },
     });
 
@@ -91,7 +91,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, OpenIdScope.EMAIL],
+        scopes: [Scope.OPENID, Scope.EMAIL],
       },
     });
 
@@ -110,7 +110,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, OpenIdScope.PHONE],
+        scopes: [Scope.OPENID, Scope.PHONE],
       },
     });
 
@@ -129,7 +129,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+        scopes: [Scope.OPENID, Scope.PROFILE],
       },
     });
 
@@ -161,7 +161,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, LindormScope.ACCESSIBILITY],
+        scopes: [Scope.OPENID, Scope.ACCESSIBILITY],
       },
     });
 
@@ -179,7 +179,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, LindormScope.NATIONAL_IDENTITY_NUMBER],
+        scopes: [Scope.OPENID, Scope.NATIONAL_IDENTITY_NUMBER],
       },
     });
 
@@ -198,7 +198,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, LindormScope.PUBLIC],
+        scopes: [Scope.OPENID, Scope.PUBLIC],
       },
     });
 
@@ -218,7 +218,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, LindormScope.SOCIAL_SECURITY_NUMBER],
+        scopes: [Scope.OPENID, Scope.SOCIAL_SECURITY_NUMBER],
       },
     });
 
@@ -237,7 +237,7 @@ describe("getClaimsController", () => {
     getOauthClaimsSession.mockResolvedValue({
       claimsSession: {
         identityId: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
-        scopes: [OpenIdScope.OPENID, LindormScope.USERNAME],
+        scopes: [Scope.OPENID, Scope.USERNAME],
       },
     });
 

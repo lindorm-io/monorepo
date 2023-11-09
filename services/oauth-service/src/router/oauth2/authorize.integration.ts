@@ -3,7 +3,7 @@ import {
   AuthenticationLevel,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";

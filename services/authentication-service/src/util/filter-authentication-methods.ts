@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-enums";
 
 export const filterAuthenticationMethods = (input?: Array<string>): Array<AuthenticationMethod> =>
   Array.isArray(input)

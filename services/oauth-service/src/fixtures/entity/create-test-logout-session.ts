@@ -1,7 +1,7 @@
-import { LogoutSession, LogoutSessionOptions } from "../../entity";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
-import { SessionStatus } from "@lindorm-io/common-types";
+import { LogoutSession, LogoutSessionOptions } from "../../entity";
 
 export const createTestLogoutSession = (
   options: Partial<LogoutSessionOptions> = {},

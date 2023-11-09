@@ -1,4 +1,5 @@
-import { AddIdentifierRequestBody, IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { AddIdentifierRequestBody } from "@lindorm-io/common-types";
 import { ServerError } from "@lindorm-io/errors";
 import { FederationSession } from "../../entity";
 import { clientCredentialsMiddleware } from "../../middleware";

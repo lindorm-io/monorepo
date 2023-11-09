@@ -1,4 +1,4 @@
-import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-types";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { ClientError } from "@lindorm-io/errors";
 import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";

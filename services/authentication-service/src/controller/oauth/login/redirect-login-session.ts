@@ -1,4 +1,4 @@
-import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-enums";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
 import Joi from "joi";

@@ -2,14 +2,13 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  GetAuthorizationResponse,
-  LindormScope,
   OpenIdClientType,
   OpenIdDisplayMode,
   OpenIdPromptMode,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { GetAuthorizationResponse } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
@@ -21,8 +20,21 @@ export const mockFetchOauthAuthorizationSession = (
     status: SessionStatus.PENDING,
 
     audiences: [randomUUID()],
-    optionalScopes: Object.values(LindormScope),
-    requiredScopes: Object.values(OpenIdScope),
+    optionalScopes: [
+      Scope.ACCESSIBILITY,
+      Scope.NATIONAL_IDENTITY_NUMBER,
+      Scope.PUBLIC,
+      Scope.SOCIAL_SECURITY_NUMBER,
+      Scope.USERNAME,
+    ],
+    requiredScopes: [
+      Scope.ADDRESS,
+      Scope.EMAIL,
+      Scope.OFFLINE_ACCESS,
+      Scope.OPENID,
+      Scope.PHONE,
+      Scope.PROFILE,
+    ],
     scopeDescriptions: [],
   },
 
@@ -89,7 +101,7 @@ export const mockFetchOauthAuthorizationSession = (
     latestAuthentication: new Date().toISOString(),
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL],
-    scopes: Object.values(OpenIdScope),
+    scopes: Object.values(Scope),
     strategies: [AuthenticationStrategy.EMAIL_CODE],
   },
 

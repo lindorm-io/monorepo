@@ -2,9 +2,9 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LevelOfAssurance,
   OpenIdDisplayMode,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";

@@ -1,6 +1,6 @@
-import { assertSessionPending } from "./assert-session-pending";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "@lindorm-io/common-types";
+import { assertSessionPending } from "./assert-session-pending";
 
 describe("assertSessionPending", () => {
   test("should resolve", () => {

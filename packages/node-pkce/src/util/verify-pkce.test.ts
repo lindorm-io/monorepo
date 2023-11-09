@@ -1,6 +1,6 @@
-import { verifyPKCE } from "./verify-pkce";
+import { PKCEMethod } from "@lindorm-io/common-enums";
 import { createHash } from "crypto";
-import { PKCEMethod } from "@lindorm-io/common-types";
+import { verifyPKCE } from "./verify-pkce";
 
 describe("verifyPKCE", () => {
   let pkceChallenge: string;

@@ -1,4 +1,4 @@
-import { RdcSessionType } from "@lindorm-io/common-types";
+import { RdcSessionType } from "@lindorm-io/common-enums";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus as _updateEnrolmentStatus } from "../../handler";

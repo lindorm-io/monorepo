@@ -2,9 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  Dict,
-  LevelOfAssurance,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { Dict, LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,

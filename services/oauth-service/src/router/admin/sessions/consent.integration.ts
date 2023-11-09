@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import MockDate from "mockdate";
 import request from "supertest";
 import { createTestAuthorizationSession, createTestClient } from "../../../fixtures/entity";
@@ -31,7 +31,7 @@ describe("/admin/sessions/consent", () => {
       createTestAuthorizationSession({
         requestedConsent: {
           audiences: [client.id],
-          scopes: Object.values(OpenIdScope),
+          scopes: Object.values(Scope),
         },
         clientId: client.id,
       }),

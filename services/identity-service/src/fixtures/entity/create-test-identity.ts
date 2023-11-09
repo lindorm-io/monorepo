@@ -1,4 +1,4 @@
-import { NamingSystem } from "@lindorm-io/common-types";
+import { NamingSystem } from "@lindorm-io/common-enums";
 import { randomString } from "@lindorm-io/random";
 import { Identity, IdentityOptions } from "../../entity";
 

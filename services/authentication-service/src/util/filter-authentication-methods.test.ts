@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-enums";
 import { filterAuthenticationMethods } from "./filter-authentication-methods";
 
 describe("filterAuthenticationMethods", () => {

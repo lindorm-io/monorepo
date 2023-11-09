@@ -1,6 +1,6 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { createTestEnrolmentSession, createTestRdcSession } from "../../fixtures/entity";
 import { updateEnrolmentStatus } from "./update-enrolment-status";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 describe("updateEnrolmentStatus", () => {
   let ctx: any;

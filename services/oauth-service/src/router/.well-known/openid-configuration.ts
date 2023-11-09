@@ -1,13 +1,8 @@
+import { OpenIdGrantType, OpenIdResponseType, Scope } from "@lindorm-io/common-enums";
 import { HttpStatus, Router } from "@lindorm-io/koa";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
 import { createBaseUrl } from "@lindorm-io/url";
-import {
-  LindormScope,
-  OpenIdGrantType,
-  OpenIdResponseType,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
 
 export const router = new Router<any, any>();
 
@@ -102,7 +97,7 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     ],
     revokeEndpoint: createURL("/oauth2/sessions/revoke"),
     rightToBeForgottenEndpoint: createURL("/rtbf"),
-    scopesSupported: [...Object.values(OpenIdScope), ...Object.values(LindormScope)].sort(),
+    scopesSupported: Object.values(Scope).sort(),
     subjectTypesSupported: ["identity", "client"],
     tokenEndpoint: createURL("/oauth2/token"),
     tokenEndpointAuthMethodsSupported: ["client_secret_basic", "client_secret_post"],

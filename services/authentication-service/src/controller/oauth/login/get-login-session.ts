@@ -1,4 +1,5 @@
-import { PublicClientInfo, PublicTenantInfo, SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { PublicClientInfo, PublicTenantInfo } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { getOauthAuthorizationSession } from "../../../handler";
@@ -10,7 +11,6 @@ type RequestData = {
 
 type ResponseBody = {
   status: SessionStatus;
-
   client: PublicClientInfo;
   tenant: PublicTenantInfo;
 };

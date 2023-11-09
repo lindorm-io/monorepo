@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
@@ -64,7 +64,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve body with id token", async () => {
-    clientSession.scopes = [OpenIdScope.OPENID];
+    clientSession.scopes = [Scope.OPENID];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual(
       expect.objectContaining({
@@ -75,7 +75,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve for refresh session", async () => {
-    clientSession.scopes = [OpenIdScope.OFFLINE_ACCESS];
+    clientSession.scopes = [Scope.OFFLINE_ACCESS];
 
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual({
       accessToken: "create_opaque_token",

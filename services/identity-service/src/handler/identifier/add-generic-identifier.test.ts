@@ -1,10 +1,10 @@
-import { ClientError } from "@lindorm-io/errors";
-import { IdentifierType } from "@lindorm-io/common-types";
-import { Identity } from "../../entity";
-import { addGenericIdentifier } from "./add-generic-identifier";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { Identity } from "../../entity";
 import { createTestEmailIdentifier, createTestIdentity } from "../../fixtures/entity";
+import { addGenericIdentifier } from "./add-generic-identifier";
 
 describe("addGenericIdentifier", () => {
   let ctx: any;

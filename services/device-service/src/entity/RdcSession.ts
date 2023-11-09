@@ -1,3 +1,16 @@
+import {
+  HttpMethod,
+  RdcSessionMode,
+  RdcSessionType,
+  SessionStatus,
+} from "@lindorm-io/common-enums";
+import {
+  EntityAttributes,
+  EntityKeys,
+  JOI_ENTITY_BASE,
+  LindormEntity,
+  Optional,
+} from "@lindorm-io/entity";
 import Joi from "joi";
 import { JOI_NONCE, JOI_SESSION_STATUS } from "../common";
 import {
@@ -7,23 +20,10 @@ import {
   JOI_RDC_REJECT_METHOD,
   JOI_RDC_TYPE,
 } from "../constant";
-import {
-  EntityAttributes,
-  EntityKeys,
-  JOI_ENTITY_BASE,
-  LindormEntity,
-  Optional,
-} from "@lindorm-io/entity";
-import {
-  RdcSessionMethod,
-  RdcSessionMode,
-  RdcSessionType,
-  SessionStatus,
-} from "@lindorm-io/common-types";
 
 export interface RdcSessionAttributes extends EntityAttributes {
   audiences: Array<string>;
-  confirmMethod: RdcSessionMethod;
+  confirmMethod: HttpMethod;
   confirmPayload: Record<string, any>;
   confirmUri: string | null;
   deviceLinks: Array<string>;
@@ -33,7 +33,7 @@ export interface RdcSessionAttributes extends EntityAttributes {
   identityId: string | null;
   mode: RdcSessionMode;
   nonce: string;
-  rejectMethod: RdcSessionMethod;
+  rejectMethod: HttpMethod;
   rejectPayload: Record<string, any>;
   rejectUri: string | null;
   scopes: Array<string>;
@@ -93,7 +93,7 @@ const schema = Joi.object<RdcSessionAttributes>()
 
 export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly audiences: Array<string>;
-  public readonly confirmMethod: RdcSessionMethod;
+  public readonly confirmMethod: HttpMethod;
   public readonly confirmPayload: Record<string, any>;
   public readonly confirmUri: string | null;
   public readonly deviceLinks: Array<string>;
@@ -102,7 +102,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
   public readonly factors: number;
   public readonly mode: RdcSessionMode;
   public readonly nonce: string;
-  public readonly rejectMethod: RdcSessionMethod;
+  public readonly rejectMethod: HttpMethod;
   public readonly rejectPayload: Record<string, any>;
   public readonly rejectUri: string | null;
   public readonly scopes: Array<string>;
@@ -118,7 +118,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     super(options);
 
     this.audiences = options.audiences || [];
-    this.confirmMethod = options.confirmMethod || RdcSessionMethod.POST;
+    this.confirmMethod = options.confirmMethod || HttpMethod.POST;
     this.confirmPayload = options.confirmPayload || {};
     this.confirmUri = options.confirmUri || null;
     this.deviceLinks = options.deviceLinks;
@@ -128,7 +128,7 @@ export class RdcSession extends LindormEntity<RdcSessionAttributes> {
     this.identityId = options.identityId || null;
     this.mode = options.mode;
     this.nonce = options.nonce;
-    this.rejectMethod = options.rejectMethod || RdcSessionMethod.POST;
+    this.rejectMethod = options.rejectMethod || HttpMethod.POST;
     this.rejectPayload = options.confirmPayload || {};
     this.rejectUri = options.rejectUri || null;
     this.scopes = options.scopes || [];

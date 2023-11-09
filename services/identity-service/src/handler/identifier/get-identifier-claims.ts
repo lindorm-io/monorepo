@@ -1,7 +1,7 @@
-import { IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { filter, orderBy } from "lodash";
 import { Identity } from "../../entity";
 import { ServerKoaContext } from "../../types";
-import { filter, orderBy } from "lodash";
 
 type Result = {
   email: string | null;

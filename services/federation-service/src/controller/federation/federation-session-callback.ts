@@ -1,4 +1,5 @@
-import { OpenIdClaims, OpenIdResponseType } from "@lindorm-io/common-types";
+import { OpenIdResponseType } from "@lindorm-io/common-enums";
+import { OpenIdClaims } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";

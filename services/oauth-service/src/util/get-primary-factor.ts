@@ -1,4 +1,4 @@
-import { AuthenticationFactor } from "@lindorm-io/common-types";
+import { AuthenticationFactor } from "@lindorm-io/common-enums";
 
 export const getPrimaryFactor = (factors: Array<AuthenticationFactor>): AuthenticationFactor => {
   if (factors.includes(AuthenticationFactor.PHISHING_RESISTANT_HARDWARE)) {

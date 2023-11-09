@@ -1,4 +1,5 @@
-import { ChallengeStrategy, Dict, PSD2Factor } from "@lindorm-io/common-types";
+import { ChallengeStrategy, PSD2Factor } from "@lindorm-io/common-enums";
+import { Dict } from "@lindorm-io/common-types";
 
 export interface AuthenticationConfirmationTokenClaims {
   confirmedIdentifiers: Array<string>;

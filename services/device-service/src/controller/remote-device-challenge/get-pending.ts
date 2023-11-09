@@ -1,9 +1,5 @@
-import {
-  GetPendingRdcRequestParams,
-  GetPendingRdcResponse,
-  RdcSessionMode,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { RdcSessionMode, SessionStatus } from "@lindorm-io/common-enums";
+import { GetPendingRdcRequestParams, GetPendingRdcResponse } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";

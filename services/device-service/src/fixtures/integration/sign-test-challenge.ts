@@ -1,5 +1,5 @@
+import { CertificateMethod } from "@lindorm-io/common-enums";
 import { createSign } from "crypto";
-import { CertificateMethod } from "@lindorm-io/common-types";
 
 const privateKey =
   "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" +

@@ -1,4 +1,4 @@
-import { OpenIdClientType } from "@lindorm-io/common-types";
+import { OpenIdClientType } from "@lindorm-io/common-enums";
 import { mockFetchOauthElevationSession } from "../../../fixtures/axios";
 import { getOauthElevationSession as _getOauthElevationSession } from "../../../handler";
 import { getElevationSessionController } from "./get-elevation-session";

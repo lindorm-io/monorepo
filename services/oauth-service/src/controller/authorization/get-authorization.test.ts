@@ -2,9 +2,9 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {
@@ -43,12 +43,12 @@ describe("getAuthorizationController", () => {
           requestedConsent: {
             audiences: ["fecdd5e7-6e6c-4bc7-8473-e87f8a1d13db"],
             scopes: [
-              OpenIdScope.ADDRESS,
-              OpenIdScope.EMAIL,
-              OpenIdScope.OFFLINE_ACCESS,
-              OpenIdScope.OPENID,
-              OpenIdScope.PHONE,
-              OpenIdScope.PROFILE,
+              Scope.ADDRESS,
+              Scope.EMAIL,
+              Scope.OFFLINE_ACCESS,
+              Scope.OPENID,
+              Scope.PHONE,
+              Scope.PROFILE,
             ],
           },
           requestedLogin: {

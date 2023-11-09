@@ -1,23 +1,23 @@
-import MockDate from "mockdate";
-import nock from "nock";
-import request from "supertest";
-import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
-import { server } from "../server/server";
-import { randomUUID } from "crypto";
-import {
-  getTestAccessToken,
-  getTestChallengeConfirmationToken,
-  getTestRdcToken,
-  setupIntegration,
-  TEST_DEVICE_REPOSITORY,
-  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
-} from "../fixtures/integration";
 import {
   ChallengeStrategy,
   PSD2Factor,
   SessionStatus,
   SubjectHint,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { randomUUID } from "crypto";
+import MockDate from "mockdate";
+import nock from "nock";
+import request from "supertest";
+import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
+import {
+  TEST_DEVICE_REPOSITORY,
+  TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
+  getTestAccessToken,
+  getTestChallengeConfirmationToken,
+  getTestRdcToken,
+  setupIntegration,
+} from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

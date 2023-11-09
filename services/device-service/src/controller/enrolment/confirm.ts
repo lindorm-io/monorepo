@@ -1,12 +1,14 @@
 import {
   ChallengeStrategy,
-  ConfirmEnrolmentRequestBody,
-  ConfirmEnrolmentRequestParams,
-  ConfirmEnrolmentResponse,
-  DeviceTokenType,
   PSD2Factor,
   SessionStatus,
   SubjectHint,
+  TokenType,
+} from "@lindorm-io/common-enums";
+import {
+  ConfirmEnrolmentRequestBody,
+  ConfirmEnrolmentRequestParams,
+  ConfirmEnrolmentResponse,
 } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
@@ -109,7 +111,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
       sessionHint: "enrolment",
       subject: deviceLink.identityId,
       subjectHint: SubjectHint.IDENTITY,
-      type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+      type: TokenType.CHALLENGE_CONFIRMATION,
     });
 
   await enrolmentSessionCache.destroy(enrolmentSession);

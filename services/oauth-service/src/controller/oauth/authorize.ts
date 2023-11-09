@@ -1,9 +1,5 @@
-import {
-  AuthorizeRequestQuery,
-  OpenIdPromptMode,
-  OpenIdResponseType,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { OpenIdPromptMode, OpenIdResponseType, SessionStatus } from "@lindorm-io/common-enums";
+import { AuthorizeRequestQuery } from "@lindorm-io/common-types";
 import { removeEmptyFromArray, uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";

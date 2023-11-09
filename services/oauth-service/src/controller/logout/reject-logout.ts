@@ -1,12 +1,9 @@
-import Joi from "joi";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { RejectLogoutRequestParams, RejectLogoutResponse } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import { assertSessionPending, createLogoutRejectedUri } from "../../util";
-import {
-  RejectLogoutRequestParams,
-  RejectLogoutResponse,
-  SessionStatus,
-} from "@lindorm-io/common-types";
 
 type RequestData = RejectLogoutRequestParams;
 

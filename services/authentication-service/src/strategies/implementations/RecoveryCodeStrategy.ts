@@ -1,11 +1,11 @@
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";

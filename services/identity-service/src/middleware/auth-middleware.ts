@@ -1,4 +1,4 @@
-import { SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint } from "@lindorm-io/common-enums";
 import { bearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { configuration } from "../server/configuration";
 

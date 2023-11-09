@@ -1,7 +1,7 @@
-import { LogoutSession } from "../../entity";
+import { Environment } from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
+import { LogoutSession } from "../../entity";
 import { configuration } from "../../server/configuration";
-import { Environment } from "@lindorm-io/common-types";
 
 export const createLogoutVerifyUri = (logoutSession: LogoutSession): string =>
   createURL("/oauth2/sessions/logout/verify", {

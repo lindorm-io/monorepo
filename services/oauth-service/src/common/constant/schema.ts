@@ -1,4 +1,4 @@
-import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-enums";
 import Joi from "joi";
 
 export const JOI_ARGON_STRING = Joi.string()

@@ -1,4 +1,5 @@
-import { OpenIdGrantType, TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
+import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";

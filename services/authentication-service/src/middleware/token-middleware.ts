@@ -1,15 +1,15 @@
-import { AuthenticationTokenType } from "@lindorm-io/common-types";
-import { configuration } from "../server/configuration";
+import { TokenType } from "@lindorm-io/common-enums";
 import { tokenValidationMiddleware } from "@lindorm-io/koa-jwt";
+import { configuration } from "../server/configuration";
 
 export const authenticationConfirmationTokenMiddleware = tokenValidationMiddleware({
   contextKey: "authenticationConfirmationToken",
   issuer: configuration.server.issuer,
-  types: [AuthenticationTokenType.AUTHENTICATION_CONFIRMATION],
+  types: [TokenType.AUTHENTICATION_CONFIRMATION],
 });
 
 export const strategySessionTokenMiddleware = tokenValidationMiddleware({
   contextKey: "strategySessionToken",
   issuer: configuration.server.issuer,
-  types: [AuthenticationTokenType.STRATEGY_SESSION],
+  types: [TokenType.STRATEGY],
 });

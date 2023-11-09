@@ -1,4 +1,4 @@
-import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationMethod, AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import { MfaCookieSession, MfaCookieSessionOptions } from "../../entity";
 

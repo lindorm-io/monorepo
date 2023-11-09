@@ -1,14 +1,9 @@
-import { configuration } from "../../server/configuration";
-import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { ChallengeStrategy, PSD2Factor, SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { JwtSignOptions, createTestJwt } from "@lindorm-io/jwt";
 import { randomHex } from "@lindorm-io/random";
-import { ChallengeConfirmationTokenClaims, RdcSessionTokenClaims } from "../../common";
 import { randomUUID } from "crypto";
-import {
-  ChallengeStrategy,
-  DeviceTokenType,
-  PSD2Factor,
-  SubjectHint,
-} from "@lindorm-io/common-types";
+import { ChallengeConfirmationTokenClaims, RdcSessionTokenClaims } from "../../common";
+import { configuration } from "../../server/configuration";
 
 export const getTestChallengeConfirmationToken = (
   options: Partial<JwtSignOptions<ChallengeConfirmationTokenClaims>> = {},
@@ -30,7 +25,7 @@ export const getTestChallengeConfirmationToken = (
     sessionHint: "challenge",
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+    type: TokenType.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
@@ -46,7 +41,7 @@ export const getTestChallengeSessionToken = (options: Partial<JwtSignOptions> = 
     sessionHint: "challenge",
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_SESSION,
+    type: TokenType.CHALLENGE,
     ...options,
   });
   return token;
@@ -62,7 +57,7 @@ export const getTestEnrolmentSessionToken = (options: Partial<JwtSignOptions> = 
     sessionHint: "enrolment",
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.ENROLMENT_SESSION,
+    type: TokenType.ENROLMENT,
     ...options,
   });
   return token;
@@ -83,7 +78,7 @@ export const getTestRdcToken = (
     sessionHint: "rdc",
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.REMOTE_DEVICE_CHALLENGE_SESSION,
+    type: TokenType.REMOTE_DEVICE_CHALLENGE,
     ...options,
   });
   return token;

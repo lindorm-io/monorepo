@@ -1,18 +1,18 @@
+import { IdentifierType } from "@lindorm-io/common-enums";
+import { randomNumber, randomString } from "@lindorm-io/random";
+import { find } from "lodash";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { IdentifierType } from "@lindorm-io/common-types";
 import { Identity } from "../../entity";
-import { find } from "lodash";
-import { randomNumber, randomString } from "@lindorm-io/random";
-import { server } from "../../server/server";
 import {
-  getTestClientCredentials,
-  setupIntegration,
   TEST_ADDRESS_REPOSITORY,
   TEST_IDENTIFIER_REPOSITORY,
   TEST_IDENTITY_REPOSITORY,
+  getTestClientCredentials,
+  setupIntegration,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

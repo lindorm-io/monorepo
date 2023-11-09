@@ -1,17 +1,17 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { KeyType } from "@lindorm-io/key-pair";
-import { ServerKoaContext } from "../types";
-import { configuration } from "./configuration";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { logger } from "./logger";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import {
   ChallengeSessionCache,
   DeviceLinkRepository,
   EnrolmentSessionCache,
   RdcSessionCache,
 } from "../infrastructure";
+import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
+import { ServerKoaContext } from "../types";
+import { configuration } from "./configuration";
+import { logger } from "./logger";
 
 export const server = createNodeServer<ServerKoaContext>({
   client: {

@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-enums";
 import { AuthorizationSession, BrowserSession } from "../../entity";
 import { createTestAuthorizationSession, createTestBrowserSession } from "../../fixtures/entity";
 import { verifyRequiredMethods } from "./verify-required-methods";

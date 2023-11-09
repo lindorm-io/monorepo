@@ -1,7 +1,7 @@
-import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-enums";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
-import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
+import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
 
 export const createTestEnrolmentSession = (
   options: Partial<EnrolmentSessionOptions> = {},

@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { KeyType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";

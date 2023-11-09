@@ -1,9 +1,9 @@
-import { configuration } from "../../server/configuration";
-import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { JwtSignOptions, createTestJwt } from "@lindorm-io/jwt";
 import { randomString } from "@lindorm-io/random";
-import { getUnixTime } from "date-fns";
 import { randomUUID } from "crypto";
-import { AuthenticationTokenType, DeviceTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { getUnixTime } from "date-fns";
+import { configuration } from "../../server/configuration";
 
 export const getTestChallengeConfirmationToken = (
   options: Partial<JwtSignOptions> = {},
@@ -23,7 +23,7 @@ export const getTestChallengeConfirmationToken = (
     session: randomUUID(),
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_CONFIRMATION,
+    type: TokenType.CHALLENGE_CONFIRMATION,
     ...options,
   });
   return token;
@@ -52,7 +52,7 @@ export const getTestAuthenticationConfirmationToken = (
     session: randomUUID(),
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: AuthenticationTokenType.AUTHENTICATION_CONFIRMATION,
+    type: TokenType.AUTHENTICATION_CONFIRMATION,
     ...options,
   });
   return token;
@@ -68,7 +68,7 @@ export const getTestStrategySessionToken = (options: Partial<JwtSignOptions> = {
     sessionHint: "strategy",
     subject: randomUUID(),
     subjectHint: SubjectHint.SESSION,
-    type: AuthenticationTokenType.STRATEGY_SESSION,
+    type: TokenType.STRATEGY,
     ...options,
   });
   return token;

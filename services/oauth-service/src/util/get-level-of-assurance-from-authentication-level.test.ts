@@ -3,7 +3,7 @@ import {
   AuthenticationLevel,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { getLevelOfAssuranceFromAuthenticationLevel } from "./get-level-of-assurance-from-authentication-level";
 
 describe("getVerifiedAcrValues", () => {

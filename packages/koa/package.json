@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.2.0",
-    "@lindorm-io/common-types": "^0.3.3",
+    "@lindorm-io/common-enums": "^0.0.1",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/retry": "^0.1.5",
@@ -34,6 +34,7 @@
     "socket.io": "^4.7.2"
   },
   "devDependencies": {
+    "@lindorm-io/common-types": "^0.3.3",
     "@lindorm-io/core-logger": "^0.2.9",
     "@lindorm-io/url": "^0.2.13",
     "@types/express-useragent": "^1.0.4",

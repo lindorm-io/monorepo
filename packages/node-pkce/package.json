@@ -19,7 +19,10 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/common-types": "^0.3.3",
+    "@lindorm-io/common-enums": "^0.0.1",
     "@lindorm-io/errors": "^0.1.21"
+  },
+  "devDependencies": {
+    "@lindorm-io/common-types": "^0.3.3"
   }
 }

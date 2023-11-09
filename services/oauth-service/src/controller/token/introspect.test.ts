@@ -1,4 +1,4 @@
-import { AuthenticationFactor, AuthenticationLevel } from "@lindorm-io/common-types";
+import { AuthenticationFactor, AuthenticationLevel } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import {

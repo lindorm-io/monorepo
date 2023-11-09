@@ -1,13 +1,13 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { assertSessionPending, createLogoutVerifyUri } from "../../util";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
   ConfirmLogoutRequestBody,
   ConfirmLogoutRequestParams,
   ConfirmLogoutResponse,
-  SessionStatus,
 } from "@lindorm-io/common-types";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { ServerKoaController } from "../../types";
+import { assertSessionPending, createLogoutVerifyUri } from "../../util";
 
 type RequestData = ConfirmLogoutRequestParams & ConfirmLogoutRequestBody;
 

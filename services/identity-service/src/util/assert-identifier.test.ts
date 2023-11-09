@@ -1,6 +1,6 @@
-import { assertIdentifier } from "./assert-identifier";
-import { IdentifierType } from "@lindorm-io/common-types";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
+import { assertIdentifier } from "./assert-identifier";
 
 describe("assertIdentifier", () => {
   describe("email", () => {

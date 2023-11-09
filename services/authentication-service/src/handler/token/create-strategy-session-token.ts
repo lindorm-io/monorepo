@@ -1,7 +1,7 @@
-import { ServerKoaContext } from "../../types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import { StrategySession } from "../../entity";
 import { configuration } from "../../server/configuration";
-import { AuthenticationTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { ServerKoaContext } from "../../types";
 
 export const createStrategySessionToken = (
   ctx: ServerKoaContext,
@@ -16,7 +16,7 @@ export const createStrategySessionToken = (
     sessionHint: "strategy",
     subject: strategySession.id,
     subjectHint: SubjectHint.SESSION,
-    type: AuthenticationTokenType.STRATEGY_SESSION,
+    type: TokenType.STRATEGY,
   });
 
   return token;

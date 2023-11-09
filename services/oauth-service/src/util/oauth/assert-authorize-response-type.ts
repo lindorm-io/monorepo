@@ -1,4 +1,4 @@
-import { OpenIdResponseType } from "@lindorm-io/common-types";
+import { OpenIdResponseType } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { difference } from "lodash";
 import { AuthorizationSession, Client } from "../../entity";

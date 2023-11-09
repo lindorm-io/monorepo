@@ -1,7 +1,7 @@
+import { AuthenticationMethod } from "@lindorm-io/common-enums";
 import { uniq } from "lodash";
-import { AuthenticationMethod } from "@lindorm-io/common-types";
-import { getStrategyConfig } from "../strategies";
 import { AuthenticationSession } from "../entity";
+import { getStrategyConfig } from "../strategies";
 
 export const getMethodsFromStrategies = (
   authenticationSession: AuthenticationSession,

@@ -1,16 +1,16 @@
-import { Environment } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../types";
-import { configuration } from "./configuration";
+import { Environment } from "@lindorm-io/common-enums";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { logger } from "./logger";
-import { memoryDatabase, mongoConnection } from "../instance";
 import {
   AddressRepository,
   DisplayNameRepository,
   IdentifierRepository,
   IdentityRepository,
 } from "../infrastructure";
+import { memoryDatabase, mongoConnection } from "../instance";
+import { ServerKoaContext } from "../types";
+import { configuration } from "./configuration";
+import { logger } from "./logger";
 
 export const server = createNodeServer<ServerKoaContext>({
   client: {

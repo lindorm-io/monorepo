@@ -1,8 +1,5 @@
-import {
-  ConfirmStrategyRequestBody,
-  ConfirmStrategyRequestParams,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { ConfirmStrategyRequestBody, ConfirmStrategyRequestParams } from "@lindorm-io/common-types";
 import { removeEmptyFromArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";

@@ -1,4 +1,4 @@
-import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-types";
+import { OpenIdPromptMode, SessionStatus } from "@lindorm-io/common-enums";
 import { AuthorizationSession, BrowserSession, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { verifyPromptMode, verifyRequiredAudiences, verifyRequiredScopes } from "../../util";

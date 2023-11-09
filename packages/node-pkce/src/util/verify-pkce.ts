@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm-io/errors";
-import { PKCEMethod } from "@lindorm-io/common-types";
+import { PKCEMethod } from "@lindorm-io/common-enums";
 import { createBaseHash } from "./create-base-hash";
 import { stringComparison } from "./string-comparison";
 

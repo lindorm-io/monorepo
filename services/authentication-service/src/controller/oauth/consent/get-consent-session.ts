@@ -1,13 +1,9 @@
-import {
-  PublicClientInfo,
-  PublicTenantInfo,
-  ScopeDescription,
-  SessionStatus,
-} from "@lindorm-io/common-types";
+import { Scope, SessionStatus } from "@lindorm-io/common-enums";
+import { PublicClientInfo, PublicTenantInfo, ScopeDescription } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { getOauthAuthorizationSession } from "../../../handler";
-import { Scope, ServerKoaController } from "../../../types";
+import { ServerKoaController } from "../../../types";
 
 type RequestData = {
   id: string;
@@ -15,11 +11,10 @@ type RequestData = {
 
 type ResponseBody = {
   audiences: Array<string>;
-  optionalScopes: Array<Scope>;
-  requiredScopes: Array<Scope>;
+  optionalScopes: Array<Scope | string>;
+  requiredScopes: Array<Scope | string>;
   scopeDescriptions: Array<ScopeDescription>;
   status: SessionStatus;
-
   client: PublicClientInfo;
   tenant: PublicTenantInfo;
 };

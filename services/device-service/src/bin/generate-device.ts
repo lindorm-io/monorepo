@@ -1,9 +1,9 @@
+import { CertificateMethod } from "@lindorm-io/common-enums";
 import { DeviceLink } from "../entity";
 import { DeviceLinkRepository } from "../infrastructure";
-import { RSA_KEY } from "./util/rsa-key";
-import { logger } from "./util/logger";
 import { mongoConnection } from "../instance";
-import { CertificateMethod } from "@lindorm-io/common-types";
+import { logger } from "./util/logger";
+import { RSA_KEY } from "./util/rsa-key";
 
 const repositories = {
   deviceLink: new DeviceLinkRepository(mongoConnection, logger),

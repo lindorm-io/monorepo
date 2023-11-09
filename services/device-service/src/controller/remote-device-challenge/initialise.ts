@@ -1,22 +1,21 @@
-import Joi from "joi";
-import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { configuration } from "../../server/configuration";
-import { createRdcSession } from "../../handler";
-import { expiryDate } from "@lindorm-io/expiry";
-import { JOI_NONCE } from "../../common";
+import { RdcSessionMode, RdcSessionType } from "@lindorm-io/common-enums";
 import {
   InitialiseRdcSessionRequestBody,
   InitialiseRdcSessionResponse,
-  RdcSessionMode,
-  RdcSessionType,
 } from "@lindorm-io/common-types";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import Joi from "joi";
+import { JOI_NONCE } from "../../common";
 import {
   JOI_FACTORS,
   JOI_RDC_CONFIRM_METHOD,
   JOI_RDC_MODE,
   JOI_RDC_REJECT_METHOD,
 } from "../../constant";
+import { createRdcSession } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseRdcSessionRequestBody;
 

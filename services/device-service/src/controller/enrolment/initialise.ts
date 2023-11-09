@@ -1,11 +1,13 @@
 import {
-  DeviceTokenType,
-  InitialiseEnrolmentRequestBody,
-  InitialiseEnrolmentResponse,
   RdcSessionMode,
   RdcSessionType,
   SessionStatus,
   SubjectHint,
+  TokenType,
+} from "@lindorm-io/common-enums";
+import {
+  InitialiseEnrolmentRequestBody,
+  InitialiseEnrolmentResponse,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
@@ -108,7 +110,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     sessionHint: "enrolment",
     subject: identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.ENROLMENT_SESSION,
+    type: TokenType.ENROLMENT,
   });
 
   if (externalChallengeRequired) {

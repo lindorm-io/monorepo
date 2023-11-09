@@ -1,6 +1,6 @@
-import { createHash } from "crypto";
+import { PKCEMethod } from "@lindorm-io/common-enums";
 import { randomString } from "@lindorm-io/random";
-import { PKCEMethod } from "@lindorm-io/common-types";
+import { createHash } from "crypto";
 
 interface Result {
   codeChallenge: string;

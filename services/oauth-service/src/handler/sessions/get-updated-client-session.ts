@@ -1,4 +1,4 @@
-import { OpenIdGrantType, OpenIdScope } from "@lindorm-io/common-types";
+import { OpenIdGrantType, Scope } from "@lindorm-io/common-enums";
 import { uniqArray } from "@lindorm-io/core";
 import { ServerError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
@@ -62,7 +62,7 @@ const createClientSession = async (
       scopes: authorizationSession.confirmedConsent.scopes,
       strategies: authorizationSession.confirmedLogin.strategies,
       tenantId: client.tenantId,
-      type: authorizationSession.confirmedConsent.scopes.includes(OpenIdScope.OFFLINE_ACCESS)
+      type: authorizationSession.confirmedConsent.scopes.includes(Scope.OFFLINE_ACCESS)
         ? ClientSessionType.REFRESH
         : ClientSessionType.EPHEMERAL,
     }),
@@ -137,9 +137,7 @@ const updateClientSession = async (
 
   clientSession.strategies = authorizationSession.confirmedLogin.strategies;
 
-  clientSession.type = authorizationSession.confirmedConsent.scopes.includes(
-    OpenIdScope.OFFLINE_ACCESS,
-  )
+  clientSession.type = authorizationSession.confirmedConsent.scopes.includes(Scope.OFFLINE_ACCESS)
     ? ClientSessionType.REFRESH
     : ClientSessionType.EPHEMERAL;
 

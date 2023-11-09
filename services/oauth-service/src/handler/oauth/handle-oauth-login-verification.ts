@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { uniqArray } from "@lindorm-io/core";
 import { AuthorizationSession } from "../../entity";
 import { ServerKoaContext } from "../../types";

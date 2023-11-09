@@ -2,9 +2,10 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LevelOfAssurance,
   OpenIdGrantType,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -16,7 +17,6 @@ import { randomUnreserved } from "@lindorm-io/random";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE, JOI_NONCE } from "../common";
 import { ClientSessionType } from "../enum";
-import { Scope } from "../types";
 
 export type ClientSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
@@ -32,7 +32,7 @@ export type ClientSessionAttributes = EntityAttributes & {
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
   nonce: string;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
   strategies: Array<AuthenticationStrategy>;
   tenantId: string;
   type: ClientSessionType;
@@ -94,7 +94,7 @@ export class ClientSession extends LindormEntity<ClientSessionAttributes> {
   public levelOfAssurance: LevelOfAssurance;
   public methods: Array<AuthenticationMethod>;
   public nonce: string;
-  public scopes: Array<Scope>;
+  public scopes: Array<Scope | string>;
   public strategies: Array<AuthenticationStrategy>;
   public type: ClientSessionType;
 

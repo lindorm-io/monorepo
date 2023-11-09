@@ -1,3 +1,4 @@
+import { Scope } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,
@@ -6,14 +7,13 @@ import {
   Optional,
 } from "@lindorm-io/entity";
 import Joi from "joi";
-import { Scope } from "../types";
 
 export type AuthenticationTokenSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
   clientId: string;
   expires: Date;
   metadata: Record<string, any>;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
   token: string;
 };
 
@@ -40,7 +40,7 @@ export class AuthenticationTokenSession extends LindormEntity<AuthenticationToke
   public readonly clientId: string;
   public readonly expires: Date;
   public readonly metadata: Record<string, any>;
-  public readonly scopes: Array<Scope>;
+  public readonly scopes: Array<Scope | string>;
   public readonly token: string;
 
   public constructor(options: AuthenticationTokenSessionOptions) {

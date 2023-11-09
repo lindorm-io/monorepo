@@ -1,8 +1,9 @@
+import { RdcSessionMode } from "@lindorm-io/common-enums";
+import { EmitSocketEventRequestBody } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
-import { EmitSocketEventRequestBody, RdcSessionMode } from "@lindorm-io/common-types";
 import { RdcSession, RdcSessionOptions } from "../../entity";
-import { ServerKoaContext } from "../../types";
 import { clientCredentialsMiddleware } from "../../middleware";
+import { ServerKoaContext } from "../../types";
 
 type Options = Omit<RdcSessionOptions, "deviceLinks">;
 

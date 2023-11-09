@@ -1,11 +1,11 @@
-import { addIdentifierController } from "./add-identifier";
+import { IdentifierType } from "@lindorm-io/common-enums";
 import { createTestIdentity } from "../../fixtures/entity";
-import { IdentifierType } from "@lindorm-io/common-types";
-import { assertIdentifier as _assertIdentifier } from "../../util";
 import {
   addGenericIdentifier as _addGenericIdentifier,
   addUsernameIdentifier as _addUsernameIdentifier,
 } from "../../handler";
+import { assertIdentifier as _assertIdentifier } from "../../util";
+import { addIdentifierController } from "./add-identifier";
 
 jest.mock("../../handler");
 jest.mock("../../util");

@@ -1,7 +1,7 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
-import { ENABLED_STRATEGIES } from "../enabled-strategies";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { ServerError } from "@lindorm-io/errors";
 import { StrategyHandler } from "../../types";
+import { ENABLED_STRATEGIES } from "../enabled-strategies";
 
 export const getStrategyHandler = (
   authenticationStrategy: AuthenticationStrategy,

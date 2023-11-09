@@ -1,11 +1,11 @@
-import { Environment, SubjectHint } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../types";
-import { configuration } from "./configuration";
+import { Environment, SubjectHint } from "@lindorm-io/common-enums";
+import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { logger } from "./logger";
 import { memoryDatabase, redisConnection } from "../instance";
-import { socketBearerAuthMiddleware } from "@lindorm-io/koa-bearer-auth";
+import { ServerKoaContext } from "../types";
+import { configuration } from "./configuration";
+import { logger } from "./logger";
 import { socketListeners } from "./socket";
 
 export const server = createNodeServer<ServerKoaContext>({

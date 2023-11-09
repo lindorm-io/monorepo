@@ -6,9 +6,9 @@ import {
   OpenIdPromptMode,
   OpenIdResponseMode,
   OpenIdResponseType,
-  OpenIdScope,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { randomHex, randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
@@ -26,12 +26,12 @@ export const createTestAuthorizationSession = (
     requestedConsent: {
       audiences: [randomUUID()],
       scopes: [
-        OpenIdScope.ADDRESS,
-        OpenIdScope.EMAIL,
-        OpenIdScope.OFFLINE_ACCESS,
-        OpenIdScope.OPENID,
-        OpenIdScope.PHONE,
-        OpenIdScope.PROFILE,
+        Scope.ADDRESS,
+        Scope.EMAIL,
+        Scope.OFFLINE_ACCESS,
+        Scope.OPENID,
+        Scope.PHONE,
+        Scope.PROFILE,
       ],
       ...(options.requestedConsent || {}),
     },

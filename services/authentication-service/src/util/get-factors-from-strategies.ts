@@ -1,4 +1,4 @@
-import { AuthenticationFactor } from "@lindorm-io/common-types";
+import { AuthenticationFactor } from "@lindorm-io/common-enums";
 import { uniq } from "lodash";
 import { AuthenticationSession } from "../entity";
 import { getStrategyConfig } from "../strategies";

@@ -1,13 +1,10 @@
-import { AuthenticationSession, StrategySession } from "../../entity";
-import { ServerKoaContext } from "../../types";
-import { configuration } from "../../server/configuration";
-import { createStrategySessionToken } from "../index";
+import { HttpMethod, RdcSessionMode } from "@lindorm-io/common-enums";
+import { InitialiseRdcSessionRequestBody } from "@lindorm-io/common-types";
 import { createURL } from "@lindorm-io/url";
-import {
-  InitialiseRdcSessionRequestBody,
-  RdcSessionMethod,
-  RdcSessionMode,
-} from "@lindorm-io/common-types";
+import { AuthenticationSession, StrategySession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaContext } from "../../types";
+import { createStrategySessionToken } from "../index";
 
 export const getRdcBody = (
   ctx: ServerKoaContext,
@@ -18,7 +15,7 @@ export const getRdcBody = (
 
   return {
     audiences: [configuration.oauth.client_id],
-    confirmMethod: RdcSessionMethod.POST,
+    confirmMethod: HttpMethod.POST,
     confirmPayload: {
       strategySessionToken: createStrategySessionToken(ctx, strategySession),
       visualHint: strategySession.visualHint,
@@ -32,7 +29,7 @@ export const getRdcBody = (
     factors: 2,
     mode: RdcSessionMode.QR_CODE,
     nonce: strategySession.nonce,
-    rejectMethod: RdcSessionMethod.POST,
+    rejectMethod: HttpMethod.POST,
     rejectUri: createURL("/sessions/strategy/:id/reject", {
       host: configuration.server.host,
       port: configuration.server.port,

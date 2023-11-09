@@ -3,8 +3,8 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdGrantType,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { randomHex, randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { ClientSession, ClientSessionOptions } from "../../entity";
@@ -27,7 +27,7 @@ export const createTestClientSession = (
     metadata: { ip: "10.0.0.1", deviceName: "Test Device", platform: "iOS" },
     methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
     nonce: randomHex(16),
-    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+    scopes: [Scope.OPENID, Scope.PROFILE],
     strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
     tenantId: randomUUID(),
     type: ClientSessionType.REFRESH,

@@ -1,7 +1,7 @@
+import { PKCEMethod } from "@lindorm-io/common-enums";
+import { createBaseHash as _createBaseHash } from "./create-base-hash";
 import { createPKCE } from "./create-pkce";
 import { randomBaseString as _randomBaseString } from "./random-base-string";
-import { createBaseHash as _createBaseHash } from "./create-base-hash";
-import { PKCEMethod } from "@lindorm-io/common-types";
 
 jest.mock("./random-base-string");
 jest.mock("./create-base-hash");

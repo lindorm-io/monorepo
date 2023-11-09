@@ -1,4 +1,4 @@
-import { SessionStatus } from "@lindorm-io/common-types";
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { AuthorizationSession, Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getUpdatedClientSession } from "../sessions";

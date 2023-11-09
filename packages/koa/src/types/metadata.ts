@@ -1,5 +1,5 @@
+import { Environment } from "@lindorm-io/common-enums";
 import { MetadataHeader } from "../enum";
-import { Environment } from "@lindorm-io/common-types";
 
 type Agent = {
   browser: string | undefined;

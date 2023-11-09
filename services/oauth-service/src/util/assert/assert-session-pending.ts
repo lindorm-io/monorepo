@@ -1,5 +1,5 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
-import { SessionStatus } from "@lindorm-io/common-types";
 
 export const assertSessionPending = (status: SessionStatus): void => {
   if (status === SessionStatus.PENDING) return;

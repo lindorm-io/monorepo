@@ -1,4 +1,4 @@
-import { SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint } from "@lindorm-io/common-enums";
 import { JwtSign } from "@lindorm-io/jwt";
 import { randomUnreserved } from "@lindorm-io/random";
 import { getUnixTime } from "date-fns";

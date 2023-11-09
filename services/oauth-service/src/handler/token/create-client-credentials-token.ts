@@ -1,4 +1,4 @@
-import { OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import { uniqArray } from "@lindorm-io/core";
 import { JwtSign } from "@lindorm-io/jwt";
 import { Client } from "../../entity";
@@ -26,6 +26,6 @@ export const createClientCredentialsToken = (
     subject: client.id,
     subjectHint: SubjectHint.CLIENT,
     tenant: client.tenantId,
-    type: OpenIdTokenType.ACCESS,
+    type: TokenType.ACCESS,
   });
 };

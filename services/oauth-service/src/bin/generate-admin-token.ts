@@ -1,8 +1,8 @@
-import { LindormScope, OpenIdScope, OpenIdTokenType, SubjectHint } from "@lindorm-io/common-types";
+import { Scope, SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { randomUUID } from "crypto";
 import { getClients } from "./util/get-clients";
 import { getJwt } from "./util/get-jwt";
 import { logger } from "./util/logger";
-import { randomUUID } from "crypto";
 
 const main = async (): Promise<void> => {
   const [id] = process.argv.slice(2);
@@ -16,11 +16,11 @@ const main = async (): Promise<void> => {
     authMethodsReference: ["generate_admin_token"],
     expiry: "15 minutes",
     levelOfAssurance: 4,
-    scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+    scopes: Object.values(Scope),
     session: randomUUID(),
     subject: id || randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
-    type: OpenIdTokenType.ACCESS,
+    type: TokenType.ACCESS,
   });
 
   logger.info("Generated token", { token });

@@ -5,9 +5,9 @@ import {
   OpenIdGrantType,
   OpenIdResponseMode,
   OpenIdResponseType,
-  OpenIdScope,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
@@ -74,7 +74,7 @@ export const createClientController: ServerKoaController<RequestData> = async (
           OpenIdResponseType.ID_TOKEN,
           OpenIdResponseType.TOKEN,
         ],
-        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE, OpenIdScope.OFFLINE_ACCESS],
+        scopes: [Scope.OPENID, Scope.PROFILE, Scope.OFFLINE_ACCESS],
         strategies: [],
       },
 

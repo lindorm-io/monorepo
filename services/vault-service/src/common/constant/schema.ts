@@ -1,5 +1,5 @@
+import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-enums";
 import Joi from "joi";
-import { OpenIdClientType, SessionStatus } from "@lindorm-io/common-types";
 
 export const JOI_ARGON_STRING = Joi.string()
   .pattern(/^([$]argon2id[$]).+$/)

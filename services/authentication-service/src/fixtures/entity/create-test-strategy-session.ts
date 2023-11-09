@@ -1,8 +1,8 @@
-import { StrategySession, StrategySessionOptions } from "../../entity";
+import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { randomNumber } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
-import { AuthenticationStrategy, IdentifierType, SessionStatus } from "@lindorm-io/common-types";
+import { StrategySession, StrategySessionOptions } from "../../entity";
 
 export const createTestStrategySession = (
   options: Partial<StrategySessionOptions> = {},

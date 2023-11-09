@@ -1,4 +1,4 @@
-import { LindormScope, OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { createTestAddress, createTestIdentity } from "../../fixtures/entity";
@@ -37,7 +37,7 @@ describe("getUserinfoController", () => {
       },
       token: {
         bearerToken: {
-          metadata: { scopes: [OpenIdScope.OPENID] },
+          metadata: { scopes: [Scope.OPENID] },
         },
       },
     };
@@ -68,7 +68,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve ADDRESS", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(OpenIdScope.ADDRESS);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.ADDRESS);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -81,7 +81,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve EMAIL", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(OpenIdScope.EMAIL);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.EMAIL);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -95,7 +95,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve PHONE", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(OpenIdScope.PHONE);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.PHONE);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -109,7 +109,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve PROFILE", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(OpenIdScope.PROFILE);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.PROFILE);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -136,7 +136,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve ACCESSIBILITY", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(LindormScope.ACCESSIBILITY);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.ACCESSIBILITY);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -149,7 +149,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve NATIONAL_IDENTITY_NUMBER", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(LindormScope.NATIONAL_IDENTITY_NUMBER);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.NATIONAL_IDENTITY_NUMBER);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -163,7 +163,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve PUBLIC", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(LindormScope.PUBLIC);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.PUBLIC);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -178,7 +178,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve SOCIAL_SECURITY_NUMBER", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(LindormScope.SOCIAL_SECURITY_NUMBER);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.SOCIAL_SECURITY_NUMBER);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {
@@ -192,7 +192,7 @@ describe("getUserinfoController", () => {
   });
 
   test("should resolve USERNAME", async () => {
-    ctx.token.bearerToken.metadata.scopes.push(LindormScope.USERNAME);
+    ctx.token.bearerToken.metadata.scopes.push(Scope.USERNAME);
 
     await expect(getUserinfoController(ctx)).resolves.toStrictEqual({
       body: {

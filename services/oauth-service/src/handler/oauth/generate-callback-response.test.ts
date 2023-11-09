@@ -1,4 +1,4 @@
-import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-types";
+import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";

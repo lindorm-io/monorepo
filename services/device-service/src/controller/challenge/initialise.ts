@@ -1,20 +1,18 @@
-import Joi from "joi";
-import { ChallengeSession } from "../../entity";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { JOI_NONCE } from "../../common";
-import { ServerKoaController } from "../../types";
-import { configuration } from "../../server/configuration";
-import { expiryDate } from "@lindorm-io/expiry";
-import { randomString } from "@lindorm-io/random";
-import { sortedUniq } from "lodash";
+import { ChallengeStrategy, SubjectHint, TokenType } from "@lindorm-io/common-enums";
 import {
-  ChallengeStrategy,
-  DeviceTokenType,
   InitialiseChallengeRequestBody,
   InitialiseChallengeResponse,
-  SubjectHint,
 } from "@lindorm-io/common-types";
+import { ClientError } from "@lindorm-io/errors";
+import { expiryDate } from "@lindorm-io/expiry";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { randomString } from "@lindorm-io/random";
+import Joi from "joi";
+import { sortedUniq } from "lodash";
+import { JOI_NONCE } from "../../common";
+import { ChallengeSession } from "../../entity";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 type RequestData = InitialiseChallengeRequestBody;
 
@@ -94,7 +92,7 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     sessionHint: "challenge",
     subject: deviceLink.identityId,
     subjectHint: SubjectHint.IDENTITY,
-    type: DeviceTokenType.CHALLENGE_SESSION,
+    type: TokenType.CHALLENGE,
   });
 
   return {

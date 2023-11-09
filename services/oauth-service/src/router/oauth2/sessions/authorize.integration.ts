@@ -3,9 +3,9 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdResponseMode,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -58,12 +58,7 @@ describe("/oauth2/sessions/authorize", () => {
         identityId: browserSession.identityId,
         latestAuthentication: new Date(),
         levelOfAssurance: 3,
-        scopes: [
-          OpenIdScope.OPENID,
-          OpenIdScope.OFFLINE_ACCESS,
-          OpenIdScope.EMAIL,
-          OpenIdScope.PHONE,
-        ],
+        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL, Scope.PHONE],
       }),
     );
 
@@ -74,7 +69,7 @@ describe("/oauth2/sessions/authorize", () => {
         browserSessionId: browserSession.id,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
+          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
         },
         confirmedLogin: {
           factors: [AuthenticationFactor.TWO_FACTOR],
@@ -145,12 +140,7 @@ describe("/oauth2/sessions/authorize", () => {
         identityId: browserSession.identityId,
         latestAuthentication: new Date(),
         levelOfAssurance: 3,
-        scopes: [
-          OpenIdScope.OPENID,
-          OpenIdScope.OFFLINE_ACCESS,
-          OpenIdScope.EMAIL,
-          OpenIdScope.PHONE,
-        ],
+        scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL, Scope.PHONE],
       }),
     );
 
@@ -161,7 +151,7 @@ describe("/oauth2/sessions/authorize", () => {
         clientSessionId: clientSession.id,
         confirmedConsent: {
           audiences: [client.id],
-          scopes: [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.EMAIL],
+          scopes: [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.EMAIL],
         },
         confirmedLogin: {
           factors: [AuthenticationFactor.TWO_FACTOR],

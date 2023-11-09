@@ -2,14 +2,15 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LevelOfAssurance,
   OpenIdDisplayMode,
   OpenIdPromptMode,
   OpenIdResponseMode,
   OpenIdResponseType,
   PKCEMethod,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -36,7 +37,6 @@ import {
   JOI_RESPONSE_MODE,
   JOI_RESPONSE_TYPE,
 } from "../constant";
-import { Scope } from "../types";
 
 export type BrowserSessionLike = {
   browserSessionId: string;
@@ -50,7 +50,7 @@ type Code = {
 
 type ConfirmedConsent = {
   audiences: Array<string>;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
 };
 
 type ConfirmedLogin = {
@@ -67,7 +67,7 @@ type ConfirmedLogin = {
 
 type RequestedConsent = {
   audiences: Array<string>;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
 };
 
 type RequestedLogin = {

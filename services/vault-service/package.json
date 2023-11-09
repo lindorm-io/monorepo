@@ -26,7 +26,7 @@
     "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {
-    "@lindorm-io/common-types": "^0.3.2",
+    "@lindorm-io/common-enums": "^0.0.1",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/crypto": "^0.1.34",
     "@lindorm-io/entity": "^0.3.13",
@@ -45,6 +45,7 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
+    "@lindorm-io/common-types": "^0.3.2",
     "@lindorm-io/axios": "^0.6.7",
     "@lindorm-io/jwt": "^0.11.0",
     "@lindorm-io/winston": "^0.5.13",

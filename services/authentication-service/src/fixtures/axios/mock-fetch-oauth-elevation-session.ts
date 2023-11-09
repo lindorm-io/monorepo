@@ -2,12 +2,12 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  GetElevationSessionResponse,
   OpenIdClientType,
   OpenIdDisplayMode,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { GetElevationSessionResponse } from "@lindorm-io/common-types";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 
@@ -59,7 +59,7 @@ export const mockFetchOauthElevationSession = (
     latestAuthentication: "2021-01-01T07:59:00.000Z",
     levelOfAssurance: 2,
     methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+    scopes: [Scope.OPENID, Scope.PROFILE],
     strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
   },
 

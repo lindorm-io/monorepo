@@ -2,8 +2,9 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LevelOfAssurance,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import {
   EntityAttributes,
   EntityKeys,
@@ -13,7 +14,6 @@ import {
 } from "@lindorm-io/entity";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE } from "../common";
-import { Scope } from "../types";
 
 export type ClaimsSessionAttributes = EntityAttributes & {
   audiences: Array<string>;
@@ -25,7 +25,7 @@ export type ClaimsSessionAttributes = EntityAttributes & {
   levelOfAssurance: LevelOfAssurance;
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
-  scopes: Array<Scope>;
+  scopes: Array<Scope | string>;
   strategies: Array<AuthenticationStrategy>;
 };
 
@@ -59,7 +59,7 @@ export class ClaimsSession extends LindormEntity<ClaimsSessionAttributes> {
   public readonly levelOfAssurance: LevelOfAssurance;
   public readonly metadata: Record<string, any>;
   public readonly methods: Array<AuthenticationMethod>;
-  public readonly scopes: Array<Scope>;
+  public readonly scopes: Array<Scope | string>;
   public readonly strategies: Array<AuthenticationStrategy>;
 
   public constructor(options: ClaimsSessionOptions) {

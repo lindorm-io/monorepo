@@ -1,9 +1,9 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
   ConfirmSelectAccountRequestBody,
   ConfirmSelectAccountRequestParams,
   ConfirmSelectAccountResponse,
   LindormIdentityClaims,
-  SessionStatus,
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";

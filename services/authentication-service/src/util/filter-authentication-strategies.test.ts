@@ -1,4 +1,4 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
 import { filterAuthenticationStrategies } from "./filter-authentication-strategies";
 
 describe("filterAuthenticationStrategies", () => {

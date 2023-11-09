@@ -1,7 +1,7 @@
-import { BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
-import { Environment } from "@lindorm-io/common-types";
-import { ServerKoaContext } from "../../types";
+import { Environment } from "@lindorm-io/common-enums";
 import { expiryDate } from "@lindorm-io/expiry";
+import { BROWSER_SESSIONS_COOKIE_NAME } from "../../constant";
+import { ServerKoaContext } from "../../types";
 
 export const setBrowserSessionCookies = (
   ctx: ServerKoaContext,

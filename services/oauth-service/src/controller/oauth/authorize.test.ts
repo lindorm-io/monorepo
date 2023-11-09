@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomUnreserved as _randomUnreserved } from "@lindorm-io/random";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";

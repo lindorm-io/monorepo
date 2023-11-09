@@ -1,12 +1,12 @@
 import {
-  AuthStrategyConfig,
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
-  DeviceTokenType,
-} from "@lindorm-io/common-types";
+  TokenType,
+} from "@lindorm-io/common-enums";
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken } from "../../handler";
@@ -104,7 +104,7 @@ export class DeviceChallengeStrategy implements StrategyHandler {
       nonce: strategySession.nonce,
       scopes: ["authentication"],
       subject: authenticationSession.identityId,
-      types: [DeviceTokenType.CHALLENGE_CONFIRMATION],
+      types: [TokenType.CHALLENGE_CONFIRMATION],
     });
 
     logger.debug("Resolving Account");

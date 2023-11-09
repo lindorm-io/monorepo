@@ -1,4 +1,4 @@
-import { OpenIdClientType } from "@lindorm-io/common-types";
+import { OpenIdClientType } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { getCredentials as _getCredentials } from "@lindorm-io/koa-basic-auth";
 import { createMockMongoRepository } from "@lindorm-io/mongo";

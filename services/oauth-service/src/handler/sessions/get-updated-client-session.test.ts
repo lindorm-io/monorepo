@@ -2,8 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
@@ -41,7 +41,7 @@ describe("getUpdatedClientSession", () => {
     authorizationSession = createTestAuthorizationSession({
       confirmedConsent: {
         audiences: ["6c04e67f-7911-4692-ab3b-f7b3f3178a40", "968db71c-3ea5-446a-a38e-cf614ec3168c"],
-        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+        scopes: [Scope.OPENID, Scope.PROFILE],
       },
       confirmedLogin: {
         factors: [AuthenticationFactor.TWO_FACTOR],
@@ -110,7 +110,7 @@ describe("getUpdatedClientSession", () => {
 
   test("should resolve refresh session", async () => {
     authorizationSession.clientSessionId = null;
-    authorizationSession.confirmedConsent.scopes.push(OpenIdScope.OFFLINE_ACCESS);
+    authorizationSession.confirmedConsent.scopes.push(Scope.OFFLINE_ACCESS);
 
     await expect(getUpdatedClientSession(ctx, authorizationSession, client)).resolves.toStrictEqual(
       expect.any(ClientSession),
@@ -150,7 +150,7 @@ describe("getUpdatedClientSession", () => {
         latestAuthentication: new Date("2021-01-01T07:59:00.000Z"),
         levelOfAssurance: 1,
         methods: [AuthenticationMethod.PASSWORD],
-        scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+        scopes: [Scope.OPENID, Scope.PROFILE],
         strategies: [AuthenticationStrategy.PASSWORD],
       }),
     );

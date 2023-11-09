@@ -1,4 +1,4 @@
-import { SubjectHint } from "@lindorm-io/common-types";
+import { SubjectHint } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { TokenHeaderType, decodeOpaqueToken, getTokenHeaderType } from "@lindorm-io/jwt";
 import { OpaqueToken } from "../../entity";

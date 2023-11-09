@@ -1,5 +1,5 @@
 import { TransformMode } from "@lindorm-io/case";
-import { OpenIdResponseMode, OpenIdResponseType, OpenIdScope } from "@lindorm-io/common-types";
+import { OpenIdResponseMode, OpenIdResponseType, Scope } from "@lindorm-io/common-enums";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { expiresIn } from "@lindorm-io/expiry";
 import { createOpaqueToken } from "@lindorm-io/jwt";
@@ -55,7 +55,7 @@ export const generateCallbackResponse = async (
 
   if (
     authorizationSession.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
-    clientSession.scopes.includes(OpenIdScope.OPENID)
+    clientSession.scopes.includes(Scope.OPENID)
   ) {
     const { token: idToken } = createIdToken(ctx, client, clientSession, claims, data.accessToken);
 

@@ -1,5 +1,5 @@
+import { Environment } from "@lindorm-io/common-enums";
 import { DefaultLindormMiddleware, KoaAppOptions } from "../../types";
-import { Environment } from "@lindorm-io/common-types";
 
 export const initContextMiddleware =
   (options: KoaAppOptions<any>): DefaultLindormMiddleware<any> =>

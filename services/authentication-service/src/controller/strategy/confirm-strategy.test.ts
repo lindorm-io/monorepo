@@ -3,7 +3,7 @@ import {
   AuthenticationStrategy,
   IdentifierType,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import {

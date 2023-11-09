@@ -1,10 +1,9 @@
 import {
-  LindormScope,
   OpenIdClientType,
   OpenIdDisplayMode,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -83,8 +82,21 @@ describe("/oauth2/consent", () => {
             status: SessionStatus.CONFIRMED,
 
             audiences: [randomUUID()],
-            optionalScopes: Object.values(LindormScope),
-            requiredScopes: Object.values(OpenIdScope),
+            optionalScopes: [
+              Scope.ACCESSIBILITY,
+              Scope.NATIONAL_IDENTITY_NUMBER,
+              Scope.PUBLIC,
+              Scope.SOCIAL_SECURITY_NUMBER,
+              Scope.USERNAME,
+            ],
+            requiredScopes: [
+              Scope.ADDRESS,
+              Scope.EMAIL,
+              Scope.OFFLINE_ACCESS,
+              Scope.OPENID,
+              Scope.PHONE,
+              Scope.PROFILE,
+            ],
             scopeDescriptions: [],
           },
         }),
@@ -116,8 +128,21 @@ describe("/oauth2/consent", () => {
             status: SessionStatus.PENDING,
 
             audiences: [randomUUID()],
-            optionalScopes: Object.values(LindormScope),
-            requiredScopes: Object.values(OpenIdScope),
+            optionalScopes: [
+              Scope.ACCESSIBILITY,
+              Scope.NATIONAL_IDENTITY_NUMBER,
+              Scope.PUBLIC,
+              Scope.SOCIAL_SECURITY_NUMBER,
+              Scope.USERNAME,
+            ],
+            requiredScopes: [
+              Scope.ADDRESS,
+              Scope.EMAIL,
+              Scope.OFFLINE_ACCESS,
+              Scope.OPENID,
+              Scope.PHONE,
+              Scope.PROFILE,
+            ],
             scopeDescriptions: [],
           },
 

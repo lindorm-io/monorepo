@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm-io/common-types";
+import { Scope } from "@lindorm-io/common-enums";
 import { AuthorizationSession, ClientSession } from "../../entity";
 import { createTestAuthorizationSession, createTestClientSession } from "../../fixtures/entity";
 import { verifyRequiredScopes } from "./verify-required-scopes";
@@ -20,29 +20,29 @@ describe("verifyRequiredScopes", () => {
   });
 
   test("should return true when scopes match", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
-    clientSession.scopes = [OpenIdScope.OPENID];
+    authorizationSession.requestedConsent.scopes = [Scope.OPENID];
+    clientSession.scopes = [Scope.OPENID];
 
     expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(true);
   });
 
   test("should return true with many scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
-    clientSession.scopes = [OpenIdScope.OPENID, OpenIdScope.OFFLINE_ACCESS, OpenIdScope.PROFILE];
+    authorizationSession.requestedConsent.scopes = [Scope.OPENID];
+    clientSession.scopes = [Scope.OPENID, Scope.OFFLINE_ACCESS, Scope.PROFILE];
 
     expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(true);
   });
 
   test("should return false when session has no scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.OPENID];
+    authorizationSession.requestedConsent.scopes = [Scope.OPENID];
     clientSession.scopes = [];
 
     expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(false);
   });
 
   test("should return false when session has missing scopes", () => {
-    authorizationSession.requestedConsent.scopes = [OpenIdScope.EMAIL];
-    clientSession.scopes = [OpenIdScope.OPENID];
+    authorizationSession.requestedConsent.scopes = [Scope.EMAIL];
+    clientSession.scopes = [Scope.OPENID];
 
     expect(verifyRequiredScopes(authorizationSession, clientSession)).toBe(false);
   });

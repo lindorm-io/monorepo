@@ -1,12 +1,9 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
+import { SessionStatus } from "@lindorm-io/common-enums";
+import { GetRdcStatusRequestParams, GetRdcStatusResponse } from "@lindorm-io/common-types";
 import { EntityNotFoundError } from "@lindorm-io/entity";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
 import { ServerKoaController } from "../../types";
-import {
-  GetRdcStatusRequestParams,
-  GetRdcStatusResponse,
-  SessionStatus,
-} from "@lindorm-io/common-types";
 
 type RequestData = GetRdcStatusRequestParams;
 

@@ -1,4 +1,4 @@
-import { AuthenticationMethod } from "@lindorm-io/common-types";
+import { AuthenticationMethod } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { getUnixTime } from "date-fns";

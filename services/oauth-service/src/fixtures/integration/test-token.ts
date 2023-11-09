@@ -1,11 +1,6 @@
-import {
-  LindormIdentityClaims,
-  LindormScope,
-  OpenIdScope,
-  OpenIdTokenType,
-  SubjectHint,
-} from "@lindorm-io/common-types";
-import { createTestJwt, JwtSignOptions } from "@lindorm-io/jwt";
+import { Scope, SubjectHint, TokenType } from "@lindorm-io/common-enums";
+import { LindormIdentityClaims } from "@lindorm-io/common-types";
+import { JwtSignOptions, createTestJwt } from "@lindorm-io/jwt";
 import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { getUnixTime } from "date-fns";
@@ -27,13 +22,13 @@ export const getTestIdToken = (
     expiry: "10 seconds",
     levelOfAssurance: 3,
     nonce: randomHex(16),
-    scopes: [...Object.values(OpenIdScope), ...Object.values(LindormScope)],
+    scopes: Object.values(Scope),
     session: randomUUID(),
     sessionHint: ClientSessionType.EPHEMERAL,
     subject: randomUUID(),
     subjectHint: SubjectHint.IDENTITY,
     tenant: randomUUID(),
-    type: OpenIdTokenType.ID,
+    type: TokenType.ID,
     ...options,
   });
 

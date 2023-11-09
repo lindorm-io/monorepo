@@ -1,18 +1,18 @@
+import { CertificateMethod, SessionStatus } from "@lindorm-io/common-enums";
+import { randomNumber, randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { randomNumber, randomString } from "@lindorm-io/random";
 import { createTestEnrolmentSession } from "../fixtures/entity";
-import { server } from "../server/server";
-import { randomUUID } from "crypto";
-import { CertificateMethod, SessionStatus } from "@lindorm-io/common-types";
 import {
+  TEST_ENROLMENT_SESSION_CACHE,
   getTestAccessToken,
   getTestEnrolmentSessionToken,
   setupIntegration,
   signTestChallenge,
-  TEST_ENROLMENT_SESSION_CACHE,
 } from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

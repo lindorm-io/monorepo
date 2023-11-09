@@ -3,7 +3,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { createMockLogger } from "@lindorm-io/winston";
 import { randomUUID } from "crypto";
 import { mockFetchOauthAuthorizationSession } from "../../../fixtures/axios";

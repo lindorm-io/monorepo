@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { ElevationSession, ElevationSessionAttributes } from "../../entity";

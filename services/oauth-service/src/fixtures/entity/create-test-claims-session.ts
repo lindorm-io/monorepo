@@ -2,8 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdScope,
-} from "@lindorm-io/common-types";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { randomUUID } from "crypto";
 import { ClaimsSession, ClaimsSessionOptions } from "../../entity";
 
@@ -20,7 +20,7 @@ export const createTestClaimsSession = (
     levelOfAssurance: 2,
     metadata: { ip: "192.168.0.1", platform: "iOS" },
     methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.PHONE],
-    scopes: [OpenIdScope.OPENID, OpenIdScope.PROFILE],
+    scopes: [Scope.OPENID, Scope.PROFILE],
     strategies: [AuthenticationStrategy.EMAIL_CODE, AuthenticationStrategy.PHONE_OTP],
     ...options,
   });

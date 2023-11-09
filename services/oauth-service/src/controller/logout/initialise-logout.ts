@@ -1,4 +1,5 @@
-import { InitialiseLogoutRequestData, OpenIdDisplayMode } from "@lindorm-io/common-types";
+import { OpenIdDisplayMode } from "@lindorm-io/common-enums";
+import { InitialiseLogoutRequestData } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
 import { ControllerResponse } from "@lindorm-io/koa";

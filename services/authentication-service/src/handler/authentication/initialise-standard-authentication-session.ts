@@ -2,9 +2,9 @@ import {
   AuthenticationMethod,
   AuthenticationMode,
   AuthenticationStrategy,
-  LevelOfAssurance,
   PKCEMethod,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
+import { LevelOfAssurance } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
 import Joi from "joi";
 import { JOI_LEVEL_OF_ASSURANCE } from "../../common";

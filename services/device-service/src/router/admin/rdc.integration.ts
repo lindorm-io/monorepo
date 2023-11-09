@@ -1,15 +1,15 @@
+import { RdcSessionMode } from "@lindorm-io/common-enums";
+import { randomHex } from "@lindorm-io/random";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { RdcSessionMode } from "@lindorm-io/common-types";
 import { createTestDeviceLink } from "../../fixtures/entity";
-import { randomHex } from "@lindorm-io/random";
-import { server } from "../../server/server";
 import {
   getTestClientCredentials,
   setupIntegration,
   TEST_DEVICE_REPOSITORY,
 } from "../../fixtures/integration";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 

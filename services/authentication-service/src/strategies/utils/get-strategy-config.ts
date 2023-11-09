@@ -1,7 +1,7 @@
-import { AuthenticationStrategy } from "@lindorm-io/common-types";
+import { AuthenticationStrategy } from "@lindorm-io/common-enums";
+import { ServerError } from "@lindorm-io/errors";
 import { AuthenticationStrategyConfig } from "../../types";
 import { STRATEGY_CONFIG_LIST } from "../strategy-config-list";
-import { ServerError } from "@lindorm-io/errors";
 
 export const getStrategyConfig = (
   authenticationStrategy: AuthenticationStrategy,

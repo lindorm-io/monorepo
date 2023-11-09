@@ -2,6 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
+} from "@lindorm-io/common-enums";
+import {
   FindIdentityRequestQuery,
   FindIdentityResponse,
   VerifyPasswordRequestBody,

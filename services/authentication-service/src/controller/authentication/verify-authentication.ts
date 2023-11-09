@@ -1,5 +1,5 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import {
-  SessionStatus,
   VerifyAuthenticationRequestBody,
   VerifyAuthenticationRequestParams,
   VerifyAuthenticationResponse,

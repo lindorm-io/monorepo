@@ -1,4 +1,4 @@
-import { Environment } from "@lindorm-io/common-types";
+import { Environment } from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
 import { ElevationSession } from "../../entity";
 import { configuration } from "../../server/configuration";

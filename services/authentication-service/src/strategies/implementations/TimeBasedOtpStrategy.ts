@@ -1,11 +1,4 @@
-import {
-  AuthStrategyConfig,
-  AuthenticationFactor,
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-} from "@lindorm-io/common-types";
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { TOTPHandler } from "../../class";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
@@ -19,6 +12,13 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-enums";
 
 export class TimeBasedOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {

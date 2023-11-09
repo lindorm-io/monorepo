@@ -5,7 +5,7 @@ import {
   AuthenticationStrategy,
   PKCEMethod,
   SessionStatus,
-} from "@lindorm-io/common-types";
+} from "@lindorm-io/common-enums";
 import { randomHex, randomUnreserved } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { AuthenticationSession, AuthenticationSessionOptions } from "../../entity";
