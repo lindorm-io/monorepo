@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.6.7...@lindorm-io/koa-jwt@0.6.8) (2023-11-09)
+
+### Bug Fixes
+
+- use new common enums ([b1f6b8e](https://github.com/lindorm-io/monorepo/commit/b1f6b8eef821c378466a16c62601b06e0a8a59c9))
+
 ## [0.6.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-jwt@0.6.6...@lindorm-io/koa-jwt@0.6.7) (2023-11-08)
 
 ### Bug Fixes

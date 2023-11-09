@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.9.0...@lindorm-io/node-server@0.9.1) (2023-11-09)
+
+**Note:** Version bump only for package @lindorm-io/node-server
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.8.1...@lindorm-io/node-server@0.9.0) (2023-11-08)
 
 ### Bug Fixes

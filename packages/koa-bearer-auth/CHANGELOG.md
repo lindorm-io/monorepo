@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.4.7...@lindorm-io/koa-bearer-auth@0.4.8) (2023-11-09)
+
+### Bug Fixes
+
+- use new common enums ([b1f6b8e](https://github.com/lindorm-io/monorepo/commit/b1f6b8eef821c378466a16c62601b06e0a8a59c9))
+
 ## [0.4.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-bearer-auth@0.4.6...@lindorm-io/koa-bearer-auth@0.4.7) (2023-11-08)
 
 **Note:** Version bump only for package @lindorm-io/koa-bearer-auth

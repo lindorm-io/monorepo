@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.3...@lindorm-io/common-types@0.4.0) (2023-11-09)
+
+### Features
+
+- remove enums ([4c98704](https://github.com/lindorm-io/monorepo/commit/4c98704c6b0b73f75f71edb6bfbb1117b1d2c35d))
+
 ## [0.3.3](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.2...@lindorm-io/common-types@0.3.3) (2023-11-08)
 
 ### Bug Fixes

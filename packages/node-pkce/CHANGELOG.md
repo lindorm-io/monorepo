@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-pkce@0.1.10...@lindorm-io/node-pkce@0.1.11) (2023-11-09)
+
+### Bug Fixes
+
+- use new common enums ([b1f6b8e](https://github.com/lindorm-io/monorepo/commit/b1f6b8eef821c378466a16c62601b06e0a8a59c9))
+
 ## [0.1.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-pkce@0.1.9...@lindorm-io/node-pkce@0.1.10) (2023-11-08)
 
 **Note:** Version bump only for package @lindorm-io/node-pkce
