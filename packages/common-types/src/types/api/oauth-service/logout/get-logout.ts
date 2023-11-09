@@ -1,5 +1,5 @@
+import { SessionStatus } from "@lindorm-io/common-enums";
 import { PublicClientInfo } from "../public-client-info";
-import { SessionStatus } from "../../../../enums";
 import { PublicTenantInfo } from "../public-tenant-info";
 
 export type GetLogoutRequestParams = {

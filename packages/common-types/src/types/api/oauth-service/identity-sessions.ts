@@ -2,9 +2,8 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LindormScope,
-  OpenIdScope,
-} from "../../../enums";
+  Scope,
+} from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../../auth";
 import { PublicClientInfo } from "./public-client-info";
 import { PublicTenantInfo } from "./public-tenant-info";
@@ -17,7 +16,7 @@ export type IdentitySessionItem = {
   levelOfAssurance: LevelOfAssurance;
   metadata: Record<string, any>;
   methods: Array<AuthenticationMethod>;
-  scopes: Array<OpenIdScope | LindormScope | string>;
+  scopes: Array<Scope | string>;
   strategies: Array<AuthenticationStrategy>;
   type: string;
 

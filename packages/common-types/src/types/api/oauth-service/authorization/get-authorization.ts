@@ -2,12 +2,11 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-  LindormScope,
   OpenIdDisplayMode,
   OpenIdPromptMode,
-  OpenIdScope,
+  Scope,
   SessionStatus,
-} from "../../../../enums";
+} from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../../../auth";
 import { ScopeDescription } from "../../../global";
 import { StandardRequestParamsWithId } from "../../standard";
@@ -27,8 +26,8 @@ export type GetAuthorizationResponse = {
     status: SessionStatus;
 
     audiences: Array<string>;
-    optionalScopes: Array<OpenIdScope | LindormScope | string>;
-    requiredScopes: Array<OpenIdScope | LindormScope | string>;
+    optionalScopes: Array<Scope | string>;
+    requiredScopes: Array<Scope | string>;
     scopeDescriptions: Array<ScopeDescription>;
   };
 
@@ -88,7 +87,7 @@ export type GetAuthorizationResponse = {
     latestAuthentication: string | null;
     levelOfAssurance: LevelOfAssurance;
     methods: Array<AuthenticationMethod>;
-    scopes: Array<OpenIdScope | LindormScope | string>;
+    scopes: Array<Scope | string>;
     strategies: Array<AuthenticationStrategy>;
   };
 

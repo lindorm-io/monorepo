@@ -1,8 +1,8 @@
-import { RdcSessionMethod, RdcSessionMode } from "../../../enums";
+import { HttpMethod, RdcSessionMode } from "@lindorm-io/common-enums";
 
 export type InitialiseRdcSessionRequestBody = {
   audiences: Array<string>;
-  confirmMethod?: RdcSessionMethod;
+  confirmMethod?: HttpMethod;
   confirmPayload?: Record<string, any>;
   confirmUri: string;
   expiresAt?: string;
@@ -10,7 +10,7 @@ export type InitialiseRdcSessionRequestBody = {
   factors?: number;
   mode: RdcSessionMode;
   nonce: string;
-  rejectMethod?: RdcSessionMethod;
+  rejectMethod?: HttpMethod;
   rejectPayload?: Record<string, any>;
   rejectUri: string;
   scopes?: Array<string>;

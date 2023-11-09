@@ -1,4 +1,7 @@
-import { AuthenticationStrategyConfirmKey, AuthenticationStrategyConfirmMode } from "../../enums";
+import {
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-enums";
 
 export type AuthStrategyConfig = {
   id: string;

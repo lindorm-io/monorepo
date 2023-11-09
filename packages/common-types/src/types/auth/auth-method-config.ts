@@ -1,4 +1,8 @@
-import { AuthenticationMethod, AuthenticationStrategy, IdentifierType } from "../../enums";
+import {
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  IdentifierType,
+} from "@lindorm-io/common-enums";
 
 export type AuthMethodInitialiseHint = "email" | "phone" | "none";
 

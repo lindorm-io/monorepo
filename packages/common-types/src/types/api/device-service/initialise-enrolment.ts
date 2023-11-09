@@ -1,4 +1,4 @@
-import { CertificateMethod } from "../../../enums";
+import { CertificateMethod } from "@lindorm-io/common-enums";
 
 export type InitialiseEnrolmentRequestBody = {
   audiences?: Array<string>;

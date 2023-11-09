@@ -1,4 +1,4 @@
-import { AuthenticationMethod, PKCEMethod } from "../../../../enums";
+import { AuthenticationMethod, PKCEMethod } from "@lindorm-io/common-enums";
 import { LevelOfAssurance } from "../../../auth";
 
 export type InitialiseAuthenticationRequestBody = {

@@ -2,7 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
-} from "../../../../enums";
+} from "@lindorm-io/common-enums";
 import { LevelOfAssurance } from "../../../auth";
 import { StandardRequestParamsWithId, StandardResponseWithRedirectTo } from "../../standard";
 

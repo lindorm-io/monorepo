@@ -1,4 +1,4 @@
-import { AuthenticationStrategy, SessionStatus } from "../../../../enums";
+import { AuthenticationStrategy, SessionStatus } from "@lindorm-io/common-enums";
 import { StandardRequestParamsWithId, StandardResponseWithSessionStatus } from "../../standard";
 
 export type GetStrategyRequestParams = StandardRequestParamsWithId;

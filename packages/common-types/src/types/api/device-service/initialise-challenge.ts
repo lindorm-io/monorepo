@@ -1,4 +1,4 @@
-import { ChallengeStrategy } from "../../../enums";
+import { ChallengeStrategy } from "@lindorm-io/common-enums";
 
 export type InitialiseChallengeRequestBody = {
   audiences?: Array<string>;

@@ -1,4 +1,4 @@
-import { SessionStatus } from "../../../enums";
+import { SessionStatus } from "@lindorm-io/common-enums";
 
 export type AcknowledgeRdcRequestParams = {
   id: string;

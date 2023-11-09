@@ -7,7 +7,7 @@ import {
   OpenIdResponseMode,
   OpenIdResponseType,
   PKCEMethod,
-} from "../../enums";
+} from "@lindorm-io/common-enums";
 
 export type OpenIdAuthorizeRequestQuery = {
   /**

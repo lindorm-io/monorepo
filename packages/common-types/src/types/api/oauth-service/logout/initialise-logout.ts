@@ -1,6 +1,6 @@
 // https://openid.net/specs/openid-connect-rpinitiated-1_0.html
 
-import { OpenIdDisplayMode } from "../../../../enums";
+import { OpenIdDisplayMode } from "@lindorm-io/common-enums";
 
 export type InitialiseLogoutRequestData = {
   /**

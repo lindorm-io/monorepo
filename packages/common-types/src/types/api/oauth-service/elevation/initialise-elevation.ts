@@ -3,7 +3,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdDisplayMode,
-} from "../../../../enums";
+} from "@lindorm-io/common-enums";
 import { LevelOfAssurance } from "../../../auth";
 
 interface InitialiseElevationSessionRequestData {

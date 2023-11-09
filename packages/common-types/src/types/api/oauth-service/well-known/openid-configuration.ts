@@ -1,4 +1,4 @@
-import { OpenIdGrantType } from "../../../../enums";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 
 export type OpenIdConfigurationResponse = {
   authorizationEndpoint: string;

@@ -15,5 +15,8 @@
     "test:update": "tsc --noEmit",
     "typecheck": "tsc --noEmit --watch",
     "typecheck:ci": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@lindorm-io/common-enums": "^0.0.1"
   }
 }

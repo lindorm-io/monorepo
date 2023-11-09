@@ -1,4 +1,4 @@
-import { NamingSystem } from "../../enums";
+import { NamingSystem } from "@lindorm-io/common-enums";
 import { LindormIdentityAddress } from "./lindorm-identity-address";
 import { LindormIdentityEmail } from "./lindorm-identity-email";
 import { LindormIdentityNIN } from "./lindorm-identity-nin";

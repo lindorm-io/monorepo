@@ -2,7 +2,7 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
-import { OpenIdGrantType } from "../../enums";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 
 export type OpenIdTokenRequestBody = {
   /**

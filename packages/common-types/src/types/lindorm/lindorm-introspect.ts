@@ -1,4 +1,8 @@
-import { AuthenticationFactor, AuthenticationLevel, AuthenticationMethod } from "../../enums";
+import {
+  AuthenticationFactor,
+  AuthenticationLevel,
+  AuthenticationMethod,
+} from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "../auth";
 import { OpenIdIntrospectResponseBody } from "../open-id";
 

@@ -1,4 +1,4 @@
-import { IdentifierType } from "../../../../enums";
+import { IdentifierType } from "@lindorm-io/common-enums";
 
 export type AddIdentifierRequestBody = {
   identityId: string;
