@@ -1,5 +1,3 @@
-import { camelCase } from "@lindorm-io/case";
-
 export const extractSearchParams = <T = Record<string, any>>(url: URL): T => {
   const query: Record<string, any> = {};
 
@@ -15,5 +13,5 @@ export const extractSearchParams = <T = Record<string, any>>(url: URL): T => {
     }
   });
 
-  return camelCase<T>(query);
+  return query as T;
 };

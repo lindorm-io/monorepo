@@ -52,9 +52,9 @@ describe("createURL", () => {
   test("should add existing query", () => {
     expect(
       createURL("/path", {
-        host: "https://lindorm.io?test=one&hello=two",
+        host: "https://lindorm.io?testCamel=one&hello_snake=two",
       }).toString(),
-    ).toBe("https://lindorm.io/path?test=one&hello=two");
+    ).toBe("https://lindorm.io/path?testCamel=one&hello_snake=two");
   });
 
   test("should add existing path", () => {

@@ -48,14 +48,14 @@ const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params?: P
 const addQueryToURL = <Query = QueryRecord>(
   url: URL,
   query?: Query,
-  queryCaseTransform: TransformMode = TransformMode.SNAKE,
+  queryCaseTransform?: TransformMode,
 ): URL => {
   if (!isObject(query)) {
     return url;
   }
 
   for (const [key, value] of Object.entries(query)) {
-    const transformed = transformCase<string>(key, queryCaseTransform);
+    const transformed = queryCaseTransform ? transformCase<string>(key, queryCaseTransform) : key;
 
     if (Array.isArray(value)) {
       url.searchParams.append(transformed, value.join(" "));

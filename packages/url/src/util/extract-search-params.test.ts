@@ -4,12 +4,14 @@ describe("extractSearchParams", () => {
   test("should resolve", () => {
     expect(
       extractSearchParams(
-        new URL("https://test.lindorm.io:4000/test/path?query_one=one&test_two=two&HelloThere=123"),
+        new URL(
+          "https://test.lindorm.io:4000/test/path?queryCamel=one&test_snake=true&HelloPascal=123",
+        ),
       ),
     ).toStrictEqual({
-      queryOne: "one",
-      testTwo: "two",
-      helloThere: 123,
+      queryCamel: "one",
+      test_snake: true,
+      HelloPascal: 123,
     });
   });
 
