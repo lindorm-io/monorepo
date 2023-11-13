@@ -1,7 +1,3 @@
-import {
-  axiosTransformBodyCaseMiddleware,
-  axiosTransformQueryCaseMiddleware,
-} from "@lindorm-io/axios";
 import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
 import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/koa-amqp";
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
@@ -78,7 +74,6 @@ export const createNodeServer = <
         port: service.port || undefined,
         alias: service.name,
         client,
-        middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
 
@@ -88,7 +83,6 @@ export const createNodeServer = <
         port: service.port || undefined,
         alias: service.name,
         client,
-        middleware: [axiosTransformBodyCaseMiddleware(), axiosTransformQueryCaseMiddleware()],
       }),
     );
   }

@@ -1,13 +1,15 @@
-import { JWK, KeyPair } from "@lindorm-io/key-pair";
-import { Logger } from "@lindorm-io/core-logger";
-import { ServerError } from "@lindorm-io/errors";
 import {
   Axios,
   AxiosOptions,
+  TransformMode,
   axiosRequestLoggerMiddleware,
-  axiosTransformBodyCaseMiddleware,
-  axiosTransformQueryCaseMiddleware,
+  axiosTransformRequestBodyMiddleware,
+  axiosTransformRequestQueryMiddleware,
+  axiosTransformResponseDataMiddleware,
 } from "@lindorm-io/axios";
+import { Logger } from "@lindorm-io/core-logger";
+import { ServerError } from "@lindorm-io/errors";
+import { JWK, KeyPair } from "@lindorm-io/key-pair";
 
 type Options = AxiosOptions &
   Required<Pick<AxiosOptions, "alias" | "host">> & {
@@ -39,8 +41,9 @@ export const getKeysFromJwks = async (
     port,
     middleware: [
       ...middleware,
-      axiosTransformBodyCaseMiddleware(),
-      axiosTransformQueryCaseMiddleware(),
+      axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
+      axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
+      axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
       axiosRequestLoggerMiddleware(logger),
     ],
     ...rest,

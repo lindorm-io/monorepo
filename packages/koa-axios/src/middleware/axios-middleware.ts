@@ -1,12 +1,14 @@
-import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
 import {
   Axios,
+  TransformMode,
   axiosClientPropertiesMiddleware,
   axiosCorrelationMiddleware,
   axiosRequestLoggerMiddleware,
-  axiosTransformBodyCaseMiddleware,
-  axiosTransformQueryCaseMiddleware,
+  axiosTransformRequestBodyMiddleware,
+  axiosTransformRequestQueryMiddleware,
+  axiosTransformResponseDataMiddleware,
 } from "@lindorm-io/axios";
+import { AxiosMiddlewareConfig, DefaultLindormAxiosKoaMiddleware } from "../types";
 
 export const axiosMiddleware =
   ({ alias, ...config }: AxiosMiddlewareConfig): DefaultLindormAxiosKoaMiddleware =>
@@ -16,10 +18,17 @@ export const axiosMiddleware =
     ctx.axios[alias] = new Axios({
       ...config,
       middleware: [
-        axiosClientPropertiesMiddleware({ environment: ctx.server.environment }),
+        axiosClientPropertiesMiddleware({
+          id: config.client?.id,
+          environment: ctx.server.environment,
+          name: config.client?.name,
+          platform: config.client?.platform,
+          version: config.client?.version,
+        }),
         axiosCorrelationMiddleware(ctx.metadata.identifiers.correlationId),
-        axiosTransformBodyCaseMiddleware(),
-        axiosTransformQueryCaseMiddleware(),
+        axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
+        axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
+        axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
         axiosRequestLoggerMiddleware(ctx.logger),
         ...(config.middleware || []),
       ],
