@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "declarationMap": true,
-    "noEmit": false
+    "noEmit": false,
+    "noUnusedLocals": true
   },
   "exclude": [
     "__mocks__/**/*",

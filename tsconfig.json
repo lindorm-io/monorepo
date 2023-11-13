@@ -8,7 +8,7 @@
     "moduleResolution": "node",
     "noEmit": true,
     "noImplicitAny": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "preserveConstEnums": true,
     "removeComments": true,
     "skipLibCheck": true,
