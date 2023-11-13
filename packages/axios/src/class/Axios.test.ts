@@ -1,6 +1,6 @@
 import { TransformMode } from "@lindorm-io/case";
 import nock from "nock";
-import { axiosBasicAuthMiddleware } from "../middleware";
+import { axiosBasicAuthMiddleware, axiosTransformRequestQueryMiddleware } from "../middleware";
 import { Middleware } from "../types";
 import { Axios } from "./Axios";
 
@@ -82,6 +82,7 @@ describe("Axios", () => {
           query: {
             snakeQuery: "one",
           },
+          middleware: [axiosTransformRequestQueryMiddleware(TransformMode.SNAKE)],
         }),
       ).resolves.toStrictEqual(
         expect.objectContaining({
