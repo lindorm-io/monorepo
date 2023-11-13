@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.15...@lindorm-io/url@0.2.16) (2023-11-13)
+
+### Bug Fixes
+
+- remove unexpected transforms ([62f6173](https://github.com/lindorm-io/monorepo/commit/62f6173cc9662d9a7a9f8cabc734eb4a97ad0e22))
+
 ## [0.2.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/url@0.2.14...@lindorm-io/url@0.2.15) (2023-11-13)
 
 **Note:** Version bump only for package @lindorm-io/url

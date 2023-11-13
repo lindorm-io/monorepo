@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/axios",
   "description": "Axios Request Handler for lindorm.io",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "@lindorm-io/common-enums": "^0.1.0",
     "@lindorm-io/middleware": "^0.1.5",
     "@lindorm-io/retry": "^0.1.5",
-    "@lindorm-io/url": "^0.2.15",
+    "@lindorm-io/url": "^0.2.16",
     "axios": "1.6.0",
     "uuid": "^9.0.1"
   },
