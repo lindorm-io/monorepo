@@ -1,4 +1,3 @@
-import { TransformMode } from "@lindorm-io/case";
 import { resolveMiddleware } from "@lindorm-io/middleware";
 import { RetryOptions } from "@lindorm-io/retry";
 import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm-io/url";
@@ -31,7 +30,6 @@ export class Axios {
   private readonly config: RawAxiosRequestConfigContext;
   private readonly headers: Record<string, any>;
   private readonly middleware: Array<Middleware>;
-  private readonly queryCaseTransform: TransformMode;
   private readonly retry: RetryOptions;
   private readonly retryCallback: RetryCallback;
 
@@ -66,7 +64,6 @@ export class Axios {
     };
     this.headers = options.headers || {};
     this.middleware = options.middleware || [];
-    this.queryCaseTransform = options.queryCaseTransform || TransformMode.SNAKE;
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
       maximumMilliseconds:
@@ -229,7 +226,6 @@ export class Axios {
       middleware = [],
       params = {},
       query = {},
-      queryCaseTransform,
       retry = {},
       retryCallback,
       timeout,
@@ -245,7 +241,6 @@ export class Axios {
       client: this.client,
       config: this.config,
       headers: this.headers,
-      queryCaseTransform: this.queryCaseTransform,
       retry: this.retry,
       retryCallback: this.retryCallback,
     };
@@ -266,7 +261,6 @@ export class Axios {
       headers: { ...this.headers, ...headers },
       params: params as RequestParams,
       query: { ...searchParams, ...query },
-      queryCaseTransform: queryCaseTransform || this.queryCaseTransform,
       requestId: uuid(),
       retry: { ...retry, ...this.retry },
       retryCallback: retryCallback || this.retryCallback,

@@ -1,6 +1,6 @@
+import { createURL } from "@lindorm-io/url";
 import { RawAxiosRequestConfig } from "axios";
 import { Context } from "../../types";
-import { createURL } from "@lindorm-io/url";
 
 export const composeAxiosConfig = (ctx: Context): RawAxiosRequestConfig => ({
   ...ctx.req.config,
@@ -10,6 +10,5 @@ export const composeAxiosConfig = (ctx: Context): RawAxiosRequestConfig => ({
   url: createURL(ctx.req.url, {
     params: ctx.req.params,
     query: ctx.req.query,
-    queryCaseTransform: ctx.req.queryCaseTransform,
   }).toString(),
 });

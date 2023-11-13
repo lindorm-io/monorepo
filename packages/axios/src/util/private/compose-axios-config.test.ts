@@ -1,4 +1,3 @@
-import { TransformMode } from "@lindorm-io/case";
 import { RequestContext } from "../../types";
 import { composeAxiosConfig } from "./compose-axios-config";
 
@@ -31,7 +30,6 @@ describe("composeAxiosConfig", () => {
         force: "be",
         with: "you",
       },
-      queryCaseTransform: TransformMode.PASCAL,
       requestId: "id",
       retry: { maximumAttempts: 5, maximumMilliseconds: 10, milliseconds: 50, strategy: "linear" },
       retryCallback: () => true,
@@ -54,7 +52,7 @@ describe("composeAxiosConfig", () => {
         header: "header",
       },
       timeout: 250,
-      url: "https://lindorm.io:3000/test/path/hello/there/kenobi?May=the&Force=be&With=you",
+      url: "https://lindorm.io:3000/test/path/hello/there/kenobi?may=the&force=be&with=you",
       withCredentials: true,
     });
   });

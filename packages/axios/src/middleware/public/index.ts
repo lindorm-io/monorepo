@@ -4,5 +4,6 @@ export * from "./axios-client-credentials-middleware";
 export * from "./axios-client-properties-middleware";
 export * from "./axios-correlation-middleware";
 export * from "./axios-request-logger-middleware";
-export * from "./axios-transform-body-case-middleware";
-export * from "./axios-transform-query-case-middleware";
+export * from "./axios-transform-request-body-middleware";
+export * from "./axios-transform-request-query-middleware";
+export * from "./axios-transform-response-data-middleware";
