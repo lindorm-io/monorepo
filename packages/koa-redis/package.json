@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa-redis",
   "description": "Redis Connection middleware for @lindorm-io/koa applications",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -26,7 +26,7 @@
     "@lindorm-io/entity": "^0.3.13",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/expiry": "^0.2.1",
-    "@lindorm-io/koa": "^0.17.4",
+    "@lindorm-io/koa": "^0.17.5",
     "@lindorm-io/readable-time": "^0.1.1",
     "@lindorm-io/redis": "^0.12.5",
     "object-path": "^0.11.8"

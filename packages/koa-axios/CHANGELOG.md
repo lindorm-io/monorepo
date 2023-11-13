@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.45](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.44...@lindorm-io/koa-axios@0.1.45) (2023-11-13)
+
+### Bug Fixes
+
+- align with restructured case transformation ([69180f1](https://github.com/lindorm-io/monorepo/commit/69180f162b092b593dcfe21b165da73e16dc5632))
+
 ## [0.1.44](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.43...@lindorm-io/koa-axios@0.1.44) (2023-11-09)
 
 **Note:** Version bump only for package @lindorm-io/koa-axios

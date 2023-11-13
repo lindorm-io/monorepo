@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.9...@lindorm-io/axios@0.6.10) (2023-11-13)
+
+### Bug Fixes
+
+- restructure case transformation ([6b7f6d7](https://github.com/lindorm-io/monorepo/commit/6b7f6d7a85d22a6bdf4a2854e475ac6f6d10342c))
+
 ## [0.6.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.8...@lindorm-io/axios@0.6.9) (2023-11-09)
 
 ### Bug Fixes

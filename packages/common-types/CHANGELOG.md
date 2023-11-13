@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.4.0...@lindorm-io/common-types@0.5.0) (2023-11-13)
+
+### Features
+
+- resolve identity for select account ([3623a76](https://github.com/lindorm-io/monorepo/commit/3623a767a7f11896f1fde52354d1c6b1c1184e55))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.3.3...@lindorm-io/common-types@0.4.0) (2023-11-09)
 
 ### Features

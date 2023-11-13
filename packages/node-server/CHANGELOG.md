@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.9.1...@lindorm-io/node-server@0.9.2) (2023-11-13)
+
+### Bug Fixes
+
+- align with restructured case transformation ([69180f1](https://github.com/lindorm-io/monorepo/commit/69180f162b092b593dcfe21b165da73e16dc5632))
+
 ## [0.9.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/node-server@0.9.0...@lindorm-io/node-server@0.9.1) (2023-11-09)
 
 **Note:** Version bump only for package @lindorm-io/node-server
