@@ -4,6 +4,11 @@ import { Middleware } from "../../types";
 export const axiosTransformRequestBodyMiddleware =
   (mode: TransformMode): Middleware =>
   async (ctx, next) => {
-    ctx.req.body = ctx.req.body ? transformCase(ctx.req.body, mode) : ctx.req.body;
+    const { body } = ctx.req;
+
+    if (body && typeof body === "object") {
+      ctx.req.body = transformCase(body, mode);
+    }
+
     await next();
   };

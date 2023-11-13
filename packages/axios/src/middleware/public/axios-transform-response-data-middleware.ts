@@ -5,5 +5,12 @@ export const axiosTransformResponseDataMiddleware =
   (mode: TransformMode): Middleware =>
   async (ctx, next) => {
     await next();
-    ctx.res.data = ctx.res.data ? transformCase(ctx.res.data, mode) : ctx.res.data;
+
+    const { data } = ctx.res;
+
+    if (data && Array.isArray(data)) {
+      ctx.res.data = transformCase<{ data: any }>({ data }, mode).data;
+    } else if (data && typeof data === "object") {
+      ctx.res.data = transformCase(data, mode);
+    }
   };
