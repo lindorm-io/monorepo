@@ -31,7 +31,6 @@ describe("Axios", () => {
             baseURL: "https://test.lindorm.io",
             client: { name: "TestClient" },
             headers: { "x-test-header": "test" },
-            queryCaseTransform: TransformMode.SNAKE,
             timeout: 5000,
             withCredentials: true,
           }),

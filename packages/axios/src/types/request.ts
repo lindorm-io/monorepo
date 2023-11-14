@@ -25,7 +25,6 @@ export type AxiosOptions = {
   // will be placed in context
   client?: Partial<AxiosClientProperties>;
   config?: RawAxiosRequestConfigOptions;
-  queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;
   retryCallback?: RetryCallback;
 
@@ -55,7 +54,6 @@ export type RequestOptions<
   middleware?: Array<Middleware<ResponseData, Body, Params, Query>>;
   params?: Params;
   query?: Query;
-  queryCaseTransform?: TransformMode;
   retry?: Partial<RetryOptions>;
   retryCallback?: RetryCallback;
   timeout?: number;
