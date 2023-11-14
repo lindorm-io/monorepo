@@ -1,6 +1,6 @@
-import { DefaultLindormEventDomainKoaMiddleware } from "../types";
-import { IEventSource } from "@lindorm-io/event-source";
 import { ServerError } from "@lindorm-io/errors";
+import { IEventSource } from "@lindorm-io/event-source";
+import { DefaultLindormEventDomainKoaMiddleware } from "../types";
 
 export const eventSourceMiddleware =
   (app: IEventSource): DefaultLindormEventDomainKoaMiddleware =>
@@ -14,7 +14,7 @@ export const eventSourceMiddleware =
     ctx.eventSource = {
       command: (command, options) =>
         app.command(command, {
-          correlationId: ctx.metadata.identifiers.correlationId,
+          correlationId: ctx.metadata.correlationId,
           metadata: {
             trace: ctx.token?.bearerToken?.subject ? "identity" : "koa",
             ...(ctx.token?.bearerToken?.subject ? { subject: ctx.token.bearerToken.subject } : {}),

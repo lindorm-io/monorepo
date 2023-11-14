@@ -4,14 +4,9 @@ import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@l
 import { AxiosResponse, Method } from "axios";
 import { v4 as uuid } from "uuid";
 import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
-import {
-  axiosDefaultClientHeadersMiddleware,
-  axiosDefaultHeadersMiddleware,
-  axiosRequestHandler,
-} from "../middleware/private";
+import { axiosDefaultHeadersMiddleware, axiosRequestHandler } from "../middleware/private";
 import {
   AppContext,
-  AxiosClientProperties,
   AxiosOptions,
   Context,
   MethodOptions,
@@ -26,7 +21,6 @@ import { defaultRetryCallback, validateStatus } from "../util/private";
 export class Axios {
   private readonly alias: string | null;
   private readonly baseURL: URL | undefined;
-  private readonly client: AxiosClientProperties;
   private readonly config: RawAxiosRequestConfigContext;
   private readonly headers: Record<string, any>;
   private readonly middleware: Array<Middleware>;
@@ -55,13 +49,6 @@ export class Axios {
         : undefined;
 
     this.alias = options.alias || null;
-    this.client = {
-      id: options.client?.id || null,
-      environment: options.client?.environment || null,
-      name: options.client?.name || null,
-      platform: options.client?.platform || null,
-      version: options.client?.version || null,
-    };
     this.headers = options.headers || {};
     this.middleware = options.middleware || [];
     this.retry = {
@@ -238,7 +225,6 @@ export class Axios {
 
     const app: AppContext = {
       alias: this.alias,
-      client: this.client,
       config: this.config,
       headers: this.headers,
       retry: this.retry,
@@ -247,11 +233,9 @@ export class Axios {
 
     const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
       body: body as RequestBody,
-      client: this.client,
       config: {
         ...this.config,
         ...config,
-
         auth,
         method,
         timeout,
@@ -279,7 +263,6 @@ export class Axios {
       ...this.middleware,
       ...middleware,
       axiosDefaultHeadersMiddleware,
-      axiosDefaultClientHeadersMiddleware,
       axiosRequestHandler,
     ]);
 

@@ -29,7 +29,6 @@ describe("Axios", () => {
             alias: "alias",
             auth: { username: "user", password: "pass" },
             baseURL: "https://test.lindorm.io",
-            client: { name: "TestClient" },
             headers: { "x-test-header": "test" },
             timeout: 5000,
             withCredentials: true,

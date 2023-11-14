@@ -6,11 +6,7 @@ import { getResponseTime } from "../../util/private";
 export const axiosRequestLoggerMiddleware =
   (logger: Logger): Middleware =>
   async (ctx, next) => {
-    const log = logger.createChildLogger([
-      "Axios",
-      ...(ctx.req.client.name ? [ctx.req.client.name] : []),
-    ]);
-
+    const log = logger.createChildLogger(["Axios", ...(ctx.app.alias ? [ctx.app.alias] : [])]);
     const start = Date.now();
 
     try {

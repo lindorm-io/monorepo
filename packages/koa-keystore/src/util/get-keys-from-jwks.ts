@@ -1,7 +1,9 @@
 import {
   Axios,
+  AxiosClientProperties,
   AxiosOptions,
   TransformMode,
+  axiosClientHeadersMiddleware,
   axiosRequestLoggerMiddleware,
   axiosTransformRequestBodyMiddleware,
   axiosTransformRequestQueryMiddleware,
@@ -13,6 +15,7 @@ import { JWK, KeyPair } from "@lindorm-io/key-pair";
 
 type Options = AxiosOptions &
   Required<Pick<AxiosOptions, "alias" | "host">> & {
+    client?: Partial<AxiosClientProperties>;
     currentKeys?: Array<KeyPair>;
     path?: string;
   };
@@ -26,6 +29,7 @@ export const getKeysFromJwks = async (
   logger: Logger,
 ): Promise<Array<KeyPair>> => {
   const {
+    client,
     host,
     port,
     alias,
@@ -41,6 +45,7 @@ export const getKeysFromJwks = async (
     port,
     middleware: [
       ...middleware,
+      ...(client ? [axiosClientHeadersMiddleware(client)] : []),
       axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
       axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
       axiosTransformResponseDataMiddleware(TransformMode.CAMEL),

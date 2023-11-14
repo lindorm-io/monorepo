@@ -1,3 +1,4 @@
+import { Middleware, axiosClientHeadersMiddleware } from "@lindorm-io/axios";
 import { DefaultLindormMiddleware, DefaultLindormSocketMiddleware, KoaApp } from "@lindorm-io/koa";
 import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/koa-amqp";
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
@@ -68,12 +69,24 @@ export const createNodeServer = <
   for (const service of services) {
     logger.debug("Adding axios middleware for service to server", { service });
 
+    const mw: Array<Middleware> = client
+      ? [
+          axiosClientHeadersMiddleware({
+            id: client.id,
+            environment: client.environment,
+            name: client.name,
+            platform: client.platform,
+            version: client.version,
+          }),
+        ]
+      : [];
+
     middleware.push(
       axiosMiddleware({
         host: service.host,
         port: service.port || undefined,
         alias: service.name,
-        client,
+        middleware: mw,
       }),
     );
 
@@ -82,7 +95,7 @@ export const createNodeServer = <
         host: service.host,
         port: service.port || undefined,
         alias: service.name,
-        client,
+        middleware: mw,
       }),
     );
   }

@@ -1,8 +1,8 @@
-import MockDate from "mockdate";
 import { Axios, Middleware } from "@lindorm-io/axios";
-import { axiosMiddleware } from "./axios-middleware";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import MockDate from "mockdate";
 import { AxiosMiddlewareConfig } from "../types";
+import { axiosMiddleware } from "./axios-middleware";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
@@ -25,13 +25,6 @@ describe("axiosMiddleware", () => {
       host: "https://lindorm.io",
       port: 4000,
       middleware: [mw],
-      client: {
-        id: "id",
-        environment: "environment",
-        name: "name",
-        platform: "platform",
-        version: "version",
-      },
     };
 
     ctx = {

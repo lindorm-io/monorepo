@@ -1,18 +1,18 @@
-import { DefaultLindormMiddleware } from "../../types";
 import { Logger } from "@lindorm-io/core-logger";
+import { DefaultLindormMiddleware } from "../../types";
 
 export const sessionLoggerMiddleware =
   (logger: Logger): DefaultLindormMiddleware =>
   async (ctx, next): Promise<void> => {
     ctx.logger = logger.createSessionLogger({
-      correlationId: ctx.metadata.identifiers.correlationId,
-      requestId: ctx.metadata.identifiers.requestId,
+      correlationId: ctx.metadata.correlationId,
+      requestId: ctx.metadata.requestId,
     });
 
     try {
       ctx.logger.info("Service request", {
-        correlationId: ctx.metadata.identifiers.correlationId,
-        requestId: ctx.metadata.identifiers.requestId,
+        correlationId: ctx.metadata.correlationId,
+        requestId: ctx.metadata.requestId,
         request: {
           body: ctx.request.body,
           header: ctx.request.header,
@@ -27,8 +27,8 @@ export const sessionLoggerMiddleware =
       await next();
     } finally {
       ctx.logger.info("Service response", {
-        correlationId: ctx.metadata.identifiers.correlationId,
-        requestId: ctx.metadata.identifiers.requestId,
+        correlationId: ctx.metadata.correlationId,
+        requestId: ctx.metadata.requestId,
         response: {
           body: ctx.response.body,
           config: ctx.config,

@@ -1,6 +1,6 @@
+import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
 import { DefaultLindormKeystoreSocketMiddleware, JwksKeysMiddlewareConfig } from "../types";
 import { getKeysFromJwks } from "../util";
-import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
 
 export const socketJwksKeysMiddleware = (
   config: JwksKeysMiddlewareConfig,

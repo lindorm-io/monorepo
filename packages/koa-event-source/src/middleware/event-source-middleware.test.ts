@@ -1,5 +1,5 @@
-import { Metric } from "@lindorm-io/koa";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { Metric } from "@lindorm-io/koa";
 import { eventSourceMiddleware } from "./event-source-middleware";
 
 const next = () => Promise.resolve();
@@ -36,7 +36,7 @@ describe("mongoMiddleware", () => {
     ctx = {
       logger,
       metrics: {},
-      metadata: { identifiers: { correlationId: "correlationId" } },
+      metadata: { correlationId: "correlationId" },
       token: {
         bearerToken: { subject: "subject" },
       },

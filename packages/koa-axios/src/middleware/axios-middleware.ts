@@ -1,7 +1,6 @@
 import {
   Axios,
   TransformMode,
-  axiosClientPropertiesMiddleware,
   axiosCorrelationMiddleware,
   axiosRequestLoggerMiddleware,
   axiosTransformRequestBodyMiddleware,
@@ -18,14 +17,7 @@ export const axiosMiddleware =
     ctx.axios[alias] = new Axios({
       ...config,
       middleware: [
-        axiosClientPropertiesMiddleware({
-          id: config.client?.id,
-          environment: ctx.server.environment,
-          name: config.client?.name,
-          platform: config.client?.platform,
-          version: config.client?.version,
-        }),
-        axiosCorrelationMiddleware(ctx.metadata.identifiers.correlationId),
+        axiosCorrelationMiddleware(ctx.metadata.correlationId),
         axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
         axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
         axiosTransformResponseDataMiddleware(TransformMode.CAMEL),

@@ -1,17 +1,8 @@
-import { TransformMode } from "@lindorm-io/case";
 import { RetryOptions } from "@lindorm-io/retry";
 import { AxiosBasicCredentials, Method } from "axios";
 import { Middleware } from "./middleware";
 import { RawAxiosRequestConfigOptions } from "./overrides";
 import { RetryCallback } from "./retry";
-
-export type AxiosClientProperties = {
-  id: string | null;
-  environment: string | null;
-  name: string | null;
-  platform: string | null;
-  version: string | null;
-};
 
 export type AxiosOptions = {
   alias?: string;
@@ -23,7 +14,6 @@ export type AxiosOptions = {
   port?: number;
 
   // will be placed in context
-  client?: Partial<AxiosClientProperties>;
   config?: RawAxiosRequestConfigOptions;
   retry?: Partial<RetryOptions>;
   retryCallback?: RetryCallback;

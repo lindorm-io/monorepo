@@ -35,26 +35,8 @@ describe("metadataMiddleware", () => {
         source: "x-agent-source",
         version: "x-agent-version",
       },
-      client: {
-        id: "x-client-id",
-        environment: "x-client-environment",
-        name: "x-client-name",
-        platform: "x-client-platform",
-        version: "x-client-version",
-      },
-      device: {
-        installationId: "x-device-installation-id",
-        ip: "x-device-ip",
-        linkId: "x-device-link-id",
-        name: "x-device-name",
-        systemVersion: "x-device-system-version",
-        uniqueId: "x-device-unique-id",
-      },
-      identifiers: {
-        correlationId: "x-correlation-id",
-        fingerprint: "x-fingerprint",
-        requestId: "x-request-id",
-      },
+      correlationId: "x-correlation-id",
+      requestId: "x-request-id",
     });
   });
 
@@ -92,26 +74,8 @@ describe("metadataMiddleware", () => {
         source: undefined,
         version: undefined,
       },
-      client: {
-        environment: "unknown",
-        id: undefined,
-        name: undefined,
-        platform: undefined,
-        version: undefined,
-      },
-      device: {
-        installationId: undefined,
-        ip: undefined,
-        linkId: undefined,
-        name: undefined,
-        systemVersion: undefined,
-        uniqueId: undefined,
-      },
-      identifiers: {
-        correlationId: "a26dad28-e854-447d-bce6-5c685cddfea8",
-        fingerprint: undefined,
-        requestId: "a26dad28-e854-447d-bce6-5c685cddfea8",
-      },
+      correlationId: "a26dad28-e854-447d-bce6-5c685cddfea8",
+      requestId: "a26dad28-e854-447d-bce6-5c685cddfea8",
     });
   });
 });

@@ -1,12 +1,10 @@
 import { RetryOptions } from "@lindorm-io/retry";
 import { AxiosResponse } from "axios";
 import { RawAxiosRequestConfigContext } from "./overrides";
-import { AxiosClientProperties } from "./request";
 import { RetryCallback } from "./retry";
 
 export type AppContext = {
   alias: string | null;
-  client: AxiosClientProperties;
   config: RawAxiosRequestConfigContext;
   headers: Record<string, any>;
   retry: RetryOptions;
@@ -19,7 +17,6 @@ export type RequestContext<
   Query = Record<string, any>,
 > = {
   body: Body;
-  client: AxiosClientProperties;
   config: RawAxiosRequestConfigContext;
   correlationId: string;
   headers: Record<string, any>;
