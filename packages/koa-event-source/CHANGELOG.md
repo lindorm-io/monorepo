@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.28](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-event-source@0.0.27...@lindorm-io/koa-event-source@0.0.28) (2023-11-15)
+
+### Bug Fixes
+
+- remove superfluous metadata ([c5df335](https://github.com/lindorm-io/monorepo/commit/c5df33504ad5f229de120e2556cb5b000d1078a5))
+
 ## [0.0.27](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-event-source@0.0.26...@lindorm-io/koa-event-source@0.0.27) (2023-11-13)
 
 **Note:** Version bump only for package @lindorm-io/koa-event-source
