@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { createURL } from "@lindorm-io/url";
 import { LogoutSession } from "../../entity";
 import { configuration } from "../../server/configuration";
@@ -11,4 +12,5 @@ export const createLogoutPendingUri = (logoutSession: LogoutSession): string =>
       display: logoutSession.displayMode,
       locales: logoutSession.uiLocales,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

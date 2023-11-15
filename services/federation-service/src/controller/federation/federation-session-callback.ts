@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { OpenIdResponseType } from "@lindorm-io/common-enums";
 import { OpenIdClaims } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
@@ -103,7 +104,10 @@ export const federationSessionCallbackController: ServerKoaController<RequestDat
 
   return {
     redirect: createURL(federationSession.callbackUri, {
-      query: { session: federationSession.id },
+      query: {
+        session: federationSession.id,
+      },
+      queryCaseTransform: TransformMode.SNAKE,
     }),
   };
 };

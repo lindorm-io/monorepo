@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { createURL } from "@lindorm-io/url";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -24,6 +25,7 @@ describe("/connect", () => {
         callbackUri: "https://test.lindorm.io/callback",
         provider: "microsoft",
       },
+      queryCaseTransform: TransformMode.SNAKE,
     })
       .toString()
       .replace("https://test.test", "");

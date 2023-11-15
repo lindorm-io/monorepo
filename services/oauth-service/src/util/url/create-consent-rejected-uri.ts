@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { createURL } from "@lindorm-io/url";
 import { AuthorizationSession } from "../../entity";
 
@@ -5,7 +6,8 @@ export const createConsentRejectedUri = (authorizationSession: AuthorizationSess
   createURL(authorizationSession.redirectUri, {
     query: {
       error: "request_rejected",
-      error_description: "consent_rejected",
+      errorDescription: "consent_rejected",
       state: authorizationSession.state,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -227,6 +228,7 @@ describe("/sessions/authentication", () => {
         provider: "apple",
         remember: true,
       },
+      queryCaseTransform: TransformMode.SNAKE,
     })
       .toString()
       .replace("https://test.test", "");

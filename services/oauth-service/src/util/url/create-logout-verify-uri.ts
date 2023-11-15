@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { Environment } from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
 import { LogoutSession } from "../../entity";
@@ -14,4 +15,5 @@ export const createLogoutVerifyUri = (logoutSession: LogoutSession): string =>
       session: logoutSession.id,
       postLogoutRedirectUri: logoutSession.postLogoutRedirectUri,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

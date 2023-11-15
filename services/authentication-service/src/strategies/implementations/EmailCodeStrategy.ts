@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import {
   AuthenticationFactor,
   AuthenticationMethod,
@@ -73,6 +74,7 @@ export class EmailCodeStrategy implements StrategyHandler {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
       query: { strategySessionToken, code },
+      queryCaseTransform: TransformMode.SNAKE,
     });
 
     await communicationClient.post<never, SendCodeRequestBody>("/admin/send/code", {

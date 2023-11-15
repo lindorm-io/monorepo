@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import {
   AuthenticationFactor,
   AuthenticationMethod,
@@ -97,6 +98,7 @@ describe("/oauth2/sessions/authorize", () => {
         session: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
+      queryCaseTransform: TransformMode.SNAKE,
     }).toString();
 
     const response = await request(server.callback())
@@ -179,6 +181,7 @@ describe("/oauth2/sessions/authorize", () => {
         session: authorizationSession.id,
         redirectUri: authorizationSession.redirectUri,
       },
+      queryCaseTransform: TransformMode.SNAKE,
     }).toString();
 
     const response = await request(server.callback())

@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { Environment } from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
 import { ElevationSession } from "../../entity";
@@ -14,4 +15,5 @@ export const createElevationVerifyUri = (elevationSession: ElevationSession): st
       session: elevationSession.id,
       redirectUri: elevationSession.redirectUri,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { SessionStatus } from "@lindorm-io/common-enums";
 import { GetFederationSessionResponse } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
@@ -71,7 +72,10 @@ export const confirmFederationController: ServerKoaController<RequestData> = asy
     redirect: createURL(configuration.frontend.routes.federation, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { session: authenticationSession.id },
+      query: {
+        session: authenticationSession.id,
+      },
+      queryCaseTransform: TransformMode.SNAKE,
     }),
   };
 };

@@ -1,6 +1,7 @@
 import { createURL } from "@lindorm-io/url";
 import { ElevationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
+import { TransformMode } from "@lindorm-io/case";
 
 export const createElevationPendingUri = (elevationSession: ElevationSession): string =>
   createURL(configuration.services.authentication_service.routes.redirect.elevate, {
@@ -11,4 +12,5 @@ export const createElevationPendingUri = (elevationSession: ElevationSession): s
       display: elevationSession.displayMode,
       locales: elevationSession.uiLocales,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

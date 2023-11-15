@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { createURL } from "@lindorm-io/url";
 import { AuthorizationSession } from "../../entity";
 import { configuration } from "../../server/configuration";
@@ -11,4 +12,5 @@ export const createSelectAccountPendingUri = (authorizationSession: Authorizatio
       display: authorizationSession.displayMode,
       locales: authorizationSession.uiLocales,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();

@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { SessionStatus } from "@lindorm-io/common-enums";
 import { VerifyElevationSessionRequestQuery } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
@@ -41,7 +42,10 @@ export const verifyElevationController: ServerKoaController<RequestData> = async
   if (elevationSession.redirectUri) {
     return {
       redirect: createURL(elevationSession.redirectUri, {
-        query: { state: elevationSession.state },
+        query: {
+          state: elevationSession.state,
+        },
+        queryCaseTransform: TransformMode.SNAKE,
       }),
     };
   }

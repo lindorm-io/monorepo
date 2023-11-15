@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { OpenIdDisplayMode, SessionStatus } from "@lindorm-io/common-enums";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { createURL } from "@lindorm-io/url";
@@ -46,7 +47,12 @@ export const redirectSelectAccountController: ServerKoaController<RequestData> =
     redirect: createURL(configuration.frontend.routes.select_account, {
       host: configuration.frontend.host,
       port: configuration.frontend.port,
-      query: { display, locales, session },
+      query: {
+        display,
+        locales,
+        session,
+      },
+      queryCaseTransform: TransformMode.SNAKE,
     }),
   };
 };

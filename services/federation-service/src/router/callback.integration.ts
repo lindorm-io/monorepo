@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { randomHex } from "@lindorm-io/random";
 import { createURL } from "@lindorm-io/url";
 import MockDate from "mockdate";
@@ -108,9 +109,10 @@ describe("/callback", () => {
     const url = createURL("/callback", {
       host: "https://test.test",
       query: {
-        id_token: getTestGoogleIdToken({ nonce: federationSession.nonce! }),
+        idToken: getTestGoogleIdToken({ nonce: federationSession.nonce! }),
         state: federationSession.state,
       },
+      queryCaseTransform: TransformMode.SNAKE,
     });
 
     const response = await request(server.callback())

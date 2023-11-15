@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/axios";
 import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-enums";
 import { removeEmptyFromObject } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
@@ -79,5 +80,6 @@ export const createFederationSession = async (
       scope,
       state: federationSession.state,
     }),
+    queryCaseTransform: TransformMode.SNAKE,
   });
 };

@@ -1,3 +1,4 @@
+import { TransformMode } from "@lindorm-io/case";
 import { Environment } from "@lindorm-io/common-enums";
 import { createURL } from "@lindorm-io/url";
 import { AuthorizationSession } from "../../entity";
@@ -14,4 +15,5 @@ export const createAuthorizationVerifyUri = (authorizationSession: Authorization
       session: authorizationSession.id,
       redirectUri: authorizationSession.redirectUri,
     },
+    queryCaseTransform: TransformMode.SNAKE,
   }).toString();
