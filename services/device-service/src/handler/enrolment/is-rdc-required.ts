@@ -1,14 +1,12 @@
-import { ServerKoaContext } from "../../types";
 import { difference, filter } from "lodash";
+import { ServerKoaContext } from "../../types";
+import { getDeviceHeaders } from "../get-device-headers";
 
 export const isRdcRequired = async (
   ctx: ServerKoaContext,
   identityId: string,
 ): Promise<boolean> => {
   const {
-    metadata: {
-      device: { installationId, uniqueId },
-    },
     mongo: { deviceLinkRepository },
   } = ctx;
 
@@ -17,6 +15,8 @@ export const isRdcRequired = async (
     identityId,
     trusted: true,
   });
+
+  const { installationId, uniqueId } = getDeviceHeaders(ctx);
 
   const filtered = filter(deviceLinks, {
     installationId,

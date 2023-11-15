@@ -1,5 +1,4 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { deviceHeadersSchema } from "../schema";
 import {
   confirmEnrolmentController,
   confirmEnrolmentSchema,
@@ -11,16 +10,17 @@ import {
   rejectEnrolmentSchema,
 } from "../controller";
 import {
-  deviceIpRateLimit,
   enrolmentSessionEntityMiddleware,
   enrolmentSessionTokenMiddleware,
   identityAuthMiddleware,
   identityIdRateLimit,
 } from "../middleware";
+import { deviceHeadersSchema } from "../schema";
 
 export const router = new Router<any, any>();
 
-router.use(deviceIpRateLimit("metadata.device.ip"));
+// use ip for rate limit middleware
+// router.use(deviceIpRateLimit("ip"));
 
 router.post(
   "/",

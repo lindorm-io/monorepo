@@ -11,6 +11,7 @@ import Joi from "joi";
 import { sortedUniq } from "lodash";
 import { JOI_NONCE } from "../../common";
 import { ChallengeSession } from "../../entity";
+import { getDeviceHeaders } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
 
@@ -37,7 +38,6 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     data: { audiences, identityId, nonce, payload, scopes },
     entity: { deviceLink },
     jwt,
-    metadata,
   } = ctx;
 
   if (!deviceLink.active) {
@@ -48,10 +48,12 @@ export const initialiseChallengeController: ServerKoaController<RequestData> = a
     throw new ClientError("Untrusted device");
   }
 
+  const { linkId, installationId, uniqueId } = getDeviceHeaders(ctx);
+
   if (
-    deviceLink.id !== metadata.device.linkId ||
-    deviceLink.installationId !== metadata.device.installationId ||
-    deviceLink.uniqueId !== metadata.device.uniqueId
+    deviceLink.id !== linkId ||
+    deviceLink.installationId !== installationId ||
+    deviceLink.uniqueId !== uniqueId
   ) {
     throw new ClientError("Invalid metadata");
   }

@@ -8,6 +8,7 @@ import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { difference } from "lodash";
+import { getDeviceHeaders } from "../../handler";
 import { clientCredentialsMiddleware } from "../../middleware";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
@@ -29,7 +30,6 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     axios: { communicationClient },
     redis: { rdcSessionCache },
     jwt,
-    metadata,
     token: { bearerToken },
   } = ctx;
 
@@ -45,10 +45,12 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     throw new ClientError("Invalid bearer token");
   }
 
-  if (!metadata.device.linkId) {
+  const { linkId } = getDeviceHeaders(ctx);
+
+  if (!linkId) {
     throw new ClientError("Invalid metadata", {
       description: "Expected metadata is missing",
-      data: { linkId: metadata.device.linkId },
+      data: { linkId: linkId },
     });
   }
 
@@ -67,7 +69,7 @@ export const acknowledgeRdcController: ServerKoaController<RequestData> = async 
     type: TokenType.REMOTE_DEVICE_CHALLENGE,
   });
 
-  const deviceLinks = difference<string>(rdcSession.deviceLinks, [metadata.device.linkId]);
+  const deviceLinks = difference<string>(rdcSession.deviceLinks, [linkId]);
 
   if (rdcSession.mode === RdcSessionMode.PUSH_NOTIFICATION && deviceLinks.length) {
     await communicationClient.post<never, EmitSocketEventRequestBody>("/admin/socket/emit", {

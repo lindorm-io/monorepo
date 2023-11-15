@@ -1,6 +1,7 @@
-import MockDate from "mockdate";
 import { createMockRedisRepository } from "@lindorm-io/redis";
+import MockDate from "mockdate";
 import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
+import { getDeviceHeaders as _getDeviceHeaders } from "../../handler";
 import { initialiseChallengeController } from "./initialise";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -10,6 +11,9 @@ jest.mock("@lindorm-io/random", () => ({
 
   randomString: () => "random-value",
 }));
+jest.mock("../../handler");
+
+const getDeviceHeaders = _getDeviceHeaders as jest.Mock;
 
 describe("initialiseChallengeController", () => {
   let ctx: any;
@@ -27,13 +31,13 @@ describe("initialiseChallengeController", () => {
         scopes: ["test_scope"],
       },
       entity: {
-        deviceLink: await createTestDeviceLink({
-          id: "524e8022-864c-4fca-a6d0-38042f69e3a9",
+        deviceLink: createTestDeviceLink({
+          id: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
           biometry: "biometry-signature",
           identityId: "9ced984c-1fbc-4ee8-af63-f8248576c660",
-          installationId: "831a4227-db62-4160-97be-65c22023e367",
+          installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
           pincode: "pincode-signature",
-          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
+          uniqueId: "474aacfa09474d4caaf903977b896213",
         }),
       },
       jwt: {
@@ -41,14 +45,15 @@ describe("initialiseChallengeController", () => {
           token: "jwt.jwt.jwt",
         })),
       },
-      metadata: {
-        device: {
-          installationId: "831a4227-db62-4160-97be-65c22023e367",
-          linkId: "524e8022-864c-4fca-a6d0-38042f69e3a9",
-          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
-        },
-      },
     };
+
+    getDeviceHeaders.mockReturnValue({
+      installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
+      linkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
+      name: "name",
+      systemVersion: "1.0.0",
+      uniqueId: "474aacfa09474d4caaf903977b896213",
+    });
   });
 
   test("should resolve challenge session", async () => {

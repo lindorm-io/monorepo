@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_JWT } from "../../common";
 import { JOI_BIOMETRY } from "../../constant";
-import { vaultGetSalt } from "../../handler";
+import { getDeviceHeaders, vaultGetSalt } from "../../handler";
 import { ServerKoaController } from "../../types";
 import { assertConfirmationTokenFactorLength } from "../../util";
 
@@ -28,7 +28,6 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
   const {
     data: { biometry },
     entity: { deviceLink },
-    metadata,
     mongo: { deviceLinkRepository },
     token: { bearerToken, challengeConfirmationToken },
   } = ctx;
@@ -41,7 +40,9 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
     throw new ClientError("Invalid confirmation token");
   }
 
-  if (deviceLink.id !== metadata.device.linkId) {
+  const { linkId, name } = getDeviceHeaders(ctx);
+
+  if (deviceLink.id !== linkId) {
     throw new ClientError("Invalid metadata");
   }
 
@@ -55,8 +56,8 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
 
   deviceLink.biometry = await crypto.encrypt(biometry);
 
-  if (metadata.device.name) {
-    deviceLink.name = metadata.device.name;
+  if (name) {
+    deviceLink.name = name;
   }
 
   await deviceLinkRepository.update(deviceLink);

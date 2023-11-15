@@ -1,8 +1,12 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createTestRdcSession } from "../../fixtures/entity";
+import { getDeviceHeaders as _getDeviceHeaders } from "../../handler";
 import { acknowledgeRdcController } from "./acknowledge";
 
+jest.mock("../../handler");
 jest.mock("../../middleware");
+
+const getDeviceHeaders = _getDeviceHeaders as jest.Mock;
 
 describe("acknowledgeRdcController", () => {
   let ctx: any;
@@ -21,7 +25,7 @@ describe("acknowledgeRdcController", () => {
       entity: {
         rdcSession: createTestRdcSession({
           id: "859858ee-4be6-47a8-8d22-f0f6393f2651",
-          deviceLinks: ["e68ec1b8-786a-443d-bd94-18ba78b95ca0"],
+          deviceLinks: ["2b16e7e6-8e88-4b5f-b667-e4b52b9ac853"],
           identityId: "9b6c9a47-7335-4ad5-85ed-af698199cdd9",
           nonce: "45Bd49BnDaKJbJM1",
           scopes: ["scope"],
@@ -33,17 +37,20 @@ describe("acknowledgeRdcController", () => {
           expiresIn: 1234,
         })),
       },
-      metadata: {
-        device: {
-          linkId: "e68ec1b8-786a-443d-bd94-18ba78b95ca0",
-        },
-      },
       token: {
         bearerToken: {
           subject: "9b6c9a47-7335-4ad5-85ed-af698199cdd9",
         },
       },
     };
+
+    getDeviceHeaders.mockReturnValue({
+      installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
+      linkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
+      name: "name",
+      systemVersion: "1.0.0",
+      uniqueId: "474aacfa09474d4caaf903977b896213",
+    });
   });
 
   test("should resolve with rdc session status", async () => {

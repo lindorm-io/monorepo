@@ -11,7 +11,7 @@ import Joi from "joi";
 import { flatten } from "lodash";
 import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import { JOI_BIOMETRY, JOI_PINCODE, JOI_STRATEGY } from "../../constant";
-import { vaultGetSalt } from "../../handler";
+import { getDeviceHeaders, vaultGetSalt } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
 import { assertCertificateChallenge } from "../../util";
@@ -47,7 +47,6 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     data: { certificateVerifier, pincode, biometry, strategy },
     entity: { challengeSession, deviceLink },
     jwt,
-    metadata,
     mongo: { deviceLinkRepository },
     token: { challengeSessionToken },
   } = ctx;
@@ -60,10 +59,12 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     throw new ClientError("Invalid strategy");
   }
 
+  const { linkId, installationId, name, uniqueId } = getDeviceHeaders(ctx);
+
   if (
-    deviceLink.id !== metadata.device.linkId ||
-    deviceLink.installationId !== metadata.device.installationId ||
-    deviceLink.uniqueId !== metadata.device.uniqueId
+    deviceLink.id !== linkId ||
+    deviceLink.installationId !== installationId ||
+    deviceLink.uniqueId !== uniqueId
   ) {
     throw new ClientError("Invalid metadata");
   }
@@ -103,8 +104,8 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
       });
   }
 
-  if (metadata.device.name && metadata.device.name !== deviceLink.name) {
-    deviceLink.name = metadata.device.name;
+  if (name && name !== deviceLink.name) {
+    deviceLink.name = name;
 
     await deviceLinkRepository.update(deviceLink);
   }

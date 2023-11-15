@@ -1,5 +1,4 @@
 import { paramsMiddleware, Router, useController, useSchema } from "@lindorm-io/koa";
-import { deviceHeadersEnrolledSchema } from "../schema";
 import {
   confirmChallengeController,
   confirmChallengeSchema,
@@ -11,16 +10,17 @@ import {
 import {
   challengeSessionEntityMiddleware,
   challengeSessionTokenMiddleware,
-  deviceIpRateLimit,
   deviceLinkEntityMiddleware,
   deviceLinkIdRateLimitBackoff,
 } from "../middleware";
+import { deviceHeadersEnrolledSchema } from "../schema";
 
 export const router = new Router<any, any>();
 
 router.use(
   useSchema(deviceHeadersEnrolledSchema, "headers"),
-  deviceIpRateLimit("metadata.device.ip"),
+  // use ip for rate limit middleware
+  // deviceIpRateLimit("ip"),
 );
 
 router.post(

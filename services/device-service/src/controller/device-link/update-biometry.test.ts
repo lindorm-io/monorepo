@@ -1,7 +1,10 @@
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { createTestDeviceLink } from "../../fixtures/entity";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import {
+  getDeviceHeaders as _getDeviceHeaders,
+  vaultGetSalt as _vaultGetSalt,
+} from "../../handler";
 import { updateDeviceLinkBiometryController } from "./update-biometry";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -20,6 +23,7 @@ jest.mock("@lindorm-io/crypto", () => ({
 jest.mock("../../handler");
 jest.mock("../../util");
 
+const getDeviceHeaders = _getDeviceHeaders as jest.Mock;
 const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
 describe("updateDeviceLinkBiometryController", () => {
@@ -32,16 +36,9 @@ describe("updateDeviceLinkBiometryController", () => {
       },
       entity: {
         deviceLink: createTestDeviceLink({
-          id: "5bc0f501-e078-4778-85de-d969d6e71ff0",
+          id: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
           identityId: "d890e6bb-531e-4b57-a80e-1f09e7b0832b",
         }),
-      },
-      metadata: {
-        agent: { os: null },
-        device: {
-          linkId: "5bc0f501-e078-4778-85de-d969d6e71ff0",
-          name: null,
-        },
       },
       mongo: {
         deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
@@ -52,13 +49,20 @@ describe("updateDeviceLinkBiometryController", () => {
         },
         challengeConfirmationToken: {
           claims: {
-            deviceLinkId: "5bc0f501-e078-4778-85de-d969d6e71ff0",
+            deviceLinkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
           },
           token: "jwt.jwt.jwt",
         },
       },
     };
 
+    getDeviceHeaders.mockReturnValue({
+      installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
+      linkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
+      name: "name",
+      systemVersion: "1.0.0",
+      uniqueId: "474aacfa09474d4caaf903977b896213",
+    });
     vaultGetSalt.mockResolvedValue({
       aes: "aes",
       sha: "sha",
@@ -76,8 +80,6 @@ describe("updateDeviceLinkBiometryController", () => {
   });
 
   test("should resolve and update with deviceLink name", async () => {
-    ctx.metadata.device.name = "name";
-
     await expect(updateDeviceLinkBiometryController(ctx)).resolves.toBeUndefined();
 
     expect(ctx.mongo.deviceLinkRepository.update).toHaveBeenCalledWith(

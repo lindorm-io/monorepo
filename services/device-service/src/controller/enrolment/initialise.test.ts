@@ -3,6 +3,7 @@ import MockDate from "mockdate";
 import { createTestEnrolmentSession } from "../../fixtures/entity";
 import {
   createRdcSession as _createRdcSession,
+  getDeviceHeaders as _getDeviceHeaders,
   isRdcRequired as _isRdcRequired,
 } from "../../handler";
 import { initialiseEnrolmentController } from "./initialise";
@@ -15,12 +16,10 @@ jest.mock("@lindorm-io/random", () => ({
   randomString: () => "random-value",
 }));
 
-jest.mock("../../handler", () => ({
-  createRdcSession: jest.fn(),
-  isRdcRequired: jest.fn().mockResolvedValue(false),
-}));
+jest.mock("../../handler");
 
 const createRdcSession = _createRdcSession as jest.Mock;
+const getDeviceHeaders = _getDeviceHeaders as jest.Mock;
 const isRdcRequired = _isRdcRequired as jest.Mock;
 
 describe("initialiseEnrolmentController", () => {
@@ -46,19 +45,6 @@ describe("initialiseEnrolmentController", () => {
           token: "jwt.jwt.jwt",
         })),
       },
-      metadata: {
-        client: {
-          id: "clientId",
-        },
-        device: {
-          installationId: "installationId",
-          name: "name",
-          uniqueId: "uniqueId",
-        },
-        identifiers: {
-          fingerprint: "fingerprint",
-        },
-      },
       mongo: {
         deviceLinkRepository: {
           findMany: jest.fn().mockResolvedValue([
@@ -76,6 +62,15 @@ describe("initialiseEnrolmentController", () => {
         },
       },
     };
+
+    getDeviceHeaders.mockReturnValue({
+      installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
+      linkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
+      name: "name",
+      systemVersion: "1.0.0",
+      uniqueId: "474aacfa09474d4caaf903977b896213",
+    });
+    isRdcRequired.mockReturnValue(false);
   });
 
   afterEach(jest.clearAllMocks);

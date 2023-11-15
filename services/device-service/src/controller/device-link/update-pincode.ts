@@ -4,7 +4,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { JOI_JWT } from "../../common";
 import { JOI_PINCODE } from "../../constant";
-import { vaultGetSalt } from "../../handler";
+import { getDeviceHeaders, vaultGetSalt } from "../../handler";
 import { ServerKoaController } from "../../types";
 import { assertConfirmationTokenFactorLength } from "../../util";
 
@@ -28,7 +28,6 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
   const {
     data: { pincode },
     entity: { deviceLink },
-    metadata,
     mongo: { deviceLinkRepository },
     token: { bearerToken, challengeConfirmationToken },
   } = ctx;
@@ -51,8 +50,10 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
 
   deviceLink.pincode = await crypto.encrypt(pincode);
 
-  if (metadata.device.name) {
-    deviceLink.name = metadata.device.name;
+  const { name } = getDeviceHeaders(ctx);
+
+  if (name) {
+    deviceLink.name = name;
   }
 
   await deviceLinkRepository.update(deviceLink);

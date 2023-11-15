@@ -16,7 +16,7 @@ import { randomString } from "@lindorm-io/random";
 import Joi from "joi";
 import { JOI_CERTIFICATE_METHOD } from "../../constant";
 import { EnrolmentSession } from "../../entity";
-import { createRdcSession, isRdcRequired } from "../../handler";
+import { createRdcSession, getDeviceHeaders, isRdcRequired } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
 
@@ -55,9 +55,6 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       systemName,
     },
     jwt,
-    metadata: {
-      device: { installationId, name, uniqueId, systemVersion },
-    },
     token: {
       bearerToken: { subject: identityId },
     },
@@ -67,6 +64,8 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
 
   const externalChallengeRequired = await isRdcRequired(ctx, identityId);
   const nonce = randomString(16);
+
+  const { installationId, name, uniqueId, systemVersion } = getDeviceHeaders(ctx);
 
   if (!name || !installationId || !uniqueId) {
     throw new ClientError("Invalid metadata", {

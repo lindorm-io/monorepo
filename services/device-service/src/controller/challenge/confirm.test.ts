@@ -2,7 +2,10 @@ import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
-import { vaultGetSalt as _vaultGetSalt } from "../../handler";
+import {
+  getDeviceHeaders as _getDeviceHeaders,
+  vaultGetSalt as _vaultGetSalt,
+} from "../../handler";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmChallengeController } from "./confirm";
 
@@ -23,6 +26,7 @@ jest.mock("../../handler");
 jest.mock("../../util");
 
 const assertCertificateChallenge = _assertCertificateChallenge as jest.Mock;
+const getDeviceHeaders = _getDeviceHeaders as jest.Mock;
 const vaultGetSalt = _vaultGetSalt as jest.Mock;
 
 describe("confirmChallengeController", () => {
@@ -44,11 +48,11 @@ describe("confirmChallengeController", () => {
           id: "7af9ad76-cd7a-4738-8952-1fdc17259176",
         }),
         deviceLink: createTestDeviceLink({
-          id: "524e8022-864c-4fca-a6d0-38042f69e3a9",
+          id: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
           biometry: "biometry-signature",
-          installationId: "831a4227-db62-4160-97be-65c22023e367",
+          installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
           pincode: "pincode-signature",
-          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
+          uniqueId: "474aacfa09474d4caaf903977b896213",
         }),
       },
       jwt: {
@@ -56,14 +60,6 @@ describe("confirmChallengeController", () => {
           expiresIn: 60,
           token: "jwt.jwt.jwt",
         })),
-      },
-      metadata: {
-        device: {
-          installationId: "831a4227-db62-4160-97be-65c22023e367",
-          linkId: "524e8022-864c-4fca-a6d0-38042f69e3a9",
-          name: "Test DeviceLink Name",
-          uniqueId: "02aea6d6-db65-4ab9-ad0f-812cf0236b6f",
-        },
       },
       mongo: {
         deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
@@ -75,6 +71,13 @@ describe("confirmChallengeController", () => {
       },
     };
 
+    getDeviceHeaders.mockReturnValue({
+      installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
+      linkId: "2b16e7e6-8e88-4b5f-b667-e4b52b9ac853",
+      name: "name",
+      systemVersion: "1.0.0",
+      uniqueId: "474aacfa09474d4caaf903977b896213",
+    });
     vaultGetSalt.mockResolvedValue({
       aes: "aes",
       sha: "sha",
