@@ -1,6 +1,7 @@
 # Table of Contents
 - [Table of Contents](#table-of-contents)
 - [What do we have here?](#what-do-we-have-here)
+- [Author \& Maintainer](#author--maintainer)
 - [Interesting packages](#interesting-packages)
   - [AMQP](#amqp)
   - [Axios](#axios)
@@ -17,6 +18,9 @@
 
 # What do we have here?
 This monorepo is a versatile staging ground that hosts a variety of packages and services, each serving as a test bed for innovative concepts, enhancements to current technologies, and frameworks. It is crafted to demonstrate my proficiency across these domains. I am open to and appreciate all forms of feedback that could further refine and improve the offerings within this repository.
+
+# Author & Maintainer
+Jonn Nilsson
 
 # Interesting packages
 While there are 40+ packages under the catalog `/packages` I would like to direct your attention towards some specific ones:
