@@ -4,7 +4,6 @@ import {
   AxiosOptions,
   TransformMode,
   axiosClientHeadersMiddleware,
-  axiosRequestLoggerMiddleware,
   axiosTransformRequestBodyMiddleware,
   axiosTransformRequestQueryMiddleware,
   axiosTransformResponseDataMiddleware,
@@ -39,20 +38,22 @@ export const getKeysFromJwks = async (
     ...rest
   } = options;
 
-  const axios = new Axios({
-    alias,
-    host,
-    port,
-    middleware: [
-      ...middleware,
-      ...(client ? [axiosClientHeadersMiddleware(client)] : []),
-      axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
-      axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
-      axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
-      axiosRequestLoggerMiddleware(logger),
-    ],
-    ...rest,
-  });
+  const axios = new Axios(
+    {
+      alias,
+      host,
+      port,
+      middleware: [
+        ...middleware,
+        ...(client ? [axiosClientHeadersMiddleware(client)] : []),
+        axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
+        axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
+        axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
+      ],
+      ...rest,
+    },
+    logger,
+  );
 
   const { data } = await axios.get<Response>(path);
 

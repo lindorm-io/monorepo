@@ -6,7 +6,6 @@ import { Axios } from "../../class";
 import { Middleware, OAuthTokenResponseData } from "../../types";
 import { getUnixTime } from "../../util/private";
 import { axiosBasicAuthMiddleware } from "./axios-basic-auth-middleware";
-import { axiosRequestLoggerMiddleware } from "./axios-request-logger-middleware";
 import { axiosTransformRequestBodyMiddleware } from "./axios-transform-request-body-middleware";
 import { axiosTransformRequestQueryMiddleware } from "./axios-transform-request-query-middleware";
 import { axiosTransformResponseDataMiddleware } from "./axios-transform-response-data-middleware";
@@ -38,19 +37,21 @@ export const axiosClientCredentialsMiddleware = (
     useBasicAuth = true,
   } = options;
 
-  const oauthClient = new Axios({
-    host,
-    port,
-    middleware: [
-      axiosRequestLoggerMiddleware(logger),
-      axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
-      axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
-      axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
-      ...(useBasicAuth
-        ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
-        : []),
-    ],
-  });
+  const oauthClient = new Axios(
+    {
+      host,
+      port,
+      middleware: [
+        axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
+        axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
+        axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
+        ...(useBasicAuth
+          ? [axiosBasicAuthMiddleware({ username: clientId, password: clientSecret })]
+          : []),
+      ],
+    },
+    logger,
+  );
 
   let bearerScopes: Array<string> = [];
   let bearerTimeout = 0;
