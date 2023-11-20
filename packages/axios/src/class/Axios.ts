@@ -1,10 +1,16 @@
+import { Logger } from "@lindorm-io/core-logger";
 import { resolveMiddleware } from "@lindorm-io/middleware";
 import { RetryOptions } from "@lindorm-io/retry";
 import { createBaseUrl, extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm-io/url";
 import { AxiosResponse, Method } from "axios";
 import { v4 as uuid } from "uuid";
 import { DEFAULT_AXIOS_RESPONSE, DEFAULT_RETRY_OPTIONS, DEFAULT_TIMEOUT } from "../constant";
-import { axiosDefaultHeadersMiddleware, axiosRequestHandler } from "../middleware/private";
+import {
+  axiosDefaultHeadersMiddleware,
+  axiosDefaultRequestLogger,
+  axiosDefaultResponseLogger,
+  axiosRequestHandler,
+} from "../middleware/private";
 import {
   AppContext,
   AxiosOptions,
@@ -23,11 +29,12 @@ export class Axios {
   private readonly baseURL: URL | undefined;
   private readonly config: RawAxiosRequestConfigContext;
   private readonly headers: Record<string, any>;
+  private readonly logger: Logger | undefined;
   private readonly middleware: Array<Middleware>;
   private readonly retry: RetryOptions;
   private readonly retryCallback: RetryCallback;
 
-  public constructor(options: AxiosOptions = {}) {
+  public constructor(options: AxiosOptions = {}, logger?: Logger) {
     this.config = {
       auth: options.auth,
       timeout: options.timeout || DEFAULT_TIMEOUT,
@@ -50,6 +57,7 @@ export class Axios {
 
     this.alias = options.alias || null;
     this.headers = options.headers || {};
+    this.logger = logger;
     this.middleware = options.middleware || [];
     this.retry = {
       maximumAttempts: options.retry?.maximumAttempts || DEFAULT_RETRY_OPTIONS.maximumAttempts,
@@ -260,9 +268,11 @@ export class Axios {
     const result = await resolveMiddleware<
       Context<ResponseData, RequestBody, RequestParams, RequestQuery>
     >(context, [
+      ...(this.logger ? [axiosDefaultResponseLogger(this.logger)] : []),
       ...this.middleware,
       ...middleware,
       axiosDefaultHeadersMiddleware,
+      ...(this.logger ? [axiosDefaultRequestLogger(this.logger)] : []),
       axiosRequestHandler,
     ]);
 

@@ -3,7 +3,6 @@ import { LogLevel } from "@lindorm-io/core-logger";
 import {
   Axios,
   TransformMode,
-  axiosRequestLoggerMiddleware,
   axiosTransformRequestBodyMiddleware,
   axiosTransformRequestQueryMiddleware,
   axiosTransformResponseDataMiddleware,
@@ -13,16 +12,16 @@ import {
   const logger = new ConsoleLogger();
   logger.addConsole(LogLevel.SILLY, { colours: true, readable: true, timestamp: true });
 
-  const axios = new Axios({
-    middleware: [
-      axiosRequestLoggerMiddleware(logger),
-      axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
-      axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
-      axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
-    ],
-  });
+  const axios = new Axios(
+    {
+      middleware: [
+        axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
+        axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
+        axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
+      ],
+    },
+    logger,
+  );
 
-  const { request, ...result } = await axios.get("https://api.scryfall.com/bulk-data");
-
-  logger.info("Result", { result });
+  await axios.get("https://api.scryfall.com/bulk-data");
 })();
