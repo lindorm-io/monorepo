@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.14...@lindorm-io/axios@0.6.15) (2023-11-20)
+
+### Bug Fixes
+
+- add improved default logger options ([510e76a](https://github.com/lindorm-io/monorepo/commit/510e76a9e000ad2c624a07ee1d41f6022da60a5f))
+- align with axios logger ([ed7be78](https://github.com/lindorm-io/monorepo/commit/ed7be782f1cc99cfdf5316774298807279a596d0))
+
 ## [0.6.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.13...@lindorm-io/axios@0.6.14) (2023-11-15)
 
 ### Bug Fixes
