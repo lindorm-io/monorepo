@@ -1,24 +1,40 @@
+import { ClientError } from "@lindorm-io/errors";
 import { randomUUID } from "crypto";
 import { DefaultLindormMiddleware } from "../../types";
 
-export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
-  const geoIp = ctx.userAgent?.geoIp ? JSON.stringify(ctx.userAgent?.geoIp) : undefined;
+const GUID_REGEX = new RegExp(
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+);
 
-  ctx.metadata = {
-    agent: {
-      browser: ctx.get("x-agent-browser") || ctx.userAgent?.browser,
-      geoIp: ctx.get("x-agent-geo-ip") || geoIp,
-      os: ctx.get("x-agent-os") || ctx.userAgent?.os,
-      platform: ctx.get("x-agent-platform") || ctx.userAgent?.platform,
-      source: ctx.get("x-agent-source") || ctx.userAgent?.source,
-      version: ctx.get("x-agent-version") || ctx.userAgent?.version,
-    },
-    correlationId: ctx.get("x-correlation-id") || randomUUID(),
-    requestId: ctx.get("x-request-id") || randomUUID(),
-  };
+export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
+  const correlationId = ctx.get("x-correlation-id") || randomUUID();
+  const requestId = ctx.get("x-request-id") || randomUUID();
+  const requestDate = ctx.get("date");
+  const date = requestDate ? new Date(requestDate) : new Date();
+
+  if (!GUID_REGEX.test(correlationId)) {
+    throw new ClientError("Invalid correlation id format", {
+      description: "GUID v4 expected",
+    });
+  }
+
+  if (!GUID_REGEX.test(requestId)) {
+    throw new ClientError("Invalid request id format", {
+      description: "GUID v4 expected",
+    });
+  }
+
+  if (Date.now() - date.getTime() > 10000) {
+    throw new ClientError("Invalid date format", {
+      description: "Date must be within 10 seconds of current time",
+    });
+  }
+
+  ctx.metadata = { date, correlationId, requestId };
 
   await next();
 
-  ctx.set("X-Correlation-ID", ctx.metadata.correlationId);
-  ctx.set("X-Request-ID", ctx.metadata.requestId);
+  ctx.set("Date", new Date().toUTCString());
+  ctx.set("X-Correlation-ID", correlationId);
+  ctx.set("X-Request-ID", requestId);
 };
