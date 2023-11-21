@@ -269,9 +269,9 @@ export class Axios {
       Context<ResponseData, RequestBody, RequestParams, RequestQuery>
     >(context, [
       ...(this.logger ? [axiosDefaultResponseLogger(this.logger)] : []),
+      axiosDefaultHeadersMiddleware,
       ...this.middleware,
       ...middleware,
-      axiosDefaultHeadersMiddleware,
       ...(this.logger ? [axiosDefaultRequestLogger(this.logger)] : []),
       axiosRequestHandler,
     ]);
