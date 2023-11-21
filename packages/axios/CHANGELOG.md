@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.16](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.15...@lindorm-io/axios@0.6.16) (2023-11-21)
+
+### Bug Fixes
+
+- add date to default headers ([89cd203](https://github.com/lindorm-io/monorepo/commit/89cd2030510a0fa6ff379061e397d562cc3af694))
+
 ## [0.6.15](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/axios@0.6.14...@lindorm-io/axios@0.6.15) (2023-11-20)
 
 ### Bug Fixes

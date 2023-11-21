@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.7...@lindorm-io/koa@0.17.8) (2023-11-21)
+
+### Bug Fixes
+
+- add next to controller ([938e7be](https://github.com/lindorm-io/monorepo/commit/938e7be9bbe32225b546873e652ca1dc029eb45c))
+- minor cleanup ([50bcd79](https://github.com/lindorm-io/monorepo/commit/50bcd792daddcfe5ea4458e415cd5ca355effffd))
+- respond with request and correlation ([b264922](https://github.com/lindorm-io/monorepo/commit/b264922a10c0dd2e698f4f6b8903ca02b5dce60c))
+
 ## [0.17.7](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.6...@lindorm-io/koa@0.17.7) (2023-11-15)
 
 ### Bug Fixes
