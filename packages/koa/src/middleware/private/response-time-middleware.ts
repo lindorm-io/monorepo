@@ -12,8 +12,8 @@ export const responseTimeMiddleware: DefaultLindormMiddleware = async (
   } finally {
     metric.end();
 
-    ctx.set("x-start-time", startTime.toString());
-    ctx.set("x-current-time", Date.now().toString());
-    ctx.set("x-response-time", `${ctx.metrics.responseTime}ms`);
+    ctx.set("X-Start-Time", startTime.toString());
+    ctx.set("X-Current-Time", Date.now().toString());
+    ctx.set("X-Response-Time", `${ctx.metrics.responseTime}ms`);
   }
 };
