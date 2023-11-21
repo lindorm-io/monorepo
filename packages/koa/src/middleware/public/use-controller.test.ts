@@ -7,6 +7,7 @@ import { useController } from "./use-controller";
 
 describe("useController", () => {
   let ctx: any;
+  let next: any;
 
   const logger = createMockLogger();
 
@@ -17,6 +18,7 @@ describe("useController", () => {
       redirect: jest.fn(),
       request: { body: { string: "string" } },
     };
+    next = () => Promise.resolve();
   });
 
   afterEach(jest.clearAllMocks);
@@ -27,7 +29,7 @@ describe("useController", () => {
       body: { response: "body" },
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({ response: "body" });
     expect(ctx.status).toStrictEqual(201);
@@ -40,7 +42,7 @@ describe("useController", () => {
       body: { ctx: ctx.request.body },
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({ ctx: { string: "string" } });
     expect(ctx.status).toStrictEqual(201);
@@ -52,7 +54,7 @@ describe("useController", () => {
       status: HttpStatus.Success.CREATED,
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toStrictEqual(201);
@@ -63,7 +65,7 @@ describe("useController", () => {
       body: ctx.request.body as any,
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({ string: "string" });
     expect(ctx.status).toStrictEqual(200);
@@ -72,7 +74,7 @@ describe("useController", () => {
   test("should automatically determine status as NO_CONTENT on empty object", async () => {
     const controller: Controller = async (): ControllerResponse => ({});
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toBeUndefined();
     expect(ctx.status).toStrictEqual(204);
@@ -81,7 +83,7 @@ describe("useController", () => {
   test("should automatically determine status as NO_CONTENT on void", async () => {
     const controller: Controller = async (): ControllerResponse => {};
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toBeUndefined();
     expect(ctx.status).toStrictEqual(204);
@@ -101,7 +103,7 @@ describe("useController", () => {
       }),
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toBe(302);
@@ -115,7 +117,7 @@ describe("useController", () => {
       redirect: "https://test.lindorm.io/",
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({});
     expect(ctx.status).toBe(302);
@@ -128,7 +130,7 @@ describe("useController", () => {
       body: ctx.request.body as any,
     });
 
-    await expect(useController(controller)(ctx)).resolves.toBeUndefined();
+    await expect(useController(controller)(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.body).toStrictEqual({ string: "string" });
     expect(ctx.status).toBe(308);

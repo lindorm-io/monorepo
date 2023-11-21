@@ -1,11 +1,11 @@
-import { Controller, DefaultLindormKoaContext } from "../../types";
 import { HttpStatus } from "../../constant";
+import { Controller, DefaultLindormKoaContext, DefaultLindormMiddleware } from "../../types";
 
 export const useController =
   <Context extends DefaultLindormKoaContext = DefaultLindormKoaContext>(
     controller: Controller<Context>,
-  ) =>
-  async (ctx: Context): Promise<void> => {
+  ): DefaultLindormMiddleware<Context> =>
+  async (ctx, next) => {
     const logger = ctx.logger.createChildLogger([controller.name]);
     ctx.logger = logger;
 
@@ -50,4 +50,6 @@ export const useController =
 
       throw err;
     }
+
+    await next();
   };
