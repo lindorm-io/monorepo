@@ -18,4 +18,7 @@ export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): P
   };
 
   await next();
+
+  ctx.set("X-Correlation-ID", ctx.metadata.correlationId);
+  ctx.set("X-Request-ID", ctx.metadata.requestId);
 };

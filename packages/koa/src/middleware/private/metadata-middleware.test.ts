@@ -12,6 +12,8 @@ describe("metadataMiddleware", () => {
   beforeEach(() => {
     ctx = {
       get: jest.fn((name) => name),
+      set: jest.fn(),
+
       userAgent: {
         browser: "browser",
         geoIp: { geoIp: 1 },
