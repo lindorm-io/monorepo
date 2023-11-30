@@ -7,7 +7,8 @@ export const axiosDefaultRequestLogger =
     const log = logger.createChildLogger(["Axios", ...(ctx.app.alias ? [ctx.app.alias] : [])]);
 
     log.verbose("Request initialised", {
-      req: ctx.req,
+      app: ctx.app,
+      request: ctx.req,
     });
 
     await next();

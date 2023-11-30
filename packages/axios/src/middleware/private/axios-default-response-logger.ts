@@ -13,9 +13,7 @@ export const axiosDefaultResponseLogger =
       await next();
 
       log.verbose("Request successful", {
-        app: ctx.app,
-        req: ctx.req,
-        res: {
+        response: {
           data: ctx.res?.data,
           headers: ctx.res?.headers,
           status: ctx.res?.status,
@@ -33,10 +31,7 @@ export const axiosDefaultResponseLogger =
       log.warn("Request failed", {
         code: err.code,
         config: err.config,
-
-        app: ctx.app,
-        req: ctx.req,
-        res: {
+        response: {
           data: err.response?.data,
           headers: err.response?.headers,
           status: err.response?.status || err.status,
