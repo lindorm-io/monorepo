@@ -13,5 +13,6 @@ export type ConfirmEnrolmentResponse = {
   challengeConfirmationToken: string;
   deviceLinkId: string;
   expiresIn: number;
+  publicKeyId: string;
   trusted: boolean;
 };
