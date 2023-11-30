@@ -10,7 +10,7 @@ export const sessionLoggerMiddleware =
     });
 
     try {
-      ctx.logger.info("Service request", {
+      ctx.logger.info("Service received request", {
         correlationId: ctx.metadata.correlationId,
         requestId: ctx.metadata.requestId,
         request: {
@@ -21,12 +21,34 @@ export const sessionLoggerMiddleware =
           params: ctx.params,
           query: ctx.query,
           url: ctx.request.url,
+          userAgent: {
+            browser: ctx.userAgent.browser,
+            geoIp: ctx.userAgent.geoIp,
+            os: ctx.userAgent.os,
+            platform: ctx.userAgent.platform,
+            source: ctx.userAgent.source,
+            version: ctx.userAgent.version,
+          },
         },
       });
 
       await next();
-    } finally {
-      ctx.logger.info("Service response", {
+
+      ctx.logger.info("Service responded with success", {
+        correlationId: ctx.metadata.correlationId,
+        requestId: ctx.metadata.requestId,
+        response: {
+          body: ctx.response.body,
+          config: ctx.config,
+          header: ctx.response.header,
+          message: ctx.response.message,
+          metrics: ctx.metrics,
+          server: ctx.server,
+          status: ctx.response.status,
+        },
+      });
+    } catch (err) {
+      ctx.logger.warn("Service responded with error", {
         correlationId: ctx.metadata.correlationId,
         requestId: ctx.metadata.requestId,
         response: {

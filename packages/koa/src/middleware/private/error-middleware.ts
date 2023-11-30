@@ -1,13 +1,13 @@
+import { RedirectError } from "@lindorm-io/errors";
 import { HttpStatus } from "../../constant";
 import { DefaultLindormMiddleware } from "../../types";
-import { RedirectError } from "@lindorm-io/errors";
 
 export const errorMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
   try {
     await next();
   } catch (err: any) {
     try {
-      ctx.logger.error("service request error", err);
+      ctx.logger.warn("Service caught error", err);
 
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
