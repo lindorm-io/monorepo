@@ -1,40 +1,35 @@
-import { CryptoAES } from "./CryptoAES";
-import { CryptoArgon } from "./CryptoArgon";
 import { CryptoError } from "../error";
-import { CryptoSHA } from "./CryptoSHA";
 import { CryptoLayeredOptions } from "../types";
-import { baseHash, baseParse } from "@lindorm-io/core";
+import { CryptoAes } from "./CryptoAes";
+import { CryptoArgon } from "./CryptoArgon";
+import { CryptoHmac } from "./CryptoHmac";
 
 export class CryptoLayered {
-  private aes: CryptoAES;
+  private aes: CryptoAes;
   private argon: CryptoArgon;
-  private sha: CryptoSHA;
+  private hmac: CryptoHmac;
 
   public constructor(options: CryptoLayeredOptions) {
-    this.aes = new CryptoAES(options.aes);
+    this.aes = new CryptoAes(options.aes);
     this.argon = new CryptoArgon(options.argon);
-    this.sha = new CryptoSHA(options.sha);
+    this.hmac = new CryptoHmac(options.hmac);
   }
 
-  public async encrypt(input: string): Promise<string> {
-    const sha = this.sha.encrypt(input);
-    const argon = await this.argon.encrypt(sha);
-    const aes = this.aes.encrypt(argon);
-
-    return baseHash(aes);
+  public async sign(data: string): Promise<string> {
+    const hmac = this.hmac.sign(data);
+    const argon = await this.argon.sign(hmac);
+    return this.aes.encrypt(argon);
   }
 
-  public async verify(input: string, signature: string): Promise<boolean> {
-    const sha = this.sha.encrypt(input);
-    const aes = baseParse(signature);
-    const argon = this.aes.decrypt(aes);
+  public async verify(data: string, signature: string): Promise<boolean> {
+    const hmac = this.hmac.sign(data);
+    const argon = this.aes.decrypt(signature);
 
-    return this.argon.verify(sha, argon);
+    return this.argon.verify(hmac, argon);
   }
 
-  public async assert(input: string, signature: string): Promise<void> {
-    if (await this.verify(input, signature)) return;
-
-    throw new CryptoError("Invalid Layered input");
+  public async assert(data: string, signature: string): Promise<void> {
+    if (await this.verify(data, signature)) return;
+    throw new CryptoError("Invalid Layered data");
   }
 }

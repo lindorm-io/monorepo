@@ -1,49 +1,53 @@
-import { CryptoError } from "../error";
-import { CryptoArgonOptions } from "../types";
-import { argon2id, hash, verify } from "argon2";
+import {
+  ArgonSignatureHashLength,
+  ArgonSignatureMemoryCost,
+  ArgonSignatureSaltLength,
+  CryptoArgonOptions,
+} from "../types";
+import { assertArgonSignature, createArgonSignature, verifyArgonSignature } from "../utils";
 
 export class CryptoArgon {
-  private readonly hashLength: number;
-  private readonly memoryCost: number;
-  private readonly parallelism: number;
-  private readonly saltLength: number;
-  private readonly secret: Buffer | undefined;
-  private readonly timeCost: number;
+  private readonly hashLength: ArgonSignatureHashLength | undefined;
+  private readonly memoryCost: ArgonSignatureMemoryCost | undefined;
+  private readonly parallelism: number | undefined;
+  private readonly saltLength: ArgonSignatureSaltLength | undefined;
+  private readonly secret: string | undefined;
+  private readonly timeCost: number | undefined;
 
-  public constructor(options?: CryptoArgonOptions) {
-    this.hashLength = options?.hashLength || 128;
-    this.memoryCost = options?.memoryCost ? options.memoryCost * 2048 : 2048;
-    this.parallelism = options?.parallelism || 2;
-    this.saltLength = options?.saltLength || 128;
-    this.secret = options?.secret ? Buffer.from(options.secret) : undefined;
-    this.timeCost = options?.timeCost || 32;
+  public constructor(options: CryptoArgonOptions = {}) {
+    this.hashLength = options?.hashLength;
+    this.memoryCost = options?.memoryCost;
+    this.parallelism = options?.parallelism;
+    this.saltLength = options?.saltLength;
+    this.secret = options?.secret;
+    this.timeCost = options?.timeCost;
   }
 
-  public async encrypt(input: string): Promise<string> {
-    const options: Record<string, unknown> = {
+  public async sign(data: string): Promise<string> {
+    return await createArgonSignature({
+      data,
       hashLength: this.hashLength,
       memoryCost: this.memoryCost,
       parallelism: this.parallelism,
       saltLength: this.saltLength,
+      secret: this.secret,
       timeCost: this.timeCost,
-      type: argon2id,
-      ...(this.secret ? { secret: this.secret } : {}),
-    };
-
-    return hash(input, options);
+    });
   }
 
-  public async verify(input: string, signature: string): Promise<boolean> {
-    const options: Record<string, unknown> = {
-      ...(this.secret ? { secret: this.secret } : {}),
-    };
-
-    return verify(signature, input, options);
+  public async verify(data: string, signature: string): Promise<boolean> {
+    return await verifyArgonSignature({
+      data,
+      secret: this.secret,
+      signature,
+    });
   }
 
-  public async assert(input: string, signature: string): Promise<void> {
-    if (await this.verify(input, signature)) return;
-
-    throw new CryptoError("Invalid Argon input");
+  public async assert(data: string, signature: string): Promise<void> {
+    return await assertArgonSignature({
+      data,
+      secret: this.secret,
+      signature,
+    });
   }
 }

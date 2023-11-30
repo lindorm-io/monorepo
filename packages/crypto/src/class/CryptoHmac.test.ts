@@ -1,34 +1,30 @@
-import { randomBytes } from "crypto";
 import { CryptoError } from "../error";
-import { CryptoSecret } from "./CryptoSecret";
+import { CryptoHmac } from "./CryptoHmac";
 
-describe("CryptoSecret", () => {
-  let instance: CryptoSecret;
+describe("CryptoHmac", () => {
+  let instance: CryptoHmac;
   let signature: string;
 
   beforeEach(() => {
-    const secret = randomBytes(16).toString("hex");
-
-    instance = new CryptoSecret({
-      aes: { secret },
-      hmac: { secret },
+    instance = new CryptoHmac({
+      secret: "mock-secret",
     });
     signature = instance.sign("string");
   });
 
-  test("should verify", async () => {
+  test("should verify", () => {
     expect(instance.verify("string", signature)).toBe(true);
   });
 
-  test("should reject", async () => {
+  test("should reject", () => {
     expect(instance.verify("wrong", signature)).toBe(false);
   });
 
-  test("should assert", async () => {
+  test("should assert", () => {
     expect(() => instance.assert("string", signature)).not.toThrow();
   });
 
-  test("should throw error", async () => {
+  test("should throw error", () => {
     expect(() => instance.assert("wrong", signature)).toThrow(CryptoError);
   });
 });

@@ -1,16 +1,19 @@
-import { CryptoLayered } from "./CryptoLayered";
+import { randomBytes } from "crypto";
 import { CryptoError } from "../error";
+import { CryptoLayered } from "./CryptoLayered";
 
 describe("CryptoLayered", () => {
   let instance: CryptoLayered;
   let signature: string;
 
   beforeEach(async () => {
+    const secret = randomBytes(16).toString("hex");
+
     instance = new CryptoLayered({
-      aes: { secret: "mock-secret" },
-      sha: { secret: "mock-secret" },
+      aes: { secret },
+      hmac: { secret },
     });
-    signature = await instance.encrypt("string");
+    signature = await instance.sign("string");
   });
 
   test("should verify", async () => {

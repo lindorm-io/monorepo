@@ -1,29 +1,52 @@
-import { AES, enc } from "crypto-js";
-import { CryptoAESOptions } from "../types";
-import { CryptoError } from "../error";
+import { AesCipherAlgorithm, AesCipherFormat, CryptoAesOptions } from "../types";
+import { assertAesCipher, decryptAesCipher, encryptAesCipher, verifyAesCipher } from "../utils";
 
-export class CryptoAES {
+export class CryptoAes {
+  private algorithm: AesCipherAlgorithm | undefined;
+  private format: AesCipherFormat | undefined;
   private secret: string;
 
-  public constructor(options: CryptoAESOptions) {
+  public constructor(options: CryptoAesOptions) {
+    this.algorithm = options.algorithm;
+    this.format = options.format;
     this.secret = options.secret;
   }
 
-  public encrypt(input: string): string {
-    return AES.encrypt(input, this.secret).toString();
+  public encrypt(data: string): string {
+    return encryptAesCipher({
+      algorithm: this.algorithm,
+      data,
+      format: this.format,
+      secret: this.secret,
+    });
   }
 
-  public decrypt(signature: string): string {
-    return AES.decrypt(signature, this.secret).toString(enc.Utf8);
+  public decrypt(cipher: string): string {
+    return decryptAesCipher({
+      algorithm: this.algorithm,
+      cipher,
+      format: this.format,
+      secret: this.secret,
+    });
   }
 
-  public verify(input: string, signature: string): boolean {
-    return input === this.decrypt(signature);
+  public verify(data: string, cipher: string): boolean {
+    return verifyAesCipher({
+      algorithm: this.algorithm,
+      cipher,
+      data,
+      format: this.format,
+      secret: this.secret,
+    });
   }
 
-  public assert(input: string, signature: string): void {
-    if (this.verify(input, signature)) return;
-
-    throw new CryptoError("Invalid AES input");
+  public assert(data: string, cipher: string): void {
+    return assertAesCipher({
+      algorithm: this.algorithm,
+      cipher,
+      data,
+      format: this.format,
+      secret: this.secret,
+    });
   }
 }

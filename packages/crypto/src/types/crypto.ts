@@ -1,30 +1,62 @@
-export type CryptoAESOptions = {
+import { AesCipherAlgorithm, AesCipherFormat } from "./aes-cipher";
+import {
+  ArgonSignatureHashLength,
+  ArgonSignatureMemoryCost,
+  ArgonSignatureSaltLength,
+} from "./argon-signature";
+import { EccSignatureAlgorithm, EccSignatureFormat } from "./ecc-signature";
+import { HmacSignatureAlgorithm, HmacSignatureFormat } from "./hmac-signature";
+import { RsaSignatureAlgorithm, RsaSignatureFormat } from "./rsa-signature";
+import { ShaHashAlgorithm, ShaHashFormat } from "./sha-hash";
+
+export type CryptoAesOptions = {
+  algorithm?: AesCipherAlgorithm;
+  format?: AesCipherFormat;
   secret: string;
 };
 
 export type CryptoArgonOptions = {
-  hashLength?: 64 | 128 | 256 | 512;
-  memoryCost?: 1 | 2 | 4 | 8;
+  hashLength?: ArgonSignatureHashLength;
+  memoryCost?: ArgonSignatureMemoryCost;
   parallelism?: number;
-  saltLength?: 64 | 128 | 256 | 512;
+  saltLength?: ArgonSignatureSaltLength;
   secret?: string;
   timeCost?: number;
 };
 
-export type Hmac = "SHA256" | "SHA384" | "SHA512";
+export type CryptoEccOptions = {
+  algorithm?: EccSignatureAlgorithm;
+  format?: EccSignatureFormat;
+  privateKey?: string;
+  publicKey?: string;
+};
 
-export type CryptoSHAOptions = {
+export type CryptoHmacOptions = {
+  algorithm?: HmacSignatureAlgorithm;
+  format?: HmacSignatureFormat;
   secret: string;
-  hmac?: Hmac;
 };
 
 export type CryptoLayeredOptions = {
-  aes: CryptoAESOptions;
+  aes: CryptoAesOptions;
   argon?: CryptoArgonOptions;
-  sha: CryptoSHAOptions;
+  hmac: CryptoHmacOptions;
+};
+
+export type CryptoRsaOptions = {
+  algorithm?: RsaSignatureAlgorithm;
+  format?: RsaSignatureFormat;
+  passphrase?: string;
+  privateKey?: string;
+  publicKey?: string;
 };
 
 export type CryptoSecretOptions = {
-  aes: CryptoAESOptions;
-  sha: CryptoSHAOptions;
+  aes: CryptoAesOptions;
+  hmac: CryptoHmacOptions;
+};
+
+export type CryptoShaOptions = {
+  algorithm?: ShaHashAlgorithm;
+  format?: ShaHashFormat;
 };

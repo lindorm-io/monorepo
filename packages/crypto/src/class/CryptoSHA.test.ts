@@ -1,30 +1,28 @@
-import { CryptoSHA } from "./CryptoSHA";
 import { CryptoError } from "../error";
+import { CryptoSha } from "./CryptoSha";
 
-describe("CryptoSHA", () => {
-  let instance: CryptoSHA;
-  let signature: string;
+describe("CryptoSha", () => {
+  let instance: CryptoSha;
+  let hash: string;
 
   beforeEach(() => {
-    instance = new CryptoSHA({
-      secret: "mock-secret",
-    });
-    signature = instance.encrypt("string");
+    instance = new CryptoSha();
+    hash = instance.hash("string");
   });
 
   test("should verify", () => {
-    expect(instance.verify("string", signature)).toBe(true);
+    expect(instance.verify("string", hash)).toBe(true);
   });
 
   test("should reject", () => {
-    expect(instance.verify("wrong", signature)).toBe(false);
+    expect(instance.verify("wrong", hash)).toBe(false);
   });
 
   test("should assert", () => {
-    expect(() => instance.assert("string", signature)).not.toThrow();
+    expect(() => instance.assert("string", hash)).not.toThrow();
   });
 
   test("should throw error", () => {
-    expect(() => instance.assert("wrong", signature)).toThrow(CryptoError);
+    expect(() => instance.assert("wrong", hash)).toThrow(CryptoError);
   });
 });

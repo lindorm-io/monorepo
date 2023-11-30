@@ -1,12 +1,14 @@
-import { CryptoAES } from "./CryptoAES";
+import { randomBytes } from "crypto";
 import { CryptoError } from "../error";
+import { CryptoAes } from "./CryptoAes";
 
-describe("CryptoAES", () => {
-  let instance: CryptoAES;
+describe("CryptoAes", () => {
+  let instance: CryptoAes;
   let signature: string;
 
   beforeEach(() => {
-    instance = new CryptoAES({ secret: "mock-secret" });
+    const secret = randomBytes(16).toString("hex");
+    instance = new CryptoAes({ secret });
     signature = instance.encrypt("string");
   });
 

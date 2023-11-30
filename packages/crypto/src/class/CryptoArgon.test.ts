@@ -1,5 +1,5 @@
-import { CryptoArgon } from "./CryptoArgon";
 import { CryptoError } from "../error";
+import { CryptoArgon } from "./CryptoArgon";
 
 describe("CryptoArgon", () => {
   let instance: CryptoArgon;
@@ -8,7 +8,7 @@ describe("CryptoArgon", () => {
   describe("with default options", () => {
     beforeEach(async () => {
       instance = new CryptoArgon();
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -33,7 +33,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         hashLength: 256,
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -58,7 +58,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         memoryCost: 2,
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -83,7 +83,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         parallelism: 1,
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -108,7 +108,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         saltLength: 64,
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -133,7 +133,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         secret: "secret",
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {
@@ -166,7 +166,7 @@ describe("CryptoArgon", () => {
       instance = new CryptoArgon({
         timeCost: 4,
       });
-      signature = await instance.encrypt("string");
+      signature = await instance.sign("string");
     });
 
     test("should generate signature", async () => {

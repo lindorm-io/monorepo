@@ -1,28 +1,9 @@
 import { CryptoError } from "../error";
-import { CryptoKeyPair } from "./CryptoKeyPair";
-import { SignMethod } from "../enum";
+import { CryptoRsa } from "./CryptoRsa";
 
-const EC_PRIVATE_KEY =
-  "-----BEGIN PRIVATE KEY-----\n" +
-  "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIBGma7xGZpaAngFXf3\n" +
-  "mJF3IxZfDpI+6wU564K+eehxX104v6dZetjSfMx0rvsYX/s6cO2P3GE7R95VxWEk\n" +
-  "+f4EX0qhgYkDgYYABAB8cBfDwCi41G4kVW4V3Y86nIMMCypYzfO8gYjpS091lxkM\n" +
-  "goTRS3LM1p65KQfwBolrWIdVrbbOILASf06fQsHw5gEt4snVuMBO+LS6pesX9vA8\n" +
-  "QT1LjX75Xq2InnLY1VToeNmxkuM+oDZgqHOYwzfUhu+zZaA5AuEkqPi47TA9iCSY\n" +
-  "VQ==\n" +
-  "-----END PRIVATE KEY-----\n";
+const PASSPHRASE = "2e6187af-4b70-4333-aa63-f5fa9f4418ad";
 
-const EC_PUBLIC_KEY =
-  "-----BEGIN PUBLIC KEY-----\n" +
-  "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAfHAXw8AouNRuJFVuFd2POpyDDAsq\n" +
-  "WM3zvIGI6UtPdZcZDIKE0UtyzNaeuSkH8AaJa1iHVa22ziCwEn9On0LB8OYBLeLJ\n" +
-  "1bjATvi0uqXrF/bwPEE9S41++V6tiJ5y2NVU6HjZsZLjPqA2YKhzmMM31Ibvs2Wg\n" +
-  "OQLhJKj4uO0wPYgkmFU=\n" +
-  "-----END PUBLIC KEY-----\n";
-
-const RSA_PASSPHRASE = "2e6187af-4b70-4333-aa63-f5fa9f4418ad";
-
-const RSA_PRIVATE_KEY =
+const PRIVATE_KEY =
   "-----BEGIN RSA PRIVATE KEY-----\n" +
   "Proc-Type: 4,ENCRYPTED\n" +
   "DEK-Info: AES-256-CBC,FCC1524DDB196B41F5DB86218439DE00\n" +
@@ -78,7 +59,7 @@ const RSA_PRIVATE_KEY =
   "oRDaiEOiHPa28NGDMgTRA0fvq3jNEjUVZAjAcqD83UnAMydQtx/nsy21W6ftybFl\n" +
   "-----END RSA PRIVATE KEY-----\n";
 
-const RSA_PUBLIC_KEY =
+const PUBLIC_KEY =
   "-----BEGIN RSA PUBLIC KEY-----\n" +
   "MIICCgKCAgEAybQm2T+bls/+8+gBZ36r2FGbfytCUjpLT/bRZPsg4W7SEeCVUexh\n" +
   "28UaUyZSTQGxqWbwZR9Tdmh/W5PDjo+P0bORrdbT2pYkDVVlXoODYN1WLswBEuOD\n" +
@@ -93,78 +74,38 @@ const RSA_PUBLIC_KEY =
   "GFeCXe7QQ+mEe55+DNs1jV3Z1pZj7eG2hmAJBLSMF7ksee46okGD6D0CAwEAAQ==\n" +
   "-----END RSA PUBLIC KEY-----\n";
 
-describe("CryptoKeyPair", () => {
-  let crypto: CryptoKeyPair;
+describe("CryptoRsa", () => {
+  let crypto: CryptoRsa;
   let signature: string;
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    crypto = new CryptoRsa({
+      passphrase: PASSPHRASE,
+      privateKey: PRIVATE_KEY,
+      publicKey: PUBLIC_KEY,
+    });
+    signature = crypto.sign("string");
   });
 
-  describe("RS512", () => {
-    beforeEach(() => {
-      crypto = new CryptoKeyPair({
-        algorithm: "RS512",
-        passphrase: RSA_PASSPHRASE,
-        privateKey: RSA_PRIVATE_KEY,
-        publicKey: RSA_PUBLIC_KEY,
-      });
-      signature = crypto.sign("string");
-    });
-
-    test("should sign/verify", () => {
-      expect(crypto.verify("string", signature)).toBe(true);
-    }, 10000);
-
-    test("should sign/reject", () => {
-      expect(crypto.verify("wrong", signature)).toBe(false);
-    }, 10000);
-
-    test("should sign/assert", () => {
-      expect(crypto.assert("string", signature)).toBeUndefined();
-    }, 10000);
-
-    test("should sign/throw error", () => {
-      expect(() => crypto.assert("wrong", signature)).toThrow(CryptoError);
-    }, 10000);
-
-    test("should encrypt/decrypt with private sign method", () => {
-      signature = crypto.encrypt(SignMethod.PRIVATE_SIGN, "string");
-
-      expect(crypto.decrypt(SignMethod.PRIVATE_SIGN, signature)).toBe("string");
-    }, 10000);
-
-    test("should encrypt/decrypt with public sign method", () => {
-      signature = crypto.encrypt(SignMethod.PUBLIC_SIGN, "string");
-
-      expect(crypto.decrypt(SignMethod.PUBLIC_SIGN, signature)).toBe("string");
-    }, 10000);
+  test("should verify", () => {
+    expect(crypto.verify("string", signature)).toBe(true);
   });
 
-  describe("ES512", () => {
-    beforeEach(() => {
-      crypto = new CryptoKeyPair({
-        algorithm: "ES512",
-        privateKey: EC_PRIVATE_KEY,
-        publicKey: EC_PUBLIC_KEY,
-      });
-      signature = crypto.sign("string");
-    });
+  test("should reject", () => {
+    expect(crypto.verify("wrong", signature)).toBe(false);
+  });
 
-    test("should sign/verify", () => {
-      expect(crypto.verify("string", signature)).toBe(true);
-    }, 10000);
+  test("should assert", () => {
+    expect(crypto.assert("string", signature)).toBeUndefined();
+  });
 
-    test("should sign/reject", () => {
-      expect(crypto.verify("wrong", signature)).toBe(false);
-    }, 10000);
+  test("should throw error on invalid data", () => {
+    expect(() => crypto.assert("wrong", signature)).toThrow(CryptoError);
+  });
 
-    test("should sign/assert", () => {
-      expect(() => crypto.assert("string", signature)).not.toThrow();
-    }, 10000);
+  test("should encrypt and decrypt", () => {
+    signature = crypto.encrypt("string");
 
-    test("should sign/throw error", () => {
-      expect(() => crypto.assert("wrong", signature)).toThrow(CryptoError);
-    }, 10000);
+    expect(crypto.decrypt(signature)).toBe("string");
   });
 });
