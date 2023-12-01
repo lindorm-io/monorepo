@@ -13,7 +13,7 @@ jest.mock("@lindorm-io/crypto", () => ({
     async assert(...args: any) {
       return cryptoAssert(...args);
     }
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return `${arg}-signature`;
     }
   },
