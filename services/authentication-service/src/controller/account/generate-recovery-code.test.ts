@@ -1,9 +1,9 @@
-import MockDate from "mockdate";
 import { baseHash } from "@lindorm-io/core";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import MockDate from "mockdate";
 import { createTestAccount } from "../../fixtures/entity";
-import { generateRecoveryCodeController } from "./generate-recovery-code";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
+import { generateRecoveryCodeController } from "./generate-recovery-code";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -17,7 +17,7 @@ jest.mock("@lindorm-io/crypto", () => ({
   ...jest.requireActual("@lindorm-io/crypto"),
 
   CryptoLayered: class CryptoLayered {
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return baseHash(arg);
     }
   },

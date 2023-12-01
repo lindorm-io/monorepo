@@ -24,7 +24,7 @@ jest.mock("@lindorm-io/crypto", () => ({
   ...jest.requireActual("@lindorm-io/crypto"),
 
   CryptoLayered: class CryptoLayered {
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return baseHash(arg);
     }
   },

@@ -1,15 +1,15 @@
 import { baseHash } from "@lindorm-io/core";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
-import { updateAccountPasswordController } from "./update-account-password";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
+import { updateAccountPasswordController } from "./update-account-password";
 
 jest.mock("@lindorm-io/crypto", () => ({
   ...jest.requireActual("@lindorm-io/crypto"),
 
   CryptoLayered: class CryptoLayered {
     async assert() {}
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return baseHash(arg);
     }
   },
