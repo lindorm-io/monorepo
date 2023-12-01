@@ -7,7 +7,13 @@ export const errorMiddleware: DefaultLindormMiddleware = async (ctx, next): Prom
     await next();
   } catch (err: any) {
     try {
-      ctx.logger.warn("Service caught error", err);
+      const status = err.statusCode || err.status || HttpStatus.ServerError.INTERNAL_SERVER_ERROR;
+
+      if (status >= 500) {
+        ctx.logger.error("Service caught unexpected error", err);
+      } else {
+        ctx.logger.warn("Service caught client error", err);
+      }
 
       if (err instanceof RedirectError) {
         const url = new URL(err.redirect);
@@ -27,7 +33,7 @@ export const errorMiddleware: DefaultLindormMiddleware = async (ctx, next): Prom
 
         ctx.redirect(url.toString());
       } else {
-        ctx.status = err.statusCode || err.status || HttpStatus.ServerError.INTERNAL_SERVER_ERROR;
+        ctx.status = status;
         ctx.body = {
           error: {
             code: err.code || null,
