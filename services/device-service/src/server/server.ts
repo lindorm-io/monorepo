@@ -4,8 +4,10 @@ import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import {
   ChallengeSessionCache,
+  ClientRepository,
   DeviceLinkRepository,
   EnrolmentSessionCache,
+  PublicKeyRepository,
   RdcSessionCache,
 } from "../infrastructure";
 import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
@@ -39,7 +41,7 @@ export const server = createNodeServer<ServerKoaContext>({
   },
   logger,
   memoryDatabase,
-  mongo: [DeviceLinkRepository],
+  mongo: [ClientRepository, DeviceLinkRepository, PublicKeyRepository],
   mongoConnection,
   port: configuration.server.port,
   redis: [ChallengeSessionCache, EnrolmentSessionCache, RdcSessionCache],

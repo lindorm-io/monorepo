@@ -1,7 +1,7 @@
 import { CertificateMethod } from "@lindorm-io/common-enums";
+import { createRsaSignature } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { randomString } from "@lindorm-io/random";
-import { createSign } from "crypto";
 import { assertCertificateChallenge } from "./assert-certificate-challenge";
 
 const privateKey =
@@ -31,13 +31,12 @@ const publicKey =
   "dsAFDTzmso9VtnBNgbt8afNea1nK25Fa+Zq+gztxkI5pkw1WFm4FAgMBAAE=\n" +
   "-----END RSA PUBLIC KEY-----\n";
 
-const sign = (method: CertificateMethod, input: string): string => {
-  const worker = createSign(method);
-  worker.write(input);
-  worker.end();
-
-  return worker.sign({ key: privateKey, passphrase: "" }, "base64");
-};
+const sign = (input: string, method: CertificateMethod = CertificateMethod.SHA256): string =>
+  createRsaSignature({
+    algorithm: method,
+    data: input,
+    key: { key: privateKey, passphrase: "" },
+  });
 
 describe("assertCertificateChallenge", () => {
   let certificateChallenge: string;
@@ -54,7 +53,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, certificateMethod),
         publicKey,
       }),
     ).not.toThrow();
@@ -67,7 +66,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, certificateMethod),
         publicKey,
       }),
     ).not.toThrow();
@@ -80,7 +79,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, certificateMethod),
         publicKey,
       }),
     ).not.toThrow();
@@ -93,7 +92,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge: randomString(32),
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, certificateMethod),
         publicKey,
       }),
     ).toThrow(ClientError);
@@ -104,7 +103,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod: CertificateMethod.SHA384,
-        certificateVerifier: sign(CertificateMethod.SHA256, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, CertificateMethod.SHA256),
         publicKey,
       }),
     ).toThrow(ClientError);
@@ -117,7 +116,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(CertificateMethod.SHA384, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, CertificateMethod.SHA384),
         publicKey,
       }),
     ).toThrow(ClientError);
@@ -130,7 +129,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, randomString(32)),
+        certificateVerifier: sign(randomString(32), certificateMethod),
         publicKey,
       }),
     ).toThrow(ClientError);
@@ -143,7 +142,7 @@ describe("assertCertificateChallenge", () => {
       assertCertificateChallenge({
         certificateChallenge,
         certificateMethod,
-        certificateVerifier: sign(certificateMethod, certificateChallenge),
+        certificateVerifier: sign(certificateChallenge, certificateMethod),
         publicKey:
           "-----BEGIN RSA PUBLIC KEY-----\n" +
           "MIICCgKCAgEAybQm2T+bls/+8+gBZ36r2FGbfytCUjpLT/bRZPsg4W7SEeCVUexh\n" +

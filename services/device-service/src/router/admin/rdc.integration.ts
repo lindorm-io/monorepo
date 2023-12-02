@@ -1,14 +1,19 @@
 import { RdcSessionMode } from "@lindorm-io/common-enums";
+import { createRsaSignature, createShaHash } from "@lindorm-io/crypto";
 import { randomHex } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createTestDeviceLink } from "../../fixtures/entity";
+import { createTestClient, createTestDeviceLink, createTestPublicKey } from "../../fixtures/entity";
 import {
+  TEST_CLIENT_REPOSITORY,
+  TEST_DEVICE_LINK_REPOSITORY,
+  TEST_PUBLIC_KEY_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-  TEST_DEVICE_REPOSITORY,
 } from "../../fixtures/integration";
+import { TEST_PRIVATE_KEY } from "../../fixtures/integration/test-public-keys";
 import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -41,9 +46,17 @@ describe("/admin/rdc", () => {
     .reply(200, {});
 
   test("should initialise rdc session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(await createTestDeviceLink());
+    const publicKey = await TEST_PUBLIC_KEY_REPOSITORY.create(createTestPublicKey());
 
-    await TEST_DEVICE_REPOSITORY.create(
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        publicKeyId: publicKey.id,
+      }),
+    );
+
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(await createTestDeviceLink());
+
+    await TEST_DEVICE_LINK_REPOSITORY.create(
       await createTestDeviceLink({
         identityId: deviceLink.identityId,
         metadata: {
@@ -54,25 +67,64 @@ describe("/admin/rdc", () => {
       }),
     );
 
-    const clientCredentials = getTestClientCredentials();
+    const clientCredentials = getTestClientCredentials({
+      subject: client.id,
+    });
+
+    const body = {
+      audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
+      confirm_payload: { confirm: true },
+      confirm_uri: "https://callback.uri/confirm",
+      identity_id: deviceLink.identityId,
+      mode: RdcSessionMode.PUSH_NOTIFICATION,
+      nonce: randomHex(16),
+      reject_payload: { reject: true },
+      reject_uri: "https://callback.uri/reject",
+      scopes: ["scope"],
+      template_name: "rdcSession_template",
+      template_parameters: { template: true },
+      token_payload: { token: true },
+    };
+
+    const bodyHash = createShaHash({
+      algorithm: "SHA512",
+      data: JSON.stringify(body),
+      format: "base64",
+    });
+
+    const requestId = randomUUID();
+
+    const digest = [`algorithm="SHA512"`, `format="base64"`, `hash="${bodyHash}"`].join(",");
+
+    const headers = {
+      date: new Date().toUTCString(),
+      digest,
+      "x-request-id": requestId,
+    };
+
+    const headersHash = createRsaSignature({
+      algorithm: "RSA-SHA512",
+      data: JSON.stringify(headers),
+      format: "base64",
+      key: TEST_PRIVATE_KEY,
+    });
+
+    const signature = [
+      `algorithm="RSA-SHA512"`,
+      `format="base64"`,
+      `hash="${headersHash}"`,
+      `headers="${Object.keys(headers).join(" ")}"`,
+      `key="${publicKey.id}"`,
+    ].join(",");
 
     const response = await request(server.callback())
       .post("/admin/rdc")
       .set("Authorization", `Bearer ${clientCredentials}`)
-      .send({
-        audiences: ["7bb4396b-5bad-4e6e-8edb-4f0f3c20e902", "d7cce9c2-0e6e-448b-a65f-f120cd2ffd32"],
-        confirm_payload: { confirm: true },
-        confirm_uri: "https://callback.uri/confirm",
-        identity_id: deviceLink.identityId,
-        mode: RdcSessionMode.PUSH_NOTIFICATION,
-        nonce: randomHex(16),
-        reject_payload: { reject: true },
-        reject_uri: "https://callback.uri/reject",
-        scopes: ["scope"],
-        template_name: "rdcSession_template",
-        template_parameters: { template: true },
-        token_payload: { token: true },
-      })
+      .set("Date", headers.date)
+      .set("Digest", digest)
+      .set("Signature", signature)
+      .set("X-Request-ID", requestId)
+      .send(body)
       .expect(202);
 
     expect(response.body).toStrictEqual({

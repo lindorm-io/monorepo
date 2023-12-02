@@ -18,7 +18,7 @@ import Joi from "joi";
 import { flatten } from "lodash";
 import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
 import { JOI_BIOMETRY, JOI_PINCODE } from "../../constant";
-import { DeviceLink } from "../../entity";
+import { DeviceLink, PublicKey } from "../../entity";
 import { createDeviceLinkCallback } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { DeviceLinkSalt, ServerKoaController } from "../../types";
@@ -46,7 +46,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     data: { biometry, certificateVerifier, pincode },
     entity: { enrolmentSession },
     jwt,
-    mongo: { deviceLinkRepository },
+    mongo: { deviceLinkRepository, publicKeyRepository },
     token: { bearerToken, enrolmentSessionToken },
   } = ctx;
 
@@ -70,25 +70,32 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     enrolmentSession.status === SessionStatus.SKIP;
 
   const salt: DeviceLinkSalt = {
-    aes: randomString(128),
-    sha: randomString(128),
+    aes: randomString(32),
+    hmac: randomString(32),
   };
+
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
+
+  const publicKey = await publicKeyRepository.create(
+    new PublicKey({
+      key: enrolmentSession.publicKey,
+    }),
+  );
 
   const deviceLink = await deviceLinkRepository.create(
     new DeviceLink({
       active: true,
-      biometry: biometry ? await crypto.encrypt(biometry) : undefined,
+      biometry: biometry ? await crypto.sign(biometry) : undefined,
       certificateMethod: enrolmentSession.certificateMethod,
       identityId: enrolmentSession.identityId,
       installationId: enrolmentSession.installationId,
       metadata: enrolmentSession.deviceMetadata,
       name: enrolmentSession.name,
-      pincode: pincode ? await crypto.encrypt(pincode) : undefined,
-      publicKey: enrolmentSession.publicKey,
+      pincode: pincode ? await crypto.sign(pincode) : undefined,
+      publicKeyId: publicKey.id,
       trusted,
       uniqueId: enrolmentSession.uniqueId,
     }),
@@ -121,6 +128,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
       challengeConfirmationToken,
       deviceLinkId: deviceLink.id,
       expiresIn,
+      publicKeyId: publicKey.id,
       trusted,
     },
   };

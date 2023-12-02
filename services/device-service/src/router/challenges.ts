@@ -8,12 +8,15 @@ import {
   rejectChallengeSchema,
 } from "../controller";
 import {
+  assertSignatureDeviceLinkMiddleware,
   challengeSessionEntityMiddleware,
   challengeSessionTokenMiddleware,
   deviceLinkEntityMiddleware,
   deviceLinkIdRateLimitBackoff,
+  publicKeyEntityMiddleware,
+  signatureMiddleware,
 } from "../middleware";
-import { deviceHeadersEnrolledSchema } from "../schema";
+import { deviceHeadersEnrolledSchema, signatureHeadersSchema } from "../schema";
 
 export const router = new Router<any, any>();
 
@@ -26,6 +29,9 @@ router.use(
 router.post(
   "/",
   useSchema(initialiseChallengeSchema),
+  useSchema(signatureHeadersSchema, "headers"),
+  signatureMiddleware,
+  assertSignatureDeviceLinkMiddleware,
   deviceLinkEntityMiddleware("data.deviceLinkId"),
   useController(initialiseChallengeController),
 );
@@ -37,6 +43,7 @@ router.post(
   challengeSessionTokenMiddleware("data.challengeSessionToken"),
   challengeSessionEntityMiddleware("data.id"),
   deviceLinkEntityMiddleware("entity.challengeSession.deviceLinkId"),
+  publicKeyEntityMiddleware("entity.deviceLink.publicKeyId"),
   deviceLinkIdRateLimitBackoff("entity.deviceLink.id"),
   useController(confirmChallengeController),
 );

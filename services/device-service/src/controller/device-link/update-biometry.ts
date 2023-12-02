@@ -49,12 +49,13 @@ export const updateDeviceLinkBiometryController: ServerKoaController<RequestData
   assertConfirmationTokenFactorLength(challengeConfirmationToken, 2);
 
   const salt = await vaultGetSalt(ctx, deviceLink);
+
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
-  deviceLink.biometry = await crypto.encrypt(biometry);
+  deviceLink.biometry = await crypto.sign(biometry);
 
   if (name) {
     deviceLink.name = name;

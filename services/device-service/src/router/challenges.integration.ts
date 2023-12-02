@@ -1,14 +1,19 @@
 import { ChallengeStrategy } from "@lindorm-io/common-enums";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { randomHex, randomNumber } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
-import { createTestChallengeSession, createTestDeviceLink } from "../fixtures/entity";
+import {
+  createTestChallengeSession,
+  createTestDeviceLink,
+  createTestPublicKey,
+} from "../fixtures/entity";
 import {
   TEST_CHALLENGE_SESSION_CACHE,
-  TEST_DEVICE_REPOSITORY,
+  TEST_DEVICE_LINK_REPOSITORY,
+  TEST_PUBLIC_KEY_REPOSITORY,
   getTestChallengeSessionToken,
   setupIntegration,
   signTestChallenge,
@@ -21,8 +26,7 @@ jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
 describe("/challenges", () => {
-  const salt =
-    "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
+  const salt = randomBytes(16).toString("hex");
 
   nock("https://oauth.test.lindorm.io")
     .get("/.well-known/openid-configuration")
@@ -46,22 +50,22 @@ describe("/challenges", () => {
     .reply(200, {
       data: {
         aes: salt,
-        sha: salt,
+        hmac: salt,
       },
     });
 
   const crypto = new CryptoLayered({
     aes: { secret: salt },
-    sha: { secret: salt },
+    hmac: { secret: salt },
   });
 
   beforeAll(setupIntegration);
 
   test("should initialise challenge session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign("123456"),
       }),
     );
 
@@ -94,22 +98,28 @@ describe("/challenges", () => {
   });
 
   test("should confirm challenge session [ IMPLICIT ]", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const publicKey = await TEST_PUBLIC_KEY_REPOSITORY.create(createTestPublicKey());
+
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign("123456"),
+        publicKeyId: publicKey.id,
       }),
     );
+
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
       createTestChallengeSession({
         id: randomUUID(),
         deviceLinkId: deviceLink.id,
       }),
     );
+
     const certificateVerifier = signTestChallenge(
       deviceLink.certificateMethod,
       session.certificateChallenge,
     );
+
     const challengeSessionToken = getTestChallengeSessionToken({
       session: session.id,
     });
@@ -139,10 +149,13 @@ describe("/challenges", () => {
   test("should confirm challenge session [ BIOMETRY ]", async () => {
     const biometry = randomHex(128);
 
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const publicKey = await TEST_PUBLIC_KEY_REPOSITORY.create(createTestPublicKey());
+
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt(biometry),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign(biometry),
+        pincode: await crypto.sign("123456"),
+        publicKeyId: publicKey.id,
       }),
     );
 
@@ -188,10 +201,13 @@ describe("/challenges", () => {
   test("should confirm challenge session [ PINCODE ]", async () => {
     const pincode = randomNumber(6).toString().padStart(6, "0");
 
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const publicKey = await TEST_PUBLIC_KEY_REPOSITORY.create(createTestPublicKey());
+
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt(pincode),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign(pincode),
+        publicKeyId: publicKey.id,
       }),
     );
 
@@ -235,7 +251,7 @@ describe("/challenges", () => {
   });
 
   test("should reject challenge session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_CHALLENGE_SESSION_CACHE.create(
       createTestChallengeSession({

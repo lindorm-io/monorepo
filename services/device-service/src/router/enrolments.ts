@@ -10,12 +10,14 @@ import {
   rejectEnrolmentSchema,
 } from "../controller";
 import {
+  assertSignatureDeviceLinkMiddleware,
   enrolmentSessionEntityMiddleware,
   enrolmentSessionTokenMiddleware,
   identityAuthMiddleware,
   identityIdRateLimit,
+  signatureMiddleware,
 } from "../middleware";
-import { deviceHeadersSchema } from "../schema";
+import { deviceHeadersSchema, signatureHeadersSchema } from "../schema";
 
 export const router = new Router<any, any>();
 
@@ -28,6 +30,9 @@ router.post(
   identityIdRateLimit("token.bearerToken.subject"),
   useSchema(initialiseEnrolmentSchema),
   useSchema(deviceHeadersSchema, "headers"),
+  useSchema(signatureHeadersSchema, "headers"),
+  signatureMiddleware,
+  assertSignatureDeviceLinkMiddleware,
   useController(initialiseEnrolmentController),
 );
 

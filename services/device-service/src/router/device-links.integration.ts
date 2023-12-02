@@ -2,13 +2,13 @@ import { ChallengeStrategy, PSD2Factor } from "@lindorm-io/common-enums";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { randomNumber, randomString } from "@lindorm-io/random";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
 import { createTestDeviceLink } from "../fixtures/entity";
 import {
-  TEST_DEVICE_REPOSITORY,
+  TEST_DEVICE_LINK_REPOSITORY,
   getTestAccessToken,
   getTestChallengeConfirmationToken,
   setupIntegration,
@@ -21,8 +21,7 @@ jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
 describe("/device-links", () => {
-  const salt =
-    "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
+  const salt = randomBytes(16).toString("hex");
 
   nock("https://oauth.test.lindorm.io")
     .get("/.well-known/openid-configuration")
@@ -46,7 +45,7 @@ describe("/device-links", () => {
     .reply(200, {
       data: {
         aes: salt,
-        sha: salt,
+        hmac: salt,
       },
     });
 
@@ -57,15 +56,15 @@ describe("/device-links", () => {
 
   const crypto = new CryptoLayered({
     aes: { secret: salt },
-    sha: { secret: salt },
+    hmac: { secret: salt },
   });
 
   beforeAll(setupIntegration);
 
   test("GET /", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink({}));
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink({}));
 
-    const deviceLink2 = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink2 = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
         identityId: deviceLink.identityId,
         metadata: {
@@ -98,7 +97,7 @@ describe("/device-links", () => {
   });
 
   test("DELETE /:id", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const accessToken = getTestAccessToken({
       subject: deviceLink.identityId,
@@ -109,16 +108,16 @@ describe("/device-links", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(204);
 
-    await expect(TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id })).rejects.toThrow(
+    await expect(TEST_DEVICE_LINK_REPOSITORY.find({ id: deviceLink.id })).rejects.toThrow(
       EntityNotFoundError,
     );
   });
 
   test("GET /:id", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign("123456"),
       }),
     );
 
@@ -151,10 +150,10 @@ describe("/device-links", () => {
   });
 
   test("PUT /:id/biometry", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign("123456"),
       }),
     );
 
@@ -187,16 +186,16 @@ describe("/device-links", () => {
       })
       .expect(204);
 
-    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+    const result = await TEST_DEVICE_LINK_REPOSITORY.find({ id: deviceLink.id });
 
     expect(result.biometry).not.toBe(deviceLink.biometry);
   });
 
   test("PUT /:id/pincode", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       createTestDeviceLink({
-        biometry: await crypto.encrypt("secret"),
-        pincode: await crypto.encrypt("123456"),
+        biometry: await crypto.sign("secret"),
+        pincode: await crypto.sign("123456"),
       }),
     );
 
@@ -230,13 +229,13 @@ describe("/device-links", () => {
       })
       .expect(204);
 
-    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+    const result = await TEST_DEVICE_LINK_REPOSITORY.find({ id: deviceLink.id });
 
     expect(result.pincode).not.toBe(deviceLink.pincode);
   });
 
   test("PUT /:id/trusted", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(
       await createTestDeviceLink({
         trusted: false,
       }),
@@ -271,7 +270,7 @@ describe("/device-links", () => {
       })
       .expect(204);
 
-    const result = await TEST_DEVICE_REPOSITORY.find({ id: deviceLink.id });
+    const result = await TEST_DEVICE_LINK_REPOSITORY.find({ id: deviceLink.id });
 
     expect(result.trusted).toBe(true);
   });

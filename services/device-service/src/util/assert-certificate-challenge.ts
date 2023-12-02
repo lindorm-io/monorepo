@@ -1,6 +1,6 @@
 import { CertificateMethod } from "@lindorm-io/common-enums";
+import { verifyRsaSignature } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
-import { createVerify } from "crypto";
 
 interface Options {
   certificateChallenge: string;
@@ -12,13 +12,14 @@ interface Options {
 export const assertCertificateChallenge = (options: Options): void => {
   const { certificateChallenge, certificateMethod, certificateVerifier, publicKey } = options;
 
-  const worker = createVerify(certificateMethod);
-  worker.write(certificateChallenge);
-  worker.end();
+  const valid = verifyRsaSignature({
+    algorithm: certificateMethod,
+    data: certificateChallenge,
+    key: publicKey,
+    signature: certificateVerifier,
+  });
 
-  const result = worker.verify({ key: publicKey }, certificateVerifier, "base64");
-
-  if (result) return;
+  if (valid) return;
 
   throw new ClientError("Conflict", {
     debug: {

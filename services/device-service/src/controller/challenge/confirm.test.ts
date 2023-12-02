@@ -1,7 +1,11 @@
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
-import { createTestChallengeSession, createTestDeviceLink } from "../../fixtures/entity";
+import {
+  createTestChallengeSession,
+  createTestDeviceLink,
+  createTestPublicKey,
+} from "../../fixtures/entity";
 import {
   getDeviceHeaders as _getDeviceHeaders,
   vaultGetSalt as _vaultGetSalt,
@@ -17,7 +21,7 @@ jest.mock("@lindorm-io/crypto", () => ({
     async assert(...args: any) {
       return cryptoAssert(...args);
     }
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return `${arg}-signature`;
     }
   },
@@ -52,7 +56,11 @@ describe("confirmChallengeController", () => {
           biometry: "biometry-signature",
           installationId: "b75393fd-2cdf-449a-810f-b14c0d11e871",
           pincode: "pincode-signature",
+          publicKeyId: "30bc624c-acea-4afc-a711-efe479bc0000",
           uniqueId: "474aacfa09474d4caaf903977b896213",
+        }),
+        publicKey: createTestPublicKey({
+          id: "30bc624c-acea-4afc-a711-efe479bc0000",
         }),
       },
       jwt: {

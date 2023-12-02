@@ -10,7 +10,7 @@ import nock from "nock";
 import request from "supertest";
 import { createTestDeviceLink, createTestRdcSession } from "../fixtures/entity";
 import {
-  TEST_DEVICE_REPOSITORY,
+  TEST_DEVICE_LINK_REPOSITORY,
   TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE,
   getTestAccessToken,
   getTestChallengeConfirmationToken,
@@ -53,7 +53,7 @@ describe("/rdc", () => {
   nock("https://callback.lindorm.io").delete("/reject").times(999).reply(200, {});
 
   test("should acknowledge rdc session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
       createTestRdcSession({
@@ -102,7 +102,7 @@ describe("/rdc", () => {
   });
 
   test("should confirm rdc session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
       createTestRdcSession({
@@ -156,7 +156,7 @@ describe("/rdc", () => {
   });
 
   test("should reject rdc session", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
       createTestRdcSession({
@@ -198,7 +198,7 @@ describe("/rdc", () => {
   });
 
   test("should resolve rdc session status", async () => {
-    const deviceLink = await TEST_DEVICE_REPOSITORY.create(createTestDeviceLink());
+    const deviceLink = await TEST_DEVICE_LINK_REPOSITORY.create(createTestDeviceLink());
 
     const session = await TEST_REMOTE_DEVICE_CHALLENGE_SESSION_CACHE.create(
       createTestRdcSession({

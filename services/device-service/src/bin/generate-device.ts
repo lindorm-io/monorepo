@@ -1,15 +1,22 @@
 import { CertificateMethod } from "@lindorm-io/common-enums";
-import { DeviceLink } from "../entity";
-import { DeviceLinkRepository } from "../infrastructure";
+import { DeviceLink, PublicKey } from "../entity";
+import { DeviceLinkRepository, PublicKeyRepository } from "../infrastructure";
 import { mongoConnection } from "../instance";
 import { logger } from "./util/logger";
 import { RSA_KEY } from "./util/rsa-key";
 
 const repositories = {
   deviceLink: new DeviceLinkRepository(mongoConnection, logger),
+  publicKey: new PublicKeyRepository(mongoConnection, logger),
 };
 
 const main = async (): Promise<void> => {
+  const publicKey = await repositories.publicKey.create(
+    new PublicKey({
+      key: RSA_KEY.publicKey,
+    }),
+  );
+
   await repositories.deviceLink.create(
     new DeviceLink({
       id: "bcc17443-5514-44bc-81bc-416a62e83e43",
@@ -28,7 +35,7 @@ const main = async (): Promise<void> => {
       },
       name: "Name",
       pincode: null,
-      publicKey: RSA_KEY.publicKey,
+      publicKeyId: publicKey.id,
       trusted: true,
       uniqueId: "68834dbe-a51d-4df2-8560-cb779c0d6c09",
     }),

@@ -1,6 +1,6 @@
-import { DeviceLink, DeviceLinkAttributes } from "../../entity";
-import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 import { Logger } from "@lindorm-io/core-logger";
+import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
+import { DeviceLink, DeviceLinkAttributes } from "../../entity";
 
 export class DeviceLinkRepository extends MongoRepositoryBase<DeviceLinkAttributes, DeviceLink> {
   public constructor(connection: IMongoConnection, logger: Logger) {
@@ -14,6 +14,14 @@ export class DeviceLinkRepository extends MongoRepositoryBase<DeviceLinkAttribut
           },
           options: {
             name: "unique_on_identity",
+            unique: true,
+          },
+        },
+        {
+          index: {
+            publicKeyId: 1,
+          },
+          options: {
             unique: true,
           },
         },

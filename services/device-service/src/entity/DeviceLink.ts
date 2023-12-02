@@ -19,7 +19,7 @@ export interface DeviceLinkAttributes extends EntityAttributes {
   installationId: string;
   name: string | null;
   pincode: string | null;
-  publicKey: string;
+  publicKeyId: string;
   trusted: boolean;
   uniqueId: string;
 }
@@ -41,7 +41,7 @@ const schema = Joi.object<DeviceLinkAttributes>()
     metadata: JOI_DEVICE_METADATA.required(),
     name: Joi.string().allow(null).required(),
     pincode: Joi.string().base64().allow(null).required(),
-    publicKey: Joi.string().required(),
+    publicKeyId: Joi.string().guid().required(),
     trusted: Joi.boolean().required(),
     uniqueId: Joi.string().required(),
   })
@@ -52,7 +52,7 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
   public readonly identityId: string;
   public readonly installationId: string;
   public readonly metadata: DeviceMetadata;
-  public readonly publicKey: string;
+  public readonly publicKeyId: string;
   public readonly uniqueId: string;
 
   public active: boolean;
@@ -72,7 +72,7 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
     this.metadata = options.metadata;
     this.name = options.name || null;
     this.pincode = options.pincode || null;
-    this.publicKey = options.publicKey;
+    this.publicKeyId = options.publicKeyId;
     this.trusted = options.trusted === true;
     this.uniqueId = options.uniqueId;
   }
@@ -93,7 +93,7 @@ export class DeviceLink extends LindormEntity<DeviceLinkAttributes> {
       metadata: this.metadata,
       name: this.name,
       pincode: this.pincode,
-      publicKey: this.publicKey,
+      publicKeyId: this.publicKeyId,
       trusted: this.trusted,
       uniqueId: this.uniqueId,
     };

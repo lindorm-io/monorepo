@@ -1,7 +1,11 @@
 import { SessionStatus } from "@lindorm-io/common-enums";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createMockRedisRepository } from "@lindorm-io/redis";
-import { createTestDeviceLink, createTestEnrolmentSession } from "../../fixtures/entity";
+import {
+  createTestDeviceLink,
+  createTestEnrolmentSession,
+  createTestPublicKey,
+} from "../../fixtures/entity";
 import { createDeviceLinkCallback } from "../../handler";
 import { assertCertificateChallenge as _assertCertificateChallenge } from "../../util";
 import { confirmEnrolmentController } from "./confirm";
@@ -12,7 +16,7 @@ jest.mock("@lindorm-io/crypto", () => ({
     async assert(...args: any) {
       return cryptoAssert(...args);
     }
-    async encrypt(arg: any) {
+    async sign(arg: any) {
       return `${arg}-signature`;
     }
   },
@@ -55,6 +59,7 @@ describe("confirmEnrolmentController", () => {
       },
       mongo: {
         deviceLinkRepository: createMockMongoRepository(createTestDeviceLink),
+        publicKeyRepository: createMockMongoRepository(createTestPublicKey),
       },
       token: {
         bearerToken: {
@@ -77,6 +82,7 @@ describe("confirmEnrolmentController", () => {
         challengeConfirmationToken: "jwt.jwt.jwt",
         deviceLinkId: expect.any(String),
         expiresIn: 60,
+        publicKeyId: expect.any(String),
         trusted: true,
       },
     });

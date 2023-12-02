@@ -86,14 +86,17 @@ describe("/enrolments", () => {
         status: SessionStatus.SKIP,
       }),
     );
+
     const certificateVerifier = signTestChallenge(
       session.certificateMethod,
       session.certificateChallenge,
     );
+
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
       session: session.id,
       subject: session.identityId,
     });
+
     const accessToken = getTestAccessToken({
       subject: session.identityId,
     });
@@ -119,16 +122,19 @@ describe("/enrolments", () => {
       challenge_confirmation_token: expect.any(String),
       device_link_id: expect.any(String),
       expires_in: 300,
+      public_key_id: expect.any(String),
       trusted: true,
     });
   });
 
   test("should reject enrolment session", async () => {
     const session = await TEST_ENROLMENT_SESSION_CACHE.create(createTestEnrolmentSession());
+
     const enrolmentSessionToken = getTestEnrolmentSessionToken({
       session: session.id,
       subject: session.identityId,
     });
+
     const accessToken = getTestAccessToken({
       subject: session.identityId,
     });
@@ -154,6 +160,7 @@ describe("/enrolments", () => {
         status: SessionStatus.PENDING,
       }),
     );
+
     const accessToken = getTestAccessToken({
       subject: session.identityId,
     });

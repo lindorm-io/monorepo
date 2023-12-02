@@ -45,7 +45,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
   const {
     redis: { challengeSessionCache },
     data: { certificateVerifier, pincode, biometry, strategy },
-    entity: { challengeSession, deviceLink },
+    entity: { challengeSession, deviceLink, publicKey },
     jwt,
     mongo: { deviceLinkRepository },
     token: { challengeSessionToken },
@@ -73,15 +73,16 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     certificateChallenge: challengeSession.certificateChallenge,
     certificateMethod: deviceLink.certificateMethod,
     certificateVerifier,
-    publicKey: deviceLink.publicKey,
+    publicKey: publicKey.key,
   });
 
   const factors: Array<PSD2Factor> = [PSD2Factor.POSSESSION];
 
   const salt = await vaultGetSalt(ctx, deviceLink);
+
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
   switch (strategy) {

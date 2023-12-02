@@ -2,6 +2,7 @@ import { CertificateMethod, SessionStatus } from "@lindorm-io/common-enums";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { EnrolmentSession, EnrolmentSessionOptions } from "../../entity";
+import { TEST_PUBLIC_KEY } from "../integration/test-public-keys";
 
 export const createTestEnrolmentSession = (
   options: Partial<EnrolmentSessionOptions> = {},
@@ -24,12 +25,7 @@ export const createTestEnrolmentSession = (
     installationId: randomUUID(),
     name: "Test DeviceLink Name",
     nonce: randomString(16),
-    publicKey:
-      "-----BEGIN RSA PUBLIC KEY-----\n" +
-      "MIGJAoGBAKdVz2lIbQi1YU3Z0qRizpV9gAMW9Kmwms4aP+r7CKcu4w9/fMcV4v6P\n" +
-      "zYHwnjvTEZ6gSqtxcpwT6EgBAgxFolqjeInOis2I+tcfxcShwcfMZ/E7kgktP15w\n" +
-      "dsAFDTzmso9VtnBNgbt8afNea1nK25Fa+Zq+gztxkI5pkw1WFm4FAgMBAAE=\n" +
-      "-----END RSA PUBLIC KEY-----\n",
+    publicKey: TEST_PUBLIC_KEY,
     status: SessionStatus.CONFIRMED,
     uniqueId: randomUUID(),
     ...options,

@@ -1,5 +1,3 @@
-import { generateRsaKeys } from "@lindorm-io/key-pair";
-
 export const RSA_KEY = {
   algorithms: ["RS256", "RS384", "RS512"],
   passphrase: "",
@@ -74,5 +72,3 @@ export const RSA_KEY = {
     "-----END RSA PUBLIC KEY-----\n",
   type: "RSA",
 };
-
-generateRsaKeys().then(console.log);

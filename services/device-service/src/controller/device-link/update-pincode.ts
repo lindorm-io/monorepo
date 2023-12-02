@@ -43,12 +43,13 @@ export const updateDeviceLinkPincodeController: ServerKoaController<RequestData>
   assertConfirmationTokenFactorLength(challengeConfirmationToken, 2);
 
   const salt = await vaultGetSalt(ctx, deviceLink);
+
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
-  deviceLink.pincode = await crypto.encrypt(pincode);
+  deviceLink.pincode = await crypto.sign(pincode);
 
   const { name } = getDeviceHeaders(ctx);
 

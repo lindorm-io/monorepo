@@ -13,11 +13,20 @@ import {
   LindormNodeServerToken,
 } from "@lindorm-io/node-server";
 import { ChallengeConfirmationTokenClaims } from "../common";
-import { ChallengeSession, DeviceLink, EnrolmentSession, RdcSession } from "../entity";
+import {
+  ChallengeSession,
+  Client,
+  DeviceLink,
+  EnrolmentSession,
+  PublicKey,
+  RdcSession,
+} from "../entity";
 import {
   ChallengeSessionCache,
+  ClientRepository,
   DeviceLinkRepository,
   EnrolmentSessionCache,
+  PublicKeyRepository,
   RdcSessionCache,
 } from "../infrastructure";
 
@@ -29,13 +38,17 @@ interface ServerAxios extends LindormNodeServerAxios {
 
 interface ServerEntity {
   challengeSession: ChallengeSession;
+  client: Client;
   deviceLink: DeviceLink;
-  rdcSession: RdcSession;
   enrolmentSession: EnrolmentSession;
+  publicKey: PublicKey;
+  rdcSession: RdcSession;
 }
 
 interface ServerMongo extends LindormNodeServerMongo {
+  clientRepository: ClientRepository;
   deviceLinkRepository: DeviceLinkRepository;
+  publicKeyRepository: PublicKeyRepository;
 }
 
 interface ServerRedis extends LindormNodeServerRedis {

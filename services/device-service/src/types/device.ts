@@ -1,6 +1,6 @@
 export interface DeviceLinkSalt {
   aes: string;
-  sha: string;
+  hmac: string;
 }
 
 export interface DeviceMetadata {
