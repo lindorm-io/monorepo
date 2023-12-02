@@ -3,7 +3,7 @@ import {
   UnlockProtectedRecordRequestParams,
   UnlockProtectedRecordResponse,
 } from "@lindorm-io/common-types";
-import { CryptoAES } from "@lindorm-io/crypto";
+import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { parseBlob } from "@lindorm-io/string-blob";
@@ -53,7 +53,7 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  const crypto = new CryptoAES({ secret: key });
+  const crypto = new CryptoAes({ secret: key });
   let blob: string;
 
   try {

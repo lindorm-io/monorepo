@@ -3,6 +3,7 @@ export interface Configuration {
   mongo:    Mongo;
   oauth:    Oauth;
   redis:    Mongo;
+  secrets:  Secrets;
   server:   Server;
   services: Services;
 }
@@ -26,6 +27,10 @@ interface Mongo {
 interface Oauth {
   client_id:     string;
   client_secret: string;
+}
+
+interface Secrets {
+  aes: string;
 }
 
 interface Server {

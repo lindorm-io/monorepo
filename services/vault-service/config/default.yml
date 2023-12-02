@@ -20,6 +20,9 @@ redis:
   port: 6379
   namespace: vault_service
 
+secrets:
+  aes: jN8dLU1CHf9bO1iAF76NTx8yR8h57TWX
+
 server:
   domain: https://lindorm.io
   environment: development

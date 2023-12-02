@@ -1,11 +1,11 @@
-import Joi from "joi";
-import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { EncryptedRecord } from "../../entity";
-import { ServerKoaController } from "../../types";
-import { getEncryptionKey } from "../../handler";
-import { stringifyBlob } from "@lindorm-io/string-blob";
 import { CreateEncryptedRecordRequestBody } from "@lindorm-io/common-types";
+import { CryptoAes } from "@lindorm-io/crypto";
+import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
+import { stringifyBlob } from "@lindorm-io/string-blob";
+import Joi from "joi";
+import { EncryptedRecord } from "../../entity";
+import { getEncryptionKey } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = CreateEncryptedRecordRequestBody;
 
@@ -25,7 +25,8 @@ export const createEncryptedRecordController: ServerKoaController<RequestData> =
     mongo: { encryptedRecordRepository },
   } = ctx;
 
-  const crypto = new CryptoAES({ secret: getEncryptionKey(ctx) });
+  const encryptionKey = await getEncryptionKey(ctx);
+  const crypto = new CryptoAes({ secret: encryptionKey });
 
   await encryptedRecordRepository.create(
     new EncryptedRecord({

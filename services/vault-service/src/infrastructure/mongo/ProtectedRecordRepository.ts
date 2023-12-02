@@ -1,6 +1,6 @@
-import { ProtectedRecord, ProtectedRecordAttributes } from "../../entity";
-import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 import { Logger } from "@lindorm-io/core-logger";
+import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
+import { ProtectedRecord, ProtectedRecordAttributes } from "../../entity";
 
 export class ProtectedRecordRepository extends MongoRepositoryBase<
   ProtectedRecordAttributes,
@@ -9,7 +9,12 @@ export class ProtectedRecordRepository extends MongoRepositoryBase<
   public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger, {
       entityName: "ProtectedRecord",
-      indices: [],
+      indices: [
+        {
+          index: { owner: 1, ownerType: 1 },
+          options: { unique: false },
+        },
+      ],
     });
   }
 

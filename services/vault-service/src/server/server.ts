@@ -2,7 +2,11 @@ import { Environment } from "@lindorm-io/common-enums";
 import { KeyType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
-import { EncryptedRecordRepository, ProtectedRecordRepository } from "../infrastructure";
+import {
+  EncryptedRecordRepository,
+  EncryptionKeyRepository,
+  ProtectedRecordRepository,
+} from "../infrastructure";
 import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
@@ -34,7 +38,7 @@ export const server = createNodeServer<ServerKoaContext>({
   },
   logger,
   memoryDatabase,
-  mongo: [EncryptedRecordRepository, ProtectedRecordRepository],
+  mongo: [EncryptedRecordRepository, EncryptionKeyRepository, ProtectedRecordRepository],
   mongoConnection,
   port: configuration.server.port,
   redisConnection,

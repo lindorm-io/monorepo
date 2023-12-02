@@ -1,15 +1,15 @@
+import { CryptoAes } from "@lindorm-io/crypto";
+import { stringifyBlob } from "@lindorm-io/string-blob";
+import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { CryptoAES } from "@lindorm-io/crypto";
 import { ProtectedRecord } from "../entity";
-import { randomUUID } from "crypto";
-import { server } from "../server/server";
-import { stringifyBlob } from "@lindorm-io/string-blob";
 import {
+  TEST_PROTECTED_RECORD_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-  TEST_PROTECTED_RECORD_REPOSITORY,
 } from "../fixtures/integration";
+import { server } from "../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -42,8 +42,8 @@ describe("/vault", () => {
     const subject = randomUUID();
     const clientCredentials = getTestClientCredentials({ subject });
 
-    const key = "secret";
-    const crypto = new CryptoAES({ secret: key });
+    const key = randomBytes(16).toString("hex");
+    const crypto = new CryptoAes({ secret: key });
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
         protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
@@ -69,8 +69,8 @@ describe("/vault", () => {
     const subject = randomUUID();
     const clientCredentials = getTestClientCredentials({ subject });
 
-    const key = "secret";
-    const crypto = new CryptoAES({ secret: key });
+    const key = randomBytes(16).toString("hex");
+    const crypto = new CryptoAes({ secret: key });
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
         protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),

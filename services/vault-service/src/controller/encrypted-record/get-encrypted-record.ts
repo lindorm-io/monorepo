@@ -1,15 +1,15 @@
-import Joi from "joi";
-import { ClientError } from "@lindorm-io/errors";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
-import { getEncryptionKey } from "../../handler";
-import { isAfter } from "date-fns";
-import { parseBlob } from "@lindorm-io/string-blob";
 import {
   GetEncryptedRecordRequestParams,
   GetEncryptedRecordResponse,
 } from "@lindorm-io/common-types";
+import { CryptoAes } from "@lindorm-io/crypto";
+import { ClientError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import { parseBlob } from "@lindorm-io/string-blob";
+import { isAfter } from "date-fns";
+import Joi from "joi";
+import { getEncryptionKey } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 type RequestData = GetEncryptedRecordRequestParams;
 
@@ -37,7 +37,9 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
     });
   }
 
-  const crypto = new CryptoAES({ secret: getEncryptionKey(ctx) });
+  const encryptionKey = await getEncryptionKey(ctx);
+  const crypto = new CryptoAes({ secret: encryptionKey });
+
   let blob: string;
 
   try {

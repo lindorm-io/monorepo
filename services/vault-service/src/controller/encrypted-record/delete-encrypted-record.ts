@@ -1,10 +1,10 @@
-import Joi from "joi";
+import { DeleteEncryptedRecordRequestParams } from "@lindorm-io/common-types";
+import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
+import Joi from "joi";
 import { getEncryptionKey } from "../../handler";
-import { DeleteEncryptedRecordRequestParams } from "@lindorm-io/common-types";
+import { ServerKoaController } from "../../types";
 
 type RequestData = DeleteEncryptedRecordRequestParams;
 
@@ -22,7 +22,8 @@ export const deleteEncryptedRecordController: ServerKoaController<RequestData> =
     mongo: { encryptedRecordRepository },
   } = ctx;
 
-  const crypto = new CryptoAES({ secret: getEncryptionKey(ctx) });
+  const encryptionKey = await getEncryptionKey(ctx);
+  const crypto = new CryptoAes({ secret: encryptionKey });
 
   try {
     crypto.decrypt(encryptedRecord.encryptedData);

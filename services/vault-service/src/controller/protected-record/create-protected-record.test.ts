@@ -5,7 +5,7 @@ import { createProtectedRecordController } from "./create-protected-record";
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("@lindorm-io/crypto", () => ({
-  CryptoAES: class CryptoAES {
+  CryptoAes: class CryptoAes {
     constructor() {}
     encrypt() {
       return "encrypted-string";

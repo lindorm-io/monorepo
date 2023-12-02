@@ -2,11 +2,11 @@ import {
   CreateProtectedRecordRequestBody,
   CreateProtectedRecordResponse,
 } from "@lindorm-io/common-types";
-import { CryptoAES } from "@lindorm-io/crypto";
+import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
-import { randomString } from "@lindorm-io/random";
 import { stringifyBlob } from "@lindorm-io/string-blob";
+import { randomBytes } from "crypto";
 import Joi from "joi";
 import { ProtectedRecord } from "../../entity";
 import { ServerKoaController } from "../../types";
@@ -37,8 +37,8 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
     },
   } = ctx;
 
-  const key = randomString(128, { numbers: "random", symbols: "random" });
-  const crypto = new CryptoAES({ secret: key });
+  const key = randomBytes(16).toString("hex");
+  const crypto = new CryptoAes({ secret: key });
 
   if (!subjectHint) {
     throw new ClientError("Bad Request", {

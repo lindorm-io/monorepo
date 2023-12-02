@@ -1,8 +1,6 @@
 import { Axios } from "@lindorm-io/axios";
-import { Controller } from "@lindorm-io/koa";
 import { Dict } from "@lindorm-io/common-types";
-import { EncryptedRecord, ProtectedRecord } from "../entity";
-import { EncryptedRecordRepository, ProtectedRecordRepository } from "../infrastructure";
+import { Controller } from "@lindorm-io/koa";
 import {
   LindormNodeServerAxios,
   LindormNodeServerContext,
@@ -12,6 +10,12 @@ import {
   LindormNodeServerMongo,
   LindormNodeServerRedis,
 } from "@lindorm-io/node-server";
+import { EncryptedRecord, ProtectedRecord } from "../entity";
+import {
+  EncryptedRecordRepository,
+  EncryptionKeyRepository,
+  ProtectedRecordRepository,
+} from "../infrastructure";
 
 interface ServerAxios extends LindormNodeServerAxios {
   oauthClient: Axios;
@@ -24,6 +28,7 @@ interface ServerEntity {
 
 interface ServerMongo extends LindormNodeServerMongo {
   encryptedRecordRepository: EncryptedRecordRepository;
+  encryptionKeyRepository: EncryptionKeyRepository;
   protectedRecordRepository: ProtectedRecordRepository;
 }
 

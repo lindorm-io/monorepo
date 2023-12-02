@@ -1,23 +1,22 @@
+import { CryptoAes } from "@lindorm-io/crypto";
+import { stringifyBlob } from "@lindorm-io/string-blob";
+import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { EncryptedRecord } from "../../entity";
-import { baseHash } from "@lindorm-io/core";
-import { randomUUID } from "crypto";
-import { server } from "../../server/server";
-import { stringifyBlob } from "@lindorm-io/string-blob";
+import { EncryptedRecord, EncryptionKey } from "../../entity";
 import {
+  TEST_ENCRYPTED_RECORD_REPOSITORY,
+  TEST_ENCRYPTION_KEY_REPOSITORY,
   getTestClientCredentials,
   setupIntegration,
-  TEST_ENCRYPTED_RECORD_REPOSITORY,
 } from "../../fixtures/integration";
+import { cryptoAes } from "../../instance";
+import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
-
-const getKey = (subjectHint: string, subject: string) => baseHash(`${subjectHint}:${subject}`);
 
 describe("/internal/vault", () => {
   beforeAll(setupIntegration);
@@ -41,8 +40,16 @@ describe("/internal/vault", () => {
     const subject = randomUUID();
     const clientCredentials = getTestClientCredentials({ subject });
 
-    const secret = getKey("client", subject);
-    const crypto = new CryptoAES({ secret });
+    const encryptionKey = await TEST_ENCRYPTION_KEY_REPOSITORY.create(
+      new EncryptionKey({
+        key: cryptoAes.encrypt(randomBytes(16).toString("hex")),
+        owner: subject,
+        ownerType: "client",
+      }),
+    );
+    const secret = cryptoAes.decrypt(encryptionKey.key);
+    const crypto = new CryptoAes({ secret });
+
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({
         encryptedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
@@ -65,8 +72,16 @@ describe("/internal/vault", () => {
     const subject = randomUUID();
     const clientCredentials = getTestClientCredentials({ subject });
 
-    const secret = getKey("client", subject);
-    const crypto = new CryptoAES({ secret });
+    const encryptionKey = await TEST_ENCRYPTION_KEY_REPOSITORY.create(
+      new EncryptionKey({
+        key: cryptoAes.encrypt(randomBytes(16).toString("hex")),
+        owner: subject,
+        ownerType: "client",
+      }),
+    );
+    const secret = cryptoAes.decrypt(encryptionKey.key);
+    const crypto = new CryptoAes({ secret });
+
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({
         encryptedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),

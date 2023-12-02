@@ -2,7 +2,7 @@ import {
   DeleteProtectedRecordRequestBody,
   DeleteProtectedRecordRequestParams,
 } from "@lindorm-io/common-types";
-import { CryptoAES } from "@lindorm-io/crypto";
+import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -40,7 +40,7 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  const crypto = new CryptoAES({ secret: key });
+  const crypto = new CryptoAes({ secret: key });
 
   try {
     crypto.decrypt(protectedRecord.protectedData);
