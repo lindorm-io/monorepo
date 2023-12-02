@@ -26,7 +26,7 @@
     "typecheck": "tsc --noEmit --watch",
     "typecheck:ci": "tsc --noEmit",
     "upgrade:dependencies": "yarn upgrade-interactive --latest",
-    "verify": "yarn typecheck && yarn test"
+    "verify": "yarn typecheck:ci && yarn test:ci"
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.6.9",
