@@ -90,7 +90,7 @@ describe("/oauth2/token", () => {
     const tenant = await TEST_TENANT_REPOSITORY.create(createTestTenant());
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
         tenantId: tenant.id,
       }),
     );
@@ -121,7 +121,7 @@ describe("/oauth2/token", () => {
 
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -247,7 +247,7 @@ describe("/oauth2/token", () => {
   test("should resolve for client credentials grant type", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -272,7 +272,7 @@ describe("/oauth2/token", () => {
   test("should resolve for password grant type", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -301,7 +301,7 @@ describe("/oauth2/token", () => {
   test("should resolve for refresh token grant type", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 

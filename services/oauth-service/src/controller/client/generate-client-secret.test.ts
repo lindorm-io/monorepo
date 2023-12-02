@@ -10,7 +10,7 @@ jest.mock("@lindorm-io/random", () => ({
 
 jest.mock("../../instance", () => ({
   argon: {
-    encrypt: jest.fn().mockResolvedValue("encrypted-string"),
+    sign: jest.fn().mockResolvedValue("encrypted-string"),
   },
 }));
 

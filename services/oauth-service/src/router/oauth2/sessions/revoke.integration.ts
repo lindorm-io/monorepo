@@ -29,7 +29,7 @@ describe("/oauth2/sessions/revoke", () => {
   test("should revoke access token", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -62,7 +62,7 @@ describe("/oauth2/sessions/revoke", () => {
   test("should revoke refresh token", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 

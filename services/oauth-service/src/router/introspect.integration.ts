@@ -29,7 +29,7 @@ describe("/introspect", () => {
   test("should introspect opaque access token", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -92,7 +92,7 @@ describe("/introspect", () => {
   test("should introspect jwt access token", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
@@ -157,7 +157,7 @@ describe("/introspect", () => {
   test("should introspect opaque refresh token", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
       }),
     );
 
