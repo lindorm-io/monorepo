@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.8...@lindorm-io/koa@0.17.9) (2023-12-02)
+
+### Bug Fixes
+
+- change metadata middleware ([8006c41](https://github.com/lindorm-io/monorepo/commit/8006c4145873d28ecf1d6174848e1e0b0e1f1b48))
+- improve error handling ([e667e3c](https://github.com/lindorm-io/monorepo/commit/e667e3c8a58bd7d3e5396fe5b899e6dbd49ca696))
+- improve error logging ([4a86c04](https://github.com/lindorm-io/monorepo/commit/4a86c04b5e40c726b0cadea615dbb90df2442bee))
+
 ## [0.17.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.7...@lindorm-io/koa@0.17.8) (2023-11-21)
 
 ### Bug Fixes

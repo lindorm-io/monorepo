@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.5.0...@lindorm-io/common-types@0.5.1) (2023-12-02)
+
+### Bug Fixes
+
+- add public key id to enrolment response ([16a0af6](https://github.com/lindorm-io/monorepo/commit/16a0af6f26c876145c2b3a0d7b411452f94a942b))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.4.0...@lindorm-io/common-types@0.5.0) (2023-11-13)
 
 ### Features

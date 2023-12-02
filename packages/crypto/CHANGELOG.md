@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.1.34...@lindorm-io/crypto@0.2.0) (2023-12-02)
+
+### Features
+
+- enhance package with utils ([c929fdf](https://github.com/lindorm-io/monorepo/commit/c929fdfb4efc3cafcfffdef6d05e4c65e65c5df3))
+
 ## [0.1.34](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.1.33...@lindorm-io/crypto@0.1.34) (2023-11-06)
 
 ### Bug Fixes

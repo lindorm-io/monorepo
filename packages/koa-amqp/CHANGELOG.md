@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.9](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.1.8...@lindorm-io/koa-amqp@0.1.9) (2023-12-02)
+
+**Note:** Version bump only for package @lindorm-io/koa-amqp
+
 ## [0.1.8](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-amqp@0.1.7...@lindorm-io/koa-amqp@0.1.8) (2023-11-21)
 
 **Note:** Version bump only for package @lindorm-io/koa-amqp
