@@ -1,28 +1,31 @@
+import { CryptoAes } from "@lindorm-io/crypto";
+import { randomBytes } from "crypto";
 import MockDate from "mockdate";
-import { CryptoAES } from "@lindorm-io/crypto";
-import { TOTPError } from "../error";
-import { TOTPHandler } from "./TOTPHandler";
 import { authenticator } from "otplib";
-import { baseParse } from "@lindorm-io/core";
+import { TotpError } from "../error";
+import { TotpHandler } from "./TotpHandler";
 
 MockDate.set("2020-01-01T08:00:15.000");
 
-describe("OTPHandler", () => {
-  let aes: CryptoAES;
+describe("TotpHandler", () => {
+  let aes: CryptoAes;
   let code: string;
-  let handler: TOTPHandler;
+  let handler: TotpHandler;
   let signature: string;
 
   beforeEach(() => {
-    handler = new TOTPHandler({
-      aes: { secret: "secret" },
+    const secret = randomBytes(16).toString("hex");
+
+    handler = new TotpHandler({
+      aes: { secret },
       issuer: "issuer",
     });
-    aes = new CryptoAES({ secret: "secret" });
+
+    aes = new CryptoAes({ secret });
 
     ({ signature } = handler.generate());
 
-    code = authenticator.generate(aes.decrypt(baseParse(signature)));
+    code = authenticator.generate(aes.decrypt(signature));
   });
 
   test("should generate", () => {
@@ -32,7 +35,7 @@ describe("OTPHandler", () => {
     expect(result.uri).toContain("?secret=");
     expect(result.uri).toContain("&period=30&digits=6&algorithm=SHA1&issuer=issuer");
 
-    expect(result.signature.length).toBe(144);
+    expect(result.signature.length).toBe(108);
   });
 
   test("should verify resolving time remaining and used", () => {
@@ -44,6 +47,6 @@ describe("OTPHandler", () => {
   });
 
   test("should throw error", () => {
-    expect(() => handler.assert("wrong", signature)).toThrow(TOTPError);
+    expect(() => handler.assert("wrong", signature)).toThrow(TotpError);
   });
 });

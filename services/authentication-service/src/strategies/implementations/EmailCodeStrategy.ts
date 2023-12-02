@@ -64,7 +64,7 @@ export class EmailCodeStrategy implements StrategyHandler {
     }
 
     const code = randomSecret(32);
-    strategySession.secret = await argon.encrypt(code);
+    strategySession.secret = await argon.sign(code);
 
     await strategySessionCache.update(strategySession);
 

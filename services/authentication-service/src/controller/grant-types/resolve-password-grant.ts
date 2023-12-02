@@ -77,7 +77,7 @@ export const resolvePasswordGrantController: ServerKoaController<RequestData> = 
   const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
   try {

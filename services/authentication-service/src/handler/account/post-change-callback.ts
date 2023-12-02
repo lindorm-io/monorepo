@@ -1,8 +1,8 @@
-import { Account } from "../../entity";
-import { AccountSalt, ServerKoaContext } from "../../types";
 import { CreateEncryptedRecordRequestBody } from "@lindorm-io/common-types";
-import { clientCredentialsMiddleware } from "../../middleware";
 import { randomString } from "@lindorm-io/random";
+import { Account } from "../../entity";
+import { clientCredentialsMiddleware } from "../../middleware";
+import { AccountSalt, ServerKoaContext } from "../../types";
 
 export const createAccountCallback =
   (ctx: ServerKoaContext) =>
@@ -15,7 +15,7 @@ export const createAccountCallback =
       id: account.id,
       data: {
         aes: randomString(128),
-        sha: randomString(128),
+        hmac: randomString(128),
       },
     };
 

@@ -1,4 +1,3 @@
-import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import {
   AuthenticationFactor,
   AuthenticationMethod,
@@ -6,6 +5,7 @@ import {
   AuthenticationStrategyConfirmKey,
   AuthenticationStrategyConfirmMode,
 } from "@lindorm-io/common-enums";
+import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError, ServerError } from "@lindorm-io/errors";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
@@ -103,7 +103,7 @@ export class RecoveryCodeStrategy implements StrategyHandler {
     const salt = await fetchAccountSalt(ctx, account);
     const crypto = new CryptoLayered({
       aes: { secret: salt.aes },
-      sha: { secret: salt.sha },
+      hmac: { secret: salt.hmac },
     });
 
     await crypto.assert(code, account.recoveryCode);

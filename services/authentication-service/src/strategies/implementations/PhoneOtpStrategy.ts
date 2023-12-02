@@ -64,7 +64,7 @@ export class PhoneOtpStrategy implements StrategyHandler {
     const confirmLength = 6;
     const otp = (await createOtp(confirmLength)).toString().padStart(confirmLength, "0");
 
-    strategySession.secret = await argon.encrypt(otp);
+    strategySession.secret = await argon.sign(otp);
 
     await strategySessionCache.update(strategySession);
 

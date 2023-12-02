@@ -1,1 +1,1 @@
-export * from "./TOTPHandler";
+export * from "./TotpHandler";

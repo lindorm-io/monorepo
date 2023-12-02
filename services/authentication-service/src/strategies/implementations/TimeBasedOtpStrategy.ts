@@ -1,6 +1,13 @@
+import {
+  AuthenticationFactor,
+  AuthenticationMethod,
+  AuthenticationStrategy,
+  AuthenticationStrategyConfirmKey,
+  AuthenticationStrategyConfirmMode,
+} from "@lindorm-io/common-enums";
 import { AuthStrategyConfig } from "@lindorm-io/common-types";
 import { ClientError, ServerError } from "@lindorm-io/errors";
-import { TOTPHandler } from "../../class";
+import { TotpHandler } from "../../class";
 import { Account, AuthenticationSession, StrategySession } from "../../entity";
 import { createStrategySessionToken, fetchAccountSalt } from "../../handler";
 import { configuration } from "../../server/configuration";
@@ -12,13 +19,6 @@ import {
   ServerKoaContext,
   StrategyHandler,
 } from "../../types";
-import {
-  AuthenticationFactor,
-  AuthenticationMethod,
-  AuthenticationStrategy,
-  AuthenticationStrategyConfirmKey,
-  AuthenticationStrategyConfirmMode,
-} from "@lindorm-io/common-enums";
 
 export class TimeBasedOtpStrategy implements StrategyHandler {
   public readonly config: AuthenticationStrategyConfig = {
@@ -102,7 +102,7 @@ export class TimeBasedOtpStrategy implements StrategyHandler {
     logger.debug("Verifying TOTP");
 
     const salt = await fetchAccountSalt(ctx, account);
-    const totpHandler = new TOTPHandler({
+    const totpHandler = new TotpHandler({
       aes: { secret: salt.aes },
       issuer: configuration.server.issuer,
     });

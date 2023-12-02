@@ -33,7 +33,6 @@ describe("getBrowserLinksController", () => {
             id: "a26dad28-e854-447d-bce6-5c685cddfea8",
             browser: "browser",
             created: new Date("2021-01-01T08:00:00.000Z"),
-            environment: "test",
             os: "os",
             platform: "platform",
           },

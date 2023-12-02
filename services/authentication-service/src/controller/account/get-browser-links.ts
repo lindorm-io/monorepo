@@ -5,7 +5,6 @@ interface PublicBrowserLink {
   id: string;
   browser: string;
   created: Date;
-  environment: string;
   os: string;
   platform: string;
 }
@@ -32,7 +31,6 @@ export const getBrowserLinksController: ServerKoaController = async (
         id: item.id,
         browser: item.browser,
         created: item.created,
-        environment: item.environment,
         os: item.os,
         platform: item.platform,
       })),

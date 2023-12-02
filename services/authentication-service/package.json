@@ -15,6 +15,7 @@
     "test": "jest --watch --",
     "test:ci": "yarn test:unit && yarn test:integration",
     "test:integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --forceExit",
+    "test:integration:only": "compd --file docker-compose.yml jest --config jest.config.integration.js $1 --watch --detectOpenHandles",
     "test:integration:update": "compd --file docker-compose.yml jest --config jest.config.integration.js -u",
     "test:unit": "jest",
     "test:unit:update": "jest -u",
@@ -22,7 +23,7 @@
     "typecheck": "tsc --noEmit --watch",
     "typecheck:ci": "tsc --noEmit",
     "upgrade:dependencies": "yarn upgrade-interactive --latest",
-    "verify": "yarn typecheck && yarn test"
+    "verify": "yarn typecheck:ci && yarn test:ci"
   },
   "dependencies": {
     "@lindorm-io/axios": "^0.6.9",

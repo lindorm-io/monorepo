@@ -1,4 +1,3 @@
-import { Environment } from "@lindorm-io/common-enums";
 import {
   EntityAttributes,
   EntityKeys,
@@ -11,7 +10,6 @@ import Joi from "joi";
 export interface BrowserLinkAttributes extends EntityAttributes {
   accountId: string;
   browser: string;
-  environment: Environment;
   os: string;
   platform: string;
 }
@@ -23,7 +21,6 @@ const schema = Joi.object<BrowserLinkAttributes>({
 
   accountId: Joi.string().guid().required(),
   browser: Joi.string().required(),
-  environment: Joi.string().required(),
   os: Joi.string().required(),
   platform: Joi.string().required(),
 });
@@ -34,7 +31,6 @@ export class BrowserLink
 {
   public readonly accountId: string;
   public readonly browser: string;
-  public readonly environment: Environment;
   public readonly os: string;
   public readonly platform: string;
 
@@ -43,7 +39,6 @@ export class BrowserLink
 
     this.accountId = options.accountId;
     this.browser = options.browser;
-    this.environment = options.environment;
     this.os = options.os;
     this.platform = options.platform;
   }
@@ -62,7 +57,6 @@ export class BrowserLink
 
       accountId: this.accountId,
       browser: this.browser,
-      environment: this.environment,
       os: this.os,
       platform: this.platform,
     };

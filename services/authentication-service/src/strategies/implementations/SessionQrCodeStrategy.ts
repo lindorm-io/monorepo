@@ -49,7 +49,7 @@ export class SessionQrCodeStrategy implements StrategyHandler {
     const confirmLength = 16;
     const acknowledgeCode = randomString(confirmLength).toUpperCase();
 
-    strategySession.secret = await argon.encrypt(acknowledgeCode);
+    strategySession.secret = await argon.sign(acknowledgeCode);
 
     await strategySessionCache.update(strategySession);
 
@@ -100,7 +100,7 @@ export class SessionQrCodeStrategy implements StrategyHandler {
 
     const code = randomSecret(32);
 
-    strategySession.secret = await argon.encrypt(code);
+    strategySession.secret = await argon.sign(code);
     strategySession.identityId = identityId;
     strategySession.status = SessionStatus.ACKNOWLEDGED;
 

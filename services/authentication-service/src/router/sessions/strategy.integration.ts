@@ -100,7 +100,7 @@ describe("/sessions/strategy", () => {
     const strategySession = await TEST_STRATEGY_SESSION_CACHE.create(
       createTestStrategySession({
         authenticationSessionId: authenticationSession.id,
-        secret: await TEST_ARGON.encrypt("secret"),
+        secret: await TEST_ARGON.sign("secret"),
         strategy: AuthenticationStrategy.SESSION_QR_CODE,
       }),
     );

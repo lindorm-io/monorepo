@@ -36,7 +36,7 @@ export const getAuthenticationCodeController: ServerKoaController<RequestData> =
 
   const code = randomString(64);
 
-  authenticationSession.code = await argon.encrypt(code);
+  authenticationSession.code = await argon.sign(code);
   authenticationSession.status = SessionStatus.CODE;
 
   await authenticationSessionCache.update(authenticationSession);

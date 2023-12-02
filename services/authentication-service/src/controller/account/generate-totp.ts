@@ -1,9 +1,9 @@
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { TOTPHandler } from "../../class";
-import { configuration } from "../../server/configuration";
+import { TotpHandler } from "../../class";
 import { fetchAccountSalt } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 interface ResponseBody {
   uri: string;
@@ -24,7 +24,7 @@ export const generateTotpController: ServerKoaController = async (
   }
 
   const salt = await fetchAccountSalt(ctx, account);
-  const totpHandler = new TOTPHandler({
+  const totpHandler = new TotpHandler({
     aes: { secret: salt.aes },
     issuer: configuration.server.issuer,
   });

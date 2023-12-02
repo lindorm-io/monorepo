@@ -1,9 +1,9 @@
-import Joi from "joi";
+import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
-import { CryptoLayered } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
+import Joi from "joi";
 import { fetchAccountSalt } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   newPassword: string;
@@ -33,10 +33,10 @@ export const createPasswordController: ServerKoaController<RequestData> = async 
   const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
-  account.password = await crypto.encrypt(newPassword);
+  account.password = await crypto.sign(newPassword);
 
   await accountRepository.update(account);
 };

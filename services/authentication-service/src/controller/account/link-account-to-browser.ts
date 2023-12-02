@@ -27,14 +27,13 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
   const {
     data: { code, password },
     entity: { account },
-    metadata: { agent, client },
     mongo: { browserLinkRepository },
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
   if (!account.browserLinkCode) {
@@ -53,19 +52,18 @@ export const linkAccountToBrowserController: ServerKoaController<RequestData> = 
 
   await crypto.assert(password, account.password);
 
-  if (!agent.browser || !agent.os || !agent.platform) {
+  if (!ctx.userAgent.browser || !ctx.userAgent.os || !ctx.userAgent.platform) {
     throw new ServerError("Invalid agent", {
-      debug: { agent },
+      debug: { userAgent: ctx.userAgent },
     });
   }
 
   const browserLink = await browserLinkRepository.create(
     new BrowserLink({
       accountId: account.id,
-      browser: agent.browser,
-      environment: client.environment,
-      os: agent.os,
-      platform: agent.platform,
+      browser: ctx.userAgent.browser,
+      os: ctx.userAgent.os,
+      platform: ctx.userAgent.platform,
     }),
   );
 

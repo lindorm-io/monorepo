@@ -44,18 +44,13 @@ describe("linkAccountToBrowserController", () => {
           id: "ce43d777-8a56-4053-bc5b-8f1f5624b71c",
         }),
       },
-      metadata: {
-        agent: {
-          browser: "agent-browser",
-          os: "agent-os",
-          platform: "agent-platform",
-        },
-        client: {
-          environment: "client-environment",
-        },
-      },
       mongo: {
         browserLinkRepository: createMockMongoRepository(createTestBrowserLink),
+      },
+      userAgent: {
+        browser: "browser",
+        os: "os",
+        platform: "platform",
       },
       server: {
         environment: "development",

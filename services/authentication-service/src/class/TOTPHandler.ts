@@ -1,11 +1,10 @@
-import { CryptoAES, CryptoAESOptions } from "@lindorm-io/crypto";
-import { TOTPError } from "../error";
-import { authenticator } from "otplib";
-import { baseHash, baseParse } from "@lindorm-io/core";
+import { CryptoAes, CryptoAesOptions } from "@lindorm-io/crypto";
 import { randomUUID } from "crypto";
+import { authenticator } from "otplib";
+import { TotpError } from "../error";
 
 interface Options {
-  aes: CryptoAESOptions;
+  aes: CryptoAesOptions;
   issuer: string;
   numberOfBytes?: number;
 }
@@ -15,13 +14,13 @@ interface GenerateData {
   uri: string;
 }
 
-export class TOTPHandler {
-  private readonly crypto: CryptoAES;
+export class TotpHandler {
+  private readonly aes: CryptoAes;
   private readonly issuer: string;
   private readonly numberOfBytes: number;
 
   public constructor(options: Options) {
-    this.crypto = new CryptoAES(options.aes);
+    this.aes = new CryptoAes(options.aes);
     this.issuer = options.issuer;
     this.numberOfBytes = options.numberOfBytes || 32;
   }
@@ -30,24 +29,18 @@ export class TOTPHandler {
     const id = randomUUID();
     const secret = authenticator.generateSecret(this.numberOfBytes);
     const uri = authenticator.keyuri(id, this.issuer, secret);
-    const aes = this.crypto.encrypt(secret);
-    const signature = baseHash(aes);
+    const signature = this.aes.encrypt(secret);
 
     return { signature, uri };
   }
 
   public verify(input: string, signature: string): boolean {
-    const aes = baseParse(signature);
-    const secret = this.crypto.decrypt(aes);
-
+    const secret = this.aes.decrypt(signature);
     return authenticator.check(input, secret);
   }
 
   public assert(input: string, signature: string): void {
-    if (this.verify(input, signature)) {
-      return;
-    }
-
-    throw new TOTPError("Invalid OTP input");
+    if (this.verify(input, signature)) return;
+    throw new TotpError("Invalid TOTP input");
   }
 }

@@ -114,7 +114,7 @@ export class PasswordBrowserLinkStrategy implements StrategyHandler {
     const salt = await fetchAccountSalt(ctx, account);
     const crypto = new CryptoLayered({
       aes: { secret: salt.aes },
-      sha: { secret: salt.sha },
+      hmac: { secret: salt.hmac },
     });
 
     await crypto.assert(password, account.password);

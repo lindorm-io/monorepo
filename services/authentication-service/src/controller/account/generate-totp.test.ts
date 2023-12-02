@@ -1,10 +1,10 @@
-import { generateTotpController } from "./generate-totp";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
+import { generateTotpController } from "./generate-totp";
 
 jest.mock("../../class", () => ({
-  TOTPHandler: class TOTPHandler {
+  TotpHandler: class TotpHandler {
     generate() {
       return { signature: "signature", uri: "uri" };
     }

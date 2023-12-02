@@ -1,10 +1,10 @@
-import Joi from "joi";
-import { ControllerResponse } from "@lindorm-io/koa";
-import { ServerKoaController } from "../../types";
-import { TOTPHandler } from "../../class";
-import { configuration } from "../../server/configuration";
-import { fetchAccountSalt } from "../../handler";
 import { ServerError } from "@lindorm-io/errors";
+import { ControllerResponse } from "@lindorm-io/koa";
+import Joi from "joi";
+import { TotpHandler } from "../../class";
+import { fetchAccountSalt } from "../../handler";
+import { configuration } from "../../server/configuration";
+import { ServerKoaController } from "../../types";
 
 interface RequestData {
   totp: string;
@@ -26,7 +26,7 @@ export const deleteTotpController: ServerKoaController<RequestData> = async (
   } = ctx;
 
   const salt = await fetchAccountSalt(ctx, account);
-  const totpHandler = new TOTPHandler({
+  const totpHandler = new TotpHandler({
     aes: { secret: salt.aes },
     issuer: configuration.server.issuer,
   });

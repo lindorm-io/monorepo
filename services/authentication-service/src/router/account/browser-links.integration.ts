@@ -1,6 +1,7 @@
 import { Environment } from "@lindorm-io/common-enums";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { EntityNotFoundError } from "@lindorm-io/entity";
+import { randomBytes } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
 import request from "supertest";
@@ -19,12 +20,10 @@ jest.unmock("@lindorm-io/mongo");
 jest.unmock("@lindorm-io/redis");
 
 describe("/account/browser-link", () => {
-  const salt =
-    "84s8VNdOtIvwL6KvNd28YktehfPhwGy0xObf7c7yr6Vz3XwH3CA9aOi7rSYKhPICaTukA0qqSzVhm1WW1L48YvpYD9OLAaNFqSAy6VIdA3NF096aBoawvt2boQkHF5tC";
-
+  const secret = randomBytes(16).toString("hex");
   const crypto = new CryptoLayered({
-    aes: { secret: salt },
-    sha: { secret: salt },
+    aes: { secret },
+    hmac: { secret },
   });
 
   beforeAll(setupIntegration);
@@ -50,16 +49,16 @@ describe("/account/browser-link", () => {
     .times(999)
     .reply(200, {
       data: {
-        aes: salt,
-        sha: salt,
+        aes: secret,
+        hmac: secret,
       },
     });
 
   test("POST /", async () => {
     const account = await TEST_ACCOUNT_REPOSITORY.create(
       createTestAccount({
-        browserLinkCode: await crypto.encrypt("browser-link-code"),
-        password: await crypto.encrypt("password"),
+        browserLinkCode: await crypto.sign("browser-link-code"),
+        password: await crypto.sign("password"),
       }),
     );
 
@@ -91,8 +90,8 @@ describe("/account/browser-link", () => {
   test("GET /", async () => {
     const account = await TEST_ACCOUNT_REPOSITORY.create(
       createTestAccount({
-        browserLinkCode: await crypto.encrypt("browser-link-code"),
-        password: await crypto.encrypt("password"),
+        browserLinkCode: await crypto.sign("browser-link-code"),
+        password: await crypto.sign("password"),
       }),
     );
 
@@ -117,7 +116,6 @@ describe("/account/browser-link", () => {
           id: browserLink.id,
           browser: "browser",
           created: "2021-01-01T08:00:00.000Z",
-          environment: "test",
           os: "os",
           platform: "platform",
         },
@@ -128,8 +126,8 @@ describe("/account/browser-link", () => {
   test("DELETE /:id", async () => {
     const account = await TEST_ACCOUNT_REPOSITORY.create(
       createTestAccount({
-        browserLinkCode: await crypto.encrypt("browser-link-code"),
-        password: await crypto.encrypt("password"),
+        browserLinkCode: await crypto.sign("browser-link-code"),
+        password: await crypto.sign("password"),
       }),
     );
 

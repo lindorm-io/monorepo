@@ -295,7 +295,7 @@ describe("/sessions/authentication", () => {
 
     const authenticationSession = await TEST_AUTHENTICATION_SESSION_CACHE.create(
       createTestAuthenticationSession({
-        code: await argon.encrypt(code),
+        code: await argon.sign(code),
         codeChallenge,
         codeChallengeMethod,
         confirmedIdentifiers: ["test@email.com", "+46701234567"],

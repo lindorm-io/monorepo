@@ -1,10 +1,10 @@
-import { deleteTotpController } from "./delete-totp";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
 import { createTestAccount } from "../../fixtures/entity";
 import { fetchAccountSalt as _fetchAccountSalt } from "../../handler";
+import { deleteTotpController } from "./delete-totp";
 
 jest.mock("../../class", () => ({
-  TOTPHandler: class TOTPHandler {
+  TotpHandler: class TotpHandler {
     async assert() {}
   },
 }));

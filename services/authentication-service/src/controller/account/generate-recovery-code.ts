@@ -1,8 +1,8 @@
-import { ControllerResponse } from "@lindorm-io/koa";
 import { CryptoLayered } from "@lindorm-io/crypto";
-import { ServerKoaController } from "../../types";
-import { fetchAccountSalt } from "../../handler";
+import { ControllerResponse } from "@lindorm-io/koa";
 import { randomString } from "@lindorm-io/random";
+import { fetchAccountSalt } from "../../handler";
+import { ServerKoaController } from "../../types";
 
 interface ResponseBody {
   code: string;
@@ -19,7 +19,7 @@ export const generateRecoveryCodeController: ServerKoaController = async (
   const salt = await fetchAccountSalt(ctx, account);
   const crypto = new CryptoLayered({
     aes: { secret: salt.aes },
-    sha: { secret: salt.sha },
+    hmac: { secret: salt.hmac },
   });
 
   const code = [
@@ -29,7 +29,7 @@ export const generateRecoveryCodeController: ServerKoaController = async (
     randomString(6).toUpperCase(),
   ].join("-");
 
-  account.recoveryCode = await crypto.encrypt(code);
+  account.recoveryCode = await crypto.sign(code);
 
   await accountRepository.update(account);
 

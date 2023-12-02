@@ -1,1 +1,1 @@
-export * from "./TOTPError";
+export * from "./TotpError";
