@@ -1,3 +1,4 @@
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { baseParse } from "@lindorm-io/core";
 import {
   createTestKeyPairEC,
@@ -43,6 +44,7 @@ describe("JWT", () => {
       client: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
       code: "e69f2ca7ef134767827a13f5ae28d8bde69f2ca7ef134767827a13f5ae28d8bde69f2ca7ef134767827a13f5ae28d8bd",
       expiry: "10 seconds",
+      grantType: OpenIdGrantType.AUTHORIZATION_CODE,
       jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
@@ -124,7 +126,7 @@ describe("JWT", () => {
     });
   });
 
-  describe("RSA", () => {
+  describe("RS", () => {
     beforeEach(() => {
       jwt = createTestJwt(
         undefined,
@@ -188,6 +190,7 @@ describe("JWT", () => {
         cid: "88e3b5f5-5c49-45ef-a064-a2d39c11ee0c",
         claims_key: "claimValue",
         exp: 1609488010,
+        gty: "urn:ietf:params:oauth:grant-type:authorization-code",
         iat: 1609488000,
         iss: "https://test.lindorm.io",
         jti: id,
@@ -257,6 +260,7 @@ describe("JWT", () => {
         codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         expires: 1609488010,
         expiresIn: 10,
+        grantType: "urn:ietf:params:oauth:grant-type:authorization-code",
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
         levelOfAssurance: 4,
@@ -311,6 +315,16 @@ describe("JWT", () => {
     expect(
       jwt.verify(token, {
         issuer: "https://test.lindorm.io",
+      }),
+    ).toBeTruthy();
+  });
+
+  test("should verify grant type", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(
+      jwt.verify(token, {
+        grantType: OpenIdGrantType.AUTHORIZATION_CODE,
       }),
     ).toBeTruthy();
   });
@@ -432,6 +446,7 @@ describe("JWT", () => {
         codeHash: "pJchQ5z-z7G28gE4pwQ0diuLJjFbdDvaghE9bAnTMag",
         expires: 1609488010,
         expiresIn: 10,
+        grantType: "urn:ietf:params:oauth:grant-type:authorization-code",
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
         levelOfAssurance: 4,
@@ -475,6 +490,7 @@ describe("JWT", () => {
         codeHash: null,
         expires: 1609488010,
         expiresIn: 10,
+        grantType: null,
         issuedAt: 1609488000,
         issuer: "https://test.lindorm.io",
         levelOfAssurance: 0,

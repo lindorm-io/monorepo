@@ -13,6 +13,7 @@ export type LindormIntrospectResponseBody = OpenIdIntrospectResponseBody & {
   amr: Array<AuthenticationMethod>;
   authTime: number | null;
   azp: string | null;
+  gty: string | null;
   loa: LevelOfAssurance;
   sid: string | null;
   sih: string | null;

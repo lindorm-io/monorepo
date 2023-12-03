@@ -1,3 +1,4 @@
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { Algorithm } from "@lindorm-io/key-pair";
 
@@ -21,6 +22,7 @@ export type JwtDecodeMetadata = {
   codeHash: string | null;
   expires: number;
   expiresIn: number;
+  grantType: OpenIdGrantType | null;
   issuedAt: number;
   issuer: string;
   levelOfAssurance: LevelOfAssurance;

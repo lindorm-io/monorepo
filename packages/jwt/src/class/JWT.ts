@@ -1,4 +1,5 @@
 import { camelCase, snakeCase } from "@lindorm-io/case";
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import {
   AdjustedAccessLevel,
   LevelOfAssurance,
@@ -52,6 +53,7 @@ export class JWT {
       authTime,
       claims,
       client,
+      grantType,
       issuedAt,
       jwksUrl = this.jwksUrl,
       keyType,
@@ -110,6 +112,7 @@ export class JWT {
       // optional lindorm claims
       aal: adjustedAccessLevel,
       cid: client,
+      gty: grantType,
       loa: levelOfAssurance,
       scope: scopes?.join(" "),
       sih: sessionHint,
@@ -153,6 +156,7 @@ export class JWT {
       client,
       clockTolerance,
       codeHash,
+      grantType,
       issuer = this.issuer,
       levelOfAssurance,
       maxAge,
@@ -223,6 +227,10 @@ export class JWT {
         assertClaimEquals(codeHash, payload.metadata.codeHash, "c_hash");
       }
 
+      if (grantType) {
+        assertClaimEquals(grantType, payload.metadata.grantType, "gty");
+      }
+
       if (levelOfAssurance) {
         assertGreaterOrEqual(levelOfAssurance, payload.metadata.levelOfAssurance, "loa");
       }
@@ -284,6 +292,7 @@ export class JWT {
       c_hash,
       cid,
       exp,
+      gty,
       iat,
       iss,
       jti,
@@ -324,6 +333,7 @@ export class JWT {
         codeHash: c_hash || null,
         expires: exp,
         expiresIn: exp - now,
+        grantType: (gty as OpenIdGrantType) || null,
         issuedAt: iat,
         issuer: iss,
         levelOfAssurance: (loa as LevelOfAssurance) || 0,

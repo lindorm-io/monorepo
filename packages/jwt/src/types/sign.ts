@@ -1,3 +1,4 @@
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { Expiry } from "@lindorm-io/expiry";
 import { KeyType } from "@lindorm-io/key-pair";
@@ -18,6 +19,7 @@ export type JwtSignOptions<Claims = Record<string, never>> = {
   code?: string;
   codeHash?: string;
   expiry: Expiry;
+  grantType?: OpenIdGrantType;
   issuedAt?: Date;
   jwksUrl?: string;
   keyType?: KeyType;

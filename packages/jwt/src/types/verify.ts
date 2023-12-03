@@ -1,3 +1,4 @@
+import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
 import { Algorithm } from "jsonwebtoken";
 import { JwtDecode } from "./decode";
@@ -11,6 +12,7 @@ export type JwtVerifyOptions = {
   client?: string;
   clockTolerance?: number;
   codeHash?: string;
+  grantType?: OpenIdGrantType;
   issuer?: string;
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string | number;
