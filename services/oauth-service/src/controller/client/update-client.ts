@@ -1,4 +1,9 @@
-import { OpenIdClientProfile, OpenIdClientType, Scope } from "@lindorm-io/common-enums";
+import {
+  OpenIdBackChannelAuthMode,
+  OpenIdClientProfile,
+  OpenIdClientType,
+  Scope,
+} from "@lindorm-io/common-enums";
 import { ScopeDescription } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -21,26 +26,28 @@ import { ServerKoaController } from "../../types";
 
 type RequestData = {
   id: string;
-  active: boolean;
-  allowed: ClientAllowed;
-  audiences: ClientAudiences;
-  backChannelLogoutUri: string | null;
-  customClaims: ClientCustomClaims;
-  defaults: ClientDefaults;
-  description: string | null;
-  expiry: ClientExpiry;
-  frontChannelLogoutUri: string | null;
-  domain: string;
-  logoUri: string | null;
-  name: string;
-  postLogoutUris: Array<string>;
-  profile: OpenIdClientProfile;
-  redirectUris: Array<string>;
-  requiredScopes: Array<Scope | string>;
-  rtbfUri: string | null;
-  scopeDescriptions: Array<ScopeDescription>;
-  trusted: boolean;
-  type: OpenIdClientType;
+  active?: boolean;
+  allowed?: ClientAllowed;
+  audiences?: ClientAudiences;
+  backChannelAuthCallbackUri?: string;
+  backChannelAuthMode?: OpenIdBackChannelAuthMode;
+  backChannelLogoutUri?: string;
+  customClaims?: ClientCustomClaims;
+  defaults?: ClientDefaults;
+  description?: string;
+  domain?: string;
+  expiry?: ClientExpiry;
+  frontChannelLogoutUri?: string;
+  logoUri?: string;
+  name?: string;
+  postLogoutUris?: Array<string>;
+  profile?: OpenIdClientProfile;
+  redirectUris?: Array<string>;
+  requiredScopes?: Array<Scope | string>;
+  rtbfUri?: string;
+  scopeDescriptions?: Array<ScopeDescription>;
+  trusted?: boolean;
+  type?: OpenIdClientType;
 };
 
 export const updateClientSchema = Joi.object<RequestData>()
@@ -73,6 +80,8 @@ export const updateClientSchema = Joi.object<RequestData>()
     }),
 
     active: Joi.boolean(),
+    backChannelAuthCallbackUri: Joi.string().uri(),
+    backChannelAuthMode: Joi.string().valid(...Object.values(OpenIdBackChannelAuthMode)),
     backChannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
@@ -98,13 +107,15 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       active,
       allowed,
       audiences,
+      backChannelAuthCallbackUri,
+      backChannelAuthMode,
       backChannelLogoutUri,
       customClaims,
       defaults,
       description,
+      domain,
       expiry,
       frontChannelLogoutUri,
-      domain,
       logoUri,
       name,
       postLogoutUris,
@@ -120,44 +131,113 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     mongo: { clientRepository },
   } = ctx;
 
-  if (allowed?.codeChallengeMethods !== undefined)
+  if (allowed?.codeChallengeMethods !== undefined) {
     client.allowed.codeChallengeMethods = allowed.codeChallengeMethods;
-  if (allowed?.grantTypes !== undefined) client.allowed.grantTypes = allowed.grantTypes;
-  if (allowed?.methods !== undefined) client.allowed.methods = allowed.methods;
-  if (allowed?.responseTypes !== undefined) client.allowed.responseTypes = allowed.responseTypes;
-  if (allowed?.scopes !== undefined) client.allowed.scopes = allowed.scopes;
-  if (allowed?.strategies !== undefined) client.allowed.strategies = allowed.strategies;
+  }
+  if (allowed?.grantTypes !== undefined) {
+    client.allowed.grantTypes = allowed.grantTypes;
+  }
+  if (allowed?.methods !== undefined) {
+    client.allowed.methods = allowed.methods;
+  }
+  if (allowed?.responseTypes !== undefined) {
+    client.allowed.responseTypes = allowed.responseTypes;
+  }
+  if (allowed?.scopes !== undefined) {
+    client.allowed.scopes = allowed.scopes;
+  }
+  if (allowed?.strategies !== undefined) {
+    client.allowed.strategies = allowed.strategies;
+  }
 
-  if (audiences?.credentials !== undefined) client.audiences.credentials = audiences.credentials;
-  if (audiences?.identity !== undefined) client.audiences.identity = audiences.identity;
+  if (audiences?.credentials !== undefined) {
+    client.audiences.credentials = audiences.credentials;
+  }
+  if (audiences?.identity !== undefined) {
+    client.audiences.identity = audiences.identity;
+  }
 
-  if (customClaims?.uri !== undefined) client.customClaims.uri = customClaims.uri;
-  if (customClaims?.username !== undefined) client.customClaims.username = customClaims.username;
-  if (customClaims?.password !== undefined) client.customClaims.password = customClaims.password;
+  if (customClaims?.uri !== undefined) {
+    client.customClaims.uri = customClaims.uri;
+  }
+  if (customClaims?.username !== undefined) {
+    client.customClaims.username = customClaims.username;
+  }
+  if (customClaims?.password !== undefined) {
+    client.customClaims.password = customClaims.password;
+  }
 
-  if (defaults?.displayMode !== undefined) client.defaults.displayMode = defaults.displayMode;
-  if (defaults?.levelOfAssurance) client.defaults.levelOfAssurance = defaults.levelOfAssurance;
-  if (defaults?.responseMode !== undefined) client.defaults.responseMode = defaults.responseMode;
+  if (defaults?.displayMode !== undefined) {
+    client.defaults.displayMode = defaults.displayMode;
+  }
+  if (defaults?.levelOfAssurance !== undefined) {
+    client.defaults.levelOfAssurance = defaults.levelOfAssurance;
+  }
+  if (defaults?.responseMode !== undefined) {
+    client.defaults.responseMode = defaults.responseMode;
+  }
 
-  if (expiry?.accessToken !== undefined) client.expiry.accessToken = expiry.accessToken;
-  if (expiry?.idToken !== undefined) client.expiry.idToken = expiry.idToken;
-  if (expiry?.refreshToken !== undefined) client.expiry.refreshToken = expiry.refreshToken;
+  if (expiry?.accessToken !== undefined) {
+    client.expiry.accessToken = expiry.accessToken;
+  }
+  if (expiry?.idToken !== undefined) {
+    client.expiry.idToken = expiry.idToken;
+  }
+  if (expiry?.refreshToken !== undefined) {
+    client.expiry.refreshToken = expiry.refreshToken;
+  }
 
-  if (active !== undefined) client.active = active;
-  if (backChannelLogoutUri !== undefined) client.backChannelLogoutUri = backChannelLogoutUri;
-  if (description !== undefined) client.description = description;
-  if (frontChannelLogoutUri !== undefined) client.frontChannelLogoutUri = frontChannelLogoutUri;
-  if (domain !== undefined) client.domain = domain;
-  if (logoUri !== undefined) client.logoUri = logoUri;
-  if (name !== undefined) client.name = name;
-  if (postLogoutUris !== undefined) client.postLogoutUris = postLogoutUris;
-  if (profile !== undefined) client.profile = profile;
-  if (redirectUris !== undefined) client.redirectUris = redirectUris;
-  if (requiredScopes !== undefined) client.requiredScopes = requiredScopes;
-  if (rtbfUri !== undefined) client.rtbfUri = rtbfUri;
-  if (scopeDescriptions !== undefined) client.scopeDescriptions = scopeDescriptions;
-  if (trusted !== undefined) client.trusted = trusted;
-  if (type !== undefined) client.type = type;
+  if (active !== undefined) {
+    client.active = active;
+  }
+  if (backChannelAuthCallbackUri !== undefined) {
+    client.backChannelAuthCallbackUri = backChannelAuthCallbackUri;
+  }
+  if (backChannelAuthMode !== undefined) {
+    client.backChannelAuthMode = backChannelAuthMode;
+  }
+  if (backChannelLogoutUri !== undefined) {
+    client.backChannelLogoutUri = backChannelLogoutUri;
+  }
+  if (description !== undefined) {
+    client.description = description;
+  }
+  if (frontChannelLogoutUri !== undefined) {
+    client.frontChannelLogoutUri = frontChannelLogoutUri;
+  }
+  if (domain !== undefined) {
+    client.domain = domain;
+  }
+  if (logoUri !== undefined) {
+    client.logoUri = logoUri;
+  }
+  if (name !== undefined) {
+    client.name = name;
+  }
+  if (postLogoutUris !== undefined) {
+    client.postLogoutUris = postLogoutUris;
+  }
+  if (profile !== undefined) {
+    client.profile = profile;
+  }
+  if (redirectUris !== undefined) {
+    client.redirectUris = redirectUris;
+  }
+  if (requiredScopes !== undefined) {
+    client.requiredScopes = requiredScopes;
+  }
+  if (rtbfUri !== undefined) {
+    client.rtbfUri = rtbfUri;
+  }
+  if (scopeDescriptions !== undefined) {
+    client.scopeDescriptions = scopeDescriptions;
+  }
+  if (trusted !== undefined) {
+    client.trusted = trusted;
+  }
+  if (type !== undefined) {
+    client.type = type;
+  }
 
   await clientRepository.update(client);
 };

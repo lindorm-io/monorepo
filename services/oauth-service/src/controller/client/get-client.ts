@@ -27,6 +27,8 @@ export const getClientController: ServerKoaController<RequestData> = async (
       active: client.active,
       allowed: client.allowed,
       audiences: client.audiences,
+      backChannelAuthCallbackUri: client.backChannelAuthCallbackUri,
+      backChannelAuthMode: client.backChannelAuthMode,
       backChannelLogoutUri: client.backChannelLogoutUri,
       customClaims: client.customClaims,
       defaults: client.defaults,

@@ -85,6 +85,8 @@ describe("getClientInfoController", () => {
           credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
           identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
         },
+        backChannelAuthCallbackUri: "https://test.client.lindorm.io/back-channel-auth-callback",
+        backChannelAuthMode: "poll",
         backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
         customClaims: {
           uri: "https://test.client.lindorm.io/claims",

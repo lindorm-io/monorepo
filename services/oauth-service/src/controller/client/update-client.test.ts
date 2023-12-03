@@ -42,6 +42,8 @@ describe("updateClientController", () => {
         },
 
         active: false,
+        backChannelAuthCallbackUri: "https://backChannelAuthCallbackUri",
+        backChannelAuthMode: "ping",
         backChannelLogoutUri: "https://backChannelLogoutUri",
         description: "updated description",
         domain: "https://domain",
