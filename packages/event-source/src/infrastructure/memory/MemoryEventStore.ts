@@ -1,12 +1,15 @@
-import { IN_MEMORY_EVENT_STORE } from "./in-memory";
-import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
-import { filter, orderBy } from "lodash";
 import { isAfter } from "date-fns";
+import { filter, orderBy } from "lodash";
+import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
+import { assertChecksum } from "../../util";
+import { IN_MEMORY_EVENT_STORE } from "./in-memory";
 
 export class MemoryEventStore implements IEventStore {
   public async find(findFilter: EventStoreFindFilter): Promise<Array<EventData>> {
     const filtered = filter<EventStoreAttributes>(IN_MEMORY_EVENT_STORE, findFilter);
     const ordered = orderBy<EventStoreAttributes>(filtered, ["expected_events"], ["asc"]);
+
+    this.warnIfChecksumMismatch(ordered);
 
     return MemoryEventStore.toEventData(ordered);
   }
@@ -30,6 +33,18 @@ export class MemoryEventStore implements IEventStore {
   }
 
   // private
+
+  private async warnIfChecksumMismatch(entities: Array<EventStoreAttributes>): Promise<void> {
+    for (const entity of entities) {
+      try {
+        assertChecksum(entity);
+      } catch (err: any) {
+        console.warn("Checksum mismatch", { entity });
+      }
+    }
+  }
+
+  // private static
 
   private static toEventData(documents: Array<EventStoreAttributes>): Array<EventData> {
     const result: Array<EventData> = [];

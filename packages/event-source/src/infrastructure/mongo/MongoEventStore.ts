@@ -1,10 +1,11 @@
-import { Collection } from "mongodb";
-import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
-import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
 import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
-import { MongoBase } from "./MongoBase";
+import { Collection, WithId } from "mongodb";
+import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
 import { MongoDuplicateKeyError } from "../../error";
+import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
+import { assertChecksum } from "../../util";
+import { MongoBase } from "./MongoBase";
 
 export class MongoEventStore extends MongoBase implements IEventStore {
   private promise: () => Promise<void>;
@@ -35,6 +36,8 @@ export class MongoEventStore extends MongoBase implements IEventStore {
 
       if (!documents.length) return [];
 
+      this.warnIfChecksumMismatch(documents);
+
       return MongoEventStore.toEventData(documents);
     } catch (err: any) {
       this.logger.error("Failed to find event documents", err);
@@ -43,8 +46,8 @@ export class MongoEventStore extends MongoBase implements IEventStore {
     }
   }
 
-  public async insert(data: EventStoreAttributes): Promise<void> {
-    this.logger.debug("Inserting event document", { data });
+  public async insert(attributes: EventStoreAttributes): Promise<void> {
+    this.logger.debug("Inserting event document", { attributes });
 
     await this.promise();
 
@@ -52,15 +55,16 @@ export class MongoEventStore extends MongoBase implements IEventStore {
       const collection = await this.eventCollection();
 
       const result = await collection.insertOne({
-        id: data.id,
-        name: data.name,
-        context: data.context,
-        causation_id: data.causation_id,
-        correlation_id: data.correlation_id,
-        events: data.events,
-        expected_events: data.expected_events,
-        previous_event_id: data.previous_event_id,
-        timestamp: data.timestamp,
+        id: attributes.id,
+        name: attributes.name,
+        context: attributes.context,
+        causation_id: attributes.causation_id,
+        checksum: attributes.checksum,
+        correlation_id: attributes.correlation_id,
+        events: attributes.events,
+        expected_events: attributes.expected_events,
+        previous_event_id: attributes.previous_event_id,
+        timestamp: attributes.timestamp,
       });
 
       this.logger.verbose("Inserted event document", { result });
@@ -114,6 +118,21 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   private async eventCollection(): Promise<Collection<EventStoreAttributes>> {
     return this.connection.database.collection<EventStoreAttributes>(EVENT_STORE);
   }
+
+  private async warnIfChecksumMismatch(
+    documents: Array<WithId<EventStoreAttributes>>,
+  ): Promise<void> {
+    for (const document of documents) {
+      const { _id, ...doc } = document;
+      try {
+        assertChecksum(doc);
+      } catch (err: any) {
+        this.logger.warn("Checksum mismatch", { document });
+      }
+    }
+  }
+
+  // private static
 
   private static toEventData(documents: Array<EventStoreAttributes>): Array<EventData> {
     const result: Array<EventData> = [];

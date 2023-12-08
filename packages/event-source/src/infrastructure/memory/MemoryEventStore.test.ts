@@ -1,10 +1,11 @@
-import { AggregateIdentifier } from "../../types";
-import { IN_MEMORY_EVENT_STORE } from "./in-memory";
-import { MemoryEventStore } from "./MemoryEventStore";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
-import { find } from "lodash";
 import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
+import { find } from "lodash";
+import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { AggregateIdentifier } from "../../types";
+import { createChecksum } from "../../util";
+import { MemoryEventStore } from "./MemoryEventStore";
+import { IN_MEMORY_EVENT_STORE } from "./in-memory";
 
 describe("MemoryEventStore", () => {
   let identifier: AggregateIdentifier;
@@ -21,7 +22,7 @@ describe("MemoryEventStore", () => {
   test("should find events", async () => {
     const causationId = randomUUID();
 
-    IN_MEMORY_EVENT_STORE.push({
+    const attributes = {
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -38,7 +39,11 @@ describe("MemoryEventStore", () => {
       expected_events: 3,
       previous_event_id: randomUUID(),
       timestamp: new Date(),
-    });
+    };
+
+    const checksum = createChecksum(attributes);
+
+    IN_MEMORY_EVENT_STORE.push({ ...attributes, checksum });
 
     await expect(
       store.find({
@@ -71,6 +76,7 @@ describe("MemoryEventStore", () => {
       store.insert({
         ...identifier,
         causation_id: causationId,
+        checksum: "checksum",
         correlation_id: randomUUID(),
         events: [
           {
@@ -89,7 +95,7 @@ describe("MemoryEventStore", () => {
     ).resolves.toBeUndefined();
 
     expect(find(IN_MEMORY_EVENT_STORE, { ...identifier })).toStrictEqual(
-      expect.objectContaining({ causation_id: causationId }),
+      expect.objectContaining({ causation_id: causationId, checksum: "checksum" }),
     );
   });
 
@@ -99,6 +105,7 @@ describe("MemoryEventStore", () => {
     IN_MEMORY_EVENT_STORE.push({
       ...identifier,
       causation_id: causationId,
+      checksum: "checksum",
       correlation_id: randomUUID(),
       events: [
         {

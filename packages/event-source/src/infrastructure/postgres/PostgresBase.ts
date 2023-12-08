@@ -1,6 +1,6 @@
-import { Attributes, StoreIndexes } from "../../types";
 import { Logger } from "@lindorm-io/core-logger";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { Attributes, StoreIndexes } from "../../types";
 
 export abstract class PostgresBase {
   protected readonly connection: IPostgresConnection;

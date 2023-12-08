@@ -3,6 +3,7 @@ export * from "./AggregateDestroyedError";
 export * from "./AggregateNotCreatedError";
 export * from "./AggregateNotDestroyedError";
 export * from "./CausationMissingEventsError";
+export * from "./ChecksumError";
 export * from "./CommandSchemaValidationError";
 export * from "./ConcurrencyError";
 export * from "./DomainError";

@@ -12,6 +12,7 @@ export interface EventStoreAttributes {
   name: string;
   context: string;
   causation_id: string;
+  checksum: string;
   correlation_id: string;
   events: Array<EventAttributes>;
   expected_events: number;

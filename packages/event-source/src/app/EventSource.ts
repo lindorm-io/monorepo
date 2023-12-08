@@ -15,8 +15,10 @@ import {
   SagaDomain,
   ViewDomain,
 } from "../domain";
+import { ChecksumDomain } from "../domain/ChecksumDomain";
 import { ReplayEventName } from "../enum";
 import { EventStore, MessageBus, SagaStore, ViewStore } from "../infrastructure";
+import { ChecksumStore } from "../infrastructure/ChecksumStore";
 import { Command } from "../message";
 import { Aggregate, Saga, View } from "../model";
 import { JOI_MESSAGE } from "../schema";
@@ -33,6 +35,8 @@ import {
   EventSourceSetup,
   HandlerIdentifier,
   IAggregateDomain,
+  IChecksumDomain,
+  IDomainChecksumStore,
   IDomainEventStore,
   IDomainSagaStore,
   IDomainViewStore,
@@ -62,6 +66,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
   // domains
   private readonly aggregateDomain: IAggregateDomain;
+  private readonly checksumDomain: IChecksumDomain;
   private readonly errorDomain: IErrorDomain;
   private readonly queryDomain: IQueryDomain;
   private readonly replayDomain: IReplayDomain;
@@ -69,6 +74,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   private readonly viewDomain: IViewDomain;
 
   // stores
+  private readonly checksumStore: IDomainChecksumStore;
   private readonly eventStore: IDomainEventStore;
   private readonly sagaStore: IDomainSagaStore;
   private readonly viewStore: IDomainViewStore;
@@ -89,6 +95,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     // defaults
     const defaultOptions: EventSourcePrivateOptions = {
       adapters: {
+        checksumStore: "memory",
         eventStore: "memory",
         sagaStore: "memory",
         messageBus: "memory",
@@ -119,11 +126,13 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     this.status = "created";
 
     // connections
+
     this.amqp = connections.amqp;
     this.mongo = connections.mongo;
     this.postgres = connections.postgres;
 
     // bus
+
     this.messageBus = new MessageBus(
       {
         amqp: this.amqp,
@@ -134,6 +143,17 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     );
 
     // stores
+
+    this.checksumStore = new ChecksumStore(
+      {
+        custom: custom.checksumStore,
+        mongo: this.mongo,
+        postgres: this.postgres,
+        type: this.options.adapters.checksumStore,
+      },
+      this.logger,
+    );
+
     this.eventStore = new EventStore(
       {
         custom: custom.eventStore,
@@ -163,10 +183,19 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
     );
 
     // domains
+
     this.aggregateDomain = new AggregateDomain(
       {
         messageBus: this.messageBus,
         store: this.eventStore,
+      },
+      this.logger,
+    );
+
+    this.checksumDomain = new ChecksumDomain(
+      {
+        messageBus: this.messageBus,
+        store: this.checksumStore,
       },
       this.logger,
     );
@@ -253,6 +282,9 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
       ),
       registerAggregateEventHandler: this.aggregateDomain.registerEventHandler.bind(
         this.aggregateDomain,
+      ),
+      registerChecksumEventHandler: this.checksumDomain.registerEventHandler.bind(
+        this.checksumDomain,
       ),
       registerErrorHandler: this.errorDomain.registerErrorHandler.bind(this.errorDomain),
       registerQueryHandler: this.queryDomain.registerQueryHandler.bind(this.queryDomain),
@@ -418,12 +450,16 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
         await this.aggregateDomain.registerEventHandler(handler);
       }
 
+      for (const handler of this.scanner.checksumEventHandlers) {
+        await this.checksumDomain.registerEventHandler(handler);
+      }
+
       for (const handler of this.scanner.errorHandlers) {
         await this.errorDomain.registerErrorHandler(handler);
       }
 
       for (const handler of this.scanner.queryHandlers) {
-        await this.queryDomain.registerQueryHandler(handler);
+        this.queryDomain.registerQueryHandler(handler);
       }
 
       for (const handler of this.scanner.sagaEventHandlers) {

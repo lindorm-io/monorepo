@@ -1,5 +1,6 @@
 export * from "./aggregate-command-handler";
 export * from "./aggregate-event-handler";
+export * from "./checksum-event-handler";
 export * from "./error-handler";
 export * from "./handler";
 export * from "./query-handler";

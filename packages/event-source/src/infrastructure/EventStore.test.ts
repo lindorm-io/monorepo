@@ -1,19 +1,7 @@
-import { Aggregate } from "../model";
-import { AggregateIdentifier } from "../types";
-import { CausationMissingEventsError } from "../error";
-import { Command, DomainEvent } from "../message";
-import { EventStore } from "./EventStore";
-import { EventStoreType } from "../enum";
-import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
-import { TEST_DOMAIN_EVENT_CREATE } from "../fixtures/domain-event.fixture";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { createMockMongoConnection } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
-import {
-  TEST_COMMAND,
-  TEST_COMMAND_CREATE,
-  TEST_COMMAND_MERGE_STATE,
-} from "../fixtures/command.fixture";
+import { EventStoreType } from "../enum";
+import { CausationMissingEventsError } from "../error";
 import {
   TEST_AGGREGATE_EVENT_HANDLER,
   TEST_AGGREGATE_EVENT_HANDLER_CREATE,
@@ -23,8 +11,19 @@ import {
   TEST_AGGREGATE_EVENT_HANDLER_SET_STATE,
   TEST_AGGREGATE_EVENT_HANDLER_THROWS,
 } from "../fixtures/aggregate-event-handler.fixture";
+import { TEST_AGGREGATE_IDENTIFIER } from "../fixtures/aggregate.fixture";
+import {
+  TEST_COMMAND,
+  TEST_COMMAND_CREATE,
+  TEST_COMMAND_MERGE_STATE,
+} from "../fixtures/command.fixture";
+import { TEST_DOMAIN_EVENT_CREATE } from "../fixtures/domain-event.fixture";
+import { Command, DomainEvent } from "../message";
+import { Aggregate } from "../model";
+import { AggregateIdentifier } from "../types";
+import { EventStore } from "./EventStore";
 
-describe("EventStore (MongoConnection)", () => {
+describe("EventStore", () => {
   const logger = createMockLogger();
   const eventHandlers = [
     TEST_AGGREGATE_EVENT_HANDLER,
@@ -49,7 +48,6 @@ describe("EventStore (MongoConnection)", () => {
 
     store = new EventStore(
       {
-        mongo: createMockMongoConnection(),
         type: EventStoreType.CUSTOM,
         custom: mock,
       },
@@ -92,6 +90,7 @@ describe("EventStore (MongoConnection)", () => {
       name: "aggregate_name",
       context: "default",
       causation_id: command.id,
+      checksum: expect.any(String),
       correlation_id: command.correlationId,
       events: [
         {
@@ -142,6 +141,7 @@ describe("EventStore (MongoConnection)", () => {
       name: "aggregate_name",
       context: "default",
       causation_id: command.id,
+      checksum: expect.any(String),
       correlation_id: command.correlationId,
       events: [
         {

@@ -5,6 +5,7 @@ import { ScanData, StructureScanner } from "@lindorm-io/structure-scanner";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
+  ChecksumEventHandlerImplementation,
   ErrorHandlerImplementation,
   QueryHandlerImplementation,
   SagaEventHandlerImplementation,
@@ -24,8 +25,10 @@ import {
   ErrorHandler,
   EventSourceCustomOptions,
   EventSourcePrivateOptions,
+  HandlerIdentifier,
   IAggregateCommandHandler,
   IAggregateEventHandler,
+  IChecksumEventHandler,
   IErrorHandler,
   IQueryHandler,
   ISagaEventHandler,
@@ -36,6 +39,11 @@ import {
 } from "../types";
 import { assertSchema, defaultAggregateCommandHandlerSchema, extractNameData } from "../util";
 
+type GetAggregateEventData = {
+  eventName: string;
+  aggregate: HandlerIdentifier;
+};
+
 export class EventSourceScanner {
   private readonly logger: Logger;
   private readonly options: EventSourcePrivateOptions;
@@ -44,6 +52,7 @@ export class EventSourceScanner {
 
   public readonly aggregateCommandHandlers: Array<IAggregateCommandHandler>;
   public readonly aggregateEventHandlers: Array<IAggregateEventHandler>;
+  public readonly checksumEventHandlers: Array<IChecksumEventHandler>;
   public readonly errorHandlers: Array<IErrorHandler>;
   public readonly queryHandlers: Array<IQueryHandler>;
   public readonly sagaEventHandlers: Array<ISagaEventHandler>;
@@ -64,6 +73,7 @@ export class EventSourceScanner {
 
     this.aggregateCommandHandlers = [];
     this.aggregateEventHandlers = [];
+    this.checksumEventHandlers = [];
     this.errorHandlers = [];
     this.queryHandlers = [];
     this.sagaEventHandlers = [];
@@ -259,10 +269,12 @@ export class EventSourceScanner {
   private switchEvents(file: ScanData): void {
     switch (file.type) {
       case "event":
-        return this.loadAggregateEvent(file);
+        this.loadAggregateEvent(file);
+        this.loadChecksumEventHandler(file);
+        return;
 
       case "handler":
-        return this.loadEventHandlers(file);
+        return this.loadAggregateEventHandlers(file);
 
       default:
         return;
@@ -307,7 +319,7 @@ export class EventSourceScanner {
     );
   }
 
-  private loadEventHandlers(file: ScanData): void {
+  private loadAggregateEventHandlers(file: ScanData): void {
     const [directory, aggregate] = file.parents;
 
     if (directory !== "events") {
@@ -338,6 +350,14 @@ export class EventSourceScanner {
         version,
         handler: handler.handler,
       }),
+    );
+  }
+
+  private loadChecksumEventHandler(file: ScanData): void {
+    const { eventName, aggregate } = this.getAggregateEventData(file);
+
+    this.checksumEventHandlers.push(
+      new ChecksumEventHandlerImplementation({ eventName, aggregate }),
     );
   }
 
@@ -494,6 +514,16 @@ export class EventSourceScanner {
   }
 
   private loadAggregateEvent(file: ScanData): void {
+    const { eventName, aggregate } = this.getAggregateEventData(file);
+
+    this.registerAggregateEvent(eventName, aggregate.name);
+
+    this.logger.debug("Found aggregate event", { name });
+  }
+
+  // private helpers
+
+  private getAggregateEventData(file: ScanData): GetAggregateEventData {
     const content = this.require(file.fullPath);
     const events = Object.keys(content);
 
@@ -502,19 +532,21 @@ export class EventSourceScanner {
     }
 
     const [event] = events;
-    const { name } = extractNameData(event);
-    const [directory, aggregate] = file.parents;
+    const { name: eventName } = extractNameData(event);
+    const [directory, aggregateName] = file.parents;
 
     if (directory !== "events") {
       throw new Error("Invalid event location");
     }
 
-    this.registerAggregateEvent(name, aggregate);
-
-    this.logger.debug("Found aggregate event", { name });
+    return {
+      eventName,
+      aggregate: {
+        name: snakeCase(aggregateName),
+        context: snakeCase(this.options.context),
+      },
+    };
   }
-
-  // private helpers
 
   private getFileHandlers<THandler>(path: string): Array<THandler> {
     const required = this.require(path);

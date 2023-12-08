@@ -1,9 +1,9 @@
-import { AmqpMessageBus } from "./amqp";
+import { IMessage, IMessageBus, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
 import { Logger } from "@lindorm-io/core-logger";
-import { IMessageBus, IMessage, ISubscription, UnsubscribeOptions } from "@lindorm-io/amqp";
-import { MemoryMessageBus } from "./memory";
-import { MessageBusOptions } from "../types/message-bus";
 import { MessageBusType } from "../enum";
+import { MessageBusOptions } from "../types/message-bus";
+import { AmqpMessageBus } from "./amqp";
+import { MemoryMessageBus } from "./memory";
 
 export class MessageBus implements IMessageBus {
   private readonly bus: IMessageBus;
@@ -11,12 +11,12 @@ export class MessageBus implements IMessageBus {
   public constructor(options: MessageBusOptions, logger: Logger) {
     switch (options.type) {
       case MessageBusType.AMQP:
-        if (!options.amqp) throw new Error("Connection not provided");
+        if (!options.amqp) throw new Error("AMQP connection not provided");
         this.bus = new AmqpMessageBus(options.amqp, logger);
         break;
 
       case MessageBusType.CUSTOM:
-        if (!options.custom) throw new Error("IMessageBus not provided");
+        if (!options.custom) throw new Error("Custom MessageBus not provided");
         this.bus = options.custom;
         break;
 

@@ -1,11 +1,13 @@
-import { AggregateIdentifier, EventStoreAttributes } from "../../types";
-import { Collection } from "mongodb";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { MongoEventStore } from "./MongoEventStore";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import { MongoConnection } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
+import { Collection } from "mongodb";
+import { EVENT_STORE } from "../../constant";
+import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { AggregateIdentifier, EventStoreAttributes } from "../../types";
+import { createChecksum } from "../../util";
+import { MongoEventStore } from "./MongoEventStore";
 
 describe("MongoEventStore", () => {
   const logger = createMockLogger();
@@ -28,7 +30,7 @@ describe("MongoEventStore", () => {
     );
     await connection.connect();
 
-    collection = connection.database.collection("event_store");
+    collection = connection.database.collection(EVENT_STORE);
 
     store = new MongoEventStore(connection, logger);
   }, 10000);
@@ -44,7 +46,7 @@ describe("MongoEventStore", () => {
   test("should find events", async () => {
     const causationId = randomUUID();
 
-    await collection.insertOne({
+    const attributes = {
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -61,7 +63,11 @@ describe("MongoEventStore", () => {
       expected_events: 3,
       previous_event_id: randomUUID(),
       timestamp: new Date(),
-    });
+    };
+
+    const checksum = createChecksum(attributes);
+
+    await collection.insertOne({ ...attributes, checksum });
 
     await expect(
       store.find({
@@ -90,26 +96,28 @@ describe("MongoEventStore", () => {
   test("should insert events", async () => {
     const causationId = randomUUID();
 
-    await expect(
-      store.insert({
-        ...identifier,
-        causation_id: causationId,
-        correlation_id: randomUUID(),
-        events: [
-          {
-            id: randomUUID(),
-            name: "event_name",
-            data: { stuff: "string" },
-            meta: { meta: true },
-            version: 3,
-            timestamp: new Date(),
-          },
-        ],
-        expected_events: 3,
-        previous_event_id: randomUUID(),
-        timestamp: new Date(),
-      }),
-    ).resolves.toBeUndefined();
+    const attributes = {
+      ...identifier,
+      causation_id: causationId,
+      correlation_id: randomUUID(),
+      events: [
+        {
+          id: randomUUID(),
+          name: "event_name",
+          data: { stuff: "string" },
+          meta: { meta: true },
+          version: 3,
+          timestamp: new Date(),
+        },
+      ],
+      expected_events: 3,
+      previous_event_id: randomUUID(),
+      timestamp: new Date(),
+    };
+
+    const checksum = createChecksum(attributes);
+
+    await expect(store.insert({ ...attributes, checksum })).resolves.toBeUndefined();
 
     await expect(collection.findOne({ ...identifier })).resolves.toStrictEqual(
       expect.objectContaining({ causation_id: causationId }),
@@ -119,7 +127,7 @@ describe("MongoEventStore", () => {
   test("should list events", async () => {
     const causationId = randomUUID();
 
-    await collection.insertOne({
+    const attributes = {
       ...identifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -136,7 +144,11 @@ describe("MongoEventStore", () => {
       expected_events: 3,
       previous_event_id: randomUUID(),
       timestamp: subDays(new Date(), 1),
-    });
+    };
+
+    const checksum = createChecksum(attributes);
+
+    await collection.insertOne({ ...attributes, checksum });
 
     await expect(store.listEvents(subDays(new Date(), 2), 100)).resolves.toStrictEqual(
       expect.arrayContaining([

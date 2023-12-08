@@ -1,9 +1,9 @@
-import EventEmitter from "events";
-import { DomainEvent, ReplayMessage } from "../message";
-import { Logger } from "@lindorm-io/core-logger";
 import { IMessageBus } from "@lindorm-io/amqp";
-import { ReplayEventName } from "../enum";
+import { Logger } from "@lindorm-io/core-logger";
 import { intervalToDuration } from "date-fns";
+import EventEmitter from "events";
+import { ReplayEventName } from "../enum";
+import { DomainEvent, ReplayMessage } from "../message";
 import {
   AggregateIdentifier,
   Data,
@@ -43,8 +43,8 @@ export class ReplayDomain implements IReplayDomain {
 
   // public
 
-  public on<TData = Data>(eventName: string, listener: EventEmitterListener<TData>): void {
-    this.eventEmitter.on(eventName, listener);
+  public on<TData = Data>(evt: string, listener: EventEmitterListener<TData>): void {
+    this.eventEmitter.on(evt, listener);
   }
 
   public async replay(options: ReplayOptions = {}): Promise<void> {

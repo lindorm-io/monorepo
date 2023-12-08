@@ -65,7 +65,7 @@ export class SagaDomain implements ISagaDomain {
     if (!(eventHandler instanceof SagaEventHandlerImplementation)) {
       throw new LindormError("Invalid handler type", {
         data: {
-          expect: "SagaEventHandler",
+          expect: SagaEventHandlerImplementation.name,
           actual: typeof eventHandler,
         },
       });
@@ -206,12 +206,12 @@ export class SagaDomain implements ISagaDomain {
 
     this.logger.debug("Saga loaded", { saga: saga.toJSON() });
 
-    const exists = await this.store.causationExists(sagaIdentifier, event);
+    const causationExists = await this.store.causationExists(sagaIdentifier, event);
 
-    this.logger.debug("Causation exists", { exists });
+    this.logger.debug("Causation exists", { exists: causationExists });
 
     try {
-      if (!exists && !saga.processedCausationIds.includes(event.id)) {
+      if (!causationExists && !saga.processedCausationIds.includes(event.id)) {
         saga = await this.handleSaga(saga, event, eventHandler, conditionValidators);
       }
 
@@ -292,8 +292,8 @@ export class SagaDomain implements ISagaDomain {
               message: event,
               saga: { id: saga.id, name: saga.name, context: saga.context },
             },
-            metadata: event.metadata,
             mandatory: false,
+            metadata: event.metadata,
           },
           event,
         ),

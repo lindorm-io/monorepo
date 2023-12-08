@@ -181,7 +181,7 @@ export class ViewStore implements IDomainViewStore {
     switch (adapter.type) {
       case ViewStoreType.CUSTOM:
         if (!adapter.custom) {
-          throw new Error("Custom adapter not found");
+          throw new Error("Custom ViewStore not provided");
         }
         return adapter.custom;
 
@@ -190,13 +190,13 @@ export class ViewStore implements IDomainViewStore {
 
       case ViewStoreType.MONGO:
         if (!this.mongo) {
-          throw new Error("Mongo adapter not found");
+          throw new Error("Mongo connection not provided");
         }
         return this.mongo;
 
       case ViewStoreType.POSTGRES:
         if (!this.postgres) {
-          throw new Error("Postgres adapter not found");
+          throw new Error("Postgres connection not provided");
         }
         return this.postgres;
 

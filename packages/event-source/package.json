@@ -23,6 +23,7 @@
     "test:e2e:update": "compd --file docker-compose.yml jest --forceExit --runInBand --config jest.config.e2e.js -u",
     "test:integration": "jest --forceExit --runInBand --config jest.config.integration.js",
     "test:integration:compd": "compd --file docker-compose.yml yarn test:integration",
+    "test:integration:only": "compd --file docker-compose.yml jest --config jest.config.integration.js $1 --watch --detectOpenHandles",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --runInBand --config jest.config.integration.js -u",
     "test:unit": "jest --forceExit",
     "test:unit:update": "jest --forceExit -u",
@@ -33,6 +34,7 @@
   "dependencies": {
     "@lindorm-io/amqp": "^0.3.2",
     "@lindorm-io/case": "^0.2.0",
+    "@lindorm-io/crypto": "^0.2.0",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/mongo": "^0.12.5",
     "@lindorm-io/postgres": "^0.1.20",

@@ -3,6 +3,7 @@ import { IPostgresConnection } from "@lindorm-io/postgres";
 import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { EVENT_STORE, EVENT_STORE_INDEXES } from "../../constant";
 import { EventData, EventStoreAttributes, EventStoreFindFilter, IEventStore } from "../../types";
+import { assertChecksum } from "../../util";
 import { PostgresBase } from "./PostgresBase";
 import { CREATE_TABLE_EVENT_STORE } from "./sql/event-store";
 
@@ -38,10 +39,13 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       text += " ORDER BY expected_events ASC";
 
       const result = await this.connection.query<EventStoreAttributes>(text, values);
+      const entities = PostgresEventStore.toParsedEntities(result.rows);
 
-      this.logger.debug("Found event entities", { amount: result.rows.length });
+      this.logger.debug("Found event entities", { amount: entities.length });
 
-      return PostgresEventStore.toEventData(result.rows);
+      this.warnIfChecksumMismatch(entities);
+
+      return PostgresEventStore.toEventData(entities);
     } catch (err: any) {
       this.logger.error("Failed to find event entities", err);
 
@@ -61,13 +65,14 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
           name,
           context,
           causation_id,
+          checksum,
           correlation_id,
           events,
           expected_events,
           previous_event_id,
           timestamp
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       `;
 
       const values = [
@@ -75,6 +80,7 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
         attributes.name,
         attributes.context,
         attributes.causation_id,
+        attributes.checksum,
         attributes.correlation_id,
         stringifyBlob(attributes.events),
         attributes.expected_events,
@@ -99,7 +105,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       await this.promise();
 
       const text = `
-        SELECT * FROM ${EVENT_STORE}
+        SELECT *
+          FROM ${EVENT_STORE}
         WHERE timestamp >= $1
           ORDER BY timestamp ASC
           LIMIT $2`;
@@ -107,10 +114,11 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
       const values = [from, limit];
 
       const result = await this.connection.query<EventStoreAttributes>(text, values);
+      const entities = PostgresEventStore.toParsedEntities(result.rows);
 
-      this.logger.debug("Found event entities", { amount: result.rows.length });
+      this.logger.debug("Found event entities", { amount: entities.length });
 
-      return PostgresEventStore.toEventData(result.rows);
+      return PostgresEventStore.toEventData(entities);
     } catch (err: any) {
       this.logger.error("Failed to list event entities", err);
 
@@ -135,15 +143,37 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
     this.promise = (): Promise<void> => Promise.resolve();
   }
 
+  // private
+
+  private async warnIfChecksumMismatch(entities: Array<EventStoreAttributes>): Promise<void> {
+    for (const entity of entities) {
+      try {
+        assertChecksum(entity);
+      } catch (err: any) {
+        this.logger.warn("Checksum mismatch", { entity });
+      }
+    }
+  }
+
   // private static
+
+  private static toParsedEntities(rows: Array<EventStoreAttributes>): Array<EventStoreAttributes> {
+    const result: Array<EventStoreAttributes> = [];
+
+    for (const row of rows) {
+      const events = parseBlob<Array<EventData>>(row.events);
+
+      result.push({ ...row, events });
+    }
+
+    return result;
+  }
 
   private static toEventData(entities: Array<EventStoreAttributes>): Array<EventData> {
     const result: Array<EventData> = [];
 
     for (const item of entities) {
-      const events = parseBlob<Array<EventData>>(item.events);
-
-      for (const event of events) {
+      for (const event of item.events) {
         result.push({
           id: event.id,
           name: event.name,

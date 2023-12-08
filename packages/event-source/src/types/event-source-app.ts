@@ -3,6 +3,7 @@ import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
 import { StructureScannerOptions } from "@lindorm-io/structure-scanner";
 import { Aggregate, Saga, View } from "../model";
+import { ChecksumStoreAdapterType, IChecksumStore } from "./checksum-store";
 import { ReplayOptions } from "./domain";
 import { EventEmitterListener } from "./event-emitter";
 import { EventStoreAdapterType, IEventStore } from "./event-store";
@@ -11,6 +12,7 @@ import {
   HandlerIdentifier,
   IAggregateCommandHandler,
   IAggregateEventHandler,
+  IChecksumEventHandler,
   IErrorHandler,
   IQueryHandler,
   ISagaEventHandler,
@@ -22,6 +24,7 @@ import { AggregateIdentifier } from "./model";
 import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
 
 export type EventSourceAdapterOptions = {
+  checksumStore: ChecksumStoreAdapterType;
   eventStore: EventStoreAdapterType;
   sagaStore: SagaStoreAdapterType;
   messageBus: MessageBusQueueType;
@@ -34,9 +37,10 @@ export type EventSourceConnectionOptions = {
 };
 
 export type EventSourceCustomOptions = {
-  messageBus: IMessageBus;
+  checksumStore: IChecksumStore;
   eventStore: IEventStore;
   sagaStore: ISagaStore;
+  messageBus: IMessageBus;
   require: NodeJS.Require;
 };
 
@@ -104,6 +108,7 @@ export interface EventSourceAdmin {
 export interface EventSourceSetup {
   registerAggregateCommandHandler(handler: IAggregateCommandHandler): Promise<void>;
   registerAggregateEventHandler(handler: IAggregateEventHandler): Promise<void>;
+  registerChecksumEventHandler(handler: IChecksumEventHandler): Promise<void>;
   registerErrorHandler(handler: IErrorHandler): Promise<void>;
   registerQueryHandler(handler: IQueryHandler): void;
   registerSagaEventHandler(handler: ISagaEventHandler): Promise<void>;

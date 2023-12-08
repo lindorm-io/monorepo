@@ -1,11 +1,12 @@
-import { AggregateIdentifier, EventStoreAttributes } from "../../types";
-import { PostgresConnection } from "@lindorm-io/postgres";
-import { PostgresEventStore } from "./PostgresEventStore";
-import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
 import { createMockLogger } from "@lindorm-io/core-logger";
-import { randomUUID } from "crypto";
+import { PostgresConnection } from "@lindorm-io/postgres";
 import { stringifyBlob } from "@lindorm-io/string-blob";
+import { randomUUID } from "crypto";
 import { subDays } from "date-fns";
+import { TEST_AGGREGATE_IDENTIFIER } from "../../fixtures/aggregate.fixture";
+import { AggregateIdentifier, EventStoreAttributes } from "../../types";
+import { createChecksum } from "../../util";
+import { PostgresEventStore } from "./PostgresEventStore";
 
 const insert = async (
   connection: PostgresConnection,
@@ -17,19 +18,21 @@ const insert = async (
       name,
       context,
       causation_id,
+      checksum,
       correlation_id,
       events,
       expected_events,
       previous_event_id,
       timestamp
     )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
   `;
   const values = [
     attributes.id,
     attributes.name,
     attributes.context,
     attributes.causation_id,
+    attributes.checksum,
     attributes.correlation_id,
     stringifyBlob(attributes.events),
     attributes.expected_events,
@@ -88,7 +91,7 @@ describe("PostgresEventStore", () => {
   beforeEach(() => {
     causationId = randomUUID();
     aggregateIdentifier = { ...TEST_AGGREGATE_IDENTIFIER, id: randomUUID() };
-    attributes = {
+    const data = {
       ...aggregateIdentifier,
       causation_id: causationId,
       correlation_id: randomUUID(),
@@ -109,6 +112,8 @@ describe("PostgresEventStore", () => {
       previous_event_id: randomUUID(),
       timestamp: new Date(),
     };
+    const checksum = createChecksum(data);
+    attributes = { ...data, checksum };
   });
 
   afterAll(async () => {

@@ -6,6 +6,7 @@ export const CREATE_TABLE_EVENT_STORE = `
     name VARCHAR ( 64 ) NOT NULL,
     context VARCHAR ( 32 ) NOT NULL,
     causation_id UUID NOT NULL,
+    checksum VARCHAR ( 64 ) NOT NULL,
     correlation_id UUID NOT NULL,
     events JSONB NOT NULL,
     expected_events INT NOT NULL,

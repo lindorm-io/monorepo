@@ -7,11 +7,13 @@ import { Aggregate } from "../model";
 import {
   AggregateIdentifier,
   EventData,
+  EventStoreAttributes,
   EventStoreOptions,
   IAggregate,
   IDomainEventStore,
   IEventStore,
 } from "../types";
+import { createChecksum } from "../util";
 import { MemoryEventStore } from "./memory";
 import { MongoEventStore } from "./mongo";
 import { PostgresEventStore } from "./postgres";
@@ -23,7 +25,7 @@ export class EventStore implements IDomainEventStore {
   public constructor(options: EventStoreOptions, logger: Logger) {
     switch (options.type) {
       case EventStoreType.CUSTOM:
-        if (!options.custom) throw new Error("IEventStore not provided");
+        if (!options.custom) throw new Error("Custom EventStore not provided");
         this.store = options.custom;
         break;
 
@@ -32,12 +34,12 @@ export class EventStore implements IDomainEventStore {
         break;
 
       case EventStoreType.MONGO:
-        if (!options.mongo) throw new Error("Connection not provided");
+        if (!options.mongo) throw new Error("Mongo connection not provided");
         this.store = new MongoEventStore(options.mongo, logger);
         break;
 
       case EventStoreType.POSTGRES:
-        if (!options.postgres) throw new Error("Connection not provided");
+        if (!options.postgres) throw new Error("Postgres connection not provided");
         this.store = new PostgresEventStore(options.postgres, logger);
         break;
 
@@ -82,7 +84,7 @@ export class EventStore implements IDomainEventStore {
       lastExpectedEvent,
     });
 
-    await this.store.insert({
+    const attributes: Omit<EventStoreAttributes, "checksum"> = {
       id: aggregate.id,
       name: aggregate.name,
       context: aggregate.context,
@@ -99,7 +101,11 @@ export class EventStore implements IDomainEventStore {
       expected_events: expectedEvents.length,
       previous_event_id: lastExpectedEvent ? lastExpectedEvent.id : null,
       timestamp: new Date(),
-    });
+    };
+
+    const checksum = createChecksum(attributes);
+
+    await this.store.insert({ ...attributes, checksum });
 
     return causationEvents;
   }

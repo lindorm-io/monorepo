@@ -29,7 +29,7 @@ export class SagaStore implements IDomainSagaStore {
 
     switch (options.type) {
       case SagaStoreType.CUSTOM:
-        if (!options.custom) throw new Error("Connection not provided");
+        if (!options.custom) throw new Error("Custom SagaStore not provided");
         this.store = options.custom;
         break;
 
@@ -38,12 +38,12 @@ export class SagaStore implements IDomainSagaStore {
         break;
 
       case SagaStoreType.MONGO:
-        if (!options.mongo) throw new Error("Connection not provided");
+        if (!options.mongo) throw new Error("Mongo connection not provided");
         this.store = new MongoSagaStore(options.mongo, logger);
         break;
 
       case SagaStoreType.POSTGRES:
-        if (!options.postgres) throw new Error("Connection not provided");
+        if (!options.postgres) throw new Error("Postgres connection not provided");
         this.store = new PostgresSagaStore(options.postgres, logger);
         break;
 

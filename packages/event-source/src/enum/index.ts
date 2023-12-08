@@ -1,3 +1,4 @@
+export * from "./ChecksumStoreType";
 export * from "./EventStoreType";
 export * from "./MessageBusType";
 export * from "./MessageType";

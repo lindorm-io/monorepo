@@ -1,15 +1,16 @@
-import Joi from "joi";
-import { DomainEvent } from "../message";
-import { EventSource } from "./EventSource";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomUUID } from "crypto";
+import Joi from "joi";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
+  ChecksumEventHandlerImplementation,
   QueryHandlerImplementation,
   SagaEventHandlerImplementation,
   ViewEventHandlerImplementation,
 } from "../handler";
+import { DomainEvent } from "../message";
+import { EventSource } from "./EventSource";
 
 export class CreateGreeting {
   public constructor(public readonly create: boolean) {}
@@ -100,6 +101,19 @@ describe("EventSource (Memory)", () => {
         handler: async (ctx) => {
           ctx.mergeState(ctx.event);
         },
+      }),
+    );
+
+    await app.setup.registerChecksumEventHandler(
+      new ChecksumEventHandlerImplementation({
+        eventName: "greeting_created",
+        aggregate: { name: "test_aggregate", context: "es_memory" },
+      }),
+    );
+    await app.setup.registerChecksumEventHandler(
+      new ChecksumEventHandlerImplementation({
+        eventName: "greeting_updated",
+        aggregate: { name: "test_aggregate", context: "es_memory" },
       }),
     );
 

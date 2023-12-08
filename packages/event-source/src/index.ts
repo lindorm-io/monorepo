@@ -1,7 +1,7 @@
-export { Command, DomainEvent } from "./message";
-export { ConcurrencyError, DomainError } from "./error";
 export { EventSource } from "./app";
 export { EventStoreType, MessageBusType, SagaStoreType, ViewStoreType } from "./enum";
+export { ConcurrencyError, DomainError } from "./error";
+export { Command, DomainEvent } from "./message";
 export {
   AggregateCommandHandler,
   AggregateEventHandler,
@@ -10,6 +10,7 @@ export {
   EventSourceCommandOptions,
   EventSourceCommandResult,
   EventSourceOptions,
+  IChecksumStore,
   IEventSource,
   IEventStore,
   ISagaStore,
