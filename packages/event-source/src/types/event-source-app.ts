@@ -1,12 +1,9 @@
-import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
-import { IMongoConnection } from "@lindorm-io/mongo";
-import { IPostgresConnection } from "@lindorm-io/postgres";
 import { StructureScannerOptions } from "@lindorm-io/structure-scanner";
 import { Aggregate, Saga, View } from "../model";
-import { ChecksumStoreAdapterType, IChecksumStore } from "./checksum-store";
+import { ChecksumStoreOptions } from "./checksum-store";
 import { ReplayOptions } from "./domain";
 import { EventEmitterListener } from "./event-emitter";
-import { EventStoreAdapterType, IEventStore } from "./event-store";
+import { EventStoreOptions } from "./event-store";
 import { Data, DtoClass, Metadata, State } from "./generic";
 import {
   HandlerIdentifier,
@@ -19,29 +16,16 @@ import {
   IViewEventHandler,
   ViewEventHandlerAdapter,
 } from "./handler";
-import { MessageBusQueueType } from "./message-bus";
+import { MessageBusOptions } from "./message-bus";
 import { AggregateIdentifier } from "./model";
-import { ISagaStore, SagaStoreAdapterType } from "./saga-store";
+import { SagaStoreOptions } from "./saga-store";
+import { ViewStoreOptions } from "./view-store";
 
-export type EventSourceAdapterOptions = {
-  checksumStore: ChecksumStoreAdapterType;
-  eventStore: EventStoreAdapterType;
-  sagaStore: SagaStoreAdapterType;
-  messageBus: MessageBusQueueType;
-};
-
-export type EventSourceConnectionOptions = {
-  amqp: IAmqpConnection;
-  mongo: IMongoConnection;
-  postgres: IPostgresConnection;
-};
-
-export type EventSourceCustomOptions = {
-  checksumStore: IChecksumStore;
-  eventStore: IEventStore;
-  sagaStore: ISagaStore;
-  messageBus: IMessageBus;
-  require: NodeJS.Require;
+export type EventSourceDirectories = {
+  aggregates: string;
+  queries: string;
+  sagas: string;
+  views: string;
 };
 
 export type EventSourceFileFilterOptions = {
@@ -55,25 +39,31 @@ export type EventSourceScannerOptions = Pick<
 >;
 
 export type EventSourcePrivateOptions = {
-  adapters: EventSourceAdapterOptions;
-  aggregates: string;
+  checksumStore: ChecksumStoreOptions;
   context: string;
   dangerouslyRegisterHandlersManually: boolean;
+  directories: EventSourceDirectories;
+  eventStore: EventStoreOptions;
   fileFilter: EventSourceFileFilterOptions;
-  queries: string;
-  sagas: string;
+  messageBus: MessageBusOptions;
+  require: NodeJS.Require;
+  sagaStore: SagaStoreOptions;
   scanner: EventSourceScannerOptions;
-  views: string;
+  viewStore: ViewStoreOptions;
 };
 
 export type EventSourceOptions = Partial<
-  Omit<EventSourcePrivateOptions, "adapters" | "fileFilter" | "scanner">
+  Omit<
+    EventSourcePrivateOptions,
+    "eventStore" | "fileFilter" | "messageBus" | "sagaStore" | "scanner" | "viewStore"
+  >
 > & {
-  adapters?: Partial<EventSourceAdapterOptions>;
-  connections?: Partial<EventSourceConnectionOptions>;
-  custom?: Partial<EventSourceCustomOptions>;
+  eventStore?: EventStoreOptions;
   fileFilter?: Partial<EventSourceFileFilterOptions>;
+  messageBus?: MessageBusOptions;
+  sagaStore?: SagaStoreOptions;
   scanner?: Partial<EventSourceScannerOptions>;
+  viewStore?: ViewStoreOptions;
 };
 
 export type EventSourceCommandOptions<TMetadata extends Metadata = Metadata> = {

@@ -1,11 +1,8 @@
-import { IAmqpConnection, IMessageBus } from "@lindorm-io/amqp";
+import { IMessageBus } from "@lindorm-io/amqp";
 import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
-import { IMongoConnection } from "@lindorm-io/mongo";
-import { IPostgresConnection } from "@lindorm-io/postgres";
 import { StructureScanner } from "@lindorm-io/structure-scanner";
 import { randomUUID } from "crypto";
-import merge from "deepmerge";
 import { join } from "path";
 import {
   AggregateDomain,
@@ -59,11 +56,6 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   // bus
   private readonly messageBus: IMessageBus;
 
-  // connections
-  private readonly amqp: IAmqpConnection | undefined;
-  private readonly mongo: IMongoConnection | undefined;
-  private readonly postgres: IPostgresConnection | undefined;
-
   // domains
   private readonly aggregateDomain: IAggregateDomain;
   private readonly checksumDomain: IChecksumDomain;
@@ -90,97 +82,65 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   private promise: () => Promise<void>;
 
   public constructor(options: EventSourceOptions, logger: Logger) {
-    const { connections = {}, custom = {}, ...appOptions } = options;
-
-    // defaults
-    const defaultOptions: EventSourcePrivateOptions = {
-      adapters: {
-        checksumStore: "memory",
-        eventStore: "memory",
-        sagaStore: "memory",
-        messageBus: "memory",
+    this.options = {
+      checksumStore: {
+        type: "memory",
+        ...(options.checksumStore || {}),
       },
-      aggregates: join(__dirname, "aggregates"),
-      context: "default",
-      dangerouslyRegisterHandlersManually: false,
+      context: options.context || "default",
+      dangerouslyRegisterHandlersManually: options.dangerouslyRegisterHandlersManually === true,
+      directories: {
+        aggregates: join(__dirname, "aggregates"),
+        queries: join(__dirname, "queries"),
+        sagas: join(__dirname, "sagas"),
+        views: join(__dirname, "views"),
+        ...(options.directories || {}),
+      },
+      eventStore: {
+        type: "memory",
+        ...(options.eventStore || {}),
+      },
       fileFilter: {
         include: [/.*/],
         exclude: [],
+        ...(options.fileFilter || {}),
       },
-      queries: join(__dirname, "queries"),
-      sagas: join(__dirname, "sagas"),
+      messageBus: {
+        type: "memory",
+        ...(options.messageBus || {}),
+      },
+      require: options.require || require,
+      sagaStore: {
+        type: "memory",
+        ...(options.sagaStore || {}),
+      },
       scanner: {
         deniedDirectories: [],
         deniedExtensions: [],
         deniedFilenames: [],
         deniedTypes: [/^spec$/, /^test$/],
+        ...(options.scanner || {}),
       },
-      views: join(__dirname, "views"),
+      viewStore: {
+        ...(options.viewStore || {}),
+      },
     };
 
-    // primary
     this.logger = logger.createChildLogger(["EventSource"]);
-    this.options = merge<EventSourcePrivateOptions, EventSourceOptions>(defaultOptions, appOptions);
     this.adapters = [];
-    this.scanner = new EventSourceScanner(this.options, custom, this.logger);
+    this.scanner = new EventSourceScanner(this.options, this.logger);
     this.status = "created";
-
-    // connections
-
-    this.amqp = connections.amqp;
-    this.mongo = connections.mongo;
-    this.postgres = connections.postgres;
 
     // bus
 
-    this.messageBus = new MessageBus(
-      {
-        amqp: this.amqp,
-        custom: custom.messageBus,
-        type: this.options.adapters.messageBus,
-      },
-      this.logger,
-    );
+    this.messageBus = new MessageBus(this.options.messageBus, this.logger);
 
     // stores
 
-    this.checksumStore = new ChecksumStore(
-      {
-        custom: custom.checksumStore,
-        mongo: this.mongo,
-        postgres: this.postgres,
-        type: this.options.adapters.checksumStore,
-      },
-      this.logger,
-    );
-
-    this.eventStore = new EventStore(
-      {
-        custom: custom.eventStore,
-        mongo: this.mongo,
-        postgres: this.postgres,
-        type: this.options.adapters.eventStore,
-      },
-      this.logger,
-    );
-
-    this.sagaStore = new SagaStore(
-      {
-        custom: custom.sagaStore,
-        mongo: this.mongo,
-        postgres: this.postgres,
-        type: this.options.adapters.sagaStore,
-      },
-      this.logger,
-    );
-
-    this.viewStore = new ViewStore(
-      {
-        mongo: this.mongo,
-        postgres: this.postgres,
-      },
-      this.logger,
-    );
+    this.checksumStore = new ChecksumStore(this.options.checksumStore, this.logger);
+    this.eventStore = new EventStore(this.options.eventStore, this.logger);
+    this.sagaStore = new SagaStore(this.options.sagaStore, this.logger);
+    this.viewStore = new ViewStore(this.options.viewStore, this.logger);
 
     // domains
 
@@ -202,13 +162,7 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
 
     this.errorDomain = new ErrorDomain(this.messageBus, this.logger);
 
-    this.queryDomain = new QueryDomain(
-      {
-        mongo: this.mongo,
-        postgres: this.postgres,
-      },
-      this.logger,
-    );
+    this.queryDomain = new QueryDomain(this.options.viewStore, this.logger);
 
     this.replayDomain = new ReplayDomain(
       {
@@ -428,13 +382,41 @@ export class EventSource<TCommand extends DtoClass = DtoClass, TQuery extends Dt
   private async handleInitialisation(): Promise<void> {
     this.status = "initialising";
 
-    if (this.amqp) await this.amqp.connect();
-    if (this.mongo) await this.mongo.connect();
-    if (this.postgres) await this.postgres.connect();
+    if (this.options.messageBus.amqp) {
+      await this.options.messageBus.amqp.connect();
+    }
+
+    if (this.options.checksumStore.mongo) {
+      await this.options.checksumStore.mongo.connect();
+    }
+    if (this.options.checksumStore.postgres) {
+      await this.options.checksumStore.postgres.connect();
+    }
+
+    if (this.options.eventStore.mongo) {
+      await this.options.eventStore.mongo.connect();
+    }
+    if (this.options.eventStore.postgres) {
+      await this.options.eventStore.postgres.connect();
+    }
+
+    if (this.options.sagaStore.mongo) {
+      await this.options.sagaStore.mongo.connect();
+    }
+    if (this.options.sagaStore.postgres) {
+      await this.options.sagaStore.postgres.connect();
+    }
+
+    if (this.options.viewStore.mongo) {
+      await this.options.viewStore.mongo.connect();
+    }
+    if (this.options.viewStore.postgres) {
+      await this.options.viewStore.postgres.connect();
+    }
 
     if (!this.options.dangerouslyRegisterHandlersManually) {
-      if (!StructureScanner.hasFiles(this.options.aggregates)) {
-        throw new Error(`No files found at directory [ ${this.options.aggregates} ]`);
+      if (!StructureScanner.hasFiles(this.options.directories.aggregates)) {
+        throw new Error(`No files found at directory [ ${this.options.directories.aggregates} ]`);
       }
 
       await this.scanner.scanAggregates();

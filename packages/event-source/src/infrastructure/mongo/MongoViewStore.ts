@@ -250,6 +250,7 @@ export class MongoViewStore extends MongoBase implements IViewStore {
   }
 
   private async initialiseCausation(): Promise<void> {
+    await this.connect();
     await this.createIndexes(VIEW_CAUSATION, VIEW_CAUSATION_INDEXES);
 
     this.promise = (): Promise<void> => Promise.resolve();

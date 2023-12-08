@@ -89,6 +89,8 @@ export class PostgresChecksumStore extends PostgresBase implements IChecksumStor
   // private
 
   protected async initialise(): Promise<void> {
+    await this.connect();
+
     const storeExists = await this.tableExists(CHECKSUM_STORE);
     if (!storeExists) {
       await this.connection.query(CREATE_TABLE_CHECKSUM_STORE);

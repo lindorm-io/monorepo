@@ -261,6 +261,8 @@ export class MongoSagaStore extends MongoBase implements ISagaStore {
   // private
 
   private async initialise(): Promise<void> {
+    await this.connect();
+
     await this.createIndexes(SAGA_STORE, SAGA_STORE_INDEXES);
     await this.createIndexes(SAGA_CAUSATION, SAGA_CAUSATION_INDEXES);
 

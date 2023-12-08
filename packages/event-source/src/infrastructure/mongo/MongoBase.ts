@@ -1,6 +1,6 @@
-import { CreateIndexesOptions, IndexSpecification } from "mongodb";
 import { Logger } from "@lindorm-io/core-logger";
 import { IMongoConnection } from "@lindorm-io/mongo";
+import { CreateIndexesOptions, IndexSpecification } from "mongodb";
 import { Attributes, MongoIndex, StoreIndexes } from "../../types";
 
 export abstract class MongoBase {
@@ -13,6 +13,10 @@ export abstract class MongoBase {
   }
 
   // protected
+
+  protected async connect(): Promise<void> {
+    await this.connection.connect();
+  }
 
   protected async createIndexes<TFields extends Attributes = Attributes>(
     name: string,

@@ -110,6 +110,7 @@ export class MongoEventStore extends MongoBase implements IEventStore {
   // private
 
   private async initialise(): Promise<void> {
+    await this.connect();
     await this.createIndexes(EVENT_STORE, EVENT_STORE_INDEXES);
 
     this.promise = (): Promise<void> => Promise.resolve();

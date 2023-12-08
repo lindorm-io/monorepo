@@ -342,6 +342,8 @@ export class PostgresSagaStore extends PostgresBase implements ISagaStore {
   // protected
 
   protected async initialise(): Promise<void> {
+    await this.connect();
+
     // saga_store
 
     const storeExists = await this.tableExists(SAGA_STORE);

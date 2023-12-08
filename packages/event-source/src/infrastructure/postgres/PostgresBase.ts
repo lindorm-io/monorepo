@@ -20,6 +20,10 @@ export abstract class PostgresBase {
 
   // protected
 
+  protected async connect(): Promise<void> {
+    await this.connection.connect();
+  }
+
   protected async createIndexes<TFields extends Attributes = Attributes>(
     name: string,
     indexes: StoreIndexes<TFields>,

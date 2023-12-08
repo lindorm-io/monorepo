@@ -3,7 +3,7 @@ import { createMockLogger } from "@lindorm-io/core-logger";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
 import Joi from "joi";
-import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
+import { ChecksumStoreType, EventStoreType, MessageBusType, SagaStoreType } from "../enum";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -69,15 +69,11 @@ describe("EventSource (Mongo)", () => {
 
     app = new EventSource(
       {
-        adapters: {
-          eventStore: EventStoreType.MONGO,
-          messageBus: MessageBusType.AMQP,
-          sagaStore: SagaStoreType.MONGO,
-        },
-        connections: {
-          amqp,
-          mongo,
-        },
+        checksumStore: { mongo, type: ChecksumStoreType.MONGO },
+        eventStore: { mongo, type: EventStoreType.MONGO },
+        messageBus: { amqp, type: MessageBusType.AMQP },
+        sagaStore: { mongo, type: SagaStoreType.MONGO },
+        viewStore: { mongo },
         context: "es_mongo",
         dangerouslyRegisterHandlersManually: true,
       },

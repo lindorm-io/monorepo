@@ -10,6 +10,7 @@ export * from "./view-store";
 export * from "./error";
 export * from "./event-emitter";
 export * from "./event-source-app";
+export * from "./event-source-scanner";
 export * from "./generic";
 export * from "./message";
 export * from "./mongo-base";

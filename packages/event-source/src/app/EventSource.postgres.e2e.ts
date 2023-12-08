@@ -3,7 +3,7 @@ import { createMockLogger } from "@lindorm-io/core-logger";
 import { PostgresConnection } from "@lindorm-io/postgres";
 import { randomUUID } from "crypto";
 import Joi from "joi";
-import { EventStoreType, MessageBusType, SagaStoreType } from "../enum";
+import { ChecksumStoreType, EventStoreType, MessageBusType, SagaStoreType } from "../enum";
 import {
   AggregateCommandHandlerImplementation,
   AggregateEventHandlerImplementation,
@@ -69,15 +69,11 @@ describe("EventSource (Postgres)", () => {
 
     app = new EventSource(
       {
-        adapters: {
-          eventStore: EventStoreType.POSTGRES,
-          messageBus: MessageBusType.AMQP,
-          sagaStore: SagaStoreType.POSTGRES,
-        },
-        connections: {
-          amqp,
-          postgres,
-        },
+        checksumStore: { postgres, type: ChecksumStoreType.POSTGRES },
+        eventStore: { postgres, type: EventStoreType.POSTGRES },
+        messageBus: { amqp, type: MessageBusType.AMQP },
+        sagaStore: { postgres, type: SagaStoreType.POSTGRES },
+        viewStore: { postgres },
         context: "es_postgres",
         dangerouslyRegisterHandlersManually: true,
       },

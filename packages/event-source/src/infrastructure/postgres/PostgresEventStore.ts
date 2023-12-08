@@ -129,6 +129,8 @@ export class PostgresEventStore extends PostgresBase implements IEventStore {
   // protected
 
   protected async initialise(): Promise<void> {
+    await this.connect();
+
     const storeExists = await this.tableExists(EVENT_STORE);
     if (!storeExists) {
       await this.connection.query(CREATE_TABLE_EVENT_STORE);

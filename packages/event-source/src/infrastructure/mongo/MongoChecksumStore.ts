@@ -75,6 +75,7 @@ export class MongoChecksumStore extends MongoBase implements IChecksumStore {
   // private
 
   private async initialise(): Promise<void> {
+    await this.connect();
     await this.createIndexes(CHECKSUM_STORE, CHECKSUM_STORE_INDEXES);
 
     this.promise = (): Promise<void> => Promise.resolve();

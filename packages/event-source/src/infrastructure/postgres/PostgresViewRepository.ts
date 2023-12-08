@@ -150,6 +150,6 @@ export class PostgresViewRepository<TState = State>
   // protected
 
   protected async initialise(): Promise<void> {
-    /* ignored */
+    await this.connect();
   }
 }

@@ -23,9 +23,8 @@ import {
   AggregateCommandHandler,
   AggregateEventHandler,
   ErrorHandler,
-  EventSourceCustomOptions,
   EventSourcePrivateOptions,
-  HandlerIdentifier,
+  GetAggregateEventData,
   IAggregateCommandHandler,
   IAggregateEventHandler,
   IChecksumEventHandler,
@@ -38,11 +37,6 @@ import {
   ViewEventHandler,
 } from "../types";
 import { assertSchema, defaultAggregateCommandHandlerSchema, extractNameData } from "../util";
-
-type GetAggregateEventData = {
-  eventName: string;
-  aggregate: HandlerIdentifier;
-};
 
 export class EventSourceScanner {
   private readonly logger: Logger;
@@ -61,14 +55,10 @@ export class EventSourceScanner {
   public readonly commandAggregates: Record<string, Array<string>>;
   public readonly eventAggregates: Record<string, Array<string>>;
 
-  public constructor(
-    options: EventSourcePrivateOptions,
-    custom: Partial<EventSourceCustomOptions>,
-    logger: Logger,
-  ) {
+  public constructor(options: EventSourcePrivateOptions, logger: Logger) {
     this.logger = logger;
     this.options = options;
-    this.require = custom.require || require;
+    this.require = options.require;
     this.scanner = new StructureScanner({ ...options.scanner, parentDirection: "reverse" });
 
     this.aggregateCommandHandlers = [];
@@ -86,7 +76,7 @@ export class EventSourceScanner {
   // public scan
 
   public async scanAggregates(): Promise<void> {
-    const scan = this.scanner.scan(this.options.aggregates);
+    const scan = this.scanner.scan(this.options.directories.aggregates);
     const files = StructureScanner.flatten(scan);
 
     this.logger.debug("Scanning aggregates", { files });
@@ -122,7 +112,7 @@ export class EventSourceScanner {
   }
 
   public async scanSagas(): Promise<void> {
-    const scan = this.scanner.scan(this.options.sagas);
+    const scan = this.scanner.scan(this.options.directories.sagas);
     const files = StructureScanner.flatten(scan);
 
     this.logger.debug("Scanning sagas", { files });
@@ -139,7 +129,7 @@ export class EventSourceScanner {
   }
 
   public async scanViews(): Promise<void> {
-    const scan = this.scanner.scan(this.options.views);
+    const scan = this.scanner.scan(this.options.directories.views);
     const files = StructureScanner.flatten(scan);
 
     this.logger.debug("Scanning views", { files });
@@ -156,7 +146,7 @@ export class EventSourceScanner {
   }
 
   public async scanQueries(): Promise<void> {
-    const files = this.scanner.scan(this.options.queries);
+    const files = this.scanner.scan(this.options.directories.queries);
 
     this.logger.debug("Scanning queries", { files });
 

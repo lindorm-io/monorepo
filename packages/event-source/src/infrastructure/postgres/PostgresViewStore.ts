@@ -310,6 +310,8 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
   // protected
 
   protected async initialise(): Promise<void> {
+    await this.connect();
+
     // view_causation
 
     const causationExists = await this.tableExists("view_causation");
