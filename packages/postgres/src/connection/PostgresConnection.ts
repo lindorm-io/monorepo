@@ -1,7 +1,7 @@
 import { ConnectionBase } from "@lindorm-io/core-connection";
 import { Logger } from "@lindorm-io/core-logger";
-import { IPostgresConnection, PostgresConnectionOptions } from "../types";
 import { Pool, PoolConfig, QueryConfig, QueryResult, QueryResultRow } from "pg";
+import { IPostgresConnection, PostgresConnectionOptions } from "../types";
 
 export class PostgresConnection
   extends ConnectionBase<Pool, PoolConfig>
@@ -66,12 +66,29 @@ export class PostgresConnection
   ): Promise<QueryResult<TResult>> {
     const client = await this.client.connect();
 
-    this.logger.debug("Query", { query: queryTextOrConfig, values });
+    const query =
+      typeof queryTextOrConfig === "string"
+        ? this.trim(queryTextOrConfig)
+        : queryTextOrConfig.text
+        ? this.trim(queryTextOrConfig.text)
+        : queryTextOrConfig;
+
+    this.logger.debug("Query", { query, values });
 
     try {
-      return await client.query(queryTextOrConfig, values);
+      return await client.query(query, values);
     } finally {
       client.release();
     }
+  }
+
+  // private
+
+  private trim(query: string): string {
+    return query
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join(" ");
   }
 }
