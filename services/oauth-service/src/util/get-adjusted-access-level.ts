@@ -1,5 +1,6 @@
 import { LevelOfAssurance } from "@lindorm-io/common-types";
-import { addDays, addMinutes, isAfter } from "date-fns";
+import { ms } from "@lindorm-io/readable-time";
+import { addMilliseconds, isAfter } from "date-fns";
 import { configuration } from "../server/configuration";
 
 interface SessionLike {
@@ -11,7 +12,10 @@ const getHighestPossibleAdjustment = (session: SessionLike): LevelOfAssurance =>
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_1_max_days),
+      addMilliseconds(
+        session.latestAuthentication,
+        ms(configuration.defaults.adjusted_access.loa_1_max),
+      ),
     )
   ) {
     return 0;
@@ -20,7 +24,10 @@ const getHighestPossibleAdjustment = (session: SessionLike): LevelOfAssurance =>
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_2_max_days),
+      addMilliseconds(
+        session.latestAuthentication,
+        ms(configuration.defaults.adjusted_access.loa_2_max),
+      ),
     )
   ) {
     return 1;
@@ -29,7 +36,10 @@ const getHighestPossibleAdjustment = (session: SessionLike): LevelOfAssurance =>
   if (
     isAfter(
       new Date(),
-      addDays(session.latestAuthentication, configuration.defaults.sessions.loa_3_max_days),
+      addMilliseconds(
+        session.latestAuthentication,
+        ms(configuration.defaults.adjusted_access.loa_3_max),
+      ),
     )
   ) {
     return 2;
@@ -38,7 +48,10 @@ const getHighestPossibleAdjustment = (session: SessionLike): LevelOfAssurance =>
   if (
     isAfter(
       new Date(),
-      addMinutes(session.latestAuthentication, configuration.defaults.sessions.loa_4_max_minutes),
+      addMilliseconds(
+        session.latestAuthentication,
+        ms(configuration.defaults.adjusted_access.loa_4_max),
+      ),
     )
   ) {
     return 3;

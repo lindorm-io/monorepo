@@ -12,9 +12,16 @@ export interface Configuration {
 }
 
 interface Defaults {
+  adjusted_access: AdjustedAccess;
   expiry: Expiry;
   interval: Interval;
-  sessions: Sessions;
+}
+
+interface AdjustedAccess {
+  loa_1_max: ReadableTime;
+  loa_2_max: ReadableTime;
+  loa_3_max: ReadableTime;
+  loa_4_max: ReadableTime;
 }
 
 interface Expiry {
@@ -35,13 +42,6 @@ interface Expiry {
 
 interface Interval {
   backchannel: ReadableTime;
-}
-
-interface Sessions {
-  loa_1_max_days: number;
-  loa_2_max_days: number;
-  loa_3_max_days: number;
-  loa_4_max_minutes: number;
 }
 
 interface Frontend {
