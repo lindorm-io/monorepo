@@ -7,6 +7,7 @@ import { JOI_CODE, JOI_GRANT_TYPE } from "../../constant";
 import {
   handleAuthenticationTokenGrant,
   handleAuthorizationCodeGrant,
+  handleBackchannelAuthenticationGrant,
   handleClientCredentialsGrant,
   handleJwtBearerGrant,
   handlePasswordGrant,
@@ -62,6 +63,10 @@ export const oauthTokenController: ServerKoaController<RequestData> = async (
 
     case OpenIdGrantType.AUTHORIZATION_CODE:
       body = await handleAuthorizationCodeGrant(ctx);
+      break;
+
+    case OpenIdGrantType.BACKCHANNEL_AUTHENTICATION:
+      body = await handleBackchannelAuthenticationGrant(ctx);
       break;
 
     case OpenIdGrantType.JWT_BEARER:

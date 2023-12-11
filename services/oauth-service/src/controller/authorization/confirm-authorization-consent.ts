@@ -14,7 +14,7 @@ type RequestData = ConfirmConsentRequestParams & ConfirmConsentRequestBody;
 
 type ResponseBody = ConfirmConsentResponse;
 
-export const confirmConsentSchema = Joi.object<RequestData>()
+export const confirmAuthorizationConsentSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
     audiences: Joi.array().items(Joi.string().guid()).required(),
@@ -22,7 +22,7 @@ export const confirmConsentSchema = Joi.object<RequestData>()
   })
   .required();
 
-export const confirmConsentController: ServerKoaController<RequestData> = async (
+export const confirmAuthorizationConsentController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

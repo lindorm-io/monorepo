@@ -226,6 +226,8 @@ const schema = Joi.object<AuthorizationSessionAttributes>()
   })
   .required();
 
+// TODO make login hint a string and remove array logic
+
 export class AuthorizationSession extends LindormEntity<AuthorizationSessionAttributes> {
   public readonly code: Code;
   public readonly confirmedConsent: ConfirmedConsent;

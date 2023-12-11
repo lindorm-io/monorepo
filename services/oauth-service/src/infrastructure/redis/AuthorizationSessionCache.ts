@@ -8,7 +8,7 @@ export class AuthorizationSessionCache extends RedisRepositoryBase<
 > {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "AuthorizationSession",
+      entityName: AuthorizationSession.name,
       indexedAttributes: [],
       ttlAttribute: "expires",
     });

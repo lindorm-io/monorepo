@@ -1,6 +1,6 @@
-import { AuthorizationCode, AuthorizationCodeAttributes } from "../../entity";
-import { IRedisConnection, RedisRepositoryBase } from "@lindorm-io/redis";
 import { Logger } from "@lindorm-io/core-logger";
+import { IRedisConnection, RedisRepositoryBase } from "@lindorm-io/redis";
+import { AuthorizationCode, AuthorizationCodeAttributes } from "../../entity";
 
 export class AuthorizationCodeCache extends RedisRepositoryBase<
   AuthorizationCodeAttributes,
@@ -8,7 +8,7 @@ export class AuthorizationCodeCache extends RedisRepositoryBase<
 > {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "AuthorizationCode",
+      entityName: AuthorizationCode.name,
       indexedAttributes: ["code"],
       ttlAttribute: "expires",
     });

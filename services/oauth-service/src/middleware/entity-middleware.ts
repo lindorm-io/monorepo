@@ -3,6 +3,7 @@ import { redisRepositoryEntityMiddleware } from "@lindorm-io/koa-redis";
 import {
   AuthenticationTokenSession,
   AuthorizationSession,
+  BackchannelSession,
   ClaimsSession,
   Client,
   ElevationSession,
@@ -12,6 +13,7 @@ import {
 import {
   AuthenticationTokenSessionCache,
   AuthorizationSessionCache,
+  BackchannelSessionCache,
   ClaimsSessionCache,
   ClientRepository,
   ElevationSessionCache,
@@ -27,6 +29,11 @@ export const authenticationTokenSessionEntityMiddleware = redisRepositoryEntityM
 export const authorizationSessionEntityMiddleware = redisRepositoryEntityMiddleware(
   AuthorizationSession,
   AuthorizationSessionCache,
+);
+
+export const backchannelSessionEntityMiddleware = redisRepositoryEntityMiddleware(
+  BackchannelSession,
+  BackchannelSessionCache,
 );
 
 export const claimsSessionEntityMiddleware = redisRepositoryEntityMiddleware(

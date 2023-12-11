@@ -1,13 +1,11 @@
 import { SessionStatus } from "@lindorm-io/common-enums";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
 import {
+  createAuthorizationRejectedUri as _createAuthorizationRejectedUri,
   createAuthorizationVerifyUri as _createAuthorizationVerifyUri,
   createConsentPendingUri as _createConsentPendingUri,
-  createConsentRejectedUri as _createConsentRejectedUri,
   createLoginPendingUri as _createLoginPendingUri,
-  createLoginRejectedUri as _createLoginRejectedUri,
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
-  createSelectAccountRejectedUri as _createSelectAccountRejectedUri,
 } from "../../util";
 import { redirectAuthorizationController } from "./redirect-authorization";
 
@@ -15,11 +13,9 @@ jest.mock("../../util");
 
 const createAuthorizationVerifyUri = _createAuthorizationVerifyUri as jest.Mock;
 const createConsentPendingUri = _createConsentPendingUri as jest.Mock;
-const createConsentRejectedUri = _createConsentRejectedUri as jest.Mock;
+const createAuthorizationRejectedUri = _createAuthorizationRejectedUri as jest.Mock;
 const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
-const createLoginRejectedUri = _createLoginRejectedUri as jest.Mock;
 const createSelectAccountPendingUri = _createSelectAccountPendingUri as jest.Mock;
-const createSelectAccountRejectedUri = _createSelectAccountRejectedUri as jest.Mock;
 
 describe("redirectAuthorizationController", () => {
   let ctx: any;
@@ -39,11 +35,9 @@ describe("redirectAuthorizationController", () => {
 
     createAuthorizationVerifyUri.mockReturnValue("createAuthorizationVerifyUri");
     createConsentPendingUri.mockReturnValue("createConsentPendingUri");
-    createConsentRejectedUri.mockReturnValue("createConsentRejectedUri");
+    createAuthorizationRejectedUri.mockReturnValue("createAuthorizationRejectedUri");
     createLoginPendingUri.mockReturnValue("createLoginPendingUri");
-    createLoginRejectedUri.mockReturnValue("createLoginRejectedUri");
     createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
-    createSelectAccountRejectedUri.mockReturnValue("createSelectAccountRejectedUri");
   });
 
   describe("selectAccount", () => {
@@ -73,7 +67,7 @@ describe("redirectAuthorizationController", () => {
       ctx.entity.authorizationSession.status.selectAccount = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
-        body: { redirectTo: "createSelectAccountRejectedUri" },
+        body: { redirectTo: "createAuthorizationRejectedUri" },
       });
     });
   });
@@ -105,7 +99,7 @@ describe("redirectAuthorizationController", () => {
       ctx.entity.authorizationSession.status.login = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
-        body: { redirectTo: "createLoginRejectedUri" },
+        body: { redirectTo: "createAuthorizationRejectedUri" },
       });
     });
   });
@@ -137,7 +131,7 @@ describe("redirectAuthorizationController", () => {
       ctx.entity.authorizationSession.status.consent = "rejected";
 
       await expect(redirectAuthorizationController(ctx)).resolves.toStrictEqual({
-        body: { redirectTo: "createConsentRejectedUri" },
+        body: { redirectTo: "createAuthorizationRejectedUri" },
       });
     });
   });

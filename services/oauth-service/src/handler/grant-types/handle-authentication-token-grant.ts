@@ -75,6 +75,7 @@ export const handleAuthenticationTokenGrant = async (
   const { data } = await authenticationClient.get<
     GetAuthenticationTokenResponse,
     never,
+    never,
     GetAuthenticationTokenQuery
   >(configuration.services.authentication_service.routes.admin.authentication_token, {
     query,

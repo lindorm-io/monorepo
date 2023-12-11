@@ -5,7 +5,7 @@ import { OpaqueToken, OpaqueTokenAttributes } from "../../entity";
 export class OpaqueTokenCache extends RedisRepositoryBase<OpaqueTokenAttributes, OpaqueToken> {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "OpaqueToken",
+      entityName: OpaqueToken.name,
       indexedAttributes: ["clientSessionId", "type"],
       ttlAttribute: "expires",
     });

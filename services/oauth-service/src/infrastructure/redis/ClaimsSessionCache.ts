@@ -8,7 +8,7 @@ export class ClaimsSessionCache extends RedisRepositoryBase<
 > {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "ClaimsSession",
+      entityName: ClaimsSession.name,
       indexedAttributes: [],
       ttlAttribute: "expires",
     });

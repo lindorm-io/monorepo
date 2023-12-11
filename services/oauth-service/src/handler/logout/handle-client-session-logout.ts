@@ -1,5 +1,5 @@
-import { Client, LogoutSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { Client, LogoutSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { createLogoutToken } from "../token";
 
@@ -25,8 +25,8 @@ export const handleClientSessionLogout = async (
 
   const { token } = createLogoutToken(ctx, client, clientSession);
 
-  if (client.backChannelLogoutUri) {
-    await axiosClient.post(client.backChannelLogoutUri, {
+  if (client.backchannelLogoutUri) {
+    await axiosClient.post(client.backchannelLogoutUri, {
       body: { logoutToken: token },
     });
   }

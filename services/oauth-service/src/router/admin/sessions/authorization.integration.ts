@@ -4,6 +4,7 @@ import {
   AuthenticationStrategy,
   Scope,
 } from "@lindorm-io/common-enums";
+import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import request from "supertest";
 import {
@@ -177,5 +178,194 @@ describe("/admin/sessions/authorization", () => {
         name: "TenantName",
       },
     });
+  });
+
+  test("should confirm consent and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
+        requestedConsent: {
+          audiences: [client.id],
+          scopes: Object.values(Scope),
+        },
+        clientId: client.id,
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post(`/admin/sessions/authorization/${authorizationSession.id}/consent`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        audiences: authorizationSession.requestedConsent.audiences,
+        scopes: authorizationSession.requestedConsent.scopes,
+      })
+      .expect(200);
+
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+  });
+
+  test("should confirm login and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
+        clientId: client.id,
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post(`/admin/sessions/authorization/${authorizationSession.id}/login`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        factors: [AuthenticationFactor.TWO_FACTOR],
+        identity_id: randomUUID(),
+        level_of_assurance: 2,
+        metadata: { ip: "127.0.0.1" },
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.TIME_BASED_OTP],
+        remember: true,
+        singleSignOn: true,
+        strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.TIME_BASED_OTP],
+      })
+      .expect(200);
+
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+  });
+
+  test("should reject and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({ clientId: client.id }),
+    );
+
+    const response = await request(server.callback())
+      .post(`/admin/sessions/authorization/${authorizationSession.id}/reject`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .expect(200);
+
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://test.client.lindorm.io");
+    expect(url.pathname).toBe("/redirect");
+    expect(url.searchParams.get("error")).toBe("request_rejected");
+    expect(url.searchParams.get("error_description")).toBe("authorization_rejected");
+    expect(url.searchParams.get("state")).toBe(authorizationSession.state);
+
+    await expect(
+      TEST_AUTHORIZATION_SESSION_CACHE.find({ id: authorizationSession.id }),
+    ).resolves.toStrictEqual(
+      expect.objectContaining({
+        status: expect.objectContaining({
+          consent: "rejected",
+          login: "rejected",
+          selectAccount: "rejected",
+        }),
+      }),
+    );
+  });
+
+  test("should confirm new account and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
+        clientId: client.id,
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post(`/admin/sessions/authorization/${authorizationSession.id}/select-account`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        select_new: true,
+      })
+      .expect(200);
+
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
+  });
+
+  test("should confirm existing account and resolve redirect uri", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(createTestClient());
+
+    const browserSession = await TEST_BROWSER_SESSION_REPOSITORY.create(createTestBrowserSession());
+
+    await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
+        clientId: client.id,
+        browserSessionId: browserSession.id,
+      }),
+    );
+
+    const authorizationSession = await TEST_AUTHORIZATION_SESSION_CACHE.create(
+      createTestAuthorizationSession({
+        requestedSelectAccount: {
+          browserSessions: [
+            {
+              browserSessionId: browserSession.id,
+              identityId: browserSession.identityId,
+            },
+          ],
+        },
+
+        clientId: client.id,
+        idTokenHint: null,
+      }),
+    );
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const response = await request(server.callback())
+      .post(`/admin/sessions/authorization/${authorizationSession.id}/select-account`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        select_existing: browserSession.id,
+      })
+      .expect(200);
+
+    const url = new URL(response.body.redirect_to);
+
+    expect(url.origin).toBe("https://oauth.test.lindorm.io");
+    expect(url.pathname).toBe("/oauth2/sessions/authorize/verify");
+    expect(url.searchParams.get("session")).toBe(authorizationSession.id);
+    expect(url.searchParams.get("redirect_uri")).toBe(authorizationSession.redirectUri);
   });
 });

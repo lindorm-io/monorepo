@@ -1,6 +1,6 @@
-import { ClientSession, ClientSessionAttributes } from "../../entity";
-import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 import { Logger } from "@lindorm-io/core-logger";
+import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
+import { ClientSession, ClientSessionAttributes } from "../../entity";
 
 export class ClientSessionRepository extends MongoRepositoryBase<
   ClientSessionAttributes,
@@ -8,7 +8,7 @@ export class ClientSessionRepository extends MongoRepositoryBase<
 > {
   public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "ClientSession",
+      entityName: ClientSession.name,
       indices: [
         {
           index: {

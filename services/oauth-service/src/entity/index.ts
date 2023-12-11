@@ -1,6 +1,7 @@
 export * from "./AuthenticationTokenSession";
 export * from "./AuthorizationCode";
 export * from "./AuthorizationSession";
+export * from "./BackchannelSession";
 export * from "./BrowserSession";
 export * from "./ClaimsSession";
 export * from "./Client";

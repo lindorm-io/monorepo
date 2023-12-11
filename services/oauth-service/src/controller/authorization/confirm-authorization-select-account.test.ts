@@ -17,7 +17,7 @@ import {
   tryFindClientSession as _tryFindClientSession,
 } from "../../handler";
 import { createAuthorizationVerifyUri as _createAuthorizationVerifyUri } from "../../util";
-import { confirmSelectAccountController } from "./confirm-select-account";
+import { confirmAuthorizationSelectAccountController } from "./confirm-authorization-select-account";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
@@ -30,7 +30,7 @@ const isConsentRequired = _isConsentRequired as jest.Mock;
 const isLoginRequired = _isLoginRequired as jest.Mock;
 const isSsoAvailable = _isSsoAvailable as jest.Mock;
 
-describe("confirmSelectAccountController", () => {
+describe("confirmAuthorizationSelectAccountController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -78,7 +78,7 @@ describe("confirmSelectAccountController", () => {
   });
 
   test("should resolve existing session", async () => {
-    await expect(confirmSelectAccountController(ctx)).resolves.toStrictEqual({
+    await expect(confirmAuthorizationSelectAccountController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
@@ -98,7 +98,7 @@ describe("confirmSelectAccountController", () => {
   test("should resolve new session", async () => {
     ctx.data.selectNew = true;
 
-    await expect(confirmSelectAccountController(ctx)).resolves.toStrictEqual({
+    await expect(confirmAuthorizationSelectAccountController(ctx)).resolves.toStrictEqual({
       body: { redirectTo: "createAuthorizationVerifyUri" },
     });
 
@@ -118,6 +118,6 @@ describe("confirmSelectAccountController", () => {
   test("should throw on invalid session", async () => {
     ctx.data.selectExisting = "c7a03f2f-f255-4ee4-a358-43ab0d792d6b";
 
-    await expect(confirmSelectAccountController(ctx)).rejects.toThrow(ClientError);
+    await expect(confirmAuthorizationSelectAccountController(ctx)).rejects.toThrow(ClientError);
   });
 });

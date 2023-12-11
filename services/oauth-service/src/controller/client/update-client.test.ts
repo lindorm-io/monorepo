@@ -42,9 +42,9 @@ describe("updateClientController", () => {
         },
 
         active: false,
-        backChannelAuthCallbackUri: "https://backChannelAuthCallbackUri",
-        backChannelAuthMode: "ping",
-        backChannelLogoutUri: "https://backChannelLogoutUri",
+        backchannelAuthCallbackUri: "https://backchannelAuthCallbackUri",
+        backchannelAuthMode: "ping",
+        backchannelLogoutUri: "https://backchannelLogoutUri",
         description: "updated description",
         domain: "https://domain",
         frontChannelLogoutUri: "https://frontChannelLogoutUri",
@@ -86,7 +86,7 @@ describe("updateClientController", () => {
           credentials: ["4cd74408-f64e-4d93-8ecd-cb2532a9acd1"],
           identity: ["3b50bab6-2962-4193-8d29-410795620df1"],
         },
-        backChannelLogoutUri: "https://backChannelLogoutUri",
+        backchannelLogoutUri: "https://backchannelLogoutUri",
         customClaims: {
           uri: "https://claimsUri",
           username: "username",

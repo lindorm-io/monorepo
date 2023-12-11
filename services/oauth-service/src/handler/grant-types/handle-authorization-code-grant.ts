@@ -9,10 +9,10 @@ export const handleAuthorizationCodeGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
 ): Promise<Partial<TokenResponse>> => {
   const {
-    redis: { authorizationCodeCache, authorizationSessionCache },
     data: { code, codeVerifier, redirectUri },
     entity: { client },
     mongo: { browserSessionRepository, clientSessionRepository },
+    redis: { authorizationCodeCache, authorizationSessionCache },
   } = ctx;
 
   if (!code) {

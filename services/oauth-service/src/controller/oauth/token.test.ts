@@ -4,6 +4,7 @@ import { createTestClient } from "../../fixtures/entity";
 import {
   handleAuthenticationTokenGrant as _handleAuthenticationTokenGrant,
   handleAuthorizationCodeGrant as _handleAuthorizationCodeGrant,
+  handleBackchannelAuthenticationGrant as _handleBackchannelAuthenticationGrant,
   handleClientCredentialsGrant as _handleClientCredentialsGrant,
   handlePasswordGrant as _handlePasswordGrant,
   handleRefreshTokenGrant as _handleRefreshTokenGrant,
@@ -14,6 +15,7 @@ jest.mock("../../handler");
 
 const handleAuthenticationTokenGrant = _handleAuthenticationTokenGrant as jest.Mock;
 const handleAuthorizationCodeGrant = _handleAuthorizationCodeGrant as jest.Mock;
+const handleBackchannelAuthenticationGrant = _handleBackchannelAuthenticationGrant as jest.Mock;
 const handleClientCredentialsGrant = _handleClientCredentialsGrant as jest.Mock;
 const handlePasswordGrant = _handlePasswordGrant as jest.Mock;
 const handleRefreshTokenGrant = _handleRefreshTokenGrant as jest.Mock;
@@ -34,6 +36,7 @@ describe("oauthTokenController", () => {
 
     handleAuthenticationTokenGrant.mockResolvedValue("handleAuthenticationTokenGrant");
     handleAuthorizationCodeGrant.mockResolvedValue("handleAuthorizationCodeGrant");
+    handleBackchannelAuthenticationGrant.mockResolvedValue("handleBackchannelAuthenticationGrant");
     handleClientCredentialsGrant.mockResolvedValue("handleClientCredentialsGrant");
     handlePasswordGrant.mockResolvedValue("handlePasswordGrant");
     handleRefreshTokenGrant.mockResolvedValue("handleRefreshTokenGrant");
@@ -52,6 +55,14 @@ describe("oauthTokenController", () => {
 
     await expect(oauthTokenController(ctx)).resolves.toStrictEqual({
       body: "handleAuthorizationCodeGrant",
+    });
+  });
+
+  test("should resolve for BACKCHANNEL_AUTHENTICATION", async () => {
+    ctx.data.grantType = OpenIdGrantType.BACKCHANNEL_AUTHENTICATION;
+
+    await expect(oauthTokenController(ctx)).resolves.toStrictEqual({
+      body: "handleBackchannelAuthenticationGrant",
     });
   });
 

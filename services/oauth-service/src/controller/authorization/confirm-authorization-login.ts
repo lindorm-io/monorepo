@@ -13,7 +13,7 @@ type RequestData = ConfirmLoginRequestParams & ConfirmLoginRequestBody;
 
 type ResponseBody = ConfirmLoginResponse;
 
-export const confirmLoginSchema = Joi.object<RequestData>()
+export const confirmAuthorizationLoginSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
     factors: Joi.array().items(Joi.string().lowercase()).required(),
@@ -27,7 +27,7 @@ export const confirmLoginSchema = Joi.object<RequestData>()
   })
   .required();
 
-export const confirmLoginController: ServerKoaController<RequestData> = async (
+export const confirmAuthorizationLoginController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

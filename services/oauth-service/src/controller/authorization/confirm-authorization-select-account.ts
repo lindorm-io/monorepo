@@ -22,7 +22,7 @@ type RequestData = ConfirmSelectAccountRequestParams & ConfirmSelectAccountReque
 
 type ResponseBody = ConfirmSelectAccountResponse;
 
-export const confirmSelectAccountSchema = Joi.object<RequestData>()
+export const confirmAuthorizationSelectAccountSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
     selectExisting: Joi.string().guid(),
@@ -30,7 +30,7 @@ export const confirmSelectAccountSchema = Joi.object<RequestData>()
   })
   .required();
 
-export const confirmSelectAccountController: ServerKoaController<RequestData> = async (
+export const confirmAuthorizationSelectAccountController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {

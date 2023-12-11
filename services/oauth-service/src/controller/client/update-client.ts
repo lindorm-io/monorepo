@@ -1,5 +1,5 @@
 import {
-  OpenIdBackChannelAuthMode,
+  OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
   OpenIdClientType,
   Scope,
@@ -29,9 +29,9 @@ type RequestData = {
   active?: boolean;
   allowed?: ClientAllowed;
   audiences?: ClientAudiences;
-  backChannelAuthCallbackUri?: string;
-  backChannelAuthMode?: OpenIdBackChannelAuthMode;
-  backChannelLogoutUri?: string;
+  backchannelAuthCallbackUri?: string;
+  backchannelAuthMode?: OpenIdBackchannelAuthMode;
+  backchannelLogoutUri?: string;
   customClaims?: ClientCustomClaims;
   defaults?: ClientDefaults;
   description?: string;
@@ -80,9 +80,9 @@ export const updateClientSchema = Joi.object<RequestData>()
     }),
 
     active: Joi.boolean(),
-    backChannelAuthCallbackUri: Joi.string().uri(),
-    backChannelAuthMode: Joi.string().valid(...Object.values(OpenIdBackChannelAuthMode)),
-    backChannelLogoutUri: Joi.string().uri(),
+    backchannelAuthCallbackUri: Joi.string().uri(),
+    backchannelAuthMode: Joi.string().valid(...Object.values(OpenIdBackchannelAuthMode)),
+    backchannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
     domain: Joi.string().uri(),
@@ -107,9 +107,9 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       active,
       allowed,
       audiences,
-      backChannelAuthCallbackUri,
-      backChannelAuthMode,
-      backChannelLogoutUri,
+      backchannelAuthCallbackUri,
+      backchannelAuthMode,
+      backchannelLogoutUri,
       customClaims,
       defaults,
       description,
@@ -190,14 +190,14 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (active !== undefined) {
     client.active = active;
   }
-  if (backChannelAuthCallbackUri !== undefined) {
-    client.backChannelAuthCallbackUri = backChannelAuthCallbackUri;
+  if (backchannelAuthCallbackUri !== undefined) {
+    client.backchannelAuthCallbackUri = backchannelAuthCallbackUri;
   }
-  if (backChannelAuthMode !== undefined) {
-    client.backChannelAuthMode = backChannelAuthMode;
+  if (backchannelAuthMode !== undefined) {
+    client.backchannelAuthMode = backchannelAuthMode;
   }
-  if (backChannelLogoutUri !== undefined) {
-    client.backChannelLogoutUri = backChannelLogoutUri;
+  if (backchannelLogoutUri !== undefined) {
+    client.backchannelLogoutUri = backchannelLogoutUri;
   }
   if (description !== undefined) {
     client.description = description;

@@ -2,6 +2,7 @@ export * from "./create-test-access-token";
 export * from "./create-test-authentication-token-session";
 export * from "./create-test-authorization-code";
 export * from "./create-test-authorization-session";
+export * from "./create-test-backchannel-session";
 export * from "./create-test-browser-session";
 export * from "./create-test-claims-session";
 export * from "./create-test-client";

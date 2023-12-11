@@ -1,6 +1,6 @@
+import { Logger } from "@lindorm-io/core-logger";
 import { IRedisConnection, RedisRepositoryBase } from "@lindorm-io/redis";
 import { LogoutSession, LogoutSessionAttributes } from "../../entity";
-import { Logger } from "@lindorm-io/core-logger";
 
 export class LogoutSessionCache extends RedisRepositoryBase<
   LogoutSessionAttributes,
@@ -8,7 +8,7 @@ export class LogoutSessionCache extends RedisRepositoryBase<
 > {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "LogoutSession",
+      entityName: LogoutSession.name,
       indexedAttributes: [],
       ttlAttribute: "expires",
     });

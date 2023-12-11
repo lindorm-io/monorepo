@@ -1,4 +1,5 @@
 export * from "./authorization";
+export * from "./backchannel";
 export * from "./cookies";
 export * from "./elevation";
 export * from "./grant-types";

@@ -15,6 +15,7 @@ import {
 import {
   AuthenticationTokenSession,
   AuthorizationSession,
+  BackchannelSession,
   ClaimsSession,
   Client,
   ClientSession,
@@ -27,6 +28,7 @@ import {
   AuthenticationTokenSessionCache,
   AuthorizationCodeCache,
   AuthorizationSessionCache,
+  BackchannelSessionCache,
   BrowserSessionRepository,
   ClaimsSessionCache,
   ClientRepository,
@@ -45,6 +47,7 @@ interface ServerAxios extends LindormNodeServerAxios {
 interface ServerEntity {
   authenticationTokenSession: AuthenticationTokenSession;
   authorizationSession: AuthorizationSession;
+  backchannelSession: BackchannelSession;
   claimsSession: ClaimsSession;
   client: Client;
   clientSession: ClientSession;
@@ -65,6 +68,7 @@ interface ServerRedis extends LindormNodeServerRedis {
   authenticationTokenSessionCache: AuthenticationTokenSessionCache;
   authorizationCodeCache: AuthorizationCodeCache;
   authorizationSessionCache: AuthorizationSessionCache;
+  backchannelSessionCache: BackchannelSessionCache;
   claimsSessionCache: ClaimsSessionCache;
   elevationSessionCache: ElevationSessionCache;
   logoutSessionCache: LogoutSessionCache;

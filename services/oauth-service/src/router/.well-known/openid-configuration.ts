@@ -1,4 +1,9 @@
-import { OpenIdGrantType, OpenIdResponseType, Scope } from "@lindorm-io/common-enums";
+import {
+  OpenIdBackchannelAuthMode,
+  OpenIdGrantType,
+  OpenIdResponseType,
+  Scope,
+} from "@lindorm-io/common-enums";
 import { HttpStatus, Router } from "@lindorm-io/koa";
 import { createBaseUrl } from "@lindorm-io/url";
 import { configuration } from "../../server/configuration";
@@ -18,8 +23,12 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
 
   ctx.body = {
     authorizationEndpoint: createURL("/oauth2/authorize"),
+    backchannelAuthenticationEndpoint: createURL("/oauth2/backchannel"),
+    backchannelAuthenticationRequestSigningAlgValuesSupported: [],
     backchannelLogoutSessionSupported: true,
     backchannelLogoutSupported: true,
+    backchannelTokenDeliveryModesSupported: [OpenIdBackchannelAuthMode.POLL],
+    backchannelUserCodeParameterSupported: false,
     claimsParameterSupported: false,
     claimsSupported: [
       "aal",
@@ -105,5 +114,6 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     tokenHeaderTypesSupported: ["JWT", "OPAQUE"],
     userinfoEndpoint: createURL("/userinfo"),
   };
+
   ctx.status = HttpStatus.Success.OK;
 });

@@ -1,24 +1,24 @@
 import { SessionStatus } from "@lindorm-io/common-enums";
 import {
-  RejectSelectAccountRequestParams,
-  RejectSelectAccountResponse,
+  RejectAuthorizationRequestParams,
+  RejectAuthorizationResponse,
 } from "@lindorm-io/common-types";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
-import { assertSessionPending, createSelectAccountRejectedUri } from "../../util";
+import { createAuthorizationRejectedUri } from "../../util";
 
-type RequestData = RejectSelectAccountRequestParams;
+type RequestData = RejectAuthorizationRequestParams;
 
-type ResponseBody = RejectSelectAccountResponse;
+type ResponseBody = RejectAuthorizationResponse;
 
-export const rejectSelectAccountSchema = Joi.object<RequestData>()
+export const rejectAuthorizationSchema = Joi.object<RequestData>()
   .keys({
     id: Joi.string().guid().required(),
   })
   .required();
 
-export const rejectSelectAccountController: ServerKoaController<RequestData> = async (
+export const rejectAuthorizationController: ServerKoaController<RequestData> = async (
   ctx,
 ): ControllerResponse<ResponseBody> => {
   const {
@@ -27,13 +27,13 @@ export const rejectSelectAccountController: ServerKoaController<RequestData> = a
     logger,
   } = ctx;
 
-  assertSessionPending(authorizationSession.status.selectAccount);
-
   logger.debug("Updating authorization session");
 
+  authorizationSession.status.consent = SessionStatus.REJECTED;
+  authorizationSession.status.login = SessionStatus.REJECTED;
   authorizationSession.status.selectAccount = SessionStatus.REJECTED;
 
   await authorizationSessionCache.update(authorizationSession);
 
-  return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
+  return { body: { redirectTo: createAuthorizationRejectedUri(authorizationSession) } };
 };

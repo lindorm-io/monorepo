@@ -1,17 +1,20 @@
 defaults:
   expiry:
-    authentication_token_session: 90 seconds
-    access_token: 3 minutes
-    authorization_session: 30 minutes
-    browser_session_remember: 30 days
-    browser_session: 20 hours
-    claims_session: 90 seconds
-    client_credentials: 60 seconds
-    code_session: 60 seconds
-    elevation_session: 30 minutes
-    id_token: 24 hours
-    logout_session: 60 seconds
-    refresh_token: 30 days
+    access_token: 3m
+    authentication_token_session: 90s
+    authorization_session: 30m
+    backchannel_session: 30m
+    browser_session_remember: 30d
+    browser_session: 20h
+    claims_session: 90s
+    client_credentials: 60s
+    code_session: 60s
+    elevation_session: 30m
+    id_token: 24h
+    logout_session: 60s
+    refresh_token: 30d
+  interval:
+    backchannel: 500ms
   sessions:
     loa_1_max_days: 90
     loa_2_max_days: 30
@@ -61,6 +64,7 @@ services:
     routes:
       admin:
         authentication_token: /admin/grant-types/authentication-token
+        backchannel_auth: /admin/grant-types/backchannel-auth
         password: /admin/grant-types/password
       redirect:
         consent: /oauth/consent

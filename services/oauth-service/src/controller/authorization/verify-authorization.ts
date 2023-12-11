@@ -11,12 +11,10 @@ import {
 } from "../../handler";
 import { ServerKoaController } from "../../types";
 import {
+  createAuthorizationRejectedUri,
   createConsentPendingUri,
-  createConsentRejectedUri,
   createLoginPendingUri,
-  createLoginRejectedUri,
   createSelectAccountPendingUri,
-  createSelectAccountRejectedUri,
 } from "../../util";
 
 type RequestData = VerifyAuthorizationRequestQuery;
@@ -62,7 +60,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createSelectAccountPendingUri(authorizationSession) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createSelectAccountRejectedUri(authorizationSession) };
+      return { redirect: createAuthorizationRejectedUri(authorizationSession) };
 
     case SessionStatus.CONFIRMED:
     case SessionStatus.SKIP:
@@ -84,7 +82,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createLoginPendingUri(authorizationSession) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createLoginRejectedUri(authorizationSession) };
+      return { redirect: createAuthorizationRejectedUri(authorizationSession) };
 
     case SessionStatus.SKIP:
     case SessionStatus.VERIFIED:
@@ -109,7 +107,7 @@ export const verifyAuthorizationController: ServerKoaController<RequestData> = a
       return { redirect: createConsentPendingUri(authorizationSession) };
 
     case SessionStatus.REJECTED:
-      return { redirect: createConsentRejectedUri(authorizationSession) };
+      return { redirect: createAuthorizationRejectedUri(authorizationSession) };
 
     case SessionStatus.SKIP:
     case SessionStatus.VERIFIED:

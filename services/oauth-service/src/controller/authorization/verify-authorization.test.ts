@@ -13,24 +13,20 @@ import {
   handleOauthLoginVerification as _handleOauthLoginVerification,
 } from "../../handler";
 import {
+  createAuthorizationRejectedUri as _createAuthorizationRejectedUri,
   createConsentPendingUri as _createConsentPendingUri,
-  createConsentRejectedUri as _createConsentRejectedUri,
   createLoginPendingUri as _createLoginPendingUri,
-  createLoginRejectedUri as _createLoginRejectedUri,
   createSelectAccountPendingUri as _createSelectAccountPendingUri,
-  createSelectAccountRejectedUri as _createSelectAccountRejectedUri,
 } from "../../util";
 import { verifyAuthorizationController } from "./verify-authorization";
 
 jest.mock("../../handler");
 jest.mock("../../util");
 
+const createAuthorizationRejectedUri = _createAuthorizationRejectedUri as jest.Mock;
 const createConsentPendingUri = _createConsentPendingUri as jest.Mock;
-const createConsentRejectedUri = _createConsentRejectedUri as jest.Mock;
 const createLoginPendingUri = _createLoginPendingUri as jest.Mock;
-const createLoginRejectedUri = _createLoginRejectedUri as jest.Mock;
 const createSelectAccountPendingUri = _createSelectAccountPendingUri as jest.Mock;
-const createSelectAccountRejectedUri = _createSelectAccountRejectedUri as jest.Mock;
 const generateCallbackResponse = _generateCallbackResponse as jest.Mock;
 const handleOauthConsentVerification = _handleOauthConsentVerification as jest.Mock;
 const handleOauthLoginVerification = _handleOauthLoginVerification as jest.Mock;
@@ -88,12 +84,10 @@ describe("oauthVerifyController", () => {
       }),
     );
 
+    createAuthorizationRejectedUri.mockReturnValue("createAuthorizationRejectedUri");
     createConsentPendingUri.mockReturnValue("createConsentPendingUri");
-    createConsentRejectedUri.mockReturnValue("createConsentRejectedUri");
     createLoginPendingUri.mockReturnValue("createLoginPendingUri");
-    createLoginRejectedUri.mockReturnValue("createLoginRejectedUri");
     createSelectAccountPendingUri.mockReturnValue("createSelectAccountPendingUri");
-    createSelectAccountRejectedUri.mockReturnValue("createSelectAccountRejectedUri");
     generateCallbackResponse.mockResolvedValue({ redirect: "generateCallbackResponse" });
   });
 
@@ -121,7 +115,7 @@ describe("oauthVerifyController", () => {
     ctx.entity.authorizationSession.status.selectAccount = "rejected";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
-      redirect: "createSelectAccountRejectedUri",
+      redirect: "createAuthorizationRejectedUri",
     });
   });
 
@@ -137,7 +131,7 @@ describe("oauthVerifyController", () => {
     ctx.entity.authorizationSession.status.login = "rejected";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
-      redirect: "createLoginRejectedUri",
+      redirect: "createAuthorizationRejectedUri",
     });
   });
 
@@ -153,7 +147,7 @@ describe("oauthVerifyController", () => {
     ctx.entity.authorizationSession.status.consent = "rejected";
 
     await expect(verifyAuthorizationController(ctx)).resolves.toStrictEqual({
-      redirect: "createConsentRejectedUri",
+      redirect: "createAuthorizationRejectedUri",
     });
   });
 

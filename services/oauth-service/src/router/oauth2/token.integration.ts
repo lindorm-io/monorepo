@@ -3,6 +3,7 @@ import {
   AuthenticationMethod,
   AuthenticationStrategy,
   OpenIdGrantType,
+  SessionStatus,
 } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
 import { Algorithm } from "@lindorm-io/key-pair";
@@ -18,6 +19,7 @@ import { TEST_GET_USERINFO_RESPONSE, getTestData } from "../../fixtures/data";
 import {
   createTestAuthorizationCode,
   createTestAuthorizationSession,
+  createTestBackchannelSession,
   createTestBrowserSession,
   createTestClient,
   createTestClientSession,
@@ -28,6 +30,7 @@ import {
   TEST_ARGON,
   TEST_AUTHORIZATION_CODE_CACHE,
   TEST_AUTHORIZATION_SESSION_CACHE,
+  TEST_BACKCHANNEL_SESSION_CACHE,
   TEST_BROWSER_SESSION_REPOSITORY,
   TEST_CLIENT_REPOSITORY,
   TEST_CLIENT_SESSION_REPOSITORY,
@@ -181,6 +184,54 @@ describe("/oauth2/token", () => {
     });
   });
 
+  test("should resolve for backchannel grant type", async () => {
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        secret: await TEST_ARGON.sign("secret"),
+      }),
+    );
+
+    const clientSession = await TEST_CLIENT_SESSION_REPOSITORY.create(
+      createTestClientSession({
+        audiences: [configuration.oauth.client_id, client.id],
+        browserSessionId: null,
+        clientId: client.id,
+        identityId: randomUUID(),
+        scopes: client.allowed.scopes,
+      }),
+    );
+
+    const backchannelSession = await TEST_BACKCHANNEL_SESSION_CACHE.create(
+      createTestBackchannelSession({
+        clientId: client.id,
+        clientSessionId: clientSession.id,
+        status: {
+          consent: SessionStatus.CONFIRMED,
+          login: SessionStatus.CONFIRMED,
+        },
+      }),
+    );
+
+    const response = await request(server.callback())
+      .post("/oauth2/token")
+      .set("Authorization", `Basic ${baseHash(`${client.id}:secret`)}`)
+      .send({
+        auth_req_id: backchannelSession.id,
+        grant_type: OpenIdGrantType.BACKCHANNEL_AUTHENTICATION,
+      })
+      .expect(200);
+
+    expect(response.body).toStrictEqual({
+      access_token: expect.any(String),
+      expires_in: 99,
+      id_token: expect.any(String),
+      refresh_token: expect.any(String),
+      scope:
+        "address email offline_access openid phone profile accessibility national_identity_number public social_security_number username",
+      token_type: "Bearer",
+    });
+  });
+
   test("should resolve for jwt bearer grant type", async () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
@@ -203,7 +254,7 @@ describe("/oauth2/token", () => {
         exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
         iat: getUnixTime(new Date()),
         iss: "https://client.test.authentication.lindorm.io",
-        jti: "044f4883-94d1-42f7-94d8-d0e0430adb5d",
+        jti: randomUUID(),
         sub: client.id,
       },
       client.authenticationAssertion.secret!,
@@ -216,7 +267,7 @@ describe("/oauth2/token", () => {
         exp: getUnixTime(new Date("2021-01-01T08:10:00.000Z")),
         iat: getUnixTime(new Date()),
         iss: "https://client.test.authorization.lindorm.io",
-        jti: "aa9170fd-1004-4616-87da-0f288ab458f6",
+        jti: randomUUID(),
         sub: randomUUID(),
       },
       client.authorizationAssertion.secret!,

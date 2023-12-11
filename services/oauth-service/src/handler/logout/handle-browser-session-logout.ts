@@ -1,10 +1,10 @@
-import { ClientSessionType } from "../../enum";
-import { LogoutSession } from "../../entity";
 import { ServerError } from "@lindorm-io/errors";
+import { LogoutSession } from "../../entity";
+import { ClientSessionType } from "../../enum";
 import { ServerKoaContext } from "../../types";
-import { createLogoutToken } from "../token";
 import { setBrowserSessionCookies } from "../cookies";
 import { tryFindBrowserSessions } from "../sessions";
+import { createLogoutToken } from "../token";
 
 export const handleBrowserSessionLogout = async (
   ctx: ServerKoaContext,
@@ -43,10 +43,10 @@ export const handleBrowserSessionLogout = async (
   for (const clientSession of clientSessions) {
     const client = await clientRepository.find({ id: clientSession.clientId });
 
-    if (client.backChannelLogoutUri) {
+    if (client.backchannelLogoutUri) {
       const { token } = createLogoutToken(ctx, client, clientSession);
 
-      await axiosClient.post(client.backChannelLogoutUri, {
+      await axiosClient.post(client.backchannelLogoutUri, {
         body: { logoutToken: token },
       });
     }

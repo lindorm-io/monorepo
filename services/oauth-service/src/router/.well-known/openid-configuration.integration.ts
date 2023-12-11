@@ -18,8 +18,12 @@ describe("/.well-known/openid-configuration", () => {
 
     expect(response.body).toStrictEqual({
       authorization_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/authorize",
+      backchannel_authentication_endpoint: "https://oauth.test.lindorm.io:3005/oauth2/backchannel",
+      backchannel_authentication_request_signing_alg_values_supported: [],
       backchannel_logout_session_supported: true,
       backchannel_logout_supported: true,
+      backchannel_token_delivery_modes_supported: ["poll"],
+      backchannel_user_code_parameter_supported: false,
       claims_parameter_supported: false,
       claims_supported: [
         "aal",
@@ -80,8 +84,13 @@ describe("/.well-known/openid-configuration", () => {
         "password",
         "refresh_token",
         "urn:ietf:params:oauth:grant-type:authentication-token",
+        "urn:ietf:params:oauth:grant-type:authorization-code",
+        "urn:ietf:params:oauth:grant-type:client-credentials",
         "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "urn:ietf:params:oauth:grant-type:password",
+        "urn:ietf:params:oauth:grant-type:refresh-token",
         "urn:ietf:params:oauth:grant-type:token-exchange",
+        "urn:openid:params:grant-type:ciba",
       ],
       id_token_encryption_alg_values_supported: [],
       id_token_encryption_enc_values_supported: [],

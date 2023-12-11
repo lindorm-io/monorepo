@@ -1,7 +1,7 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdBackChannelAuthMode,
+  OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -63,15 +63,56 @@ export type ClientExpiry = {
   refreshToken: ReadableTime;
 };
 
+// TODO /connect/register compability
+
+/**
+ * https://openid.net/specs/openid-connect-registration-1_0.html
+ * https://openid.net/specs/openid-connect-session-1_0.html
+ */
+
+/**
+  applicationType: string;
+  backchannelTokenDeliveryMode: string | null;
+  clientUri: string | null;
+  contacts: Array<string>;
+  defaultAcrValues: Array<string>;
+  defaultMaxAge: number;
+  grantTypes: Array<OpenIdGrantType>;
+  idTokenEncryptedResponseAlg: string | null;
+  idTokenEncryptedResponseEnc: string | null;
+  idTokenSignedResponseAlg: string | null;
+  initiateLoginUri: string | null;
+  jwks: Array<string>;
+  jwksUri: string | null;
+  logoUri: string | null;
+  name: string;
+  policyUri: string | null;
+  redirectUris: Array<string>;
+  requestObjectEncryptionAlg: string | null;
+  requestObjectEncryptionEnc: string | null;
+  requestObjectSigningAlg: string | null;
+  requestUris: Array<string>;
+  requireAuthTime: boolean;
+  responseTypes: Array<string>;
+  sectorIdentifierUri: string | null;
+  subjectType: string | null;
+  tokenEndpointAuthMethod: string | null;
+  tokenEndpointAuthSigningAlg: string | null;
+  tosUri: string | null;
+  userinfoEncryptedResponseAlg: string | null;
+  userinfoEncryptedResponseEnc: string | null;
+  userinfoSignedResponseAlg: string | null;
+ */
+
 export type ClientAttributes = EntityAttributes & {
   active: boolean;
   allowed: ClientAllowed;
   audiences: ClientAudiences;
   authenticationAssertion: ClientAuthenticationAssertion;
   authorizationAssertion: ClientAuthorizationAssertion;
-  backChannelAuthCallbackUri: string | null;
-  backChannelAuthMode: OpenIdBackChannelAuthMode;
-  backChannelLogoutUri: string | null;
+  backchannelAuthCallbackUri: string | null;
+  backchannelAuthMode: OpenIdBackchannelAuthMode;
+  backchannelLogoutUri: string | null;
   customClaims: ClientCustomClaims;
   defaults: ClientDefaults;
   description: string | null;
@@ -98,9 +139,9 @@ export type ClientOptions = Optional<
   ClientAttributes,
   | EntityKeys
   | "active"
-  | "backChannelAuthCallbackUri"
-  | "backChannelAuthMode"
-  | "backChannelLogoutUri"
+  | "backchannelAuthCallbackUri"
+  | "backchannelAuthMode"
+  | "backchannelLogoutUri"
   | "description"
   | "frontChannelLogoutUri"
   | "logoUri"
@@ -186,11 +227,11 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
 
     active: Joi.boolean().required(),
-    backChannelAuthCallbackUri: Joi.string().uri().required(),
-    backChannelAuthMode: Joi.string()
-      .valid(...Object.values(OpenIdBackChannelAuthMode))
+    backchannelAuthCallbackUri: Joi.string().uri().required(),
+    backchannelAuthMode: Joi.string()
+      .valid(...Object.values(OpenIdBackchannelAuthMode))
       .required(),
-    backChannelLogoutUri: Joi.string().uri().required(),
+    backchannelLogoutUri: Joi.string().uri().required(),
     description: Joi.string().allow(null).required(),
     domain: Joi.string().uri().required(),
     frontChannelLogoutUri: Joi.string().uri().allow(null).required(),
@@ -221,9 +262,9 @@ export class Client extends LindormEntity<ClientAttributes> {
   public audiences: ClientAudiences;
   public authenticationAssertion: ClientAuthenticationAssertion;
   public authorizationAssertion: ClientAuthorizationAssertion;
-  public backChannelAuthCallbackUri: string | null;
-  public backChannelAuthMode: OpenIdBackChannelAuthMode;
-  public backChannelLogoutUri: string | null;
+  public backchannelAuthCallbackUri: string | null;
+  public backchannelAuthMode: OpenIdBackchannelAuthMode;
+  public backchannelLogoutUri: string | null;
   public customClaims: ClientCustomClaims;
   public defaults: ClientDefaults;
   public description: string | null;
@@ -253,9 +294,9 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.audiences = options.audiences;
     this.authenticationAssertion = options.authenticationAssertion;
     this.authorizationAssertion = options.authorizationAssertion;
-    this.backChannelAuthCallbackUri = options.backChannelAuthCallbackUri || null;
-    this.backChannelAuthMode = options.backChannelAuthMode || OpenIdBackChannelAuthMode.POLL;
-    this.backChannelLogoutUri = options.backChannelLogoutUri || null;
+    this.backchannelAuthCallbackUri = options.backchannelAuthCallbackUri || null;
+    this.backchannelAuthMode = options.backchannelAuthMode || OpenIdBackchannelAuthMode.POLL;
+    this.backchannelLogoutUri = options.backchannelLogoutUri || null;
     this.customClaims = options.customClaims;
     this.defaults = options.defaults;
     this.description = options.description || null;
@@ -291,9 +332,9 @@ export class Client extends LindormEntity<ClientAttributes> {
       audiences: this.audiences,
       authenticationAssertion: this.authenticationAssertion,
       authorizationAssertion: this.authorizationAssertion,
-      backChannelAuthCallbackUri: this.backChannelAuthCallbackUri,
-      backChannelAuthMode: this.backChannelAuthMode,
-      backChannelLogoutUri: this.backChannelLogoutUri,
+      backchannelAuthCallbackUri: this.backchannelAuthCallbackUri,
+      backchannelAuthMode: this.backchannelAuthMode,
+      backchannelLogoutUri: this.backchannelLogoutUri,
       customClaims: this.customClaims,
       defaults: this.defaults,
       description: this.description,

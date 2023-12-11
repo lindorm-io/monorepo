@@ -68,7 +68,6 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
   ctx,
 ): ControllerResponse => {
   const {
-    redis: { authorizationSessionCache },
     data: {
       acrValues,
       codeChallenge,
@@ -88,6 +87,7 @@ export const oauthAuthorizeController: ServerKoaController<RequestData> = async 
       uiLocales,
     },
     entity: { client },
+    redis: { authorizationSessionCache },
     token: { idToken },
   } = ctx;
 

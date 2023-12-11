@@ -19,10 +19,7 @@ import { handleAuthorizationCodeGrant } from "./handle-authorization-code-grant"
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 jest.mock("../../util");
-
-jest.mock("../oauth", () => ({
-  generateTokenResponse: jest.fn().mockResolvedValue("generateTokenResponse"),
-}));
+jest.mock("../oauth");
 
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
 const assertCodeChallenge = _assertCodeChallenge as jest.Mock;

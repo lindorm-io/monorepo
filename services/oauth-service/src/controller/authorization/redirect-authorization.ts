@@ -7,13 +7,11 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
 import { ServerKoaController } from "../../types";
 import {
+  createAuthorizationRejectedUri,
   createAuthorizationVerifyUri,
   createConsentPendingUri,
-  createConsentRejectedUri,
   createLoginPendingUri,
-  createLoginRejectedUri,
   createSelectAccountPendingUri,
-  createSelectAccountRejectedUri,
 } from "../../util";
 
 type RequestData = RedirectAuthorizationRequestParams;
@@ -38,7 +36,7 @@ export const redirectAuthorizationController: ServerKoaController<RequestData> =
       return { body: { redirectTo: createSelectAccountPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createSelectAccountRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createAuthorizationRejectedUri(authorizationSession) } };
 
     default:
       break;
@@ -49,7 +47,7 @@ export const redirectAuthorizationController: ServerKoaController<RequestData> =
       return { body: { redirectTo: createLoginPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createLoginRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createAuthorizationRejectedUri(authorizationSession) } };
 
     default:
       break;
@@ -60,7 +58,7 @@ export const redirectAuthorizationController: ServerKoaController<RequestData> =
       return { body: { redirectTo: createConsentPendingUri(authorizationSession) } };
 
     case SessionStatus.REJECTED:
-      return { body: { redirectTo: createConsentRejectedUri(authorizationSession) } };
+      return { body: { redirectTo: createAuthorizationRejectedUri(authorizationSession) } };
 
     default:
       break;

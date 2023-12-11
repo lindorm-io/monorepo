@@ -13,6 +13,7 @@ export interface Configuration {
 
 interface Defaults {
   expiry: Expiry;
+  interval: Interval;
   sessions: Sessions;
 }
 
@@ -20,6 +21,7 @@ interface Expiry {
   access_token: ReadableTime;
   authentication_token_session: ReadableTime;
   authorization_session: ReadableTime;
+  backchannel_session: ReadableTime;
   browser_session: ReadableTime;
   browser_session_remember: ReadableTime;
   claims_session: ReadableTime;
@@ -29,6 +31,10 @@ interface Expiry {
   id_token: ReadableTime;
   logout_session: ReadableTime;
   refresh_token: ReadableTime;
+}
+
+interface Interval {
+  backchannel: ReadableTime;
 }
 
 interface Sessions {
@@ -99,6 +105,7 @@ interface AuthenticationServiceRoutes {
 
 interface Admin {
   authentication_token: string;
+  backchannel_auth: string;
   password: string;
 }
 

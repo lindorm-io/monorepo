@@ -1,12 +1,4 @@
 import { DefaultLindormMiddleware } from "@lindorm-io/koa";
+import { accessControlMiddleware } from "../middleware";
 
-export const middleware: Array<DefaultLindormMiddleware> = [
-  async (ctx, next) => {
-    await next();
-    ctx.set("Access-Control-Allow-Credentials", "true");
-    ctx.set("Access-Control-Allow-Headers", "*");
-    ctx.set("Access-Control-Allow-Methods", "*");
-    ctx.set("Access-Control-Allow-Origin", "http://localhost:4100");
-    ctx.set("Cache-Control", "no-cache");
-  },
-];
+export const middleware: Array<DefaultLindormMiddleware> = [accessControlMiddleware];

@@ -3,23 +3,23 @@ import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
-import { createTestAuthorizationSession, createTestClient } from "../../fixtures/entity";
-import { createAuthorizationVerifyUri as _createAuthorizationVerifyRedirectUri } from "../../util";
-import { confirmConsentController } from "./confirm-consent";
+import { createTestBackchannelSession, createTestClient } from "../../fixtures/entity";
+import { resolveBackchannelAuthentication as _resolveBackchannelAuthentication } from "../../handler";
+import { confirmBackchannelConsentController } from "./confirm-backchannel-consent";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("../../util");
+jest.mock("../../handler");
 
-const createAuthorizationVerifyRedirectUri = _createAuthorizationVerifyRedirectUri as jest.Mock;
+const resolveBackchannelAuthentication = _resolveBackchannelAuthentication as jest.Mock;
 
-describe("confirmConsentController", () => {
+describe("confirmBackchannelConsentController", () => {
   let ctx: any;
 
   beforeEach(() => {
     ctx = {
       redis: {
-        authorizationSessionCache: createMockRedisRepository(createTestAuthorizationSession),
+        backchannelSessionCache: createMockRedisRepository(createTestBackchannelSession),
       },
       data: {
         audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
@@ -33,7 +33,7 @@ describe("confirmConsentController", () => {
         ],
       },
       entity: {
-        authorizationSession: createTestAuthorizationSession({
+        backchannelSession: createTestBackchannelSession({
           requestedConsent: {
             audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
             scopes: [
@@ -51,15 +51,13 @@ describe("confirmConsentController", () => {
       logger: createMockLogger(),
     };
 
-    createAuthorizationVerifyRedirectUri.mockReturnValue("redirect-uri");
+    resolveBackchannelAuthentication.mockResolvedValue(undefined);
   });
 
   test("should resolve", async () => {
-    await expect(confirmConsentController(ctx)).resolves.toStrictEqual({
-      body: { redirectTo: "redirect-uri" },
-    });
+    await expect(confirmBackchannelConsentController(ctx)).resolves.toBeUndefined();
 
-    expect(ctx.redis.authorizationSessionCache.update).toHaveBeenCalledWith(
+    expect(ctx.redis.backchannelSessionCache.update).toHaveBeenCalledWith(
       expect.objectContaining({
         confirmedConsent: {
           audiences: ["711b142d-5e96-41a9-abb6-794e5c7464df"],
@@ -75,17 +73,18 @@ describe("confirmConsentController", () => {
         status: expect.objectContaining({ consent: "confirmed" }),
       }),
     );
+
+    expect(resolveBackchannelAuthentication).toHaveBeenCalled();
   });
 
   test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession = createTestAuthorizationSession({
+    ctx.entity.backchannelSession = createTestBackchannelSession({
       status: {
-        login: SessionStatus.CONFIRMED,
+        login: SessionStatus.REJECTED,
         consent: SessionStatus.REJECTED,
-        selectAccount: SessionStatus.PENDING,
       },
     });
 
-    await expect(confirmConsentController(ctx)).rejects.toThrow(ClientError);
+    await expect(confirmBackchannelConsentController(ctx)).rejects.toThrow(ClientError);
   });
 });

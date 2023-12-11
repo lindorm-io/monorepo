@@ -40,8 +40,12 @@ export const authenticateClientMiddleware: ServerKoaMiddleware = async (
     client = await clientRepository.find({ id });
   }
 
+  if (!client) {
+    throw new ClientError("Client not found");
+  }
+
   if (!client.active) {
-    throw new ClientError("Client is not active");
+    throw new ClientError("Client has been disabled");
   }
 
   if (secret) {
@@ -66,13 +70,9 @@ export const authenticateClientMiddleware: ServerKoaMiddleware = async (
           : [Algorithm.HS256],
         audience: configuration.oauth.client_id,
         clockTolerance: 10,
-        issuer: client.authenticationAssertion.issuer
-          ? client.authenticationAssertion.issuer
-          : client.id,
+        issuer: client.authenticationAssertion.issuer ?? client.id,
         maxAge: 60,
-        secret: client.authenticationAssertion.secret
-          ? client.authenticationAssertion.secret
-          : client.secret,
+        secret: client.authenticationAssertion.secret ?? client.secret,
         subject: client.id,
       });
 

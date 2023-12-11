@@ -28,7 +28,7 @@ jest.unmock("@lindorm-io/redis");
 describe("/oauth2/sessions/logout", () => {
   beforeAll(setupIntegration);
 
-  nock("https://test.client.lindorm.io").post("/back-channel-logout").times(999).reply(200);
+  nock("https://test.client.lindorm.io").post("/backchannel-logout").times(999).reply(200);
 
   test("should create logout session for access session", async () => {
     const { state } = getTestData();

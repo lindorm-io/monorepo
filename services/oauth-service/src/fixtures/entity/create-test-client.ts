@@ -1,7 +1,7 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
-  OpenIdBackChannelAuthMode,
+  OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -61,9 +61,9 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     },
 
     active: true,
-    backChannelAuthCallbackUri: "https://test.client.lindorm.io/back-channel-auth-callback",
-    backChannelAuthMode: OpenIdBackChannelAuthMode.PUSH,
-    backChannelLogoutUri: "https://test.client.lindorm.io/back-channel-logout",
+    backchannelAuthCallbackUri: "https://test.client.lindorm.io/backchannel-auth-callback",
+    backchannelAuthMode: OpenIdBackchannelAuthMode.POLL,
+    backchannelLogoutUri: "https://test.client.lindorm.io/backchannel-logout",
     description: "Client description",
     domain: "https://test.client.lindorm.io",
     logoUri: "https://logo.uri/logo",

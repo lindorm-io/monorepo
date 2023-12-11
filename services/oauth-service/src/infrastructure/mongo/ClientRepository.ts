@@ -1,11 +1,11 @@
-import { Client, ClientAttributes } from "../../entity";
-import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 import { Logger } from "@lindorm-io/core-logger";
+import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
+import { Client, ClientAttributes } from "../../entity";
 
 export class ClientRepository extends MongoRepositoryBase<ClientAttributes, Client> {
   public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "Client",
+      entityName: Client.name,
       indices: [],
     });
   }

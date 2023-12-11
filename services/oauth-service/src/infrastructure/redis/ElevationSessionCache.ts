@@ -8,7 +8,7 @@ export class ElevationSessionCache extends RedisRepositoryBase<
 > {
   public constructor(connection: IRedisConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "ElevationSession",
+      entityName: ElevationSession.name,
       indexedAttributes: [],
       ttlAttribute: "expires",
     });

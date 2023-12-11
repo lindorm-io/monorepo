@@ -1,13 +1,12 @@
-import { ClientError } from "@lindorm-io/errors";
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
 import { createTestAuthorizationSession } from "../../fixtures/entity";
-import { rejectConsentController } from "./reject-consent";
+import { rejectAuthorizationController } from "./reject-authorization";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-describe("rejectConsentController", () => {
+describe("rejectAuthorizationController", () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -25,10 +24,9 @@ describe("rejectConsentController", () => {
   });
 
   test("should resolve", async () => {
-    await expect(rejectConsentController(ctx)).resolves.toStrictEqual({
+    await expect(rejectAuthorizationController(ctx)).resolves.toStrictEqual({
       body: {
-        redirectTo:
-          "https://test.client.lindorm.io/redirect?error=request_rejected&error_description=consent_rejected&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+        redirectTo: `https://test.client.lindorm.io/redirect?error=request_rejected&error_description=authorization_rejected&state=9auMwEmvzbGrWJG5853OGpAGKQrHKzgX`,
       },
     });
 
@@ -36,14 +34,10 @@ describe("rejectConsentController", () => {
       expect.objectContaining({
         status: expect.objectContaining({
           consent: "rejected",
+          login: "rejected",
+          selectAccount: "rejected",
         }),
       }),
     );
-  });
-
-  test("should throw on invalid status", async () => {
-    ctx.entity.authorizationSession.status.consent = "skip";
-
-    await expect(rejectConsentController(ctx)).rejects.toThrow(ClientError);
   });
 });
