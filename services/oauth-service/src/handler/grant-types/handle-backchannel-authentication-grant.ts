@@ -23,11 +23,11 @@ export const handleBackchannelAuthenticationGrant = async (
     });
   }
 
-  if (client.backchannelAuthMode === OpenIdBackchannelAuthMode.PUSH) {
+  if (client.backchannelAuth.mode === OpenIdBackchannelAuthMode.PUSH) {
     throw new ClientError("Invalid Request", {
       code: "invalid_request",
       description: "Invalid client backchannel auth mode",
-      debug: { backchannelAuthMode: client.backchannelAuthMode },
+      debug: { backchannelAuthMode: client.backchannelAuth.mode },
     });
   }
 

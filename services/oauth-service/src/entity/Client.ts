@@ -45,6 +45,13 @@ export type ClientAudiences = {
   identity: Array<string>;
 };
 
+export type ClientBackchannelAuth = {
+  mode: OpenIdBackchannelAuthMode;
+  uri: string | null;
+  password: string | null;
+  username: string | null;
+};
+
 export type ClientCustomClaims = {
   uri: string | null;
   username: string | null;
@@ -110,8 +117,7 @@ export type ClientAttributes = EntityAttributes & {
   audiences: ClientAudiences;
   authenticationAssertion: ClientAuthenticationAssertion;
   authorizationAssertion: ClientAuthorizationAssertion;
-  backchannelAuthCallbackUri: string | null;
-  backchannelAuthMode: OpenIdBackchannelAuthMode;
+  backchannelAuth: ClientBackchannelAuth;
   backchannelLogoutUri: string | null;
   customClaims: ClientCustomClaims;
   defaults: ClientDefaults;
@@ -139,8 +145,6 @@ export type ClientOptions = Optional<
   ClientAttributes,
   | EntityKeys
   | "active"
-  | "backchannelAuthCallbackUri"
-  | "backchannelAuthMode"
   | "backchannelLogoutUri"
   | "description"
   | "frontChannelLogoutUri"
@@ -200,6 +204,14 @@ const schema = Joi.object<ClientAttributes>()
         secret: Joi.string().allow(null).required(),
       })
       .required(),
+    backchannelAuth: Joi.object().keys({
+      mode: Joi.string()
+        .valid(...Object.values(OpenIdBackchannelAuthMode))
+        .required(),
+      uri: Joi.string().uri().allow(null).required(),
+      username: Joi.string().allow(null).required(),
+      password: Joi.string().allow(null).required(),
+    }),
     customClaims: Joi.object()
       .keys({
         uri: Joi.string().uri().allow(null).required(),
@@ -227,10 +239,6 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
 
     active: Joi.boolean().required(),
-    backchannelAuthCallbackUri: Joi.string().uri().required(),
-    backchannelAuthMode: Joi.string()
-      .valid(...Object.values(OpenIdBackchannelAuthMode))
-      .required(),
     backchannelLogoutUri: Joi.string().uri().required(),
     description: Joi.string().allow(null).required(),
     domain: Joi.string().uri().required(),
@@ -262,8 +270,7 @@ export class Client extends LindormEntity<ClientAttributes> {
   public audiences: ClientAudiences;
   public authenticationAssertion: ClientAuthenticationAssertion;
   public authorizationAssertion: ClientAuthorizationAssertion;
-  public backchannelAuthCallbackUri: string | null;
-  public backchannelAuthMode: OpenIdBackchannelAuthMode;
+  public backchannelAuth: ClientBackchannelAuth;
   public backchannelLogoutUri: string | null;
   public customClaims: ClientCustomClaims;
   public defaults: ClientDefaults;
@@ -294,8 +301,7 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.audiences = options.audiences;
     this.authenticationAssertion = options.authenticationAssertion;
     this.authorizationAssertion = options.authorizationAssertion;
-    this.backchannelAuthCallbackUri = options.backchannelAuthCallbackUri || null;
-    this.backchannelAuthMode = options.backchannelAuthMode || OpenIdBackchannelAuthMode.POLL;
+    this.backchannelAuth = options.backchannelAuth;
     this.backchannelLogoutUri = options.backchannelLogoutUri || null;
     this.customClaims = options.customClaims;
     this.defaults = options.defaults;
@@ -332,8 +338,7 @@ export class Client extends LindormEntity<ClientAttributes> {
       audiences: this.audiences,
       authenticationAssertion: this.authenticationAssertion,
       authorizationAssertion: this.authorizationAssertion,
-      backchannelAuthCallbackUri: this.backchannelAuthCallbackUri,
-      backchannelAuthMode: this.backchannelAuthMode,
+      backchannelAuth: this.backchannelAuth,
       backchannelLogoutUri: this.backchannelLogoutUri,
       customClaims: this.customClaims,
       defaults: this.defaults,

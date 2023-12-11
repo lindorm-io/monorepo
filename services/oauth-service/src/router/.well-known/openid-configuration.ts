@@ -27,7 +27,11 @@ router.get("/", async (ctx: ServerKoaContext): Promise<void> => {
     backchannelAuthenticationRequestSigningAlgValuesSupported: [],
     backchannelLogoutSessionSupported: true,
     backchannelLogoutSupported: true,
-    backchannelTokenDeliveryModesSupported: [OpenIdBackchannelAuthMode.POLL],
+    backchannelTokenDeliveryModesSupported: [
+      OpenIdBackchannelAuthMode.PING,
+      OpenIdBackchannelAuthMode.POLL,
+      OpenIdBackchannelAuthMode.PUSH,
+    ],
     backchannelUserCodeParameterSupported: false,
     claimsParameterSupported: false,
     claimsSupported: [

@@ -1,4 +1,3 @@
-import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import {
   InitialiseBackchannelAuthQuery,
   OpenIdBackchannelAuthenticationRequestBody,
@@ -11,7 +10,7 @@ import { ControllerResponse } from "@lindorm-io/koa";
 import { ms } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { BackchannelSession } from "../../entity";
-import { generateServerCredentialsJwt } from "../../handler";
+import { generateServerBearerAuthMiddleware } from "../../handler";
 import { configuration } from "../../server/configuration";
 import { ServerKoaController } from "../../types";
 import { extractAcrValues } from "../../util";
@@ -112,11 +111,9 @@ export const oauthBackchannelController: ServerKoaController<RequestData> = asyn
     {
       query: { session: backchannelSession.id },
       middleware: [
-        axiosBearerAuthMiddleware(
-          generateServerCredentialsJwt(ctx, [
-            configuration.services.authentication_service.client_id,
-          ]),
-        ),
+        generateServerBearerAuthMiddleware(ctx, [
+          configuration.services.authentication_service.client_id,
+        ]),
       ],
     },
   );

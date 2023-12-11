@@ -18,6 +18,7 @@ import {
 import {
   ClientAllowed,
   ClientAudiences,
+  ClientBackchannelAuth,
   ClientCustomClaims,
   ClientDefaults,
   ClientExpiry,
@@ -29,8 +30,7 @@ type RequestData = {
   active?: boolean;
   allowed?: ClientAllowed;
   audiences?: ClientAudiences;
-  backchannelAuthCallbackUri?: string;
-  backchannelAuthMode?: OpenIdBackchannelAuthMode;
+  backchannelAuth?: ClientBackchannelAuth;
   backchannelLogoutUri?: string;
   customClaims?: ClientCustomClaims;
   defaults?: ClientDefaults;
@@ -63,6 +63,12 @@ export const updateClientSchema = Joi.object<RequestData>()
       client: Joi.array().items(Joi.string().guid()),
       identity: Joi.array().items(Joi.string().guid()),
     }),
+    backchannelAuth: Joi.object().keys({
+      mode: Joi.string().valid(...Object.values(OpenIdBackchannelAuthMode)),
+      uri: Joi.string().uri().allow(null),
+      username: Joi.string().allow(null),
+      password: Joi.string().allow(null),
+    }),
     customClaims: Joi.object().keys({
       uri: Joi.string().uri().allow(null),
       username: Joi.string().allow(null),
@@ -80,8 +86,6 @@ export const updateClientSchema = Joi.object<RequestData>()
     }),
 
     active: Joi.boolean(),
-    backchannelAuthCallbackUri: Joi.string().uri(),
-    backchannelAuthMode: Joi.string().valid(...Object.values(OpenIdBackchannelAuthMode)),
     backchannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
     frontChannelLogoutUri: Joi.string().uri().allow(null),
@@ -107,8 +111,7 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       active,
       allowed,
       audiences,
-      backchannelAuthCallbackUri,
-      backchannelAuthMode,
+      backchannelAuth,
       backchannelLogoutUri,
       customClaims,
       defaults,
@@ -157,6 +160,19 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     client.audiences.identity = audiences.identity;
   }
 
+  if (backchannelAuth?.mode !== undefined) {
+    client.backchannelAuth.mode = backchannelAuth.mode;
+  }
+  if (backchannelAuth?.uri !== undefined) {
+    client.backchannelAuth.uri = backchannelAuth.uri;
+  }
+  if (backchannelAuth?.username !== undefined) {
+    client.backchannelAuth.username = backchannelAuth.username;
+  }
+  if (backchannelAuth?.password !== undefined) {
+    client.backchannelAuth.password = backchannelAuth.password;
+  }
+
   if (customClaims?.uri !== undefined) {
     client.customClaims.uri = customClaims.uri;
   }
@@ -189,12 +205,6 @@ export const updateClientController: ServerKoaController<RequestData> = async (
 
   if (active !== undefined) {
     client.active = active;
-  }
-  if (backchannelAuthCallbackUri !== undefined) {
-    client.backchannelAuthCallbackUri = backchannelAuthCallbackUri;
-  }
-  if (backchannelAuthMode !== undefined) {
-    client.backchannelAuthMode = backchannelAuthMode;
   }
   if (backchannelLogoutUri !== undefined) {
     client.backchannelLogoutUri = backchannelLogoutUri;

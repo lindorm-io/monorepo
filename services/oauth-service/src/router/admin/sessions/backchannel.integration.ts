@@ -2,11 +2,16 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
+  OpenIdBackchannelAuthMode,
   Scope,
+  SessionStatus,
 } from "@lindorm-io/common-enums";
+import { baseHash } from "@lindorm-io/core";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
+import nock from "nock";
 import request from "supertest";
+import { TEST_GET_USERINFO_RESPONSE } from "../../../fixtures/data";
 import {
   createTestBackchannelSession,
   createTestClient,
@@ -29,6 +34,12 @@ jest.unmock("@lindorm-io/redis");
 
 describe("/admin/sessions/backchannel", () => {
   beforeAll(setupIntegration);
+
+  nock("https://identity.test.lindorm.io")
+    .get("/admin/claims")
+    .query(true)
+    .times(999)
+    .reply(200, TEST_GET_USERINFO_RESPONSE);
 
   test("should resolve data", async () => {
     const tenant = await TEST_TENANT_REPOSITORY.create(createTestTenant());
@@ -191,6 +202,122 @@ describe("/admin/sessions/backchannel", () => {
         }),
       }),
     );
+  });
+
+  test("should confirm login and ping client using notification token", async () => {
+    const scope = nock("https://test.client.lindorm.io")
+      .post("/backchannel-auth-callback")
+      .matchHeader("Authorization", "Bearer client-notification.jwt.jwt")
+      .times(1)
+      .reply(204);
+
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        backchannelAuth: {
+          mode: OpenIdBackchannelAuthMode.PING,
+          uri: "https://test.client.lindorm.io/backchannel-auth-callback",
+          username: null,
+          password: null,
+        },
+      }),
+    );
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const backchannelSession = await TEST_BACKCHANNEL_SESSION_CACHE.create(
+      createTestBackchannelSession({
+        clientId: client.id,
+        confirmedConsent: {
+          audiences: [client.id],
+          scopes: Object.values(Scope),
+        },
+        status: {
+          consent: SessionStatus.CONFIRMED,
+          login: SessionStatus.PENDING,
+        },
+      }),
+    );
+
+    await request(server.callback())
+      .post(`/admin/sessions/backchannel/${backchannelSession.id}/login`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        factors: [AuthenticationFactor.TWO_FACTOR],
+        identity_id: randomUUID(),
+        level_of_assurance: 2,
+        metadata: { ip: "127.0.0.1" },
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.TIME_BASED_OTP],
+        remember: true,
+        singleSignOn: true,
+        strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.TIME_BASED_OTP],
+      })
+      .expect(204);
+
+    scope.done();
+  });
+
+  test("should confirm login and push to client using basic auth", async () => {
+    const scope = nock("https://test.client.lindorm.io")
+      .post("/backchannel-auth-callback")
+      .matchHeader("Authorization", `Basic ${baseHash("username:password")}`)
+      .times(1)
+      .reply(204);
+
+    const client = await TEST_CLIENT_REPOSITORY.create(
+      createTestClient({
+        backchannelAuth: {
+          mode: OpenIdBackchannelAuthMode.PUSH,
+          uri: "https://test.client.lindorm.io/backchannel-auth-callback",
+          username: "username",
+          password: "password",
+        },
+        customClaims: {
+          uri: null,
+          username: null,
+          password: null,
+        },
+      }),
+    );
+
+    const clientCredentials = getTestClientCredentials({
+      audiences: [configuration.oauth.client_id, client.id],
+      subject: client.id,
+    });
+
+    const backchannelSession = await TEST_BACKCHANNEL_SESSION_CACHE.create(
+      createTestBackchannelSession({
+        clientId: client.id,
+        clientNotificationToken: null,
+        confirmedConsent: {
+          audiences: [client.id],
+          scopes: Object.values(Scope),
+        },
+        status: {
+          consent: SessionStatus.CONFIRMED,
+          login: SessionStatus.PENDING,
+        },
+      }),
+    );
+
+    await request(server.callback())
+      .post(`/admin/sessions/backchannel/${backchannelSession.id}/login`)
+      .set("Authorization", `Bearer ${clientCredentials}`)
+      .send({
+        factors: [AuthenticationFactor.TWO_FACTOR],
+        identity_id: randomUUID(),
+        level_of_assurance: 2,
+        metadata: { ip: "127.0.0.1" },
+        methods: [AuthenticationMethod.EMAIL, AuthenticationMethod.TIME_BASED_OTP],
+        remember: true,
+        singleSignOn: true,
+        strategies: [AuthenticationStrategy.EMAIL_OTP, AuthenticationStrategy.TIME_BASED_OTP],
+      })
+      .expect(204);
+
+    scope.done();
   });
 
   test("should reject", async () => {

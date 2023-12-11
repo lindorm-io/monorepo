@@ -22,7 +22,7 @@ describe("/.well-known/openid-configuration", () => {
       backchannel_authentication_request_signing_alg_values_supported: [],
       backchannel_logout_session_supported: true,
       backchannel_logout_supported: true,
-      backchannel_token_delivery_modes_supported: ["poll"],
+      backchannel_token_delivery_modes_supported: ["ping", "poll", "push"],
       backchannel_user_code_parameter_supported: false,
       claims_parameter_supported: false,
       claims_supported: [

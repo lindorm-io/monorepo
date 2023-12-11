@@ -1,6 +1,7 @@
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
+  OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -72,6 +73,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -113,6 +120,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -154,6 +167,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -195,6 +214,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -236,6 +261,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -277,6 +308,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,
@@ -318,6 +355,12 @@ const main = async (): Promise<void> => {
       },
       authenticationAssertion: { algorithm: null, issuer: null, secret: null },
       authorizationAssertion: { algorithm: null, issuer: null, secret: null },
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        username: null,
+        password: null,
+      },
       customClaims: { uri: null, username: null, password: null },
       defaults: {
         displayMode: OpenIdDisplayMode.PAGE,

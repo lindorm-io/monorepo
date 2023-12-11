@@ -1,4 +1,3 @@
-import { axiosBearerAuthMiddleware } from "@lindorm-io/axios";
 import { OpenIdGrantType, Scope } from "@lindorm-io/common-enums";
 import {
   TokenRequestBody,
@@ -15,7 +14,7 @@ import { ClientSessionType } from "../../enum";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
 import { generateTokenResponse } from "../oauth";
-import { generateServerCredentialsJwt } from "../token";
+import { generateServerBearerAuthMiddleware } from "../token";
 
 export const handlePasswordGrant = async (
   ctx: ServerKoaContext<TokenRequestBody>,
@@ -48,9 +47,9 @@ export const handlePasswordGrant = async (
   }
 
   const middleware = [
-    axiosBearerAuthMiddleware(
-      generateServerCredentialsJwt(ctx, [configuration.services.authentication_service.client_id]),
-    ),
+    generateServerBearerAuthMiddleware(ctx, [
+      configuration.services.authentication_service.client_id,
+    ]),
   ];
 
   const { data } = await authenticationClient.post<

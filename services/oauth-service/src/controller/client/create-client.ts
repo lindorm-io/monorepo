@@ -1,4 +1,5 @@
 import {
+  OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
   OpenIdClientType,
   OpenIdDisplayMode,
@@ -93,6 +94,13 @@ export const createClientController: ServerKoaController<RequestData> = async (
         algorithm: null,
         issuer: null,
         secret: null,
+      },
+
+      backchannelAuth: {
+        mode: OpenIdBackchannelAuthMode.POLL,
+        uri: null,
+        password: null,
+        username: null,
       },
 
       customClaims: {

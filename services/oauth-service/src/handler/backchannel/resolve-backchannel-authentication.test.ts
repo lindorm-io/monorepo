@@ -2,6 +2,7 @@ import {
   AuthenticationFactor,
   AuthenticationMethod,
   AuthenticationStrategy,
+  OpenIdBackchannelAuthMode,
   Scope,
   SessionStatus,
 } from "@lindorm-io/common-enums";
@@ -126,6 +127,26 @@ describe("resolveBackchannelAuthentication", () => {
     );
 
     expect(ctx.redis.backchannelSessionCache.update).toHaveBeenCalled();
+  });
+
+  test("should resolve ping", async () => {
+    client.backchannelAuth.mode = OpenIdBackchannelAuthMode.PING;
+
+    await expect(
+      resolveBackchannelAuthentication(ctx, client, backchannelSession),
+    ).resolves.toBeUndefined();
+
+    expect(handleBackchannelPing).toHaveBeenCalled();
+  });
+
+  test("should resolve push", async () => {
+    client.backchannelAuth.mode = OpenIdBackchannelAuthMode.PUSH;
+
+    await expect(
+      resolveBackchannelAuthentication(ctx, client, backchannelSession),
+    ).resolves.toBeUndefined();
+
+    expect(handleBackchannelPush).toHaveBeenCalled();
   });
 
   test("should throw on invalid consent data", async () => {

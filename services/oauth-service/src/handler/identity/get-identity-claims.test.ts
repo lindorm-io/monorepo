@@ -5,12 +5,12 @@ import {
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
-import { generateServerCredentialsJwt as _generateServerCredentialsToken } from "../token";
+import { generateServerBearerAuthMiddleware as _generateServerBearerAuthMiddleware } from "../token";
 import { getIdentityClaims } from "./get-identity-claims";
 
 jest.mock("../token");
 
-const generateServerCredentialsToken = _generateServerCredentialsToken as jest.Mock;
+const generateServerBearerAuthMiddleware = _generateServerBearerAuthMiddleware as jest.Mock;
 
 describe("getIdentityClaims", () => {
   let ctx: any;
@@ -38,7 +38,7 @@ describe("getIdentityClaims", () => {
       },
     };
 
-    generateServerCredentialsToken.mockReturnValue("bearerToken");
+    generateServerBearerAuthMiddleware.mockReturnValue("generateServerBearerAuthMiddleware");
   });
 
   test("should resolve", async () => {

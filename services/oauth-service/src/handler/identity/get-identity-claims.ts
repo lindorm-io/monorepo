@@ -1,10 +1,10 @@
-import { axiosBasicAuthMiddleware, axiosBearerAuthMiddleware } from "@lindorm-io/axios";
+import { Middleware, axiosBasicAuthMiddleware } from "@lindorm-io/axios";
 import { Dict, GetClaimsQuery, GetClaimsResponse } from "@lindorm-io/common-types";
 import { expiryDate } from "@lindorm-io/expiry";
 import { ClaimsSession, Client, ClientSession } from "../../entity";
 import { configuration } from "../../server/configuration";
 import { ServerKoaContext } from "../../types";
-import { generateServerCredentialsJwt } from "../token";
+import { generateServerBearerAuthMiddleware } from "../token";
 
 export const getIdentityClaims = async (
   ctx: ServerKoaContext,
@@ -41,27 +41,27 @@ export const getIdentityClaims = async (
   >(configuration.services.identity_service.routes.claims, {
     query,
     middleware: [
-      axiosBearerAuthMiddleware(
-        generateServerCredentialsJwt(ctx, [configuration.services.identity_service.client_id]),
-      ),
+      generateServerBearerAuthMiddleware(ctx, [configuration.services.identity_service.client_id]),
     ],
   });
 
   let clientClaims: Dict = {};
 
-  if (client.customClaims.uri) {
-    const middleware =
-      client.customClaims.username && client.customClaims.password
-        ? axiosBasicAuthMiddleware({
-            username: client.customClaims.username,
-            password: client.customClaims.password,
-          })
-        : axiosBearerAuthMiddleware(generateServerCredentialsJwt(ctx, [client.id]));
+  const { uri, username, password } = client.customClaims;
 
-    const { data } = await axiosClient.get<GetClaimsResponse, never, GetClaimsQuery>(
-      client.customClaims.uri,
-      { query, middleware: [middleware] },
-    );
+  if (uri) {
+    const middleware: Array<Middleware> = [];
+
+    if (username && password) {
+      middleware.push(axiosBasicAuthMiddleware({ username, password }));
+    } else {
+      middleware.push(generateServerBearerAuthMiddleware(ctx, [client.id]));
+    }
+
+    const { data } = await axiosClient.get<GetClaimsResponse, never, GetClaimsQuery>(uri, {
+      query,
+      middleware,
+    });
 
     clientClaims = data;
   }

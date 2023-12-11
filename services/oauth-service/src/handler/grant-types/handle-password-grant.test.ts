@@ -3,7 +3,7 @@ import { createMockMongoRepository } from "@lindorm-io/mongo";
 import MockDate from "mockdate";
 import { createTestClient, createTestClientSession } from "../../fixtures/entity";
 import { generateTokenResponse as _generateTokenResponse } from "../oauth";
-import { generateServerCredentialsJwt as _generateServerCredentialsJwt } from "../token";
+import { generateServerBearerAuthMiddleware as _generateServerBearerAuthMiddleware } from "../token";
 import { handlePasswordGrant } from "./handle-password-grant";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -11,7 +11,7 @@ MockDate.set("2021-01-01T08:00:00.000Z");
 jest.mock("../oauth");
 jest.mock("../token");
 
-const generateServerCredentialsJwt = _generateServerCredentialsJwt as jest.Mock;
+const generateServerBearerAuthMiddleware = _generateServerBearerAuthMiddleware as jest.Mock;
 const generateTokenResponse = _generateTokenResponse as jest.Mock;
 
 describe("handlePasswordGrant", () => {
@@ -45,7 +45,7 @@ describe("handlePasswordGrant", () => {
       },
     };
 
-    generateServerCredentialsJwt.mockResolvedValue("generateServerCredentialsJwt");
+    generateServerBearerAuthMiddleware.mockResolvedValue("generateServerBearerAuthMiddleware");
     generateTokenResponse.mockResolvedValue("generateTokenResponse");
   });
 

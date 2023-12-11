@@ -7,7 +7,7 @@ import {
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import { createTestBackchannelSession, createTestClient } from "../../fixtures/entity";
-import { generateServerCredentialsJwt as _generateServerCredentialsJwt } from "../../handler";
+import { generateServerBearerAuthMiddleware as _generateServerBearerAuthMiddleware } from "../../handler";
 import { extractAcrValues as _extractAcrValues } from "../../util";
 import { oauthBackchannelController } from "./backchannel";
 
@@ -19,7 +19,7 @@ jest.mock("../../util");
 
 const axiosBearerAuthMiddleware = _axiosBearerAuthMiddleware as jest.Mock;
 const extractAcrValues = _extractAcrValues as jest.Mock;
-const generateServerCredentialsJwt = _generateServerCredentialsJwt as jest.Mock;
+const generateServerBearerAuthMiddleware = _generateServerBearerAuthMiddleware as jest.Mock;
 
 describe("oauthBackchannelController", () => {
   let ctx: any;
@@ -76,7 +76,7 @@ describe("oauthBackchannelController", () => {
       methods: [AuthenticationMethod.TIME_BASED_OTP],
       strategies: [AuthenticationStrategy.TIME_BASED_OTP],
     });
-    generateServerCredentialsJwt.mockReturnValue("generateServerCredentialsJwt");
+    generateServerBearerAuthMiddleware.mockReturnValue("generateServerBearerAuthMiddleware");
   });
 
   test("should resolve for all values", async () => {

@@ -92,14 +92,14 @@ export const resolveBackchannelAuthentication = async (
 
   await backchannelSessionCache.update(backchannelSession);
 
-  switch (client.backchannelAuthMode) {
+  switch (client.backchannelAuth.mode) {
     case OpenIdBackchannelAuthMode.PING:
-      await handleBackchannelPing(ctx, client, backchannelSession, clientSession);
+      await handleBackchannelPing(ctx, client, backchannelSession);
       break;
 
     case OpenIdBackchannelAuthMode.POLL:
       logger.debug("backchannel auth mode is poll", {
-        backchannelAuthMode: client.backchannelAuthMode,
+        backchannelAuthMode: client.backchannelAuth.mode,
       });
       break;
 
@@ -109,7 +109,7 @@ export const resolveBackchannelAuthentication = async (
 
     default:
       throw new ServerError("Unexpected backchannel auth mode", {
-        debug: { backchannelAuthMode: client.backchannelAuthMode },
+        debug: { backchannelAuthMode: client.backchannelAuth.mode },
       });
   }
 };

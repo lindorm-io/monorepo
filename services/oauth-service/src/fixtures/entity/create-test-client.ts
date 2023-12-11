@@ -42,6 +42,12 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       issuer: "https://test.client.authorization.issuer",
       secret: randomString(32),
     },
+    backchannelAuth: {
+      mode: OpenIdBackchannelAuthMode.POLL,
+      uri: "https://test.client.lindorm.io/backchannel-auth-callback",
+      password: null,
+      username: null,
+    },
     customClaims: {
       uri: "https://test.client.lindorm.io/claims",
       username: null,
@@ -61,8 +67,6 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
     },
 
     active: true,
-    backchannelAuthCallbackUri: "https://test.client.lindorm.io/backchannel-auth-callback",
-    backchannelAuthMode: OpenIdBackchannelAuthMode.POLL,
     backchannelLogoutUri: "https://test.client.lindorm.io/backchannel-logout",
     description: "Client description",
     domain: "https://test.client.lindorm.io",
