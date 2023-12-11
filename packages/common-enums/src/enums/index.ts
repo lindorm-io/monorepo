@@ -11,7 +11,7 @@ export * from "./Environment";
 export * from "./HttpMethod";
 export * from "./IdentifierType";
 export * from "./NamingSystem";
-export * from "./OpenIdBackChannelAuthMode";
+export * from "./OpenIdBackchannelAuthMode";
 export * from "./OpenIdClientProfile";
 export * from "./OpenIdClientType";
 export * from "./OpenIdDisplayMode";

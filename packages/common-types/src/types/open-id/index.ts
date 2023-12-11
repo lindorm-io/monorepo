@@ -1,5 +1,6 @@
 export * from "./open-id-address";
 export * from "./open-id-authorize";
+export * from "./open-id-backchannel-authentication";
 export * from "./open-id-claims";
 export * from "./open-id-error";
 export * from "./open-id-introspect";

@@ -1,5 +1,6 @@
 export * from "./authentication-token";
 export * from "./authorization";
+export * from "./backchannel";
 export * from "./claims";
 export * from "./consent";
 export * from "./elevation";

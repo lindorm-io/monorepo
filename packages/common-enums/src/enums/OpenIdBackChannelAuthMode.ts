@@ -1,4 +1,4 @@
-export enum OpenIdBackChannelAuthMode {
+export enum OpenIdBackchannelAuthMode {
   /**
    * When configured in Ping mode, the OP will send a request
    * to a callback URI previously registered by the Client with

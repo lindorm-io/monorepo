@@ -65,6 +65,17 @@ export type OpenIdTokenRequestBody = {
   audience?: string;
 
   /**
+   * REQUIRED if the grant type is backchannel authentication
+   *
+   * It is the unique identifier to identify the authentication
+   * request (transaction) made by the Client. The OP MUST check
+   * whether the auth_req_id was issued to this Client in response
+   * to an Authentication Request. Otherwise, an error MUST be
+   * returned.
+   */
+  authReqId?: string;
+
+  /**
    * OPTIONAL
    *
    * To use a JWT Bearer Token for client authentication,
