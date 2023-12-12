@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { AesAlgorithm, AesFormat } from "../enums";
 import { decryptAesCipher, encryptAesCipher } from "./aes-cipher";
-import { decodeAesString } from "./private";
+import { decodeAesString } from "./decode-aes-string";
 
 const PRIVATE_KEY =
   "-----BEGIN RSA PRIVATE KEY-----\n" +
