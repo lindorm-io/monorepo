@@ -1,0 +1,24 @@
+{
+  "name": "@lindorm-io/aes",
+  "description": "AES utilities for lindorm.io",
+  "version": "0.0.1",
+  "license": "AGPL-3.0-or-later",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "test": "jest --watch --",
+    "test:ci": "yarn test:unit",
+    "test:unit": "jest --forceExit",
+    "test:unit:update": "jest --forceExit -u",
+    "test:update": "yarn test:unit:update",
+    "typecheck": "tsc --noEmit --watch",
+    "typecheck:ci": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lindorm-io/errors": "^0.1.21"
+  }
+}
