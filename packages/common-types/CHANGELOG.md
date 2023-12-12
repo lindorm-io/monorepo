@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.5.1...@lindorm-io/common-types@0.5.2) (2023-12-12)
+
+### Bug Fixes
+
+- add and update types ([8f89f2f](https://github.com/lindorm-io/monorepo/commit/8f89f2f14467af04a5f6330871432037de78a017))
+- add grant type metadata to jwt ([24111a5](https://github.com/lindorm-io/monorepo/commit/24111a54cdc1b5619dfe3340974d176b1198e897))
+
 ## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/common-types@0.5.0...@lindorm-io/common-types@0.5.1) (2023-12-02)
 
 ### Bug Fixes

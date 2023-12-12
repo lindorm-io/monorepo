@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.4...@lindorm-io/jwt@0.11.5) (2023-12-12)
+
+### Bug Fixes
+
+- add grant type metadata to jwt ([24111a5](https://github.com/lindorm-io/monorepo/commit/24111a54cdc1b5619dfe3340974d176b1198e897))
+
 ## [0.11.4](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.3...@lindorm-io/jwt@0.11.4) (2023-12-02)
 
 **Note:** Version bump only for package @lindorm-io/jwt

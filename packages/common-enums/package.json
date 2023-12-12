@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/common-enums",
   "description": "Common enums for lindorm.io services",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

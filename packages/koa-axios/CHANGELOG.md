@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.53](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.52...@lindorm-io/koa-axios@0.1.53) (2023-12-12)
+
+**Note:** Version bump only for package @lindorm-io/koa-axios
+
 ## [0.1.52](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa-axios@0.1.51...@lindorm-io/koa-axios@0.1.52) (2023-12-02)
 
 **Note:** Version bump only for package @lindorm-io/koa-axios

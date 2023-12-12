@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.21](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/postgres@0.1.20...@lindorm-io/postgres@0.1.21) (2023-12-12)
+
+### Bug Fixes
+
+- trim all query strings ([9dde964](https://github.com/lindorm-io/monorepo/commit/9dde9643fa5656d930cf24dd759c1a92f50aace6))
+
 ## [0.1.20](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/postgres@0.1.19...@lindorm-io/postgres@0.1.20) (2023-11-06)
 
 **Note:** Version bump only for package @lindorm-io/postgres

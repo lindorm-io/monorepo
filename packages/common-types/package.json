@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/common-types",
   "description": "Common types for lindorm.io services",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,6 +17,6 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "devDependencies": {
-    "@lindorm-io/common-enums": "^0.1.1"
+    "@lindorm-io/common-enums": "^0.1.2"
   }
 }

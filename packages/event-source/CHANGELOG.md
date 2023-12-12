@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.3.0...@lindorm-io/event-source@0.4.0) (2023-12-12)
+
+### Features
+
+- add checksum to events ([66969c7](https://github.com/lindorm-io/monorepo/commit/66969c7469dfffd5d1a712d444ae324567f534e7))
+- allow separate connections for all stores ([906134a](https://github.com/lindorm-io/monorepo/commit/906134aceda59edf401715cfcba85fe6235887b1))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/event-source@0.2.19...@lindorm-io/event-source@0.3.0) (2023-11-06)
 
 ### Bug Fixes
