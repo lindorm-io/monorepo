@@ -19,6 +19,7 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
+    "@lindorm-io/aes": "^0.0.1",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "argon2": "^0.31.2"

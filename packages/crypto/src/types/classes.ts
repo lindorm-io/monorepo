@@ -1,4 +1,4 @@
-import { AesCipherAlgorithm, AesCipherFormat } from "./aes-cipher";
+import { AesCipherOptions } from "@lindorm-io/aes";
 import {
   ArgonSignatureHashLength,
   ArgonSignatureMemoryCost,
@@ -8,12 +8,6 @@ import { EccSignatureAlgorithm, EccSignatureFormat } from "./ecc-signature";
 import { HmacSignatureAlgorithm, HmacSignatureFormat } from "./hmac-signature";
 import { RsaSignatureAlgorithm, RsaSignatureFormat } from "./rsa-signature";
 import { ShaHashAlgorithm, ShaHashFormat } from "./sha-hash";
-
-export type CryptoAesOptions = {
-  algorithm?: AesCipherAlgorithm;
-  format?: AesCipherFormat;
-  secret: string;
-};
 
 export type CryptoArgonOptions = {
   hashLength?: ArgonSignatureHashLength;
@@ -38,7 +32,7 @@ export type CryptoHmacOptions = {
 };
 
 export type CryptoLayeredOptions = {
-  aes: CryptoAesOptions;
+  aes: AesCipherOptions;
   argon?: CryptoArgonOptions;
   hmac: CryptoHmacOptions;
 };
@@ -52,7 +46,7 @@ export type CryptoRsaOptions = {
 };
 
 export type CryptoSecretOptions = {
-  aes: CryptoAesOptions;
+  aes: AesCipherOptions;
   hmac: CryptoHmacOptions;
 };
 

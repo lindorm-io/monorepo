@@ -1,4 +1,4 @@
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { assertShaHash, createShaHash, verifyShaHash } from "./sha-hash";
 
 describe("sha-hash", () => {

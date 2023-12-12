@@ -1,5 +1,5 @@
 import { CryptoError } from "../errors";
-import { assertRsaSignature, createRsaSignature, verifyRsaSignature } from "./rsa-signature";
+import { CryptoRsa } from "./CryptoRsa";
 
 const PRIVATE_KEY =
   "-----BEGIN RSA PRIVATE KEY-----\n" +
@@ -69,100 +69,31 @@ const PUBLIC_KEY =
   "FDpORQUua2TivVRvRWWpl6wC0w7/oajFii+iDDdA4h4BjPAgvjmx38cCAwEAAQ==\n" +
   "-----END RSA PUBLIC KEY-----\n";
 
-describe("rsa-signature", () => {
-  describe("SHA256", () => {
-    test("should create signature at base64 digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA256",
-          format: "base64",
-        }),
-      ).toStrictEqual(expect.any(String));
-    });
+describe("CryptoRsa", () => {
+  let crypto: CryptoRsa;
+  let signature: string;
 
-    test("should create signature at hex digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA256",
-          format: "hex",
-        }),
-      ).toStrictEqual(expect.any(String));
+  beforeEach(() => {
+    crypto = new CryptoRsa({
+      privateKey: PRIVATE_KEY,
+      publicKey: PUBLIC_KEY,
     });
+    signature = crypto.sign("string");
   });
 
-  describe("SHA384", () => {
-    test("should create signature at base64 digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA384",
-          format: "base64",
-        }),
-      ).toStrictEqual(expect.any(String));
-    });
-
-    test("should create signature at hex digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA384",
-          format: "hex",
-        }),
-      ).toStrictEqual(expect.any(String));
-    });
+  test("should verify", () => {
+    expect(crypto.verify("string", signature)).toBe(true);
   });
 
-  describe("SHA512", () => {
-    test("should create signature at base64 digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA512",
-          format: "base64",
-        }),
-      ).toStrictEqual(expect.any(String));
-    });
-
-    test("should create signature at hex digest", () => {
-      expect(
-        createRsaSignature({
-          key: PRIVATE_KEY,
-          data: "data",
-          algorithm: "RSA-SHA512",
-          format: "hex",
-        }),
-      ).toStrictEqual(expect.any(String));
-    });
+  test("should reject", () => {
+    expect(crypto.verify("wrong", signature)).toBe(false);
   });
 
-  describe("verify", () => {
-    test("should verify signature", () => {
-      const signature = createRsaSignature({ key: PRIVATE_KEY, data: "data" });
-
-      expect(verifyRsaSignature({ key: PUBLIC_KEY, data: "data", signature })).toBe(true);
-    });
+  test("should assert", () => {
+    expect(crypto.assert("string", signature)).toBeUndefined();
   });
 
-  describe("assert", () => {
-    test("should assert signature", () => {
-      const signature = createRsaSignature({ key: PRIVATE_KEY, data: "data" });
-
-      expect(() => assertRsaSignature({ key: PUBLIC_KEY, data: "data", signature })).not.toThrow();
-    });
-
-    test("should throw error on invalid signature", () => {
-      const signature = createRsaSignature({ key: PRIVATE_KEY, data: "data" });
-
-      expect(() => assertRsaSignature({ key: PUBLIC_KEY, data: "invalid", signature })).toThrow(
-        CryptoError,
-      );
-    });
+  test("should throw error on invalid data", () => {
+    expect(() => crypto.assert("wrong", signature)).toThrow(CryptoError);
   });
 });

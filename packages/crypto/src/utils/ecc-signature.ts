@@ -1,5 +1,5 @@
 import { createSign, createVerify } from "crypto";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CreateEccSignatureOptions, VerifyEccSignatureOptions } from "../types";
 
 const assertAlgorithm = (algorithm: string): void => {

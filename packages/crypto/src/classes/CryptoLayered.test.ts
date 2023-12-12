@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CryptoLayered } from "./CryptoLayered";
 
 describe("CryptoLayered", () => {

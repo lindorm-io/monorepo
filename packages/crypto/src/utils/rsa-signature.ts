@@ -1,5 +1,5 @@
 import { createSign, createVerify } from "crypto";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../types";
 
 const SUPPORTED_ALGS = ["RSA-SHA256", "RSA-SHA384", "RSA-SHA512", "SHA256", "SHA384", "SHA512"];

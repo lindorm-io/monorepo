@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CreateShaHashOptions, VerifyShaHashOptions } from "../types";
 
 export const createShaHash = ({

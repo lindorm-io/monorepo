@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CreateHmacSignatureOptions, VerifyHmacSignatureOptions } from "../types";
 
 export const createHmacSignature = ({

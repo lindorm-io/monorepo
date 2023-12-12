@@ -1,16 +1,18 @@
-import { CryptoError } from "../error";
-import { CryptoEccOptions, EccSignatureAlgorithm, EccSignatureFormat } from "../types";
-import { assertEccSignature, createEccSignature, verifyEccSignature } from "../utils";
+import { CryptoError } from "../errors";
+import { CryptoRsaOptions, RsaSignatureAlgorithm, RsaSignatureFormat } from "../types";
+import { assertRsaSignature, createRsaSignature, verifyRsaSignature } from "../utils";
 
-export class CryptoEcc {
-  private readonly algorithm: EccSignatureAlgorithm | undefined;
-  private readonly format: EccSignatureFormat | undefined;
+export class CryptoRsa {
+  private readonly algorithm: RsaSignatureAlgorithm | undefined;
+  private readonly format: RsaSignatureFormat | undefined;
+  private readonly passphrase: string | undefined;
   private readonly privateKey: string | undefined;
   private readonly publicKey: string | undefined;
 
-  public constructor(options: CryptoEccOptions) {
+  public constructor(options: CryptoRsaOptions) {
     this.algorithm = options.algorithm;
     this.format = options.format;
+    this.passphrase = options.passphrase;
     this.privateKey = options.privateKey;
     this.publicKey = options.publicKey;
   }
@@ -20,11 +22,16 @@ export class CryptoEcc {
       throw new CryptoError("Missing private key");
     }
 
-    return createEccSignature({
+    return createRsaSignature({
       algorithm: this.algorithm,
       data,
       format: this.format,
-      key: this.privateKey,
+      key: this.passphrase
+        ? {
+            key: this.privateKey,
+            passphrase: this.passphrase,
+          }
+        : this.privateKey,
     });
   }
 
@@ -33,12 +40,12 @@ export class CryptoEcc {
       throw new CryptoError("Missing public key");
     }
 
-    return verifyEccSignature({
+    return verifyRsaSignature({
       algorithm: this.algorithm,
       data,
+      signature,
       format: this.format,
       key: this.publicKey,
-      signature,
     });
   }
 
@@ -47,12 +54,12 @@ export class CryptoEcc {
       throw new CryptoError("Missing public key");
     }
 
-    return assertEccSignature({
+    return assertRsaSignature({
       algorithm: this.algorithm,
       data,
+      signature,
       format: this.format,
       key: this.publicKey,
-      signature,
     });
   }
 }

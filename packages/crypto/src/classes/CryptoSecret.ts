@@ -1,14 +1,14 @@
-import { CryptoError } from "../error";
+import { AesCipher } from "@lindorm-io/aes";
+import { CryptoError } from "../errors";
 import { CryptoSecretOptions } from "../types";
-import { CryptoAes } from "./CryptoAes";
 import { CryptoHmac } from "./CryptoHmac";
 
 export class CryptoSecret {
-  private aes: CryptoAes;
+  private aes: AesCipher;
   private hmac: CryptoHmac;
 
   public constructor(options: CryptoSecretOptions) {
-    this.aes = new CryptoAes(options.aes);
+    this.aes = new AesCipher(options.aes);
     this.hmac = new CryptoHmac(options.hmac);
   }
 

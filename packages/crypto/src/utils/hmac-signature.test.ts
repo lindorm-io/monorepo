@@ -1,4 +1,4 @@
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { assertHmacSignature, createHmacSignature, verifyHmacSignature } from "./hmac-signature";
 
 describe("hmac-signature", () => {

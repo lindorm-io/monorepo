@@ -1,5 +1,5 @@
 import { argon2id, hash, verify } from "argon2";
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CreateArgonSignatureOptions, VerifyArgonSignatureOptions } from "../types";
 
 export const createArgonSignature = async ({

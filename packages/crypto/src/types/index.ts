@@ -1,6 +1,5 @@
-export * from "./aes-cipher";
 export * from "./argon-signature";
-export * from "./crypto";
+export * from "./classes";
 export * from "./ecc-signature";
 export * from "./hmac-signature";
 export * from "./rsa-cipher";

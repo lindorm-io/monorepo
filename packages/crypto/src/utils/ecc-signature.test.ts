@@ -1,4 +1,4 @@
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { assertEccSignature, createEccSignature, verifyEccSignature } from "./ecc-signature";
 
 const PRIVATE_KEY =

@@ -1,4 +1,4 @@
-import { CryptoError } from "../error";
+import { CryptoError } from "../errors";
 import { CryptoArgon } from "./CryptoArgon";
 
 describe("CryptoArgon", () => {

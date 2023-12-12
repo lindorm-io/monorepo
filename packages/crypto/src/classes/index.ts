@@ -1,4 +1,3 @@
-export * from "./CryptoAes";
 export * from "./CryptoArgon";
 export * from "./CryptoEcc";
 export * from "./CryptoHmac";
