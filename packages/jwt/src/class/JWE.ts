@@ -1,0 +1,45 @@
+import { AesAlgorithm } from "@lindorm-io/aes";
+import { Logger } from "@lindorm-io/core-logger";
+import { sanitiseToken } from "../util/public";
+import { decryptJwe, encryptJwe } from "../util/public/jwe";
+
+export type JweOptions = {
+  algorithm?: AesAlgorithm;
+  key: string;
+};
+
+export class JWE {
+  private readonly algorithm: AesAlgorithm;
+  private readonly key: string;
+  private readonly logger: Logger;
+
+  public constructor(options: JweOptions, logger: Logger) {
+    this.logger = logger.createChildLogger(["JWE"]);
+
+    this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;
+    this.key = options.key;
+  }
+
+  public encrypt(token: string): string {
+    this.logger.debug("Encrypting token", {
+      algorithm: this.algorithm,
+      token: sanitiseToken(token),
+    });
+
+    const encrypted = encryptJwe({ algorithm: this.algorithm, token, key: this.key });
+
+    this.logger.debug("Successfully encrypted token", { token: sanitiseToken(encrypted) });
+
+    return encrypted;
+  }
+
+  public decrypt(jwe: string): string {
+    this.logger.debug("Decrypting token", { token: sanitiseToken(jwe) });
+
+    const decrypted = decryptJwe({ jwe, key: this.key });
+
+    this.logger.debug("Successfully decrypted token", { token: sanitiseToken(decrypted) });
+
+    return decrypted;
+  }
+}
