@@ -1,27 +1,27 @@
 import MockDate from "mockdate";
-import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enum";
 import { KeyPair } from "./KeyPair";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
 const privateKey = new KeyPair({
   id: "privateKey",
-  algorithms: [Algorithm.ES512],
+  algorithms: [KeyPairAlgorithm.ES512],
   created: new Date("2020-01-02T01:00:00.000Z"),
   namedCurve: NamedCurve.P521,
   privateKey: "privateKey-private-key",
   publicKey: "privateKey-public-key",
-  type: KeyType.EC,
+  type: KeyPairType.EC,
 });
 
 const privateKeyRSAPassphrase = new KeyPair({
   id: "privateKeyRSAWithPasscode",
-  algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
+  algorithms: [KeyPairAlgorithm.RS256, KeyPairAlgorithm.RS384, KeyPairAlgorithm.RS512],
   created: new Date("2020-01-04T01:00:00.000Z"),
   passphrase: "privateKeyRSAWithPasscode-passphrase",
   privateKey: "privateKeyRSAWithPasscode-private-key",
   publicKey: "privateKeyRSAWithPasscode-public-key",
-  type: KeyType.RSA,
+  type: KeyPairType.RSA,
 });
 
 jest.mock("../util", () => ({
@@ -50,7 +50,7 @@ describe("KeyPair.ts", () => {
   beforeEach(() => {
     keyPair = new KeyPair({
       id: "259ff47d-e334-4784-a478-04bf6d6b5d84",
-      algorithms: [Algorithm.ES512, Algorithm.ES384, Algorithm.ES256],
+      algorithms: [KeyPairAlgorithm.ES512, KeyPairAlgorithm.ES384, KeyPairAlgorithm.ES256],
       created: new Date("2019-01-01T08:00:00.000Z"),
       expiresAt: new Date("2020-01-01T08:00:00.000Z"),
       namedCurve: NamedCurve.P521,
@@ -59,7 +59,7 @@ describe("KeyPair.ts", () => {
       ownerId: "e4edc190-6dbc-47eb-b144-2e9624f91f4a",
       privateKey: "privateKey",
       publicKey: "publicKey",
-      type: KeyType.EC,
+      type: KeyPairType.EC,
     });
   });
 
@@ -71,9 +71,9 @@ describe("KeyPair.ts", () => {
     expect(
       new KeyPair({
         id: "02dc19eb-2b8b-4a83-a0c0-9ac2b306bb9a",
-        algorithms: [Algorithm.RS256, Algorithm.RS384],
+        algorithms: [KeyPairAlgorithm.RS256, KeyPairAlgorithm.RS384],
         publicKey: "publicKey",
-        type: KeyType.RSA,
+        type: KeyPairType.RSA,
       }),
     ).toMatchSnapshot();
   });
@@ -97,9 +97,9 @@ describe("KeyPair.ts", () => {
   });
 
   test("should get/set preferredAlgorithm", () => {
-    expect(keyPair.preferredAlgorithm).toBe(Algorithm.ES512);
+    expect(keyPair.preferredAlgorithm).toBe(KeyPairAlgorithm.ES512);
 
-    const preferredAlgorithm = Algorithm.ES384;
+    const preferredAlgorithm = KeyPairAlgorithm.ES384;
     keyPair.preferredAlgorithm = preferredAlgorithm;
 
     expect(keyPair.preferredAlgorithm).toBe(preferredAlgorithm);

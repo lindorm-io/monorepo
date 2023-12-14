@@ -1,4 +1,4 @@
-export enum KeyType {
+export enum KeyPairType {
   EC = "EC",
   HS = "HS",
   RSA = "RSA",

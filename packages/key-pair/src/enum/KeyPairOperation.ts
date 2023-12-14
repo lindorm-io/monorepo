@@ -1,4 +1,4 @@
-export enum KeyOperation {
+export enum KeyPairOperation {
   DECRYPT = "decrypt",
   ENCRYPT = "encrypt",
   SIGN = "sign",

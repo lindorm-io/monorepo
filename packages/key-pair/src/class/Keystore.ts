@@ -1,6 +1,6 @@
 import { orderBy, uniqBy } from "lodash";
 import { KeyPair } from "../entity";
-import { KeyType } from "../enum";
+import { KeyPairType } from "../enum";
 import { KeystoreError } from "../error";
 import { JWK } from "../types";
 import {
@@ -12,7 +12,7 @@ import {
   isKeyPrivate,
   isKeyPublic,
   isKeySigning,
-} from "../util";
+} from "../util/private";
 
 export interface KeystoreOptions {
   keys: Array<KeyPair>;
@@ -81,7 +81,7 @@ export class Keystore {
     return key;
   }
 
-  public getKeys(type?: KeyType): Array<KeyPair> {
+  public getKeys(type?: KeyPairType): Array<KeyPair> {
     const keys = this.keys
       .filter(isKeyCorrectType(type))
       .filter(isKeyAllowed)
@@ -97,7 +97,7 @@ export class Keystore {
     return uniqBy(keys, "id");
   }
 
-  public getPrivateKeys(type?: KeyType): Array<KeyPair> {
+  public getPrivateKeys(type?: KeyPairType): Array<KeyPair> {
     const keys = this.getKeys(type).filter(isKeyPrivate);
 
     if (!keys.length) {
@@ -109,7 +109,7 @@ export class Keystore {
     return orderBy(keys, ["external"], ["asc"]);
   }
 
-  public getSigningKey(type?: KeyType): KeyPair {
+  public getSigningKey(type?: KeyPairType): KeyPair {
     const [key] = this.getPrivateKeys(type).filter(isKeySigning);
 
     if (!key) {

@@ -1,10 +1,10 @@
 import { KeyPair, KeyPairOptions } from "../entity";
-import { Algorithm, KeyType, NamedCurve } from "../enum";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enum";
 
 export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
     id: "7531da89-12e9-403e-925a-5da49100635c",
-    algorithms: [Algorithm.ES512],
+    algorithms: [KeyPairAlgorithm.ES512],
     created: new Date("2020-01-01T08:00:00.000Z"),
     expiresAt: new Date("2029-01-01T08:00:00.000Z"),
     isExternal: false,
@@ -28,7 +28,7 @@ export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyP
       "1bjATvi0uqXrF/bwPEE9S41++V6tiJ5y2NVU6HjZsZLjPqA2YKhzmMM31Ibvs2Wg\n" +
       "OQLhJKj4uO0wPYgkmFU=\n" +
       "-----END PUBLIC KEY-----\n",
-    type: KeyType.EC,
+    type: KeyPairType.EC,
     updated: new Date("2021-01-01T10:00:00.000Z"),
     ...options,
   });
@@ -36,7 +36,7 @@ export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyP
 export const createTestKeyPairHS = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
     id: "aa08b86a-3550-4893-8021-9a18efcd1532",
-    algorithms: [Algorithm.HS512],
+    algorithms: [KeyPairAlgorithm.HS512],
     created: new Date("2020-01-01T07:00:00.000Z"),
     expiresAt: new Date("2029-01-01T08:00:00.000Z"),
     isExternal: false,
@@ -47,7 +47,7 @@ export const createTestKeyPairHS = (options: Partial<KeyPairOptions> = {}): KeyP
       "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
     publicKey:
       "w(Hr~(~DwknfWryBEsAmJwO0*5Urs_10vsL2dllJdTVc.C3j_fF36a-Xsji.8g*)w(9j0C-2rlp2fCXsK1fxA_).*6NG70vloV3h)*do0!T44PB7099S21y7~2--h5)~",
-    type: KeyType.HS,
+    type: KeyPairType.HS,
     updated: new Date("2021-01-01T10:00:00.000Z"),
     ...options,
   });
@@ -55,7 +55,7 @@ export const createTestKeyPairHS = (options: Partial<KeyPairOptions> = {}): KeyP
 export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({
     id: "e6301473-e347-4035-8084-8645d034e4a3",
-    algorithms: [Algorithm.RS256, Algorithm.RS384, Algorithm.RS512],
+    algorithms: [KeyPairAlgorithm.RS256, KeyPairAlgorithm.RS384, KeyPairAlgorithm.RS512],
     created: new Date("2020-01-01T07:00:00.000Z"),
     expiresAt: new Date("2029-01-01T08:00:00.000Z"),
     isExternal: false,
@@ -88,7 +88,7 @@ export const createTestKeyPairRSA = (options: Partial<KeyPairOptions> = {}): Key
       "rvl8GarL3tkwoBcpUyi1/awyHpHeRMSLgKOnwMeMenK99TzeU4UWPX9ZXIQ4KxWE\n" +
       "tWWfrWyCckHTDgGD/gvpM5ygkHbhru8nu0pMZNI1N5GW5bMgmX1tAgMBAAE=\n" +
       "-----END RSA PUBLIC KEY-----\n",
-    type: KeyType.RSA,
+    type: KeyPairType.RSA,
     updated: new Date("2021-01-01T09:00:00.000Z"),
     ...options,
   });

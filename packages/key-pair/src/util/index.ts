@@ -1,2 +1,1 @@
-export * from "./public";
-export * from "./private";
+export * from "./generate-key-pair";

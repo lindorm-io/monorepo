@@ -1,4 +1,4 @@
-import { KeyType, NamedCurve } from "../../../enum";
+import { KeyPairType, NamedCurve } from "../../../enum";
 import { encodeKeys } from "./encode-keys";
 
 describe("encodeKeys", () => {
@@ -28,7 +28,7 @@ describe("encodeKeys", () => {
           namedCurve: NamedCurve.P521,
           privateKey,
           publicKey,
-          type: KeyType.EC,
+          type: KeyPairType.EC,
         }),
       ).toStrictEqual({
         crv: "P-521",
@@ -73,7 +73,7 @@ describe("encodeKeys", () => {
           exposePrivateKey: true,
           privateKey,
           publicKey,
-          type: KeyType.RSA,
+          type: KeyPairType.RSA,
         }),
       ).toStrictEqual({
         d: "TN1F4P671vw6LiCYeZpJerGjU8f/qtLMyU+VfMLDPshy1HOjRW/wTS6RH9b/WEukFFFc+1OpabhbQnf0EN8LrAib0RrZKAPtxCsDyzB66r/crT+2TYjFIm1gLNdfcnSrMpdfbgFBJl4NkRBSYHm+Q6MoCny7za0K3FP1sZK1ZQE=",

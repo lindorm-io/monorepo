@@ -10,25 +10,25 @@ import {
 import { fromUnixTime, getUnixTime } from "date-fns";
 import Joi from "joi";
 import { orderBy } from "lodash";
-import { Algorithm, KeyOperation, KeyType, NamedCurve } from "../enum";
+import { KeyPairAlgorithm, KeyPairOperation, KeyPairType, NamedCurve } from "../enum";
 import { KeyPairError } from "../error";
 import { JWK, JoseData, KeyJWK } from "../types";
-import { decodeKeys, encodeKeys } from "../util";
+import { decodeKeys, encodeKeys } from "../util/private";
 
 export interface KeyPairAttributes extends EntityAttributes {
-  algorithms: Array<Algorithm>;
+  algorithms: Array<KeyPairAlgorithm>;
   expiresAt: Date | null;
   isExternal: boolean;
   namedCurve: NamedCurve | null;
   notBefore: Date;
-  operations: Array<KeyOperation>;
+  operations: Array<KeyPairOperation>;
   originUri: string | null;
   ownerId: string | null;
   passphrase: string | null;
-  preferredAlgorithm: Algorithm;
+  preferredAlgorithm: KeyPairAlgorithm;
   privateKey: string | null;
   publicKey: string | null;
-  type: KeyType;
+  type: KeyPairType;
 }
 
 export type KeyPairOptions = Optional<
@@ -50,7 +50,7 @@ export type KeyPairOptions = Optional<
 interface CalculateOperationsOptions {
   passphrase?: string | null;
   privateKey?: string | null;
-  type: KeyType;
+  type: KeyPairType;
 }
 
 const schema = Joi.object<KeyPairAttributes>()
@@ -58,7 +58,7 @@ const schema = Joi.object<KeyPairAttributes>()
     ...JOI_ENTITY_BASE,
 
     algorithms: Joi.array()
-      .items(Joi.string().valid(...Object.values(Algorithm)))
+      .items(Joi.string().valid(...Object.values(KeyPairAlgorithm)))
       .required(),
     expiresAt: Joi.date().allow(null).required(),
     isExternal: Joi.boolean().required(),
@@ -72,29 +72,29 @@ const schema = Joi.object<KeyPairAttributes>()
     ownerId: Joi.string().guid().allow(null).required(),
     passphrase: Joi.string().allow(null).required(),
     preferredAlgorithm: Joi.string()
-      .valid(...Object.values(Algorithm))
+      .valid(...Object.values(KeyPairAlgorithm))
       .required(),
     privateKey: Joi.string().allow(null).required(),
     publicKey: Joi.string().allow(null).required(),
     type: Joi.string()
-      .valid(...Object.values(KeyType))
+      .valid(...Object.values(KeyPairType))
       .required(),
   })
   .required();
 
 export class KeyPair extends LindormEntity<KeyPairAttributes> {
-  public readonly algorithms: Array<Algorithm>;
+  public readonly algorithms: Array<KeyPairAlgorithm>;
   public readonly isExternal: boolean;
   public readonly namedCurve: NamedCurve | null;
-  public readonly operations: Array<KeyOperation>;
+  public readonly operations: Array<KeyPairOperation>;
   public readonly originUri: string | null;
   public readonly ownerId: string | null;
   public readonly passphrase: string | null;
   public readonly privateKey: string | null;
   public readonly publicKey: string | null;
-  public readonly type: KeyType;
+  public readonly type: KeyPairType;
 
-  private _preferredAlgorithm: Algorithm;
+  private _preferredAlgorithm: KeyPairAlgorithm;
 
   public notBefore: Date;
   public expiresAt: Date | null;
@@ -104,7 +104,7 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
 
     this._preferredAlgorithm =
       options.preferredAlgorithm ||
-      orderBy(options.algorithms, [(item): Algorithm => item], ["desc"])[0];
+      orderBy(options.algorithms, [(item): KeyPairAlgorithm => item], ["desc"])[0];
 
     this.algorithms = options.algorithms;
     this.expiresAt = options.expiresAt || null;
@@ -122,11 +122,11 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
     this.type = options.type;
   }
 
-  public get preferredAlgorithm(): Algorithm {
+  public get preferredAlgorithm(): KeyPairAlgorithm {
     return this._preferredAlgorithm;
   }
 
-  public set preferredAlgorithm(preferredAlgorithm: Algorithm) {
+  public set preferredAlgorithm(preferredAlgorithm: KeyPairAlgorithm) {
     if (!this.algorithms.includes(preferredAlgorithm)) {
       throw new KeyPairError("Invalid preferredAlgorithm", {
         data: { preferredAlgorithm },
@@ -206,33 +206,33 @@ export class KeyPair extends LindormEntity<KeyPairAttributes> {
 
     return new KeyPair({
       id: jwk.kid,
-      algorithms: [jwk.alg as Algorithm],
+      algorithms: [jwk.alg as KeyPairAlgorithm],
       created: jwk.createdAt ? fromUnixTime(jwk.createdAt) : undefined,
       expiresAt: jwk.expiresAt ? fromUnixTime(jwk.expiresAt) : undefined,
       isExternal: true,
       namedCurve: jwk.crv ? (jwk.crv as NamedCurve) : undefined,
       notBefore: jwk.notBefore ? fromUnixTime(jwk.notBefore) : undefined,
-      operations: jwk.keyOps as Array<KeyOperation>,
+      operations: jwk.keyOps as Array<KeyPairOperation>,
       originUri: jwk.originUri,
       ownerId: jwk.ownerId,
-      preferredAlgorithm: jwk.alg as Algorithm,
-      type: jwk.kty as KeyType,
+      preferredAlgorithm: jwk.alg as KeyPairAlgorithm,
+      type: jwk.kty as KeyPairType,
       ...data,
     });
   }
 
-  private static calculateOperations(options: CalculateOperationsOptions): Array<KeyOperation> {
-    const result: Array<KeyOperation> = [KeyOperation.VERIFY];
+  private static calculateOperations(options: CalculateOperationsOptions): Array<KeyPairOperation> {
+    const result: Array<KeyPairOperation> = [KeyPairOperation.VERIFY];
 
-    if (options.type === KeyType.RSA) {
-      result.push(KeyOperation.DECRYPT);
+    if (options.type === KeyPairType.RSA) {
+      result.push(KeyPairOperation.DECRYPT);
     }
 
     if (typeof options.privateKey === "string") {
-      result.push(KeyOperation.SIGN);
+      result.push(KeyPairOperation.SIGN);
 
-      if (options.type === KeyType.RSA) {
-        result.push(KeyOperation.ENCRYPT);
+      if (options.type === KeyPairType.RSA) {
+        result.push(KeyPairOperation.ENCRYPT);
       }
     }
 

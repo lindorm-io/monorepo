@@ -1,4 +1,4 @@
-export enum Algorithm {
+export enum KeyPairAlgorithm {
   ES256 = "ES256",
   ES384 = "ES384",
   ES512 = "ES512",

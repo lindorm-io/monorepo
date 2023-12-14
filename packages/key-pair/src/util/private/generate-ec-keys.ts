@@ -1,28 +1,28 @@
 import { generateKeyPair } from "crypto";
-import { Algorithm, KeyType, NamedCurve } from "../../enum";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../../enum";
 
 export type GenerateEcKeysOptions = {
   namedCurve?: NamedCurve;
 };
 
 export type GenerateEcKeysData = {
-  algorithms: Array<Algorithm>;
+  algorithms: Array<KeyPairAlgorithm>;
   namedCurve: NamedCurve;
   privateKey: string;
   publicKey: string;
-  type: KeyType;
+  type: KeyPairType;
 };
 
-const getAlgorithm = (namedCurve: NamedCurve): Algorithm => {
+const getAlgorithm = (namedCurve: NamedCurve): KeyPairAlgorithm => {
   switch (namedCurve) {
     case NamedCurve.P521:
-      return Algorithm.ES512;
+      return KeyPairAlgorithm.ES512;
 
     case NamedCurve.P384:
-      return Algorithm.ES384;
+      return KeyPairAlgorithm.ES384;
 
     case NamedCurve.P256:
-      return Algorithm.ES256;
+      return KeyPairAlgorithm.ES256;
 
     default:
       throw new Error("Invalid Named Curve");
@@ -59,7 +59,7 @@ export const generateEcKeys = async (
           namedCurve,
           privateKey,
           publicKey,
-          type: KeyType.EC,
+          type: KeyPairType.EC,
         });
       },
     );

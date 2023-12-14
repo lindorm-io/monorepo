@@ -1,4 +1,4 @@
-import { KeyType, NamedCurve } from "../enum";
+import { KeyPairType, NamedCurve } from "../enum";
 
 export interface DefaultJWK {
   alg: string;
@@ -52,5 +52,5 @@ export interface EncodeKeysOptions {
   namedCurve?: NamedCurve | null;
   privateKey?: string | null;
   publicKey: string;
-  type: KeyType;
+  type: KeyPairType;
 }

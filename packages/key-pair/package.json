@@ -20,10 +20,11 @@
   },
   "dependencies": {
     "@lindorm-io/case": "^0.2.0",
+    "@lindorm-io/common-enums": "^0.1.2",
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/entity": "^0.3.13",
     "@lindorm-io/errors": "^0.1.21",
-    "@lindorm-io/random": "^0.2.5",
+    "@lindorm-io/rsa": "^0.1.0",
     "date-fns": "^2.30.0",
     "joi": "^17.11.0",
     "lodash": "^4.17.21"

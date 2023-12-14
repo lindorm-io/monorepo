@@ -1,14 +1,14 @@
-import { JoseData, JWK, EllipticalJWK, RivestJWK } from "../../../types";
-import { KeyType } from "../../../enum";
+import { KeyPairType } from "../../../enum";
+import { EllipticalJWK, JWK, JoseData, RivestJWK } from "../../../types";
 import { decodeEC } from "./ec";
 import { decodeRSA } from "./rsa";
 
 export const decodeKeys = (jwk: JWK): JoseData => {
   switch (jwk.kty) {
-    case KeyType.EC:
+    case KeyPairType.EC:
       return decodeEC(jwk as EllipticalJWK);
 
-    case KeyType.RSA:
+    case KeyPairType.RSA:
       return decodeRSA(jwk as RivestJWK);
 
     default:

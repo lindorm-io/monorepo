@@ -1,5 +1,5 @@
+import { KeyPairType } from "../../../enum";
 import { EncodeKeysOptions, KeyJWK } from "../../../types";
-import { KeyType } from "../../../enum";
 import { encodeEC } from "./ec";
 import { encodeRSA } from "./rsa";
 
@@ -15,10 +15,10 @@ export const encodeKeys = ({
   const crv = namedCurve as string;
 
   switch (type) {
-    case KeyType.EC:
+    case KeyPairType.EC:
       return encodeEC({ crv, privateKey, publicKey });
 
-    case KeyType.RSA:
+    case KeyPairType.RSA:
       return encodeRSA({ privateKey, publicKey });
 
     default:
