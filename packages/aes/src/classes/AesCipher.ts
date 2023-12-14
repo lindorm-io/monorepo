@@ -3,10 +3,10 @@ import { AesCipherKey, AesCipherOptions } from "../types";
 import { assertAesCipher, decryptAesCipher, encryptAesCipher, verifyAesCipher } from "../utils";
 
 export class AesCipher {
-  private algorithm: AesAlgorithm;
-  private format: AesFormat;
-  private key: AesCipherKey | undefined;
-  private secret: string | undefined;
+  private readonly algorithm: AesAlgorithm;
+  private readonly format: AesFormat;
+  private readonly key: AesCipherKey | undefined;
+  private readonly secret: string | undefined;
 
   public constructor(options: AesCipherOptions) {
     this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;

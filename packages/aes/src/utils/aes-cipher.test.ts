@@ -147,6 +147,54 @@ describe("aes-cipher", () => {
   });
 
   describe("formats", () => {
+    test("should encrypt and format the string content to base64", () => {
+      const data = randomBytes(32).toString("base64");
+      const secret = randomBytes(32).toString("base64").slice(0, 32);
+
+      const cipher = encryptAesCipher({
+        algorithm: AesAlgorithm.AES_256_GCM,
+        data,
+        format: AesFormat.BASE64,
+        secret,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-256-gcm");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.version).toBe(1);
+
+      const decrypted = decryptAesCipher({ cipher, secret });
+
+      expect(decrypted).toBe(data);
+    });
+
+    test("should encrypt and format the string content to base64url", () => {
+      const data = randomBytes(32).toString("base64url");
+      const secret = randomBytes(32).toString("base64url").slice(0, 32);
+
+      const cipher = encryptAesCipher({
+        algorithm: AesAlgorithm.AES_256_GCM,
+        data,
+        format: AesFormat.BASE64_URL,
+        secret,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-256-gcm");
+      expect(decoded.format).toBe("base64url");
+      expect(decoded.version).toBe(1);
+
+      const decrypted = decryptAesCipher({ cipher, secret });
+
+      expect(decrypted).toBe(data);
+    });
+
     test("should encrypt and format the string content to hex", () => {
       const data = randomBytes(32).toString("hex");
       const secret = randomBytes(32).toString("hex").slice(0, 32);

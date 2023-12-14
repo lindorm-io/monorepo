@@ -15,6 +15,11 @@ describe("AesCipher", () => {
     cipher = aesCipher.encrypt(string);
   });
 
+  test("should encrypt", () => {
+    expect(cipher).toStrictEqual(expect.any(String));
+    expect(cipher).not.toBe(string);
+  });
+
   test("should decrypt", () => {
     expect(aesCipher.decrypt(cipher)).toBe(string);
   });
