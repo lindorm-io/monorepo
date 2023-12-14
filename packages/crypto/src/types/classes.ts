@@ -6,7 +6,6 @@ import {
 } from "./argon-signature";
 import { EccSignatureAlgorithm, EccSignatureFormat } from "./ecc-signature";
 import { HmacSignatureAlgorithm, HmacSignatureFormat } from "./hmac-signature";
-import { RsaSignatureAlgorithm, RsaSignatureFormat } from "./rsa-signature";
 import { ShaHashAlgorithm, ShaHashFormat } from "./sha-hash";
 
 export type CryptoArgonOptions = {
@@ -35,14 +34,6 @@ export type CryptoLayeredOptions = {
   aes: AesCipherOptions;
   argon?: CryptoArgonOptions;
   hmac: CryptoHmacOptions;
-};
-
-export type CryptoRsaOptions = {
-  algorithm?: RsaSignatureAlgorithm;
-  format?: RsaSignatureFormat;
-  passphrase?: string;
-  privateKey?: string;
-  publicKey?: string;
 };
 
 export type CryptoSecretOptions = {
