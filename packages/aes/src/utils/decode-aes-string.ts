@@ -1,13 +1,17 @@
 import { AesError } from "../errors";
 import { BuildAesString } from "../types";
+import { mapShortToFormat } from "./private";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
 export const decodeAesString = (data: string): BuildAesString => {
-  const [_, algorithm, array, iv, encryption, tag] = data.split("$");
+  const [_, algorithm, array, encryption] = data.split("$");
 
   if (algorithm !== "aes-128-gcm" && algorithm !== "aes-192-gcm" && algorithm !== "aes-256-gcm") {
-    throw new AesError("Invalid AES cipher string");
+    throw new AesError("Invalid AES cipher string", {
+      description: "Invalid algorithm header",
+      debug: { algorithm },
+    });
   }
 
   const items = array.split(",");
@@ -17,16 +21,23 @@ export const decodeAesString = (data: string): BuildAesString => {
     const match = new RegExp(regex).exec(item);
 
     if (!match?.groups?.key || !match?.groups?.value) {
-      throw new AesError("Invalid AES cipher string");
+      throw new AesError("Invalid AES cipher string", {
+        description: "Invalid key/value pair",
+        debug: { item },
+      });
     }
 
     values[match.groups.key] = match.groups.value;
   }
 
-  const { cek, f: format, v } = values;
+  const { cea, cek, f, iv, tag, v } = values;
+  const format = mapShortToFormat(f);
 
-  if (format !== "base64" && format !== "hex") {
-    throw new AesError("Invalid AES cipher string");
+  if (cek && cea !== "rsa-oaep") {
+    throw new AesError("Invalid AES cipher string", {
+      description: "Invalid RSA encryption algorithm",
+      debug: { cea },
+    });
   }
 
   return {

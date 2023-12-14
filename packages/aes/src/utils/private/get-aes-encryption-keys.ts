@@ -17,7 +17,10 @@ export const getAesEncryptionKeys = ({
   secret,
 }: Pick<EncryptAesCipherOptions, "algorithm" | "key" | "secret">): EncryptionKeys => {
   if (key && secret) {
-    throw new AesError("Unable to encrypt AES cipher with both key and secret");
+    throw new AesError("Unable to encrypt AES cipher with both key and secret", {
+      description: "Key and secret are both present",
+      debug: { key, secret },
+    });
   }
 
   if (secret) {
@@ -27,7 +30,10 @@ export const getAesEncryptionKeys = ({
   }
 
   if (!key) {
-    throw new AesError("Unable to encrypt AES cipher without key OR secret");
+    throw new AesError("Unable to encrypt AES cipher without key OR secret", {
+      description: "Key is missing",
+      debug: { key },
+    });
   }
 
   const encrypt = isPrivateKey(key) ? privateEncrypt : publicEncrypt;

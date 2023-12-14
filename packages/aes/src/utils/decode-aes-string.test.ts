@@ -4,7 +4,7 @@ describe("decodeAesString", () => {
   test("should resolve decoded data", () => {
     expect(
       decodeAesString(
-        "$aes-256-gcm$v=1,f=base64,cek=cHVibGljRW5jcnlwdGlvbktleQ==$aW5pdGlhbGlzYXRpb25WZWN0b3I=$ZW5jcnlwdGlvbg==$YXV0aFRhZw==$",
+        "$aes-256-gcm$v=1,f=b64,iv=aW5pdGlhbGlzYXRpb25WZWN0b3I=,tag=YXV0aFRhZw==,cea=rsa-oaep,cek=cHVibGljRW5jcnlwdGlvbktleQ==$ZW5jcnlwdGlvbg==$",
       ),
     ).toStrictEqual({
       algorithm: "aes-256-gcm",

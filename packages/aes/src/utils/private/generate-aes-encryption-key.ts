@@ -15,6 +15,9 @@ export const generateAesEncryptionKey = (algorithm: AesCipherAlgorithm): Buffer 
       return randomBytes(32);
 
     default:
-      throw new AesError("Invalid AES cipher algorithm");
+      throw new AesError("Invalid AES cipher algorithm", {
+        description: "Unknown algorithm",
+        debug: { algorithm },
+      });
   }
 };

@@ -14,7 +14,10 @@ export const getAesDecryptionKey = ({
   publicEncryptionKey,
 }: Options): Buffer => {
   if (key && secret) {
-    throw new AesError("Unable to decrypt AES cipher with both key and secret");
+    throw new AesError("Unable to decrypt AES cipher with both key and secret", {
+      description: "Key and secret are both present",
+      debug: { key, secret },
+    });
   }
 
   if (secret) {
@@ -24,11 +27,17 @@ export const getAesDecryptionKey = ({
   }
 
   if (!key) {
-    throw new AesError("Unable to decrypt AES cipher without key OR secret");
+    throw new AesError("Unable to decrypt AES cipher without key OR secret", {
+      description: "Key is missing",
+      debug: { key },
+    });
   }
 
   if (!publicEncryptionKey) {
-    throw new AesError("Unable to decrypt AES cipher without public encryption key");
+    throw new AesError("Unable to decrypt AES cipher without public encryption key", {
+      description: "Public encryption key is missing",
+      debug: { publicEncryptionKey },
+    });
   }
 
   const decrypt = isPrivateKey(key) ? privateDecrypt : publicDecrypt;
