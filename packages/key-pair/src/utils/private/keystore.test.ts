@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { KeyPair } from "../../entity";
-import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../../enum";
+import { KeyPair } from "../../entities";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../../enums";
 import { isKeyAllowed, isKeyExpired, isKeyPrivate, isKeyUsable } from "./keystore";
 
 MockDate.set("2021-01-01T08:00:00.000Z");

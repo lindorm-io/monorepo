@@ -1,6 +1,6 @@
 import { isAfter } from "date-fns";
-import { KeyPair } from "../../entity";
-import { KeyPairOperation, KeyPairType } from "../../enum";
+import { KeyPair } from "../../entities";
+import { KeyPairOperation, KeyPairType } from "../../enums";
 
 export const isKeyAllowed = (key: KeyPair): boolean =>
   !!key.notBefore && isAfter(new Date(), key.notBefore);

@@ -1,4 +1,4 @@
-import { Keystore } from "../class";
+import { Keystore } from "../classes";
 import { createTestKeystore } from "./create-test-keystore";
 
 describe("createTestKeystore", () => {

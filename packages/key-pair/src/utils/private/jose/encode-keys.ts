@@ -1,4 +1,4 @@
-import { KeyPairType } from "../../../enum";
+import { KeyPairType } from "../../../enums";
 import { EncodeKeysOptions, KeyJWK } from "../../../types";
 import { encodeEC } from "./ec";
 import { encodeRSA } from "./rsa";

@@ -1,7 +1,7 @@
 import { orderBy, uniqBy } from "lodash";
-import { KeyPair } from "../entity";
-import { KeyPairType } from "../enum";
-import { KeystoreError } from "../error";
+import { KeyPair } from "../entities";
+import { KeyPairType } from "../enums";
+import { KeystoreError } from "../errors";
 import { JWK } from "../types";
 import {
   isKeyAllowed,
@@ -12,7 +12,7 @@ import {
   isKeyPrivate,
   isKeyPublic,
   isKeySigning,
-} from "../util/private";
+} from "../utils/private";
 
 export interface KeystoreOptions {
   keys: Array<KeyPair>;

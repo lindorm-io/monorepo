@@ -1,6 +1,6 @@
 import { GenerateRsaKeysOptions, generateRsaKeys } from "@lindorm-io/rsa";
-import { KeyPair } from "../entity";
-import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enum";
+import { KeyPair } from "../entities";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enums";
 import {
   GenerateEcKeysOptions,
   GenerateHsKeysOptions,

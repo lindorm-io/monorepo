@@ -1,4 +1,4 @@
-import { Keystore, KeystoreOptions } from "../class";
+import { Keystore, KeystoreOptions } from "../classes";
 import {
   createTestKeyPairEC,
   createTestKeyPairHS,

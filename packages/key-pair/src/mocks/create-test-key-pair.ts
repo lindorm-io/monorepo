@@ -1,5 +1,5 @@
-import { KeyPair, KeyPairOptions } from "../entity";
-import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enum";
+import { KeyPair, KeyPairOptions } from "../entities";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enums";
 
 export const createTestKeyPairEC = (options: Partial<KeyPairOptions> = {}): KeyPair =>
   new KeyPair({

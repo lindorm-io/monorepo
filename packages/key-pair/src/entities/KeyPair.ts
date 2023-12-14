@@ -10,10 +10,10 @@ import {
 import { fromUnixTime, getUnixTime } from "date-fns";
 import Joi from "joi";
 import { orderBy } from "lodash";
-import { KeyPairAlgorithm, KeyPairOperation, KeyPairType, NamedCurve } from "../enum";
-import { KeyPairError } from "../error";
+import { KeyPairAlgorithm, KeyPairOperation, KeyPairType, NamedCurve } from "../enums";
+import { KeyPairError } from "../errors";
 import { JWK, JoseData, KeyJWK } from "../types";
-import { decodeKeys, encodeKeys } from "../util/private";
+import { decodeKeys, encodeKeys } from "../utils/private";
 
 export interface KeyPairAttributes extends EntityAttributes {
   algorithms: Array<KeyPairAlgorithm>;

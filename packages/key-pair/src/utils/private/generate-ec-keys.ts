@@ -1,5 +1,5 @@
 import { generateKeyPair } from "crypto";
-import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../../enum";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../../enums";
 
 export type GenerateEcKeysOptions = {
   namedCurve?: NamedCurve;

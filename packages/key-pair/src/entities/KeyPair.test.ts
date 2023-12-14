@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enum";
+import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enums";
 import { KeyPair } from "./KeyPair";
 
 MockDate.set("2020-01-01T08:00:00.000Z");

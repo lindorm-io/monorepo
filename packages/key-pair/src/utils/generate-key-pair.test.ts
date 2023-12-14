@@ -4,7 +4,7 @@ import {
   randomUUID as _randomUUID,
 } from "crypto";
 import MockDate from "mockdate";
-import { KeyPairType, NamedCurve } from "../enum";
+import { KeyPairType, NamedCurve } from "../enums";
 import { generateKeyPair } from "./generate-key-pair";
 
 MockDate.set("2021-01-01T08:00:00.000Z");

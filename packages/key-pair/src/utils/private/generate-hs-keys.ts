@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { KeyPairType } from "../../enum";
+import { KeyPairType } from "../../enums";
 
 export type GenerateHsKeysOptions = {
   length?: number;
