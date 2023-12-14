@@ -24,7 +24,7 @@ const privateKeyRSAPassphrase = new KeyPair({
   type: KeyPairType.RSA,
 });
 
-jest.mock("../util", () => ({
+jest.mock("../utils/private", () => ({
   decodeKeys: () => ({
     privateKey: "privateKey",
     publicKey: "publicKey",

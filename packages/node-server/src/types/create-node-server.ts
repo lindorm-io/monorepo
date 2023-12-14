@@ -1,11 +1,11 @@
 import { AmqpConnection, MessageBusConstructor } from "@lindorm-io/amqp";
-import { KoaAppOptions } from "@lindorm-io/koa";
-import { LindormNodeServerKoaContext } from "./context";
+import { AxiosClientProperties } from "@lindorm-io/axios";
 import { MemoryCacheConstructor, MemoryDatabase } from "@lindorm-io/in-memory-cache";
+import { KeyPairType } from "@lindorm-io/key-pair";
+import { KoaAppOptions } from "@lindorm-io/koa";
 import { MongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
 import { RedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
-import { KeyType } from "@lindorm-io/key-pair";
-import { AxiosClientProperties } from "@lindorm-io/axios";
+import { LindormNodeServerKoaContext } from "./context";
 
 export type ServiceOptions = {
   name: string;
@@ -15,7 +15,7 @@ export type ServiceOptions = {
 
 export type KeystoreOptions = {
   exposed?: Array<"external" | "public">;
-  generated?: Array<KeyType>;
+  generated?: Array<KeyPairType>;
   jwks?: Array<ServiceOptions>;
   storage?: Array<"memory" | "mongo" | "redis">;
 };

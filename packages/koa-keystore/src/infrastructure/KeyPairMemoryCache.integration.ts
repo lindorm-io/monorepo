@@ -2,11 +2,11 @@ import { createMockLogger } from "@lindorm-io/core-logger";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import { MemoryDatabase } from "@lindorm-io/in-memory-cache";
 import {
-  Algorithm,
   createTestKeyPair,
   createTestKeyPairRSA,
   KeyPair,
-  KeyType,
+  KeyPairAlgorithm,
+  KeyPairType,
 } from "@lindorm-io/key-pair";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -36,11 +36,11 @@ describe("KeyPairMemory", () => {
     await expect(
       cache.create(
         new KeyPair({
-          algorithms: [Algorithm.RS256],
+          algorithms: [KeyPairAlgorithm.RS256],
           passphrase: "",
           privateKey: "create",
           publicKey: "create",
-          type: KeyType.RSA,
+          type: KeyPairType.RSA,
         }),
       ),
     ).resolves.toStrictEqual(expect.any(KeyPair));
@@ -68,11 +68,11 @@ describe("KeyPairMemory", () => {
   test("should destroy", async () => {
     const destroy = await cache.create(
       new KeyPair({
-        algorithms: [Algorithm.RS256],
+        algorithms: [KeyPairAlgorithm.RS256],
         passphrase: "",
         privateKey: "destroy",
         publicKey: "destroy",
-        type: KeyType.RSA,
+        type: KeyPairType.RSA,
       }),
     );
 

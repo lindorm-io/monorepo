@@ -1,11 +1,11 @@
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import {
-  Algorithm,
   createTestKeyPair,
   createTestKeyPairRSA,
   KeyPair,
-  KeyType,
+  KeyPairAlgorithm,
+  KeyPairType,
 } from "@lindorm-io/key-pair";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { randomUUID } from "crypto";
@@ -46,11 +46,11 @@ describe("KeyPairRepository", () => {
     await expect(
       repository.create(
         new KeyPair({
-          algorithms: [Algorithm.RS256],
+          algorithms: [KeyPairAlgorithm.RS256],
           passphrase: "",
           privateKey: "create",
           publicKey: "create",
-          type: KeyType.RSA,
+          type: KeyPairType.RSA,
         }),
       ),
     ).resolves.toStrictEqual(expect.any(KeyPair));
@@ -77,11 +77,11 @@ describe("KeyPairRepository", () => {
   test("should destroy", async () => {
     const destroy = await repository.create(
       new KeyPair({
-        algorithms: [Algorithm.RS256],
+        algorithms: [KeyPairAlgorithm.RS256],
         passphrase: "",
         privateKey: "destroy",
         publicKey: "destroy",
-        type: KeyType.RSA,
+        type: KeyPairType.RSA,
       }),
     );
 

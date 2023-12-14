@@ -8,7 +8,7 @@ import {
 import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
 import { Logger } from "@lindorm-io/core-logger";
 import { expiryObject } from "@lindorm-io/expiry";
-import { KeyPair, KeyType, Keystore } from "@lindorm-io/key-pair";
+import { KeyPair, KeyPairType, Keystore } from "@lindorm-io/key-pair";
 import { createHash, randomUUID } from "crypto";
 import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
@@ -28,7 +28,7 @@ export class JWT {
   private readonly issuer: string;
   private readonly jwksUrl: string | undefined;
   private readonly keystore: Keystore;
-  private readonly keyType: KeyType | undefined;
+  private readonly keyType: KeyPairType | undefined;
   private readonly logger: Logger;
 
   public constructor(options: JwtOptions, keystore: Keystore, logger: Logger) {
@@ -352,7 +352,7 @@ export class JWT {
     };
   }
 
-  public createHash(input: string, bits: number, keyType?: KeyType): string {
+  public createHash(input: string, bits: number, keyType?: KeyPairType): string {
     const key = this.getSigningKey(keyType);
     const alg = getHashAlgFromKey(key);
     const buffer = createHash(alg).update(input, "utf8").digest();
@@ -363,12 +363,25 @@ export class JWT {
   private getSecret(key: KeyPair): Secret {
     if (!key.privateKey) throw new Error("Missing private key");
 
-    return key.type === KeyType.RSA
-      ? { passphrase: key.passphrase || "", key: key.privateKey }
-      : key.privateKey;
+    switch (key.type) {
+      case KeyPairType.EC:
+        return key.privateKey;
+
+      case KeyPairType.HS:
+        return key.privateKey;
+
+      case KeyPairType.RSA:
+        if (key.passphrase?.length) {
+          return { key: key.privateKey, passphrase: key.passphrase };
+        }
+        return key.privateKey;
+
+      default:
+        throw new TokenError("Unsupported key type");
+    }
   }
 
-  private getSigningKey(keyType?: KeyType): KeyPair {
+  private getSigningKey(keyType?: KeyPairType): KeyPair {
     return this.keystore.getSigningKey(keyType || this.keyType);
   }
 

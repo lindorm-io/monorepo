@@ -1,5 +1,5 @@
 import { Logger } from "@lindorm-io/core-logger";
-import { KeyType, NamedCurve, generateKeyPair } from "@lindorm-io/key-pair";
+import { KeyPairType, NamedCurve, generateKeyPair } from "@lindorm-io/key-pair";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { MongoConnection } from "@lindorm-io/mongo";
 import { ReadableTime, ms, readableDuration } from "@lindorm-io/readable-time";
@@ -9,7 +9,7 @@ import { KeyPairMongoRepository } from "../infrastructure";
 
 type Options = {
   keyExpiry?: ReadableTime;
-  keyType?: KeyType;
+  keyType?: KeyPairType;
   logger: Logger;
   mongoConnection: MongoConnection;
   namedCurve?: NamedCurve;
@@ -23,7 +23,7 @@ type Options = {
 export const keyPairRotationWorker = (options: Options): IntervalWorker => {
   const {
     keyExpiry = "120 days",
-    keyType = KeyType.EC,
+    keyType = KeyPairType.EC,
     mongoConnection,
     namedCurve = NamedCurve.P521,
     originUri,

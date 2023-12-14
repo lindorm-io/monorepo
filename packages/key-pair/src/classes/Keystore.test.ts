@@ -166,9 +166,9 @@ const publicKeyNotAllowed = new KeyPair({
   type: KeyPairType.EC,
 });
 
-jest.mock("../util", () => ({
+jest.mock("../utils/private", () => ({
   // @ts-ignore
-  ...jest.requireActual("../util"),
+  ...jest.requireActual("../utils/private"),
   decodeKeys: () => ({
     privateKey: "privateKey",
     publicKey: "publicKey",

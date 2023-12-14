@@ -1,17 +1,17 @@
-import { Algorithm, KeyPair } from "@lindorm-io/key-pair";
+import { KeyPair, KeyPairAlgorithm } from "@lindorm-io/key-pair";
 
 export const getHashAlgFromKey = (key: KeyPair): string => {
   switch (key.preferredAlgorithm) {
-    case Algorithm.ES256:
-    case Algorithm.RS256:
+    case KeyPairAlgorithm.ES256:
+    case KeyPairAlgorithm.RS256:
       return "sha256";
 
-    case Algorithm.ES384:
-    case Algorithm.RS384:
+    case KeyPairAlgorithm.ES384:
+    case KeyPairAlgorithm.RS384:
       return "sha384";
 
-    case Algorithm.ES512:
-    case Algorithm.RS512:
+    case KeyPairAlgorithm.ES512:
+    case KeyPairAlgorithm.RS512:
       return "sha512";
 
     default:

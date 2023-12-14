@@ -1,10 +1,10 @@
 import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { AdjustedAccessLevel, LevelOfAssurance } from "@lindorm-io/common-types";
-import { Algorithm } from "@lindorm-io/key-pair";
+import { KeyPairAlgorithm } from "@lindorm-io/key-pair";
 
 export type JwtDecodeKey = {
   id: string;
-  algorithm: Algorithm;
+  algorithm: KeyPairAlgorithm;
   jwksUrl: string | null;
 };
 
