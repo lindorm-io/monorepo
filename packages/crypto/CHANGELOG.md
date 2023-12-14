@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.2.0...@lindorm-io/crypto@0.3.0) (2023-12-14)
+
+### Features
+
+- remove old aes from crypto ([2bfc057](https://github.com/lindorm-io/monorepo/commit/2bfc057122ac4fea49ac191d814c32adc2a6b3f2))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.1.34...@lindorm-io/crypto@0.2.0) (2023-12-02)
 
 ### Features

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.5...@lindorm-io/jwt@0.12.0) (2023-12-14)
+
+### Features
+
+- add jwe functionality ([22dc80a](https://github.com/lindorm-io/monorepo/commit/22dc80a26cb6a860aa52d739da5c21a2561c2b3a))
+
 ## [0.11.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.4...@lindorm-io/jwt@0.11.5) (2023-12-12)
 
 ### Bug Fixes

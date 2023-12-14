@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/aes@0.1.0...@lindorm-io/aes@0.1.1) (2023-12-14)
+
+### Bug Fixes
+
+- add base64url format ([25cd949](https://github.com/lindorm-io/monorepo/commit/25cd9499d1ec14d6b1860693a8bdaddb3017aadf))
+- improve encoded string ([580facc](https://github.com/lindorm-io/monorepo/commit/580facc240dd6d98cab80fd1245f93187094baae))
+
 # 0.1.0 (2023-12-12)
 
 ### Bug Fixes
