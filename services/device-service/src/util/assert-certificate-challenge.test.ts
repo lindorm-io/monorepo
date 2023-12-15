@@ -1,41 +1,83 @@
 import { CertificateMethod } from "@lindorm-io/common-enums";
-import { createRsaSignature } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { randomString } from "@lindorm-io/random";
+import { createRsaSignature } from "@lindorm-io/rsa";
 import { assertCertificateChallenge } from "./assert-certificate-challenge";
+import { mapCertificateMethodToRsaAlgorithm } from "./certificate-method-mapper";
 
-const privateKey =
-  "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" +
-  "MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQI73j2DruGoZgCAggA\n" +
-  "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBA1zkvIdjMOkQqPC0VrDGruBIIC\n" +
-  "gO+CBYavUokPVzUUWNhh/nZ/14bK5E0HOrYkawvotp0ERSTqM45bR8CaJZE9cogK\n" +
-  "zS83KPYJq6Eudu7RRHEOptfmJV9XkWvykGDVyoV7XLHqRV0yaqKntIOi7ar1c/Jy\n" +
-  "kamJ0dw1m8yhvp6u25WLAtPTkm9hJ3vneU2X+Hk9cbGtCuXzuaf7VOPmUx6Tr6TV\n" +
-  "aQo5ZtcDBaatamI3Bq0PlCr75mR7eAjVaEN01PMaJNWYIS+Bqd64cU3cqZWl97/q\n" +
-  "UVom7kMFnNwM+IJ1eCBPbMCvqhwccADcVEdSMAWLtS6OzMOC8UO+hhs+zirbnw2n\n" +
-  "3iCqSbuu0Aekh8qQRRe7DV6myvkJtQJydN2qkKQHhOK+vONwIKgf8H4Xoyefo43D\n" +
-  "RwExh4VwzVT1iDDHIsjIgEfOEwM6SKSpekfe1jzL4nEwQZyQjIHHpdDse5hrPw1G\n" +
-  "CPZ8H9id679igFaPPtHyf85PH2oRjkVfJuUX5nFxrlkRF/U5pxC+7D/AbdEdAJFQ\n" +
-  "es0JWzNfR54z5Pg6baojk4u7UggQMOSGNkTfZx5f9nWeTeiPp9fAnf/lE5FTjqWr\n" +
-  "jSRuyplFwVBPcvy497gRlGJQh4SPwqFsurjV3yXl3mFbHCtrm967uR58yVuaF658\n" +
-  "E0Dobem0s0Qexghaz/wuNRplaGUh+0kC5a8pJsB4vYVhq+goEhawisBriCt3JNeX\n" +
-  "YZe1vw1+Ze/LCfxf6N8N+/d0OoYXavZGDiO3hebuJXgHtrM7zNZNLwq4RCvgGcBd\n" +
-  "OwB9V2N3H2119vsfdASo399qL163UKUqNN3eWld9uL5h/HHLRYMTOloAOP9wJi31\n" +
-  "8VnSW4qtRe+cZMZ0yuEVxmc=\n" +
-  "-----END ENCRYPTED PRIVATE KEY-----\n";
+const PRIVATE_KEY =
+  "-----BEGIN RSA PRIVATE KEY-----\n" +
+  "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\n" +
+  "-----END RSA PRIVATE KEY-----\n";
 
-const publicKey =
+const PUBLIC_KEY =
   "-----BEGIN RSA PUBLIC KEY-----\n" +
-  "MIGJAoGBAKdVz2lIbQi1YU3Z0qRizpV9gAMW9Kmwms4aP+r7CKcu4w9/fMcV4v6P\n" +
-  "zYHwnjvTEZ6gSqtxcpwT6EgBAgxFolqjeInOis2I+tcfxcShwcfMZ/E7kgktP15w\n" +
-  "dsAFDTzmso9VtnBNgbt8afNea1nK25Fa+Zq+gztxkI5pkw1WFm4FAgMBAAE=\n" +
+  "MIICCgKCAgEA8h//VGbmGCMm/cywfEEviNkR7o3yL0yZktzqb95VtwsGatj3JbOp\n" +
+  "u7FwePJww0CBVZw3zE+bnNcVyaZFMfhm8uNEBOA5JQBWs2ZJhflIGz4oYWcWeMto\n" +
+  "cwh0kNVLtz1071a9O7JOAVR64KslbactXAeSIcMk7c9reKffVgymZnTTNHMhECtb\n" +
+  "z77RCUpgLgEG/PUU44N9cYWtPfOvUnxrA6ocxG8Y+IggG6TYtiDwTBScypg9u59/\n" +
+  "xLLevM+SRwGomM3dyx6h4W3DnT8kwIRrBvsNhmmqoMEOjQYPbfVHP/RkES9pdIFy\n" +
+  "2jdw4TrLFhwU9dSgQLpZ5EK+7CylcbdhgNqo/Bm0XgiKFKPeYvspNXXVuaVRGhop\n" +
+  "z3HmEQyaCrDjvX7GF4BJ4j26rotqKxurZDNOEKuLUWwRle/Ft6/zbbrUXdV2rBvr\n" +
+  "mx+YW8aKJiUpJhgT8rSRZeLZ/CJ+G8ZONp2bqvZqkeRhg3XcvyrBcdeT947FOFz5\n" +
+  "wZg8mnBNnDJeVs+kdUh9FP3q0T/DVcf0ebED2pxhMjmAq7oa+Gk5UPU61+EdP9pC\n" +
+  "sJrjyzu7watHSkszd8MetQ8MRUWzhplnsFJI16AKvNN03FWNk2eTd36Tzm/7SX8I\n" +
+  "FDpORQUua2TivVRvRWWpl6wC0w7/oajFii+iDDdA4h4BjPAgvjmx38cCAwEAAQ==\n" +
   "-----END RSA PUBLIC KEY-----\n";
 
 const sign = (input: string, method: CertificateMethod = CertificateMethod.SHA256): string =>
   createRsaSignature({
-    algorithm: method,
+    algorithm: mapCertificateMethodToRsaAlgorithm(method),
     data: input,
-    key: { key: privateKey, passphrase: "" },
+    key: PRIVATE_KEY,
   });
 
 describe("assertCertificateChallenge", () => {
@@ -54,7 +96,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod,
         certificateVerifier: sign(certificateChallenge, certificateMethod),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).not.toThrow();
   });
@@ -67,7 +109,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod,
         certificateVerifier: sign(certificateChallenge, certificateMethod),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).not.toThrow();
   });
@@ -80,7 +122,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod,
         certificateVerifier: sign(certificateChallenge, certificateMethod),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).not.toThrow();
   });
@@ -93,7 +135,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge: randomString(32),
         certificateMethod,
         certificateVerifier: sign(certificateChallenge, certificateMethod),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).toThrow(ClientError);
   });
@@ -104,7 +146,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod: CertificateMethod.SHA384,
         certificateVerifier: sign(certificateChallenge, CertificateMethod.SHA256),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).toThrow(ClientError);
   });
@@ -117,7 +159,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod,
         certificateVerifier: sign(certificateChallenge, CertificateMethod.SHA384),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).toThrow(ClientError);
   });
@@ -130,7 +172,7 @@ describe("assertCertificateChallenge", () => {
         certificateChallenge,
         certificateMethod,
         certificateVerifier: sign(randomString(32), certificateMethod),
-        publicKey,
+        publicKey: PUBLIC_KEY,
       }),
     ).toThrow(ClientError);
   });

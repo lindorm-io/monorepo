@@ -1,6 +1,7 @@
 import { Dict } from "@lindorm-io/common-types";
-import { verifyRsaSignature, verifyShaHash } from "@lindorm-io/crypto";
+import { verifyShaHash } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
+import { verifyRsaSignature } from "@lindorm-io/rsa";
 import { ServerKoaContext, ServerKoaMiddleware } from "../../types";
 import { destructHeaderDigest, destructHeaderSignature } from "../../util";
 

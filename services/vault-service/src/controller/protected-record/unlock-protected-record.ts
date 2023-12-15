@@ -1,9 +1,9 @@
+import { AesCipher } from "@lindorm-io/aes";
 import {
   UnlockProtectedRecordRequestBody,
   UnlockProtectedRecordRequestParams,
   UnlockProtectedRecordResponse,
 } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { parseBlob } from "@lindorm-io/string-blob";
@@ -53,11 +53,11 @@ export const unlockProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  const crypto = new CryptoAes({ secret: key });
+  const aesCipher = new AesCipher({ secret: key });
   let blob: string;
 
   try {
-    blob = crypto.decrypt(protectedRecord.protectedData);
+    blob = aesCipher.decrypt(protectedRecord.protectedData);
   } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_vault_key",

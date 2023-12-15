@@ -1,4 +1,4 @@
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { randomBytes } from "crypto";
 import MockDate from "mockdate";
 import { authenticator } from "otplib";
@@ -8,7 +8,7 @@ import { TotpHandler } from "./TotpHandler";
 MockDate.set("2020-01-01T08:00:15.000");
 
 describe("TotpHandler", () => {
-  let aes: CryptoAes;
+  let aes: AesCipher;
   let code: string;
   let handler: TotpHandler;
   let signature: string;
@@ -21,7 +21,7 @@ describe("TotpHandler", () => {
       issuer: "issuer",
     });
 
-    aes = new CryptoAes({ secret });
+    aes = new AesCipher({ secret });
 
     ({ signature } = handler.generate());
 
@@ -35,7 +35,7 @@ describe("TotpHandler", () => {
     expect(result.uri).toContain("?secret=");
     expect(result.uri).toContain("&period=30&digits=6&algorithm=SHA1&issuer=issuer");
 
-    expect(result.signature.length).toBe(108);
+    expect(result.signature.length).toBe(145);
   });
 
   test("should verify resolving time remaining and used", () => {

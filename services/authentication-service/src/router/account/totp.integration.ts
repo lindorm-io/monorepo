@@ -1,4 +1,4 @@
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { randomBytes } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -21,7 +21,7 @@ jest.unmock("@lindorm-io/redis");
 
 describe("/account/password", () => {
   const secret = randomBytes(16).toString("hex");
-  const aes = new CryptoAes({ secret });
+  const aes = new AesCipher({ secret });
 
   const totpHandler = new TotpHandler({
     aes: { secret },

@@ -18,7 +18,7 @@ export type EncryptionKeyOptions = Optional<EncryptionKeyAttributes, EntityKeys>
 const schema = Joi.object<EncryptionKeyAttributes>({
   ...JOI_ENTITY_BASE,
 
-  key: Joi.string().base64().required(),
+  key: Joi.string().required(),
   owner: Joi.string().guid().required(),
   ownerType: Joi.string().required(),
 });

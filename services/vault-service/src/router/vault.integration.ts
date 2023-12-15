@@ -1,4 +1,4 @@
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -43,10 +43,10 @@ describe("/vault", () => {
     const clientCredentials = getTestClientCredentials({ subject });
 
     const key = randomBytes(16).toString("hex");
-    const crypto = new CryptoAes({ secret: key });
+    const aesCipher = new AesCipher({ secret: key });
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
-        protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
+        protectedData: aesCipher.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
         expires: new Date("2024-02-03T09:10:15.000Z"),
         owner: subject,
         ownerType: "client",
@@ -70,10 +70,10 @@ describe("/vault", () => {
     const clientCredentials = getTestClientCredentials({ subject });
 
     const key = randomBytes(16).toString("hex");
-    const crypto = new CryptoAes({ secret: key });
+    const aesCipher = new AesCipher({ secret: key });
     const entity = await TEST_PROTECTED_RECORD_REPOSITORY.create(
       new ProtectedRecord({
-        protectedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
+        protectedData: aesCipher.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
         expires: new Date("2024-02-03T09:10:15.000Z"),
         owner: subject,
         ownerType: "client",

@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm-io/errors";
 import { randomBytes } from "crypto";
 import { EncryptionKey } from "../entity";
-import { cryptoAes } from "../instance";
+import { aesCipher } from "../instance";
 import { ServerKoaContext } from "../types";
 
 export const getEncryptionKey = async (ctx: ServerKoaContext): Promise<string> => {
@@ -24,7 +24,7 @@ export const getEncryptionKey = async (ctx: ServerKoaContext): Promise<string> =
   const found = await encryptionKeyRepository.tryFind({ owner: subject, ownerType: subjectHint });
 
   if (found) {
-    return cryptoAes.decrypt(found.key);
+    return aesCipher.decrypt(found.key);
   }
 
   const key = randomBytes(16).toString("hex");
@@ -32,7 +32,7 @@ export const getEncryptionKey = async (ctx: ServerKoaContext): Promise<string> =
   await encryptionKeyRepository.create(
     new EncryptionKey({
       owner: subject,
-      key: cryptoAes.encrypt(key),
+      key: aesCipher.encrypt(key),
       ownerType: subjectHint,
     }),
   );

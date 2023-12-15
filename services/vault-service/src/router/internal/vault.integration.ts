@@ -1,4 +1,4 @@
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 import { randomBytes, randomUUID } from "crypto";
 import MockDate from "mockdate";
@@ -10,7 +10,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
 } from "../../fixtures/integration";
-import { cryptoAes } from "../../instance";
+import { aesCipher } from "../../instance";
 import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -42,17 +42,17 @@ describe("/internal/vault", () => {
 
     const encryptionKey = await TEST_ENCRYPTION_KEY_REPOSITORY.create(
       new EncryptionKey({
-        key: cryptoAes.encrypt(randomBytes(16).toString("hex")),
+        key: aesCipher.encrypt(randomBytes(16).toString("hex")),
         owner: subject,
         ownerType: "client",
       }),
     );
-    const secret = cryptoAes.decrypt(encryptionKey.key);
-    const crypto = new CryptoAes({ secret });
+    const secret = aesCipher.decrypt(encryptionKey.key);
+    const testCipher = new AesCipher({ secret });
 
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({
-        encryptedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
+        encryptedData: testCipher.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
         expires: new Date("2024-02-03T09:10:15.000Z"),
       }),
     );
@@ -74,17 +74,17 @@ describe("/internal/vault", () => {
 
     const encryptionKey = await TEST_ENCRYPTION_KEY_REPOSITORY.create(
       new EncryptionKey({
-        key: cryptoAes.encrypt(randomBytes(16).toString("hex")),
+        key: aesCipher.encrypt(randomBytes(16).toString("hex")),
         owner: subject,
         ownerType: "client",
       }),
     );
-    const secret = cryptoAes.decrypt(encryptionKey.key);
-    const crypto = new CryptoAes({ secret });
+    const secret = aesCipher.decrypt(encryptionKey.key);
+    const testCipher = new AesCipher({ secret });
 
     const entity = await TEST_ENCRYPTED_RECORD_REPOSITORY.create(
       new EncryptedRecord({
-        encryptedData: crypto.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
+        encryptedData: testCipher.encrypt(stringifyBlob({ foo: "bar", baz: "qok" })),
         expires: new Date("2024-02-03T09:10:15.000Z"),
       }),
     );

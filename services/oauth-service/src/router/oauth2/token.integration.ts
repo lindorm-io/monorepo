@@ -6,7 +6,7 @@ import {
   SessionStatus,
 } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
-import { Algorithm } from "@lindorm-io/key-pair";
+import { KeyPairAlgorithm } from "@lindorm-io/key-pair";
 import { randomHex } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { getUnixTime } from "date-fns";
@@ -236,12 +236,12 @@ describe("/oauth2/token", () => {
     const client = await TEST_CLIENT_REPOSITORY.create(
       createTestClient({
         authenticationAssertion: {
-          algorithm: Algorithm.HS256,
+          algorithm: KeyPairAlgorithm.HS256,
           issuer: "https://client.test.authentication.lindorm.io",
           secret: "9as5n79KR1woVTdqaJ0ZjADAMLSh2SLM",
         },
         authorizationAssertion: {
-          algorithm: Algorithm.HS256,
+          algorithm: KeyPairAlgorithm.HS256,
           issuer: "https://client.test.authorization.lindorm.io",
           secret: "zVLezwFmrYWsyhuBkrnFSBiDtUfpSuHT",
         },

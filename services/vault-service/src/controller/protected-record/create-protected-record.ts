@@ -1,8 +1,8 @@
+import { AesCipher } from "@lindorm-io/aes";
 import {
   CreateProtectedRecordRequestBody,
   CreateProtectedRecordResponse,
 } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { stringifyBlob } from "@lindorm-io/string-blob";
@@ -38,7 +38,7 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
   } = ctx;
 
   const key = randomBytes(16).toString("hex");
-  const crypto = new CryptoAes({ secret: key });
+  const aesCipher = new AesCipher({ secret: key });
 
   if (!subjectHint) {
     throw new ClientError("Bad Request", {
@@ -50,7 +50,7 @@ export const createProtectedRecordController: ServerKoaController<RequestData> =
   await protectedRecordRepository.create(
     new ProtectedRecord({
       id,
-      protectedData: crypto.encrypt(stringifyBlob(data)),
+      protectedData: aesCipher.encrypt(stringifyBlob(data)),
       expires: expires ? new Date(expires) : null,
       owner: subject,
       ownerType: subjectHint,

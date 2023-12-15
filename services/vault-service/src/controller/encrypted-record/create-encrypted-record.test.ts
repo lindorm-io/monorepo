@@ -5,8 +5,8 @@ import { createEncryptedRecordController } from "./create-encrypted-record";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
 
-jest.mock("@lindorm-io/crypto", () => ({
-  CryptoAes: class CryptoAes {
+jest.mock("@lindorm-io/aes", () => ({
+  AesCipher: class AesCipher {
     constructor() {}
     encrypt() {
       return "encrypted-string";

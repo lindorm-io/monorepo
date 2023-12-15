@@ -1,6 +1,7 @@
 import { RdcSessionMode } from "@lindorm-io/common-enums";
-import { createRsaSignature, createShaHash } from "@lindorm-io/crypto";
+import { createShaHash } from "@lindorm-io/crypto";
 import { randomHex } from "@lindorm-io/random";
+import { RsaAlgorithm, RsaFormat, createRsaSignature } from "@lindorm-io/rsa";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -103,9 +104,9 @@ describe("/admin/rdc", () => {
     };
 
     const headersHash = createRsaSignature({
-      algorithm: "RSA-SHA512",
+      algorithm: RsaAlgorithm.RSA_SHA512,
       data: JSON.stringify(headers),
-      format: "base64",
+      format: RsaFormat.BASE64,
       key: TEST_PRIVATE_KEY,
     });
 

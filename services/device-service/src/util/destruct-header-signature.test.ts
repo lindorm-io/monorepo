@@ -1,5 +1,5 @@
-import { createRsaSignature } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
+import { RsaAlgorithm, RsaFormat, createRsaSignature } from "@lindorm-io/rsa";
 import { TEST_PRIVATE_KEY } from "../fixtures/integration/test-public-keys";
 import { destructHeaderSignature } from "./destruct-header-signature";
 
@@ -19,15 +19,15 @@ describe("destructHeaderSignature", () => {
     headers = ["Date", "Digest", "Foo", "Bar", "Baz"].join(" ");
 
     hash = createRsaSignature({
-      algorithm: "RSA-SHA512",
+      algorithm: RsaAlgorithm.RSA_SHA512,
       data: JSON.stringify(content),
-      format: "base64",
+      format: RsaFormat.BASE64,
       key: TEST_PRIVATE_KEY,
     });
 
     signature = [
-      `algorithm="RSA-SHA512"`,
-      `format="base64"`,
+      `algorithm="${RsaAlgorithm.RSA_SHA512}"`,
+      `format="${RsaFormat.BASE64}"`,
       `hash="${hash}"`,
       `headers="${headers}"`,
       `key="040c34af-1e6c-4821-b18c-bd433b0c9c4b"`,
@@ -46,23 +46,23 @@ describe("destructHeaderSignature", () => {
 
   test("should resolve signature data with other valid algorithms and formats", () => {
     hash = createRsaSignature({
-      algorithm: "RSA-SHA256",
+      algorithm: RsaAlgorithm.RSA_SHA256,
       data: JSON.stringify(content),
-      format: "hex",
+      format: RsaFormat.HEX,
       key: TEST_PRIVATE_KEY,
     });
 
     signature = [
-      `algorithm="RSA-SHA256"`,
-      `format="hex"`,
+      `algorithm="${RsaAlgorithm.RSA_SHA256}"`,
+      `format="${RsaFormat.HEX}"`,
       `hash="${hash}"`,
       `headers="${headers}"`,
       `key="040c34af-1e6c-4821-b18c-bd433b0c9c4b"`,
     ].join(",");
 
     expect(destructHeaderSignature(signature)).toStrictEqual({
-      algorithm: "RSA-SHA256",
-      format: "hex",
+      algorithm: RsaAlgorithm.RSA_SHA256,
+      format: RsaFormat.HEX,
       hash: "6759ee2fde60473aea980829711eb33c2afe8d2e6f9c1cacc72f058efcab7b5b6c80de136f71a35f564d4fe5d0e9f6a738fd8cd6eb842873a3de19624f5dfe041b3027b06b4e9bbb4e2a3c179dfca2e95296d2aa2875920b81155927298f4764c96dcd8b4210bf323a375efb61aa362fd5c59d1a8205100aeb661bb2f5e3e4f60f5c9a0fbc1e34d397b4947e8e6b25bcda77439681571c2b1556070c40ff2e8c4b1f62ce2af7dfd3f9eaf39914782da563491671b46619b5db0e5250a4f8899d42ec2536efaab1a1e63b437bb1e430f50f4b9b2ee06232301d42211503af58cf7c904c31431f99f0a0df30745f3dd14b91cbca3f14f847386ec59ead46835baffd72d5e297c9e0c6d50e086be81f8e0edf338dc8f8e32bfc8758484c8c3318d4a821ae2ce2646bce1f49e02abd63e9b546d0487923f5b71077ed9d2471a7d4024a581b31104c21dc63cba024309ba1760f189f8f1237055416abae1314bbd2b1a54ea074be0b2643e7031a9cffa7cad04fda583437da953928f0d7a899f954f3ef1b3b9259edf13ee22c4662b4ab70e27e6e071998f1420434e75effdc77635fc74378d2c412cee1f9facd465a498f8ba07cc8ce798021439c8797689c3f95947c60fc7fac54e015994d5a6614936ff835500746bcceddc99c26770f5f2fb57cee9680a761640d27640586d7416b735a451f60b8c7759f626d35bc88d2f46c64",
       headers: ["date", "digest", "foo", "bar", "baz"],
       key: "040c34af-1e6c-4821-b18c-bd433b0c9c4b",

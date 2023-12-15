@@ -8,8 +8,8 @@ import { deleteEncryptedRecordController } from "./delete-encrypted-record";
 MockDate.set("2021-01-01T08:00:00.000Z");
 
 const aesDecrypt = jest.fn();
-jest.mock("@lindorm-io/crypto", () => ({
-  CryptoAes: class CryptoAes {
+jest.mock("@lindorm-io/aes", () => ({
+  AesCipher: class AesCipher {
     constructor() {}
     decrypt() {
       aesDecrypt();

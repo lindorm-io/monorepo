@@ -1,10 +1,10 @@
-import { CryptoAes, CryptoAesOptions } from "@lindorm-io/crypto";
+import { AesCipher, AesCipherOptions } from "@lindorm-io/aes";
 import { randomUUID } from "crypto";
 import { authenticator } from "otplib";
 import { TotpError } from "../error";
 
 interface Options {
-  aes: CryptoAesOptions;
+  aes: AesCipherOptions;
   issuer: string;
   numberOfBytes?: number;
 }
@@ -15,12 +15,12 @@ interface GenerateData {
 }
 
 export class TotpHandler {
-  private readonly aes: CryptoAes;
+  private readonly aes: AesCipher;
   private readonly issuer: string;
   private readonly numberOfBytes: number;
 
   public constructor(options: Options) {
-    this.aes = new CryptoAes(options.aes);
+    this.aes = new AesCipher(options.aes);
     this.issuer = options.issuer;
     this.numberOfBytes = options.numberOfBytes || 32;
   }

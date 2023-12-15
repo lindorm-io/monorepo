@@ -1,4 +1,4 @@
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { configuration } from "../server/configuration";
 
-export const cryptoAes = new CryptoAes({ secret: configuration.secrets.aes });
+export const aesCipher = new AesCipher({ secret: configuration.secrets.aes });

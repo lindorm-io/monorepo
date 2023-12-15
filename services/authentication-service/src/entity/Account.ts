@@ -23,11 +23,11 @@ export type AccountOptions = Optional<
 const schema = Joi.object<AccountAttributes>({
   ...JOI_ENTITY_BASE,
 
-  browserLinkCode: Joi.string().base64().allow(null).required(),
-  password: Joi.string().base64().allow(null).required(),
-  recoveryCode: Joi.string().base64().allow(null).required(),
+  browserLinkCode: Joi.string().allow(null).required(),
+  password: Joi.string().allow(null).required(),
+  recoveryCode: Joi.string().allow(null).required(),
   requireMfa: Joi.boolean().required(),
-  totp: Joi.string().base64().allow(null).required(),
+  totp: Joi.string().allow(null).required(),
 });
 
 export class Account extends LindormEntity<AccountAttributes> implements AccountAttributes {

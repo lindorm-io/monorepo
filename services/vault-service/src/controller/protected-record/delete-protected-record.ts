@@ -1,8 +1,8 @@
+import { AesCipher } from "@lindorm-io/aes";
 import {
   DeleteProtectedRecordRequestBody,
   DeleteProtectedRecordRequestParams,
 } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -40,10 +40,10 @@ export const deleteProtectedRecordController: ServerKoaController<RequestData> =
     });
   }
 
-  const crypto = new CryptoAes({ secret: key });
+  const aesCipher = new AesCipher({ secret: key });
 
   try {
-    crypto.decrypt(protectedRecord.protectedData);
+    aesCipher.decrypt(protectedRecord.protectedData);
   } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_vault_key",

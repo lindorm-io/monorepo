@@ -790,6 +790,13 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@lindorm-io/aes@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/aes/-/aes-0.1.1.tgz#8af6ea92c8f89d7aca41029824a78d24a79b5f3c"
+  integrity sha512-ZjEY75e6PoZLPiBrA5FgyptYnP0qIK655S9ZOFUHN+V9LcLz3x4GOjMvl5wXTj0weJV2hcdFiFOhhqsUtUCcdg==
+  dependencies:
+    "@lindorm-io/errors" "^0.1.21"
+
 "@lindorm-io/amqp@^0.3.2":
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@lindorm-io/amqp/-/amqp-0.3.2.tgz#90eaa2cd7c4eb4722c212dc31f98166aef03e2de"

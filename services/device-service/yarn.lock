@@ -1080,6 +1080,13 @@
   resolved "https://registry.yarnpkg.com/@lindorm-io/retry/-/retry-0.1.5.tgz#405732281c88f839f1127b28127b396e09db4d8d"
   integrity sha512-7RCq6Xj9OKS5gjPLMJC3bgfxgIiPZN8RclYPx8VN8xxNSJ40K1I1DMxxBYG3CnySV+zDubBxKRaJu1j1d1+fIQ==
 
+"@lindorm-io/rsa@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/rsa/-/rsa-0.1.0.tgz#380ceec67911513a6856b884494eaddced24a3a6"
+  integrity sha512-cEdbismpim3WWoFxXeOS9QYt7SddOaWuA8EixZuECmvZFIGhiIuBdHXwFiSirzmBlCUV2KJRlOQzkCkLYVQCNQ==
+  dependencies:
+    "@lindorm-io/errors" "^0.1.21"
+
 "@lindorm-io/string-blob@^0.0.27":
   version "0.0.27"
   resolved "https://registry.yarnpkg.com/@lindorm-io/string-blob/-/string-blob-0.0.27.tgz#7542f96316d89a093192154a4bba962a004c6352"

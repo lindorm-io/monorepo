@@ -1,5 +1,5 @@
+import { AesCipher } from "@lindorm-io/aes";
 import { DeleteEncryptedRecordRequestParams } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import Joi from "joi";
@@ -23,10 +23,10 @@ export const deleteEncryptedRecordController: ServerKoaController<RequestData> =
   } = ctx;
 
   const encryptionKey = await getEncryptionKey(ctx);
-  const crypto = new CryptoAes({ secret: encryptionKey });
+  const aesCipher = new AesCipher({ secret: encryptionKey });
 
   try {
-    crypto.decrypt(encryptedRecord.encryptedData);
+    aesCipher.decrypt(encryptedRecord.encryptedData);
   } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_owner",

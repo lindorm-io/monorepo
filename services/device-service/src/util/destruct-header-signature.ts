@@ -1,8 +1,9 @@
 import { ClientError } from "@lindorm-io/errors";
+import { RsaAlgorithm, RsaFormat } from "@lindorm-io/rsa";
 
 type DestructSignature = {
-  algorithm: "RSA-SHA256" | "RSA-SHA384" | "RSA-SHA512";
-  format: "base64" | "hex";
+  algorithm: RsaAlgorithm;
+  format: RsaFormat;
   hash: string;
   headers: Array<string>;
   key: string;
@@ -23,7 +24,11 @@ export const destructHeaderSignature = (input: string): DestructSignature => {
     });
   }
 
-  if (algorithm !== "RSA-SHA256" && algorithm !== "RSA-SHA384" && algorithm !== "RSA-SHA512") {
+  if (
+    algorithm !== RsaAlgorithm.RSA_SHA512 &&
+    algorithm !== RsaAlgorithm.RSA_SHA384 &&
+    algorithm !== RsaAlgorithm.RSA_SHA256
+  ) {
     throw new ClientError("Invalid signature header", {
       description: "Algorithm not supported",
     });
@@ -37,7 +42,7 @@ export const destructHeaderSignature = (input: string): DestructSignature => {
     });
   }
 
-  if (format !== "base64" && format !== "hex") {
+  if (format !== RsaFormat.BASE64 && format !== RsaFormat.HEX) {
     throw new ClientError("Invalid signature header", {
       description: "Format not supported",
     });

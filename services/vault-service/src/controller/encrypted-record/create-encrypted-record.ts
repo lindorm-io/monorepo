@@ -1,5 +1,5 @@
 import { CreateEncryptedRecordRequestBody } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
+import { AesCipher } from "@lindorm-io/aes";
 import { ControllerResponse, HttpStatus } from "@lindorm-io/koa";
 import { stringifyBlob } from "@lindorm-io/string-blob";
 import Joi from "joi";
@@ -26,12 +26,12 @@ export const createEncryptedRecordController: ServerKoaController<RequestData> =
   } = ctx;
 
   const encryptionKey = await getEncryptionKey(ctx);
-  const crypto = new CryptoAes({ secret: encryptionKey });
+  const aesCipher = new AesCipher({ secret: encryptionKey });
 
   await encryptedRecordRepository.create(
     new EncryptedRecord({
       id,
-      encryptedData: crypto.encrypt(stringifyBlob(data)),
+      encryptedData: aesCipher.encrypt(stringifyBlob(data)),
       expires: expires ? new Date(expires) : null,
     }),
   );

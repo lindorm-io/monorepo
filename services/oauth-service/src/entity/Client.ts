@@ -13,7 +13,7 @@ import {
 } from "@lindorm-io/common-enums";
 import { LevelOfAssurance, Optional, ScopeDescription } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
-import { Algorithm } from "@lindorm-io/key-pair";
+import { KeyPairAlgorithm } from "@lindorm-io/key-pair";
 import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_SCOPE_DESCRIPTION } from "../common";
@@ -29,13 +29,13 @@ export type ClientAllowed = {
 };
 
 export type ClientAuthenticationAssertion = {
-  algorithm: Algorithm | null;
+  algorithm: KeyPairAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
 
 export type ClientAuthorizationAssertion = {
-  algorithm: Algorithm | null;
+  algorithm: KeyPairAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
@@ -187,7 +187,7 @@ const schema = Joi.object<ClientAttributes>()
     authenticationAssertion: Joi.object()
       .keys({
         algorithm: Joi.string()
-          .valid(...Object.values(Algorithm))
+          .valid(...Object.values(KeyPairAlgorithm))
           .allow(null)
           .required(),
         issuer: Joi.string().allow(null).required(),
@@ -197,7 +197,7 @@ const schema = Joi.object<ClientAttributes>()
     authorizationAssertion: Joi.object()
       .keys({
         algorithm: Joi.string()
-          .valid(...Object.values(Algorithm))
+          .valid(...Object.values(KeyPairAlgorithm))
           .allow(null)
           .required(),
         issuer: Joi.string().allow(null).required(),

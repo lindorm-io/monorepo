@@ -1,8 +1,8 @@
+import { AesCipher } from "@lindorm-io/aes";
 import {
   GetEncryptedRecordRequestParams,
   GetEncryptedRecordResponse,
 } from "@lindorm-io/common-types";
-import { CryptoAes } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { parseBlob } from "@lindorm-io/string-blob";
@@ -38,12 +38,12 @@ export const getEncryptedRecordController: ServerKoaController<RequestData> = as
   }
 
   const encryptionKey = await getEncryptionKey(ctx);
-  const crypto = new CryptoAes({ secret: encryptionKey });
+  const aesCipher = new AesCipher({ secret: encryptionKey });
 
   let blob: string;
 
   try {
-    blob = crypto.decrypt(encryptedRecord.encryptedData);
+    blob = aesCipher.decrypt(encryptedRecord.encryptedData);
   } catch (err: any) {
     throw new ClientError("Forbidden", {
       code: "invalid_encryption_Key",

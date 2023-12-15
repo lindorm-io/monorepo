@@ -1,5 +1,5 @@
 import { Environment } from "@lindorm-io/common-enums";
-import { KeyType } from "@lindorm-io/key-pair";
+import { KeyPairType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import {
@@ -30,7 +30,7 @@ export const server = createNodeServer<ServerKoaContext>({
   keystore: {
     exposed: ["public"],
     storage: ["memory"],
-    generated: configuration.server.workers ? [KeyType.EC] : [],
+    generated: configuration.server.workers ? [KeyPairType.EC] : [],
     jwks: [
       {
         host: configuration.services.oauth_service.host,
