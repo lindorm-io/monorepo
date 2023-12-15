@@ -9,7 +9,7 @@ export class RsaSignature {
   private readonly privateKey: RsaPrivateKey | undefined;
 
   public constructor(options: RsaSignatureOptions) {
-    this.algorithm = options.algorithm || RsaAlgorithm.RS256;
+    this.algorithm = options.algorithm || RsaAlgorithm.RSA_SHA256;
     this.format = options.format || RsaFormat.BASE64;
     this.publicKey = options.publicKey;
     this.privateKey = options.privateKey;

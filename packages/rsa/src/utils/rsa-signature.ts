@@ -4,7 +4,7 @@ import { RsaError } from "../errors";
 import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../types";
 
 export const createRsaSignature = ({
-  algorithm = RsaAlgorithm.RS256,
+  algorithm = RsaAlgorithm.RSA_SHA256,
   data,
   format = RsaFormat.BASE64,
   key,
@@ -14,7 +14,7 @@ export const createRsaSignature = ({
 };
 
 export const verifyRsaSignature = ({
-  algorithm = RsaAlgorithm.RS256,
+  algorithm = RsaAlgorithm.RSA_SHA256,
   data,
   format = RsaFormat.BASE64,
   key,
