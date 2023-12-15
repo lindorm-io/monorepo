@@ -34,7 +34,7 @@ export const sessionLoggerMiddleware =
 
       await next();
 
-      ctx.logger.info("Service responded with success", {
+      ctx.logger.info("Service responded", {
         correlationId: ctx.metadata.correlationId,
         requestId: ctx.metadata.requestId,
         response: {
@@ -48,7 +48,7 @@ export const sessionLoggerMiddleware =
         },
       });
     } catch (err) {
-      ctx.logger.warn("Service responded with error", {
+      ctx.logger.warn("Service responded with unknown error", {
         correlationId: ctx.metadata.correlationId,
         requestId: ctx.metadata.requestId,
         response: {
