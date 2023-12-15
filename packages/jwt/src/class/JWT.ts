@@ -361,6 +361,8 @@ export class JWT {
   }
 
   private getSecret(key: KeyPair): Secret {
+    this.logger.silly("Resolving secret key", { key });
+
     if (!key.privateKey) throw new Error("Missing private key");
 
     switch (key.type) {
@@ -382,11 +384,17 @@ export class JWT {
   }
 
   private getSigningKey(keyType?: KeyPairType): KeyPair {
-    return this.keystore.getSigningKey(keyType || this.keyType);
+    this.logger.silly("Finding signing key", { keyType });
+
+    const key = this.keystore.getSigningKey(keyType || this.keyType);
+
+    this.logger.silly("Found signing key", { keyType, key });
+
+    return key;
   }
 
   private getSignOptions(key: KeyPair, jwksUrl?: string): SignOptions {
-    return {
+    const options: SignOptions = {
       algorithm: key.preferredAlgorithm,
       allowInsecureKeySizes: true,
       header: {
@@ -395,5 +403,9 @@ export class JWT {
         kid: key.id,
       },
     };
+
+    this.logger.silly("Resolving sign options", { key, jwksUrl, options });
+
+    return options;
   }
 }
