@@ -19,7 +19,7 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/aes": "^0.0.1",
+    "@lindorm-io/aes": "^0.1.1",
     "@lindorm-io/case": "^0.2.0",
     "@lindorm-io/common-enums": "^0.1.2",
     "@lindorm-io/core": "^0.8.11",
