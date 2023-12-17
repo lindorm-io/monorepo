@@ -1,6 +1,6 @@
-import { AesError } from "../errors";
-import { AesEncryptionData } from "../types";
-import { mapShortToFormat, mapStringToRsaOaepHash } from "./private";
+import { mapShortToFormat, mapStringToRsaOaepHash } from ".";
+import { AesError } from "../../errors";
+import { AesEncryptionData } from "../../types";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 

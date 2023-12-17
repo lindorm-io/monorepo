@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
 import { AesAlgorithm, AesFormat, RsaOaepHash } from "../enums";
 import { decryptAesCipher, encryptAesCipher } from "./aes-cipher";
-import { decodeAesString } from "./decode-aes-string";
+import { decodeAesString } from "./private/decode-aes-string";
 
 const PRIVATE_KEY =
   "-----BEGIN RSA PRIVATE KEY-----\n" +

@@ -1,4 +1,4 @@
-import { RsaOaepHash } from "../enums";
+import { RsaOaepHash } from "../../enums";
 import { decodeAesString } from "./decode-aes-string";
 
 describe("decodeAesString", () => {
