@@ -1,3 +1,4 @@
+import { AesAlgorithm, RsaOaepHash } from "@lindorm-io/aes";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomBytes } from "crypto";
 import { JWE } from "./JWE";
@@ -71,20 +72,30 @@ const PUBLIC_KEY =
   "-----END RSA PUBLIC KEY-----\n";
 
 describe("JWE", () => {
-  let jwe: JWE;
-
-  beforeEach(() => {
-    jwe = new JWE({ key: PUBLIC_KEY }, createMockLogger());
-  });
-
   test("should encrypt and decrypt a jwe", () => {
+    const encrypter = new JWE(
+      {
+        algorithm: AesAlgorithm.AES_256_GCM,
+        key: PUBLIC_KEY,
+        oaepHash: RsaOaepHash.SHA512,
+      },
+      createMockLogger(),
+    );
+
+    const decrypter = new JWE(
+      {
+        algorithm: AesAlgorithm.AES_256_GCM,
+        key: PRIVATE_KEY,
+        oaepHash: RsaOaepHash.SHA512,
+      },
+      createMockLogger(),
+    );
+
     const token = randomBytes(32).toString("hex");
-    const string = jwe.encrypt(token);
+    const jwe = encrypter.encrypt(token);
 
-    expect(string).toStrictEqual(expect.any(String));
+    expect(jwe).toStrictEqual(expect.any(String));
 
-    const priv = new JWE({ key: PRIVATE_KEY }, createMockLogger());
-
-    expect(priv.decrypt(string)).toBe(token);
+    expect(decrypter.decrypt(jwe)).toBe(token);
   });
 });

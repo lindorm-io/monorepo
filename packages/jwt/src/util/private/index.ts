@@ -5,4 +5,4 @@ export * from "./assert-greater-or-equal";
 export * from "./get-first-bits-from-buffer";
 export * from "./get-hash-alg-from-key";
 export * from "./get-unix-time";
-export * from "./jwe-encoding-algorithm-mapper";
+export * from "./jwe-mapper";
