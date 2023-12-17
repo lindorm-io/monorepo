@@ -54,11 +54,11 @@ export const decryptPublicEncryptionKey = ({
     });
   }
 
-  const isPublic = !isPrivateKey(key);
-  const keyObject = isPublic ? key : getKeyObject(key, keyHash);
-  const action = isPublic ? publicDecrypt : privateDecrypt;
+  const isPrivate = isPrivateKey(key);
+  const keyObject = isPrivate ? getKeyObject(key, keyHash) : key;
+  const action = isPrivate ? privateDecrypt : publicDecrypt;
 
-  if (!isPublic && !keyHash) {
+  if (isPrivate && !keyHash) {
     throw new AesError("Unexpected error when decrypting AES cipher", {
       description: "Key hash is missing for private decryption",
     });
