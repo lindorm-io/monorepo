@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
-import { AesAlgorithm, AesFormat } from "../enums";
-import { decryptAesCipher, decryptAesData, encryptAesCipher } from "./aes-cipher";
+import { AesAlgorithm, AesFormat, RsaOaepHash } from "../enums";
+import { decryptAesCipher, encryptAesCipher } from "./aes-cipher";
 import { decodeAesString } from "./decode-aes-string";
 
 const PRIVATE_KEY =
@@ -221,14 +221,14 @@ describe("aes-cipher", () => {
     });
   });
 
-  describe("methods", () => {
-    test("should encrypt using an rsa key pair", () => {
+  describe("encryption and decryption", () => {
+    test("should encrypt using an rsa private key", () => {
       const data = randomBytes(32).toString("hex");
 
       const cipher = encryptAesCipher({
         data,
-        keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
         key: PRIVATE_KEY,
+        keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
       });
 
       expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
@@ -238,6 +238,7 @@ describe("aes-cipher", () => {
       expect(decoded.algorithm).toBe("aes-256-gcm");
       expect(decoded.format).toBe("base64");
       expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
+      expect(decoded.keyHash).toBeUndefined();
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
       expect(decoded.version).toBe(LATEST_AES_VERSION);
 
@@ -246,20 +247,82 @@ describe("aes-cipher", () => {
       expect(decrypted).toBe(data);
     });
 
-    test("should decrypt aes data", () => {
+    test("should encrypt using an rsa public key with sha256", () => {
       const data = randomBytes(32).toString("hex");
-      const secret = randomBytes(32).toString("hex").slice(0, 32);
 
       const cipher = encryptAesCipher({
-        algorithm: AesAlgorithm.AES_256_GCM,
         data,
-        format: AesFormat.BASE64,
-        secret,
+        key: PUBLIC_KEY,
+        keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
+        keyHash: RsaOaepHash.SHA256,
       });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
 
       const decoded = decodeAesString(cipher);
 
-      expect(decryptAesData({ ...decoded, secret })).toBe(data);
+      expect(decoded.algorithm).toBe("aes-256-gcm");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
+      expect(decoded.keyHash).toBe(RsaOaepHash.SHA256);
+      expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+
+      expect(decrypted).toBe(data);
+    });
+
+    test("should encrypt using an rsa public key with sha384", () => {
+      const data = randomBytes(32).toString("hex");
+
+      const cipher = encryptAesCipher({
+        data,
+        key: PUBLIC_KEY,
+        keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
+        keyHash: RsaOaepHash.SHA384,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-256-gcm");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
+      expect(decoded.keyHash).toBe(RsaOaepHash.SHA384);
+      expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+
+      expect(decrypted).toBe(data);
+    });
+
+    test("should encrypt using an rsa public key with sha512", () => {
+      const data = randomBytes(32).toString("hex");
+
+      const cipher = encryptAesCipher({
+        data,
+        key: PUBLIC_KEY,
+        keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
+        keyHash: RsaOaepHash.SHA512,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-256-gcm");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
+      expect(decoded.keyHash).toBe(RsaOaepHash.SHA512);
+      expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+
+      expect(decrypted).toBe(data);
     });
   });
 });

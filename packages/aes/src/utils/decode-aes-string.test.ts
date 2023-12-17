@@ -1,3 +1,4 @@
+import { RsaOaepHash } from "../enums";
 import { decodeAesString } from "./decode-aes-string";
 
 describe("decodeAesString", () => {
@@ -13,6 +14,7 @@ describe("decodeAesString", () => {
       format: "base64",
       initialisationVector: Buffer.from("initialisationVector"),
       keyId: Buffer.from("keyId"),
+      keyHash: RsaOaepHash.SHA1,
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       version: 1,
     });

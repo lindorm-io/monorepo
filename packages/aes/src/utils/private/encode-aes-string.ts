@@ -1,6 +1,6 @@
 import { removeEmptyFromObject } from "@lindorm-io/core";
 import { mapFormatToShort } from ".";
-import { BuildAesString } from "../../types";
+import { AesEncryptionData } from "../../types";
 
 export const encodeAesString = ({
   algorithm,
@@ -9,16 +9,17 @@ export const encodeAesString = ({
   format,
   initialisationVector,
   keyId,
+  keyHash,
   publicEncryptionKey,
   version,
-}: BuildAesString): string => {
+}: AesEncryptionData): string => {
   const values = removeEmptyFromObject({
     v: version,
     f: mapFormatToShort(format),
     cek: publicEncryptionKey?.toString(format),
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
-    pka: publicEncryptionKey ? "rsa-oaep" : undefined,
+    pka: keyHash?.toLowerCase(),
     tag: authTag.toString(format),
   });
   const array = Object.entries(values).map(([key, value]) => `${key}=${value}`);

@@ -1,15 +1,15 @@
-import { privateDecrypt, publicDecrypt } from "crypto";
 import { AesError } from "../../errors";
-import { BuildAesString, DecryptAesCipherOptions } from "../../types";
+import { AesEncryptionData, DecryptAesCipherOptions } from "../../types";
 import { assertAesCipherSecret } from "./assert-aes-cipher-secret";
-import { isPrivateKey } from "./is-private-key";
+import { decryptPublicEncryptionKey } from "./public-encryption-key";
 
 type Options = Pick<DecryptAesCipherOptions, "key" | "secret"> &
-  Pick<BuildAesString, "algorithm" | "publicEncryptionKey">;
+  Pick<AesEncryptionData, "algorithm" | "keyHash" | "publicEncryptionKey">;
 
 export const getAesDecryptionKey = ({
   algorithm,
   key,
+  keyHash,
   secret,
   publicEncryptionKey,
 }: Options): Buffer => {
@@ -33,14 +33,5 @@ export const getAesDecryptionKey = ({
     });
   }
 
-  if (!publicEncryptionKey) {
-    throw new AesError("Unable to decrypt AES cipher without public encryption key", {
-      description: "Public encryption key is missing",
-      debug: { publicEncryptionKey },
-    });
-  }
-
-  const decrypt = isPrivateKey(key) ? privateDecrypt : publicDecrypt;
-
-  return decrypt(key, publicEncryptionKey);
+  return decryptPublicEncryptionKey({ key, keyHash, publicEncryptionKey });
 };

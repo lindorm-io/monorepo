@@ -1,21 +1,25 @@
-import { privateEncrypt, publicEncrypt } from "crypto";
 import { AesAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { EncryptAesCipherOptions } from "../../types";
 import { assertAesCipherSecret } from "./assert-aes-cipher-secret";
 import { generateAesEncryptionKey } from "./generate-aes-encryption-key";
 import { isPrivateKey } from "./is-private-key";
+import { createPublicEncryptionKey } from "./public-encryption-key";
 
 type EncryptionKeys = {
   encryptionKey: Buffer;
+  isPrivateKey: boolean;
   publicEncryptionKey?: Buffer;
 };
+
+type Options = Pick<EncryptAesCipherOptions, "algorithm" | "key" | "keyHash" | "secret">;
 
 export const getAesEncryptionKeys = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   key,
+  keyHash,
   secret,
-}: Pick<EncryptAesCipherOptions, "algorithm" | "key" | "secret">): EncryptionKeys => {
+}: Options): EncryptionKeys => {
   if (key && secret) {
     throw new AesError("Unable to encrypt AES cipher with both key and secret", {
       description: "Key and secret are both present",
@@ -26,7 +30,7 @@ export const getAesEncryptionKeys = ({
   if (secret) {
     assertAesCipherSecret(secret, algorithm);
 
-    return { encryptionKey: Buffer.from(secret) };
+    return { encryptionKey: Buffer.from(secret), isPrivateKey: false };
   }
 
   if (!key) {
@@ -36,10 +40,9 @@ export const getAesEncryptionKeys = ({
     });
   }
 
-  const encrypt = isPrivateKey(key) ? privateEncrypt : publicEncrypt;
-
+  const isPrivate = isPrivateKey(key);
   const encryptionKey = generateAesEncryptionKey(algorithm);
-  const publicEncryptionKey = encrypt(key, encryptionKey);
+  const publicEncryptionKey = createPublicEncryptionKey({ encryptionKey, key, keyHash });
 
-  return { encryptionKey, publicEncryptionKey };
+  return { encryptionKey, isPrivateKey: isPrivate, publicEncryptionKey };
 };
