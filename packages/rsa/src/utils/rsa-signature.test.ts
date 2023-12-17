@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { RsaAlgorithm, RsaFormat } from "../enums";
+import { RsaAlgorithm, RsaFormat, ShaAlgorithm } from "../enums";
 import { RsaError } from "../errors";
 import { assertRsaSignature, createRsaSignature, verifyRsaSignature } from "./rsa-signature";
 
@@ -79,39 +79,39 @@ describe("rsa-signature", () => {
   });
 
   describe("algorithms", () => {
-    test("should create signature with RS256", () => {
+    test("should create signature with RSA_SHA256", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.RS256, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: RsaAlgorithm.RSA_SHA256, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with RS384", () => {
+    test("should create signature with RSA_SHA384", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.RS384, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: RsaAlgorithm.RSA_SHA384, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with RS512", () => {
+    test("should create signature with RSA_SHA512", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.RS512, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: RsaAlgorithm.RSA_SHA512, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with S256", () => {
+    test("should create signature with SHA256", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.S256, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: ShaAlgorithm.SHA256, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with S384", () => {
+    test("should create signature with SHA384", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.S384, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: ShaAlgorithm.SHA384, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with S512", () => {
+    test("should create signature with SHA512", () => {
       expect(
-        createRsaSignature({ algorithm: RsaAlgorithm.S512, key: PRIVATE_KEY, data }),
+        createRsaSignature({ algorithm: ShaAlgorithm.SHA512, key: PRIVATE_KEY, data }),
       ).toStrictEqual(expect.any(String));
     });
   });
