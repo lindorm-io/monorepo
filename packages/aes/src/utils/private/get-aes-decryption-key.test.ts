@@ -1,4 +1,4 @@
-import { AesAlgorithm, RsaOaepHash } from "../../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { assertAesCipherSecret as _assertAesCipherSecret } from "./assert-aes-cipher-secret";
 import { getAesDecryptionKey } from "./get-aes-decryption-key";
@@ -23,7 +23,7 @@ describe("getAesDecryptionKey", () => {
       getAesDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
         key: "key",
-        keyHash: RsaOaepHash.SHA256,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
         publicEncryptionKey: Buffer.from("public-encryption-key"),
       }),
     ).toStrictEqual(Buffer.from("encryption-key"));

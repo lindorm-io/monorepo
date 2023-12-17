@@ -4,7 +4,7 @@ import {
   publicDecrypt as _publicDecrypt,
   publicEncrypt as _publicEncrypt,
 } from "crypto";
-import { RsaOaepHash } from "../../enums";
+import { AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
@@ -121,7 +121,7 @@ describe("public-encryption-key", () => {
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
           key: PRIVATE_KEY,
-          keyHash: RsaOaepHash.SHA256,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
         }),
       ).toThrow(AesError);
     });
@@ -133,7 +133,7 @@ describe("public-encryption-key", () => {
         decryptPublicEncryptionKey({
           publicEncryptionKey: Buffer.from("public-encryption-key"),
           key: PRIVATE_KEY,
-          keyHash: RsaOaepHash.SHA256,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
         }),
       ).toStrictEqual(Buffer.from("privateDecrypt"));
 

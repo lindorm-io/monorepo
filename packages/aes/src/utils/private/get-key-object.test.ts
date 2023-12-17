@@ -1,4 +1,4 @@
-import { RsaOaepHash } from "../../enums";
+import { AesEncryptionKeyAlgorithm } from "../../enums";
 import { getKeyObject } from "./get-key-object";
 
 describe("getKeyObject", () => {
@@ -7,7 +7,7 @@ describe("getKeyObject", () => {
   });
 
   test("should resolve key object with oaep", () => {
-    expect(getKeyObject("key", RsaOaepHash.SHA256)).toStrictEqual({
+    expect(getKeyObject("key", AesEncryptionKeyAlgorithm.SHA256)).toStrictEqual({
       key: "key",
       padding: 4,
       oaepHash: "sha256",

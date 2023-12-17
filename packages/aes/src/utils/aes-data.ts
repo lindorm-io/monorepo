@@ -10,30 +10,30 @@ export const encryptAesData = ({
   format = AesFormat.BASE64,
   key,
   keyId,
-  keyHash,
+  encryptionKeyAlgorithm,
   secret,
 }: EncryptAesCipherOptions): AesEncryptionData => {
   const { encryptionKey, isPrivateKey, publicEncryptionKey } = getAesEncryptionKeys({
     algorithm,
     key,
-    keyHash,
+    encryptionKeyAlgorithm,
     secret,
   });
 
   const initialisationVector = randomBytes(12);
   const cipher = createCipheriv(algorithm, encryptionKey, initialisationVector);
 
-  const encryption = Buffer.concat([cipher.update(Buffer.from(data)), cipher.final()]);
+  const content = Buffer.concat([cipher.update(Buffer.from(data)), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
   return {
     algorithm,
     authTag,
-    encryption,
+    content,
     format,
     initialisationVector,
     keyId: keyId ? Buffer.from(keyId) : undefined,
-    keyHash: isPrivateKey ? undefined : keyHash,
+    encryptionKeyAlgorithm: isPrivateKey ? undefined : encryptionKeyAlgorithm,
     publicEncryptionKey,
     version: LATEST_AES_VERSION,
   };
@@ -42,17 +42,17 @@ export const encryptAesData = ({
 export const decryptAesData = ({
   algorithm,
   authTag,
-  encryption,
+  content,
   initialisationVector,
   key,
-  keyHash,
+  encryptionKeyAlgorithm,
   publicEncryptionKey,
   secret,
 }: DecryptAesDataOptions): string => {
   const decryptionKey = getAesDecryptionKey({
     algorithm,
     key,
-    keyHash,
+    encryptionKeyAlgorithm,
     secret,
     publicEncryptionKey,
   });
@@ -60,5 +60,5 @@ export const decryptAesData = ({
   const decipher = createDecipheriv(algorithm, decryptionKey, initialisationVector);
   decipher.setAuthTag(authTag);
 
-  return Buffer.concat([decipher.update(encryption), decipher.final()]).toString("utf-8");
+  return Buffer.concat([decipher.update(content), decipher.final()]).toString("utf-8");
 };

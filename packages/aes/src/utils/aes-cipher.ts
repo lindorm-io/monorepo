@@ -8,16 +8,22 @@ export const encryptAesCipher = (options: EncryptAesCipherOptions): string =>
   encodeAesString(encryptAesData(options));
 
 export const decryptAesCipher = ({ cipher, key, secret }: DecryptAesCipherOptions): string => {
-  const { algorithm, authTag, encryption, keyHash, publicEncryptionKey, initialisationVector } =
-    decodeAesString(cipher);
+  const {
+    algorithm,
+    authTag,
+    content,
+    encryptionKeyAlgorithm,
+    publicEncryptionKey,
+    initialisationVector,
+  } = decodeAesString(cipher);
 
   return decryptAesData({
     algorithm,
     authTag,
-    encryption,
+    content,
     initialisationVector,
     key,
-    keyHash,
+    encryptionKeyAlgorithm,
     publicEncryptionKey,
     secret,
   });

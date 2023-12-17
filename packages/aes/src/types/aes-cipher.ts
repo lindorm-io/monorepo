@@ -1,29 +1,13 @@
-import { AesAlgorithm, AesFormat, RsaOaepHash } from "../enums";
-
-export type AesCipherAlgorithm = "aes-128-gcm" | "aes-192-gcm" | "aes-256-gcm";
-
-export type AesCipherFormat = "base64" | "base64url" | "hex";
-
-export type AesCipherKey = string | { key: string; passphrase?: string };
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
+import { AesCipherKey } from "./aes";
 
 export type EncryptAesCipherOptions = {
   algorithm?: AesAlgorithm;
   data: string;
+  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   format?: AesFormat;
   key?: AesCipherKey;
-  keyHash?: RsaOaepHash;
   keyId?: string;
-  secret?: string;
-};
-
-export type DecryptAesDataOptions = {
-  algorithm: AesCipherAlgorithm;
-  authTag: Buffer;
-  encryption: Buffer;
-  initialisationVector: Buffer;
-  key?: AesCipherKey;
-  keyHash?: RsaOaepHash;
-  publicEncryptionKey?: Buffer;
   secret?: string;
 };
 

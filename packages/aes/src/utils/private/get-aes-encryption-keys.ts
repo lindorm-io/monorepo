@@ -12,12 +12,15 @@ type EncryptionKeys = {
   publicEncryptionKey?: Buffer;
 };
 
-type Options = Pick<EncryptAesCipherOptions, "algorithm" | "key" | "keyHash" | "secret">;
+type Options = Pick<
+  EncryptAesCipherOptions,
+  "algorithm" | "encryptionKeyAlgorithm" | "key" | "secret"
+>;
 
 export const getAesEncryptionKeys = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   key,
-  keyHash,
+  encryptionKeyAlgorithm,
   secret,
 }: Options): EncryptionKeys => {
   if (key && secret) {
@@ -42,7 +45,11 @@ export const getAesEncryptionKeys = ({
 
   const isPrivate = isPrivateKey(key);
   const encryptionKey = generateAesEncryptionKey(algorithm);
-  const publicEncryptionKey = createPublicEncryptionKey({ encryptionKey, key, keyHash });
+  const publicEncryptionKey = createPublicEncryptionKey({
+    encryptionKey,
+    key,
+    encryptionKeyAlgorithm,
+  });
 
   return { encryptionKey, isPrivateKey: isPrivate, publicEncryptionKey };
 };

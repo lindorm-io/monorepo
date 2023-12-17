@@ -4,12 +4,12 @@ import { assertAesCipherSecret } from "./assert-aes-cipher-secret";
 import { decryptPublicEncryptionKey } from "./public-encryption-key";
 
 type Options = Pick<DecryptAesCipherOptions, "key" | "secret"> &
-  Pick<AesEncryptionData, "algorithm" | "keyHash" | "publicEncryptionKey">;
+  Pick<AesEncryptionData, "algorithm" | "encryptionKeyAlgorithm" | "publicEncryptionKey">;
 
 export const getAesDecryptionKey = ({
   algorithm,
   key,
-  keyHash,
+  encryptionKeyAlgorithm,
   secret,
   publicEncryptionKey,
 }: Options): Buffer => {
@@ -33,5 +33,5 @@ export const getAesDecryptionKey = ({
     });
   }
 
-  return decryptPublicEncryptionKey({ key, keyHash, publicEncryptionKey });
+  return decryptPublicEncryptionKey({ key, encryptionKeyAlgorithm, publicEncryptionKey });
 };

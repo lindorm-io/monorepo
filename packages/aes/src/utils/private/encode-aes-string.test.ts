@@ -1,4 +1,4 @@
-import { RsaOaepHash } from "../../enums";
+import { AesEncryptionKeyAlgorithm } from "../../enums";
 import { encodeAesString } from "./encode-aes-string";
 
 describe("encodeAesString", () => {
@@ -6,11 +6,11 @@ describe("encodeAesString", () => {
     const string = encodeAesString({
       algorithm: "aes-256-gcm",
       authTag: Buffer.from("authTag"),
-      encryption: Buffer.from("encryption"),
+      content: Buffer.from("encryption"),
       format: "base64",
       initialisationVector: Buffer.from("initialisationVector"),
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
       keyId: Buffer.from("keyId"),
-      keyHash: RsaOaepHash.SHA256,
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       version: 1,
     });
@@ -18,10 +18,10 @@ describe("encodeAesString", () => {
     expect(string).toContain("$aes-256-gcm$");
     expect(string).toContain("v=1");
     expect(string).toContain("f=b64");
+    expect(string).toContain("eka=rsa-oaep-256");
     expect(string).toContain("cek=cHVibGljRW5jcnlwdGlvbktleQ==");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I=");
     expect(string).toContain("kid=a2V5SWQ=");
-    expect(string).toContain("pka=rsa-oaep-256");
     expect(string).toContain("tag=YXV0aFRhZw==");
     expect(string).toContain("$ZW5jcnlwdGlvbg==$");
   });

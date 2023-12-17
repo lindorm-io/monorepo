@@ -5,11 +5,11 @@ import { AesEncryptionData } from "../../types";
 export const encodeAesString = ({
   algorithm,
   authTag,
-  encryption,
+  content,
   format,
   initialisationVector,
+  encryptionKeyAlgorithm,
   keyId,
-  keyHash,
   publicEncryptionKey,
   version,
 }: AesEncryptionData): string => {
@@ -17,15 +17,15 @@ export const encodeAesString = ({
     v: version,
     f: mapFormatToShort(format),
     cek: publicEncryptionKey?.toString(format),
+    eka: encryptionKeyAlgorithm?.toLowerCase(),
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
-    pka: keyHash?.toLowerCase(),
     tag: authTag.toString(format),
   });
   const array = Object.entries(values).map(([key, value]) => `${key}=${value}`);
 
   const str = array.join(",");
-  const enc = encryption.toString(format);
+  const cnt = content.toString(format);
 
-  return `\$${algorithm}\$${str}\$${enc}\$`;
+  return `\$${algorithm}\$${str}\$${cnt}\$`;
 };

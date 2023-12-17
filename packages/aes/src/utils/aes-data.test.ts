@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
-import { AesAlgorithm, AesFormat, RsaOaepHash } from "../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
 import { AesError } from "../errors";
 import { decryptAesData, encryptAesData } from "./aes-data";
 
@@ -80,17 +80,17 @@ describe("aes-data", () => {
       data,
       key: PUBLIC_KEY,
       keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-      keyHash: RsaOaepHash.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
     });
 
     expect(encrypted).toStrictEqual({
       algorithm: "aes-256-gcm",
       authTag: expect.any(Buffer),
-      encryption: expect.any(Buffer),
+      content: expect.any(Buffer),
+      encryptionKeyAlgorithm: "RSA-OAEP-256",
       format: "base64",
       initialisationVector: expect.any(Buffer),
       keyId: expect.any(Buffer),
-      keyHash: "RSA-OAEP-256",
       publicEncryptionKey: expect.any(Buffer),
       version: LATEST_AES_VERSION,
     });
@@ -118,7 +118,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      keyHash: RsaOaepHash.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -132,7 +132,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      keyHash: RsaOaepHash.SHA384,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA384,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -146,7 +146,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      keyHash: RsaOaepHash.SHA512,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -155,11 +155,11 @@ describe("aes-data", () => {
   test("should throw on missing key hash when decrypting", () => {
     const data = randomBytes(32).toString("hex");
 
-    const { keyHash, ...encrypted } = encryptAesData({
+    const { encryptionKeyAlgorithm, ...encrypted } = encryptAesData({
       data,
       key: PUBLIC_KEY,
       keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-      keyHash: RsaOaepHash.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
     });
 
     expect(() => decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toThrow(AesError);
