@@ -1,10 +1,4 @@
-import {
-  AesAlgorithm,
-  decodeAesString,
-  decryptAesCipher,
-  encodeAesString,
-  encryptAesCipher,
-} from "@lindorm-io/aes";
+import { AesAlgorithm, decodeAesString, decryptAesData, encryptAesCipher } from "@lindorm-io/aes";
 import { TokenError } from "../../error";
 import { mapAlgorithmToJweEncoding, mapJweEncodingToAlgorithm } from "../private";
 
@@ -43,40 +37,41 @@ export const encryptJwe = ({
 
   const enc = mapAlgorithmToJweEncoding(algorithm);
 
-  const jweComponents = [
-    Buffer.from(JSON.stringify({ alg: ALG, enc, typ: TYP, ver: 1 })).toString(B64),
+  const components = [
+    Buffer.from(JSON.stringify({ alg: ALG, enc, typ: TYP })).toString(B64),
     publicEncryptionKey.toString(B64),
     initialisationVector.toString(B64),
     encryption.toString(B64),
     authTag.toString(B64),
   ];
 
-  return jweComponents.join(".");
+  return components.join(".");
 };
 
 export const decryptJwe = ({ jwe, key }: DecryptJweOptions) => {
   const [header, publicEncryptionKey, initialisationVector, encryption, authTag] = jwe.split(".");
-  const { alg, enc, typ, ver } = JSON.parse(Buffer.from(header, B64).toString());
+  const { alg, enc, typ } = JSON.parse(Buffer.from(header, B64).toString());
 
   if (typ !== TYP) {
-    throw new TokenError("Failed to decrypt JWE: unsupported type.");
+    throw new TokenError("Failed to decrypt JWE: unsupported type.", {
+      debug: { expect: TYP, actual: typ },
+    });
   }
 
   if (alg !== ALG) {
-    throw new TokenError("Failed to decrypt JWE: unsupported algorithm.");
+    throw new TokenError("Failed to decrypt JWE: unsupported algorithm.", {
+      debug: { expect: ALG, actual: alg },
+    });
   }
 
   const algorithm = mapJweEncodingToAlgorithm(enc);
 
-  const cipher = encodeAesString({
+  return decryptAesData({
     algorithm,
     authTag: Buffer.from(authTag, B64),
     encryption: Buffer.from(encryption, B64),
-    format: B64,
     initialisationVector: Buffer.from(initialisationVector, B64),
+    key,
     publicEncryptionKey: Buffer.from(publicEncryptionKey, B64),
-    version: ver ? parseInt(ver, 10) : 1,
   });
-
-  return decryptAesCipher({ cipher, key });
 };
