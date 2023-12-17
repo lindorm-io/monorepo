@@ -1,41 +1,40 @@
-import { AesAlgorithm, RsaOaepHash } from "@lindorm-io/aes";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import { Logger } from "@lindorm-io/core-logger";
 import { sanitiseToken } from "../util/public";
 import { decryptJwe, encryptJwe } from "../util/public/jwe";
 
 export type JweOptions = {
   algorithm?: AesAlgorithm;
+  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   key: string;
-  oaepHash?: RsaOaepHash;
 };
 
 export class JWE {
   private readonly algorithm: AesAlgorithm;
+  private readonly encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm;
   private readonly key: string;
   private readonly logger: Logger;
-  private readonly oaepHash: RsaOaepHash;
 
   public constructor(options: JweOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["JWE"]);
 
-    this.key = options.key;
-
     this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;
-    this.oaepHash = options.oaepHash || RsaOaepHash.SHA1;
+    this.encryptionKeyAlgorithm = options.encryptionKeyAlgorithm || AesEncryptionKeyAlgorithm.SHA1;
+    this.key = options.key;
   }
 
   public encrypt(token: string): string {
     this.logger.debug("Encrypting token", {
       algorithm: this.algorithm,
+      encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
       token: sanitiseToken(token),
-      oaepHash: this.oaepHash,
     });
 
     const encrypted = encryptJwe({
       algorithm: this.algorithm,
-      token,
+      encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
       key: this.key,
-      oaepHash: this.oaepHash,
+      token,
     });
 
     this.logger.debug("Successfully encrypted token", { token: sanitiseToken(encrypted) });

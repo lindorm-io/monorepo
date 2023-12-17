@@ -1,4 +1,4 @@
-import { AesAlgorithm, RsaOaepHash } from "@lindorm-io/aes";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { randomBytes } from "crypto";
 import { JWE } from "./JWE";
@@ -76,8 +76,8 @@ describe("JWE", () => {
     const encrypter = new JWE(
       {
         algorithm: AesAlgorithm.AES_256_GCM,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
         key: PUBLIC_KEY,
-        oaepHash: RsaOaepHash.SHA512,
       },
       createMockLogger(),
     );
@@ -85,8 +85,8 @@ describe("JWE", () => {
     const decrypter = new JWE(
       {
         algorithm: AesAlgorithm.AES_256_GCM,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
         key: PRIVATE_KEY,
-        oaepHash: RsaOaepHash.SHA512,
       },
       createMockLogger(),
     );

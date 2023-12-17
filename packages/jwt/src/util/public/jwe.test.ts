@@ -1,4 +1,4 @@
-import { AesAlgorithm, RsaOaepHash } from "@lindorm-io/aes";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import { randomBytes } from "crypto";
 import { decryptJwe, encryptJwe } from "./jwe";
 
@@ -73,49 +73,128 @@ const PUBLIC_KEY =
 describe("jwe", () => {
   test("should encrypt and decrypt using default values", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ token: data, key: PUBLIC_KEY });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using AES-128-GCM", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ algorithm: AesAlgorithm.AES_128_GCM, token: data, key: PUBLIC_KEY });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_128_GCM,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using AES-192-GCM", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ algorithm: AesAlgorithm.AES_192_GCM, token: data, key: PUBLIC_KEY });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_192_GCM,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using AES-256-GCM", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ algorithm: AesAlgorithm.AES_256_GCM, token: data, key: PUBLIC_KEY });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_256_GCM,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using RSA-OAEP", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ token: data, key: PUBLIC_KEY, oaepHash: RsaOaepHash.SHA1 });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      token: data,
+      key: PUBLIC_KEY,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA1,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using RSA-OAEP-256", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ token: data, key: PUBLIC_KEY, oaepHash: RsaOaepHash.SHA256 });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      token: data,
+      key: PUBLIC_KEY,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using RSA-OAEP-384", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ token: data, key: PUBLIC_KEY, oaepHash: RsaOaepHash.SHA384 });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      token: data,
+      key: PUBLIC_KEY,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA384,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 
   test("should encrypt and decrypt using RSA-OAEP-512", () => {
     const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({ token: data, key: PUBLIC_KEY, oaepHash: RsaOaepHash.SHA512 });
-    expect(decryptJwe({ jwe, key: PRIVATE_KEY })).toBe(data);
+    const jwe = encryptJwe({
+      token: data,
+      key: PUBLIC_KEY,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
   });
 });
