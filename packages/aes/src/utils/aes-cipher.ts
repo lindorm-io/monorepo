@@ -1,15 +1,22 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { LATEST_AES_VERSION } from "../constants";
 import { AesAlgorithm, AesFormat } from "../enums";
 import { AesError } from "../errors";
-import { DecryptAesCipherOptions, EncryptAesCipherOptions, VerifyAesCipherOptions } from "../types";
+import {
+  DecryptAesCipherOptions,
+  DecryptAesDataOptions,
+  EncryptAesCipherOptions,
+  VerifyAesCipherOptions,
+} from "../types";
 import { decodeAesString } from "./decode-aes-string";
-import { encodeAesString } from "./encode-aes-string";
 import { getAesDecryptionKey, getAesEncryptionKeys } from "./private";
+import { encodeAesString } from "./private/encode-aes-string";
 
 export const encryptAesCipher = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   data,
   format = AesFormat.BASE64,
+  keyId,
   key,
   secret,
 }: EncryptAesCipherOptions): string => {
@@ -25,23 +32,44 @@ export const encryptAesCipher = ({
     algorithm,
     authTag,
     encryption,
-    publicEncryptionKey,
     format,
     initialisationVector,
-    version: 1,
+    keyId: keyId ? Buffer.from(keyId) : undefined,
+    publicEncryptionKey,
+    version: LATEST_AES_VERSION,
   });
 };
 
-export const decryptAesCipher = ({ cipher, key, secret }: DecryptAesCipherOptions): string => {
-  const { algorithm, authTag, encryption, publicEncryptionKey, initialisationVector } =
-    decodeAesString(cipher);
-
+export const decryptAesData = ({
+  algorithm,
+  authTag,
+  encryption,
+  initialisationVector,
+  key,
+  publicEncryptionKey,
+  secret,
+}: DecryptAesDataOptions): string => {
   const decryptionKey = getAesDecryptionKey({ algorithm, key, secret, publicEncryptionKey });
 
   const decipher = createDecipheriv(algorithm, decryptionKey, initialisationVector);
   decipher.setAuthTag(authTag);
 
   return Buffer.concat([decipher.update(encryption), decipher.final()]).toString("utf-8");
+};
+
+export const decryptAesCipher = ({ cipher, key, secret }: DecryptAesCipherOptions): string => {
+  const { algorithm, authTag, encryption, publicEncryptionKey, initialisationVector } =
+    decodeAesString(cipher);
+
+  return decryptAesData({
+    algorithm,
+    authTag,
+    encryption,
+    initialisationVector,
+    key,
+    publicEncryptionKey,
+    secret,
+  });
 };
 
 export const verifyAesCipher = ({ data, secret, cipher }: VerifyAesCipherOptions): boolean =>

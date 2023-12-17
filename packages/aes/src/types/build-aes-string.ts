@@ -6,6 +6,7 @@ export type BuildAesString = {
   encryption: Buffer;
   format: AesCipherFormat;
   initialisationVector: Buffer;
+  keyId?: Buffer;
   publicEncryptionKey?: Buffer;
   version: number;
 };

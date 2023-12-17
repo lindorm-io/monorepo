@@ -8,6 +8,7 @@ describe("encodeAesString", () => {
       encryption: Buffer.from("encryption"),
       format: "base64",
       initialisationVector: Buffer.from("initialisationVector"),
+      keyId: Buffer.from("keyId"),
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       version: 1,
     });
@@ -15,10 +16,11 @@ describe("encodeAesString", () => {
     expect(string).toContain("$aes-256-gcm$");
     expect(string).toContain("v=1");
     expect(string).toContain("f=b64");
-    expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I=");
-    expect(string).toContain("tag=YXV0aFRhZw==");
-    expect(string).toContain("cea=rsa-oaep");
     expect(string).toContain("cek=cHVibGljRW5jcnlwdGlvbktleQ==");
+    expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I=");
+    expect(string).toContain("kid=a2V5SWQ=");
+    expect(string).toContain("pka=rsa-oaep");
+    expect(string).toContain("tag=YXV0aFRhZw==");
     expect(string).toContain("$ZW5jcnlwdGlvbg==$");
   });
 });

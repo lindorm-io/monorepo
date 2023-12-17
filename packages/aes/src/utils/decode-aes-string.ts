@@ -30,13 +30,13 @@ export const decodeAesString = (data: string): BuildAesString => {
     values[match.groups.key] = match.groups.value;
   }
 
-  const { cea, cek, f, iv, tag, v } = values;
+  const { cek, f, iv, kid, pka, tag, v } = values;
   const format = mapShortToFormat(f);
 
-  if (cek && cea !== "rsa-oaep") {
+  if (cek && pka !== "rsa-oaep") {
     throw new AesError("Invalid AES cipher string", {
       description: "Invalid RSA encryption algorithm",
-      debug: { cea },
+      debug: { pka },
     });
   }
 
@@ -46,6 +46,7 @@ export const decodeAesString = (data: string): BuildAesString => {
     encryption: Buffer.from(encryption, format),
     format,
     initialisationVector: Buffer.from(iv, format),
+    keyId: kid ? Buffer.from(kid, format) : undefined,
     publicEncryptionKey: cek ? Buffer.from(cek, format) : undefined,
     version: parseInt(v, 10),
   };

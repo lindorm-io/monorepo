@@ -10,7 +10,18 @@ export type EncryptAesCipherOptions = {
   algorithm?: AesAlgorithm;
   data: string;
   format?: AesFormat;
+  keyId?: string;
   key?: AesCipherKey;
+  secret?: string;
+};
+
+export type DecryptAesDataOptions = {
+  algorithm: AesCipherAlgorithm;
+  authTag: Buffer;
+  encryption: Buffer;
+  initialisationVector: Buffer;
+  key?: AesCipherKey;
+  publicEncryptionKey?: Buffer;
   secret?: string;
 };
 
