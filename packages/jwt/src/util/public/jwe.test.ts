@@ -86,163 +86,167 @@ describe("jwe", () => {
     ).toBe(data);
   });
 
-  test("should encrypt and decrypt using AES-128-CBC", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_128_CBC,
-      token: data,
-      key: PUBLIC_KEY,
+  describe("algorithsm", () => {
+    test("should encrypt and decrypt using aes-128-cbc-hs256", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_128_CBC_HS256,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
     });
 
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
+    test("should encrypt and decrypt using aes-192-cbc-hs256", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_192_CBC_HS256,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
+    });
+
+    test("should encrypt and decrypt using aes-256-cbc-hs256", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_256_CBC_HS256,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
+    });
+
+    test("should encrypt and decrypt using aes-128-gcm", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_128_GCM,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
+    });
+
+    test("should encrypt and decrypt using aes-192-gcm", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_192_GCM,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
+    });
+
+    test("should encrypt and decrypt using aes-256-gcm", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        algorithm: AesAlgorithm.AES_256_GCM,
+        token: data,
+        key: PUBLIC_KEY,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
+    });
   });
 
-  test("should encrypt and decrypt using AES-192-CBC", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_192_CBC,
-      token: data,
-      key: PUBLIC_KEY,
+  describe("encryption keys", () => {
+    test("should encrypt and decrypt using RSA-OAEP", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        token: data,
+        key: PUBLIC_KEY,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
+      });
+
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
     });
 
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
+    test("should encrypt and decrypt using RSA-OAEP-256", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        token: data,
+        key: PUBLIC_KEY,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+      });
 
-  test("should encrypt and decrypt using AES-256-CBC", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_256_CBC,
-      token: data,
-      key: PUBLIC_KEY,
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
     });
 
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
+    test("should encrypt and decrypt using RSA-OAEP-384", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        token: data,
+        key: PUBLIC_KEY,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
+      });
 
-  test("should encrypt and decrypt using AES-128-GCM", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_128_GCM,
-      token: data,
-      key: PUBLIC_KEY,
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
     });
 
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
+    test("should encrypt and decrypt using RSA-OAEP-512", () => {
+      const data = randomBytes(32).toString("hex");
+      const jwe = encryptJwe({
+        token: data,
+        key: PUBLIC_KEY,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
+      });
 
-  test("should encrypt and decrypt using AES-192-GCM", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_192_GCM,
-      token: data,
-      key: PUBLIC_KEY,
+      expect(
+        decryptJwe({
+          jwe,
+          key: PRIVATE_KEY,
+        }),
+      ).toBe(data);
     });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
-
-  test("should encrypt and decrypt using AES-256-GCM", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      algorithm: AesAlgorithm.AES_256_GCM,
-      token: data,
-      key: PUBLIC_KEY,
-    });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
-
-  test("should encrypt and decrypt using RSA-OAEP", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      token: data,
-      key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
-    });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
-
-  test("should encrypt and decrypt using RSA-OAEP-256", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      token: data,
-      key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-    });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
-
-  test("should encrypt and decrypt using RSA-OAEP-384", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      token: data,
-      key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
-    });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
-  });
-
-  test("should encrypt and decrypt using RSA-OAEP-512", () => {
-    const data = randomBytes(32).toString("hex");
-    const jwe = encryptJwe({
-      token: data,
-      key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
-    });
-
-    expect(
-      decryptJwe({
-        jwe,
-        key: PRIVATE_KEY,
-      }),
-    ).toBe(data);
   });
 });

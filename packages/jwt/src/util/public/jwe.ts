@@ -6,22 +6,10 @@ import {
 } from "@lindorm-io/aes";
 import { removeUndefinedFromArray, removeUndefinedFromObject } from "@lindorm-io/core";
 import { TokenError } from "../../error";
-import { mapAlgorithmToJweEncoding, mapJweEncodingToAlgorithm } from "../private";
+import { DecryptJweOptions, EncryptJweOptions } from "../../types";
+import { mapAesAlgorithmToJweEncoding, mapJweEncodingToAesAlgorithm } from "../private";
 
-export type EncryptJweOptions = {
-  algorithm?: AesAlgorithm;
-  key: string;
-  keyId?: string;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  token: string;
-};
-
-export type DecryptJweOptions = {
-  jwe: string;
-  key: string;
-};
-
-const B64 = "base64";
+const B64 = "base64url";
 const TYP = "JWE";
 
 export const encryptJwe = ({
@@ -44,7 +32,7 @@ export const encryptJwe = ({
 
   const header = removeUndefinedFromObject({
     alg: encryptionKeyAlgorithm,
-    enc: mapAlgorithmToJweEncoding(algorithm),
+    enc: mapAesAlgorithmToJweEncoding(algorithm),
     kid: keyId,
     typ: TYP,
   });
@@ -70,7 +58,7 @@ export const decryptJwe = ({ jwe, key }: DecryptJweOptions) => {
     });
   }
 
-  const algorithm = mapJweEncodingToAlgorithm(enc);
+  const algorithm = mapJweEncodingToAesAlgorithm(enc);
 
   return decryptAesData({
     algorithm,

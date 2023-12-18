@@ -1,13 +1,7 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import { Logger } from "@lindorm-io/core-logger";
-import { sanitiseToken } from "../util/public";
-import { decryptJwe, encryptJwe } from "../util/public/jwe";
-
-export type JweOptions = {
-  algorithm?: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key: string;
-};
+import { JweOptions } from "../types";
+import { decryptJwe, encryptJwe, sanitiseToken } from "../util/public";
 
 export class JWE {
   private readonly algorithm: AesAlgorithm;
