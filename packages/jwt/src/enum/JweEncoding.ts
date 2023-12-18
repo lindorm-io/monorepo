@@ -1,4 +1,7 @@
 export enum JweEncoding {
+  A128CBC = "A128CBC",
+  A192CBC = "A192CBC",
+  A256CBC = "A256CBC",
   A128GCM = "A128GCM",
   A192GCM = "A192GCM",
   A256GCM = "A256GCM",

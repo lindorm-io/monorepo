@@ -4,7 +4,7 @@ import {
   decryptAesData,
   encryptAesData,
 } from "@lindorm-io/aes";
-import { removeUndefinedFromObject } from "@lindorm-io/core";
+import { removeUndefinedFromArray, removeUndefinedFromObject } from "@lindorm-io/core";
 import { TokenError } from "../../error";
 import { mapAlgorithmToJweEncoding, mapJweEncodingToAlgorithm } from "../private";
 
@@ -28,7 +28,7 @@ export const encryptJwe = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   key,
   keyId,
-  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.SHA1,
+  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP,
   token,
 }: EncryptJweOptions) => {
   const { authTag, content, initialisationVector, publicEncryptionKey } = encryptAesData({
@@ -49,13 +49,13 @@ export const encryptJwe = ({
     typ: TYP,
   });
 
-  const components = [
+  const components = removeUndefinedFromArray([
     Buffer.from(JSON.stringify(header)).toString(B64),
     publicEncryptionKey.toString(B64),
     initialisationVector.toString(B64),
     content.toString(B64),
-    authTag.toString(B64),
-  ];
+    authTag?.toString(B64),
+  ]);
 
   return components.join(".");
 };
@@ -74,7 +74,7 @@ export const decryptJwe = ({ jwe, key }: DecryptJweOptions) => {
 
   return decryptAesData({
     algorithm,
-    authTag: Buffer.from(authTag, B64),
+    authTag: authTag ? Buffer.from(authTag, B64) : undefined,
     content: Buffer.from(content, B64),
     encryptionKeyAlgorithm,
     initialisationVector: Buffer.from(initialisationVector, B64),

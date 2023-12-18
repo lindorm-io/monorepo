@@ -4,6 +4,15 @@ import { TokenError } from "../../error";
 
 export const mapJweEncodingToAlgorithm = (encoding: string): AesAlgorithm => {
   switch (encoding) {
+    case JweEncoding.A128CBC:
+      return AesAlgorithm.AES_128_CBC;
+
+    case JweEncoding.A192CBC:
+      return AesAlgorithm.AES_192_CBC;
+
+    case JweEncoding.A256CBC:
+      return AesAlgorithm.AES_256_CBC;
+
     case JweEncoding.A128GCM:
       return AesAlgorithm.AES_128_GCM;
 
@@ -20,6 +29,15 @@ export const mapJweEncodingToAlgorithm = (encoding: string): AesAlgorithm => {
 
 export const mapAlgorithmToJweEncoding = (algorithm: string): JweEncoding => {
   switch (algorithm) {
+    case AesAlgorithm.AES_128_CBC:
+      return JweEncoding.A128CBC;
+
+    case AesAlgorithm.AES_192_CBC:
+      return JweEncoding.A192CBC;
+
+    case AesAlgorithm.AES_256_CBC:
+      return JweEncoding.A256CBC;
+
     case AesAlgorithm.AES_128_GCM:
       return JweEncoding.A128GCM;
 

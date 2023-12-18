@@ -76,7 +76,7 @@ describe("JWE", () => {
     const encrypter = new JWE(
       {
         algorithm: AesAlgorithm.AES_256_GCM,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
         key: PUBLIC_KEY,
       },
       createMockLogger(),
@@ -85,7 +85,7 @@ describe("JWE", () => {
     const decrypter = new JWE(
       {
         algorithm: AesAlgorithm.AES_256_GCM,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
         key: PRIVATE_KEY,
       },
       createMockLogger(),

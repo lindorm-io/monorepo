@@ -86,6 +86,54 @@ describe("jwe", () => {
     ).toBe(data);
   });
 
+  test("should encrypt and decrypt using AES-128-CBC", () => {
+    const data = randomBytes(32).toString("hex");
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_128_CBC,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
+  });
+
+  test("should encrypt and decrypt using AES-192-CBC", () => {
+    const data = randomBytes(32).toString("hex");
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_192_CBC,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
+  });
+
+  test("should encrypt and decrypt using AES-256-CBC", () => {
+    const data = randomBytes(32).toString("hex");
+    const jwe = encryptJwe({
+      algorithm: AesAlgorithm.AES_256_CBC,
+      token: data,
+      key: PUBLIC_KEY,
+    });
+
+    expect(
+      decryptJwe({
+        jwe,
+        key: PRIVATE_KEY,
+      }),
+    ).toBe(data);
+  });
+
   test("should encrypt and decrypt using AES-128-GCM", () => {
     const data = randomBytes(32).toString("hex");
     const jwe = encryptJwe({
@@ -139,7 +187,7 @@ describe("jwe", () => {
     const jwe = encryptJwe({
       token: data,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA1,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
     });
 
     expect(
@@ -155,7 +203,7 @@ describe("jwe", () => {
     const jwe = encryptJwe({
       token: data,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
     });
 
     expect(
@@ -171,7 +219,7 @@ describe("jwe", () => {
     const jwe = encryptJwe({
       token: data,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA384,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
     });
 
     expect(
@@ -187,7 +235,7 @@ describe("jwe", () => {
     const jwe = encryptJwe({
       token: data,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
     });
 
     expect(

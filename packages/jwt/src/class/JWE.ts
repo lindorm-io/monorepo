@@ -19,7 +19,8 @@ export class JWE {
     this.logger = logger.createChildLogger(["JWE"]);
 
     this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;
-    this.encryptionKeyAlgorithm = options.encryptionKeyAlgorithm || AesEncryptionKeyAlgorithm.SHA1;
+    this.encryptionKeyAlgorithm =
+      options.encryptionKeyAlgorithm || AesEncryptionKeyAlgorithm.RSA_OAEP;
     this.key = options.key;
   }
 
