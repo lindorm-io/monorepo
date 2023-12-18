@@ -9,7 +9,7 @@ describe("encodeAesString", () => {
       content: Buffer.from("encryption"),
       format: "base64",
       initialisationVector: Buffer.from("initialisationVector"),
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       keyId: Buffer.from("keyId"),
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       version: 1,

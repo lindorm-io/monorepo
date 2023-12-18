@@ -121,7 +121,7 @@ describe("public-encryption-key", () => {
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
           key: PRIVATE_KEY,
-          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
         }),
       ).toThrow(AesError);
     });
@@ -133,7 +133,7 @@ describe("public-encryption-key", () => {
         decryptPublicEncryptionKey({
           publicEncryptionKey: Buffer.from("public-encryption-key"),
           key: PRIVATE_KEY,
-          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
         }),
       ).toStrictEqual(Buffer.from("privateDecrypt"));
 

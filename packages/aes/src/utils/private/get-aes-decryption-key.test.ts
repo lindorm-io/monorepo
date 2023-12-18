@@ -23,7 +23,7 @@ describe("getAesDecryptionKey", () => {
       getAesDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
         key: "key",
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
         publicEncryptionKey: Buffer.from("public-encryption-key"),
       }),
     ).toStrictEqual(Buffer.from("encryption-key"));

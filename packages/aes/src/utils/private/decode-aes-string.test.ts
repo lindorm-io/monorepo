@@ -11,7 +11,7 @@ describe("decodeAesString", () => {
       algorithm: "aes-256-gcm",
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA1,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
       format: "base64",
       initialisationVector: Buffer.from("initialisationVector"),
       keyId: Buffer.from("keyId"),

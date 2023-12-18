@@ -326,7 +326,7 @@ describe("aes-cipher", () => {
         data,
         key: PUBLIC_KEY,
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       });
 
       expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
@@ -336,7 +336,7 @@ describe("aes-cipher", () => {
       expect(decoded.algorithm).toBe("aes-256-gcm");
       expect(decoded.format).toBe("base64");
       expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
-      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.SHA256);
+      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_256);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
       expect(decoded.version).toBe(LATEST_AES_VERSION);
 
@@ -352,7 +352,7 @@ describe("aes-cipher", () => {
         data,
         key: PUBLIC_KEY,
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA384,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
       });
 
       expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
@@ -362,7 +362,7 @@ describe("aes-cipher", () => {
       expect(decoded.algorithm).toBe("aes-256-gcm");
       expect(decoded.format).toBe("base64");
       expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
-      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.SHA384);
+      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_384);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
       expect(decoded.version).toBe(LATEST_AES_VERSION);
 
@@ -378,7 +378,7 @@ describe("aes-cipher", () => {
         data,
         key: PUBLIC_KEY,
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
       });
 
       expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-gcm$"));
@@ -388,7 +388,7 @@ describe("aes-cipher", () => {
       expect(decoded.algorithm).toBe("aes-256-gcm");
       expect(decoded.format).toBe("base64");
       expect(decoded.keyId).toStrictEqual(Buffer.from("0acfb2a3-5cd6-5911-8a8f-e3aca6465090"));
-      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.SHA512);
+      expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_512);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
       expect(decoded.version).toBe(LATEST_AES_VERSION);
 

@@ -7,7 +7,7 @@ describe("getKeyObject", () => {
   });
 
   test("should resolve key object with oaep", () => {
-    expect(getKeyObject("key", AesEncryptionKeyAlgorithm.SHA256)).toStrictEqual({
+    expect(getKeyObject("key", AesEncryptionKeyAlgorithm.RSA_OAEP_256)).toStrictEqual({
       key: "key",
       padding: 4,
       oaepHash: "sha256",

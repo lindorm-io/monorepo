@@ -80,7 +80,7 @@ describe("aes-data", () => {
       data,
       key: PUBLIC_KEY,
       keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
     });
 
     expect(encrypted).toStrictEqual({
@@ -118,7 +118,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA1,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -132,7 +132,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -146,7 +146,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA384,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -160,7 +160,7 @@ describe("aes-data", () => {
       data,
       format: AesFormat.BASE64,
       key: PUBLIC_KEY,
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA512,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
     });
 
     expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
@@ -173,7 +173,7 @@ describe("aes-data", () => {
       data,
       key: PUBLIC_KEY,
       keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA256,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
     });
 
     expect(() => decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toThrow(AesError);
