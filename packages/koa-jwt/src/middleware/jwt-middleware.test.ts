@@ -2,9 +2,9 @@ import { createMockLogger } from "@lindorm-io/core-logger";
 import { ServerError } from "@lindorm-io/errors";
 import { JWT } from "@lindorm-io/jwt";
 import {
-  Algorithm,
   KeyPair,
-  KeyType,
+  KeyPairAlgorithm,
+  KeyPairType,
   Keystore,
   KeystoreError,
   NamedCurve,
@@ -55,12 +55,12 @@ describe("jwtMiddleware", () => {
       keys: [
         new KeyPair({
           id: "59c9f0ac-115a-47b1-b635-a85f88729fc7",
-          algorithms: [Algorithm.ES512],
+          algorithms: [KeyPairAlgorithm.ES512],
           expiresAt: new Date("1980-01-01T00:00:00.000Z"),
           namedCurve: NamedCurve.P521,
           privateKey: "privateKey",
           publicKey: "publicKey",
-          type: KeyType.EC,
+          type: KeyPairType.EC,
         }),
       ],
     });

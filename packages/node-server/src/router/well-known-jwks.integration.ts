@@ -73,7 +73,7 @@ describe("/.well-known", () => {
           key_ops: ["decrypt", "verify"],
           kid: "e6301473-e347-4035-8084-8645d034e4a3",
           kty: "RSA",
-          n: "ylo2AV+CdQg0p3HLGOVmzcvQYGNxbuqrC3MEAAyB0lZwSjtnx+UM0bKu+XwZqsve2TCgFylTKLX9rDIekd5ExIuAo6fAx4x6cr31PN5ThRY9f1lchDgrFYS1ZZ+tbIJyQdMOAYP+C+kznKCQduGu7ye7Skxk0jU3kZblsyCZfW0=",
+          n: "8h//VGbmGCMm/cywfEEviNkR7o3yL0yZktzqb95VtwsGatj3JbOpu7FwePJww0CBVZw3zE+bnNcVyaZFMfhm8uNEBOA5JQBWs2ZJhflIGz4oYWcWeMtocwh0kNVLtz1071a9O7JOAVR64KslbactXAeSIcMk7c9reKffVgymZnTTNHMhECtbz77RCUpgLgEG/PUU44N9cYWtPfOvUnxrA6ocxG8Y+IggG6TYtiDwTBScypg9u59/xLLevM+SRwGomM3dyx6h4W3DnT8kwIRrBvsNhmmqoMEOjQYPbfVHP/RkES9pdIFy2jdw4TrLFhwU9dSgQLpZ5EK+7CylcbdhgNqo/Bm0XgiKFKPeYvspNXXVuaVRGhopz3HmEQyaCrDjvX7GF4BJ4j26rotqKxurZDNOEKuLUWwRle/Ft6/zbbrUXdV2rBvrmx+YW8aKJiUpJhgT8rSRZeLZ/CJ+G8ZONp2bqvZqkeRhg3XcvyrBcdeT947FOFz5wZg8mnBNnDJeVs+kdUh9FP3q0T/DVcf0ebED2pxhMjmAq7oa+Gk5UPU61+EdP9pCsJrjyzu7watHSkszd8MetQ8MRUWzhplnsFJI16AKvNN03FWNk2eTd36Tzm/7SX8IFDpORQUua2TivVRvRWWpl6wC0w7/oajFii+iDDdA4h4BjPAgvjmx38c=",
           not_before: 1577862000,
           origin_uri: "https://example.com",
           owner_id: "ffe189e0-c82e-42d1-84ea-1bf4d4d07117",
