@@ -1,4 +1,5 @@
 import { privateDecrypt, privateEncrypt, publicDecrypt, publicEncrypt } from "crypto";
+import { AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { AesEncryptionData, DecryptAesCipherOptions, EncryptAesCipherOptions } from "../../types";
 import { getKeyObject } from "./get-key-object";
@@ -14,7 +15,7 @@ type DecryptOptions = Pick<DecryptAesCipherOptions, "key"> &
 export const createPublicEncryptionKey = ({
   encryptionKey,
   key,
-  encryptionKeyAlgorithm,
+  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP_256,
 }: EncryptOptions): Buffer => {
   if (!key) {
     throw new AesError("Unable to encrypt AES cipher without key", {
@@ -27,20 +28,13 @@ export const createPublicEncryptionKey = ({
   const keyObject = isPrivate ? key : getKeyObject(key, encryptionKeyAlgorithm);
   const action = isPrivate ? privateEncrypt : publicEncrypt;
 
-  if (isPrivate && encryptionKeyAlgorithm) {
-    throw new AesError("Unexpected error when encrypting AES cipher", {
-      description: "Key hash is present for private encryption",
-      debug: { encryptionKeyAlgorithm },
-    });
-  }
-
   return action(keyObject, encryptionKey);
 };
 
 export const decryptPublicEncryptionKey = ({
   publicEncryptionKey,
   key,
-  encryptionKeyAlgorithm,
+  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP_256,
 }: DecryptOptions): Buffer => {
   if (!key) {
     throw new AesError("Unable to decrypt AES cipher without key", {
@@ -59,12 +53,6 @@ export const decryptPublicEncryptionKey = ({
   const isPrivate = isPrivateKey(key);
   const keyObject = isPrivate ? getKeyObject(key, encryptionKeyAlgorithm) : key;
   const action = isPrivate ? privateDecrypt : publicDecrypt;
-
-  if (isPrivate && !encryptionKeyAlgorithm) {
-    throw new AesError("Unexpected error when decrypting AES cipher", {
-      description: "Key hash is missing for private decryption",
-    });
-  }
 
   return action(keyObject, publicEncryptionKey);
 };

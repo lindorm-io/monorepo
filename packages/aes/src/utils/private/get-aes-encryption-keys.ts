@@ -1,4 +1,4 @@
-import { AesAlgorithm } from "../../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { EncryptAesCipherOptions } from "../../types";
 import { assertAesCipherSecret } from "./assert-aes-cipher-secret";
@@ -20,7 +20,7 @@ type Options = Pick<
 export const getAesEncryptionKeys = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   key,
-  encryptionKeyAlgorithm,
+  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP_256,
   secret,
 }: Options): EncryptionKeys => {
   if (key && secret) {

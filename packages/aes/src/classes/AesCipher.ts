@@ -1,16 +1,19 @@
-import { AesAlgorithm, AesFormat } from "../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
 import { AesCipherKey, AesCipherOptions } from "../types";
 import { assertAesCipher, decryptAesCipher, encryptAesCipher, verifyAesCipher } from "../utils";
 
 export class AesCipher {
   private readonly algorithm: AesAlgorithm;
+  private readonly encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm;
   private readonly format: AesFormat;
   private readonly key: AesCipherKey | undefined;
   private readonly secret: string | undefined;
 
   public constructor(options: AesCipherOptions) {
     this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;
-    this.format = options.format || AesFormat.BASE64;
+    this.encryptionKeyAlgorithm =
+      options.encryptionKeyAlgorithm || AesEncryptionKeyAlgorithm.RSA_OAEP_256;
+    this.format = options.format || AesFormat.BASE64_URL;
     this.key = options.key;
     this.secret = options.secret;
   }
@@ -19,6 +22,7 @@ export class AesCipher {
     return encryptAesCipher({
       algorithm: this.algorithm,
       data,
+      encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
       format: this.format,
       key: this.key,
       secret: this.secret,

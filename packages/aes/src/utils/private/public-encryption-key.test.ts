@@ -5,7 +5,6 @@ import {
   publicEncrypt as _publicEncrypt,
 } from "crypto";
 import { AesEncryptionKeyAlgorithm } from "../../enums";
-import { AesError } from "../../errors";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
 jest.mock("crypto");
@@ -115,16 +114,6 @@ describe("public-encryption-key", () => {
 
       expect(publicEncrypt).toHaveBeenCalled();
     });
-
-    test("should throw on invalid options", () => {
-      expect(() =>
-        createPublicEncryptionKey({
-          encryptionKey: Buffer.from("encryption-key"),
-          key: PRIVATE_KEY,
-          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-        }),
-      ).toThrow(AesError);
-    });
   });
 
   describe("decryptPublicEncryptionKey", () => {
@@ -149,15 +138,6 @@ describe("public-encryption-key", () => {
       ).toStrictEqual(Buffer.from("publicDecrypt"));
 
       expect(publicDecrypt).toHaveBeenCalled();
-    });
-
-    test("should throw on missing hash key", () => {
-      expect(() =>
-        decryptPublicEncryptionKey({
-          publicEncryptionKey: Buffer.from("public-encryption-key"),
-          key: PRIVATE_KEY,
-        }),
-      ).toThrow(AesError);
     });
   });
 });

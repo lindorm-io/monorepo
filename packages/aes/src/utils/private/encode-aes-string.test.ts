@@ -1,10 +1,10 @@
-import { AesEncryptionKeyAlgorithm } from "../../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { encodeAesString } from "./encode-aes-string";
 
 describe("encodeAesString", () => {
   test("should resolve string", () => {
     const string = encodeAesString({
-      algorithm: "aes-256-gcm",
+      algorithm: AesAlgorithm.AES_256_GCM,
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
       format: "base64",

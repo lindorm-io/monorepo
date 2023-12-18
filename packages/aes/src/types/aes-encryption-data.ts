@@ -1,8 +1,8 @@
-import { AesEncryptionKeyAlgorithm } from "../enums";
-import { AesCipherAlgorithm, AesCipherFormat } from "./aes";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../enums";
+import { AesCipherFormat } from "./aes";
 
 export type AesEncryptionData = {
-  algorithm: AesCipherAlgorithm;
+  algorithm: AesAlgorithm;
   authTag?: Buffer;
   content: Buffer;
   encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;

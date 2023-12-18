@@ -10,6 +10,11 @@ export const getInitialisationVector = (algorithm: AesCipherAlgorithm): Buffer =
     case AesAlgorithm.AES_256_CBC:
       return randomBytes(16);
 
+    case AesAlgorithm.AES_128_CBC_HS256:
+    case AesAlgorithm.AES_192_CBC_HS256:
+    case AesAlgorithm.AES_256_CBC_HS256:
+      return randomBytes(16);
+
     case AesAlgorithm.AES_128_GCM:
     case AesAlgorithm.AES_192_GCM:
     case AesAlgorithm.AES_256_GCM:

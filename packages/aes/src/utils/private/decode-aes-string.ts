@@ -1,26 +1,14 @@
 import { mapShortToFormat, mapStringToEncryptionKeyAlgorithm } from ".";
 import { AesError } from "../../errors";
 import { AesEncryptionData } from "../../types";
+import { mapCipherAlgorithmToAesAlgorithm } from "./cipher-algorithm-mapper";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
 export const decodeAesString = (data: string): AesEncryptionData => {
-  const [_, algorithm, array, content] = data.split("$");
+  const [_, alg, array, content] = data.split("$");
 
-  if (
-    algorithm !== "aes-128-cbc" &&
-    algorithm !== "aes-192-cbc" &&
-    algorithm !== "aes-256-cbc" &&
-    algorithm !== "aes-128-gcm" &&
-    algorithm !== "aes-192-gcm" &&
-    algorithm !== "aes-256-gcm"
-  ) {
-    throw new AesError("Invalid AES cipher string", {
-      description: "Invalid algorithm header",
-      debug: { algorithm },
-    });
-  }
-
+  const algorithm = mapCipherAlgorithmToAesAlgorithm(alg);
   const items = array.split(",");
   const values: Record<string, string> = {};
 

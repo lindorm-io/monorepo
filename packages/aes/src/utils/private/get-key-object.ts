@@ -5,9 +5,9 @@ import { mapEncryptionKeyAlgorithmToShaAlgorithm } from "./encryption-key-algori
 
 export const getKeyObject = (
   key: AesCipherKey,
-  oaepHash?: AesEncryptionKeyAlgorithm,
+  oaepHash: AesEncryptionKeyAlgorithm,
 ): RsaPrivateKey => ({
   ...(typeof key === "string" ? { key } : key),
   padding: constants.RSA_PKCS1_OAEP_PADDING,
-  ...(oaepHash ? { oaepHash: mapEncryptionKeyAlgorithmToShaAlgorithm(oaepHash) } : {}),
+  oaepHash: mapEncryptionKeyAlgorithmToShaAlgorithm(oaepHash),
 });
