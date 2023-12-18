@@ -4,12 +4,14 @@ import {
   decryptAesData,
   encryptAesData,
 } from "@lindorm-io/aes";
+import { removeUndefinedFromObject } from "@lindorm-io/core";
 import { TokenError } from "../../error";
 import { mapAlgorithmToJweEncoding, mapJweEncodingToAlgorithm } from "../private";
 
 export type EncryptJweOptions = {
   algorithm?: AesAlgorithm;
   key: string;
+  keyId?: string;
   encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   token: string;
 };
@@ -25,6 +27,7 @@ const TYP = "JWE";
 export const encryptJwe = ({
   algorithm = AesAlgorithm.AES_256_GCM,
   key,
+  keyId,
   encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.SHA1,
   token,
 }: EncryptJweOptions) => {
@@ -39,11 +42,15 @@ export const encryptJwe = ({
     throw new TokenError("Failed to create JWE: missing public encryption key.");
   }
 
-  const alg = encryptionKeyAlgorithm;
-  const enc = mapAlgorithmToJweEncoding(algorithm);
+  const header = removeUndefinedFromObject({
+    alg: encryptionKeyAlgorithm,
+    enc: mapAlgorithmToJweEncoding(algorithm),
+    kid: keyId,
+    typ: TYP,
+  });
 
   const components = [
-    Buffer.from(JSON.stringify({ alg, enc, typ: TYP })).toString(B64),
+    Buffer.from(JSON.stringify(header)).toString(B64),
     publicEncryptionKey.toString(B64),
     initialisationVector.toString(B64),
     content.toString(B64),
