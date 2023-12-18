@@ -110,6 +110,20 @@ describe("aes-data", () => {
     expect(decryptAesData({ ...encrypted, secret })).toBe(data);
   });
 
+  test("should decrypt aes data using RSA-OAEP", () => {
+    const data = randomBytes(32).toString("hex");
+
+    const encrypted = encryptAesData({
+      algorithm: AesAlgorithm.AES_256_GCM,
+      data,
+      format: AesFormat.BASE64,
+      key: PUBLIC_KEY,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.SHA1,
+    });
+
+    expect(decryptAesData({ ...encrypted, key: PRIVATE_KEY })).toBe(data);
+  });
+
   test("should decrypt aes data using RSA-OAEP-256", () => {
     const data = randomBytes(32).toString("hex");
 

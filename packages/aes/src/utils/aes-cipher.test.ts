@@ -74,6 +74,78 @@ const PUBLIC_KEY =
 
 describe("aes-cipher", () => {
   describe("algorithms", () => {
+    test("should encrypt using the aes-128-cbc algorithm", () => {
+      const data = randomBytes(32).toString("hex");
+      const secret = randomBytes(32).toString("hex").slice(0, 16);
+
+      const cipher = encryptAesCipher({
+        algorithm: AesAlgorithm.AES_128_CBC,
+        data,
+        format: AesFormat.BASE64,
+        secret,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-128-cbc$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-128-cbc");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, secret });
+
+      expect(decrypted).toBe(data);
+    });
+
+    test("should encrypt using the aes-192-cbc algorithm", () => {
+      const data = randomBytes(32).toString("hex");
+      const secret = randomBytes(32).toString("hex").slice(0, 24);
+
+      const cipher = encryptAesCipher({
+        algorithm: AesAlgorithm.AES_192_CBC,
+        data,
+        format: AesFormat.BASE64,
+        secret,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-192-cbc$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-192-cbc");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, secret });
+
+      expect(decrypted).toBe(data);
+    });
+
+    test("should encrypt using the aes-256-cbc algorithm", () => {
+      const data = randomBytes(32).toString("hex");
+      const secret = randomBytes(32).toString("hex").slice(0, 32);
+
+      const cipher = encryptAesCipher({
+        algorithm: AesAlgorithm.AES_256_CBC,
+        data,
+        format: AesFormat.BASE64,
+        secret,
+      });
+
+      expect(cipher).toStrictEqual(expect.stringContaining("$aes-256-cbc$"));
+
+      const decoded = decodeAesString(cipher);
+
+      expect(decoded.algorithm).toBe("aes-256-cbc");
+      expect(decoded.format).toBe("base64");
+      expect(decoded.version).toBe(LATEST_AES_VERSION);
+
+      const decrypted = decryptAesCipher({ cipher, secret });
+
+      expect(decrypted).toBe(data);
+    });
+
     test("should encrypt using the aes-128-gcm algorithm", () => {
       const data = randomBytes(32).toString("hex");
       const secret = randomBytes(32).toString("hex").slice(0, 16);

@@ -7,7 +7,14 @@ const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 export const decodeAesString = (data: string): AesEncryptionData => {
   const [_, algorithm, array, content] = data.split("$");
 
-  if (algorithm !== "aes-128-gcm" && algorithm !== "aes-192-gcm" && algorithm !== "aes-256-gcm") {
+  if (
+    algorithm !== "aes-128-cbc" &&
+    algorithm !== "aes-192-cbc" &&
+    algorithm !== "aes-256-cbc" &&
+    algorithm !== "aes-128-gcm" &&
+    algorithm !== "aes-192-gcm" &&
+    algorithm !== "aes-256-gcm"
+  ) {
     throw new AesError("Invalid AES cipher string", {
       description: "Invalid algorithm header",
       debug: { algorithm },
@@ -35,7 +42,7 @@ export const decodeAesString = (data: string): AesEncryptionData => {
 
   return {
     algorithm,
-    authTag: Buffer.from(tag, format),
+    authTag: tag ? Buffer.from(tag, format) : undefined,
     content: Buffer.from(content, format),
     encryptionKeyAlgorithm: eka ? mapStringToEncryptionKeyAlgorithm(eka) : undefined,
     format,

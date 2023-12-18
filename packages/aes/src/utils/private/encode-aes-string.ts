@@ -20,7 +20,7 @@ export const encodeAesString = ({
     eka: encryptionKeyAlgorithm?.toLowerCase(),
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
-    tag: authTag.toString(format),
+    tag: authTag?.toString(format),
   });
   const array = Object.entries(values).map(([key, value]) => `${key}=${value}`);
 

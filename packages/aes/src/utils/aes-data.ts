@@ -1,8 +1,14 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
 import { AesAlgorithm, AesFormat } from "../enums";
 import { AesEncryptionData, DecryptAesDataOptions, EncryptAesCipherOptions } from "../types";
-import { getAesDecryptionKey, getAesEncryptionKeys } from "./private";
+import {
+  getAesDecryptionKey,
+  getAesEncryptionKeys,
+  getAuthTag,
+  getInitialisationVector,
+  setAuthTag,
+} from "./private";
 
 export const encryptAesData = ({
   algorithm = AesAlgorithm.AES_256_GCM,
@@ -20,11 +26,10 @@ export const encryptAesData = ({
     secret,
   });
 
-  const initialisationVector = randomBytes(12);
+  const initialisationVector = getInitialisationVector(algorithm);
   const cipher = createCipheriv(algorithm, encryptionKey, initialisationVector);
-
   const content = Buffer.concat([cipher.update(Buffer.from(data)), cipher.final()]);
-  const authTag = cipher.getAuthTag();
+  const authTag = getAuthTag(algorithm, cipher);
 
   return {
     algorithm,
@@ -58,7 +63,7 @@ export const decryptAesData = ({
   });
 
   const decipher = createDecipheriv(algorithm, decryptionKey, initialisationVector);
-  decipher.setAuthTag(authTag);
+  setAuthTag(algorithm, decipher, authTag);
 
   return Buffer.concat([decipher.update(content), decipher.final()]).toString("utf-8");
 };

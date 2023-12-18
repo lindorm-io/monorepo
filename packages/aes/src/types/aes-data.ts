@@ -3,7 +3,7 @@ import { AesCipherAlgorithm, AesCipherKey } from "./aes";
 
 export type DecryptAesDataOptions = {
   algorithm: AesCipherAlgorithm;
-  authTag: Buffer;
+  authTag?: Buffer;
   content: Buffer;
   encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   initialisationVector: Buffer;
