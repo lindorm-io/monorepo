@@ -7,27 +7,8 @@ import { encodeAesString } from "./private/encode-aes-string";
 export const encryptAesCipher = (options: EncryptAesCipherOptions): string =>
   encodeAesString(encryptAesData(options));
 
-export const decryptAesCipher = ({ cipher, key, secret }: DecryptAesCipherOptions): string => {
-  const {
-    algorithm,
-    authTag,
-    content,
-    encryptionKeyAlgorithm,
-    publicEncryptionKey,
-    initialisationVector,
-  } = decodeAesString(cipher);
-
-  return decryptAesData({
-    algorithm,
-    authTag,
-    content,
-    initialisationVector,
-    key,
-    encryptionKeyAlgorithm,
-    publicEncryptionKey,
-    secret,
-  });
-};
+export const decryptAesCipher = ({ cipher, key, secret }: DecryptAesCipherOptions): string =>
+  decryptAesData({ ...decodeAesString(cipher), key, secret });
 
 export const verifyAesCipher = ({ cipher, data, key, secret }: VerifyAesCipherOptions): boolean =>
   decryptAesCipher({ cipher, key, secret }) === data;

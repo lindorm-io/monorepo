@@ -1,9 +1,11 @@
-import { AesEncryptionKeyAlgorithm } from "../../enums";
-import { getKeyObject } from "./get-key-object";
+import { AesEncryptionKeyAlgorithm } from "../../../enums";
+import { getRsaKeyObject } from "./get-rsa-key-object";
 
-describe("getKeyObject", () => {
+describe("getRsaKeyObject", () => {
   test("should resolve key object", () => {
-    expect(getKeyObject("key", AesEncryptionKeyAlgorithm.RSA_OAEP)).toStrictEqual({
+    expect(
+      getRsaKeyObject({ key: "key", type: "RSA" }, AesEncryptionKeyAlgorithm.RSA_OAEP),
+    ).toStrictEqual({
       key: "key",
       padding: 4,
       oaepHash: "sha1",
@@ -11,7 +13,9 @@ describe("getKeyObject", () => {
   });
 
   test("should resolve key object with oaep", () => {
-    expect(getKeyObject("key", AesEncryptionKeyAlgorithm.RSA_OAEP_256)).toStrictEqual({
+    expect(
+      getRsaKeyObject({ key: "key", type: "RSA" }, AesEncryptionKeyAlgorithm.RSA_OAEP_256),
+    ).toStrictEqual({
       key: "key",
       padding: 4,
       oaepHash: "sha256",
@@ -20,8 +24,8 @@ describe("getKeyObject", () => {
 
   test("should resolve key object with passphrase", () => {
     expect(
-      getKeyObject(
-        { key: "key", passphrase: "passphrase" },
+      getRsaKeyObject(
+        { key: "key", type: "RSA", passphrase: "passphrase" },
         AesEncryptionKeyAlgorithm.RSA_OAEP_512,
       ),
     ).toStrictEqual({

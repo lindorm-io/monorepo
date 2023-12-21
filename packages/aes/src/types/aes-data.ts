@@ -1,13 +1,30 @@
-import { AesEncryptionKeyAlgorithm } from "../enums";
-import { AesCipherAlgorithm, AesCipherKey } from "./aes";
+import {
+  AesAlgorithm,
+  AesEncryptionKeyAlgorithm,
+  AesFormat,
+  AesIntegrityAlgorithm,
+} from "../enums";
+import { AesEncryptionKey, AesSecret } from "./aes-encryption-key";
+
+export type EncryptAesDataOptions = {
+  algorithm?: AesAlgorithm;
+  data: Buffer | string;
+  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
+  format?: AesFormat;
+  integrityAlgorithm?: AesIntegrityAlgorithm;
+  key?: AesEncryptionKey;
+  keyId?: string;
+  secret?: AesSecret;
+};
 
 export type DecryptAesDataOptions = {
-  algorithm: AesCipherAlgorithm;
+  algorithm: AesAlgorithm;
   authTag?: Buffer;
   content: Buffer;
   encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   initialisationVector: Buffer;
-  key?: AesCipherKey;
+  integrityAlgorithm?: AesIntegrityAlgorithm;
+  key?: AesEncryptionKey;
   publicEncryptionKey?: Buffer;
-  secret?: string;
+  secret?: AesSecret;
 };

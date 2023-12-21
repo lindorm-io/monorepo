@@ -10,17 +10,21 @@ export const getAuthTag = ({
   content,
   encryptionKey,
   initialisationVector,
+  integrityAlgorithm,
 }: GetAuthTagOptions): Buffer | undefined => {
   switch (algorithm) {
     case AesAlgorithm.AES_128_CBC:
     case AesAlgorithm.AES_192_CBC:
     case AesAlgorithm.AES_256_CBC:
-      return;
-
-    case AesAlgorithm.AES_128_CBC_HS256:
-    case AesAlgorithm.AES_192_CBC_HS256:
-    case AesAlgorithm.AES_256_CBC_HS256:
-      return createHmacAuthTag({ content, encryptionKey, initialisationVector });
+      if (!integrityAlgorithm) {
+        return;
+      }
+      return createHmacAuthTag({
+        content,
+        encryptionKey,
+        initialisationVector,
+        integrityAlgorithm,
+      });
 
     case AesAlgorithm.AES_128_GCM:
     case AesAlgorithm.AES_192_GCM:
@@ -41,26 +45,23 @@ export const setAuthTag = ({
   decipher,
   decryptionKey,
   initialisationVector,
+  integrityAlgorithm,
 }: SetAuthTagOptions): void => {
   switch (algorithm) {
     case AesAlgorithm.AES_128_CBC:
     case AesAlgorithm.AES_192_CBC:
     case AesAlgorithm.AES_256_CBC:
-      break;
-
-    case AesAlgorithm.AES_128_CBC_HS256:
-    case AesAlgorithm.AES_192_CBC_HS256:
-    case AesAlgorithm.AES_256_CBC_HS256:
-      if (!authTag) {
-        throw new AesError("Auth tag is required for CBC decryption");
+      if (!authTag || !integrityAlgorithm) {
+        return;
       }
       verifyHmacAuthTag({
         authTag,
         content,
         encryptionKey: decryptionKey,
         initialisationVector,
+        integrityAlgorithm,
       });
-      break;
+      return;
 
     case AesAlgorithm.AES_128_GCM:
     case AesAlgorithm.AES_192_GCM:
@@ -69,7 +70,7 @@ export const setAuthTag = ({
         throw new AesError("Auth tag is required for GCM decryption");
       }
       (decipher as DecipherGCM).setAuthTag(authTag);
-      break;
+      return;
 
     default:
       throw new AesError("Unexpected algorithm", {

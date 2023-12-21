@@ -1,12 +1,12 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
-import { AesCipherKey, AesCipherOptions } from "../types";
+import { AesCipherOptions, AesEncryptionKey } from "../types";
 import { assertAesCipher, decryptAesCipher, encryptAesCipher, verifyAesCipher } from "../utils";
 
 export class AesCipher {
   private readonly algorithm: AesAlgorithm;
   private readonly encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm;
   private readonly format: AesFormat;
-  private readonly key: AesCipherKey | undefined;
+  private readonly key: AesEncryptionKey | undefined;
   private readonly secret: string | undefined;
 
   public constructor(options: AesCipherOptions) {

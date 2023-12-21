@@ -1,4 +1,4 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../../enums";
 import { encodeAesString } from "./encode-aes-string";
 
 describe("encodeAesString", () => {
@@ -7,7 +7,7 @@ describe("encodeAesString", () => {
       algorithm: AesAlgorithm.AES_256_GCM,
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
-      format: "base64",
+      format: AesFormat.BASE64,
       initialisationVector: Buffer.from("initialisationVector"),
       encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       keyId: Buffer.from("keyId"),
@@ -17,7 +17,7 @@ describe("encodeAesString", () => {
 
     expect(string).toContain("$aes-256-gcm$");
     expect(string).toContain("v=1");
-    expect(string).toContain("f=b64");
+    expect(string).toContain("f=base64");
     expect(string).toContain("eka=rsa-oaep-256");
     expect(string).toContain("cek=cHVibGljRW5jcnlwdGlvbktleQ==");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I=");

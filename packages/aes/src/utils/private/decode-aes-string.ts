@@ -1,14 +1,14 @@
-import { mapShortToFormat, mapStringToEncryptionKeyAlgorithm } from ".";
 import { AesError } from "../../errors";
 import { AesEncryptionData } from "../../types";
-import { mapCipherAlgorithmToAesAlgorithm } from "./cipher-algorithm-mapper";
+import { mapStringToAesFormat, mapStringToEncryptionKeyAlgorithm } from "./mappers";
+import { mapStringToAesAlgorithm } from "./mappers/algorithm-mapper";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
 export const decodeAesString = (data: string): AesEncryptionData => {
   const [_, alg, array, content] = data.split("$");
 
-  const algorithm = mapCipherAlgorithmToAesAlgorithm(alg);
+  const algorithm = mapStringToAesAlgorithm(alg);
   const items = array.split(",");
   const values: Record<string, string> = {};
 
@@ -26,7 +26,7 @@ export const decodeAesString = (data: string): AesEncryptionData => {
   }
 
   const { cek, eka, f, iv, kid, tag, v } = values;
-  const format = mapShortToFormat(f);
+  const format = mapStringToAesFormat(f);
 
   return {
     algorithm,

@@ -1,26 +1,30 @@
 import { Cipher, CipherGCM, Decipher, DecipherGCM } from "crypto";
-import { AesCipherAlgorithm } from "./aes";
+import { AesAlgorithm, AesIntegrityAlgorithm } from "../enums";
 
 export type GetAuthTagOptions = {
-  algorithm: AesCipherAlgorithm;
+  algorithm: AesAlgorithm;
   cipher: Cipher | CipherGCM;
   content: Buffer;
   encryptionKey: Buffer;
   initialisationVector: Buffer;
+  integrityAlgorithm?: AesIntegrityAlgorithm;
 };
 
 export type SetAuthTagOptions = {
-  algorithm: AesCipherAlgorithm;
+  algorithm: AesAlgorithm;
   authTag?: Buffer;
   content: Buffer;
   decipher: Decipher | DecipherGCM;
   decryptionKey: Buffer;
   initialisationVector: Buffer;
+  integrityAlgorithm?: AesIntegrityAlgorithm;
 };
 
-export type CreateHmacAuthTag = Pick<
-  GetAuthTagOptions,
-  "content" | "encryptionKey" | "initialisationVector"
->;
+export type CreateHmacAuthTag = {
+  content: Buffer;
+  encryptionKey: Buffer;
+  initialisationVector: Buffer;
+  integrityAlgorithm: AesIntegrityAlgorithm;
+};
 
 export type VerifyHmacAuthTag = CreateHmacAuthTag & { authTag: Buffer };

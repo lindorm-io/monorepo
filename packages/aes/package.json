@@ -19,6 +19,7 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/errors": "^0.1.21"
+    "@lindorm-io/errors": "^0.1.21",
+    "@lindorm-io/jwk": "^0.1.0"
   }
 }

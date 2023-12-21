@@ -1,5 +1,4 @@
 import { removeEmptyFromObject } from "@lindorm-io/core";
-import { mapFormatToShort } from ".";
 import { AesEncryptionData } from "../../types";
 
 export const encodeAesString = ({
@@ -15,7 +14,7 @@ export const encodeAesString = ({
 }: AesEncryptionData): string => {
   const values = removeEmptyFromObject({
     v: version,
-    f: mapFormatToShort(format),
+    f: format,
     cek: publicEncryptionKey?.toString(format),
     eka: encryptionKeyAlgorithm?.toLowerCase(),
     iv: initialisationVector.toString(format),

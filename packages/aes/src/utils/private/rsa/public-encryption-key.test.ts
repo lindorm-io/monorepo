@@ -4,7 +4,7 @@ import {
   publicDecrypt as _publicDecrypt,
   publicEncrypt as _publicEncrypt,
 } from "crypto";
-import { AesEncryptionKeyAlgorithm } from "../../enums";
+import { AesEncryptionKeyAlgorithm } from "../../../enums";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
 jest.mock("crypto");
@@ -97,7 +97,8 @@ describe("public-encryption-key", () => {
       expect(
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
-          key: PRIVATE_KEY,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+          key: { key: PRIVATE_KEY, type: "RSA" },
         }),
       ).toStrictEqual(Buffer.from("privateEncrypt"));
 
@@ -108,7 +109,8 @@ describe("public-encryption-key", () => {
       expect(
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
-          key: PUBLIC_KEY,
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+          key: { key: PUBLIC_KEY, type: "RSA" },
         }),
       ).toStrictEqual(Buffer.from("publicEncrypt"));
 
@@ -120,9 +122,9 @@ describe("public-encryption-key", () => {
     test("should decrypt encryption key using private key pair", () => {
       expect(
         decryptPublicEncryptionKey({
-          publicEncryptionKey: Buffer.from("public-encryption-key"),
-          key: PRIVATE_KEY,
           encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+          key: { key: PRIVATE_KEY, type: "RSA" },
+          publicEncryptionKey: Buffer.from("public-encryption-key"),
         }),
       ).toStrictEqual(Buffer.from("privateDecrypt"));
 
@@ -132,8 +134,9 @@ describe("public-encryption-key", () => {
     test("should decrypt encryption key using public key pair", () => {
       expect(
         decryptPublicEncryptionKey({
+          encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+          key: { key: PUBLIC_KEY, type: "RSA" },
           publicEncryptionKey: Buffer.from("public-encryption-key"),
-          key: PUBLIC_KEY,
         }),
       ).toStrictEqual(Buffer.from("publicDecrypt"));
 

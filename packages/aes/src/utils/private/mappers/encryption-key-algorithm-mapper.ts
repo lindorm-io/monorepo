@@ -1,10 +1,10 @@
-import { AesEncryptionKeyAlgorithm, ShaAlgorithm } from "../../enums";
-import { AesError } from "../../errors";
+import { AesEncryptionKeyAlgorithm, ShaAlgorithm } from "../../../enums";
+import { AesError } from "../../../errors";
 
 export const mapEncryptionKeyAlgorithmToShaAlgorithm = (
-  hash: AesEncryptionKeyAlgorithm,
+  algorithm: AesEncryptionKeyAlgorithm,
 ): ShaAlgorithm => {
-  switch (hash) {
+  switch (algorithm) {
     case AesEncryptionKeyAlgorithm.RSA_OAEP:
       return ShaAlgorithm.SHA1;
 
@@ -18,14 +18,14 @@ export const mapEncryptionKeyAlgorithmToShaAlgorithm = (
       return ShaAlgorithm.SHA512;
 
     default:
-      throw new AesError("Unexpected RSA OAEP hash", {
-        debug: { hash },
+      throw new AesError("Unexpected encryption key algorithm", {
+        debug: { algorithm },
       });
   }
 };
 
-export const mapStringToEncryptionKeyAlgorithm = (hash: string): AesEncryptionKeyAlgorithm => {
-  switch (hash) {
+export const mapStringToEncryptionKeyAlgorithm = (algorithm: string): AesEncryptionKeyAlgorithm => {
+  switch (algorithm) {
     case "rsa-oaep":
       return AesEncryptionKeyAlgorithm.RSA_OAEP;
 
@@ -39,8 +39,8 @@ export const mapStringToEncryptionKeyAlgorithm = (hash: string): AesEncryptionKe
       return AesEncryptionKeyAlgorithm.RSA_OAEP_512;
 
     default:
-      throw new AesError("Unexpected key hash", {
-        debug: { hash },
+      throw new AesError("Unexpected encryption key algorithm", {
+        debug: { algorithm },
       });
   }
 };

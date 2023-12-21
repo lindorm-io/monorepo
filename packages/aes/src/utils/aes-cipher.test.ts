@@ -342,7 +342,7 @@ describe("aes-cipher", () => {
 
       const cipher = encryptAesCipher({
         data,
-        key: PRIVATE_KEY,
+        key: { key: PRIVATE_KEY, type: "RSA" },
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
       });
 
@@ -354,7 +354,7 @@ describe("aes-cipher", () => {
       expect(decoded.encryptionKeyAlgorithm).toBeUndefined();
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
 
-      const decrypted = decryptAesCipher({ cipher, key: PUBLIC_KEY });
+      const decrypted = decryptAesCipher({ cipher, key: { key: PUBLIC_KEY, type: "RSA" } });
 
       expect(decrypted).toBe(data);
     });
@@ -364,7 +364,7 @@ describe("aes-cipher", () => {
 
       const cipher = encryptAesCipher({
         data,
-        key: PUBLIC_KEY,
+        key: { key: PUBLIC_KEY, type: "RSA" },
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       });
@@ -377,7 +377,7 @@ describe("aes-cipher", () => {
       expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_256);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
 
-      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+      const decrypted = decryptAesCipher({ cipher, key: { key: PRIVATE_KEY, type: "RSA" } });
 
       expect(decrypted).toBe(data);
     });
@@ -387,7 +387,7 @@ describe("aes-cipher", () => {
 
       const cipher = encryptAesCipher({
         data,
-        key: PUBLIC_KEY,
+        key: { key: PUBLIC_KEY, type: "RSA" },
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
       });
@@ -400,7 +400,7 @@ describe("aes-cipher", () => {
       expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_384);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
 
-      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+      const decrypted = decryptAesCipher({ cipher, key: { key: PRIVATE_KEY, type: "RSA" } });
 
       expect(decrypted).toBe(data);
     });
@@ -410,7 +410,7 @@ describe("aes-cipher", () => {
 
       const cipher = encryptAesCipher({
         data,
-        key: PUBLIC_KEY,
+        key: { key: PUBLIC_KEY, type: "RSA" },
         keyId: "0acfb2a3-5cd6-5911-8a8f-e3aca6465090",
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
       });
@@ -423,7 +423,7 @@ describe("aes-cipher", () => {
       expect(decoded.encryptionKeyAlgorithm).toBe(AesEncryptionKeyAlgorithm.RSA_OAEP_512);
       expect(decoded.publicEncryptionKey).toStrictEqual(expect.any(Buffer));
 
-      const decrypted = decryptAesCipher({ cipher, key: PRIVATE_KEY });
+      const decrypted = decryptAesCipher({ cipher, key: { key: PRIVATE_KEY, type: "RSA" } });
 
       expect(decrypted).toBe(data);
     });

@@ -70,10 +70,10 @@ const PUBLIC_KEY =
 
 describe("isPrivateKey", () => {
   test("should return true with private key", () => {
-    expect(isPrivateKey(PRIVATE_KEY)).toBe(true);
+    expect(isPrivateKey({ key: PRIVATE_KEY, type: "RSA" })).toBe(true);
   });
 
   test("should return false with public key", () => {
-    expect(isPrivateKey(PUBLIC_KEY)).toBe(false);
+    expect(isPrivateKey({ key: PUBLIC_KEY, type: "RSA" })).toBe(false);
   });
 });
