@@ -1,4 +1,5 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
+import { PUBLIC_RSA_KEY } from "../../../fixtures/rsa-keys.fixture";
 import { generateEncryptionKey as _generateEncryptionKey } from "../generate-encryption-key";
 import { isPrivateKey as _isPrivateKey } from "../is-private-key";
 import { getRsaDecryptionKey, getRsaEncryptionKeys } from "./get-rsa-keys";
@@ -29,7 +30,7 @@ describe("get-rsa-keys", () => {
       getRsaEncryptionKeys({
         algorithm: AesAlgorithm.AES_128_CBC,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
       }),
     ).toStrictEqual({
       encryptionKey: "generateEncryptionKey",
@@ -42,7 +43,7 @@ describe("get-rsa-keys", () => {
     expect(
       getRsaDecryptionKey({
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
         publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       }),
     ).toBe("decryptPublicEncryptionKey");

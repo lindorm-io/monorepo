@@ -1,5 +1,6 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
+import { PUBLIC_RSA_KEY } from "../../fixtures/rsa-keys.fixture";
 import { getDecryptionKey } from "./get-decryption-key";
 
 import { getRsaDecryptionKey as _getRsaDecryptionKey } from "./rsa";
@@ -34,7 +35,7 @@ describe("getDecryptionKey", () => {
     expect(
       getDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
         publicEncryptionKey: Buffer.from("public-encryption-key"),
       }),
@@ -47,7 +48,7 @@ describe("getDecryptionKey", () => {
     expect(() =>
       getDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
         secret: "secret",
       }),
     ).toThrow(AesError);
@@ -65,7 +66,7 @@ describe("getDecryptionKey", () => {
     expect(() =>
       getDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
       }),
     ).toThrow(AesError);
   });
@@ -74,7 +75,7 @@ describe("getDecryptionKey", () => {
     expect(() =>
       getDecryptionKey({
         algorithm: AesAlgorithm.AES_256_GCM,
-        key: { key: "key", type: "RSA" },
+        key: PUBLIC_RSA_KEY,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       }),
     ).toThrow(AesError);
