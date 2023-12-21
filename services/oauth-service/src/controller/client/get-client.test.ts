@@ -115,6 +115,12 @@ describe("getClientInfoController", () => {
           refreshToken: "99 seconds",
         },
         frontChannelLogoutUri: null,
+        idTokenEncryption: {
+          algorithm: "aes-256-gcm",
+          encryptionKeyAlgorithm: "RSA-OAEP-256",
+        },
+        jwks: [],
+        jwksUri: "https://test.client.lindorm.io/.well-known/jwks.json",
         logoUri: "https://logo.uri/logo",
         name: "ClientName",
         profile: "user_agent_based_application",

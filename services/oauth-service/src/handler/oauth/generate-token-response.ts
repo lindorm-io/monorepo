@@ -6,7 +6,7 @@ import { createOpaqueToken } from "@lindorm-io/jwt";
 import { Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
-import { createIdToken, generateAccessToken, generateRefreshToken } from "../token";
+import { createIdToken, encryptIdToken, generateAccessToken, generateRefreshToken } from "../token";
 
 export const generateTokenResponse = async (
   ctx: ServerKoaContext,
@@ -33,7 +33,11 @@ export const generateTokenResponse = async (
   body.tokenType = "Bearer";
 
   if (clientSession.scopes.includes(Scope.OPENID)) {
-    const { token: idToken } = createIdToken(ctx, client, clientSession, claims, body.accessToken);
+    let { token: idToken } = createIdToken(ctx, client, clientSession, claims, body.accessToken);
+
+    if (client.idTokenEncryption.algorithm) {
+      idToken = await encryptIdToken(ctx, client, idToken);
+    }
 
     body.idToken = idToken;
   }

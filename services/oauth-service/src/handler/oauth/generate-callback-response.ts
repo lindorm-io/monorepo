@@ -9,7 +9,7 @@ import { AUTHORIZATION_SESSION_COOKIE_NAME } from "../../constant";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { ServerKoaContext } from "../../types";
 import { getIdentityClaims } from "../identity";
-import { createIdToken, generateAccessToken } from "../token";
+import { createIdToken, encryptIdToken, generateAccessToken } from "../token";
 import { generateAuthorizationCode } from "./generate-authorization-code";
 
 type CallbackData = {
@@ -57,7 +57,11 @@ export const generateCallbackResponse = async (
     authorizationSession.responseTypes.includes(OpenIdResponseType.ID_TOKEN) &&
     clientSession.scopes.includes(Scope.OPENID)
   ) {
-    const { token: idToken } = createIdToken(ctx, client, clientSession, claims, data.accessToken);
+    let { token: idToken } = createIdToken(ctx, client, clientSession, claims, data.accessToken);
+
+    if (client.idTokenEncryption.algorithm) {
+      idToken = await encryptIdToken(ctx, client, idToken);
+    }
 
     data.idToken = idToken;
   }

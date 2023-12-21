@@ -1,3 +1,4 @@
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -70,6 +71,11 @@ export type ClientExpiry = {
   refreshToken: ReadableTime;
 };
 
+export type ClientIdTokenEncryption = {
+  algorithm: AesAlgorithm | null;
+  encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm | null;
+};
+
 // TODO /connect/register compability
 
 /**
@@ -125,6 +131,9 @@ export type ClientAttributes = EntityAttributes & {
   domain: string;
   expiry: ClientExpiry;
   frontChannelLogoutUri: string | null;
+  idTokenEncryption: ClientIdTokenEncryption;
+  jwks: Array<string>;
+  jwksUri: string | null;
   logoUri: string | null;
   name: string;
   opaqueAccessToken: boolean;
@@ -148,6 +157,8 @@ export type ClientOptions = Optional<
   | "backchannelLogoutUri"
   | "description"
   | "frontChannelLogoutUri"
+  | "jwks"
+  | "jwksUri"
   | "logoUri"
   | "opaqueAccessToken"
   | "postLogoutUris"
@@ -162,7 +173,7 @@ const schema = Joi.object<ClientAttributes>()
   .keys({
     ...JOI_ENTITY_BASE,
 
-    allowed: Joi.object()
+    allowed: Joi.object<ClientAllowed>()
       .keys({
         codeChallengeMethods: Joi.array()
           .items(Joi.string().valid(...Object.values(PKCEMethod)))
@@ -178,13 +189,13 @@ const schema = Joi.object<ClientAttributes>()
         strategies: Joi.array().items(Joi.string().lowercase()).required(),
       })
       .required(),
-    audiences: Joi.object()
+    audiences: Joi.object<ClientAudiences>()
       .keys({
         credentials: Joi.array().items(Joi.string().guid()).required(),
         identity: Joi.array().items(Joi.string().guid()).required(),
       })
       .required(),
-    authenticationAssertion: Joi.object()
+    authenticationAssertion: Joi.object<ClientAuthenticationAssertion>()
       .keys({
         algorithm: Joi.string()
           .valid(...Object.values(KeyPairAlgorithm))
@@ -194,7 +205,7 @@ const schema = Joi.object<ClientAttributes>()
         secret: Joi.string().allow(null).required(),
       })
       .required(),
-    authorizationAssertion: Joi.object()
+    authorizationAssertion: Joi.object<ClientAuthorizationAssertion>()
       .keys({
         algorithm: Joi.string()
           .valid(...Object.values(KeyPairAlgorithm))
@@ -204,7 +215,7 @@ const schema = Joi.object<ClientAttributes>()
         secret: Joi.string().allow(null).required(),
       })
       .required(),
-    backchannelAuth: Joi.object().keys({
+    backchannelAuth: Joi.object<ClientBackchannelAuth>().keys({
       mode: Joi.string()
         .valid(...Object.values(OpenIdBackchannelAuthMode))
         .required(),
@@ -212,14 +223,14 @@ const schema = Joi.object<ClientAttributes>()
       username: Joi.string().allow(null).required(),
       password: Joi.string().allow(null).required(),
     }),
-    customClaims: Joi.object()
+    customClaims: Joi.object<ClientCustomClaims>()
       .keys({
         uri: Joi.string().uri().allow(null).required(),
         username: Joi.string().allow(null).required(),
         password: Joi.string().allow(null).required(),
       })
       .required(),
-    defaults: Joi.object()
+    defaults: Joi.object<ClientDefaults>()
       .keys({
         displayMode: Joi.string()
           .valid(...Object.values(OpenIdDisplayMode))
@@ -230,11 +241,23 @@ const schema = Joi.object<ClientAttributes>()
           .required(),
       })
       .required(),
-    expiry: Joi.object()
+    expiry: Joi.object<ClientExpiry>()
       .keys({
         accessToken: JOI_EXPIRY_REGEX.required(),
         idToken: JOI_EXPIRY_REGEX.required(),
         refreshToken: JOI_EXPIRY_REGEX.required(),
+      })
+      .required(),
+    idTokenEncryption: Joi.object<ClientIdTokenEncryption>()
+      .keys({
+        algorithm: Joi.string()
+          .valid(...Object.values(AesAlgorithm))
+          .allow(null)
+          .required(),
+        encryptionKeyAlgorithm: Joi.string()
+          .valid(...Object.values(AesEncryptionKeyAlgorithm))
+          .allow(null)
+          .required(),
       })
       .required(),
 
@@ -243,6 +266,8 @@ const schema = Joi.object<ClientAttributes>()
     description: Joi.string().allow(null).required(),
     domain: Joi.string().uri().required(),
     frontChannelLogoutUri: Joi.string().uri().allow(null).required(),
+    jwks: Joi.array().items(Joi.string()).required(),
+    jwksUri: Joi.string().uri().allow(null).required(),
     logoUri: Joi.string().uri().allow(null).required(),
     name: Joi.string().required(),
     opaqueAccessToken: Joi.boolean().required(),
@@ -278,6 +303,9 @@ export class Client extends LindormEntity<ClientAttributes> {
   public domain: string;
   public expiry: ClientExpiry;
   public frontChannelLogoutUri: string | null;
+  public idTokenEncryption: ClientIdTokenEncryption;
+  public jwks: Array<string>;
+  public jwksUri: string | null;
   public logoUri: string | null;
   public name: string;
   public opaqueAccessToken: boolean;
@@ -309,6 +337,9 @@ export class Client extends LindormEntity<ClientAttributes> {
     this.domain = options.domain;
     this.expiry = options.expiry;
     this.frontChannelLogoutUri = options.frontChannelLogoutUri || null;
+    this.idTokenEncryption = options.idTokenEncryption;
+    this.jwks = options.jwks || [];
+    this.jwksUri = options.jwksUri || null;
     this.logoUri = options.logoUri || null;
     this.name = options.name;
     this.opaqueAccessToken = options.opaqueAccessToken === true;
@@ -346,6 +377,9 @@ export class Client extends LindormEntity<ClientAttributes> {
       domain: this.domain,
       expiry: this.expiry,
       frontChannelLogoutUri: this.frontChannelLogoutUri,
+      idTokenEncryption: this.idTokenEncryption,
+      jwks: this.jwks,
+      jwksUri: this.jwksUri,
       logoUri: this.logoUri,
       name: this.name,
       opaqueAccessToken: this.opaqueAccessToken,

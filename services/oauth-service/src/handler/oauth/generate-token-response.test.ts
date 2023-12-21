@@ -1,5 +1,5 @@
 import { Scope } from "@lindorm-io/common-enums";
-import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
+import { AesAlgorithm, createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
 import {
@@ -11,6 +11,7 @@ import {
 import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   createIdToken as _createIdToken,
+  encryptIdToken as _encryptIdToken,
   generateAccessToken as _generateAccessToken,
   generateRefreshToken as _generateRefreshToken,
 } from "../token";
@@ -24,6 +25,7 @@ jest.mock("../token");
 
 const createOpaqueToken = _createOpaqueToken as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
+const encryptIdToken = _encryptIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
 const generateRefreshToken = _generateRefreshToken as jest.Mock;
 const getIdentityUserinfo = _getIdentityUserinfo as jest.Mock;
@@ -37,12 +39,18 @@ describe("generateTokenResponse", () => {
     ctx = {};
 
     clientSession = createTestClientSession();
-    client = createTestClient();
+    client = createTestClient({
+      idTokenEncryption: {
+        algorithm: null,
+        encryptionKeyAlgorithm: null,
+      },
+    });
 
     createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
+    encryptIdToken.mockResolvedValue("encrypted.id.token.jwe");
     generateAccessToken.mockResolvedValue(createTestAccessToken());
     generateRefreshToken.mockResolvedValue(createTestRefreshToken());
     getIdentityUserinfo.mockResolvedValue({
@@ -69,6 +77,19 @@ describe("generateTokenResponse", () => {
     await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual(
       expect.objectContaining({
         idToken: "id.token.jwt",
+        scope: "openid",
+      }),
+    );
+  });
+
+  test("should resolve body with encrypted id token", async () => {
+    client.idTokenEncryption.algorithm = AesAlgorithm.AES_256_GCM;
+
+    clientSession.scopes = [Scope.OPENID];
+
+    await expect(generateTokenResponse(ctx, client, clientSession)).resolves.toStrictEqual(
+      expect.objectContaining({
+        idToken: "encrypted.id.token.jwe",
         scope: "openid",
       }),
     );

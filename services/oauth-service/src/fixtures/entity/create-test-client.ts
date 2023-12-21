@@ -1,3 +1,4 @@
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -65,11 +66,17 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       refreshToken: "99 seconds",
       ...(options.expiry || {}),
     },
+    idTokenEncryption: {
+      algorithm: AesAlgorithm.AES_256_GCM,
+      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+    },
 
     active: true,
     backchannelLogoutUri: "https://test.client.lindorm.io/backchannel-logout",
     description: "Client description",
     domain: "https://test.client.lindorm.io",
+    jwks: [],
+    jwksUri: "https://test.client.lindorm.io/.well-known/jwks.json",
     logoUri: "https://logo.uri/logo",
     name: "ClientName",
     opaqueAccessToken: true,

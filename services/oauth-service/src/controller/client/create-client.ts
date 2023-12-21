@@ -121,6 +121,11 @@ export const createClientController: ServerKoaController<RequestData> = async (
         refreshToken: configuration.defaults.expiry.refresh_token,
       },
 
+      idTokenEncryption: {
+        algorithm: null,
+        encryptionKeyAlgorithm: null,
+      },
+
       active: true,
       description,
       domain,

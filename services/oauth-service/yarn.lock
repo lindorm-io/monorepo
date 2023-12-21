@@ -764,6 +764,13 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@lindorm-io/aes@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/aes/-/aes-0.1.1.tgz#8af6ea92c8f89d7aca41029824a78d24a79b5f3c"
+  integrity sha512-ZjEY75e6PoZLPiBrA5FgyptYnP0qIK655S9ZOFUHN+V9LcLz3x4GOjMvl5wXTj0weJV2hcdFiFOhhqsUtUCcdg==
+  dependencies:
+    "@lindorm-io/errors" "^0.1.21"
+
 "@lindorm-io/amqp@^0.3.2":
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@lindorm-io/amqp/-/amqp-0.3.2.tgz#90eaa2cd7c4eb4722c212dc31f98166aef03e2de"
@@ -788,6 +795,19 @@
     axios "1.6.0"
     uuid "^9.0.1"
 
+"@lindorm-io/axios@^0.6.18":
+  version "0.6.18"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/axios/-/axios-0.6.18.tgz#af91333db659f61f2b599284e7f157ecc1f4e98e"
+  integrity sha512-3lLVoZ1qqQhWSSJx60FFbpJ7eiVFqhNzVG8/6yrtY2Sl9oOgoMWgRGwgkheBP3RFacseY+vOsisXPHD8JKmY8A==
+  dependencies:
+    "@lindorm-io/case" "^0.2.0"
+    "@lindorm-io/common-enums" "^0.1.2"
+    "@lindorm-io/middleware" "^0.1.5"
+    "@lindorm-io/retry" "^0.1.5"
+    "@lindorm-io/url" "^0.2.18"
+    axios "1.6.0"
+    uuid "^9.0.1"
+
 "@lindorm-io/case@^0.2.0":
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@lindorm-io/case/-/case-0.2.0.tgz#382650a30625e14d8a81dcbbf30b415aa180c85c"
@@ -800,6 +820,11 @@
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/@lindorm-io/common-enums/-/common-enums-0.1.1.tgz#94252c5fe8caab8528c7c2a7458d507fd3ecfd85"
   integrity sha512-1BezSkHSkLoXD+elrkXPAS/4ZI9mMUf4g4QlV44Sae80TBo5XvwVYf5y2eO/3m01NUClQlXVaPhRRLrvmE7PYQ==
+
+"@lindorm-io/common-enums@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/common-enums/-/common-enums-0.1.2.tgz#b6d93519659bda8eaa450485fa0eaa58e366a518"
+  integrity sha512-yQeQcIWIvPeB63fj8lJGJl+L35jDYCnlVAhml9zhwqzvmpkeF64sbgHsKXx0jWhOgBSQDeqXM08S2gJ2JfxSMg==
 
 "@lindorm-io/common-types@^0.5.1":
   version "0.5.1"
@@ -943,6 +968,24 @@
     "@lindorm-io/koa" "^0.17.9"
     object-path "^0.11.8"
 
+"@lindorm-io/koa-keystore@^0.11.10":
+  version "0.11.10"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.11.10.tgz#f6fe2bb50f9c7bcb6e8547925642f26a51861167"
+  integrity sha512-khuB4T1h1Nx3gBAV1BzSelmMSGjMnlBnc7oK/LzEDLoT8kk1ZjADEOaPdmImzdMo8fCOxBH+HgoYi3CLnlYnEQ==
+  dependencies:
+    "@lindorm-io/axios" "^0.6.18"
+    "@lindorm-io/core" "^0.8.11"
+    "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/expiry" "^0.2.1"
+    "@lindorm-io/in-memory-cache" "^0.3.5"
+    "@lindorm-io/key-pair" "^0.8.0"
+    "@lindorm-io/koa" "^0.17.10"
+    "@lindorm-io/mongo" "^0.12.5"
+    "@lindorm-io/readable-time" "^0.1.1"
+    "@lindorm-io/redis" "^0.12.5"
+    "@lindorm-io/retry" "^0.1.5"
+    joi "^17.11.0"
+
 "@lindorm-io/koa-keystore@^0.11.9":
   version "0.11.9"
   resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.11.9.tgz#0430c233cabead26fc806d7d603ba340338b4cd0"
@@ -987,6 +1030,25 @@
     "@lindorm-io/readable-time" "^0.1.1"
     "@lindorm-io/redis" "^0.12.5"
     object-path "^0.11.8"
+
+"@lindorm-io/koa@^0.17.10":
+  version "0.17.10"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa/-/koa-0.17.10.tgz#180937408ef0ddf2ebb9dd77eea2eea8c2f9921d"
+  integrity sha512-Tnclxd2qHMaPIiYDHg+YdBvvjw8fJ+jTpl2mAS4WPGyVgxwtRzC5DIeXo2SzyBXQY3H/CgyLR0jFF3MxZ6yFTQ==
+  dependencies:
+    "@lindorm-io/case" "^0.2.0"
+    "@lindorm-io/common-enums" "^0.1.2"
+    "@lindorm-io/core" "^0.8.11"
+    "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/retry" "^0.1.5"
+    "@lindorm-io/structure-scanner" "^0.2.1"
+    joi "^17.11.0"
+    koa "2.14.2"
+    koa-bodyparser "4.4.1"
+    koa-router "12.0.1"
+    koa-useragent "4.1.0"
+    object-path "^0.11.8"
+    socket.io "^4.7.2"
 
 "@lindorm-io/koa@^0.17.9":
   version "0.17.9"
@@ -1106,6 +1168,14 @@
   version "0.2.17"
   resolved "https://registry.yarnpkg.com/@lindorm-io/url/-/url-0.2.17.tgz#62b149b843f56d8c481286d57a1ed9fd4a03d4e9"
   integrity sha512-H/2ZcTGGgNo2jtV/qlubyKjVvs3NvH/SRqPKHDCTInrxRU6Q8sK+nB81sgEUcCVAkZpy3DJD4dAJvGzdfIELYg==
+  dependencies:
+    "@lindorm-io/case" "^0.2.0"
+    "@lindorm-io/core" "^0.8.11"
+
+"@lindorm-io/url@^0.2.18":
+  version "0.2.18"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/url/-/url-0.2.18.tgz#501b8234f75c9bd5613f05a63ad5152a4890ae2e"
+  integrity sha512-4tYFPNfUrxMvF6EUNH6DnX46KzPVpvWGWM1j2fSYeRZWrjOdnPcFnO3HwQ9bJvetm0syhErmp6pL7YK6gC4C8w==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
     "@lindorm-io/core" "^0.8.11"

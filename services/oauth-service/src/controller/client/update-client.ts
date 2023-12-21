@@ -1,3 +1,4 @@
+import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
@@ -22,6 +23,7 @@ import {
   ClientCustomClaims,
   ClientDefaults,
   ClientExpiry,
+  ClientIdTokenEncryption,
 } from "../../entity";
 import { ServerKoaController } from "../../types";
 
@@ -38,6 +40,9 @@ type RequestData = {
   domain?: string;
   expiry?: ClientExpiry;
   frontChannelLogoutUri?: string;
+  idTokenEncryption?: ClientIdTokenEncryption;
+  jwks: Array<string>;
+  jwksUri: string | null;
   logoUri?: string;
   name?: string;
   postLogoutUris?: Array<string>;
@@ -84,12 +89,22 @@ export const updateClientSchema = Joi.object<RequestData>()
       idToken: JOI_EXPIRY_REGEX,
       refreshToken: JOI_EXPIRY_REGEX,
     }),
+    idTokenEncryption: Joi.object<ClientIdTokenEncryption>().keys({
+      algorithm: Joi.string()
+        .valid(...Object.values(AesAlgorithm))
+        .allow(null),
+      encryptionKeyAlgorithm: Joi.string()
+        .valid(...Object.values(AesEncryptionKeyAlgorithm))
+        .allow(null),
+    }),
 
     active: Joi.boolean(),
     backchannelLogoutUri: Joi.string().uri(),
     description: Joi.string().allow(null),
-    frontChannelLogoutUri: Joi.string().uri().allow(null),
     domain: Joi.string().uri(),
+    frontChannelLogoutUri: Joi.string().uri().allow(null),
+    jwks: Joi.array().items(Joi.string()).required(),
+    jwksUri: Joi.string().uri().allow(null).required(),
     logoUri: Joi.string().uri().allow(null),
     name: Joi.string(),
     postLogoutUris: Joi.array().items(Joi.string().uri()),
@@ -119,6 +134,9 @@ export const updateClientController: ServerKoaController<RequestData> = async (
       domain,
       expiry,
       frontChannelLogoutUri,
+      idTokenEncryption,
+      jwks,
+      jwksUri,
       logoUri,
       name,
       postLogoutUris,
@@ -203,6 +221,13 @@ export const updateClientController: ServerKoaController<RequestData> = async (
     client.expiry.refreshToken = expiry.refreshToken;
   }
 
+  if (idTokenEncryption?.algorithm !== undefined) {
+    client.idTokenEncryption.algorithm = idTokenEncryption.algorithm;
+  }
+  if (idTokenEncryption?.encryptionKeyAlgorithm !== undefined) {
+    client.idTokenEncryption.encryptionKeyAlgorithm = idTokenEncryption.encryptionKeyAlgorithm;
+  }
+
   if (active !== undefined) {
     client.active = active;
   }
@@ -212,11 +237,17 @@ export const updateClientController: ServerKoaController<RequestData> = async (
   if (description !== undefined) {
     client.description = description;
   }
+  if (domain !== undefined) {
+    client.domain = domain;
+  }
   if (frontChannelLogoutUri !== undefined) {
     client.frontChannelLogoutUri = frontChannelLogoutUri;
   }
-  if (domain !== undefined) {
-    client.domain = domain;
+  if (jwks !== undefined) {
+    client.jwks = jwks;
+  }
+  if (jwksUri !== undefined) {
+    client.jwksUri = jwksUri;
   }
   if (logoUri !== undefined) {
     client.logoUri = logoUri;

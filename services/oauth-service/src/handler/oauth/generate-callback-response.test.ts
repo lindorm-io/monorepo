@@ -1,6 +1,6 @@
 import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
-import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
+import { AesAlgorithm, createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
@@ -13,6 +13,7 @@ import {
 import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
 import {
   createIdToken as _createIdToken,
+  encryptIdToken as _encryptIdToken,
   generateAccessToken as _generateAccessToken,
 } from "../token";
 import { generateAuthorizationCode as _generateAuthorizationCode } from "./generate-authorization-code";
@@ -27,6 +28,7 @@ jest.mock("./generate-authorization-code");
 
 const createOpaqueToken = _createOpaqueToken as jest.Mock;
 const createIdToken = _createIdToken as jest.Mock;
+const encryptIdToken = _encryptIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
 const generateAuthorizationCode = _generateAuthorizationCode as jest.Mock;
 const getIdentityUserinfo = _getIdentityUserinfo as jest.Mock;
@@ -51,12 +53,18 @@ describe("generateCallbackResponse", () => {
     });
 
     clientSession = createTestClientSession();
-    client = createTestClient();
+    client = createTestClient({
+      idTokenEncryption: {
+        algorithm: null,
+        encryptionKeyAlgorithm: null,
+      },
+    });
 
     createOpaqueToken.mockReturnValue({ token: "create_opaque_token" });
     createIdToken.mockImplementation(() => ({
       token: "id.token.jwt",
     }));
+    encryptIdToken.mockResolvedValue("encrypted.id.token.jwe");
     generateAccessToken.mockResolvedValue(createTestAccessToken());
     getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
     generateAuthorizationCode.mockResolvedValue(
@@ -158,6 +166,22 @@ describe("generateCallbackResponse", () => {
       generateCallbackResponse(ctx, authorizationSession, client, clientSession),
     ).resolves.toStrictEqual({
       redirect: expect.stringContaining("id_token=id.token.jwt"),
+    });
+  });
+
+  test("should resolve with encryped id token", async () => {
+    client.idTokenEncryption.algorithm = AesAlgorithm.AES_256_GCM;
+
+    authorizationSession = createTestAuthorizationSession({
+      redirectData: null,
+      responseTypes: [OpenIdResponseType.ID_TOKEN],
+      state: "9auMwEmvzbGrWJG5853OGpAGKQrHKzgX",
+    });
+
+    await expect(
+      generateCallbackResponse(ctx, authorizationSession, client, clientSession),
+    ).resolves.toStrictEqual({
+      redirect: expect.stringContaining("id_token=encrypted.id.token.jwe"),
     });
   });
 
