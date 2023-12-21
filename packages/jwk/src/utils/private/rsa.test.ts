@@ -1,5 +1,5 @@
 import { createSign, createVerify } from "crypto";
-import { decodeRSA, encodeRSA } from "./rsa";
+import { createRsaJwk, createRsaPem } from "./rsa";
 
 const sign = (privateKey: string, input: string) => {
   const createdSign = createSign("sha512");
@@ -14,6 +14,9 @@ const verify = (publicKey: string, input: string, signature: string) => {
   createdVerify.end();
   return createdVerify.verify({ key: publicKey }, signature, "base64");
 };
+
+const type = "RSA";
+const kty = type;
 
 describe("rsa", () => {
   const privateKey =
@@ -60,7 +63,7 @@ describe("rsa", () => {
     "DNtq71ngu8GSu7iFTbVJQNQQJ/SMOrkRbEP8ugj34wH30FY5DYmKlKLvxlp1eolH/sE2GhzvJd1avuYtA+YQVw==";
 
   test("should encode both keys", () => {
-    expect(encodeRSA({ privateKey, publicKey })).toStrictEqual({
+    expect(createRsaJwk({ privateKey, publicKey, type })).toStrictEqual({
       d,
       dp,
       dq,
@@ -69,15 +72,16 @@ describe("rsa", () => {
       p,
       q,
       qi,
+      kty,
     });
   });
 
   test("should encode public key", () => {
-    expect(encodeRSA({ publicKey })).toStrictEqual({ e, n });
+    expect(createRsaJwk({ publicKey, type })).toStrictEqual({ e, n, kty });
   });
 
   test("should decode both keys", () => {
-    expect(decodeRSA({ d, dp, dq, e, n, p, q, qi })).toStrictEqual({
+    expect(createRsaPem({ d, dp, dq, e, n, p, q, qi, kty })).toStrictEqual({
       privateKey:
         "-----BEGIN RSA PRIVATE KEY-----\n" +
         "MIICXAIBAAKBgQCnVc9pSG0ItWFN2dKkYs6VfYADFvSpsJrOGj/q+winLuMPf3zH\n" +
@@ -95,24 +99,36 @@ describe("rsa", () => {
         "99BWOQ2JipSi78ZadXqJR/7BNhoc7yXdWr7mLQPmEFc=\n" +
         "-----END RSA PRIVATE KEY-----\n",
       publicKey,
+      type,
     });
   });
 
   test("should decode public key", () => {
-    expect(decodeRSA({ e, n })).toStrictEqual({
+    expect(createRsaPem({ e, n, kty })).toStrictEqual({
       publicKey,
+      type,
     });
   });
 
   test("should resolve a valid public key", () => {
-    const { publicKey: decodedPublicKey } = decodeRSA({ e, n });
+    const { publicKey: decodedPublicKey } = createRsaPem({ e, n, kty });
     const signature = sign(privateKey, "input");
 
     expect(verify(decodedPublicKey, "input", signature)).toBe(true);
   });
 
   test("should resolve a valid private key", () => {
-    const { privateKey: decodedPrivateKey } = decodeRSA({ d, dp, dq, e, n, p, q, qi });
+    const { privateKey: decodedPrivateKey } = createRsaPem({
+      d,
+      dp,
+      dq,
+      e,
+      n,
+      p,
+      q,
+      qi,
+      kty,
+    });
     const signature = sign(decodedPrivateKey!, "input");
 
     expect(verify(publicKey, "input", signature)).toBe(true);

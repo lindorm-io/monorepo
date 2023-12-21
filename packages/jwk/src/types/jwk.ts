@@ -1,14 +1,19 @@
-export type EcdhJwk = {
+import { EllipticCurve, JwkAlgorithm, JwkType, JwkUse } from "./types";
+
+export type EcJwkValues = {
   // common
   x: string;
   y: string;
-  crv: string;
+  crv: EllipticCurve;
 
   // specific for private keys
   d?: string;
+
+  // metadata
+  kty: "EC";
 };
 
-export type RsaJwk = {
+export type RsaJwkValues = {
   // common
   e: string;
   n: string;
@@ -20,16 +25,31 @@ export type RsaJwk = {
   p?: string;
   q?: string;
   qi?: string;
+
+  // metadata
+  kty: "RSA";
 };
 
-export type SpecificJwk = EcdhJwk | RsaJwk;
+export type JwkValues = EcJwkValues | RsaJwkValues;
 
-export type StandardJwk = {
-  alg: "ES256" | "ES384" | "ES512" | "RS256" | "RS384" | "RS512";
-  key_ops: Array<string>;
+export type JwkMetadata = {
+  alg: JwkAlgorithm;
   kid: string;
-  kty: "EC" | "RSA";
-  use: "enc" | "sig";
+  kty: JwkType;
+  use: JwkUse;
+
+  // specific for private keys
+  key_ops: string[];
 };
 
-export type JWK = StandardJwk & SpecificJwk;
+export type LindormJwkMetadata = {
+  created_at: number;
+  expires_at: number;
+  not_before: number;
+  origin_uri: string;
+  owner_id: string;
+};
+
+export type PublicJwk = JwkValues & JwkMetadata;
+
+export type LindormJwk = PublicJwk & LindormJwkMetadata;

@@ -1,4 +1,4 @@
-import { JWK } from "../types";
+import { JwkValues } from "../types";
 import { jwkToPem } from "./jwk-to-pem";
 
 describe("jwkToPem", () => {
@@ -10,16 +10,12 @@ describe("jwkToPem", () => {
     const y =
       "AJcSMpJWmZ97gv03gXIIbH57p01RN6CpVcUTXW+s4NxnQ6UDhuWKeyBdB7F14rXQZQKhvluoGpjvv6ON4bdk2wuW";
 
-    const jwk: JWK = {
-      alg: "ES512",
+    const jwk: JwkValues = {
       crv: "P-521",
-      key_ops: [],
-      kid: "391a4598-5dc6-4e3c-b1d9-a971ac55b3bb",
-      kty: "EC",
-      use: "sig",
       d,
       x,
       y,
+      kty: "EC",
     };
 
     test("should decode jwk", () => {
@@ -41,6 +37,7 @@ describe("jwkToPem", () => {
           "e6dNUTegqVXFE11vrODcZ0OlA4blinsgXQexdeK10GUCob5bqBqY77+jjeG3ZNsL\n" +
           "lg==\n" +
           "-----END PRIVATE KEY-----\n",
+        type: "EC",
       });
     });
   });
@@ -62,12 +59,7 @@ describe("jwkToPem", () => {
     const qi =
       "DNtq71ngu8GSu7iFTbVJQNQQJ/SMOrkRbEP8ugj34wH30FY5DYmKlKLvxlp1eolH/sE2GhzvJd1avuYtA+YQVw==";
 
-    const jwk: JWK = {
-      alg: "RS512",
-      key_ops: [],
-      kid: "e2ed020f-b646-45c6-b425-feb32908daa0",
-      kty: "RSA",
-      use: "sig",
+    const jwk: JwkValues = {
       e,
       d,
       dp,
@@ -76,6 +68,7 @@ describe("jwkToPem", () => {
       p,
       q,
       qi,
+      kty: "RSA",
     };
 
     test("should decode jwk", () => {
@@ -102,6 +95,7 @@ describe("jwkToPem", () => {
           "BW5qGsqh2EphEve6j20CQAzbau9Z4LvBkru4hU21SUDUECf0jDq5EWxD/LoI9+MB\n" +
           "99BWOQ2JipSi78ZadXqJR/7BNhoc7yXdWr7mLQPmEFc=\n" +
           "-----END RSA PRIVATE KEY-----\n",
+        type: "RSA",
       });
     });
   });

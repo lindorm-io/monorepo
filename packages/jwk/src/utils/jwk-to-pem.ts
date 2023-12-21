@@ -1,15 +1,17 @@
 import { JwkError } from "../errors";
-import { EcdhJwk, JWK, PemData, RsaJwk } from "../types";
-import { decodeEC } from "./private/ec";
-import { decodeRSA } from "./private/rsa";
+import { EcJwkValues, JwkValues, PemValues, RsaJwkValues } from "../types";
+import { createEcPem } from "./private/ec";
+import { createRsaPem } from "./private/rsa";
 
-export const jwkToPem = (jwk: JWK): PemData => {
-  switch (jwk.kty) {
+export const jwkToPem = (jwk: JwkValues): PemValues => {
+  const { kty } = jwk;
+
+  switch (kty) {
     case "EC":
-      return decodeEC(jwk as EcdhJwk);
+      return createEcPem(jwk as EcJwkValues);
 
     case "RSA":
-      return decodeRSA(jwk as RsaJwk);
+      return createRsaPem(jwk as RsaJwkValues);
 
     default:
       throw new JwkError("Invalid KeyType");

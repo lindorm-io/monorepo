@@ -1,18 +1,17 @@
 import { JwkError } from "../errors";
-import { PemToJwkOptions, SpecificJwk } from "../types";
-import { encodeEC } from "./private/ec";
-import { encodeRSA } from "./private/rsa";
+import { JwkValues, PemValues } from "../types";
+import { createEcJwk } from "./private/ec";
+import { createRsaJwk } from "./private/rsa";
 
-export const pemToJwk = ({ curve, privateKey, publicKey, type }: PemToJwkOptions): SpecificJwk => {
+export const pemToJwk = (options: PemValues): JwkValues => {
+  const { type } = options;
+
   switch (type) {
     case "EC":
-      if (!curve) {
-        throw new JwkError("Curve is required for EC keys");
-      }
-      return encodeEC({ curve, privateKey, publicKey });
+      return createEcJwk(options);
 
     case "RSA":
-      return encodeRSA({ privateKey, publicKey });
+      return createRsaJwk(options);
 
     default:
       throw new JwkError("Invalid KeyType");

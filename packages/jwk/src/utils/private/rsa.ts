@@ -1,10 +1,10 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { JwkError } from "../../errors";
-import { PemData, RsaJwk } from "../../types";
+import { RsaJwkValues, RsaPemValues } from "../../types";
 import { Asn1SequenceDecoder } from "./Asn1SequenceDecoder";
 import { Asn1SequenceEncoder } from "./Asn1SequenceEncoder";
 
-export const encodeRSA = ({ privateKey, publicKey }: PemData): RsaJwk => {
+export const createRsaJwk = ({ privateKey, publicKey, type }: RsaPemValues): RsaJwkValues => {
   if (!publicKey) {
     throw new JwkError(`Invalid publicKey [ ${publicKey} ]`);
   }
@@ -26,6 +26,7 @@ export const encodeRSA = ({ privateKey, publicKey }: PemData): RsaJwk => {
     return {
       n,
       e,
+      kty: type,
     };
   }
 
@@ -53,7 +54,7 @@ export const encodeRSA = ({ privateKey, publicKey }: PemData): RsaJwk => {
     dec.end();
 
     return {
-      ...encodeRSA({ publicKey }),
+      ...createRsaJwk({ publicKey, type }),
       d,
       p,
       q,
@@ -66,7 +67,7 @@ export const encodeRSA = ({ privateKey, publicKey }: PemData): RsaJwk => {
   throw new JwkError("publicKey is required");
 };
 
-export const decodeRSA = ({ d, dp, dq, e, n, p, q, qi }: RsaJwk): PemData => {
+export const createRsaPem = ({ d, dp, dq, e, n, p, q, qi, kty }: RsaJwkValues): RsaPemValues => {
   const isPrivate = d !== undefined;
 
   const enc = new Asn1SequenceEncoder();
@@ -85,7 +86,7 @@ export const decodeRSA = ({ d, dp, dq, e, n, p, q, qi }: RsaJwk): PemData => {
     });
     const publicKey = key.export({ format: "pem", type: "pkcs1" }) as string;
 
-    return { publicKey };
+    return { publicKey, type: kty };
   }
 
   if (!d) {
@@ -131,7 +132,7 @@ export const decodeRSA = ({ d, dp, dq, e, n, p, q, qi }: RsaJwk): PemData => {
   const privateKey = key.export({ format: "pem", type: "pkcs1" }) as string;
 
   return {
-    ...decodeRSA({ e, n }),
+    ...createRsaPem({ e, n, kty }),
     privateKey,
   };
 };

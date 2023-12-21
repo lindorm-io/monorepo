@@ -1,19 +1,17 @@
-export type PemData = {
+import { EllipticCurve } from "./types";
+
+export type EcPemValues = {
+  curve: EllipticCurve;
   privateKey?: string;
   publicKey: string;
+  type: "EC";
 };
 
-export type PemDataEcdh = PemData & {
-  curve: EcdhCurve;
-};
-
-export type PemType = "EC" | "RSA";
-
-export type EcdhCurve = "P-256" | "P-384" | "P-521";
-
-export type PemToJwkOptions = {
-  curve?: EcdhCurve;
+export type RsaPemValues = {
+  passphrase?: string;
   privateKey?: string;
   publicKey: string;
-  type: PemType;
+  type: "RSA";
 };
+
+export type PemValues = EcPemValues | RsaPemValues;

@@ -1,5 +1,5 @@
 import { createSign, createVerify } from "crypto";
-import { decodeEC, encodeEC } from "./ec";
+import { createEcJwk, createEcPem } from "./ec";
 
 const sign = (privateKey: string, input: string) => {
   const createdSign = createSign("sha512");
@@ -14,6 +14,9 @@ const verify = (publicKey: string, input: string, signature: string) => {
   createdVerify.end();
   return createdVerify.verify({ key: publicKey }, signature, "base64");
 };
+
+const type = "EC";
+const kty = type;
 
 describe("ec", () => {
   const curve = "P-521";
@@ -44,30 +47,41 @@ describe("ec", () => {
     "AJcSMpJWmZ97gv03gXIIbH57p01RN6CpVcUTXW+s4NxnQ6UDhuWKeyBdB7F14rXQZQKhvluoGpjvv6ON4bdk2wuW";
 
   test("should encode both keys", () => {
-    expect(encodeEC({ privateKey, publicKey, curve })).toStrictEqual({ crv: curve, d, x, y });
+    expect(createEcJwk({ privateKey, publicKey, curve, type })).toStrictEqual({
+      crv: curve,
+      d,
+      x,
+      y,
+      kty,
+    });
   });
 
   test("should encode public key", () => {
-    expect(encodeEC({ publicKey, curve })).toStrictEqual({ crv: curve, x, y });
+    expect(createEcJwk({ publicKey, curve, type })).toStrictEqual({ crv: curve, x, y, kty });
   });
 
   test("should decode both keys", () => {
-    expect(decodeEC({ d, x, y, crv: curve })).toStrictEqual({ curve, publicKey, privateKey });
+    expect(createEcPem({ d, x, y, crv: curve, kty })).toStrictEqual({
+      curve,
+      publicKey,
+      privateKey,
+      type,
+    });
   });
 
   test("should decode public key", () => {
-    expect(decodeEC({ x, y, crv: curve })).toStrictEqual({ curve, publicKey });
+    expect(createEcPem({ x, y, crv: curve, kty })).toStrictEqual({ curve, publicKey, type });
   });
 
   test("should resolve a valid public key", () => {
-    const { publicKey: decodedPublicKey } = decodeEC({ x, y, crv: curve });
+    const { publicKey: decodedPublicKey } = createEcPem({ x, y, crv: curve, kty });
     const signature = sign(privateKey, "input");
 
     expect(verify(decodedPublicKey!, "input", signature)).toBe(true);
   });
 
   test("should resolve a valid private key", () => {
-    const { privateKey: decodedPrivateKey } = decodeEC({ d, x, y, crv: curve });
+    const { privateKey: decodedPrivateKey } = createEcPem({ d, x, y, crv: curve, kty });
     const signature = sign(decodedPrivateKey!, "input");
 
     expect(verify(publicKey, "input", signature)).toBe(true);

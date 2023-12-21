@@ -1,9 +1,11 @@
 import { createPrivateKey, createPublicKey } from "crypto";
 import { JwkError } from "../../errors";
-import { EcdhCurve, EcdhJwk, PemDataEcdh } from "../../types";
+import { EcJwkValues, EcPemValues, EllipticCurve } from "../../types";
 import { Asn1SequenceEncoder } from "./Asn1SequenceEncoder";
 
-const getEncodeLength = (curve: EcdhCurve): { len: number; offset: number; correction: number } => {
+const getCurveLength = (
+  curve: EllipticCurve,
+): { len: number; offset: number; correction: number } => {
   switch (curve) {
     case "P-256":
       return {
@@ -31,7 +33,7 @@ const getEncodeLength = (curve: EcdhCurve): { len: number; offset: number; corre
   }
 };
 
-export const encodeEC = ({ curve, privateKey, publicKey }: PemDataEcdh): EcdhJwk => {
+export const createEcJwk = ({ curve, privateKey, publicKey, type }: EcPemValues): EcJwkValues => {
   if (!curve) {
     throw new JwkError(`Invalid curve [ ${curve} ]`);
   }
@@ -40,7 +42,7 @@ export const encodeEC = ({ curve, privateKey, publicKey }: PemDataEcdh): EcdhJwk
     throw new JwkError(`Invalid publicKey [ ${publicKey} ]`);
   }
 
-  const { len, offset: originalOffset, correction } = getEncodeLength(curve);
+  const { len, offset: originalOffset, correction } = getCurveLength(curve);
   let offset = originalOffset;
 
   if (!privateKey) {
@@ -51,6 +53,7 @@ export const encodeEC = ({ curve, privateKey, publicKey }: PemDataEcdh): EcdhJwk
       crv: curve,
       x: der.subarray(-len, -len / 2).toString("base64"),
       y: der.subarray(-len / 2).toString("base64"),
+      kty: type,
     };
   }
 
@@ -63,7 +66,7 @@ export const encodeEC = ({ curve, privateKey, publicKey }: PemDataEcdh): EcdhJwk
     }
 
     return {
-      ...encodeEC({ curve, publicKey }),
+      ...createEcJwk({ curve, publicKey, type }),
       d: der.subarray(offset, offset + len / 2).toString("base64"),
     };
   }
@@ -71,7 +74,7 @@ export const encodeEC = ({ curve, privateKey, publicKey }: PemDataEcdh): EcdhJwk
   throw new JwkError("Unexpected Error");
 };
 
-export const decodeEC = ({ crv, d, x, y }: EcdhJwk): PemDataEcdh => {
+export const createEcPem = ({ crv, d, x, y, kty }: EcJwkValues): EcPemValues => {
   const isPrivate = d !== undefined;
 
   if (!x) {
@@ -82,7 +85,6 @@ export const decodeEC = ({ crv, d, x, y }: EcdhJwk): PemDataEcdh => {
     throw new JwkError("JWK key [ y ] invalid (empty)");
   }
 
-  const curve = crv as EcdhCurve;
   const enc = new Asn1SequenceEncoder();
   const pub = Buffer.concat([
     Buffer.alloc(1, 4),
@@ -102,7 +104,7 @@ export const decodeEC = ({ crv, d, x, y }: EcdhJwk): PemDataEcdh => {
     const key = createPublicKey({ key: der, format: "der", type: "spki" });
     const publicKey = key.export({ format: "pem", type: "spki" }) as string;
 
-    return { curve, publicKey };
+    return { curve: crv, publicKey, type: kty };
   }
 
   enc.zero();
@@ -138,7 +140,7 @@ export const decodeEC = ({ crv, d, x, y }: EcdhJwk): PemDataEcdh => {
   const privateKey = key.export({ format: "pem", type: "pkcs8" }) as string;
 
   return {
-    ...decodeEC({ x, y, crv }),
+    ...createEcPem({ x, y, crv, kty }),
     privateKey,
   };
 };
