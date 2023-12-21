@@ -1,8 +1,7 @@
 import { AesError } from "../errors";
 import { DecryptAesCipherOptions, EncryptAesCipherOptions, VerifyAesCipherOptions } from "../types";
 import { decryptAesData, encryptAesData } from "./aes-data";
-import { decodeAesString } from "./private/decode-aes-string";
-import { encodeAesString } from "./private/encode-aes-string";
+import { decodeAesString, encodeAesString } from "./private";
 
 export const encryptAesCipher = (options: EncryptAesCipherOptions): string =>
   encodeAesString(encryptAesData(options));
