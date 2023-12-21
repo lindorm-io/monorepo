@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.11](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.10...@lindorm-io/koa@0.17.11) (2023-12-21)
+
+### Bug Fixes
+
+- improve log message ([b7c6df7](https://github.com/lindorm-io/monorepo/commit/b7c6df755a1044fb8820423de506de402df1add6))
+
 ## [0.17.10](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/koa@0.17.9...@lindorm-io/koa@0.17.10) (2023-12-12)
 
 **Note:** Version bump only for package @lindorm-io/koa

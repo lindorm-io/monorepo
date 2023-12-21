@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/koa",
   "description": "Koa App & Router for lindorm.io",
-  "version": "0.17.10",
+  "version": "0.17.11",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/retry": "^0.1.5",
-    "@lindorm-io/structure-scanner": "^0.2.1",
+    "@lindorm-io/structure-scanner": "^0.2.2",
     "joi": "^17.11.0",
     "koa": "2.14.2",
     "koa-bodyparser": "4.4.1",

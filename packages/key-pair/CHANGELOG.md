@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.8.0...@lindorm-io/key-pair@0.8.1) (2023-12-21)
+
+### Bug Fixes
+
+- align with key-pair changes ([625a7e0](https://github.com/lindorm-io/monorepo/commit/625a7e05df215a8f22fedb18cfa6b69f2f8ecd15))
+- use new package and rename enums ([326f949](https://github.com/lindorm-io/monorepo/commit/326f949a670d43e555189a47bdaaf8f9e73db208))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.7.1...@lindorm-io/key-pair@0.8.0) (2023-11-08)
 
 ### Features

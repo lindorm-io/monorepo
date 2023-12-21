@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.3.0...@lindorm-io/crypto@0.3.1) (2023-12-21)
+
+### Bug Fixes
+
+- remove rsa from crypto ([8f04796](https://github.com/lindorm-io/monorepo/commit/8f0479686eb09c33297fce4095918e16e72f0830))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/crypto@0.2.0...@lindorm-io/crypto@0.3.0) (2023-12-14)
 
 ### Features

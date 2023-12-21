@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.12.0...@lindorm-io/jwt@0.12.1) (2023-12-21)
+
+### Bug Fixes
+
+- add cbc encryption to jwe ([82038d1](https://github.com/lindorm-io/monorepo/commit/82038d14b7664c46162da9632fe29dda62acaf77))
+- add cbc-hs256 to jwe ([a28f27d](https://github.com/lindorm-io/monorepo/commit/a28f27d3eef9fd49e6a4a29cd4f55c27b294f095))
+- add key id to jwe ([424a60e](https://github.com/lindorm-io/monorepo/commit/424a60e7438c907d39e57c6d8a2006cb90285e88))
+- add oaep algorithms ([634ed45](https://github.com/lindorm-io/monorepo/commit/634ed45f07e154f3e31fef35e0295df17d1fa37e))
+- add silly logs ([1331aab](https://github.com/lindorm-io/monorepo/commit/1331aab41c8fd4bbaeb01cd75003d7203fdf1a4b))
+- align with key-pair changes ([625a7e0](https://github.com/lindorm-io/monorepo/commit/625a7e05df215a8f22fedb18cfa6b69f2f8ecd15))
+- use new utils from aes package ([6c75fbc](https://github.com/lindorm-io/monorepo/commit/6c75fbc212a6b628601861180949e03bcb355aee))
+- use renamed encryption key algorithm ([e0f125c](https://github.com/lindorm-io/monorepo/commit/e0f125c0e80d01193ba063e1a9334776adb473d3))
+
 # [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.11.5...@lindorm-io/jwt@0.12.0) (2023-12-14)
 
 ### Features
