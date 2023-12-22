@@ -2,6 +2,7 @@ import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { AesEncryptionKey, AesSecret } from "../../types";
 import { getKeyType } from "./get-key-type";
+import { getOctDecryptionKey } from "./oct";
 import { getRsaDecryptionKey } from "./rsa";
 import { getSecretDecryptionKey } from "./secret";
 
@@ -38,13 +39,6 @@ export const getDecryptionKey = ({
     });
   }
 
-  if (!publicEncryptionKey) {
-    throw new AesError("Unable to decrypt AES cipher without public encryption key", {
-      description: "Public encryption key is missing",
-      debug: { publicEncryptionKey },
-    });
-  }
-
   switch (getKeyType(key)) {
     case "EC":
       throw new AesError("Unable to decrypt AES cipher with EC encryption key", {
@@ -53,7 +47,16 @@ export const getDecryptionKey = ({
       });
 
     case "RSA":
+      if (!publicEncryptionKey) {
+        throw new AesError("Unable to decrypt AES cipher without public encryption key", {
+          description: "Public encryption key is missing",
+          debug: { publicEncryptionKey },
+        });
+      }
       return getRsaDecryptionKey({ key, encryptionKeyAlgorithm, publicEncryptionKey });
+
+    case "oct":
+      return getOctDecryptionKey({ algorithm, key });
 
     default:
       throw new AesError("Unexpected encryption key type", {

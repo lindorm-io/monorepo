@@ -1,5 +1,4 @@
-import { PRIVATE_RSA_JWK } from "../../../fixtures/rsa-jwks.fixture";
-import { PRIVATE_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
+import { PRIVATE_RSA_JWK, PRIVATE_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
 import { getRsaPem } from "./get-rsa-pem";
 
 describe("getRsaPem", () => {

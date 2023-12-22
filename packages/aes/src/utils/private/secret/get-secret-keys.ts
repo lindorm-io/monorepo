@@ -9,7 +9,6 @@ type Options = {
 
 type Result = {
   encryptionKey: Buffer;
-  isPrivateKey: boolean;
 };
 
 export const getSecretEncryptionKeys = ({ algorithm, secret }: Options): Result => {
@@ -17,7 +16,6 @@ export const getSecretEncryptionKeys = ({ algorithm, secret }: Options): Result 
 
   return {
     encryptionKey: Buffer.from(secret),
-    isPrivateKey: false,
   };
 };
 

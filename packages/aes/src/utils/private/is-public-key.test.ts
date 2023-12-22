@@ -1,5 +1,9 @@
-import { PRIVATE_RSA_JWK, PUBLIC_RSA_JWK } from "../../fixtures/rsa-jwks.fixture";
-import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
+import {
+  PRIVATE_RSA_JWK,
+  PRIVATE_RSA_PEM,
+  PUBLIC_RSA_JWK,
+  PUBLIC_RSA_PEM,
+} from "../../fixtures/rsa-keys.fixture";
 import { isPublicKey } from "./is-public-key";
 
 describe("isPublicKey", () => {

@@ -2,6 +2,7 @@ import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { AesEncryptionKey, AesSecret } from "../../types";
 import { getKeyType } from "./get-key-type";
+import { getOctEncryptionKeys } from "./oct";
 import { getRsaEncryptionKeys } from "./rsa";
 import { getSecretEncryptionKeys } from "./secret";
 
@@ -50,6 +51,9 @@ export const getEncryptionKeys = ({
 
     case "RSA":
       return getRsaEncryptionKeys({ algorithm, encryptionKeyAlgorithm, key });
+
+    case "oct":
+      return getOctEncryptionKeys({ algorithm, key });
 
     default:
       throw new AesError("Unexpected encryption key type", {

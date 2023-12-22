@@ -1,10 +1,10 @@
-import { RsaPemValues, isJwk, isPem, jwkToPem } from "@lindorm-io/jwk";
+import { OctPemValues, isJwk, isPem, jwkToPem } from "@lindorm-io/jwk";
 import { AesError } from "../../../errors";
 import { AesEncryptionKey } from "../../../types";
 
-export const getRsaPem = (key: AesEncryptionKey): RsaPemValues => {
+export const getOctPem = (key: AesEncryptionKey): OctPemValues => {
   if (isPem(key)) {
-    if (key.type !== "RSA") {
+    if (key.type !== "oct") {
       throw new AesError("Unexpected PEM type", { debug: { key } });
     }
 
@@ -14,12 +14,12 @@ export const getRsaPem = (key: AesEncryptionKey): RsaPemValues => {
   if (isJwk(key)) {
     const pem = jwkToPem(key);
 
-    if (pem.type !== "RSA") {
+    if (pem.type !== "oct") {
       throw new AesError("Unexpected PEM type", { debug: { pem } });
     }
 
     return pem;
   }
 
-  throw new AesError("Unable to get RSA PEM", { debug: { key } });
+  throw new AesError("Unable to get oct PEM", { debug: { key } });
 };

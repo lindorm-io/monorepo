@@ -1,19 +1,24 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
+import { SYMMETRIC_OCT_PEM } from "../../fixtures/oct-keys.fixture";
 import { PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
 import { getEncryptionKeys } from "./get-encryption-keys";
 
+import { getOctEncryptionKeys as _getOctEncryptionKeys } from "./oct";
 import { getRsaEncryptionKeys as _getRsaEncryptionKeys } from "./rsa";
 import { getSecretEncryptionKeys as _getSecretEncryptionKeys } from "./secret";
 
+jest.mock("./oct");
 jest.mock("./rsa");
 jest.mock("./secret");
 
+const getOctEncryptionKeys = _getOctEncryptionKeys as jest.Mock;
 const getRsaEncryptionKeys = _getRsaEncryptionKeys as jest.Mock;
 const getSecretEncryptionKeys = _getSecretEncryptionKeys as jest.Mock;
 
 describe("getEncryptionKeys", () => {
   beforeEach(() => {
+    getOctEncryptionKeys.mockReturnValue("getOctEncryptionKeys");
     getRsaEncryptionKeys.mockReturnValue("getRsaEncryptionKeys");
     getSecretEncryptionKeys.mockReturnValue("getSecretEncryptionKeys");
   });
@@ -31,7 +36,7 @@ describe("getEncryptionKeys", () => {
     expect(getSecretEncryptionKeys).toHaveBeenCalled();
   });
 
-  test("should resolve encryption keys with key", () => {
+  test("should resolve encryption keys with RSA key", () => {
     expect(
       getEncryptionKeys({
         algorithm: AesAlgorithm.AES_256_GCM,
@@ -41,6 +46,17 @@ describe("getEncryptionKeys", () => {
     ).toBe("getRsaEncryptionKeys");
 
     expect(getRsaEncryptionKeys).toHaveBeenCalled();
+  });
+
+  test("should resolve encryption keys with OCT key", () => {
+    expect(
+      getEncryptionKeys({
+        algorithm: AesAlgorithm.AES_256_GCM,
+        key: SYMMETRIC_OCT_PEM,
+      }),
+    ).toBe("getOctEncryptionKeys");
+
+    expect(getOctEncryptionKeys).toHaveBeenCalled();
   });
 
   test("should throw error with both key and secret", () => {

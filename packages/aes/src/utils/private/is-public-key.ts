@@ -1,4 +1,4 @@
-import { isEcJwk, isPem, isRsaJwk } from "@lindorm-io/jwk";
+import { isEcJwk, isEcPem, isOctPem, isRsaJwk, isRsaPem } from "@lindorm-io/jwk";
 import { AesError } from "../../errors";
 import { AesEncryptionKey } from "../../types";
 
@@ -7,8 +7,12 @@ export const isPublicKey = (key?: AesEncryptionKey): boolean => {
     return false;
   }
 
-  if (isPem(key)) {
+  if (isRsaPem(key) || isEcPem(key)) {
     return typeof key.publicKey === "string" && key.publicKey.includes("PUBLIC KEY");
+  }
+
+  if (isOctPem(key)) {
+    return false;
   }
 
   if (isRsaJwk(key)) {

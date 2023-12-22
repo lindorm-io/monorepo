@@ -1,5 +1,4 @@
-import { PUBLIC_RSA_JWK } from "../../fixtures/rsa-jwks.fixture";
-import { PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
+import { PUBLIC_RSA_JWK, PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
 import { getKeyType } from "./get-key-type";
 
 describe("getKeyType", () => {
