@@ -1,4 +1,4 @@
-import { EllipticCurve, JwkAlgorithm, JwkType, JwkUse } from "./types";
+import { EllipticCurve, JwkAlgorithm, JwkOps, JwkType, JwkUse } from "./types";
 
 export type EcJwkValues = {
   // common
@@ -50,7 +50,7 @@ export type JwkMetadata = {
   use: JwkUse;
 
   // specific for private keys
-  key_ops?: string[];
+  key_ops: Array<JwkOps>;
 };
 
 export type LindormJwkMetadata = {
