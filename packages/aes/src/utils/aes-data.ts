@@ -7,6 +7,8 @@ import {
   getDecryptionKey,
   getEncryptionKeys,
   getInitialisationVector,
+  getKeyId,
+  isPublicKey,
   mapStringToAesAlgorithm,
   setAuthTag,
 } from "./private";
@@ -18,10 +20,9 @@ export const encryptAesData = ({
   format = AesFormat.BASE64_URL,
   integrityAlgorithm,
   key,
-  keyId,
   secret,
 }: EncryptAesDataOptions) => {
-  const { encryptionKey, isPrivateKey, publicEncryptionKey } = getEncryptionKeys({
+  const { encryptionKey, publicEncryptionKey } = getEncryptionKeys({
     algorithm,
     key,
     secret,
@@ -29,9 +30,7 @@ export const encryptAesData = ({
   });
 
   const initialisationVector = getInitialisationVector(algorithm);
-
   const cipher = createCipheriv(algorithm, encryptionKey, initialisationVector);
-
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
@@ -44,6 +43,9 @@ export const encryptAesData = ({
     integrityAlgorithm,
   });
 
+  const keyId = getKeyId(key);
+  const publicKey = isPublicKey(key);
+
   return {
     algorithm,
     authTag,
@@ -51,9 +53,8 @@ export const encryptAesData = ({
     format,
     initialisationVector,
     integrityAlgorithm,
-    keyId: keyId ? Buffer.from(keyId) : undefined,
-    encryptionKeyAlgorithm:
-      !!publicEncryptionKey && !isPrivateKey ? encryptionKeyAlgorithm : undefined,
+    keyId: keyId ? Buffer.from(keyId, format) : undefined,
+    encryptionKeyAlgorithm: publicKey && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
     publicEncryptionKey,
     version: LATEST_AES_VERSION,
   };

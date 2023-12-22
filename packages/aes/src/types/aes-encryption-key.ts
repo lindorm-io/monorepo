@@ -1,6 +1,5 @@
-export type AesKeyObject = { key: string; passphrase?: string; type: "EC" | "RSA" };
+import { JwkValues, PemValues } from "@lindorm-io/jwk";
 
 export type AesSecret = Buffer | string;
 
-export type AesEncryptionKey = AesKeyObject;
-// export type AesEncryptionKey = JwkValues | AesKeyObject;
+export type AesEncryptionKey = JwkValues | PemValues;

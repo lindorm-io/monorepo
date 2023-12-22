@@ -1,4 +1,5 @@
 export * from "./mappers";
+export * from "./secret";
 
 export * from "./auth-tag";
 export * from "./decode-aes-string";
@@ -6,4 +7,6 @@ export * from "./encode-aes-string";
 export * from "./get-decryption-key";
 export * from "./get-encryption-keys";
 export * from "./get-initialisation-vector";
-export * from "./secret/calculate-secret-length";
+export * from "./get-key-id";
+export * from "./get-key-type";
+export * from "./is-public-key";

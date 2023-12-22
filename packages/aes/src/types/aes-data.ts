@@ -13,7 +13,6 @@ export type EncryptAesDataOptions = {
   format?: AesFormat;
   integrityAlgorithm?: AesIntegrityAlgorithm;
   key?: AesEncryptionKey;
-  keyId?: string;
   secret?: AesSecret;
 };
 

@@ -1,38 +1,19 @@
-import { AesEncryptionKeyAlgorithm } from "../../../enums";
+import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
 import { getRsaKeyObject } from "./get-rsa-key-object";
 
 describe("getRsaKeyObject", () => {
-  test("should resolve key object", () => {
-    expect(
-      getRsaKeyObject({ key: "key", type: "RSA" }, AesEncryptionKeyAlgorithm.RSA_OAEP),
-    ).toStrictEqual({
-      key: "key",
-      padding: 4,
-      oaepHash: "sha1",
-    });
+  test("should resolve key object with oaep hash for private key", () => {
+    expect(getRsaKeyObject(PRIVATE_RSA_PEM)).toStrictEqual({ key: PRIVATE_RSA_PEM.privateKey });
   });
 
-  test("should resolve key object with oaep", () => {
-    expect(
-      getRsaKeyObject({ key: "key", type: "RSA" }, AesEncryptionKeyAlgorithm.RSA_OAEP_256),
-    ).toStrictEqual({
-      key: "key",
-      padding: 4,
-      oaepHash: "sha256",
-    });
+  test("should resolve key object with oaep hash for public key", () => {
+    expect(getRsaKeyObject(PUBLIC_RSA_PEM)).toStrictEqual({ key: PUBLIC_RSA_PEM.publicKey });
   });
 
   test("should resolve key object with passphrase", () => {
-    expect(
-      getRsaKeyObject(
-        { key: "key", type: "RSA", passphrase: "passphrase" },
-        AesEncryptionKeyAlgorithm.RSA_OAEP_512,
-      ),
-    ).toStrictEqual({
-      key: "key",
-      padding: 4,
+    expect(getRsaKeyObject({ ...PRIVATE_RSA_PEM, passphrase: "passphrase" })).toStrictEqual({
+      key: PRIVATE_RSA_PEM.privateKey,
       passphrase: "passphrase",
-      oaepHash: "sha512",
     });
   });
 });

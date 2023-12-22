@@ -5,7 +5,7 @@ import {
   publicEncrypt as _publicEncrypt,
 } from "crypto";
 import { AesEncryptionKeyAlgorithm } from "../../../enums";
-import { PRIVATE_RSA_KEY, PUBLIC_RSA_KEY } from "../../../fixtures/rsa-keys.fixture";
+import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
 jest.mock("crypto");
@@ -31,7 +31,7 @@ describe("public-encryption-key", () => {
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
           encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-          key: PRIVATE_RSA_KEY,
+          pem: PRIVATE_RSA_PEM,
         }),
       ).toStrictEqual(Buffer.from("privateEncrypt"));
 
@@ -43,7 +43,7 @@ describe("public-encryption-key", () => {
         createPublicEncryptionKey({
           encryptionKey: Buffer.from("encryption-key"),
           encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-          key: PUBLIC_RSA_KEY,
+          pem: PUBLIC_RSA_PEM,
         }),
       ).toStrictEqual(Buffer.from("publicEncrypt"));
 
@@ -56,7 +56,7 @@ describe("public-encryption-key", () => {
       expect(
         decryptPublicEncryptionKey({
           encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-          key: PRIVATE_RSA_KEY,
+          pem: PRIVATE_RSA_PEM,
           publicEncryptionKey: Buffer.from("public-encryption-key"),
         }),
       ).toStrictEqual(Buffer.from("privateDecrypt"));
@@ -68,7 +68,7 @@ describe("public-encryption-key", () => {
       expect(
         decryptPublicEncryptionKey({
           encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-          key: PUBLIC_RSA_KEY,
+          pem: PUBLIC_RSA_PEM,
           publicEncryptionKey: Buffer.from("public-encryption-key"),
         }),
       ).toStrictEqual(Buffer.from("publicDecrypt"));

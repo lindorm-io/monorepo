@@ -5,7 +5,7 @@ import {
   AesFormat,
   AesIntegrityAlgorithm,
 } from "../enums";
-import { PRIVATE_RSA_KEY, PUBLIC_RSA_KEY } from "../fixtures/rsa-keys.fixture";
+import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../fixtures/rsa-keys.fixture";
 import { decryptAesData, encryptAesData } from "./aes-data";
 
 describe("aes-data", () => {
@@ -169,60 +169,60 @@ describe("aes-data", () => {
     test("should encrypt and decrypt with private key", () => {
       const encryption = encryptAesData({
         data,
-        key: PRIVATE_RSA_KEY,
+        key: PRIVATE_RSA_PEM,
       });
 
       expect(encryption.algorithm).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe(undefined);
-      expect(decryptAesData({ ...encryption, key: PUBLIC_RSA_KEY })).toBe(data);
+      expect(decryptAesData({ ...encryption, key: PUBLIC_RSA_PEM })).toBe(data);
     });
 
     test("should encrypt and decrypt with public key and RSA-OAEP", () => {
       const encryption = encryptAesData({
         data,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
       });
 
       expect(encryption.algorithm).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP");
-      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_KEY })).toBe(data);
+      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_PEM })).toBe(data);
     });
 
     test("should encrypt and decrypt with public key and RSA-OAEP-256", () => {
       const encryption = encryptAesData({
         data,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
       });
 
       expect(encryption.algorithm).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-256");
-      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_KEY })).toBe(data);
+      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_PEM })).toBe(data);
     });
 
     test("should encrypt and decrypt with public key and RSA-OAEP-384", () => {
       const encryption = encryptAesData({
         data,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_384,
       });
 
       expect(encryption.algorithm).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-384");
-      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_KEY })).toBe(data);
+      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_PEM })).toBe(data);
     });
 
     test("should encrypt and decrypt with public key and RSA-OAEP-512", () => {
       const encryption = encryptAesData({
         data,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_512,
       });
 
       expect(encryption.algorithm).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-512");
-      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_KEY })).toBe(data);
+      expect(decryptAesData({ ...encryption, key: PRIVATE_RSA_PEM })).toBe(data);
     });
   });
 });

@@ -1,7 +1,8 @@
-import { AesKeyObject } from "../types";
+import { RsaPemValues } from "@lindorm-io/jwk";
 
-export const PRIVATE_RSA_KEY: AesKeyObject = {
-  key:
+export const PRIVATE_RSA_PEM: RsaPemValues = {
+  id: "d1215234-e872-5935-b03f-697e27d452c4",
+  privateKey:
     "-----BEGIN RSA PRIVATE KEY-----\n" +
     "MIIJKQIBAAKCAgEA8h//VGbmGCMm/cywfEEviNkR7o3yL0yZktzqb95VtwsGatj3\n" +
     "JbOpu7FwePJww0CBVZw3zE+bnNcVyaZFMfhm8uNEBOA5JQBWs2ZJhflIGz4oYWcW\n" +
@@ -56,8 +57,9 @@ export const PRIVATE_RSA_KEY: AesKeyObject = {
   type: "RSA",
 };
 
-export const PUBLIC_RSA_KEY: AesKeyObject = {
-  key:
+export const PUBLIC_RSA_PEM: RsaPemValues = {
+  id: "3a0b5b82-73d5-5f80-9591-0d37551bcd83",
+  publicKey:
     "-----BEGIN RSA PUBLIC KEY-----\n" +
     "MIICCgKCAgEA8h//VGbmGCMm/cywfEEviNkR7o3yL0yZktzqb95VtwsGatj3JbOp\n" +
     "u7FwePJww0CBVZw3zE+bnNcVyaZFMfhm8uNEBOA5JQBWs2ZJhflIGz4oYWcWeMto\n" +

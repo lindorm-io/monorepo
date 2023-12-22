@@ -1,6 +1,7 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { AesEncryptionKey, AesSecret } from "../../types";
+import { getKeyType } from "./get-key-type";
 import { getRsaDecryptionKey } from "./rsa";
 import { getSecretDecryptionKey } from "./secret";
 
@@ -44,7 +45,7 @@ export const getDecryptionKey = ({
     });
   }
 
-  switch (key.type) {
+  switch (getKeyType(key)) {
     case "EC":
       throw new AesError("Unable to decrypt AES cipher with EC encryption key", {
         description: "EC encryption keys are not supported",

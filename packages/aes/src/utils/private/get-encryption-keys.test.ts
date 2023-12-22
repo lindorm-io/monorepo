@@ -1,6 +1,6 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
-import { PUBLIC_RSA_KEY } from "../../fixtures/rsa-keys.fixture";
+import { PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
 import { getEncryptionKeys } from "./get-encryption-keys";
 
 import { getRsaEncryptionKeys as _getRsaEncryptionKeys } from "./rsa";
@@ -36,7 +36,7 @@ describe("getEncryptionKeys", () => {
       getEncryptionKeys({
         algorithm: AesAlgorithm.AES_256_GCM,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
       }),
     ).toBe("getRsaEncryptionKeys");
 
@@ -47,7 +47,7 @@ describe("getEncryptionKeys", () => {
     expect(() =>
       getEncryptionKeys({
         algorithm: AesAlgorithm.AES_256_GCM,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         secret: "secret",
       }),
     ).toThrow(AesError);

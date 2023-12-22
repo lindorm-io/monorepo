@@ -1,7 +1,7 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
 import { AesEncryptionKey } from "../../../types";
 import { generateEncryptionKey } from "../generate-encryption-key";
-import { isPrivateKey } from "../is-private-key";
+import { getRsaPem } from "./get-rsa-pem";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
 type EncryptOptions = {
@@ -12,7 +12,6 @@ type EncryptOptions = {
 
 type EncryptResult = {
   encryptionKey: Buffer;
-  isPrivateKey: boolean;
   publicEncryptionKey: Buffer;
 };
 
@@ -27,16 +26,27 @@ export const getRsaEncryptionKeys = ({
   encryptionKeyAlgorithm,
   key,
 }: EncryptOptions): EncryptResult => {
-  const isPrivate = isPrivateKey(key);
+  const pem = getRsaPem(key);
   const encryptionKey = generateEncryptionKey(algorithm);
   const publicEncryptionKey = createPublicEncryptionKey({
     encryptionKey,
-    key,
+    pem,
     encryptionKeyAlgorithm,
   });
 
-  return { encryptionKey, isPrivateKey: isPrivate, publicEncryptionKey };
+  return { encryptionKey, publicEncryptionKey };
 };
 
-export const getRsaDecryptionKey = (options: DecryptOptions): Buffer =>
-  decryptPublicEncryptionKey(options);
+export const getRsaDecryptionKey = ({
+  encryptionKeyAlgorithm,
+  key,
+  publicEncryptionKey,
+}: DecryptOptions): Buffer => {
+  const pem = getRsaPem(key);
+
+  return decryptPublicEncryptionKey({
+    encryptionKeyAlgorithm,
+    pem,
+    publicEncryptionKey,
+  });
+};

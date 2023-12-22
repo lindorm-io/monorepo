@@ -1,14 +1,15 @@
-import { RsaPrivateKey, constants } from "crypto";
-import { AesEncryptionKeyAlgorithm } from "../../../enums";
-import { AesKeyObject } from "../../../types";
-import { mapEncryptionKeyAlgorithmToShaAlgorithm } from "../mappers/encryption-key-algorithm-mapper";
+import { RsaPemValues } from "@lindorm-io/jwk";
+import { RsaPrivateKey } from "crypto";
+import { AesError } from "../../../errors";
 
-export const getRsaKeyObject = (
-  key: AesKeyObject,
-  encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm,
-): RsaPrivateKey => ({
-  key: key.key,
-  padding: constants.RSA_PKCS1_OAEP_PADDING,
-  oaepHash: mapEncryptionKeyAlgorithmToShaAlgorithm(encryptionKeyAlgorithm),
-  ...(key.passphrase !== undefined ? { passphrase: key.passphrase } : {}),
-});
+export const getRsaKeyObject = (pem: Omit<RsaPemValues, "type">): RsaPrivateKey => {
+  if (pem.privateKey) {
+    return { key: pem.privateKey, ...(pem.passphrase ? { passphrase: pem.passphrase } : {}) };
+  }
+
+  if (pem.publicKey) {
+    return { key: pem.publicKey };
+  }
+
+  throw new AesError("Unable to create RSA key object", { debug: { pem } });
+};

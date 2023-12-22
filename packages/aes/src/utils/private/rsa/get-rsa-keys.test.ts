@@ -1,26 +1,26 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
-import { PUBLIC_RSA_KEY } from "../../../fixtures/rsa-keys.fixture";
+import { PUBLIC_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
 import { generateEncryptionKey as _generateEncryptionKey } from "../generate-encryption-key";
-import { isPrivateKey as _isPrivateKey } from "../is-private-key";
 import { getRsaDecryptionKey, getRsaEncryptionKeys } from "./get-rsa-keys";
+import { getRsaPem as _getRsaPem } from "./get-rsa-pem";
 import {
   createPublicEncryptionKey as _createPublicEncryptionKey,
   decryptPublicEncryptionKey as _decryptPublicEncryptionKey,
 } from "./public-encryption-key";
 
 jest.mock("../generate-encryption-key");
-jest.mock("../is-private-key");
+jest.mock("./get-rsa-pem");
 jest.mock("./public-encryption-key");
 
+const getRsaPem = _getRsaPem as jest.Mock;
 const generateEncryptionKey = _generateEncryptionKey as jest.Mock;
-const isPrivateKey = _isPrivateKey as jest.Mock;
 const createPublicEncryptionKey = _createPublicEncryptionKey as jest.Mock;
 const decryptPublicEncryptionKey = _decryptPublicEncryptionKey as jest.Mock;
 
 describe("get-rsa-keys", () => {
   beforeEach(() => {
+    getRsaPem.mockReturnValue(PUBLIC_RSA_PEM);
     generateEncryptionKey.mockReturnValue("generateEncryptionKey");
-    isPrivateKey.mockReturnValue(true);
     createPublicEncryptionKey.mockReturnValue("createPublicEncryptionKey");
     decryptPublicEncryptionKey.mockReturnValue("decryptPublicEncryptionKey");
   });
@@ -30,11 +30,10 @@ describe("get-rsa-keys", () => {
       getRsaEncryptionKeys({
         algorithm: AesAlgorithm.AES_128_CBC,
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
       }),
     ).toStrictEqual({
       encryptionKey: "generateEncryptionKey",
-      isPrivateKey: true,
       publicEncryptionKey: "createPublicEncryptionKey",
     });
   });
@@ -43,7 +42,7 @@ describe("get-rsa-keys", () => {
     expect(
       getRsaDecryptionKey({
         encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP,
-        key: PUBLIC_RSA_KEY,
+        key: PUBLIC_RSA_PEM,
         publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       }),
     ).toBe("decryptPublicEncryptionKey");
