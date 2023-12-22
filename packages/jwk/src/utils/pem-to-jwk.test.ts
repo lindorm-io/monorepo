@@ -23,6 +23,7 @@ describe("pemToJwk", () => {
     test("should encode keys", () => {
       expect(
         pemToJwk({
+          id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
           curve: "P-521",
           privateKey,
           publicKey,
@@ -33,6 +34,7 @@ describe("pemToJwk", () => {
         d: "AJk+YtHhPoobRdEZXzK9URIT7mB7dvGYeH6TmK8kP06Ha/lVRX8f/zD9vc9CRik+fb6XkcTMxktFNve1Xkq3HbMu",
         x: "AAsJtfdgSmaSxsm1swOSCodmSxeEwxQ1vcdkLVySpZAGLcGZYNIvJ9cUtQGQc9S3CDvjkR0bkrxq4HLYqC4Kwodz",
         y: "AJcSMpJWmZ97gv03gXIIbH57p01RN6CpVcUTXW+s4NxnQ6UDhuWKeyBdB7F14rXQZQKhvluoGpjvv6ON4bdk2wuW",
+        kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
         kty: "EC",
       });
     });
@@ -69,6 +71,7 @@ describe("pemToJwk", () => {
     test("should encode keys", () => {
       expect(
         pemToJwk({
+          id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
           privateKey,
           publicKey,
           type: "RSA",
@@ -82,6 +85,7 @@ describe("pemToJwk", () => {
         p: "1dQKVwjhdrXAz/WoT6/X4728q9t4V36zrYLelzrZ9rTl/3i61wcFwyz+pmy8CrfqQ4VOApKIoUBqu/DjZuGSCQ==",
         q: "yFZiSv8BqXQHEPPo/S8G4S+01Ie3R7/kOeqcCpiuR9avpFLArpypE54ciONUPgHLrhx98qbL6O+GIP8dac6LHQ==",
         qi: "DNtq71ngu8GSu7iFTbVJQNQQJ/SMOrkRbEP8ugj34wH30FY5DYmKlKLvxlp1eolH/sE2GhzvJd1avuYtA+YQVw==",
+        kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
         kty: "RSA",
       });
     });

@@ -15,11 +15,13 @@ describe("jwkToPem", () => {
       d,
       x,
       y,
+      kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
       kty: "EC",
     };
 
     test("should decode jwk", () => {
       expect(jwkToPem(jwk)).toStrictEqual({
+        id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
         curve: "P-521",
         publicKey:
           "-----BEGIN PUBLIC KEY-----\n" +
@@ -68,11 +70,13 @@ describe("jwkToPem", () => {
       p,
       q,
       qi,
+      kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
       kty: "RSA",
     };
 
     test("should decode jwk", () => {
       expect(jwkToPem(jwk)).toStrictEqual({
+        id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
         publicKey:
           "-----BEGIN RSA PUBLIC KEY-----\n" +
           "MIGJAoGBAKdVz2lIbQi1YU3Z0qRizpV9gAMW9Kmwms4aP+r7CKcu4w9/fMcV4v6P\n" +

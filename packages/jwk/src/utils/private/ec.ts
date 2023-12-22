@@ -33,7 +33,13 @@ const getCurveLength = (
   }
 };
 
-export const createEcJwk = ({ curve, privateKey, publicKey, type }: EcPemValues): EcJwkValues => {
+export const createEcJwk = ({
+  id,
+  curve,
+  privateKey,
+  publicKey,
+  type,
+}: EcPemValues): EcJwkValues => {
   if (!curve) {
     throw new JwkError(`Invalid curve [ ${curve} ]`);
   }
@@ -53,6 +59,7 @@ export const createEcJwk = ({ curve, privateKey, publicKey, type }: EcPemValues)
       crv: curve,
       x: der.subarray(-len, -len / 2).toString("base64"),
       y: der.subarray(-len / 2).toString("base64"),
+      kid: id,
       kty: type,
     };
   }
@@ -66,7 +73,7 @@ export const createEcJwk = ({ curve, privateKey, publicKey, type }: EcPemValues)
     }
 
     return {
-      ...createEcJwk({ curve, publicKey, type }),
+      ...createEcJwk({ id, curve, publicKey, type }),
       d: der.subarray(offset, offset + len / 2).toString("base64"),
     };
   }
@@ -74,7 +81,7 @@ export const createEcJwk = ({ curve, privateKey, publicKey, type }: EcPemValues)
   throw new JwkError("Unexpected Error");
 };
 
-export const createEcPem = ({ crv, d, x, y, kty }: EcJwkValues): EcPemValues => {
+export const createEcPem = ({ crv, d, x, y, kid, kty }: EcJwkValues): EcPemValues => {
   const isPrivate = d !== undefined;
 
   if (!x) {
@@ -104,7 +111,7 @@ export const createEcPem = ({ crv, d, x, y, kty }: EcJwkValues): EcPemValues => 
     const key = createPublicKey({ key: der, format: "der", type: "spki" });
     const publicKey = key.export({ format: "pem", type: "spki" }) as string;
 
-    return { curve: crv, publicKey, type: kty };
+    return { id: kid, curve: crv, publicKey, type: kty };
   }
 
   enc.zero();
@@ -140,7 +147,7 @@ export const createEcPem = ({ crv, d, x, y, kty }: EcJwkValues): EcPemValues => 
   const privateKey = key.export({ format: "pem", type: "pkcs8" }) as string;
 
   return {
-    ...createEcPem({ x, y, crv, kty }),
+    ...createEcPem({ x, y, crv, kid, kty }),
     privateKey,
   };
 };

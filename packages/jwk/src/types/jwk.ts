@@ -10,6 +10,7 @@ export type EcJwkValues = {
   d?: string;
 
   // metadata
+  kid?: string;
   kty: "EC";
 };
 
@@ -27,6 +28,7 @@ export type RsaJwkValues = {
   qi?: string;
 
   // metadata
+  kid?: string;
   kty: "RSA";
 };
 
@@ -39,7 +41,7 @@ export type JwkMetadata = {
   use: JwkUse;
 
   // specific for private keys
-  key_ops: string[];
+  key_ops?: string[];
 };
 
 export type LindormJwkMetadata = {
