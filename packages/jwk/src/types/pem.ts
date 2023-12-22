@@ -14,6 +14,14 @@ export type OctPemValues = {
   type: "oct";
 };
 
+// export type OkpPemValues = {
+//   id?: string;
+//   curve: string; // Curve name, e.g., "Ed25519"
+//   privateKey?: string;
+//   publicKey?: string;
+//   type: "OKP";
+// };
+
 export type RsaPemValues = {
   id?: string;
   passphrase?: string;

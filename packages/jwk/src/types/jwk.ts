@@ -1,5 +1,7 @@
 import { EllipticCurve, JwkAlgorithm, JwkOps, JwkType, JwkUse } from "./types";
 
+// 'OKP': Refers to Octet Key Pair, used for keys like Ed25519.
+
 export type EcJwkValues = {
   // common
   x: string;
@@ -22,6 +24,19 @@ export type OctJwkValues = {
   kid?: string;
   kty: "oct";
 };
+
+// export type OkpJwkValues = {
+//   // common
+//   x: string;
+//   crv: string; // Curve name, e.g., "Ed25519"
+
+//   // specific for private keys
+//   d?: string;
+
+//   // metadata
+//   kid?: string;
+//   kty: "OKP";
+// };
 
 export type RsaJwkValues = {
   // common
