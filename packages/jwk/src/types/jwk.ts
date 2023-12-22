@@ -14,6 +14,15 @@ export type EcJwkValues = {
   kty: "EC";
 };
 
+export type OctJwkValues = {
+  // common
+  k: string;
+
+  // metadata
+  kid?: string;
+  kty: "oct";
+};
+
 export type RsaJwkValues = {
   // common
   e: string;
@@ -32,7 +41,7 @@ export type RsaJwkValues = {
   kty: "RSA";
 };
 
-export type JwkValues = EcJwkValues | RsaJwkValues;
+export type JwkValues = EcJwkValues | OctJwkValues | RsaJwkValues;
 
 export type JwkMetadata = {
   alg: JwkAlgorithm;

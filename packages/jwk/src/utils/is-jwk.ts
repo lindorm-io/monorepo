@@ -1,4 +1,4 @@
-import { EcJwkValues, JwkValues, RsaJwkValues } from "../types";
+import { EcJwkValues, JwkValues, OctJwkValues, RsaJwkValues } from "../types";
 
 export const isEcJwk = (input: Record<string, any>): input is EcJwkValues =>
   typeof input === "object" &&
@@ -13,5 +13,8 @@ export const isRsaJwk = (input: Record<string, any>): input is RsaJwkValues =>
   typeof input.e === "string" &&
   typeof input.n === "string";
 
+export const isOctJwk = (input: Record<string, any>): input is OctJwkValues =>
+  typeof input === "object" && input.kty === "oct" && typeof input.k === "string";
+
 export const isJwk = (input: Record<string, any>): input is JwkValues =>
-  isEcJwk(input) || isRsaJwk(input);
+  isEcJwk(input) || isRsaJwk(input) || isOctJwk(input);

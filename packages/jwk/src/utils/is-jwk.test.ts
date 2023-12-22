@@ -51,4 +51,10 @@ describe("isJwk", () => {
       }),
     ).toBe(true);
   });
+
+  test("should return true for oct JWK", () => {
+    const k = "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=";
+
+    expect(isJwk({ k, kty: "oct" })).toBe(true);
+  });
 });

@@ -8,6 +8,12 @@ export type EcPemValues = {
   type: "EC";
 };
 
+export type OctPemValues = {
+  id?: string;
+  symmetricKey: string;
+  type: "oct";
+};
+
 export type RsaPemValues = {
   id?: string;
   passphrase?: string;
@@ -16,4 +22,4 @@ export type RsaPemValues = {
   type: "RSA";
 };
 
-export type PemValues = EcPemValues | RsaPemValues;
+export type PemValues = EcPemValues | OctPemValues | RsaPemValues;

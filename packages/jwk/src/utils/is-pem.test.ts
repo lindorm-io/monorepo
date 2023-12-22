@@ -66,4 +66,10 @@ describe("isPem", () => {
       }),
     ).toBe(true);
   });
+
+  test("should return true for oct PEM", () => {
+    const symmetricKey = "12345678901234567890123456789012";
+
+    expect(isPem({ symmetricKey, type: "oct" })).toBe(true);
+  });
 });

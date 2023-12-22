@@ -103,4 +103,22 @@ describe("jwkToPem", () => {
       });
     });
   });
+
+  describe("oct", () => {
+    const k = "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=";
+
+    test("should encode key", () => {
+      expect(
+        jwkToPem({
+          k,
+          kid: "e0a6805f-1c6a-5219-8366-60e0cb39cfed",
+          kty: "oct",
+        }),
+      ).toStrictEqual({
+        id: "e0a6805f-1c6a-5219-8366-60e0cb39cfed",
+        symmetricKey: "12345678901234567890123456789012",
+        type: "oct",
+      });
+    });
+  });
 });

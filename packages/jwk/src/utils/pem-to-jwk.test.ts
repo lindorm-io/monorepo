@@ -90,4 +90,22 @@ describe("pemToJwk", () => {
       });
     });
   });
+
+  describe("oct", () => {
+    const symmetricKey = "12345678901234567890123456789012";
+
+    test("should encode key", () => {
+      expect(
+        pemToJwk({
+          id: "e0a6805f-1c6a-5219-8366-60e0cb39cfed",
+          symmetricKey,
+          type: "oct",
+        }),
+      ).toStrictEqual({
+        k: "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
+        kid: "e0a6805f-1c6a-5219-8366-60e0cb39cfed",
+        kty: "oct",
+      });
+    });
+  });
 });
