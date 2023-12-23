@@ -1,6 +1,6 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
 import { PUBLIC_RSA_PEM } from "../../../fixtures/rsa-keys.fixture";
-import { generateEncryptionKey as _generateEncryptionKey } from "../generate-encryption-key";
+import { generateEncryptionKey as _generateEncryptionKey } from "./generate-encryption-key";
 import { getRsaDecryptionKey, getRsaEncryptionKeys } from "./get-rsa-keys";
 import { getRsaPem as _getRsaPem } from "./get-rsa-pem";
 import {
@@ -8,7 +8,7 @@ import {
   decryptPublicEncryptionKey as _decryptPublicEncryptionKey,
 } from "./public-encryption-key";
 
-jest.mock("../generate-encryption-key");
+jest.mock("./generate-encryption-key");
 jest.mock("./get-rsa-pem");
 jest.mock("./public-encryption-key");
 

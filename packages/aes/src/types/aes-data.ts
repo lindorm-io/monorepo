@@ -1,10 +1,11 @@
+import { EcJwkValues } from "@lindorm-io/jwk";
 import {
   AesAlgorithm,
   AesEncryptionKeyAlgorithm,
   AesFormat,
   AesIntegrityAlgorithm,
 } from "../enums";
-import { AesEncryptionKey, AesSecret } from "./aes-encryption-key";
+import { AesEncryptionKey, AesPublicJwk, AesSecret } from "./types";
 
 export type EncryptAesDataOptions = {
   algorithm?: AesAlgorithm;
@@ -24,6 +25,7 @@ export type DecryptAesDataOptions = {
   initialisationVector: Buffer;
   integrityAlgorithm?: AesIntegrityAlgorithm;
   key?: AesEncryptionKey;
+  publicEncryptionJwk?: AesPublicJwk;
   publicEncryptionKey?: Buffer;
   secret?: AesSecret;
 };

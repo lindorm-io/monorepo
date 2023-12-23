@@ -5,10 +5,12 @@ export const encodeAesString = ({
   algorithm,
   authTag,
   content,
+  encryptionKeyAlgorithm,
   format,
   initialisationVector,
-  encryptionKeyAlgorithm,
+  integrityAlgorithm,
   keyId,
+  publicEncryptionJwk,
   publicEncryptionKey,
   version,
 }: AesEncryptionData): string => {
@@ -16,10 +18,14 @@ export const encodeAesString = ({
     v: version,
     f: format,
     cek: publicEncryptionKey?.toString(format),
+    crv: publicEncryptionJwk?.crv,
     eka: encryptionKeyAlgorithm?.toLowerCase(),
+    ia: integrityAlgorithm,
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,
     tag: authTag?.toString(format),
+    x: publicEncryptionJwk?.x,
+    y: publicEncryptionJwk?.y,
   });
   const array = Object.entries(values).map(([key, value]) => `${key}=${value}`);
 

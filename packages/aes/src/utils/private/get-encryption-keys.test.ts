@@ -4,20 +4,25 @@ import { SYMMETRIC_OCT_PEM } from "../../fixtures/oct-keys.fixture";
 import { PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
 import { getEncryptionKeys } from "./get-encryption-keys";
 
+import { PUBLIC_EC_PEM } from "../../fixtures/ec-keys.fixture";
+import { getEcEncryptionKeys as _getEcEncryptionKeys } from "./ec";
 import { getOctEncryptionKeys as _getOctEncryptionKeys } from "./oct";
 import { getRsaEncryptionKeys as _getRsaEncryptionKeys } from "./rsa";
 import { getSecretEncryptionKeys as _getSecretEncryptionKeys } from "./secret";
 
+jest.mock("./ec");
 jest.mock("./oct");
 jest.mock("./rsa");
 jest.mock("./secret");
 
+const getEcEncryptionKeys = _getEcEncryptionKeys as jest.Mock;
 const getOctEncryptionKeys = _getOctEncryptionKeys as jest.Mock;
 const getRsaEncryptionKeys = _getRsaEncryptionKeys as jest.Mock;
 const getSecretEncryptionKeys = _getSecretEncryptionKeys as jest.Mock;
 
 describe("getEncryptionKeys", () => {
   beforeEach(() => {
+    getEcEncryptionKeys.mockReturnValue("getEcEncryptionKeys");
     getOctEncryptionKeys.mockReturnValue("getOctEncryptionKeys");
     getRsaEncryptionKeys.mockReturnValue("getRsaEncryptionKeys");
     getSecretEncryptionKeys.mockReturnValue("getSecretEncryptionKeys");
@@ -34,6 +39,18 @@ describe("getEncryptionKeys", () => {
     ).toBe("getSecretEncryptionKeys");
 
     expect(getSecretEncryptionKeys).toHaveBeenCalled();
+  });
+
+  test("should resolve encryption keys with EC key", () => {
+    expect(
+      getEncryptionKeys({
+        algorithm: AesAlgorithm.AES_256_GCM,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.ECDH_ES,
+        key: PUBLIC_EC_PEM,
+      }),
+    ).toBe("getEcEncryptionKeys");
+
+    expect(getEcEncryptionKeys).toHaveBeenCalled();
   });
 
   test("should resolve encryption keys with RSA key", () => {

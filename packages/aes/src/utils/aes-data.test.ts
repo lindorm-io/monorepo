@@ -5,6 +5,8 @@ import {
   AesFormat,
   AesIntegrityAlgorithm,
 } from "../enums";
+import { PRIVATE_EC_PEM, PUBLIC_EC_PEM } from "../fixtures/ec-keys.fixture";
+import { SYMMETRIC_OCT_PEM } from "../fixtures/oct-keys.fixture";
 import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../fixtures/rsa-keys.fixture";
 import { decryptAesData, encryptAesData } from "./aes-data";
 
@@ -27,6 +29,7 @@ describe("aes-data", () => {
       initialisationVector: expect.any(Buffer),
       integrityAlgorithm: undefined,
       keyId: undefined,
+      publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
       version: 4,
     });
@@ -162,6 +165,33 @@ describe("aes-data", () => {
 
       expect(encryption.format).toBe("hex");
       expect(decryptAesData({ ...encryption, secret })).toBe(data);
+    });
+  });
+
+  describe("ec", () => {
+    test("should encrypt and decrypt", () => {
+      const encryption = encryptAesData({
+        data,
+        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.ECDH_ES,
+        key: PUBLIC_EC_PEM,
+      });
+
+      expect(encryption.algorithm).toBe("aes-256-gcm");
+      expect(encryption.encryptionKeyAlgorithm).toBe(undefined);
+      expect(decryptAesData({ ...encryption, key: PRIVATE_EC_PEM })).toBe(data);
+    });
+  });
+
+  describe("oct", () => {
+    test("should encrypt and decrypt", () => {
+      const encryption = encryptAesData({
+        data,
+        key: SYMMETRIC_OCT_PEM,
+      });
+
+      expect(encryption.algorithm).toBe("aes-256-gcm");
+      expect(encryption.encryptionKeyAlgorithm).toBe(undefined);
+      expect(decryptAesData({ ...encryption, key: SYMMETRIC_OCT_PEM })).toBe(data);
     });
   });
 

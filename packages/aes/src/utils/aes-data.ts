@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
 import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
-import { DecryptAesDataOptions, EncryptAesDataOptions } from "../types";
+import { AesEncryptionData, DecryptAesDataOptions, EncryptAesDataOptions } from "../types";
 import {
   getAuthTag,
   getDecryptionKey,
@@ -21,8 +21,8 @@ export const encryptAesData = ({
   integrityAlgorithm,
   key,
   secret,
-}: EncryptAesDataOptions) => {
-  const { encryptionKey, publicEncryptionKey } = getEncryptionKeys({
+}: EncryptAesDataOptions): AesEncryptionData => {
+  const { encryptionKey, publicEncryptionJwk, publicEncryptionKey } = getEncryptionKeys({
     algorithm,
     key,
     secret,
@@ -55,6 +55,7 @@ export const encryptAesData = ({
     integrityAlgorithm,
     keyId: keyId ? Buffer.from(keyId, format) : undefined,
     encryptionKeyAlgorithm: publicKey && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
+    publicEncryptionJwk,
     publicEncryptionKey,
     version: LATEST_AES_VERSION,
   };
@@ -68,6 +69,7 @@ export const decryptAesData = ({
   initialisationVector,
   integrityAlgorithm,
   key,
+  publicEncryptionJwk,
   publicEncryptionKey,
   secret,
 }: DecryptAesDataOptions): string => {
@@ -76,6 +78,7 @@ export const decryptAesData = ({
     key,
     encryptionKeyAlgorithm,
     secret,
+    publicEncryptionJwk,
     publicEncryptionKey,
   });
 

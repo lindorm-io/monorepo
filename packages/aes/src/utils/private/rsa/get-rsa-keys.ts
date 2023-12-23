@@ -1,6 +1,6 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
 import { AesEncryptionKey } from "../../../types";
-import { generateEncryptionKey } from "../generate-encryption-key";
+import { generateEncryptionKey } from "./generate-encryption-key";
 import { getRsaPem } from "./get-rsa-pem";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 

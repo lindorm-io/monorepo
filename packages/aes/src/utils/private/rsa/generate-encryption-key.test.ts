@@ -1,5 +1,5 @@
-import { AesAlgorithm } from "../../enums";
-import { AesError } from "../../errors";
+import { AesAlgorithm } from "../../../enums";
+import { AesError } from "../../../errors";
 import { generateEncryptionKey } from "./generate-encryption-key";
 
 describe("generateEncryptionKey", () => {

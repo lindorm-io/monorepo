@@ -1,6 +1,7 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
-import { AesEncryptionKey, AesSecret } from "../../types";
+import { AesEncryptionKey, AesPublicJwk, AesSecret } from "../../types";
+import { getEcDecryptionKey } from "./ec";
 import { getKeyType } from "./get-key-type";
 import { getOctDecryptionKey } from "./oct";
 import { getRsaDecryptionKey } from "./rsa";
@@ -10,16 +11,18 @@ type Options = {
   algorithm: AesAlgorithm;
   encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
   key?: AesEncryptionKey;
+  publicEncryptionJwk?: AesPublicJwk;
   publicEncryptionKey?: Buffer;
   secret?: AesSecret;
 };
 
 export const getDecryptionKey = ({
   algorithm,
-  key,
   encryptionKeyAlgorithm,
-  secret,
+  key,
+  publicEncryptionJwk,
   publicEncryptionKey,
+  secret,
 }: Options): Buffer => {
   if (key && secret) {
     throw new AesError("Unable to decrypt AES cipher with both key and secret", {
@@ -41,10 +44,13 @@ export const getDecryptionKey = ({
 
   switch (getKeyType(key)) {
     case "EC":
-      throw new AesError("Unable to decrypt AES cipher with EC encryption key", {
-        description: "EC encryption keys are not supported",
-        debug: { key },
-      });
+      if (!publicEncryptionJwk) {
+        throw new AesError("Unable to decrypt AES cipher without public encryption JWK", {
+          description: "Public encryption JWK is missing",
+          debug: { publicEncryptionJwk },
+        });
+      }
+      return getEcDecryptionKey({ algorithm, key, publicEncryptionJwk });
 
     case "RSA":
       if (!publicEncryptionKey) {

@@ -1,6 +1,7 @@
 import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
-import { AesEncryptionKey, AesSecret } from "../../types";
+import { AesEncryptionKey, AesPublicJwk, AesSecret } from "../../types";
+import { getEcEncryptionKeys } from "./ec";
 import { getKeyType } from "./get-key-type";
 import { getOctEncryptionKeys } from "./oct";
 import { getRsaEncryptionKeys } from "./rsa";
@@ -15,6 +16,7 @@ type Options = {
 
 type EncryptionKeys = {
   encryptionKey: Buffer;
+  publicEncryptionJwk?: AesPublicJwk;
   publicEncryptionKey?: Buffer;
 };
 
@@ -44,10 +46,7 @@ export const getEncryptionKeys = ({
 
   switch (getKeyType(key)) {
     case "EC":
-      throw new AesError("Unable to encrypt AES cipher with EC encryption key", {
-        description: "EC encryption keys are not supported",
-        debug: { key },
-      });
+      return getEcEncryptionKeys({ algorithm, encryptionKeyAlgorithm, key });
 
     case "RSA":
       return getRsaEncryptionKeys({ algorithm, encryptionKeyAlgorithm, key });

@@ -1,5 +1,5 @@
 import { EncryptAesDataOptions } from "./aes-data";
-import { AesEncryptionKey, AesSecret } from "./aes-encryption-key";
+import { AesEncryptionKey, AesSecret } from "./types";
 
 export type EncryptAesCipherOptions = EncryptAesDataOptions;
 
