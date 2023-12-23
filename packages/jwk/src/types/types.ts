@@ -1,4 +1,8 @@
-export type EllipticCurve = "P-256" | "P-384" | "P-521";
+export type NistEllipticCurve = "P-256" | "P-384" | "P-521";
+
+export type SpecificEllipticCurve = "secp256k1" | "secp384r1" | "secp521r1";
+
+export type EllipticCurve = NistEllipticCurve | SpecificEllipticCurve;
 
 export type EcJwkAlgorithm = "ES256" | "ES384" | "ES512";
 

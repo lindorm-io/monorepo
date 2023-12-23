@@ -3,11 +3,12 @@ import { JwkError } from "../../errors";
 import { EcJwkValues, EcPemValues, EllipticCurve } from "../../types";
 import { Asn1SequenceEncoder } from "./Asn1SequenceEncoder";
 
-const getCurveLength = (
+export const getCurveLength = (
   curve: EllipticCurve,
 ): { len: number; offset: number; correction: number } => {
   switch (curve) {
     case "P-256":
+    case "secp256k1":
       return {
         len: 64,
         offset: 34 + 2,
@@ -15,6 +16,7 @@ const getCurveLength = (
       };
 
     case "P-384":
+    case "secp384r1":
       return {
         len: 96,
         offset: 33 + 2,
@@ -22,6 +24,7 @@ const getCurveLength = (
       };
 
     case "P-521":
+    case "secp521r1":
       return {
         len: 132,
         offset: 33 + 2,
@@ -48,10 +51,9 @@ export const createEcJwk = ({
     throw new JwkError(`Invalid publicKey [ ${publicKey} ]`);
   }
 
-  const { len, offset: originalOffset, correction } = getCurveLength(curve);
-  let offset = originalOffset;
-
   if (!privateKey) {
+    const { len } = getCurveLength(curve);
+
     const key = createPublicKey(publicKey);
     const der = key.export({ format: "der", type: "spki" });
 
@@ -65,6 +67,8 @@ export const createEcJwk = ({
   }
 
   if (privateKey) {
+    let { len, offset, correction } = getCurveLength(curve);
+
     const key = createPrivateKey(privateKey);
     const der = key.export({ format: "der", type: "pkcs8" });
 
