@@ -1,9 +1,4 @@
-import {
-  AesAlgorithm,
-  AesEncryptionKeyAlgorithm,
-  AesFormat,
-  AesIntegrityAlgorithm,
-} from "../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../enums";
 import { AesPublicJwk } from "./types";
 
 export type AesEncryptionData = {
@@ -13,7 +8,7 @@ export type AesEncryptionData = {
   encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm | undefined;
   format: AesFormat;
   initialisationVector: Buffer;
-  integrityAlgorithm: AesIntegrityAlgorithm | undefined;
+  integrityHash: AesIntegrityHash | undefined;
   keyId: Buffer | undefined;
   publicEncryptionJwk: AesPublicJwk | undefined;
   publicEncryptionKey: Buffer | undefined;

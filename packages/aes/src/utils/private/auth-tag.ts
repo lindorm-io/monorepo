@@ -10,20 +10,20 @@ export const getAuthTag = ({
   content,
   encryptionKey,
   initialisationVector,
-  integrityAlgorithm,
+  integrityHash,
 }: GetAuthTagOptions): Buffer | undefined => {
   switch (algorithm) {
     case AesAlgorithm.AES_128_CBC:
     case AesAlgorithm.AES_192_CBC:
     case AesAlgorithm.AES_256_CBC:
-      if (!integrityAlgorithm) {
+      if (!integrityHash) {
         return;
       }
       return createHmacAuthTag({
         content,
         encryptionKey,
         initialisationVector,
-        integrityAlgorithm,
+        integrityHash,
       });
 
     case AesAlgorithm.AES_128_GCM:
@@ -45,13 +45,13 @@ export const setAuthTag = ({
   decipher,
   decryptionKey,
   initialisationVector,
-  integrityAlgorithm,
+  integrityHash,
 }: SetAuthTagOptions): void => {
   switch (algorithm) {
     case AesAlgorithm.AES_128_CBC:
     case AesAlgorithm.AES_192_CBC:
     case AesAlgorithm.AES_256_CBC:
-      if (!authTag || !integrityAlgorithm) {
+      if (!authTag || !integrityHash) {
         return;
       }
       verifyHmacAuthTag({
@@ -59,7 +59,7 @@ export const setAuthTag = ({
         content,
         encryptionKey: decryptionKey,
         initialisationVector,
-        integrityAlgorithm,
+        integrityHash,
       });
       return;
 

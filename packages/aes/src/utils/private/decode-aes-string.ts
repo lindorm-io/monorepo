@@ -1,5 +1,5 @@
 import { EllipticCurve } from "@lindorm-io/jwk";
-import { AesIntegrityAlgorithm } from "../../enums";
+import { AesIntegrityHash } from "../../enums";
 import { AesError } from "../../errors";
 import { AesEncryptionData } from "../../types";
 import { mapStringToAesFormat, mapStringToEncryptionKeyAlgorithm } from "./mappers";
@@ -27,7 +27,7 @@ export const decodeAesString = (data: string): AesEncryptionData => {
     values[match.groups.key] = match.groups.value;
   }
 
-  const { cek, crv: curve, eka, f, iv, ia, kid, tag, v, x, y } = values;
+  const { cek, crv: curve, eka, f, ih, iv, kid, tag, v, x, y } = values;
   const crv = curve as EllipticCurve;
   const format = mapStringToAesFormat(f);
 
@@ -37,7 +37,7 @@ export const decodeAesString = (data: string): AesEncryptionData => {
     content: Buffer.from(content, format),
     encryptionKeyAlgorithm: eka ? mapStringToEncryptionKeyAlgorithm(eka) : undefined,
     format,
-    integrityAlgorithm: ia as AesIntegrityAlgorithm,
+    integrityHash: ih as AesIntegrityHash,
     initialisationVector: Buffer.from(iv, format),
     keyId: kid ? Buffer.from(kid, format) : undefined,
     publicEncryptionJwk: crv && x && y ? { crv, x, y } : undefined,

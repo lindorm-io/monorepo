@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { AesIntegrityAlgorithm } from "../../enums";
+import { AesIntegrityHash } from "../../enums";
 import { AesError } from "../../errors";
 import { CreateHmacAuthTag, VerifyHmacAuthTag } from "../../types/auth-tag";
 
@@ -7,9 +7,9 @@ export const createHmacAuthTag = ({
   content,
   encryptionKey,
   initialisationVector,
-  integrityAlgorithm = AesIntegrityAlgorithm.SHA256,
+  integrityHash = AesIntegrityHash.SHA256,
 }: CreateHmacAuthTag): Buffer => {
-  const hmac = createHmac(integrityAlgorithm, encryptionKey);
+  const hmac = createHmac(integrityHash, encryptionKey);
 
   hmac.update(initialisationVector);
   hmac.update(content);
@@ -22,13 +22,13 @@ export const verifyHmacAuthTag = ({
   content,
   encryptionKey,
   initialisationVector,
-  integrityAlgorithm,
+  integrityHash,
 }: VerifyHmacAuthTag): void => {
   const generated = createHmacAuthTag({
     content,
     encryptionKey,
     initialisationVector,
-    integrityAlgorithm,
+    integrityHash,
   });
 
   if (Buffer.compare(generated, authTag) === 0) return;

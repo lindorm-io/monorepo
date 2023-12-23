@@ -18,7 +18,7 @@ export const encryptAesData = ({
   data,
   encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP,
   format = AesFormat.BASE64_URL,
-  integrityAlgorithm,
+  integrityHash,
   key,
   secret,
 }: EncryptAesDataOptions): AesEncryptionData => {
@@ -40,7 +40,7 @@ export const encryptAesData = ({
     content,
     encryptionKey,
     initialisationVector,
-    integrityAlgorithm,
+    integrityHash,
   });
 
   const keyId = getKeyId(key);
@@ -52,7 +52,7 @@ export const encryptAesData = ({
     content,
     format,
     initialisationVector,
-    integrityAlgorithm,
+    integrityHash,
     keyId: keyId ? Buffer.from(keyId, format) : undefined,
     encryptionKeyAlgorithm: publicKey && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
     publicEncryptionJwk,
@@ -67,7 +67,7 @@ export const decryptAesData = ({
   content,
   encryptionKeyAlgorithm,
   initialisationVector,
-  integrityAlgorithm,
+  integrityHash,
   key,
   publicEncryptionJwk,
   publicEncryptionKey,
@@ -91,7 +91,7 @@ export const decryptAesData = ({
     decipher,
     decryptionKey,
     initialisationVector,
-    integrityAlgorithm,
+    integrityHash,
   });
 
   return Buffer.concat([decipher.update(content), decipher.final()]).toString("utf-8");

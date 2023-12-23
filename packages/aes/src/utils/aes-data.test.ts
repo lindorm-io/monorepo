@@ -1,10 +1,5 @@
 import { randomBytes } from "crypto";
-import {
-  AesAlgorithm,
-  AesEncryptionKeyAlgorithm,
-  AesFormat,
-  AesIntegrityAlgorithm,
-} from "../enums";
+import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../enums";
 import { PRIVATE_EC_PEM, PUBLIC_EC_PEM } from "../fixtures/ec-keys.fixture";
 import { SYMMETRIC_OCT_PEM } from "../fixtures/oct-keys.fixture";
 import { PRIVATE_RSA_PEM, PUBLIC_RSA_PEM } from "../fixtures/rsa-keys.fixture";
@@ -27,7 +22,7 @@ describe("aes-data", () => {
       encryptionKeyAlgorithm: undefined,
       format: "base64url",
       initialisationVector: expect.any(Buffer),
-      integrityAlgorithm: undefined,
+      integrityHash: undefined,
       keyId: undefined,
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
@@ -83,13 +78,13 @@ describe("aes-data", () => {
       const encryption = encryptAesData({
         algorithm: AesAlgorithm.AES_256_CBC,
         data,
-        integrityAlgorithm: AesIntegrityAlgorithm.SHA256,
+        integrityHash: AesIntegrityHash.SHA256,
         secret,
       });
 
       expect(encryption.algorithm).toBe("aes-256-cbc");
       expect(encryption.authTag).toStrictEqual(expect.any(Buffer));
-      expect(encryption.integrityAlgorithm).toBe("sha256");
+      expect(encryption.integrityHash).toBe("sha256");
       expect(decryptAesData({ ...encryption, secret })).toBe(data);
     });
   });
