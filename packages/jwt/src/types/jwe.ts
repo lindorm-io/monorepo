@@ -1,20 +1,23 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
+import { Encryption, EncryptionKeyAlgorithm, KeyObject } from "@lindorm-io/aes";
+import { KeySet } from "@lindorm-io/jwk";
 
 export type JweOptions = {
-  algorithm?: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key: string;
+  encryption?: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  key?: KeyObject;
+  keySet?: KeySet;
 };
 
 export type EncryptJweOptions = {
-  algorithm?: AesAlgorithm;
-  key: string;
-  keyId?: string;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
+  encryption?: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  key?: KeyObject;
+  keySet?: KeySet;
   token: string;
 };
 
 export type DecryptJweOptions = {
   jwe: string;
-  key: string;
+  key?: KeyObject;
+  keySet?: KeySet;
 };

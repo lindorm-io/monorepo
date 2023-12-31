@@ -1,26 +1,26 @@
-import { AesAlgorithm } from "@lindorm-io/aes";
+import { AesEncryption, Encryption } from "@lindorm-io/aes";
 import { JweEncoding } from "../../enum";
 import { TokenError } from "../../error";
 
-export const mapJweEncodingToAesAlgorithm = (encoding: string): AesAlgorithm => {
+export const mapJweEncodingToEncryption = (encoding: string): Encryption => {
   switch (encoding) {
     case JweEncoding.A128CBC_HS256:
-      return AesAlgorithm.AES_128_CBC_HS256;
+      return AesEncryption.AES_128_CBC;
 
     case JweEncoding.A192CBC_HS256:
-      return AesAlgorithm.AES_192_CBC_HS256;
+      return AesEncryption.AES_192_CBC;
 
     case JweEncoding.A256CBC_HS256:
-      return AesAlgorithm.AES_256_CBC_HS256;
+      return AesEncryption.AES_256_CBC;
 
     case JweEncoding.A128GCM:
-      return AesAlgorithm.AES_128_GCM;
+      return AesEncryption.AES_128_GCM;
 
     case JweEncoding.A192GCM:
-      return AesAlgorithm.AES_192_GCM;
+      return AesEncryption.AES_192_GCM;
 
     case JweEncoding.A256GCM:
-      return AesAlgorithm.AES_256_GCM;
+      return AesEncryption.AES_256_GCM;
 
     default:
       throw new TokenError("Invalid JWE encoding", {
@@ -29,29 +29,29 @@ export const mapJweEncodingToAesAlgorithm = (encoding: string): AesAlgorithm => 
   }
 };
 
-export const mapAesAlgorithmToJweEncoding = (algorithm: string): JweEncoding => {
-  switch (algorithm) {
-    case AesAlgorithm.AES_128_CBC_HS256:
+export const mapEncryptionToJweEncoding = (encryption: string): JweEncoding => {
+  switch (encryption) {
+    case AesEncryption.AES_128_CBC:
       return JweEncoding.A128CBC_HS256;
 
-    case AesAlgorithm.AES_192_CBC_HS256:
+    case AesEncryption.AES_192_CBC:
       return JweEncoding.A192CBC_HS256;
 
-    case AesAlgorithm.AES_256_CBC_HS256:
+    case AesEncryption.AES_256_CBC:
       return JweEncoding.A256CBC_HS256;
 
-    case AesAlgorithm.AES_128_GCM:
+    case AesEncryption.AES_128_GCM:
       return JweEncoding.A128GCM;
 
-    case AesAlgorithm.AES_192_GCM:
+    case AesEncryption.AES_192_GCM:
       return JweEncoding.A192GCM;
 
-    case AesAlgorithm.AES_256_GCM:
+    case AesEncryption.AES_256_GCM:
       return JweEncoding.A256GCM;
 
     default:
       throw new TokenError("Invalid algorithm", {
-        debug: { algorithm },
+        debug: { algorithm: encryption },
       });
   }
 };

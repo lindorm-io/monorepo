@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@lindorm-io/common-types": "^0.5.2",
+    "@lindorm-io/jwk": "^0.1.0",
     "@lindorm-io/key-pair": "^0.8.1",
     "@types/jsonwebtoken": "^9.0.4",
     "date-fns": "^2.30.0"
