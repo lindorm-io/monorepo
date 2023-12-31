@@ -28,4 +28,4 @@ export const DEFAULT_SYMBOLS = [
   "~",
 ].join("");
 export const TOKEN_SYMBOLS = ["*", "-", "_", "~"].join("");
-export const UNRESERVED_URL_SYMBOLS = ["!", "'", "(", ")", "*", "-", ".", "_", "~"].join("");
+export const UNRESERVED_URL_SYMBOLS = ["!", "(", ")", "*", "-", ".", "_", "~"].join("");
