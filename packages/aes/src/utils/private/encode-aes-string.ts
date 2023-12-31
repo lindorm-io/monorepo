@@ -2,7 +2,7 @@ import { removeEmptyFromObject } from "@lindorm-io/core";
 import { AesEncryptionData } from "../../types";
 
 export const encodeAesString = ({
-  algorithm,
+  encryption: algorithm,
   authTag,
   content,
   encryptionKeyAlgorithm,
@@ -19,7 +19,7 @@ export const encodeAesString = ({
     f: format,
     cek: publicEncryptionKey?.toString(format),
     crv: publicEncryptionJwk?.crv,
-    eka: encryptionKeyAlgorithm?.toLowerCase(),
+    eka: encryptionKeyAlgorithm,
     ih: integrityHash,
     iv: initialisationVector.toString(format),
     kid: publicEncryptionKey && keyId ? keyId.toString(format) : undefined,

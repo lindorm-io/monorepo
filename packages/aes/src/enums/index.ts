@@ -1,5 +1,4 @@
-export * from "./AesAlgorithm";
+export * from "./AesEncryption";
 export * from "./AesEncryptionKeyAlgorithm";
 export * from "./AesFormat";
 export * from "./AesIntegrityHash";
-export * from "./ShaAlgorithm";

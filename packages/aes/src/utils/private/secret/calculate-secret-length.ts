@@ -1,21 +1,21 @@
-import { AesAlgorithm } from "../../../enums";
 import { AesError } from "../../../errors";
+import { Encryption } from "../../../types";
 
-export const calculateSecretLength = (algorithm: AesAlgorithm): number => {
-  switch (algorithm) {
-    case AesAlgorithm.AES_128_CBC:
-    case AesAlgorithm.AES_128_GCM:
+export const calculateSecretLength = (encryption: Encryption): number => {
+  switch (encryption) {
+    case "aes-128-cbc":
+    case "aes-128-gcm":
       return 16;
 
-    case AesAlgorithm.AES_192_CBC:
-    case AesAlgorithm.AES_192_GCM:
+    case "aes-192-cbc":
+    case "aes-192-gcm":
       return 24;
 
-    case AesAlgorithm.AES_256_CBC:
-    case AesAlgorithm.AES_256_GCM:
+    case "aes-256-cbc":
+    case "aes-256-gcm":
       return 32;
 
     default:
-      throw new AesError(`Unsupported algorithm: ${algorithm}`);
+      throw new AesError("Unsupported encryption", { debug: { encryption } });
   }
 };

@@ -1,33 +1,43 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../enums";
-import { AesCipherOptions, AesEncryptionKey, AesSecret } from "../types";
+import { KeySet } from "@lindorm-io/jwk";
+import {
+  AesCipherOptions,
+  BufferFormat,
+  Encryption,
+  EncryptionKeyAlgorithm,
+  IntegrityHash,
+  KeyObject,
+  Secret,
+} from "../types";
 import { assertAesCipher, decryptAesCipher, encryptAesCipher, verifyAesCipher } from "../utils";
 
 export class AesCipher {
-  private readonly algorithm: AesAlgorithm;
-  private readonly encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm;
-  private readonly format: AesFormat;
-  private readonly integrityHash: AesIntegrityHash;
-  private readonly key: AesEncryptionKey | undefined;
-  private readonly secret: AesSecret | undefined;
+  private readonly encryption: Encryption;
+  private readonly encryptionKeyAlgorithm: EncryptionKeyAlgorithm;
+  private readonly format: BufferFormat;
+  private readonly integrityHash: IntegrityHash;
+  private readonly key: KeyObject | undefined;
+  private readonly keySet: KeySet | undefined;
+  private readonly secret: Secret | undefined;
 
   public constructor(options: AesCipherOptions) {
-    this.algorithm = options.algorithm || AesAlgorithm.AES_256_GCM;
-    this.encryptionKeyAlgorithm =
-      options.encryptionKeyAlgorithm || AesEncryptionKeyAlgorithm.RSA_OAEP_256;
-    this.format = options.format || AesFormat.BASE64_URL;
-    this.integrityHash = options.integrityHash || AesIntegrityHash.SHA256;
+    this.encryption = options.encryption || "aes-256-gcm";
+    this.encryptionKeyAlgorithm = options.encryptionKeyAlgorithm || "RSA-OAEP-256";
+    this.format = options.format || "base64url";
+    this.integrityHash = options.integrityHash || "sha256";
     this.key = options.key;
+    this.keySet = options.keySet;
     this.secret = options.secret;
   }
 
   public encrypt(data: string): string {
     return encryptAesCipher({
-      algorithm: this.algorithm,
+      encryption: this.encryption,
       data,
       encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
       format: this.format,
       integrityHash: this.integrityHash,
       key: this.key,
+      keySet: this.keySet,
       secret: this.secret,
     });
   }
@@ -36,6 +46,7 @@ export class AesCipher {
     return decryptAesCipher({
       cipher,
       key: this.key,
+      keySet: this.keySet,
       secret: this.secret,
     });
   }
@@ -45,6 +56,7 @@ export class AesCipher {
       cipher,
       data,
       key: this.key,
+      keySet: this.keySet,
       secret: this.secret,
     });
   }
@@ -54,6 +66,7 @@ export class AesCipher {
       cipher,
       data,
       key: this.key,
+      keySet: this.keySet,
       secret: this.secret,
     });
   }

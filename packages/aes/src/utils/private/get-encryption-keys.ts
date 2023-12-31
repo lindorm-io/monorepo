@@ -1,62 +1,40 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
+import { KeySet } from "@lindorm-io/jwk";
 import { AesError } from "../../errors";
-import { AesEncryptionKey, AesPublicJwk, AesSecret } from "../../types";
+import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../types";
 import { getEcEncryptionKeys } from "./ec";
-import { getKeyType } from "./get-key-type";
 import { getOctEncryptionKeys } from "./oct";
 import { getRsaEncryptionKeys } from "./rsa";
-import { getSecretEncryptionKeys } from "./secret";
 
 type Options = {
-  algorithm: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key?: AesEncryptionKey;
-  secret?: AesSecret;
+  encryption: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: KeySet;
 };
 
 type EncryptionKeys = {
   encryptionKey: Buffer;
-  publicEncryptionJwk?: AesPublicJwk;
+  publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
 };
 
 export const getEncryptionKeys = ({
-  algorithm,
+  encryption,
   encryptionKeyAlgorithm,
-  key,
-  secret,
+  keySet,
 }: Options): EncryptionKeys => {
-  if (key && secret) {
-    throw new AesError("Unable to encrypt AES cipher with both key and secret", {
-      description: "Key and secret are both present",
-      debug: { key, secret },
-    });
-  }
-
-  if (secret) {
-    return getSecretEncryptionKeys({ algorithm, secret });
-  }
-
-  if (!key) {
-    throw new AesError("Unable to encrypt AES cipher without key OR secret", {
-      description: "Key is missing",
-      debug: { key },
-    });
-  }
-
-  switch (getKeyType(key)) {
+  switch (keySet.type) {
     case "EC":
-      return getEcEncryptionKeys({ algorithm, encryptionKeyAlgorithm, key });
+      return getEcEncryptionKeys({ encryption, encryptionKeyAlgorithm, keySet });
 
     case "RSA":
-      return getRsaEncryptionKeys({ algorithm, encryptionKeyAlgorithm, key });
+      return getRsaEncryptionKeys({ encryption, encryptionKeyAlgorithm, keySet });
 
     case "oct":
-      return getOctEncryptionKeys({ algorithm, key });
+      return getOctEncryptionKeys({ encryption, keySet });
 
     default:
       throw new AesError("Unexpected encryption key type", {
-        debug: { key },
+        debug: { keySet },
       });
   }
 };

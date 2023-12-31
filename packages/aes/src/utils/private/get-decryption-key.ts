@@ -1,48 +1,26 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
+import { KeySet } from "@lindorm-io/jwk";
 import { AesError } from "../../errors";
-import { AesEncryptionKey, AesPublicJwk, AesSecret } from "../../types";
+import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../types";
 import { getEcDecryptionKey } from "./ec";
-import { getKeyType } from "./get-key-type";
 import { getOctDecryptionKey } from "./oct";
 import { getRsaDecryptionKey } from "./rsa";
-import { getSecretDecryptionKey } from "./secret";
 
 type Options = {
-  algorithm: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key?: AesEncryptionKey;
-  publicEncryptionJwk?: AesPublicJwk;
+  encryption: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: KeySet;
+  publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
-  secret?: AesSecret;
 };
 
 export const getDecryptionKey = ({
-  algorithm,
+  encryption,
   encryptionKeyAlgorithm,
-  key,
+  keySet,
   publicEncryptionJwk,
   publicEncryptionKey,
-  secret,
 }: Options): Buffer => {
-  if (key && secret) {
-    throw new AesError("Unable to decrypt AES cipher with both key and secret", {
-      description: "Key and secret are both present",
-      debug: { key, secret },
-    });
-  }
-
-  if (secret) {
-    return getSecretDecryptionKey({ algorithm, secret });
-  }
-
-  if (!key) {
-    throw new AesError("Unable to decrypt AES cipher without key OR secret", {
-      description: "Key is missing",
-      debug: { key },
-    });
-  }
-
-  switch (getKeyType(key)) {
+  switch (keySet.type) {
     case "EC":
       if (!publicEncryptionJwk) {
         throw new AesError("Unable to decrypt AES cipher without public encryption JWK", {
@@ -50,7 +28,7 @@ export const getDecryptionKey = ({
           debug: { publicEncryptionJwk },
         });
       }
-      return getEcDecryptionKey({ algorithm, key, publicEncryptionJwk });
+      return getEcDecryptionKey({ encryption, keySet, publicEncryptionJwk });
 
     case "RSA":
       if (!publicEncryptionKey) {
@@ -59,14 +37,14 @@ export const getDecryptionKey = ({
           debug: { publicEncryptionKey },
         });
       }
-      return getRsaDecryptionKey({ key, encryptionKeyAlgorithm, publicEncryptionKey });
+      return getRsaDecryptionKey({ encryptionKeyAlgorithm, keySet, publicEncryptionKey });
 
     case "oct":
-      return getOctDecryptionKey({ algorithm, key });
+      return getOctDecryptionKey({ encryption, keySet });
 
     default:
       throw new AesError("Unexpected encryption key type", {
-        debug: { key },
+        debug: { keySet },
       });
   }
 };

@@ -1,83 +1,75 @@
+import { EcKeySet } from "@lindorm-io/jwk";
 import { createECDH } from "crypto";
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
 import { AesError } from "../../../errors";
-import { AesEncryptionKey, AesPublicJwk } from "../../../types";
-import { calculateSecretLength } from "../secret";
-import { createKeyDerivation } from "./create-key-derivation";
-import { getEcJwk } from "./get-ec-jwk";
-import { getKeyCurve } from "./get-key-curve";
-import { getJwkFromBuffer, getPrivateKeyBuffer, getPublicKeyBuffer } from "./jwk-buffer";
+import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../../types";
+import { createKeyDerivation } from "../secret";
+import { getKeyCurve, getNistCurve } from "./get-key-curve";
 
 type EncryptOptions = {
-  algorithm: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key: AesEncryptionKey;
+  encryption: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: EcKeySet;
 };
 
 type EncryptResult = {
   encryptionKey: Buffer;
-  publicEncryptionJwk: AesPublicJwk;
+  publicEncryptionJwk: PublicEncryptionJwk;
 };
 
 type DecryptOptions = {
-  algorithm: AesAlgorithm;
-  key: AesEncryptionKey;
-  publicEncryptionJwk: AesPublicJwk;
+  encryption: Encryption;
+  keySet: EcKeySet;
+  publicEncryptionJwk: PublicEncryptionJwk;
 };
 
 export const getEcEncryptionKeys = ({
-  algorithm,
+  encryption,
   encryptionKeyAlgorithm,
-  key,
+  keySet,
 }: EncryptOptions): EncryptResult => {
-  if (encryptionKeyAlgorithm !== AesEncryptionKeyAlgorithm.ECDH_ES) {
+  if (encryptionKeyAlgorithm !== "ECDH-ES") {
     throw new AesError("Mismatched options values", {
       description: "Encryption key algorithm is not ECDH_ES",
-      debug: { encryptionKeyAlgorithm, key },
+      debug: { encryptionKeyAlgorithm, keySet },
     });
   }
 
-  const jwk = getEcJwk(key);
-  const curve = getKeyCurve(jwk);
-  const publicKey = getPublicKeyBuffer(jwk);
-  const secretLength = calculateSecretLength(algorithm);
-
-  const senderKeyPair = createECDH(curve);
+  const { publicKey } = keySet.export("raw");
+  const senderKeyPair = createECDH(getKeyCurve(keySet.curve));
   const senderPublicKey = senderKeyPair.generateKeys();
-
   const sharedSecret = senderKeyPair.computeSecret(publicKey);
+  const encryptionKey = createKeyDerivation({ encryption, initialKeyringMaterial: sharedSecret });
 
-  const encryptionKey = createKeyDerivation({
-    initialKeyringMaterial: sharedSecret,
-    length: secretLength,
+  const publicEncryptionKeySet = EcKeySet.fromRaw({
+    curve: getNistCurve(keySet.curve),
+    publicKey: senderPublicKey,
+    type: "EC",
   });
 
-  const publicEncryptionJwk = getJwkFromBuffer(jwk.crv, senderPublicKey);
+  const publicEncryptionJwk = publicEncryptionKeySet.export("jwk");
 
-  return {
-    encryptionKey,
-    publicEncryptionJwk,
-  };
+  return { encryptionKey, publicEncryptionJwk };
 };
 
 export const getEcDecryptionKey = ({
-  algorithm,
-  key,
+  encryption,
+  keySet,
   publicEncryptionJwk,
 }: DecryptOptions): Buffer => {
-  const jwk = getEcJwk(key);
-  const curve = getKeyCurve(jwk);
-  const privateKey = getPrivateKeyBuffer(jwk);
-  const publicKey = getPublicKeyBuffer(publicEncryptionJwk);
-  const secretLength = calculateSecretLength(algorithm);
+  const { privateKey } = keySet.export("raw");
 
-  const receiverKeyPair = createECDH(curve);
+  if (!privateKey) {
+    throw new AesError("Missing private key", {
+      debug: { keySet },
+    });
+  }
+
+  const receiverKeyPair = createECDH(getKeyCurve(keySet.curve));
   receiverKeyPair.setPrivateKey(privateKey);
 
+  const publicEncryptionKeySet = EcKeySet.fromJwk(publicEncryptionJwk);
+  const { publicKey } = publicEncryptionKeySet.export("raw");
   const sharedSecret = receiverKeyPair.computeSecret(publicKey);
 
-  return createKeyDerivation({
-    initialKeyringMaterial: sharedSecret,
-    length: secretLength,
-  });
+  return createKeyDerivation({ encryption, initialKeyringMaterial: sharedSecret });
 };

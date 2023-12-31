@@ -1,54 +1,37 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
-import { SYMMETRIC_OCT_PEM } from "../../fixtures/oct-keys.fixture";
-import { PUBLIC_RSA_PEM } from "../../fixtures/rsa-keys.fixture";
-import { getDecryptionKey } from "./get-decryption-key";
-
-import { PRIVATE_EC_JWK, PUBLIC_EC_JWK } from "../../fixtures/ec-keys.fixture";
+import { EC_KEY_SET } from "../../fixtures/ec-keys.fixture";
+import { OCT_KEY_SET } from "../../fixtures/oct-keys.fixture";
+import { RSA_KEY_SET } from "../../fixtures/rsa-keys.fixture";
 import { getEcDecryptionKey as _getEcDecryptionKey } from "./ec";
+import { getDecryptionKey } from "./get-decryption-key";
 import { getOctDecryptionKey as _getOctDecryptionKey } from "./oct";
 import { getRsaDecryptionKey as _getRsaDecryptionKey } from "./rsa";
-import { getSecretDecryptionKey as _getSecretDecryptionKey } from "./secret";
 
 jest.mock("./ec");
 jest.mock("./oct");
 jest.mock("./rsa");
-jest.mock("./secret");
 
 const getEcDecryptionKey = _getEcDecryptionKey as jest.Mock;
 const getOctDecryptionKey = _getOctDecryptionKey as jest.Mock;
 const getRsaDecryptionKey = _getRsaDecryptionKey as jest.Mock;
-const getSecretDecryptionKey = _getSecretDecryptionKey as jest.Mock;
 
 describe("getDecryptionKey", () => {
   beforeEach(() => {
     getEcDecryptionKey.mockReturnValue("getEcDecryptionKey");
     getOctDecryptionKey.mockReturnValue("getOctDecryptionKey");
     getRsaDecryptionKey.mockReturnValue("getRsaDecryptionKey");
-    getSecretDecryptionKey.mockReturnValue("getSecretDecryptionKey");
   });
 
   afterEach(jest.clearAllMocks);
 
-  test("should resolve decryption key with secret", () => {
-    expect(
-      getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        secret: "secret",
-      }),
-    ).toStrictEqual("getSecretDecryptionKey");
-
-    expect(getSecretDecryptionKey).toHaveBeenCalled();
-  });
-
   test("should resolve decryption key with EC key", () => {
     expect(
       getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PRIVATE_EC_JWK,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.ECDH_ES,
+        encryption: "aes-256-gcm",
+        keySet: EC_KEY_SET,
+        encryptionKeyAlgorithm: "ECDH-ES",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
-        publicEncryptionJwk: PUBLIC_EC_JWK,
+        publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
       }),
     ).toStrictEqual("getEcDecryptionKey");
 
@@ -58,9 +41,9 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with RSA key", () => {
     expect(
       getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PUBLIC_RSA_PEM,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+        encryption: "aes-256-gcm",
+        keySet: RSA_KEY_SET,
+        encryptionKeyAlgorithm: "RSA-OAEP-256",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
       }),
     ).toStrictEqual("getRsaDecryptionKey");
@@ -71,37 +54,19 @@ describe("getDecryptionKey", () => {
   test("should resolve decryption key with OCT key", () => {
     expect(
       getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: SYMMETRIC_OCT_PEM,
+        encryption: "aes-256-gcm",
+        keySet: OCT_KEY_SET,
       }),
     ).toStrictEqual("getOctDecryptionKey");
 
     expect(getOctDecryptionKey).toHaveBeenCalled();
   });
 
-  test("should throw error with both key and secret", () => {
-    expect(() =>
-      getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PUBLIC_RSA_PEM,
-        secret: "secret",
-      }),
-    ).toThrow(AesError);
-  });
-
-  test("should throw when key is missing", () => {
-    expect(() =>
-      getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-      }),
-    ).toThrow(AesError);
-  });
-
   test("should throw when encryption key algorithm is missing", () => {
     expect(() =>
       getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PUBLIC_RSA_PEM,
+        encryption: "aes-256-gcm",
+        keySet: RSA_KEY_SET,
       }),
     ).toThrow(AesError);
   });
@@ -109,9 +74,9 @@ describe("getDecryptionKey", () => {
   test("should throw when public encryption key is missing", () => {
     expect(() =>
       getDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PUBLIC_RSA_PEM,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+        encryption: "aes-256-gcm",
+        keySet: RSA_KEY_SET,
+        encryptionKeyAlgorithm: "RSA-OAEP-256",
       }),
     ).toThrow(AesError);
   });

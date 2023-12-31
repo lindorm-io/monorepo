@@ -1,29 +1,30 @@
-import { AesAlgorithm } from "../../../enums";
-import { AesEncryptionKey } from "../../../types";
+import { OctKeySet } from "@lindorm-io/jwk";
+import { Encryption } from "../../../types";
 import { assertSecretLength } from "../secret";
-import { getOctPem } from "./get-oct-pem";
 
-type Options = {
-  algorithm: AesAlgorithm;
-  key: AesEncryptionKey;
+type EncryptOptions = {
+  encryption: Encryption;
+  keySet: OctKeySet;
 };
 
-type Result = {
+type EncryptResult = {
   encryptionKey: Buffer;
 };
 
-export const getOctEncryptionKeys = ({ algorithm, key }: Options): Result => {
-  const pem = getOctPem(key);
+export const getOctEncryptionKeys = ({ encryption, keySet }: EncryptOptions): EncryptResult => {
+  const der = keySet.export("der");
+  const pem = keySet.export("pem");
 
-  assertSecretLength({ algorithm, secret: pem.symmetricKey });
+  assertSecretLength({ encryption, secret: pem.privateKey });
 
-  return { encryptionKey: Buffer.from(pem.symmetricKey) };
+  return { encryptionKey: der.privateKey };
 };
 
-export const getOctDecryptionKey = ({ algorithm, key }: Options): Buffer => {
-  const pem = getOctPem(key);
+export const getOctDecryptionKey = ({ encryption, keySet }: EncryptOptions): Buffer => {
+  const der = keySet.export("der");
+  const pem = keySet.export("pem");
 
-  assertSecretLength({ algorithm, secret: pem.symmetricKey });
+  assertSecretLength({ encryption, secret: pem.privateKey });
 
-  return Buffer.from(pem.symmetricKey);
+  return der.privateKey;
 };

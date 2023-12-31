@@ -1,11 +1,10 @@
 import { CipherGCM, DecipherGCM } from "crypto";
-import { AesAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
 import { GetAuthTagOptions, SetAuthTagOptions } from "../../types/auth-tag";
 import { createHmacAuthTag, verifyHmacAuthTag } from "./auth-tag-hmac";
 
 export const getAuthTag = ({
-  algorithm,
+  encryption: algorithm,
   cipher,
   content,
   encryptionKey,
@@ -13,9 +12,9 @@ export const getAuthTag = ({
   integrityHash,
 }: GetAuthTagOptions): Buffer | undefined => {
   switch (algorithm) {
-    case AesAlgorithm.AES_128_CBC:
-    case AesAlgorithm.AES_192_CBC:
-    case AesAlgorithm.AES_256_CBC:
+    case "aes-128-cbc":
+    case "aes-192-cbc":
+    case "aes-256-cbc":
       if (!integrityHash) {
         return;
       }
@@ -26,9 +25,9 @@ export const getAuthTag = ({
         integrityHash,
       });
 
-    case AesAlgorithm.AES_128_GCM:
-    case AesAlgorithm.AES_192_GCM:
-    case AesAlgorithm.AES_256_GCM:
+    case "aes-128-gcm":
+    case "aes-192-gcm":
+    case "aes-256-gcm":
       return (cipher as CipherGCM).getAuthTag();
 
     default:
@@ -39,7 +38,7 @@ export const getAuthTag = ({
 };
 
 export const setAuthTag = ({
-  algorithm,
+  encryption: algorithm,
   authTag,
   content,
   decipher,
@@ -48,9 +47,9 @@ export const setAuthTag = ({
   integrityHash,
 }: SetAuthTagOptions): void => {
   switch (algorithm) {
-    case AesAlgorithm.AES_128_CBC:
-    case AesAlgorithm.AES_192_CBC:
-    case AesAlgorithm.AES_256_CBC:
+    case "aes-128-cbc":
+    case "aes-192-cbc":
+    case "aes-256-cbc":
       if (!authTag || !integrityHash) {
         return;
       }
@@ -63,9 +62,9 @@ export const setAuthTag = ({
       });
       return;
 
-    case AesAlgorithm.AES_128_GCM:
-    case AesAlgorithm.AES_192_GCM:
-    case AesAlgorithm.AES_256_GCM:
+    case "aes-128-gcm":
+    case "aes-192-gcm":
+    case "aes-256-gcm":
       if (!authTag) {
         throw new AesError("Auth tag is required for GCM decryption");
       }

@@ -1,41 +1,39 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../constants";
-import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat } from "../enums";
 import { AesEncryptionData, DecryptAesDataOptions, EncryptAesDataOptions } from "../types";
 import {
   getAuthTag,
   getDecryptionKey,
   getEncryptionKeys,
   getInitialisationVector,
-  getKeyId,
-  isPublicKey,
-  mapStringToAesAlgorithm,
+  getKeySet,
   setAuthTag,
 } from "./private";
 
-export const encryptAesData = ({
-  algorithm = AesAlgorithm.AES_256_GCM,
-  data,
-  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP,
-  format = AesFormat.BASE64_URL,
-  integrityHash,
-  key,
-  secret,
-}: EncryptAesDataOptions): AesEncryptionData => {
+export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
+  const {
+    encryption = "aes-256-gcm",
+    data,
+    encryptionKeyAlgorithm,
+    format = "base64url",
+    integrityHash,
+  } = options;
+
+  const keySet = getKeySet(options);
+
   const { encryptionKey, publicEncryptionJwk, publicEncryptionKey } = getEncryptionKeys({
-    algorithm,
-    key,
-    secret,
+    encryption,
+    keySet,
     encryptionKeyAlgorithm,
   });
 
-  const initialisationVector = getInitialisationVector(algorithm);
-  const cipher = createCipheriv(algorithm, encryptionKey, initialisationVector);
+  const initialisationVector = getInitialisationVector(encryption);
+  const cipher = createCipheriv(encryption, encryptionKey, initialisationVector);
   const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
   const authTag = getAuthTag({
-    algorithm,
+    encryption,
     cipher,
     content,
     encryptionKey,
@@ -43,49 +41,48 @@ export const encryptAesData = ({
     integrityHash,
   });
 
-  const keyId = getKeyId(key);
-  const publicKey = isPublicKey(key);
-
   return {
-    algorithm,
+    encryption,
     authTag,
     content,
     format,
     initialisationVector,
     integrityHash,
-    keyId: keyId ? Buffer.from(keyId, format) : undefined,
-    encryptionKeyAlgorithm: publicKey && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
+    keyId: keySet.id ? Buffer.from(keySet.id, format) : undefined,
+    encryptionKeyAlgorithm:
+      encryptionKeyAlgorithm && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
     publicEncryptionJwk,
     publicEncryptionKey,
     version: LATEST_AES_VERSION,
   };
 };
 
-export const decryptAesData = ({
-  algorithm,
-  authTag,
-  content,
-  encryptionKeyAlgorithm,
-  initialisationVector,
-  integrityHash,
-  key,
-  publicEncryptionJwk,
-  publicEncryptionKey,
-  secret,
-}: DecryptAesDataOptions): string => {
-  const decryptionKey = getDecryptionKey({
-    algorithm: mapStringToAesAlgorithm(algorithm),
-    key,
+export const decryptAesData = (options: DecryptAesDataOptions): string => {
+  const {
+    encryption,
+    authTag,
+    content,
     encryptionKeyAlgorithm,
-    secret,
+    initialisationVector,
+    integrityHash,
+    publicEncryptionJwk,
+    publicEncryptionKey,
+  } = options;
+
+  const keySet = getKeySet(options);
+
+  const decryptionKey = getDecryptionKey({
+    encryption,
+    encryptionKeyAlgorithm,
+    keySet,
     publicEncryptionJwk,
     publicEncryptionKey,
   });
 
-  const decipher = createDecipheriv(algorithm, decryptionKey, initialisationVector);
+  const decipher = createDecipheriv(encryption, decryptionKey, initialisationVector);
 
   setAuthTag({
-    algorithm,
+    encryption,
     authTag,
     content,
     decipher,

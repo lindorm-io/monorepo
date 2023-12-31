@@ -1,25 +1,35 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../enums";
-import { AesEncryptionKey, AesPublicJwk, AesSecret } from "./types";
+import { KeySet } from "@lindorm-io/jwk";
+import {
+  BufferFormat,
+  Encryption,
+  EncryptionKeyAlgorithm,
+  IntegrityHash,
+  KeyObject,
+  PublicEncryptionJwk,
+  Secret,
+} from "./types";
 
 export type EncryptAesDataOptions = {
-  algorithm?: AesAlgorithm;
   data: Buffer | string;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  format?: AesFormat;
-  integrityHash?: AesIntegrityHash;
-  key?: AesEncryptionKey;
-  secret?: AesSecret;
+  encryption?: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  format?: BufferFormat;
+  integrityHash?: IntegrityHash;
+  key?: KeyObject;
+  keySet?: KeySet;
+  secret?: Secret;
 };
 
 export type DecryptAesDataOptions = {
-  algorithm: AesAlgorithm;
   authTag?: Buffer;
   content: Buffer;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
+  encryption: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
   initialisationVector: Buffer;
-  integrityHash?: AesIntegrityHash;
-  key?: AesEncryptionKey;
-  publicEncryptionJwk?: AesPublicJwk;
+  integrityHash?: IntegrityHash;
+  key?: KeyObject;
+  keySet?: KeySet;
+  publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
-  secret?: AesSecret;
+  secret?: Secret;
 };

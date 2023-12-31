@@ -1,3 +1,3 @@
 export * from "./assert-secret-length";
 export * from "./calculate-secret-length";
-export * from "./get-secret-keys";
+export * from "./create-key-derivation";

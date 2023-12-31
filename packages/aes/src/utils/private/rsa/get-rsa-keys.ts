@@ -1,13 +1,12 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
-import { AesEncryptionKey } from "../../../types";
+import { RsaKeySet } from "@lindorm-io/jwk";
+import { Encryption, EncryptionKeyAlgorithm } from "../../../types";
 import { generateEncryptionKey } from "./generate-encryption-key";
-import { getRsaPem } from "./get-rsa-pem";
 import { createPublicEncryptionKey, decryptPublicEncryptionKey } from "./public-encryption-key";
 
 type EncryptOptions = {
-  algorithm: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key: AesEncryptionKey;
+  encryption: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: RsaKeySet;
 };
 
 type EncryptResult = {
@@ -16,21 +15,20 @@ type EncryptResult = {
 };
 
 type DecryptOptions = {
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  key: AesEncryptionKey;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: RsaKeySet;
   publicEncryptionKey: Buffer;
 };
 
 export const getRsaEncryptionKeys = ({
-  algorithm,
+  encryption,
   encryptionKeyAlgorithm,
-  key,
+  keySet,
 }: EncryptOptions): EncryptResult => {
-  const pem = getRsaPem(key);
-  const encryptionKey = generateEncryptionKey(algorithm);
+  const encryptionKey = generateEncryptionKey(encryption);
   const publicEncryptionKey = createPublicEncryptionKey({
     encryptionKey,
-    pem,
+    keySet,
     encryptionKeyAlgorithm,
   });
 
@@ -39,14 +37,11 @@ export const getRsaEncryptionKeys = ({
 
 export const getRsaDecryptionKey = ({
   encryptionKeyAlgorithm,
-  key,
+  keySet,
   publicEncryptionKey,
-}: DecryptOptions): Buffer => {
-  const pem = getRsaPem(key);
-
-  return decryptPublicEncryptionKey({
+}: DecryptOptions): Buffer =>
+  decryptPublicEncryptionKey({
     encryptionKeyAlgorithm,
-    pem,
+    keySet,
     publicEncryptionKey,
   });
-};

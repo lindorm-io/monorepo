@@ -1,56 +1,97 @@
-import { RsaPemValues } from "@lindorm-io/jwk";
-import { privateDecrypt, privateEncrypt, publicDecrypt, publicEncrypt } from "crypto";
-import { AesEncryptionKeyAlgorithm } from "../../../enums";
+import { RsaKeySet } from "@lindorm-io/jwk";
+import { constants, privateDecrypt, privateEncrypt, publicDecrypt, publicEncrypt } from "crypto";
 import { AesError } from "../../../errors";
-import { getRsaHashKeyObject } from "./get-rsa-hash-key-object";
-import { getRsaKeyObject } from "./get-rsa-key-object";
+import { EncryptionKeyAlgorithm } from "../../../types";
+import { getOaepHash } from "./get-oaep-hash";
 
 type EncryptOptions = {
   encryptionKey: Buffer;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  pem: RsaPemValues;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: RsaKeySet;
 };
 
 type DecryptOptions = {
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  pem: RsaPemValues;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  keySet: RsaKeySet;
   publicEncryptionKey: Buffer;
 };
 
 export const createPublicEncryptionKey = ({
   encryptionKey,
-  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-  pem,
+  encryptionKeyAlgorithm,
+  keySet,
 }: EncryptOptions): Buffer => {
-  if (pem.privateKey?.length) {
-    return privateEncrypt(getRsaKeyObject(pem), encryptionKey);
+  const { privateKey, publicKey } = keySet.export("pem");
+
+  if (encryptionKeyAlgorithm === "RSA-PRIVATE-KEY") {
+    if (!privateKey) {
+      throw new AesError("Unable to encrypt AES without private key", {
+        description: "Private key is missing",
+        debug: { keySet },
+      });
+    }
+
+    return privateEncrypt(privateKey, encryptionKey);
   }
 
-  if (pem.publicKey?.length) {
-    return publicEncrypt(getRsaHashKeyObject(pem, encryptionKeyAlgorithm), encryptionKey);
+  if (
+    encryptionKeyAlgorithm === "RSA-OAEP" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-256" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-384" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-512"
+  ) {
+    return publicEncrypt(
+      {
+        key: publicKey,
+        padding: constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: getOaepHash(encryptionKeyAlgorithm),
+      },
+      encryptionKey,
+    );
   }
 
-  throw new AesError("Unable to encrypt AES cipher with public key without public key", {
-    description: "Public key is missing",
-    debug: { pem },
+  throw new AesError("Invalid encryption key algorithm", {
+    description: "Encryption key algorithm is invalid",
+    debug: { encryptionKeyAlgorithm, keySet },
   });
 };
 
 export const decryptPublicEncryptionKey = ({
-  encryptionKeyAlgorithm = AesEncryptionKeyAlgorithm.RSA_OAEP_256,
-  pem,
+  encryptionKeyAlgorithm,
+  keySet,
   publicEncryptionKey,
 }: DecryptOptions): Buffer => {
-  if (pem.privateKey?.length) {
-    return privateDecrypt(getRsaHashKeyObject(pem, encryptionKeyAlgorithm), publicEncryptionKey);
+  const { privateKey, publicKey } = keySet.export("pem");
+
+  if (encryptionKeyAlgorithm === "RSA-PRIVATE-KEY") {
+    return publicDecrypt(publicKey, publicEncryptionKey);
   }
 
-  if (pem.publicKey?.length) {
-    return publicDecrypt(getRsaKeyObject(pem), publicEncryptionKey);
+  if (
+    encryptionKeyAlgorithm === "RSA-OAEP" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-256" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-384" ||
+    encryptionKeyAlgorithm === "RSA-OAEP-512"
+  ) {
+    if (!privateKey) {
+      throw new AesError("Unable to decrypt AES without private key", {
+        description: "Private key is missing",
+        debug: { keySet },
+      });
+    }
+
+    return privateDecrypt(
+      {
+        key: privateKey,
+        padding: constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: getOaepHash(encryptionKeyAlgorithm),
+      },
+      publicEncryptionKey,
+    );
   }
 
-  throw new AesError("Unable to decrypt AES cipher with public key without public key", {
-    description: "Public key is missing",
-    debug: { pem },
+  throw new AesError("Invalid encryption key algorithm", {
+    description: "Encryption key algorithm is invalid",
+    debug: { encryptionKeyAlgorithm, keySet },
   });
 };

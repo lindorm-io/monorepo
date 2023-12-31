@@ -1,16 +1,15 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../../enums";
 import { encodeAesString } from "./encode-aes-string";
 
 describe("encodeAesString", () => {
   test("should resolve string", () => {
     const string = encodeAesString({
-      algorithm: AesAlgorithm.AES_256_GCM,
+      encryption: "aes-256-gcm",
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
-      format: AesFormat.BASE64_URL,
-      integrityHash: AesIntegrityHash.SHA256,
+      format: "base64url",
+      integrityHash: "sha256",
       initialisationVector: Buffer.from("initialisationVector"),
-      encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
+      encryptionKeyAlgorithm: "RSA-OAEP-256",
       keyId: Buffer.from("keyId"),
       publicEncryptionJwk: {
         crv: "P-521",
@@ -28,7 +27,7 @@ describe("encodeAesString", () => {
 
     expect(string).toContain("cek=cHVibGljRW5jcnlwdGlvbktleQ");
     expect(string).toContain("crv=P-521");
-    expect(string).toContain("eka=rsa-oaep-256");
+    expect(string).toContain("eka=RSA-OAEP-256");
     expect(string).toContain("ih=sha256");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I");
     expect(string).toContain("kid=a2V5SWQ");

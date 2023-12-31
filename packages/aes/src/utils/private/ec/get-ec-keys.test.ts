@@ -1,14 +1,13 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "../../../enums";
-import { PRIVATE_EC_JWK, PUBLIC_EC_JWK } from "../../../fixtures/ec-keys.fixture";
+import { EC_KEY_SET } from "../../../fixtures/ec-keys.fixture";
 import { getEcDecryptionKey, getEcEncryptionKeys } from "./get-ec-keys";
 
 describe("get-ec-keys", () => {
   test("should return encryption keys", () => {
     expect(
       getEcEncryptionKeys({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.ECDH_ES,
-        key: PUBLIC_EC_JWK,
+        encryption: "aes-256-gcm",
+        encryptionKeyAlgorithm: "ECDH-ES",
+        keySet: EC_KEY_SET,
       }),
     ).toStrictEqual({
       encryptionKey: expect.any(Buffer),
@@ -16,6 +15,7 @@ describe("get-ec-keys", () => {
         crv: "P-521",
         x: expect.any(String),
         y: expect.any(String),
+        kty: "EC",
       },
     });
   });
@@ -23,16 +23,17 @@ describe("get-ec-keys", () => {
   test("should return decryption key", () => {
     expect(
       getEcDecryptionKey({
-        algorithm: AesAlgorithm.AES_256_GCM,
-        key: PRIVATE_EC_JWK,
+        encryption: "aes-256-gcm",
+        keySet: EC_KEY_SET,
         publicEncryptionJwk: {
           crv: "P-521",
-          x: "Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7",
-          y: "ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH",
+          x: "ALYAPxQI9-VaHz4jacSrDlu2RL7AubK8NTB3b5EG4KE1WRBa-SBoSec6O3cD3kWWw4IA4B6MgJzm_Qsss3QzHvW-",
+          y: "AX24-JHetceSWC-nhNolARHasMWbUpzKdbpx-NlfzKRBm3SpJ05PkP6ecoYciRm0oMownoOlb48ZY1FDpuw0h8zR",
+          kty: "EC",
         },
       }),
     ).toStrictEqual(
-      Buffer.from("729e00110e7e8912072ce1fcd3677656b8461a47122058308812db5e413124a4", "hex"),
+      Buffer.from("4ddde4b3352815587593d7f7df124930332ceef9ed62225794e6276ed3f4b1dc", "hex"),
     );
   });
 });

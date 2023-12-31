@@ -1,1 +1,1 @@
-export const LATEST_AES_VERSION = 4;
+export const LATEST_AES_VERSION = 5;

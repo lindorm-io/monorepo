@@ -1,53 +1,22 @@
-import { EcJwkValues, EcPemValues } from "@lindorm-io/jwk";
+import { EcKeySet } from "@lindorm-io/jwk";
 
-export const PRIVATE_EC_PEM: EcPemValues = {
-  id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
+export const EC_KEY_SET = EcKeySet.fromPem({
   curve: "P-521",
   privateKey:
     "-----BEGIN PRIVATE KEY-----\n" +
-    "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAmT5i0eE+ihtF0Rlf\n" +
-    "Mr1REhPuYHt28Zh4fpOYryQ/Todr+VVFfx//MP29z0JGKT59vpeRxMzGS0U297Ve\n" +
-    "Srcdsy6hgYkDgYYABAALCbX3YEpmksbJtbMDkgqHZksXhMMUNb3HZC1ckqWQBi3B\n" +
-    "mWDSLyfXFLUBkHPUtwg745EdG5K8auBy2KguCsKHcwCXEjKSVpmfe4L9N4FyCGx+\n" +
-    "e6dNUTegqVXFE11vrODcZ0OlA4blinsgXQexdeK10GUCob5bqBqY77+jjeG3ZNsL\n" +
-    "lg==\n" +
+    "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIB+1dzKp5FO/wISTaI\n" +
+    "PHCv1yZLMZl0o6BAXgMKibC6e8iFI9W4YIrZYTInHDpqA/wNd764XikWWse9jRRw\n" +
+    "KLYy02KhgYkDgYYABAFyw1SdEKD9Sz2XojfjqCPVoilq5YSZjLBmZtXG2x6ydRUW\n" +
+    "3Q/IL7kfEtKycJ42z9UhP4adevymNBQ4J02/Yx/jswGcKMep28r825kUE64LbsUc\n" +
+    "8b4/pgKHEX2bR9n1Vw5uJRWEtPKVBXeV9dk0D1I/1/iDYJRkc3OwZ1+MYWN31i5r\n" +
+    "tg==\n" +
     "-----END PRIVATE KEY-----\n",
   publicKey:
     "-----BEGIN PUBLIC KEY-----\n" +
-    "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQACwm192BKZpLGybWzA5IKh2ZLF4TD\n" +
-    "FDW9x2QtXJKlkAYtwZlg0i8n1xS1AZBz1LcIO+ORHRuSvGrgctioLgrCh3MAlxIy\n" +
-    "klaZn3uC/TeBcghsfnunTVE3oKlVxRNdb6zg3GdDpQOG5Yp7IF0HsXXitdBlAqG+\n" +
-    "W6gamO+/o43ht2TbC5Y=\n" +
+    "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQBcsNUnRCg/Us9l6I346gj1aIpauWE\n" +
+    "mYywZmbVxtsesnUVFt0PyC+5HxLSsnCeNs/VIT+GnXr8pjQUOCdNv2Mf47MBnCjH\n" +
+    "qdvK/NuZFBOuC27FHPG+P6YChxF9m0fZ9VcObiUVhLTylQV3lfXZNA9SP9f4g2CU\n" +
+    "ZHNzsGdfjGFjd9Yua7Y=\n" +
     "-----END PUBLIC KEY-----\n",
   type: "EC",
-};
-
-export const PUBLIC_EC_PEM: EcPemValues = {
-  id: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
-  curve: "P-521",
-  publicKey:
-    "-----BEGIN PUBLIC KEY-----\n" +
-    "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQACwm192BKZpLGybWzA5IKh2ZLF4TD\n" +
-    "FDW9x2QtXJKlkAYtwZlg0i8n1xS1AZBz1LcIO+ORHRuSvGrgctioLgrCh3MAlxIy\n" +
-    "klaZn3uC/TeBcghsfnunTVE3oKlVxRNdb6zg3GdDpQOG5Yp7IF0HsXXitdBlAqG+\n" +
-    "W6gamO+/o43ht2TbC5Y=\n" +
-    "-----END PUBLIC KEY-----\n",
-  type: "EC",
-};
-
-export const PRIVATE_EC_JWK: EcJwkValues = {
-  crv: "P-521",
-  d: "AJk+YtHhPoobRdEZXzK9URIT7mB7dvGYeH6TmK8kP06Ha/lVRX8f/zD9vc9CRik+fb6XkcTMxktFNve1Xkq3HbMu",
-  x: "AAsJtfdgSmaSxsm1swOSCodmSxeEwxQ1vcdkLVySpZAGLcGZYNIvJ9cUtQGQc9S3CDvjkR0bkrxq4HLYqC4Kwodz",
-  y: "AJcSMpJWmZ97gv03gXIIbH57p01RN6CpVcUTXW+s4NxnQ6UDhuWKeyBdB7F14rXQZQKhvluoGpjvv6ON4bdk2wuW",
-  kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
-  kty: "EC",
-};
-
-export const PUBLIC_EC_JWK: EcJwkValues = {
-  crv: "P-521",
-  x: "AAsJtfdgSmaSxsm1swOSCodmSxeEwxQ1vcdkLVySpZAGLcGZYNIvJ9cUtQGQc9S3CDvjkR0bkrxq4HLYqC4Kwodz",
-  y: "AJcSMpJWmZ97gv03gXIIbH57p01RN6CpVcUTXW+s4NxnQ6UDhuWKeyBdB7F14rXQZQKhvluoGpjvv6ON4bdk2wuW",
-  kid: "dfa05b8c-b003-5ada-8a91-5bc6ce95c654",
-  kty: "EC",
-};
+});

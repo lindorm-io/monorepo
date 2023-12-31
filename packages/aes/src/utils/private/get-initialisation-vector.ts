@@ -1,23 +1,23 @@
 import { randomBytes } from "crypto";
-import { AesAlgorithm } from "../../enums";
 import { AesError } from "../../errors";
+import { Encryption } from "../../types";
 
-export const getInitialisationVector = (algorithm: AesAlgorithm): Buffer => {
-  switch (algorithm) {
-    case AesAlgorithm.AES_128_CBC:
-    case AesAlgorithm.AES_192_CBC:
-    case AesAlgorithm.AES_256_CBC:
+export const getInitialisationVector = (encryption: Encryption): Buffer => {
+  switch (encryption) {
+    case "aes-128-cbc":
+    case "aes-192-cbc":
+    case "aes-256-cbc":
       return randomBytes(16);
 
-    case AesAlgorithm.AES_128_GCM:
-    case AesAlgorithm.AES_192_GCM:
-    case AesAlgorithm.AES_256_GCM:
+    case "aes-128-gcm":
+    case "aes-192-gcm":
+    case "aes-256-gcm":
       return randomBytes(12);
 
     default:
       throw new AesError("Unexpected algorithm", {
         description: "Algorithm does not support initialisation vector",
-        debug: { algorithm },
+        debug: { encryption },
       });
   }
 };

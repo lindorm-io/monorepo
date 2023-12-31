@@ -1,16 +1,19 @@
 import { EllipticCurve } from "@lindorm-io/jwk";
-import { AesIntegrityHash } from "../../enums";
 import { AesError } from "../../errors";
-import { AesEncryptionData } from "../../types";
-import { mapStringToAesFormat, mapStringToEncryptionKeyAlgorithm } from "./mappers";
-import { mapStringToAesAlgorithm } from "./mappers/algorithm-mapper";
+import {
+  AesEncryptionData,
+  BufferFormat,
+  Encryption,
+  EncryptionKeyAlgorithm,
+  IntegrityHash,
+} from "../../types";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
 export const decodeAesString = (data: string): AesEncryptionData => {
   const [_, alg, array, content] = data.split("$");
 
-  const algorithm = mapStringToAesAlgorithm(alg);
+  const algorithm = alg as Encryption;
   const items = array.split(",");
   const values: Record<string, string> = {};
 
@@ -27,20 +30,21 @@ export const decodeAesString = (data: string): AesEncryptionData => {
     values[match.groups.key] = match.groups.value;
   }
 
-  const { cek, crv: curve, eka, f, ih, iv, kid, tag, v, x, y } = values;
+  const { cek, crv: curve, eka, f, ih, iv, kid, tag, v, x, y, kty: keyType } = values;
   const crv = curve as EllipticCurve;
-  const format = mapStringToAesFormat(f);
+  const format = f as BufferFormat;
+  const kty = keyType as "EC";
 
   return {
-    algorithm,
+    encryption: algorithm,
     authTag: tag ? Buffer.from(tag, format) : undefined,
     content: Buffer.from(content, format),
-    encryptionKeyAlgorithm: eka ? mapStringToEncryptionKeyAlgorithm(eka) : undefined,
+    encryptionKeyAlgorithm: eka as EncryptionKeyAlgorithm,
     format,
-    integrityHash: ih as AesIntegrityHash,
+    integrityHash: ih as IntegrityHash,
     initialisationVector: Buffer.from(iv, format),
     keyId: kid ? Buffer.from(kid, format) : undefined,
-    publicEncryptionJwk: crv && x && y ? { crv, x, y } : undefined,
+    publicEncryptionJwk: crv && x && y && kty ? { crv, x, y, kty } : undefined,
     publicEncryptionKey: cek ? Buffer.from(cek, format) : undefined,
     version: parseInt(v, 10),
   };

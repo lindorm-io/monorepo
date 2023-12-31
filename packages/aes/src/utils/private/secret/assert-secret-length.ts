@@ -1,15 +1,14 @@
-import { AesAlgorithm } from "../../../enums";
 import { AesError } from "../../../errors";
-import { AesSecret } from "../../../types";
+import { Encryption, Secret } from "../../../types";
 import { calculateSecretLength } from "./calculate-secret-length";
 
 type Options = {
-  algorithm: AesAlgorithm;
-  secret: AesSecret;
+  encryption: Encryption;
+  secret: Secret;
 };
 
-export const assertSecretLength = ({ algorithm, secret }: Options): void => {
-  const secretLength = calculateSecretLength(algorithm);
+export const assertSecretLength = ({ encryption, secret }: Options): void => {
+  const secretLength = calculateSecretLength(encryption);
 
   if (secret.length === secretLength) return;
 

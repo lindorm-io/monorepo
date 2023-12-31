@@ -1,11 +1,19 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm, AesFormat, AesIntegrityHash } from "../enums";
-import { AesEncryptionKey, AesSecret } from "./types";
+import { KeySet } from "@lindorm-io/jwk";
+import {
+  BufferFormat,
+  Encryption,
+  EncryptionKeyAlgorithm,
+  IntegrityHash,
+  KeyObject,
+  Secret,
+} from "./types";
 
 export type AesCipherOptions = {
-  algorithm?: AesAlgorithm;
-  encryptionKeyAlgorithm?: AesEncryptionKeyAlgorithm;
-  format?: AesFormat;
-  integrityHash?: AesIntegrityHash;
-  key?: AesEncryptionKey;
-  secret?: AesSecret;
+  encryption?: Encryption;
+  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  format?: BufferFormat;
+  integrityHash?: IntegrityHash;
+  key?: KeyObject;
+  keySet?: KeySet;
+  secret?: Secret;
 };

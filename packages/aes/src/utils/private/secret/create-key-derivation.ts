@@ -1,22 +1,23 @@
 import { createHmac } from "crypto";
-import { ShaAlgorithm } from "../../../enums";
 import { AesError } from "../../../errors";
+import { Encryption, ShaHash } from "../../../types";
+import { calculateSecretLength } from "./calculate-secret-length";
 
 type Options = {
-  hash?: ShaAlgorithm;
+  encryption: Encryption;
+  hash?: ShaHash;
   initialKeyringMaterial: Buffer;
-  length: number;
 };
 
-const getHashLength = (hash: ShaAlgorithm): number => {
+const getHashLength = (hash: ShaHash): number => {
   switch (hash) {
-    case ShaAlgorithm.SHA256:
+    case "sha256":
       return 32;
 
-    case ShaAlgorithm.SHA384:
+    case "sha384":
       return 48;
 
-    case ShaAlgorithm.SHA512:
+    case "sha512":
       return 64;
 
     default:
@@ -25,10 +26,11 @@ const getHashLength = (hash: ShaAlgorithm): number => {
 };
 
 export const createKeyDerivation = ({
-  hash = ShaAlgorithm.SHA256,
+  encryption,
+  hash = "sha256",
   initialKeyringMaterial,
-  length,
 }: Options): Buffer => {
+  const length = calculateSecretLength(encryption);
   const hashLength = getHashLength(hash);
 
   // Step 1: Extract

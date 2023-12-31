@@ -1,12 +1,14 @@
+import { KeySet } from "@lindorm-io/jwk";
 import { EncryptAesDataOptions } from "./aes-data";
-import { AesEncryptionKey, AesSecret } from "./types";
+import { KeyObject, Secret } from "./types";
 
 export type EncryptAesCipherOptions = EncryptAesDataOptions;
 
 export type DecryptAesCipherOptions = {
   cipher: string;
-  key?: AesEncryptionKey;
-  secret?: AesSecret;
+  key?: KeyObject;
+  keySet?: KeySet;
+  secret?: Secret;
 };
 
 export type VerifyAesCipherOptions = DecryptAesCipherOptions & {

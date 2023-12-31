@@ -1,5 +1,4 @@
 import { randomBytes } from "crypto";
-import { AesAlgorithm } from "../../../enums";
 import { AesError } from "../../../errors";
 import { assertSecretLength } from "./assert-secret-length";
 
@@ -8,7 +7,7 @@ describe("assertSecretLength", () => {
     test("should resolve for aes-128-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_128_GCM,
+          encryption: "aes-128-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 16),
         }),
       ).not.toThrow();
@@ -17,7 +16,7 @@ describe("assertSecretLength", () => {
     test("should throw for aes-128-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_128_GCM,
+          encryption: "aes-128-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 15),
         }),
       ).toThrow(AesError);
@@ -28,7 +27,7 @@ describe("assertSecretLength", () => {
     test("should resolve for aes-192-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_192_GCM,
+          encryption: "aes-192-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 24),
         }),
       ).not.toThrow();
@@ -37,7 +36,7 @@ describe("assertSecretLength", () => {
     test("should throw for aes-192-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_192_GCM,
+          encryption: "aes-192-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 23),
         }),
       ).toThrow(AesError);
@@ -48,7 +47,7 @@ describe("assertSecretLength", () => {
     test("should resolve for aes-256-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_256_GCM,
+          encryption: "aes-256-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 32),
         }),
       ).not.toThrow();
@@ -57,7 +56,7 @@ describe("assertSecretLength", () => {
     test("should throw for aes-256-gcm", () => {
       expect(() =>
         assertSecretLength({
-          algorithm: AesAlgorithm.AES_256_GCM,
+          encryption: "aes-256-gcm",
           secret: randomBytes(32).toString("hex").slice(0, 31),
         }),
       ).toThrow(AesError);

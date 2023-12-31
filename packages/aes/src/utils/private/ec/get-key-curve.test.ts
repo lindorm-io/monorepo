@@ -1,8 +1,10 @@
-import { PUBLIC_EC_JWK } from "../../../fixtures/ec-keys.fixture";
+import { EC_KEY_SET } from "../../../fixtures/ec-keys.fixture";
 import { getKeyCurve } from "./get-key-curve";
 
 describe("getKeyCurve", () => {
   test("should return curve", () => {
-    expect(getKeyCurve(PUBLIC_EC_JWK)).toBe("secp521r1");
+    const { curve } = EC_KEY_SET.export("der");
+
+    expect(getKeyCurve(curve)).toBe("secp521r1");
   });
 });

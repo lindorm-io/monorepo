@@ -1,4 +1,4 @@
-export enum AesAlgorithm {
+export enum AesEncryption {
   // cbc
   AES_128_CBC = "aes-128-cbc",
   AES_192_CBC = "aes-192-cbc",
