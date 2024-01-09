@@ -79,8 +79,6 @@ describe("OctKeySet", () => {
     const generated = await OctKeySet.generate();
     const pem = generated.export("pem");
 
-    console.log(pem);
-
     expect(pem).toStrictEqual({
       privateKey: expect.any(String),
       type: "oct",

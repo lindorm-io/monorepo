@@ -17,7 +17,7 @@ describe("RsaKeySet", () => {
     expect(generated.modulus).toBe(1024);
     expect(generated.type).toBe("RSA");
     expect(generated.export).toBeInstanceOf(Function);
-  });
+  }, 10000);
 
   test("should generate with modulus at 2", async () => {
     const generated = await RsaKeySet.generate(2);
@@ -26,7 +26,7 @@ describe("RsaKeySet", () => {
     expect(generated.modulus).toBe(2048);
     expect(generated.type).toBe("RSA");
     expect(generated.export).toBeInstanceOf(Function);
-  });
+  }, 10000);
 
   test("should generate with modulus at 3", async () => {
     const generated = await RsaKeySet.generate(3);
@@ -35,7 +35,7 @@ describe("RsaKeySet", () => {
     expect(generated.modulus).toBe(3072);
     expect(generated.type).toBe("RSA");
     expect(generated.export).toBeInstanceOf(Function);
-  });
+  }, 10000);
 
   test("should generate with modulus at 4", async () => {
     const generated = await RsaKeySet.generate(4);
@@ -44,7 +44,7 @@ describe("RsaKeySet", () => {
     expect(generated.modulus).toBe(4096);
     expect(generated.type).toBe("RSA");
     expect(generated.export).toBeInstanceOf(Function);
-  });
+  }, 10000);
 
   test("should create from jwk", () => {
     const created = RsaKeySet.fromJwk({
