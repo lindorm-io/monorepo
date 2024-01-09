@@ -15,6 +15,7 @@ describe("encodeAesString", () => {
         crv: "P-521",
         x: "Af3ZdH3XBQFqC4qISUyAPW9WrCDe36KuTFcLz0dIhoh8LeCk4PGt2HEs9pQyxlEVS9fm1tecb9Wk+83nUNBLDet7",
         y: "ATdzYQHx4ZS1DJYb27bRy+NouEm53Jmpdk0Z00B1PIZcRwBEoYVPUQAmYsEt18MX1nLDdwKXV2dONaytvbkdRIMH",
+        kty: "EC",
       },
       publicEncryptionKey: Buffer.from("publicEncryptionKey"),
       version: 1,
