@@ -1,9 +1,9 @@
-import { RsaAlgorithm, RsaFormat } from "../enums";
-import { RsaPrivateKey, RsaPublicKey } from "./rsa-key";
+import { KeySet } from "@lindorm-io/jwk";
+import { BufferFormat, KeyObject, SignatureAlgorithm } from "./types";
 
 export type RsaSignatureOptions = {
-  algorithm?: RsaAlgorithm;
-  format?: RsaFormat;
-  publicKey?: RsaPublicKey;
-  privateKey?: RsaPrivateKey;
+  algorithm?: SignatureAlgorithm;
+  format?: BufferFormat;
+  key?: KeyObject;
+  keySet?: KeySet;
 };
