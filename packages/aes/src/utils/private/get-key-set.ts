@@ -15,6 +15,7 @@ export const getKeySet = ({ key, keySet, secret }: Options): KeySet => {
 
   if (Buffer.isBuffer(secret)) {
     return OctKeySet.fromDer({
+      id: "ignored",
       privateKey: secret,
       type: "oct",
     });
@@ -22,6 +23,7 @@ export const getKeySet = ({ key, keySet, secret }: Options): KeySet => {
 
   if (typeof secret === "string") {
     return OctKeySet.fromPem({
+      id: "ignored",
       privateKey: secret,
       type: "oct",
     });

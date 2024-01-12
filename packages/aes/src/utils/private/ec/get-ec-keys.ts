@@ -34,21 +34,22 @@ export const getEcEncryptionKeys = ({
     });
   }
 
-  const { publicKey } = keySet.export("raw");
+  const { id, publicKey } = keySet.export("raw");
   const senderKeyPair = createECDH(getKeyCurve(keySet.curve));
   const senderPublicKey = senderKeyPair.generateKeys();
   const sharedSecret = senderKeyPair.computeSecret(publicKey);
   const encryptionKey = createKeyDerivation({ encryption, initialKeyringMaterial: sharedSecret });
 
   const publicEncryptionKeySet = EcKeySet.fromRaw({
+    id,
     curve: getNistCurve(keySet.curve),
     publicKey: senderPublicKey,
     type: "EC",
   });
 
-  const publicEncryptionJwk = publicEncryptionKeySet.export("jwk");
+  const { crv, kty, x, y } = publicEncryptionKeySet.export("jwk");
 
-  return { encryptionKey, publicEncryptionJwk };
+  return { encryptionKey, publicEncryptionJwk: { crv, kty, x, y } };
 };
 
 export const getEcDecryptionKey = ({
@@ -67,7 +68,7 @@ export const getEcDecryptionKey = ({
   const receiverKeyPair = createECDH(getKeyCurve(keySet.curve));
   receiverKeyPair.setPrivateKey(privateKey);
 
-  const publicEncryptionKeySet = EcKeySet.fromJwk(publicEncryptionJwk);
+  const publicEncryptionKeySet = EcKeySet.fromJwk({ ...publicEncryptionJwk, kid: "ignored" });
   const { publicKey } = publicEncryptionKeySet.export("raw");
   const sharedSecret = receiverKeyPair.computeSecret(publicKey);
 

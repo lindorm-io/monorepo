@@ -22,7 +22,7 @@ describe("aes-data", () => {
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: undefined,
-      keyId: undefined,
+      keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,
       version: 5,

@@ -13,18 +13,16 @@ type EncryptResult = {
 
 export const getOctEncryptionKeys = ({ encryption, keySet }: EncryptOptions): EncryptResult => {
   const der = keySet.export("der");
-  const pem = keySet.export("pem");
 
-  assertSecretLength({ encryption, secret: pem.privateKey });
+  assertSecretLength({ encryption, secret: der.privateKey });
 
   return { encryptionKey: der.privateKey };
 };
 
 export const getOctDecryptionKey = ({ encryption, keySet }: EncryptOptions): Buffer => {
   const der = keySet.export("der");
-  const pem = keySet.export("pem");
 
-  assertSecretLength({ encryption, secret: pem.privateKey });
+  assertSecretLength({ encryption, secret: der.privateKey });
 
   return der.privateKey;
 };
