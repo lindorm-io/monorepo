@@ -443,7 +443,7 @@ describe("WebKeySet", () => {
     test("should create oct from jwk", () => {
       const webKeySet = WebKeySet.fromJwk({
         alg: "HS512",
-        k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+        k: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
         key_ops: [],
         kid: "e6a3f1e5-4f8f-5f2c-9f7f-9e8e7a1d0f8d",
         kty: "oct",
@@ -459,14 +459,14 @@ describe("WebKeySet", () => {
       expect(keySet.type).toBe("oct");
 
       expect(webKeySet.export("jwk")).toStrictEqual({
-        k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+        k: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
         kid: "e6a3f1e5-4f8f-5f2c-9f7f-9e8e7a1d0f8d",
         kty: "oct",
       });
 
       expect(webKeySet.export("pem")).toStrictEqual({
         id: "e6a3f1e5-4f8f-5f2c-9f7f-9e8e7a1d0f8d",
-        privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
+        privateKey: "aIDH@Vq@FOvVHEngSd@Erjlw@SnsAtMu",
         type: "oct",
       });
     });

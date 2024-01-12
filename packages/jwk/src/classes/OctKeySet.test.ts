@@ -16,22 +16,28 @@ describe("OctKeySet", () => {
 
   test("should create from jwk", () => {
     const created = OctKeySet.fromJwk({
-      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      k: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
       kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created).toBeInstanceOf(OctKeySet);
 
+    expect(created.export("b64")).toStrictEqual({
+      id: "0e81e739-cc88-537e-8571-aec1681e40a6",
+      privateKey: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
+      type: "oct",
+    });
+
     expect(created.export("jwk")).toStrictEqual({
-      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      k: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
       kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created.export("pem")).toStrictEqual({
       id: "0e81e739-cc88-537e-8571-aec1681e40a6",
-      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
+      privateKey: "aIDH@Vq@FOvVHEngSd@Erjlw@SnsAtMu",
       type: "oct",
     });
   });
@@ -39,21 +45,27 @@ describe("OctKeySet", () => {
   test("should create from pem", () => {
     const created = OctKeySet.fromPem({
       id: "0e81e739-cc88-537e-8571-aec1681e40a6",
-      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
+      privateKey: "aIDH@Vq@FOvVHEngSd@Erjlw@SnsAtMu",
       type: "oct",
     });
 
     expect(created).toBeInstanceOf(OctKeySet);
 
+    expect(created.export("b64")).toStrictEqual({
+      id: "0e81e739-cc88-537e-8571-aec1681e40a6",
+      privateKey: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
+      type: "oct",
+    });
+
     expect(created.export("jwk")).toStrictEqual({
-      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      k: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
       kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created.export("pem")).toStrictEqual({
       id: "0e81e739-cc88-537e-8571-aec1681e40a6",
-      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
+      privateKey: "aIDH@Vq@FOvVHEngSd@Erjlw@SnsAtMu",
       type: "oct",
     });
   });
