@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { JwkError } from "../errors";
 import {
   CreateKeySetOptions,
+  EcKeySetB64,
   EcKeySetDer,
   EcKeySetJwk,
   EcKeySetPem,
@@ -11,26 +12,32 @@ import {
   GenerateOkpOptions,
   GenerateOptions,
   GenerateRsaOptions,
-  JwkOperations,
-  JwkType,
-  JwkUsage,
   KeySet,
   KeySetAlgorithm,
+  KeySetB64,
+  KeySetCurve,
   KeySetDer,
   KeySetExportFormat,
   KeySetExportKeys,
   KeySetJwk,
+  KeySetOperations,
   KeySetPem,
+  KeySetType,
+  KeySetUsage,
   LindormJwk,
+  OctKeySetB64,
   OctKeySetDer,
   OctKeySetJwk,
   OctKeySetPem,
+  OkpKeySetB64,
   OkpKeySetDer,
   OkpKeySetJwk,
   OkpKeySetPem,
+  RsaKeySetB64,
   RsaKeySetDer,
   RsaKeySetJwk,
   RsaKeySetPem,
+  WebKeySetMetadata,
   WebKeySetOptions,
 } from "../types";
 import { getUnixTime } from "../utils/private";
@@ -39,20 +46,21 @@ import { OctKeySet } from "./OctKeySet";
 import { OkpKeySet } from "./OkpKeySet";
 import { RsaKeySet } from "./RsaKeySet";
 
-const TYPES = ["EC", "OKP", "RSA", "oct"] as const;
-
 export class WebKeySet {
   // private readonly
   readonly #algorithm: KeySetAlgorithm;
   readonly #createdAt: Date;
-  readonly #expiresAt: Date | undefined;
   readonly #isExternal: boolean;
   readonly #jwkUri: string | undefined;
-  readonly #notBefore: Date;
-  readonly #operations: Array<JwkOperations>;
   readonly #ownerId: string | undefined;
-  readonly #type: JwkType;
-  readonly #use: JwkUsage;
+  readonly #type: KeySetType;
+  readonly #use: KeySetUsage;
+
+  // private
+  #expiresAt: Date | undefined;
+  #notBefore: Date;
+  #operations: Array<KeySetOperations>;
+  #updatedAt: Date;
 
   // generated
   readonly #keySet: KeySet;
@@ -67,15 +75,20 @@ export class WebKeySet {
     this.#operations = options.operations ?? [];
     this.#ownerId = options.ownerId;
     this.#type = options.type;
+    this.#updatedAt = options.updatedAt ?? options.createdAt ?? new Date();
     this.#use = options.use;
 
     this.#keySet = WebKeySet.createKeySet({
       ...options,
-      keyId: options.keyId ?? randomUUID(),
+      id: options.id ?? randomUUID(),
     } as KeySetDer);
   }
 
   // getters and setters
+
+  public get id(): string {
+    return this.#keySet.id;
+  }
 
   public get algorithm(): KeySetAlgorithm {
     return this.#algorithm;
@@ -85,8 +98,25 @@ export class WebKeySet {
     return this.#createdAt;
   }
 
+  public get curve(): KeySetCurve | undefined {
+    if (WebKeySet.isEcKeySet(this.#keySet) || WebKeySet.isOkpKeySet(this.#keySet)) {
+      return this.#keySet.curve;
+    }
+    return undefined;
+  }
+
   public get expiresAt(): Date | undefined {
     return this.#expiresAt;
+  }
+
+  public set expiresAt(date: Date | undefined) {
+    this.#expiresAt = date;
+    this.#updatedAt = new Date();
+  }
+
+  public get expiresIn(): number | undefined {
+    if (!this.#expiresAt) return undefined;
+    return Math.round((this.#expiresAt.getTime() - Date.now()) / 1000);
   }
 
   public get isExternal(): boolean {
@@ -97,64 +127,103 @@ export class WebKeySet {
     return this.#jwkUri;
   }
 
-  public get keyId(): string {
-    if (!this.#keySet.id) {
-      throw new JwkError("Unexpected error", { debug: { keySet: this.#keySet } });
-    }
-    return this.#keySet.id;
-  }
-
   public get notBefore(): Date {
     return this.#notBefore;
   }
 
-  public get operations(): Array<JwkOperations> {
+  public set notBefore(date: Date) {
+    this.#notBefore = date;
+    this.#updatedAt = new Date();
+  }
+
+  public get operations(): Array<KeySetOperations> {
     return this.#operations;
+  }
+
+  public set operations(operations: Array<KeySetOperations>) {
+    this.#operations = operations;
+    this.#updatedAt = new Date();
   }
 
   public get ownerId(): string | undefined {
     return this.#ownerId;
   }
 
-  public get type(): JwkType {
+  public get type(): KeySetType {
     return this.#type;
   }
 
-  public get use(): JwkUsage {
+  public get updatedAt(): Date {
+    return this.#updatedAt;
+  }
+
+  public get use(): KeySetUsage {
     return this.#use;
+  }
+
+  // extra getters
+
+  public get metadata(): WebKeySetMetadata {
+    return {
+      id: this.id,
+      algorithm: this.algorithm,
+      createdAt: this.createdAt,
+      curve: this.curve,
+      expiresAt: this.expiresAt,
+      expiresIn: this.expiresIn,
+      isExternal: this.isExternal,
+      jwkUri: this.jwkUri,
+      notBefore: this.notBefore,
+      operations: this.operations,
+      ownerId: this.ownerId,
+      type: this.type,
+      updatedAt: this.updatedAt,
+      use: this.use,
+    };
+  }
+
+  public get hasPrivateKey(): boolean {
+    return this.#keySet.hasPrivateKey;
+  }
+
+  public get hasPublicKey(): boolean {
+    return this.#keySet.hasPublicKey;
+  }
+
+  // public generated
+
+  public get keySet(): KeySet {
+    return this.#keySet;
   }
 
   // public methods
 
+  public export<D extends KeySetB64>(format: "b64", keys?: KeySetExportKeys): D;
   public export<D extends KeySetDer>(format: "der", keys?: KeySetExportKeys): D;
   public export<J extends KeySetJwk>(format: "jwk", keys?: KeySetExportKeys): J;
   public export<P extends KeySetPem>(format: "pem", keys?: KeySetExportKeys): P;
-  public export<T extends KeySetDer | KeySetJwk | KeySetPem>(
+  public export<T extends KeySetB64 | KeySetDer | KeySetJwk | KeySetPem>(
     format: KeySetExportFormat,
     keys: KeySetExportKeys = "both",
   ): T {
     return this.#keySet.export(format as any, keys) as T;
   }
 
-  public toJwk(): LindormJwk {
-    const jwk = this.#keySet.export("jwk");
-
+  public jwk(keys: KeySetExportKeys = "public"): LindormJwk {
+    const jwk = this.#keySet.export("jwk", keys);
     return {
       alg: this.algorithm,
-      created_at: getUnixTime(this.createdAt),
-      expires_at: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
-      jwk_uri: this.jwkUri ?? undefined,
+      exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
+      expires_in: this.expiresIn,
+      iat: getUnixTime(this.createdAt),
+      jku: this.jwkUri ?? undefined,
       key_ops: this.operations,
-      kid: this.keyId,
-      not_before: this.notBefore.getTime(),
+      nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
+      uat: getUnixTime(this.updatedAt),
       use: this.use,
       ...jwk,
     };
-  }
-
-  public keySet<K extends KeySet>(): K {
-    return this.#keySet as K;
   }
 
   // public static methods
@@ -197,11 +266,12 @@ export class WebKeySet {
 
   public static fromJwk(jwk: ExternalJwk): WebKeySet {
     let options: WebKeySetOptions = {
+      id: jwk.kid,
       algorithm: jwk.alg,
-      expiresAt: jwk.expires_at ? new Date(jwk.expires_at) : undefined,
+      expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
       isExternal: true,
-      jwkUri: jwk.jwk_uri,
-      notBefore: jwk.not_before ? new Date(jwk.not_before) : new Date(),
+      jwkUri: jwk.jku,
+      notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : new Date(),
       operations: jwk.key_ops ?? [],
       ownerId: jwk.owner_id,
       publicKey: Buffer.alloc(0),
@@ -247,7 +317,9 @@ export class WebKeySet {
   }
 
   public static createKeySet<K extends KeySet>(options: CreateKeySetOptions): K {
-    const type = WebKeySet.isDer(options)
+    const type = WebKeySet.isB64(options)
+      ? options.type
+      : WebKeySet.isDer(options)
       ? options.type
       : WebKeySet.isPem(options)
       ? options.type
@@ -261,49 +333,61 @@ export class WebKeySet {
 
     switch (type) {
       case "EC":
-        if (WebKeySet.isDer(options) && WebKeySet.isEcDer(options)) {
+        if (WebKeySet.isEcB64(options)) {
+          return EcKeySet.fromB64(options) as K;
+        }
+        if (WebKeySet.isEcDer(options)) {
           return EcKeySet.fromDer(options) as K;
         }
-        if (WebKeySet.isPem(options) && WebKeySet.isEcPem(options)) {
+        if (WebKeySet.isEcPem(options)) {
           return EcKeySet.fromPem(options) as K;
         }
-        if (WebKeySet.isJwk(options) && WebKeySet.isEcJwk(options)) {
+        if (WebKeySet.isEcJwk(options)) {
           return EcKeySet.fromJwk(options) as K;
         }
         throw new JwkError("Invalid input", { debug: { options } });
 
       case "OKP":
-        if (WebKeySet.isDer(options) && WebKeySet.isOkpDer(options)) {
+        if (WebKeySet.isOkpB64(options)) {
+          return OkpKeySet.fromB64(options) as K;
+        }
+        if (WebKeySet.isOkpDer(options)) {
           return OkpKeySet.fromDer(options) as K;
         }
-        if (WebKeySet.isPem(options) && WebKeySet.isOkpPem(options)) {
+        if (WebKeySet.isOkpPem(options)) {
           return OkpKeySet.fromPem(options) as K;
         }
-        if (WebKeySet.isJwk(options) && WebKeySet.isOkpJwk(options)) {
+        if (WebKeySet.isOkpJwk(options)) {
           return OkpKeySet.fromJwk(options) as K;
         }
         throw new JwkError("Invalid input", { debug: { options } });
 
       case "RSA":
-        if (WebKeySet.isDer(options) && WebKeySet.isRsaDer(options)) {
+        if (WebKeySet.isRsaB64(options)) {
+          return RsaKeySet.fromB64(options) as K;
+        }
+        if (WebKeySet.isRsaDer(options)) {
           return RsaKeySet.fromDer(options) as K;
         }
-        if (WebKeySet.isPem(options) && WebKeySet.isRsaPem(options)) {
+        if (WebKeySet.isRsaPem(options)) {
           return RsaKeySet.fromPem(options) as K;
         }
-        if (WebKeySet.isJwk(options) && WebKeySet.isRsaJwk(options)) {
+        if (WebKeySet.isRsaJwk(options)) {
           return RsaKeySet.fromJwk(options) as K;
         }
         throw new JwkError("Invalid input", { debug: { options } });
 
       case "oct":
-        if (WebKeySet.isDer(options) && WebKeySet.isOctDer(options)) {
+        if (WebKeySet.isOctB64(options)) {
+          return OctKeySet.fromB64(options) as K;
+        }
+        if (WebKeySet.isOctDer(options)) {
           return OctKeySet.fromDer(options) as K;
         }
-        if (WebKeySet.isPem(options) && WebKeySet.isOctPem(options)) {
+        if (WebKeySet.isOctPem(options)) {
           return OctKeySet.fromPem(options) as K;
         }
-        if (WebKeySet.isJwk(options) && WebKeySet.isOctJwk(options)) {
+        if (WebKeySet.isOctJwk(options)) {
           return OctKeySet.fromJwk(options) as K;
         }
         throw new JwkError("Invalid input", { debug: { options } });
@@ -315,7 +399,7 @@ export class WebKeySet {
 
   // public static type guards
 
-  public static isKeySet<K extends KeySet>(keySet: any): keySet is K {
+  public static isKeySet<K extends KeySet>(keySet: unknown): keySet is K {
     return (
       WebKeySet.isEcKeySet(keySet) ||
       WebKeySet.isOctKeySet(keySet) ||
@@ -324,104 +408,127 @@ export class WebKeySet {
     );
   }
 
-  public static isDer(input: any): input is KeySetDer {
+  public static isB64(b64: unknown): b64 is KeySetB64 {
     return (
-      typeof input === "object" &&
-      TYPES.includes(input.type) &&
-      (Buffer.isBuffer(input.publicKey) || Buffer.isBuffer(input.privateKey))
+      WebKeySet.isEcB64(b64) ||
+      WebKeySet.isOctB64(b64) ||
+      WebKeySet.isOkpB64(b64) ||
+      WebKeySet.isRsaB64(b64)
     );
   }
 
-  public static isJwk(input: any): input is KeySetJwk {
+  public static isDer(der: unknown): der is KeySetDer {
     return (
-      typeof input === "object" &&
-      TYPES.includes(input.kty) &&
-      (typeof input.e === "string" ||
-        typeof input.x === "string" ||
-        typeof input.k === "string" ||
-        typeof input.d === "string" ||
-        typeof input.n === "string" ||
-        typeof input.y === "string")
+      WebKeySet.isEcDer(der) ||
+      WebKeySet.isOctDer(der) ||
+      WebKeySet.isOkpDer(der) ||
+      WebKeySet.isRsaDer(der)
     );
   }
 
-  public static isPem(input: any): input is KeySetPem {
+  public static isJwk(jwk: unknown): jwk is KeySetJwk {
     return (
-      typeof input === "object" &&
-      TYPES.includes(input.type) &&
-      (typeof input.publicKey === "string" || typeof input.privateKey === "string")
+      WebKeySet.isEcJwk(jwk) ||
+      WebKeySet.isOctJwk(jwk) ||
+      WebKeySet.isOkpJwk(jwk) ||
+      WebKeySet.isRsaJwk(jwk)
+    );
+  }
+
+  public static isPem(pem: unknown): pem is KeySetPem {
+    return (
+      WebKeySet.isEcPem(pem) ||
+      WebKeySet.isOctPem(pem) ||
+      WebKeySet.isOkpPem(pem) ||
+      WebKeySet.isRsaPem(pem)
     );
   }
 
   // EC
 
-  public static isEcKeySet(keySet: KeySet): keySet is EcKeySet {
+  public static isEcKeySet(keySet: unknown): keySet is EcKeySet {
     return keySet instanceof EcKeySet;
   }
 
-  public static isEcDer(der: KeySetDer): der is EcKeySetDer {
+  public static isEcB64(b64: unknown): b64 is EcKeySetB64 {
+    return EcKeySet.isB64(b64);
+  }
+
+  public static isEcDer(der: unknown): der is EcKeySetDer {
     return EcKeySet.isDer(der);
   }
 
-  public static isEcJwk(jwk: KeySetJwk): jwk is EcKeySetJwk {
+  public static isEcJwk(jwk: unknown): jwk is EcKeySetJwk {
     return EcKeySet.isJwk(jwk);
   }
 
-  public static isEcPem(pem: KeySetPem): pem is EcKeySetPem {
+  public static isEcPem(pem: unknown): pem is EcKeySetPem {
     return EcKeySet.isPem(pem);
   }
 
   // OCT
 
-  public static isOctKeySet(keySet: KeySet): keySet is OctKeySet {
+  public static isOctKeySet(keySet: unknown): keySet is OctKeySet {
     return keySet instanceof OctKeySet;
   }
 
-  public static isOctDer(der: KeySetDer): der is OctKeySetDer {
+  public static isOctB64(b64: unknown): b64 is OctKeySetB64 {
+    return OctKeySet.isB64(b64);
+  }
+
+  public static isOctDer(der: unknown): der is OctKeySetDer {
     return OctKeySet.isDer(der);
   }
 
-  public static isOctJwk(jwk: KeySetJwk): jwk is OctKeySetJwk {
+  public static isOctJwk(jwk: unknown): jwk is OctKeySetJwk {
     return OctKeySet.isJwk(jwk);
   }
 
-  public static isOctPem(pem: KeySetPem): pem is OctKeySetPem {
+  public static isOctPem(pem: unknown): pem is OctKeySetPem {
     return OctKeySet.isPem(pem);
   }
 
   // OKP
 
-  public static isOkpKeySet(keySet: KeySet): keySet is OkpKeySet {
+  public static isOkpKeySet(keySet: unknown): keySet is OkpKeySet {
     return keySet instanceof OkpKeySet;
   }
 
-  public static isOkpDer(der: KeySetDer): der is OkpKeySetDer {
+  public static isOkpB64(b64: unknown): b64 is OkpKeySetB64 {
+    return OkpKeySet.isB64(b64);
+  }
+
+  public static isOkpDer(der: unknown): der is OkpKeySetDer {
     return OkpKeySet.isDer(der);
   }
 
-  public static isOkpJwk(jwk: KeySetJwk): jwk is OkpKeySetJwk {
+  public static isOkpJwk(jwk: unknown): jwk is OkpKeySetJwk {
     return OkpKeySet.isJwk(jwk);
   }
 
-  public static isOkpPem(pem: KeySetPem): pem is OkpKeySetPem {
+  public static isOkpPem(pem: unknown): pem is OkpKeySetPem {
     return OkpKeySet.isPem(pem);
   }
 
   // RSA
 
-  public static isRsaKeySet(keySet: KeySet): keySet is RsaKeySet {
+  public static isRsaKeySet(keySet: unknown): keySet is RsaKeySet {
     return keySet instanceof RsaKeySet;
   }
 
-  public static isRsaDer(der: KeySetDer): der is RsaKeySetDer {
+  public static isRsaB64(b64: unknown): b64 is RsaKeySetB64 {
+    return RsaKeySet.isB64(b64);
+  }
+
+  public static isRsaDer(der: unknown): der is RsaKeySetDer {
     return RsaKeySet.isDer(der);
   }
 
-  public static isRsaJwk(jwk: KeySetJwk): jwk is RsaKeySetJwk {
+  public static isRsaJwk(jwk: unknown): jwk is RsaKeySetJwk {
     return RsaKeySet.isJwk(jwk);
   }
 
-  public static isRsaPem(pem: KeySetPem): pem is RsaKeySetPem {
+  public static isRsaPem(pem: unknown): pem is RsaKeySetPem {
     return RsaKeySet.isPem(pem);
   }
 }

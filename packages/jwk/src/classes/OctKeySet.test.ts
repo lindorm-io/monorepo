@@ -7,44 +7,71 @@ describe("OctKeySet", () => {
     expect(generated).toBeInstanceOf(OctKeySet);
     expect(generated.type).toBe("oct");
     expect(generated.export).toBeInstanceOf(Function);
+
+    expect(generated.export("b64").privateKey.length).toBe(43);
+    expect(generated.export("der").privateKey.length).toBe(32);
+    expect(generated.export("jwk").k.length).toBe(43);
+    expect(generated.export("pem").privateKey.length).toBe(32);
   });
 
   test("should create from jwk", () => {
     const created = OctKeySet.fromJwk({
-      k: "UUZtKSFfTTZXaWx0WVNGd3FsWjVzRFRvcWVaTWZ4KjA",
+      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created).toBeInstanceOf(OctKeySet);
 
     expect(created.export("jwk")).toStrictEqual({
-      k: "UUZtKSFfTTZXaWx0WVNGd3FsWjVzRFRvcWVaTWZ4KjA",
+      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created.export("pem")).toStrictEqual({
-      privateKey: "QFm)!_M6WiltYSFwqlZ5sDToqeZMfx*0",
+      id: "0e81e739-cc88-537e-8571-aec1681e40a6",
+      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
       type: "oct",
     });
   });
 
   test("should create from pem", () => {
     const created = OctKeySet.fromPem({
-      privateKey: "QFm)!_M6WiltYSFwqlZ5sDToqeZMfx*0",
+      id: "0e81e739-cc88-537e-8571-aec1681e40a6",
+      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
       type: "oct",
     });
 
     expect(created).toBeInstanceOf(OctKeySet);
 
     expect(created.export("jwk")).toStrictEqual({
-      k: "UUZtKSFfTTZXaWx0WVNGd3FsWjVzRFRvcWVaTWZ4KjA",
+      k: "TnpRa0dATFNjbXB5QExHTWlPS0BNQnhidHVSTkBCRWE",
+      kid: "0e81e739-cc88-537e-8571-aec1681e40a6",
       kty: "oct",
     });
 
     expect(created.export("pem")).toStrictEqual({
-      privateKey: "QFm)!_M6WiltYSFwqlZ5sDToqeZMfx*0",
+      id: "0e81e739-cc88-537e-8571-aec1681e40a6",
+      privateKey: "NzQkG@LScmpy@LGMiOK@MBxbtuRN@BEa",
       type: "oct",
     });
+  });
+
+  test("should export to b64", async () => {
+    const generated = await OctKeySet.generate();
+    const b64 = generated.export("b64");
+
+    expect(b64).toStrictEqual({
+      id: expect.any(String),
+      privateKey: expect.any(String),
+      type: "oct",
+    });
+
+    expect(OctKeySet.isB64(b64)).toBe(true);
+    expect(OctKeySet.isDer(b64)).toBe(false);
+    expect(OctKeySet.isJwk(b64)).toBe(false);
+    expect(OctKeySet.isPem(b64)).toBe(false);
   });
 
   test("should export to der", async () => {
@@ -52,10 +79,12 @@ describe("OctKeySet", () => {
     const der = generated.export("der");
 
     expect(der).toStrictEqual({
+      id: expect.any(String),
       privateKey: expect.any(Buffer),
       type: "oct",
     });
 
+    expect(OctKeySet.isB64(der)).toBe(false);
     expect(OctKeySet.isDer(der)).toBe(true);
     expect(OctKeySet.isJwk(der)).toBe(false);
     expect(OctKeySet.isPem(der)).toBe(false);
@@ -67,9 +96,11 @@ describe("OctKeySet", () => {
 
     expect(jwk).toStrictEqual({
       k: expect.any(String),
+      kid: expect.any(String),
       kty: "oct",
     });
 
+    expect(OctKeySet.isB64(jwk)).toBe(false);
     expect(OctKeySet.isDer(jwk)).toBe(false);
     expect(OctKeySet.isJwk(jwk)).toBe(true);
     expect(OctKeySet.isPem(jwk)).toBe(false);
@@ -80,10 +111,12 @@ describe("OctKeySet", () => {
     const pem = generated.export("pem");
 
     expect(pem).toStrictEqual({
+      id: expect.any(String),
       privateKey: expect.any(String),
       type: "oct",
     });
 
+    expect(OctKeySet.isB64(pem)).toBe(false);
     expect(OctKeySet.isDer(pem)).toBe(false);
     expect(OctKeySet.isJwk(pem)).toBe(false);
     expect(OctKeySet.isPem(pem)).toBe(true);

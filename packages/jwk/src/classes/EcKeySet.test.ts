@@ -14,9 +14,10 @@ describe("EcKeySet", () => {
     const created = EcKeySet.fromJwk({
       crv: "P-521",
       d: "AftXcyqeRTv8CEk2iDxwr9cmSzGZdKOgQF4DComwunvIhSPVuGCK2WEyJxw6agP8DXe-uF4pFlrHvY0UcCi2MtNi",
+      kid: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
+      kty: "EC",
       x: "AXLDVJ0QoP1LPZeiN-OoI9WiKWrlhJmMsGZm1cbbHrJ1FRbdD8gvuR8S0rJwnjbP1SE_hp16_KY0FDgnTb9jH-Oz",
       y: "AZwox6nbyvzbmRQTrgtuxRzxvj-mAocRfZtH2fVXDm4lFYS08pUFd5X12TQPUj_X-INglGRzc7BnX4xhY3fWLmu2",
-      kty: "EC",
     });
 
     expect(created).toBeInstanceOf(EcKeySet);
@@ -24,12 +25,14 @@ describe("EcKeySet", () => {
     expect(created.export("jwk")).toStrictEqual({
       crv: "P-521",
       d: "AftXcyqeRTv8CEk2iDxwr9cmSzGZdKOgQF4DComwunvIhSPVuGCK2WEyJxw6agP8DXe-uF4pFlrHvY0UcCi2MtNi",
+      kid: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
+      kty: "EC",
       x: "AXLDVJ0QoP1LPZeiN-OoI9WiKWrlhJmMsGZm1cbbHrJ1FRbdD8gvuR8S0rJwnjbP1SE_hp16_KY0FDgnTb9jH-Oz",
       y: "AZwox6nbyvzbmRQTrgtuxRzxvj-mAocRfZtH2fVXDm4lFYS08pUFd5X12TQPUj_X-INglGRzc7BnX4xhY3fWLmu2",
-      kty: "EC",
     });
 
     expect(created.export("pem")).toStrictEqual({
+      id: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
       curve: "P-521",
       privateKey:
         "-----BEGIN PRIVATE KEY-----\n" +
@@ -53,6 +56,7 @@ describe("EcKeySet", () => {
 
   test("should create from pem", () => {
     const created = EcKeySet.fromPem({
+      id: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
       curve: "P-521",
       privateKey:
         "-----BEGIN PRIVATE KEY-----\n" +
@@ -78,12 +82,14 @@ describe("EcKeySet", () => {
     expect(created.export("jwk")).toStrictEqual({
       crv: "P-521",
       d: "AKcD4_kbMZAAdvvPRvyxWr8_0idxgPDw9NDXbClpkvHvAsPExm_a6xbIw1RDCceX0fa1MCzbJHjpQooC0hGE61jk",
+      kid: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
+      kty: "EC",
       x: "ACPeUaKWT-Yni6vOZ4YPcOIlVEZu56k6Rh13WN-xIdGU96Nc0KT7LewwtIB__cfDjqLjV-HJLGDbuevk2Kfac9QZ",
       y: "AXBs2QN-NqleuJJU57rtlmeirY-GKM7z8_B68guOa47sVOrWjLVI8V9Bh3Ni3cSORbpr30UDzDz8oYuYgCuRzPoV",
-      kty: "EC",
     });
 
     expect(created.export("pem")).toStrictEqual({
+      id: "aee68a60-3fbb-57b8-a224-2d92a1587f6b",
       curve: "P-521",
       privateKey:
         "-----BEGIN PRIVATE KEY-----\n" +
@@ -105,17 +111,37 @@ describe("EcKeySet", () => {
     });
   });
 
+  test("should export to b64", async () => {
+    const generated = await EcKeySet.generate();
+    const b64 = generated.export("b64");
+
+    expect(b64).toStrictEqual({
+      id: expect.any(String),
+      curve: "P-521",
+      privateKey: expect.any(String),
+      publicKey: expect.any(String),
+      type: "EC",
+    });
+
+    expect(EcKeySet.isB64(b64)).toBe(true);
+    expect(EcKeySet.isDer(b64)).toBe(false);
+    expect(EcKeySet.isJwk(b64)).toBe(false);
+    expect(EcKeySet.isPem(b64)).toBe(false);
+  });
+
   test("should export to der", async () => {
     const generated = await EcKeySet.generate();
     const der = generated.export("der");
 
     expect(der).toStrictEqual({
+      id: expect.any(String),
       curve: "P-521",
       privateKey: expect.any(Buffer),
       publicKey: expect.any(Buffer),
       type: "EC",
     });
 
+    expect(EcKeySet.isB64(der)).toBe(false);
     expect(EcKeySet.isDer(der)).toBe(true);
     expect(EcKeySet.isJwk(der)).toBe(false);
     expect(EcKeySet.isPem(der)).toBe(false);
@@ -128,11 +154,13 @@ describe("EcKeySet", () => {
     expect(jwk).toStrictEqual({
       crv: "P-521",
       d: expect.any(String),
+      kid: expect.any(String),
+      kty: "EC",
       x: expect.any(String),
       y: expect.any(String),
-      kty: "EC",
     });
 
+    expect(EcKeySet.isB64(jwk)).toBe(false);
     expect(EcKeySet.isDer(jwk)).toBe(false);
     expect(EcKeySet.isJwk(jwk)).toBe(true);
     expect(EcKeySet.isPem(jwk)).toBe(false);
@@ -144,11 +172,13 @@ describe("EcKeySet", () => {
 
     expect(jwk).toStrictEqual({
       crv: "P-521",
+      kid: expect.any(String),
+      kty: "EC",
       x: expect.any(String),
       y: expect.any(String),
-      kty: "EC",
     });
 
+    expect(EcKeySet.isB64(jwk)).toBe(false);
     expect(EcKeySet.isDer(jwk)).toBe(false);
     expect(EcKeySet.isJwk(jwk)).toBe(true);
     expect(EcKeySet.isPem(jwk)).toBe(false);
@@ -159,12 +189,14 @@ describe("EcKeySet", () => {
     const pem = generated.export("pem");
 
     expect(pem).toStrictEqual({
+      id: expect.any(String),
       curve: "P-521",
       privateKey: expect.any(String),
       publicKey: expect.any(String),
       type: "EC",
     });
 
+    expect(EcKeySet.isB64(pem)).toBe(false);
     expect(EcKeySet.isDer(pem)).toBe(false);
     expect(EcKeySet.isJwk(pem)).toBe(false);
     expect(EcKeySet.isPem(pem)).toBe(true);

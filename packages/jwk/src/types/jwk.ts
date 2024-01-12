@@ -1,36 +1,23 @@
 import { KeySetAlgorithm } from "./algorithms";
 import { KeySetJwk } from "./key-set";
-
-export type JwkOperations =
-  | "decrypt"
-  | "deriveBits"
-  | "deriveKey"
-  | "encrypt"
-  | "sign"
-  | "unwrapKey"
-  | "verify"
-  | "wrapKey";
-
-export type JwkType = "EC" | "RSA" | "OKP" | "oct";
-
-export type JwkUsage = "enc" | "sig";
+import { KeySetOperations, KeySetUsage } from "./types";
 
 export type JwkMetadata = {
   alg: KeySetAlgorithm;
-  kid: string;
-  kty: JwkType;
-  use: JwkUsage;
+  use: KeySetUsage;
 
   // specific for private keys
-  key_ops: Array<JwkOperations>;
+  key_ops: Array<KeySetOperations>;
 };
 
 export type LindormJwkMetadata = {
-  created_at: number;
-  expires_at?: number;
-  jwk_uri?: string;
-  not_before: number;
+  exp?: number;
+  expires_in?: number;
+  iat: number;
+  jku?: string;
+  nbf: number;
   owner_id?: string;
+  uat: number;
 };
 
 export type PublicJwk = KeySetJwk & JwkMetadata;

@@ -48,32 +48,35 @@ describe("RsaKeySet", () => {
 
   test("should create from jwk", () => {
     const created = RsaKeySet.fromJwk({
-      e: "AQAB",
-      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
       d: "lLlj4wQxl17vAbmki4UrxyxmXQYXlGkPuKnnt8ngFBxry9AtrIXOQhlG3idBYpQt_ldPUUqeNbXj678Wi2RXv5wlz6GifCpYdlgLfXP-AOdDZu4JQCNU9T96_Xa7F749QiJUL0H3bNinocDI_zWmT6Nz5phWzXw80Ug2nJMzSxE",
-      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
-      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
       dp: "hhitTxlsTIMAA84UCsGCD31HLq9p3Ov4ItYpOOquLakg6AXJnGN1HVgDnUBc9CiVwtBv_kpchHobkPdWoNcElw",
       dq: "A5jFHIanAYGnKg0zjG6OHUJ5i6Whq4oQ3MTVIhH7AbgN7Xo2dkRwr7VaNqOC7H25w3bpoZRJxTKJA82pHoulMQ",
-      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
+      e: "AQAB",
+      kid: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       kty: "RSA",
+      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
+      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
+      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
+      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
     });
 
     expect(created).toBeInstanceOf(RsaKeySet);
 
     expect(created.export("jwk")).toStrictEqual({
-      e: "AQAB",
-      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
       d: "lLlj4wQxl17vAbmki4UrxyxmXQYXlGkPuKnnt8ngFBxry9AtrIXOQhlG3idBYpQt_ldPUUqeNbXj678Wi2RXv5wlz6GifCpYdlgLfXP-AOdDZu4JQCNU9T96_Xa7F749QiJUL0H3bNinocDI_zWmT6Nz5phWzXw80Ug2nJMzSxE",
-      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
-      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
       dp: "hhitTxlsTIMAA84UCsGCD31HLq9p3Ov4ItYpOOquLakg6AXJnGN1HVgDnUBc9CiVwtBv_kpchHobkPdWoNcElw",
       dq: "A5jFHIanAYGnKg0zjG6OHUJ5i6Whq4oQ3MTVIhH7AbgN7Xo2dkRwr7VaNqOC7H25w3bpoZRJxTKJA82pHoulMQ",
-      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
+      e: "AQAB",
+      kid: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       kty: "RSA",
+      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
+      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
+      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
+      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
     });
 
     expect(created.export("pem")).toStrictEqual({
+      id: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       publicKey:
         "-----BEGIN RSA PUBLIC KEY-----\n" +
         "MIGJAoGBANEs2aYyZ47UBfWCm7ynbcD8WuCPkgDqXwVxQlkszVn80vIYQiDte/sN\n" +
@@ -102,6 +105,7 @@ describe("RsaKeySet", () => {
 
   test("should create from pem", () => {
     const created = RsaKeySet.fromPem({
+      id: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       publicKey:
         "-----BEGIN RSA PUBLIC KEY-----\n" +
         "MIGJAoGBANEs2aYyZ47UBfWCm7ynbcD8WuCPkgDqXwVxQlkszVn80vIYQiDte/sN\n" +
@@ -130,18 +134,20 @@ describe("RsaKeySet", () => {
     expect(created).toBeInstanceOf(RsaKeySet);
 
     expect(created.export("jwk")).toStrictEqual({
-      e: "AQAB",
-      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
       d: "lLlj4wQxl17vAbmki4UrxyxmXQYXlGkPuKnnt8ngFBxry9AtrIXOQhlG3idBYpQt_ldPUUqeNbXj678Wi2RXv5wlz6GifCpYdlgLfXP-AOdDZu4JQCNU9T96_Xa7F749QiJUL0H3bNinocDI_zWmT6Nz5phWzXw80Ug2nJMzSxE",
-      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
-      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
       dp: "hhitTxlsTIMAA84UCsGCD31HLq9p3Ov4ItYpOOquLakg6AXJnGN1HVgDnUBc9CiVwtBv_kpchHobkPdWoNcElw",
       dq: "A5jFHIanAYGnKg0zjG6OHUJ5i6Whq4oQ3MTVIhH7AbgN7Xo2dkRwr7VaNqOC7H25w3bpoZRJxTKJA82pHoulMQ",
-      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
+      e: "AQAB",
+      kid: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       kty: "RSA",
+      n: "0SzZpjJnjtQF9YKbvKdtwPxa4I-SAOpfBXFCWSzNWfzS8hhCIO17-w2MPXSjh-7-dYWjO6h322k74x5YMOPF5zSzUEZDgESh5RpKrRvmdbF4PngvMoIL8QH6phoHzSqhFBRDQ99Z6h8lPk2RZLiJ5FoudsB2qDN3sbu0O1cyuXM",
+      p: "6fxiLOGTi1VjDEaxpI3i4B4JHpZSkhQBU-nAz1cfPWLv8VK8ecRs3qTGbzH0l_qPcbmxNnD8kEw61DM50iPSGw",
+      q: "5Nrk-3euhGOVjMRACHnsEgqjkm-sx8N0hqKF8N33-M6zVQlt-cMYZOsaV-qEOdLUDhYk6B6oYn_N4Nn0HwJriQ",
+      qi: "28uVk7OXXF6ea5mL5fZfAcNt2auHPXwJAD1RUeDbE0EVlvsL-S8fqtg0u0vs6li_vQ6DvbUkluSnHbA4upiZpQ",
     });
 
     expect(created.export("pem")).toStrictEqual({
+      id: "d944ba0a-8ba8-582b-a546-e076fce1ea77",
       publicKey:
         "-----BEGIN RSA PUBLIC KEY-----\n" +
         "MIGJAoGBANEs2aYyZ47UBfWCm7ynbcD8WuCPkgDqXwVxQlkszVn80vIYQiDte/sN\n" +
@@ -168,16 +174,35 @@ describe("RsaKeySet", () => {
     });
   });
 
+  test("should export to b64", async () => {
+    const generated = await RsaKeySet.generate();
+    const b64 = generated.export("b64");
+
+    expect(b64).toStrictEqual({
+      id: expect.any(String),
+      privateKey: expect.any(String),
+      publicKey: expect.any(String),
+      type: "RSA",
+    });
+
+    expect(RsaKeySet.isB64(b64)).toBe(true);
+    expect(RsaKeySet.isDer(b64)).toBe(false);
+    expect(RsaKeySet.isJwk(b64)).toBe(false);
+    expect(RsaKeySet.isPem(b64)).toBe(false);
+  });
+
   test("should export to der", async () => {
     const generated = await RsaKeySet.generate();
     const der = generated.export("der");
 
     expect(der).toStrictEqual({
+      id: expect.any(String),
       privateKey: expect.any(Buffer),
       publicKey: expect.any(Buffer),
       type: "RSA",
     });
 
+    expect(RsaKeySet.isB64(der)).toBe(false);
     expect(RsaKeySet.isDer(der)).toBe(true);
     expect(RsaKeySet.isJwk(der)).toBe(false);
     expect(RsaKeySet.isPem(der)).toBe(false);
@@ -192,13 +217,15 @@ describe("RsaKeySet", () => {
       dp: expect.any(String),
       dq: expect.any(String),
       e: "AQAB",
+      kid: expect.any(String),
+      kty: "RSA",
       n: expect.any(String),
       p: expect.any(String),
       q: expect.any(String),
       qi: expect.any(String),
-      kty: "RSA",
     });
 
+    expect(RsaKeySet.isB64(jwk)).toBe(false);
     expect(RsaKeySet.isDer(jwk)).toBe(false);
     expect(RsaKeySet.isJwk(jwk)).toBe(true);
     expect(RsaKeySet.isPem(jwk)).toBe(false);
@@ -210,10 +237,12 @@ describe("RsaKeySet", () => {
 
     expect(jwk).toStrictEqual({
       e: "AQAB",
-      n: expect.any(String),
+      kid: expect.any(String),
       kty: "RSA",
+      n: expect.any(String),
     });
 
+    expect(RsaKeySet.isB64(jwk)).toBe(false);
     expect(RsaKeySet.isDer(jwk)).toBe(false);
     expect(RsaKeySet.isJwk(jwk)).toBe(true);
     expect(RsaKeySet.isPem(jwk)).toBe(false);
@@ -224,11 +253,13 @@ describe("RsaKeySet", () => {
     const pem = generated.export("pem");
 
     expect(pem).toStrictEqual({
+      id: expect.any(String),
       privateKey: expect.any(String),
       publicKey: expect.any(String),
       type: "RSA",
     });
 
+    expect(RsaKeySet.isB64(pem)).toBe(false);
     expect(RsaKeySet.isDer(pem)).toBe(false);
     expect(RsaKeySet.isJwk(pem)).toBe(false);
     expect(RsaKeySet.isPem(pem)).toBe(true);

@@ -1,11 +1,12 @@
 import { KeySetAlgorithm } from "./algorithms";
 import { EllipticCurve } from "./ec";
-import { JwkOperations, JwkType, JwkUsage } from "./jwk";
-import { KeySetCurve, KeySetDer, KeySetJwk, KeySetPem } from "./key-set";
+import { KeySetB64, KeySetDer, KeySetJwk, KeySetPem } from "./key-set";
 import { OctKeySize } from "./oct";
 import { OctetCurve } from "./okp";
+import { RsaModulusOption as RsaModulusSize } from "./rsa";
+import { KeySetCurve, KeySetOperations, KeySetType, KeySetUsage } from "./types";
 
-export type CreateKeySetOptions = KeySetDer | KeySetJwk | KeySetPem;
+export type CreateKeySetOptions = KeySetB64 | KeySetDer | KeySetJwk | KeySetPem;
 
 export type GenerateEcOptions = {
   curve: EllipticCurve;
@@ -23,7 +24,7 @@ export type GenerateOkpOptions = {
 };
 
 export type GenerateRsaOptions = {
-  modulus: 1 | 2 | 3 | 4;
+  modulus: RsaModulusSize;
   type: "RSA";
 };
 
@@ -33,28 +34,48 @@ export type GenerateKeySetOptions =
   | GenerateOkpOptions
   | GenerateRsaOptions;
 
+export type WebKeySetMetadata = {
+  id: string;
+  algorithm: KeySetAlgorithm;
+  createdAt: Date;
+  curve: KeySetCurve | undefined;
+  expiresAt: Date | undefined;
+  expiresIn: number | undefined;
+  isExternal: boolean;
+  jwkUri: string | undefined;
+  notBefore: Date;
+  operations: Array<KeySetOperations>;
+  ownerId: string | undefined;
+  type: KeySetType;
+  updatedAt: Date;
+  use: KeySetUsage;
+};
+
 export type GenerateOptions = GenerateKeySetOptions & {
+  id?: string;
   algorithm: KeySetAlgorithm;
   expiresAt?: Date;
+  jwkUri?: string;
   notBefore?: Date;
-  operations?: Array<JwkOperations>;
+  operations?: Array<KeySetOperations>;
   ownerId?: string;
-  use: JwkUsage;
+  use: KeySetUsage;
 };
 
 export type WebKeySetOptions = {
+  id?: string;
   algorithm: KeySetAlgorithm;
   createdAt?: Date;
   curve?: KeySetCurve;
   expiresAt?: Date;
   isExternal?: boolean;
   jwkUri?: string;
-  keyId?: string;
   notBefore?: Date;
-  operations?: Array<JwkOperations>;
+  operations?: Array<KeySetOperations>;
   ownerId?: string;
   privateKey?: Buffer;
   publicKey?: Buffer;
-  type: JwkType;
-  use: JwkUsage;
+  type: KeySetType;
+  updatedAt?: Date;
+  use: KeySetUsage;
 };

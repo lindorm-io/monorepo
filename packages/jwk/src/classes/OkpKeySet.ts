@@ -1,10 +1,16 @@
-import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey } from "crypto";
+import {
+  generateKeyPair as _generateKeyPair,
+  createPrivateKey,
+  createPublicKey,
+  randomUUID,
+} from "crypto";
 import { promisify } from "util";
 import { JwkError } from "../errors";
 import {
   KeySetExportFormat,
   KeySetExportKeys,
   OctetCurve,
+  OkpKeySetB64,
   OkpKeySetDer,
   OkpKeySetJwk,
   OkpKeySetPem,
@@ -15,14 +21,14 @@ const generateKeyPair = promisify(_generateKeyPair);
 const CURVES: Array<OctetCurve> = ["Ed25519", "X25519"];
 
 export class OkpKeySet {
-  readonly #id: string | undefined;
+  readonly #id: string;
   readonly #curve: OctetCurve;
   readonly #privateKey: Buffer | undefined;
   readonly #publicKey: Buffer;
   readonly #type: "OKP";
 
   public constructor(options: OkpKeySetDer) {
-    this.#id = options.keyId;
+    this.#id = options.id;
     this.#curve = options.curve;
     this.#privateKey = options.privateKey;
     this.#publicKey = options.publicKey;
@@ -31,7 +37,7 @@ export class OkpKeySet {
 
   // public metadata
 
-  public get id(): string | undefined {
+  public get id(): string {
     return this.#id;
   }
 
@@ -43,8 +49,17 @@ export class OkpKeySet {
     return this.#type;
   }
 
+  public get hasPrivateKey(): boolean {
+    return Buffer.isBuffer(this.#privateKey);
+  }
+
+  public get hasPublicKey(): boolean {
+    return Buffer.isBuffer(this.#publicKey);
+  }
+
   // public export
 
+  public export(format: "b64", keys?: KeySetExportKeys): OkpKeySetB64;
   public export(format: "der", keys?: KeySetExportKeys): OkpKeySetDer;
   public export(format: "jwk", keys?: KeySetExportKeys): OkpKeySetJwk;
   public export(format: "pem", keys?: KeySetExportKeys): OkpKeySetPem;
@@ -53,6 +68,9 @@ export class OkpKeySet {
     keys: KeySetExportKeys = "both",
   ): OkpKeySetDer | OkpKeySetJwk | OkpKeySetPem {
     switch (format) {
+      case "b64":
+        return this.formatBase64Url(keys);
+
       case "der":
         return this.formatDer(keys);
 
@@ -69,30 +87,47 @@ export class OkpKeySet {
 
   // public static boolean
 
-  public static isDer(input: any): input is OkpKeySetDer {
-    return (
+  public static isB64(input: any): input is OkpKeySetB64 {
+    return !!(
       typeof input === "object" &&
       input.type === "OKP" &&
+      typeof input.id === "string" &&
+      CURVES.includes(input.curve) &&
+      ((typeof input.privateKey === "string" &&
+        !input.privateKey.startsWith("-----BEGIN PRIVATE KEY-----")) ||
+        (typeof input.publicKey === "string" &&
+          !input.publicKey.startsWith("-----BEGIN PUBLIC KEY-----")))
+    );
+  }
+
+  public static isDer(input: any): input is OkpKeySetDer {
+    return !!(
+      typeof input === "object" &&
+      input.type === "OKP" &&
+      typeof input.id === "string" &&
       CURVES.includes(input.curve) &&
       (Buffer.isBuffer(input.publicKey) || Buffer.isBuffer(input.privateKey))
     );
   }
 
   public static isJwk(input: any): input is OkpKeySetJwk {
-    return (
+    return !!(
       typeof input === "object" &&
       input.kty === "OKP" &&
+      typeof input.kid === "string" &&
       CURVES.includes(input.crv) &&
       (typeof input.x === "string" || typeof input.y === "string" || typeof input.d === "string")
     );
   }
 
   public static isPem(input: any): input is OkpKeySetPem {
-    return (
+    return !!(
       typeof input === "object" &&
       input.type === "OKP" &&
+      typeof input.id === "string" &&
       CURVES.includes(input.curve) &&
-      (typeof input.privateKey === "string" || typeof input.publicKey === "string")
+      (input.privateKey?.startsWith?.("-----BEGIN PRIVATE KEY-----") ||
+        input.publicKey?.startsWith?.("-----BEGIN PUBLIC KEY-----"))
     );
   }
 
@@ -120,10 +155,21 @@ export class OkpKeySet {
       throw new JwkError("Generation failed", { debug: { privateKey, publicKey } });
     }
 
-    return new OkpKeySet({ curve, privateKey, publicKey, type: "OKP" });
+    return new OkpKeySet({ id: randomUUID(), curve, privateKey, publicKey, type: "OKP" });
   }
 
   // public static returns EcKeySet from data
+
+  public static fromB64(b64: OkpKeySetB64): OkpKeySet {
+    if (!b64.publicKey) {
+      throw new JwkError("Public key not available");
+    }
+
+    const privateKey = b64.privateKey ? Buffer.from(b64.privateKey, "base64url") : undefined;
+    const publicKey = Buffer.from(b64.publicKey, "base64url");
+
+    return new OkpKeySet({ ...b64, privateKey, publicKey });
+  }
 
   public static fromDer(der: OkpKeySetDer): OkpKeySet {
     if (!der.publicKey) {
@@ -133,7 +179,12 @@ export class OkpKeySet {
   }
 
   public static fromJwk(jwk: OkpKeySetJwk): OkpKeySet {
-    const options: OkpKeySetDer = { curve: jwk.crv, publicKey: Buffer.alloc(0), type: jwk.kty };
+    const options: OkpKeySetDer = {
+      id: jwk.kid,
+      curve: jwk.crv,
+      publicKey: Buffer.alloc(0),
+      type: jwk.kty,
+    };
 
     if (jwk.d && jwk.x) {
       const privateObject = createPrivateKey({ key: jwk, format: "jwk", type: "pkcs8" });
@@ -165,7 +216,12 @@ export class OkpKeySet {
   }
 
   public static fromPem(pem: OkpKeySetPem): OkpKeySet {
-    const options: OkpKeySetDer = { curve: pem.curve, publicKey: Buffer.alloc(0), type: pem.type };
+    const options: OkpKeySetDer = {
+      id: pem.id,
+      curve: pem.curve,
+      publicKey: Buffer.alloc(0),
+      type: pem.type,
+    };
 
     if (pem.privateKey) {
       const privateObject = createPrivateKey({ key: pem.privateKey, format: "pem", type: "pkcs8" });
@@ -198,12 +254,28 @@ export class OkpKeySet {
 
   // private format
 
+  private formatBase64Url(keys: KeySetExportKeys = "both"): OkpKeySetB64 {
+    if (!this.#publicKey) {
+      throw new JwkError("Public key not available");
+    }
+
+    return {
+      id: this.#id,
+      curve: this.#curve,
+      privateKey:
+        keys === "both" && this.#privateKey ? this.#privateKey.toString("base64url") : undefined,
+      publicKey: this.#publicKey.toString("base64url"),
+      type: this.#type,
+    };
+  }
+
   private formatDer(keys: KeySetExportKeys = "both"): OkpKeySetDer {
     if (!this.#publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
+      id: this.#id,
       curve: this.#curve,
       privateKey: keys === "both" ? this.#privateKey : undefined,
       publicKey: this.#publicKey,
@@ -212,7 +284,7 @@ export class OkpKeySet {
   }
 
   private formatJwk(keys: KeySetExportKeys = "both"): OkpKeySetJwk {
-    const result: OkpKeySetJwk = { crv: this.#curve, x: "", kty: this.#type };
+    const result: OkpKeySetJwk = { crv: this.#curve, x: "", kid: this.#id, kty: this.#type };
 
     if (keys === "both" && this.#privateKey) {
       const keyObject = createPrivateKey({ key: this.#privateKey, format: "der", type: "pkcs8" });
@@ -260,7 +332,12 @@ export class OkpKeySet {
   }
 
   private formatPem(keys: KeySetExportKeys = "both"): OkpKeySetPem {
-    const result: OkpKeySetPem = { curve: this.#curve, publicKey: "", type: this.#type };
+    const result: OkpKeySetPem = {
+      id: this.#id,
+      curve: this.#curve,
+      publicKey: "",
+      type: this.#type,
+    };
 
     if (keys === "both" && this.#privateKey) {
       const privateObject = createPrivateKey({

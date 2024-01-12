@@ -1,7 +1,13 @@
-import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey } from "crypto";
+import {
+  generateKeyPair as _generateKeyPair,
+  createPrivateKey,
+  createPublicKey,
+  randomUUID,
+} from "crypto";
 import { promisify } from "util";
 import { JwkError } from "../errors";
 import {
+  EcKeySetB64,
   EcKeySetDer,
   EcKeySetJwk,
   EcKeySetPem,
@@ -23,14 +29,14 @@ const CURVES: Array<EllipticCurve> = [
 ];
 
 export class EcKeySet {
-  readonly #id: string | undefined;
+  readonly #id: string;
   readonly #curve: EllipticCurve;
   readonly #privateKey: Buffer | undefined;
   readonly #publicKey: Buffer;
   readonly #type: "EC";
 
   public constructor(options: EcKeySetDer) {
-    this.#id = options.keyId;
+    this.#id = options.id;
     this.#curve = options.curve;
     this.#privateKey = options.privateKey;
     this.#publicKey = options.publicKey;
@@ -39,7 +45,7 @@ export class EcKeySet {
 
   // public metadata
 
-  public get id(): string | undefined {
+  public get id(): string {
     return this.#id;
   }
 
@@ -51,8 +57,17 @@ export class EcKeySet {
     return this.#type;
   }
 
+  public get hasPrivateKey(): boolean {
+    return Buffer.isBuffer(this.#privateKey);
+  }
+
+  public get hasPublicKey(): boolean {
+    return Buffer.isBuffer(this.#publicKey);
+  }
+
   // public export
 
+  public export(format: "b64", keys?: KeySetExportKeys): EcKeySetB64;
   public export(format: "der", keys?: KeySetExportKeys): EcKeySetDer;
   public export(format: "jwk", keys?: KeySetExportKeys): EcKeySetJwk;
   public export(format: "pem", keys?: KeySetExportKeys): EcKeySetPem;
@@ -62,6 +77,9 @@ export class EcKeySet {
     keys: KeySetExportKeys = "both",
   ): EcKeySetDer | EcKeySetJwk | EcKeySetPem {
     switch (format) {
+      case "b64":
+        return this.formatBase64Url(keys);
+
       case "der":
         return this.formatDer(keys);
 
@@ -81,30 +99,47 @@ export class EcKeySet {
 
   // public static boolean
 
-  public static isDer(input: any): input is EcKeySetDer {
-    return (
+  public static isB64(input: any): input is EcKeySetB64 {
+    return !!(
       typeof input === "object" &&
       input.type === "EC" &&
+      typeof input.id === "string" &&
+      CURVES.includes(input.curve) &&
+      ((typeof input.privateKey === "string" &&
+        !input.privateKey.startsWith("-----BEGIN PRIVATE KEY-----")) ||
+        (typeof input.publicKey === "string" &&
+          !input.publicKey.startsWith("-----BEGIN PUBLIC KEY-----")))
+    );
+  }
+
+  public static isDer(input: any): input is EcKeySetDer {
+    return !!(
+      typeof input === "object" &&
+      input.type === "EC" &&
+      typeof input.id === "string" &&
       CURVES.includes(input.curve) &&
       (Buffer.isBuffer(input.publicKey) || Buffer.isBuffer(input.privateKey))
     );
   }
 
   public static isJwk(input: any): input is EcKeySetJwk {
-    return (
+    return !!(
       typeof input === "object" &&
       input.kty === "EC" &&
+      typeof input.kid === "string" &&
       CURVES.includes(input.crv) &&
       (typeof input.x === "string" || typeof input.y === "string" || typeof input.d === "string")
     );
   }
 
   public static isPem(input: any): input is EcKeySetPem {
-    return (
+    return !!(
       typeof input === "object" &&
       input.type === "EC" &&
+      typeof input.id === "string" &&
       CURVES.includes(input.curve) &&
-      (typeof input.privateKey === "string" || typeof input.publicKey === "string")
+      (input.privateKey?.startsWith?.("-----BEGIN PRIVATE KEY-----") ||
+        input.publicKey?.startsWith?.("-----BEGIN PUBLIC KEY-----"))
     );
   }
 
@@ -117,10 +152,21 @@ export class EcKeySet {
       publicKeyEncoding: { format: "der", type: "spki" },
     });
 
-    return new EcKeySet({ curve, privateKey, publicKey, type: "EC" });
+    return new EcKeySet({ id: randomUUID(), curve, privateKey, publicKey, type: "EC" });
   }
 
   // public static returns EcKeySet from data
+
+  public static fromB64(b64: EcKeySetB64): EcKeySet {
+    if (!b64.publicKey) {
+      throw new JwkError("Public key not available");
+    }
+
+    const publicKey = Buffer.from(b64.publicKey, "base64url");
+    const privateKey = b64.privateKey ? Buffer.from(b64.privateKey, "base64url") : undefined;
+
+    return new EcKeySet({ ...b64, privateKey, publicKey });
+  }
 
   public static fromDer(der: EcKeySetDer): EcKeySet {
     if (!der.publicKey) {
@@ -130,7 +176,12 @@ export class EcKeySet {
   }
 
   public static fromJwk(jwk: EcKeySetJwk): EcKeySet {
-    const options: EcKeySetDer = { curve: jwk.crv, publicKey: Buffer.alloc(0), type: jwk.kty };
+    const options: EcKeySetDer = {
+      id: jwk.kid,
+      curve: jwk.crv,
+      publicKey: Buffer.alloc(0),
+      type: jwk.kty,
+    };
 
     if (jwk.d && jwk.x && jwk.y) {
       const privateObject = createPrivateKey({ key: jwk, format: "jwk", type: "pkcs8" });
@@ -162,7 +213,12 @@ export class EcKeySet {
   }
 
   public static fromPem(pem: EcKeySetPem): EcKeySet {
-    const options: EcKeySetDer = { curve: pem.curve, publicKey: Buffer.alloc(0), type: pem.type };
+    const options: EcKeySetDer = {
+      id: pem.id,
+      curve: pem.curve,
+      publicKey: Buffer.alloc(0),
+      type: pem.type,
+    };
 
     if (pem.privateKey) {
       const privateObject = createPrivateKey({ key: pem.privateKey, format: "pem", type: "pkcs8" });
@@ -198,7 +254,7 @@ export class EcKeySet {
 
     const jwk: EcKeySetJwk = {
       crv: raw.curve,
-      kid: raw.keyId,
+      kid: raw.id,
       kty: raw.type,
       x: raw.publicKey.subarray(-len, -len / 2).toString("base64"),
       y: raw.publicKey.subarray(-len / 2).toString("base64"),
@@ -213,12 +269,28 @@ export class EcKeySet {
 
   // private format
 
+  private formatBase64Url(keys: KeySetExportKeys = "both"): EcKeySetB64 {
+    if (!this.#publicKey) {
+      throw new JwkError("Public key not available");
+    }
+
+    return {
+      id: this.#id,
+      curve: this.#curve,
+      privateKey:
+        keys === "both" && this.#privateKey ? this.#privateKey.toString("base64url") : undefined,
+      publicKey: this.#publicKey.toString("base64url"),
+      type: this.#type,
+    };
+  }
+
   private formatDer(keys: KeySetExportKeys = "both"): EcKeySetDer {
     if (!this.#publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
+      id: this.#id,
       curve: this.#curve,
       privateKey: keys === "both" ? this.#privateKey : undefined,
       publicKey: this.#publicKey,
@@ -231,7 +303,7 @@ export class EcKeySet {
       throw new JwkError("Public key not available");
     }
 
-    const result: EcKeySetJwk = { crv: this.#curve, x: "", y: "", kty: this.#type };
+    const result: EcKeySetJwk = { crv: this.#curve, x: "", y: "", kid: this.#id, kty: this.#type };
 
     if (keys === "both" && this.#privateKey) {
       const keyObject = createPrivateKey({ key: this.#privateKey, format: "der", type: "pkcs8" });
@@ -288,6 +360,7 @@ export class EcKeySet {
     }
 
     const result: EcKeySetPem = {
+      id: this.#id,
       curve: this.#curve,
       publicKey: "",
       type: this.#type,
@@ -324,6 +397,7 @@ export class EcKeySet {
     const jwk = this.formatJwk(keys);
 
     const result: EcKeySetRaw = {
+      id: this.#id,
       curve: this.#curve,
       publicKey: Buffer.alloc(0),
       type: this.#type,

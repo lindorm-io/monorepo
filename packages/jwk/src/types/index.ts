@@ -5,4 +5,5 @@ export * from "./key-set";
 export * from "./oct";
 export * from "./okp";
 export * from "./rsa";
+export * from "./types";
 export * from "./web-key-set";
