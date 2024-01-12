@@ -27,7 +27,6 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
     mongoConnection,
     namedCurve = NamedCurve.P521,
     originUri,
-    passphrase = "",
     retry,
     rotationInterval = "30 days",
     workerInterval = "1 days",
@@ -49,7 +48,6 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           const keyPair = await generateKeyPair({
             namedCurve,
             originUri,
-            passphrase,
             type: keyType,
           });
 
@@ -70,7 +68,6 @@ export const keyPairRotationWorker = (options: Options): IntervalWorker => {
           const keyPair = await generateKeyPair({
             namedCurve,
             originUri,
-            passphrase,
             type: keyType,
           });
 
