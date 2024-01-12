@@ -1,32 +1,48 @@
-import { GenerateRsaKeysOptions, generateRsaKeys } from "@lindorm-io/rsa";
+import { EcKeySet, RsaKeySet } from "../../../jwk/dist";
 import { KeyPair } from "../entities";
 import { KeyPairAlgorithm, KeyPairType, NamedCurve } from "../enums";
-import {
-  GenerateEcKeysOptions,
-  GenerateHsKeysOptions,
-  generateEcKeys,
-  generateHsKeys,
-} from "./private";
+import { GenerateEcKeysOptions, GenerateHsKeysOptions, generateHsKeys } from "./private";
 
 type Options = GenerateEcKeysOptions &
-  GenerateHsKeysOptions &
-  GenerateRsaKeysOptions & {
+  GenerateHsKeysOptions & {
     originUri?: string;
     type: KeyPairType;
   };
+
+const tmpGenerateEc = async (): Promise<any> => {
+  const keySet = await EcKeySet.generate();
+  const { curve, privateKey, publicKey } = keySet.export("pem");
+
+  return {
+    algorithms: [KeyPairAlgorithm.ES512],
+    namedCurve: curve,
+    privateKey,
+    publicKey,
+  };
+};
+
+const tmpGenerateRsa = async (): Promise<any> => {
+  const keySet = await RsaKeySet.generate();
+  const { privateKey, publicKey } = keySet.export("pem");
+
+  return {
+    algorithms: [KeyPairAlgorithm.RS512],
+    privateKey,
+    publicKey,
+  };
+};
 
 export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
   const { originUri, type } = options;
 
   let algorithms: Array<KeyPairAlgorithm>;
   let namedCurve: NamedCurve | null = null;
-  let passphrase: string | null = options.passphrase ?? null;
   let privateKey: string;
   let publicKey: string | null = null;
 
   switch (type) {
     case KeyPairType.EC:
-      ({ algorithms, namedCurve, privateKey, publicKey } = await generateEcKeys(options));
+      ({ algorithms, namedCurve, privateKey, publicKey } = await tmpGenerateEc());
       break;
 
     case KeyPairType.HS:
@@ -36,7 +52,7 @@ export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
 
     case KeyPairType.RSA:
       algorithms = [KeyPairAlgorithm.RS256, KeyPairAlgorithm.RS384, KeyPairAlgorithm.RS512];
-      ({ privateKey, publicKey } = await generateRsaKeys(options));
+      ({ privateKey, publicKey } = await tmpGenerateRsa());
       break;
 
     default:
@@ -47,7 +63,7 @@ export const generateKeyPair = async (options: Options): Promise<KeyPair> => {
     algorithms,
     namedCurve,
     originUri,
-    passphrase,
+    passphrase: "",
     privateKey,
     publicKey,
     type,
