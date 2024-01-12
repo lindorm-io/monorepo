@@ -8,7 +8,8 @@ import {
 import { removeUndefinedFromObject, sortObjectKeys } from "@lindorm-io/core";
 import { Logger } from "@lindorm-io/core-logger";
 import { expiryObject } from "@lindorm-io/expiry";
-import { KeyPair, KeyPairType, Keystore } from "@lindorm-io/key-pair";
+import { KeySetType, WebKeySet } from "@lindorm-io/jwk";
+import { Keystore } from "@lindorm-io/keystore";
 import { createHash, randomUUID } from "crypto";
 import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
@@ -24,21 +25,21 @@ import {
 } from "../util/private";
 
 export class JWT {
-  private readonly clockTolerance: number;
-  private readonly issuer: string;
-  private readonly jwksUrl: string | undefined;
-  private readonly keystore: Keystore;
-  private readonly keyType: KeyPairType | undefined;
-  private readonly logger: Logger;
+  readonly #clockTolerance: number;
+  readonly #issuer: string;
+  readonly #jwksUrl: string | undefined;
+  readonly #keystore: Keystore;
+  readonly #keyType: KeySetType | undefined;
+  readonly #logger: Logger;
 
   public constructor(options: JwtOptions, keystore: Keystore, logger: Logger) {
-    this.logger = logger.createChildLogger(["jwt"]);
+    this.#logger = logger.createChildLogger(["jwt"]);
 
-    this.clockTolerance = options.clockTolerance || 0;
-    this.issuer = options.issuer;
-    this.jwksUrl = options.jwksUrl;
-    this.keystore = keystore;
-    this.keyType = options.keyType;
+    this.#clockTolerance = options.clockTolerance || 0;
+    this.#issuer = options.issuer;
+    this.#jwksUrl = options.jwksUrl;
+    this.#keystore = keystore;
+    this.#keyType = options.keyType;
   }
 
   public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSign {
@@ -55,7 +56,7 @@ export class JWT {
       client,
       grantType,
       issuedAt,
-      jwksUrl = this.jwksUrl,
+      jwksUrl = this.#jwksUrl,
       keyType,
       levelOfAssurance,
       nonce,
@@ -83,7 +84,7 @@ export class JWT {
       ? this.createHash(options.code, 256)
       : undefined;
 
-    this.logger.debug("Signing token", {
+    this.#logger.debug("Signing token", {
       options,
     });
 
@@ -92,7 +93,7 @@ export class JWT {
       aud: audiences,
       exp: expiresUnix,
       iat: getUnixTime(issuedAt || now),
-      iss: this.issuer,
+      iss: this.#issuer,
       jti: id,
       nbf: getUnixTime(notBefore || now),
       sub: subject,
@@ -130,7 +131,7 @@ export class JWT {
 
     const token = sign(payload, privateKey, signOptions);
 
-    this.logger.debug("Successfully signed token", { token, ...object, ...signOptions });
+    this.#logger.debug("Successfully signed token", { token, ...object, ...signOptions });
 
     return {
       id,
@@ -145,7 +146,7 @@ export class JWT {
     token: string,
     options: JwtVerifyOptions = {},
   ): JwtDecode<Claims> {
-    this.logger.debug("verify token", { token, options });
+    this.#logger.debug("verify token", { token, options });
 
     const payload = JWT.decodePayload<Claims>(token);
     const {
@@ -157,7 +158,7 @@ export class JWT {
       clockTolerance,
       codeHash,
       grantType,
-      issuer = this.issuer,
+      issuer = this.#issuer,
       levelOfAssurance,
       maxAge,
       nonce,
@@ -171,37 +172,42 @@ export class JWT {
     } = options;
 
     let algorithms: Array<Algorithm>;
-    let publicKey: Secret;
+    let verifyKey: Secret;
 
     if (secret) {
       algorithms = options.algorithms || ["HS256"];
-      publicKey = secret;
+      verifyKey = secret;
     } else if (payload.key.id) {
-      const found = this.keystore.getKey(payload.key.id);
+      const found = this.#keystore.getKey(payload.key.id);
+      const pem = found.export("pem");
 
-      if (!found.publicKey) {
-        throw new TokenError("Missing public key");
+      if (pem.type === "OKP") {
+        throw new TokenError("Unsupported key type");
       }
 
-      algorithms = found.algorithms;
-      publicKey = found.publicKey;
+      algorithms = [found.metadata.algorithm as Algorithm];
+      verifyKey = WebKeySet.isOctPem(pem) ? pem.privateKey : pem.publicKey;
+
+      if (!verifyKey) {
+        throw new TokenError("Missing verification key");
+      }
     } else {
       throw new TokenError("Missing keyId or secret");
     }
 
     try {
-      verify(token, publicKey, {
+      verify(token, verifyKey, {
         algorithms,
         audience,
         clockTimestamp: getUnixTime(),
-        clockTolerance: clockTolerance || this.clockTolerance,
+        clockTolerance: clockTolerance || this.#clockTolerance,
         issuer,
         maxAge,
         nonce,
         subject,
       });
     } catch (err: any) {
-      this.logger.error("Failed to verify token", err);
+      this.#logger.error("Failed to verify token", err);
 
       throw new TokenError("Invalid token", { error: err });
     }
@@ -255,11 +261,11 @@ export class JWT {
         assertClaimEquals(tenant, payload.metadata.tenant, "tid");
       }
 
-      this.logger.debug("verify token success", { claims: payload });
+      this.#logger.debug("verify token success", { claims: payload });
 
       return payload;
     } catch (err: any) {
-      this.logger.error("Failed to validate token", err);
+      this.#logger.error("Failed to validate token", err);
 
       throw err;
     }
@@ -352,7 +358,7 @@ export class JWT {
     };
   }
 
-  public createHash(input: string, bits: number, keyType?: KeyPairType): string {
+  public createHash(input: string, bits: number, keyType?: KeySetType): string {
     const key = this.getSigningKey(keyType);
     const alg = getHashAlgFromKey(key);
     const buffer = createHash(alg).update(input, "utf8").digest();
@@ -360,51 +366,40 @@ export class JWT {
     return getFirstBitsFromBuffer(buffer, bits);
   }
 
-  private getSecret(key: KeyPair): Secret {
-    this.logger.silly("Resolving secret key", { key });
+  private getSecret(key: WebKeySet): Secret {
+    const pem = key.export("pem");
 
-    if (!key.privateKey) throw new Error("Missing private key");
-
-    switch (key.type) {
-      case KeyPairType.EC:
-        return key.privateKey;
-
-      case KeyPairType.HS:
-        return key.privateKey;
-
-      case KeyPairType.RSA:
-        if (key.passphrase?.length) {
-          return { key: key.privateKey, passphrase: key.passphrase };
-        }
-        return key.privateKey;
-
-      default:
-        throw new TokenError("Unsupported key type");
+    if (!pem.privateKey) {
+      throw new TokenError("Missing private key");
     }
+
+    this.#logger.silly("Resolving secret key", { key });
+
+    return pem.privateKey;
   }
 
-  private getSigningKey(keyType?: KeyPairType): KeyPair {
-    this.logger.silly("Finding signing key", { keyType });
+  private getSigningKey(keyType?: KeySetType): WebKeySet {
+    this.#logger.silly("Finding signing key", { keyType });
 
-    const key = this.keystore.getSigningKey(keyType || this.keyType);
+    const key = this.#keystore.findKey("sig", keyType || this.#keyType);
 
-    this.logger.silly("Found signing key", { keyType, key });
+    this.#logger.silly("Found signing key", { keyType, key });
 
     return key;
   }
 
-  private getSignOptions(key: KeyPair, jwksUrl?: string): SignOptions {
+  private getSignOptions(key: WebKeySet, jwksUrl?: string): SignOptions {
     const options: SignOptions = {
-      algorithm: key.preferredAlgorithm,
+      algorithm: key.algorithm as Algorithm,
       allowInsecureKeySizes: true,
       header: {
-        alg: key.preferredAlgorithm,
+        alg: key.algorithm,
         jku: jwksUrl,
         kid: key.id,
       },
     };
 
-    this.logger.silly("Resolving sign options", { key, jwksUrl, options });
+    this.#logger.silly("Resolving sign options", { key, jwksUrl, options });
 
     return options;
   }

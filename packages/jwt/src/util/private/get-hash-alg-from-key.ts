@@ -1,17 +1,17 @@
-import { KeyPair, KeyPairAlgorithm } from "@lindorm-io/key-pair";
+import { WebKeySet } from "@lindorm-io/jwk";
 
-export const getHashAlgFromKey = (key: KeyPair): string => {
-  switch (key.preferredAlgorithm) {
-    case KeyPairAlgorithm.ES256:
-    case KeyPairAlgorithm.RS256:
+export const getHashAlgFromKey = (key: WebKeySet): string => {
+  switch (key.algorithm) {
+    case "ES256":
+    case "RS256":
       return "sha256";
 
-    case KeyPairAlgorithm.ES384:
-    case KeyPairAlgorithm.RS384:
+    case "ES384":
+    case "RS384":
       return "sha384";
 
-    case KeyPairAlgorithm.ES512:
-    case KeyPairAlgorithm.RS512:
+    case "ES512":
+    case "RS512":
       return "sha512";
 
     default:

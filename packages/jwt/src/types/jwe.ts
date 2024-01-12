@@ -1,11 +1,10 @@
 import { Encryption, EncryptionKeyAlgorithm, KeyObject } from "@lindorm-io/aes";
-import { KeySet } from "@lindorm-io/jwk";
+import { KeySet, KeySetType } from "@lindorm-io/jwk";
 
 export type JweOptions = {
   encryption?: Encryption;
   encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
-  key?: KeyObject;
-  keySet?: KeySet;
+  keyType?: KeySetType;
 };
 
 export type EncryptJweOptions = {

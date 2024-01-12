@@ -1,4 +1,4 @@
-import { RsaKeySet } from "@lindorm-io/jwk";
+import { RsaKeySet, WebKeySet } from "@lindorm-io/jwk";
 
 export const RSA_KEY_SET = RsaKeySet.fromPem({
   id: "051204f3-fb85-5d97-90e3-73241c4f077c",
@@ -69,4 +69,11 @@ export const RSA_KEY_SET = RsaKeySet.fromPem({
     "6jwDnME2QhASFRZWssA3XsgGT4lZV5NCOgLMCZiwyWAcMhhRA5t5b83waWg=\n" +
     "-----END RSA PRIVATE KEY-----\n",
   type: "RSA",
+});
+
+export const RSA_WEB_KEY_SET = new WebKeySet({
+  ...RSA_KEY_SET.export("der"),
+  algorithm: "RS512",
+  type: "RSA",
+  use: "enc",
 });

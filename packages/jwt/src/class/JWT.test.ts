@@ -1,11 +1,11 @@
 import { OpenIdGrantType } from "@lindorm-io/common-enums";
 import { baseParse } from "@lindorm-io/core";
 import {
-  createTestKeyPairEC,
-  createTestKeyPairHS,
-  createTestKeyPairRSA,
   createTestKeystore,
-} from "@lindorm-io/key-pair";
+  createTestStoredKeySetEc,
+  createTestStoredKeySetOct,
+  createTestStoredKeySetRsa,
+} from "@lindorm-io/keystore";
 import MockDate from "mockdate";
 import { TokenError } from "../error";
 import { createTestJwt } from "../mocks";
@@ -66,12 +66,7 @@ describe("JWT", () => {
 
   describe("ES", () => {
     beforeEach(() => {
-      jwt = createTestJwt(
-        undefined,
-        createTestKeystore({
-          keys: [createTestKeyPairEC()],
-        }),
-      );
+      jwt = createTestJwt(undefined, createTestKeystore([createTestStoredKeySetEc()]));
     });
 
     test("should sign/verify", () => {
@@ -81,7 +76,7 @@ describe("JWT", () => {
         expect.objectContaining({
           id,
           key: expect.objectContaining({
-            id: "7531da89-12e9-403e-925a-5da49100635c",
+            id: "971c8839-af23-545f-8e2b-2f31d3e3af11",
             algorithm: "ES512",
           }),
           metadata: expect.objectContaining({
@@ -97,12 +92,7 @@ describe("JWT", () => {
 
   describe("HS", () => {
     beforeEach(() => {
-      jwt = createTestJwt(
-        undefined,
-        createTestKeystore({
-          keys: [createTestKeyPairHS()],
-        }),
-      );
+      jwt = createTestJwt(undefined, createTestKeystore([createTestStoredKeySetOct()]));
     });
 
     test("should sign/verify", () => {
@@ -112,8 +102,8 @@ describe("JWT", () => {
         expect.objectContaining({
           id,
           key: expect.objectContaining({
-            id: "aa08b86a-3550-4893-8021-9a18efcd1532",
-            algorithm: "HS512",
+            id: "79e34435-8946-558e-af6e-a5cb081498dc",
+            algorithm: "HS256",
           }),
           metadata: expect.objectContaining({
             audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
@@ -128,12 +118,7 @@ describe("JWT", () => {
 
   describe("RS", () => {
     beforeEach(() => {
-      jwt = createTestJwt(
-        undefined,
-        createTestKeystore({
-          keys: [createTestKeyPairRSA()],
-        }),
-      );
+      jwt = createTestJwt(undefined, createTestKeystore([createTestStoredKeySetRsa()]));
     });
 
     test("should sign/verify", () => {
@@ -143,8 +128,8 @@ describe("JWT", () => {
         expect.objectContaining({
           id,
           key: expect.objectContaining({
-            id: "e6301473-e347-4035-8084-8645d034e4a3",
-            algorithm: "RS512",
+            id: "8ec80934-d9b6-56a5-85af-e0cb74171854",
+            algorithm: "RS256",
           }),
           metadata: expect.objectContaining({
             audiences: ["066576d7-9bb5-4e08-83c7-e9c4e81bc108"],
@@ -174,7 +159,7 @@ describe("JWT", () => {
       header: {
         alg: "ES512",
         jku: "https://test.lindorm.io/.well-known/jwks.json",
-        kid: "7531da89-12e9-403e-925a-5da49100635c",
+        kid: "971c8839-af23-545f-8e2b-2f31d3e3af11",
         typ: "JWT",
       },
       payload: {
@@ -216,7 +201,7 @@ describe("JWT", () => {
       header: {
         alg: "ES512",
         jku: "https://default.lindorm.io/.well-known/jwks.json",
-        kid: "7531da89-12e9-403e-925a-5da49100635c",
+        kid: "971c8839-af23-545f-8e2b-2f31d3e3af11",
         typ: "JWT",
       },
       payload: {
@@ -242,7 +227,7 @@ describe("JWT", () => {
         claimsKey: "claimValue",
       },
       key: {
-        id: "7531da89-12e9-403e-925a-5da49100635c",
+        id: "971c8839-af23-545f-8e2b-2f31d3e3af11",
         algorithm: "ES512",
         jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
       },
@@ -428,7 +413,7 @@ describe("JWT", () => {
         claimsKey: "claimValue",
       },
       key: {
-        id: "7531da89-12e9-403e-925a-5da49100635c",
+        id: "971c8839-af23-545f-8e2b-2f31d3e3af11",
         algorithm: "ES512",
         jwksUrl: "https://test.lindorm.io/.well-known/jwks.json",
       },
@@ -472,7 +457,7 @@ describe("JWT", () => {
       id,
       claims: {},
       key: {
-        id: "7531da89-12e9-403e-925a-5da49100635c",
+        id: "971c8839-af23-545f-8e2b-2f31d3e3af11",
         algorithm: "ES512",
         jwksUrl: "https://default.lindorm.io/.well-known/jwks.json",
       },
