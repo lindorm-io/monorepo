@@ -1,7 +1,7 @@
 import { AmqpConnection, MessageBusConstructor } from "@lindorm-io/amqp";
 import { AxiosClientProperties } from "@lindorm-io/axios";
 import { MemoryCacheConstructor, MemoryDatabase } from "@lindorm-io/in-memory-cache";
-import { KeyPairType } from "@lindorm-io/key-pair";
+import { GenerateOptions, KeySetExportKeys } from "@lindorm-io/jwk";
 import { KoaAppOptions } from "@lindorm-io/koa";
 import { MongoConnection, MongoRepositoryConstructor } from "@lindorm-io/mongo";
 import { RedisConnection, RedisRepositoryConstructor } from "@lindorm-io/redis";
@@ -14,9 +14,11 @@ export type ServiceOptions = {
 };
 
 export type KeystoreOptions = {
-  exposed?: Array<"external" | "public">;
-  generated?: Array<KeyPairType>;
+  encOptions?: GenerateOptions;
+  exportExternalKeys?: boolean;
+  exportKeys?: KeySetExportKeys;
   jwks?: Array<ServiceOptions>;
+  sigOptions?: GenerateOptions;
   storage?: Array<"memory" | "mongo" | "redis">;
 };
 

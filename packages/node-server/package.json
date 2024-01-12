@@ -11,8 +11,9 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "test": "jest --watch --",
-    "test:ci": "yarn test:unit && yarn test:integration",
-    "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js",
+    "test:ci": "yarn test:unit && yarn test:integration:ci",
+    "test:integration": "compd --file docker-compose.yml jest --watch --config jest.config.integration.js",
+    "test:integration:ci": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u",
     "test:unit": "jest --forceExit",
     "test:unit:update": "jest --forceExit -u",
@@ -23,8 +24,9 @@
   "dependencies": {
     "@lindorm-io/amqp": "^0.3.2",
     "@lindorm-io/axios": "^0.6.18",
+    "@lindorm-io/jwk": "^0.2.0",
     "@lindorm-io/jwt": "^0.13.0",
-    "@lindorm-io/key-pair": "^0.8.2",
+    "@lindorm-io/keystore": "^0.1.0",
     "@lindorm-io/koa": "^0.17.11",
     "@lindorm-io/koa-amqp": "^0.1.11",
     "@lindorm-io/koa-axios": "^0.1.54",

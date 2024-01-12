@@ -4,21 +4,21 @@ import { messageBusMiddleware, socketMessageBusMiddleware } from "@lindorm-io/ko
 import { axiosMiddleware, socketAxiosMiddleware } from "@lindorm-io/koa-axios";
 import { jwtMiddleware, socketJwtMiddleware } from "@lindorm-io/koa-jwt";
 import {
-  KeyPairMemoryCache,
-  KeyPairMongoRepository,
-  KeyPairRedisRepository,
-  keyPairCleanupWorker,
-  keyPairJwksMemoryWorker,
-  keyPairJwksRedisWorker,
-  keyPairMongoMemoryWorker,
-  keyPairMongoRedisWorker,
-  keyPairRotationWorker,
+  StoredKeySetMemoryCache,
+  StoredKeySetMongoRepository,
+  StoredKeySetRedisRepository,
   keystoreMiddleware,
   memoryKeysMiddleware,
   redisKeysMiddleware,
   socketKeystoreMiddleware,
   socketMemoryKeysMiddleware,
   socketRedisKeysMiddleware,
+  storedKeySetCleanupWorker,
+  storedKeySetJwksMemoryWorker,
+  storedKeySetJwksRedisWorker,
+  storedKeySetMongoMemoryWorker,
+  storedKeySetMongoRedisWorker,
+  storedKeySetRotationWorker,
 } from "@lindorm-io/koa-keystore";
 import { memoryCacheMiddleware, socketMemoryCacheMiddleware } from "@lindorm-io/koa-memory";
 import {
@@ -119,11 +119,11 @@ export const createNodeServer = <
 
     if (keystore?.storage?.includes("memory")) {
       logger.debug("Adding memory cache middleware to server", {
-        cache: KeyPairMemoryCache.name,
+        cache: StoredKeySetMemoryCache.name,
       });
 
-      middleware.push(memoryCacheMiddleware(memoryDatabase, KeyPairMemoryCache));
-      socketMiddleware.push(socketMemoryCacheMiddleware(memoryDatabase, KeyPairMemoryCache));
+      middleware.push(memoryCacheMiddleware(memoryDatabase, StoredKeySetMemoryCache));
+      socketMiddleware.push(socketMemoryCacheMiddleware(memoryDatabase, StoredKeySetMemoryCache));
 
       logger.debug("Adding memory keys middleware to server");
 
@@ -148,9 +148,9 @@ export const createNodeServer = <
     if (keystore?.storage?.includes("mongo")) {
       logger.debug("Adding mongo keystore middleware to server");
 
-      middleware.push(mongoRepositoryMiddleware(mongoConnection, KeyPairMongoRepository));
+      middleware.push(mongoRepositoryMiddleware(mongoConnection, StoredKeySetMongoRepository));
       socketMiddleware.push(
-        socketMongoRepositoryMiddleware(mongoConnection, KeyPairMongoRepository),
+        socketMongoRepositoryMiddleware(mongoConnection, StoredKeySetMongoRepository),
       );
     }
   }
@@ -171,9 +171,9 @@ export const createNodeServer = <
     if (keystore?.storage?.includes("redis")) {
       logger.debug("Adding mongo keystore middleware to server");
 
-      middleware.push(redisRepositoryMiddleware(redisConnection, KeyPairRedisRepository));
+      middleware.push(redisRepositoryMiddleware(redisConnection, StoredKeySetRedisRepository));
       socketMiddleware.push(
-        socketRedisRepositoryMiddleware(redisConnection, KeyPairRedisRepository),
+        socketRedisRepositoryMiddleware(redisConnection, StoredKeySetRedisRepository),
       );
 
       middleware.push(redisKeysMiddleware);
@@ -212,25 +212,24 @@ export const createNodeServer = <
 
   const koa = new KoaApp<Context>({ ...options, middleware, socketMiddleware });
 
-  if (issuer && mongoConnection && keystore?.generated?.length) {
-    for (const keyType of keystore.generated) {
-      logger.debug("Adding mongo KeyPair rotation worker", { keyType });
-
-      koa.addWorker(
-        keyPairRotationWorker({
-          keyType,
-          logger: options.logger,
-          mongoConnection,
-          originUri: issuer,
-          retry: { maximumAttempts: 30 },
-        }),
-      );
-    }
-
-    logger.debug("Adding KeyPair cleanup worker");
+  if (issuer && mongoConnection && (keystore?.encOptions || keystore?.sigOptions)) {
+    logger.debug("Adding mongo StoredKeySet rotation worker");
 
     koa.addWorker(
-      keyPairCleanupWorker({
+      storedKeySetRotationWorker({
+        encOptions: keystore.encOptions,
+        jwkUri: issuer,
+        logger: options.logger,
+        mongoConnection,
+        retry: { maximumAttempts: 30 },
+        sigOptions: keystore.sigOptions,
+      }),
+    );
+
+    logger.debug("Adding StoredKeySet cleanup worker");
+
+    koa.addWorker(
+      storedKeySetCleanupWorker({
         logger: options.logger,
         mongoConnection,
         retry: { maximumAttempts: 30 },
@@ -238,10 +237,10 @@ export const createNodeServer = <
     );
 
     if (memoryDatabase && keystore.storage?.includes("memory")) {
-      logger.debug("Adding memory KeyPair cache worker");
+      logger.debug("Adding memory StoredKeySet cache worker");
 
       koa.addWorker(
-        keyPairMongoMemoryWorker({
+        storedKeySetMongoMemoryWorker({
           logger: options.logger,
           memoryDatabase,
           mongoConnection,
@@ -251,10 +250,10 @@ export const createNodeServer = <
     }
 
     if (redisConnection && keystore.storage?.includes("redis")) {
-      logger.debug("Adding redis KeyPair cache worker");
+      logger.debug("Adding redis StoredKeySet cache worker");
 
       koa.addWorker(
-        keyPairMongoRedisWorker({
+        storedKeySetMongoRedisWorker({
           logger: options.logger,
           mongoConnection,
           redisConnection,
@@ -270,7 +269,7 @@ export const createNodeServer = <
     for (const service of jwks) {
       if (memoryDatabase && keystore.storage.includes("memory")) {
         koa.addWorker(
-          keyPairJwksMemoryWorker({
+          storedKeySetJwksMemoryWorker({
             host: service.host,
             port: service.port || undefined,
             alias: service.name,
@@ -284,7 +283,7 @@ export const createNodeServer = <
 
       if (redisConnection && keystore.storage.includes("redis")) {
         koa.addWorker(
-          keyPairJwksRedisWorker({
+          storedKeySetJwksRedisWorker({
             host: service.host,
             port: service.port || undefined,
             alias: service.name,
@@ -298,10 +297,10 @@ export const createNodeServer = <
     }
   }
 
-  if (keystore?.exposed?.includes("public")) {
+  if (typeof keystore?.exportKeys === "string") {
     koa.addRoute(
       "/.well-known/jwks.json",
-      createWellKnownJwksRouter<Context>(keystore?.exposed?.includes("external")),
+      createWellKnownJwksRouter<Context>(keystore.exportKeys, keystore.exportExternalKeys),
     );
   }
 
