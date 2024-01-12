@@ -1,23 +1,21 @@
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { EntityNotFoundError } from "@lindorm-io/entity";
 import {
-  KeyPair,
-  KeyPairAlgorithm,
-  KeyPairType,
-  createTestKeyPair,
-  createTestKeyPairRSA,
-} from "@lindorm-io/key-pair";
+  StoredKeySet,
+  createTestStoredKeySet,
+  createTestStoredKeySetRsa,
+} from "@lindorm-io/keystore";
 import { RedisConnection } from "@lindorm-io/redis";
 import { randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { KeyPairRedisRepository } from "./KeyPairRedisRepository";
+import { StoredKeySetRedisRepository } from "./StoredKeySetRedisRepository";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
-describe("KeyPairCache", () => {
-  let cache: KeyPairRedisRepository;
+describe("StoredKeySetCache", () => {
+  let cache: StoredKeySetRedisRepository;
   let connection: RedisConnection;
-  let entity: KeyPair;
+  let entity: StoredKeySet;
 
   const logger = createMockLogger();
 
@@ -32,12 +30,12 @@ describe("KeyPairCache", () => {
 
     await connection.connect();
 
-    cache = new KeyPairRedisRepository(connection, logger);
+    cache = new StoredKeySetRedisRepository(connection, logger);
   });
 
   beforeEach(async () => {
     entity = await cache.create(
-      createTestKeyPair({ id: randomUUID(), expiresAt: new Date("2022-01-01T08:15:00.000Z") }),
+      createTestStoredKeySet({ id: randomUUID(), expiresAt: new Date("2022-01-01T08:15:00.000Z") }),
     );
   });
 
@@ -48,44 +46,51 @@ describe("KeyPairCache", () => {
   test("should create", async () => {
     await expect(
       cache.create(
-        new KeyPair({
-          algorithms: [KeyPairAlgorithm.RS256],
-          passphrase: "",
-          privateKey: "create",
-          publicKey: "create",
-          type: KeyPairType.RSA,
+        createTestStoredKeySet({
+          id: randomUUID(),
+          expiresAt: new Date("2022-01-01T08:15:00.000Z"),
         }),
       ),
-    ).resolves.toStrictEqual(expect.any(KeyPair));
+    ).resolves.toStrictEqual(expect.any(StoredKeySet));
   });
 
   test("should update with expiry", async () => {
-    entity.expiresAt = new Date("2022-01-01T08:30:00.000Z");
+    entity.webKeySet.expiresAt = new Date("2022-01-01T08:30:00.000Z");
 
-    await expect(cache.update(entity)).resolves.toStrictEqual(expect.any(KeyPair));
+    await expect(cache.update(entity)).resolves.toStrictEqual(
+      expect.objectContaining({
+        id: entity.id,
+        updated: new Date("2022-01-01T08:00:00.000Z"),
+      }),
+    );
     await expect(cache.ttl(entity)).resolves.toBe(1800);
   });
 
   test("should find", async () => {
-    await expect(cache.find({ id: entity.id })).resolves.toStrictEqual(entity);
+    await expect(cache.find({ id: entity.id })).resolves.toStrictEqual(
+      expect.objectContaining({ id: entity.id }),
+    );
   });
 
   test("should find many", async () => {
-    const keyRSA = await cache.create(createTestKeyPairRSA());
+    const keyRSA = await cache.create(createTestStoredKeySetRsa({ id: randomUUID() }));
 
     await expect(cache.findMany({})).resolves.toStrictEqual(
-      expect.arrayContaining([entity, keyRSA]),
+      expect.arrayContaining([
+        expect.objectContaining({ id: entity.id }),
+        expect.objectContaining({ id: keyRSA.id }),
+      ]),
     );
   });
 
   test("should destroy", async () => {
     const destroy = await cache.create(
-      new KeyPair({
-        algorithms: [KeyPairAlgorithm.RS256],
-        passphrase: "",
+      new StoredKeySet({
+        algorithm: "RS256",
         privateKey: "destroy",
         publicKey: "destroy",
-        type: KeyPairType.RSA,
+        type: "RSA",
+        use: "sig",
       }),
     );
 

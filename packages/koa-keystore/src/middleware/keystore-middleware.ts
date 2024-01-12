@@ -1,5 +1,5 @@
+import { Keystore } from "@lindorm-io/keystore";
 import { DefaultLindormKeystoreKoaMiddleware } from "../types";
-import { Keystore } from "@lindorm-io/key-pair";
 
 export const keystoreMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
   ctx,
@@ -7,9 +7,9 @@ export const keystoreMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
 ): Promise<void> => {
   const metric = ctx.getMetric("keystore");
 
-  ctx.keystore = new Keystore({ keys: ctx.keys });
+  ctx.keystore = new Keystore(ctx.keys, ctx.logger);
 
-  ctx.logger.debug("keystore initialised", { amount: ctx.keys.length });
+  ctx.logger.debug("Keystore initialised", { amount: ctx.keystore.allKeys.length });
 
   metric.end();
 

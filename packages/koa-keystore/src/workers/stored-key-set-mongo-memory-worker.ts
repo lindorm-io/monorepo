@@ -7,7 +7,7 @@ import { MongoConnection } from "@lindorm-io/mongo";
 import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { KeyPairMemoryCache, KeyPairMongoRepository } from "../infrastructure";
+import { StoredKeySetMemoryCache, StoredKeySetMongoRepository } from "../infrastructure";
 
 type Options = {
   logger: Logger;
@@ -17,15 +17,15 @@ type Options = {
   workerInterval?: ReadableTime;
 };
 
-export const keyPairMongoMemoryWorker = (options: Options): IntervalWorker => {
+export const storedKeySetMongoMemoryWorker = (options: Options): IntervalWorker => {
   const { memoryDatabase, mongoConnection, retry, workerInterval = "1 hours" } = options;
 
-  const logger = options.logger.createChildLogger(["keyPairMongoMemoryWorker"]);
+  const logger = options.logger.createChildLogger(["storedKeySetMongoMemoryWorker"]);
 
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const mongoRepository = new KeyPairMongoRepository(mongoConnection, logger);
+        const mongoRepository = new StoredKeySetMongoRepository(mongoConnection, logger);
 
         const array = await mongoRepository.findMany({});
 
@@ -33,11 +33,11 @@ export const keyPairMongoMemoryWorker = (options: Options): IntervalWorker => {
           throw new LindormError("No keys could be found in repository");
         }
 
-        const memoryCache = new KeyPairMemoryCache(memoryDatabase, logger);
+        const memoryCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
 
         for (const entity of array) {
-          if (!entity.expiresAt) {
-            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
+          if (!entity.webKeySet.expiresAt) {
+            entity.webKeySet.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
           await memoryCache.upsert(entity);
         }

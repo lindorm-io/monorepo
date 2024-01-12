@@ -1,8 +1,10 @@
-import { DefaultLindormKeystoreSocketMiddleware } from "../types";
 import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
-import { getKeysFromMemory } from "../util";
+import { DefaultLindormKeystoreSocketMiddleware } from "../types";
+import { getKeysFromMemory } from "../utils";
 
 export const socketMemoryKeysMiddleware: DefaultLindormKeystoreSocketMiddleware =
   promisifyLindormSocketMiddleware(async (socket) => {
-    socket.ctx.keys = await getKeysFromMemory(socket.ctx);
+    const keys = await getKeysFromMemory(socket.ctx);
+
+    socket.ctx.keys = [socket.ctx.keys, keys].flat();
   });

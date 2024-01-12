@@ -1,12 +1,19 @@
 import { Logger } from "@lindorm-io/core-logger";
-import { KeyPair, KeyPairAttributes } from "@lindorm-io/key-pair";
+import { StoredKeySet, StoredKeySetAttributes } from "@lindorm-io/keystore";
 import { IMongoConnection, MongoRepositoryBase } from "@lindorm-io/mongo";
 
-export class KeyPairMongoRepository extends MongoRepositoryBase<KeyPairAttributes, KeyPair> {
+export class StoredKeySetMongoRepository extends MongoRepositoryBase<
+  StoredKeySetAttributes,
+  StoredKeySet
+> {
   public constructor(connection: IMongoConnection, logger: Logger) {
     super(connection, logger, {
-      entityName: "KeyPair",
+      entityName: "StoredKeySet",
       indices: [
+        {
+          index: { algorithm: 1 },
+          options: { unique: false },
+        },
         {
           index: { expiresAt: 1 },
           options: { unique: false },
@@ -20,26 +27,26 @@ export class KeyPairMongoRepository extends MongoRepositoryBase<KeyPairAttribute
           options: { unique: false },
         },
         {
-          index: { preferredAlgorithm: 1 },
+          index: { type: 1 },
           options: { unique: false },
         },
         {
-          index: { type: 1 },
+          index: { use: 1 },
           options: { unique: false },
         },
       ],
     });
   }
 
-  protected createDocument(entity: KeyPair): KeyPairAttributes {
+  protected createDocument(entity: StoredKeySet): StoredKeySetAttributes {
     return entity.toJSON();
   }
 
-  protected createEntity(data: KeyPairAttributes): KeyPair {
-    return new KeyPair(data);
+  protected createEntity(data: StoredKeySetAttributes): StoredKeySet {
+    return new StoredKeySet(data);
   }
 
-  protected validateSchema(entity: KeyPair): Promise<void> {
+  protected validateSchema(entity: StoredKeySet): Promise<void> {
     return entity.schemaValidation();
   }
 }

@@ -6,12 +6,13 @@ import {
 import { Logger } from "@lindorm-io/core-logger";
 import { expiryDate } from "@lindorm-io/expiry";
 import { IMemoryDatabase } from "@lindorm-io/in-memory-cache";
+import { StoredKeySet } from "@lindorm-io/keystore";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { KeyPairMemoryCache } from "../infrastructure";
-import { getKeysFromJwks } from "../util";
+import { StoredKeySetMemoryCache } from "../infrastructure";
+import { getKeysFromJwks } from "../utils";
 
 type Options = {
   host: string;
@@ -26,7 +27,7 @@ type Options = {
   workerInterval?: ReadableTime;
 };
 
-export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
+export const storedKeySetJwksMemoryWorker = (options: Options): IntervalWorker => {
   const {
     host,
     port,
@@ -39,7 +40,7 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const logger = options.logger.createChildLogger(["keyPairJwksMemoryWorker", alias]);
+  const logger = options.logger.createChildLogger(["storedKeySetJwksMemoryWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
     host,
@@ -55,7 +56,7 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const memoryCache = new KeyPairMemoryCache(memoryDatabase, logger);
+        const memoryCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
 
         const keys = await getKeysFromJwks(
           {
@@ -69,11 +70,11 @@ export const keyPairJwksMemoryWorker = (options: Options): IntervalWorker => {
           logger,
         );
 
-        for (const entity of keys) {
-          if (!entity.expiresAt) {
-            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
+        for (const key of keys) {
+          if (!key.expiresAt) {
+            key.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
-          await memoryCache.upsert(entity);
+          await memoryCache.upsert(new StoredKeySet(key));
         }
       },
       retry,

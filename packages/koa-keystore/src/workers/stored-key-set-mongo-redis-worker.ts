@@ -7,7 +7,7 @@ import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { KeyPairMongoRepository, KeyPairRedisRepository } from "../infrastructure";
+import { StoredKeySetMongoRepository, StoredKeySetRedisRepository } from "../infrastructure";
 
 type Options = {
   mongoConnection: MongoConnection;
@@ -17,15 +17,15 @@ type Options = {
   workerInterval?: ReadableTime;
 };
 
-export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
+export const storedKeySetMongoRedisWorker = (options: Options): IntervalWorker => {
   const { mongoConnection, redisConnection, retry, workerInterval = "1 hours" } = options;
 
-  const logger = options.logger.createChildLogger(["keyPairMongoRedisWorker"]);
+  const logger = options.logger.createChildLogger(["storedKeySetMongoRedisWorker"]);
 
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const mongoRepository = new KeyPairMongoRepository(mongoConnection, logger);
+        const mongoRepository = new StoredKeySetMongoRepository(mongoConnection, logger);
 
         const array = await mongoRepository.findMany({});
 
@@ -33,11 +33,11 @@ export const keyPairMongoRedisWorker = (options: Options): IntervalWorker => {
           throw new LindormError("No keys could be found in repository");
         }
 
-        const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
+        const redisRepository = new StoredKeySetRedisRepository(redisConnection, logger);
 
         for (const entity of array) {
-          if (!entity.expiresAt) {
-            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
+          if (!entity.webKeySet.expiresAt) {
+            entity.webKeySet.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
           await redisRepository.upsert(entity);
         }

@@ -1,11 +1,5 @@
-import { KeyPair, Keystore } from "@lindorm-io/key-pair";
-import { MongoConnection } from "@lindorm-io/mongo";
-import { RedisConnection } from "@lindorm-io/redis";
-import {
-  KeyPairMemoryCache,
-  KeyPairMongoRepository,
-  KeyPairRedisRepository,
-} from "../infrastructure";
+import { WebKeySet } from "@lindorm-io/jwk";
+import { Keystore } from "@lindorm-io/keystore";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
@@ -13,22 +7,29 @@ import {
   DefaultLindormSocket,
   DefaultLindormSocketMiddleware,
 } from "@lindorm-io/koa";
+import { MongoConnection } from "@lindorm-io/mongo";
+import { RedisConnection } from "@lindorm-io/redis";
+import {
+  StoredKeySetMemoryCache,
+  StoredKeySetMongoRepository,
+  StoredKeySetRedisRepository,
+} from "../infrastructure";
 
 export interface DefaultLindormKeystoreContext extends DefaultLindormContext {
   connection: {
     mongo: MongoConnection;
     redis: RedisConnection;
   };
-  keys: Array<KeyPair>;
+  keys: Array<WebKeySet>;
   keystore: Keystore;
   memory: {
-    keyPairMemoryCache: KeyPairMemoryCache;
+    storedKeySetMemoryCache: StoredKeySetMemoryCache;
   };
   mongo: {
-    keyPairMongoRepository: KeyPairMongoRepository;
+    storedKeySetMongoRepository: StoredKeySetMongoRepository;
   };
   redis: {
-    keyPairRedisRepository: KeyPairRedisRepository;
+    storedKeySetRedisRepository: StoredKeySetRedisRepository;
   };
 }
 

@@ -11,8 +11,9 @@
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "test": "jest --watch --",
-    "test:ci": "yarn test:unit && yarn test:integration",
-    "test:integration": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js",
+    "test:ci": "yarn test:unit && yarn test:integration:ci",
+    "test:integration": "compd --file docker-compose.yml jest --watch --config jest.config.integration.js",
+    "test:integration:ci": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js",
     "test:integration:update": "compd --file docker-compose.yml jest --forceExit --config jest.config.integration.js -u",
     "test:unit": "jest --forceExit",
     "test:unit:update": "jest --forceExit -u",
@@ -26,12 +27,14 @@
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/expiry": "^0.2.1",
     "@lindorm-io/in-memory-cache": "^0.3.6",
-    "@lindorm-io/key-pair": "^0.8.2",
+    "@lindorm-io/jwk": "^0.1.0",
+    "@lindorm-io/keystore": "^0.1.0",
     "@lindorm-io/koa": "^0.17.11",
     "@lindorm-io/mongo": "^0.12.6",
     "@lindorm-io/readable-time": "^0.1.1",
     "@lindorm-io/redis": "^0.12.6",
     "@lindorm-io/retry": "^0.1.5",
+    "@lindorm-io/url": "^0.2.18",
     "joi": "^17.11.0"
   },
   "devDependencies": {

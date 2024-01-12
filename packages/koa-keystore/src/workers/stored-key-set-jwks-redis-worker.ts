@@ -5,13 +5,14 @@ import {
 } from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
 import { expiryDate } from "@lindorm-io/expiry";
+import { StoredKeySet } from "@lindorm-io/keystore";
 import { IntervalWorker } from "@lindorm-io/koa";
 import { ReadableTime, ms } from "@lindorm-io/readable-time";
 import { RedisConnection } from "@lindorm-io/redis";
 import { RetryOptions } from "@lindorm-io/retry";
 import { addSeconds } from "date-fns";
-import { KeyPairRedisRepository } from "../infrastructure";
-import { getKeysFromJwks } from "../util";
+import { StoredKeySetRedisRepository } from "../infrastructure";
+import { getKeysFromJwks } from "../utils";
 
 type Options = {
   host: string;
@@ -26,7 +27,7 @@ type Options = {
   workerInterval?: ReadableTime;
 };
 
-export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
+export const storedKeySetJwksRedisWorker = (options: Options): IntervalWorker => {
   const {
     alias,
     host,
@@ -39,7 +40,7 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
     workerInterval = "5 minutes",
   } = options;
 
-  const logger = options.logger.createChildLogger(["keyPairJwksRedisWorker", alias]);
+  const logger = options.logger.createChildLogger(["storedKeySetJwksRedisWorker", alias]);
 
   logger.debug("creating jwks cache worker", {
     host,
@@ -55,7 +56,7 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
   return new IntervalWorker(
     {
       callback: async (): Promise<void> => {
-        const redisRepository = new KeyPairRedisRepository(redisConnection, logger);
+        const redisRepository = new StoredKeySetRedisRepository(redisConnection, logger);
 
         const keys = await getKeysFromJwks(
           {
@@ -69,11 +70,11 @@ export const keyPairJwksRedisWorker = (options: Options): IntervalWorker => {
           logger,
         );
 
-        for (const entity of keys) {
-          if (!entity.expiresAt) {
-            entity.expiresAt = addSeconds(expiryDate(workerInterval), 15);
+        for (const key of keys) {
+          if (!key.expiresAt) {
+            key.expiresAt = addSeconds(expiryDate(workerInterval), 15);
           }
-          await redisRepository.upsert(entity);
+          await redisRepository.upsert(new StoredKeySet(key));
         }
       },
       retry,

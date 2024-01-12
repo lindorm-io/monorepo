@@ -1,5 +1,5 @@
 import { DefaultLindormKeystoreKoaMiddleware } from "../types";
-import { getKeysFromMongo } from "../util";
+import { getKeysFromMongo } from "../utils";
 
 export const mongoKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
   ctx,
@@ -7,7 +7,9 @@ export const mongoKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
 ): Promise<void> => {
   const metric = ctx.getMetric("keystore");
 
-  ctx.keys = await getKeysFromMongo(ctx);
+  const keys = await getKeysFromMongo(ctx);
+
+  ctx.keys = [ctx.keys, keys].flat();
 
   metric.end();
 

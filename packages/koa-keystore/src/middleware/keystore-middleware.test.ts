@@ -1,6 +1,10 @@
-import { Metric } from "@lindorm-io/koa";
-import { createTestKeyPairEC, createTestKeyPairRSA, Keystore } from "@lindorm-io/key-pair";
 import { createMockLogger } from "@lindorm-io/core-logger";
+import {
+  createTestStoredKeySetEc,
+  createTestStoredKeySetRsa,
+  Keystore,
+} from "@lindorm-io/keystore";
+import { Metric } from "@lindorm-io/koa";
 import { keystoreMiddleware } from "./keystore-middleware";
 
 const next = () => Promise.resolve();
@@ -9,12 +13,12 @@ describe("keystoreMiddleware", () => {
   let ctx: any;
 
   const logger = createMockLogger();
-  const keyEC = createTestKeyPairEC();
-  const keyRSA = createTestKeyPairRSA();
+  const keyEC = createTestStoredKeySetEc();
+  const keyRSA = createTestStoredKeySetRsa();
 
   beforeEach(() => {
     ctx = {
-      keys: [keyEC, keyRSA],
+      keys: [keyEC.webKeySet, keyRSA.webKeySet],
       logger,
       metrics: {},
     };
@@ -25,7 +29,7 @@ describe("keystoreMiddleware", () => {
     await expect(keystoreMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.keystore).toStrictEqual(expect.any(Keystore));
-    expect(ctx.keystore.getKeys()).toStrictEqual([keyEC, keyRSA]);
+    expect(ctx.keystore.allKeys).toStrictEqual([keyEC.webKeySet, keyRSA.webKeySet]);
     expect(ctx.metrics.keystore).toStrictEqual(expect.any(Number));
   });
 });

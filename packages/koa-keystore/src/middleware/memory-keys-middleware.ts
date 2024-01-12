@@ -1,5 +1,5 @@
 import { DefaultLindormKeystoreKoaMiddleware } from "../types";
-import { getKeysFromMemory } from "../util";
+import { getKeysFromMemory } from "../utils";
 
 export const memoryKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
   ctx,
@@ -7,7 +7,9 @@ export const memoryKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
 ): Promise<void> => {
   const metric = ctx.getMetric("keystore");
 
-  ctx.keys = await getKeysFromMemory(ctx);
+  const keys = await getKeysFromMemory(ctx);
+
+  ctx.keys = [ctx.keys, keys].flat();
 
   metric.end();
 

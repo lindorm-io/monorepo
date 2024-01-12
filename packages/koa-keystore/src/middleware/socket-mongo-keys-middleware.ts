@@ -1,8 +1,10 @@
-import { DefaultLindormKeystoreSocketMiddleware } from "../types";
 import { promisifyLindormSocketMiddleware } from "@lindorm-io/koa";
-import { getKeysFromMongo } from "../util";
+import { DefaultLindormKeystoreSocketMiddleware } from "../types";
+import { getKeysFromMongo } from "../utils";
 
 export const socketMongoKeysMiddleware: DefaultLindormKeystoreSocketMiddleware =
   promisifyLindormSocketMiddleware(async (socket) => {
-    socket.ctx.keys = await getKeysFromMongo(socket.ctx);
+    const keys = await getKeysFromMongo(socket.ctx);
+
+    socket.ctx.keys = [socket.ctx.keys, keys].flat();
   });

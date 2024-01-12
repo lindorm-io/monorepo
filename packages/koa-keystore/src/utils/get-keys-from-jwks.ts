@@ -6,33 +6,31 @@ import {
   axiosClientHeadersMiddleware,
   axiosTransformRequestBodyMiddleware,
   axiosTransformRequestQueryMiddleware,
-  axiosTransformResponseDataMiddleware,
 } from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
 import { ServerError } from "@lindorm-io/errors";
-import { JWK, KeyPair } from "@lindorm-io/key-pair";
+import { ExternalJwk, WebKeySet } from "@lindorm-io/jwk";
+import { createURL } from "@lindorm-io/url";
 
 type Options = AxiosOptions &
   Required<Pick<AxiosOptions, "alias" | "host">> & {
     client?: Partial<AxiosClientProperties>;
-    currentKeys?: Array<KeyPair>;
     path?: string;
   };
 
-interface Response {
-  keys: Array<JWK>;
-}
+type Response = {
+  keys: Array<ExternalJwk>;
+};
 
 export const getKeysFromJwks = async (
   options: Options,
   logger: Logger,
-): Promise<Array<KeyPair>> => {
+): Promise<Array<WebKeySet>> => {
   const {
     client,
     host,
     port,
     alias,
-    currentKeys = [],
     middleware = [],
     path = "/.well-known/jwks.json",
     ...rest
@@ -48,12 +46,13 @@ export const getKeysFromJwks = async (
         ...(client ? [axiosClientHeadersMiddleware(client)] : []),
         axiosTransformRequestBodyMiddleware(TransformMode.SNAKE),
         axiosTransformRequestQueryMiddleware(TransformMode.SNAKE),
-        axiosTransformResponseDataMiddleware(TransformMode.CAMEL),
       ],
       ...rest,
     },
     logger,
   );
+
+  const jku = createURL(path, { host, port }).toString();
 
   const { data } = await axios.get<Response>(path);
 
@@ -63,11 +62,11 @@ export const getKeysFromJwks = async (
     });
   }
 
-  const keys: Array<KeyPair> = [];
+  const keys: Array<WebKeySet> = [];
 
   for (const key of data.keys) {
-    keys.push(KeyPair.fromJWK(key));
+    keys.push(WebKeySet.fromJwk({ jku, ...key }));
   }
 
-  return [currentKeys, keys].flat();
+  return keys;
 };

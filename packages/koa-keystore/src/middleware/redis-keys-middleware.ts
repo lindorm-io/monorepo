@@ -1,5 +1,5 @@
 import { DefaultLindormKeystoreKoaMiddleware } from "../types";
-import { getKeysFromRedis } from "../util";
+import { getKeysFromRedis } from "../utils";
 
 export const redisKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
   ctx,
@@ -7,7 +7,9 @@ export const redisKeysMiddleware: DefaultLindormKeystoreKoaMiddleware = async (
 ): Promise<void> => {
   const metric = ctx.getMetric("keystore");
 
-  ctx.keys = await getKeysFromRedis(ctx);
+  const keys = await getKeysFromRedis(ctx);
+
+  ctx.keys = [ctx.keys, keys].flat();
 
   metric.end();
 
