@@ -22,7 +22,7 @@
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/jwt": "^0.13.0",
-    "@lindorm-io/key-pair": "^0.8.2",
+    "@lindorm-io/keystore": "^0.1.0",
     "@lindorm-io/koa": "^0.17.11",
     "@lindorm-io/koa-jwt": "^0.6.17",
     "object-path": "^0.11.8"
