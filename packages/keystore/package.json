@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/keystore",
   "description": "Keystore for lindorm.io",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,9 +19,9 @@
     "typecheck:ci": "tsc --noEmit"
   },
   "dependencies": {
-    "@lindorm-io/entity": "^0.3.13",
+    "@lindorm-io/entity": "^0.3.14",
     "@lindorm-io/errors": "^0.1.21",
-    "@lindorm-io/jwk": "^0.1.0",
+    "@lindorm-io/jwk": "^0.2.0",
     "date-fns": "^2.30.0",
     "joi": "^17.11.0",
     "lodash": "^4.17.21"

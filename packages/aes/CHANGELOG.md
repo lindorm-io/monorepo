@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/aes@0.2.0...@lindorm-io/aes@0.3.0) (2024-01-12)
+
+### Bug Fixes
+
+- add integrity hash to class ([822a6a2](https://github.com/lindorm-io/monorepo/commit/822a6a2a9c3f3496b4466af18735f15a02dd9740))
+- align with jwk changes ([e7d1ca3](https://github.com/lindorm-io/monorepo/commit/e7d1ca3ce836b91e8b61b0818084ec1687ef2678))
+- improve types ([d79a09f](https://github.com/lindorm-io/monorepo/commit/d79a09fd0b4b14cb3df42e4e7298876796e51d40))
+- rename integrity hash ([1f8e49d](https://github.com/lindorm-io/monorepo/commit/1f8e49d6c673184028bf917ad019e41041bc1cba))
+
+### Features
+
+- add ecdh encryption ([43bcb39](https://github.com/lindorm-io/monorepo/commit/43bcb39219f130662a41e1c8c4c5cab4b468cd79))
+- add oct keys ([da11b66](https://github.com/lindorm-io/monorepo/commit/da11b66ac40f0ee53ae31127a7c9d50ff70287b0))
+- use key sets ([bd8beb7](https://github.com/lindorm-io/monorepo/commit/bd8beb73fb59037e127092bedd3a00a1c5cc5d48))
+- use pem and jwk values for key ([55700b5](https://github.com/lindorm-io/monorepo/commit/55700b5e83fc8c8408d6e612b6b95e408cb11d85))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/aes@0.1.1...@lindorm-io/aes@0.2.0) (2023-12-21)
 
 ### Bug Fixes

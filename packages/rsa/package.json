@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/rsa",
   "description": "RSA utilities for lindorm.io",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "@lindorm-io/errors": "^0.1.21",
-    "@lindorm-io/jwk": "^0.1.0"
+    "@lindorm-io/jwk": "^0.2.0"
   }
 }

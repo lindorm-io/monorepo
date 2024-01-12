@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.12.1...@lindorm-io/jwt@0.13.0) (2024-01-12)
+
+### Features
+
+- align jwe with aes ([db6a3a8](https://github.com/lindorm-io/monorepo/commit/db6a3a8d67df84167ae134e208aed33f95c45ac7))
+
 ## [0.12.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/jwt@0.12.0...@lindorm-io/jwt@0.12.1) (2023-12-21)
 
 ### Bug Fixes

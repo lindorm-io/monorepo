@@ -1,7 +1,7 @@
 {
   "name": "@lindorm-io/event-source",
   "description": "Event Source for lindorm.io",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "AGPL-3.0-or-later",
   "contributors": [
     "Jonn Nilsson",
@@ -35,10 +35,10 @@
     "@lindorm-io/amqp": "^0.3.2",
     "@lindorm-io/case": "^0.2.0",
     "@lindorm-io/core": "^0.8.11",
-    "@lindorm-io/crypto": "^0.3.1",
-    "@lindorm-io/mongo": "^0.12.5",
+    "@lindorm-io/crypto": "^0.3.2",
+    "@lindorm-io/mongo": "^0.12.6",
     "@lindorm-io/postgres": "^0.1.21",
-    "@lindorm-io/random": "^0.2.5",
+    "@lindorm-io/random": "^0.2.6",
     "@lindorm-io/string-blob": "^0.0.27",
     "@lindorm-io/structure-scanner": "^0.2.2",
     "clone": "^2.1.2",

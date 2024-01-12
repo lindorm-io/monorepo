@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.8.1...@lindorm-io/key-pair@0.8.2) (2024-01-12)
+
+### Bug Fixes
+
+- add temporary generation ([0a005a6](https://github.com/lindorm-io/monorepo/commit/0a005a6db69e55175cecb1275bcdeb798d9d59f9))
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/key-pair@0.8.0...@lindorm-io/key-pair@0.8.1) (2023-12-21)
 
 ### Bug Fixes

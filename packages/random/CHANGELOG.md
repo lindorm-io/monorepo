@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.6](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.2.5...@lindorm-io/random@0.2.6) (2024-01-12)
+
+### Bug Fixes
+
+- update random secret ([b6fc553](https://github.com/lindorm-io/monorepo/commit/b6fc5531c44dd611e687b0eb0d719f727690b443))
+
 ## [0.2.5](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/random@0.2.4...@lindorm-io/random@0.2.5) (2023-11-06)
 
 **Note:** Version bump only for package @lindorm-io/random

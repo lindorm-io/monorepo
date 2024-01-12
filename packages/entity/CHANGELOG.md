@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.14](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/entity@0.3.13...@lindorm-io/entity@0.3.14) (2024-01-12)
+
+### Bug Fixes
+
+- update schema ([bb2836a](https://github.com/lindorm-io/monorepo/commit/bb2836af6159880f404ab963fd109bab288c1315))
+
 ## [0.3.13](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/entity@0.3.12...@lindorm-io/entity@0.3.13) (2023-11-06)
 
 **Note:** Version bump only for package @lindorm-io/entity

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/rsa@0.1.1...@lindorm-io/rsa@0.2.0) (2024-01-12)
+
+### Bug Fixes
+
+- align with jwk changes ([349483f](https://github.com/lindorm-io/monorepo/commit/349483f2ffb7b955474a7298867d5b8128d013c6))
+
+### Features
+
+- use key objects and key sets ([e21bc06](https://github.com/lindorm-io/monorepo/commit/e21bc063e0f7ad40664978569fdd88751410d572))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm-io/rsa@0.1.0...@lindorm-io/rsa@0.1.1) (2023-12-21)
 
 ### Bug Fixes
