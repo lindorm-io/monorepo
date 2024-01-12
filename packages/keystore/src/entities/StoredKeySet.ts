@@ -49,7 +49,7 @@ const schema = Joi.object<StoredKeySetAttributes>()
     ...JOI_ENTITY_BASE,
 
     algorithm: Joi.string().required(),
-    curve: Joi.string().required(),
+    curve: Joi.string().allow(null).required(),
     expiresAt: Joi.date().allow(null).required(),
     isExternal: Joi.boolean().required(),
     jwkUri: Joi.string().uri().allow(null).required(),

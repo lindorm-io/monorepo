@@ -30,7 +30,7 @@ export const KEY_PAIR_SIG_OCT = new StoredKeySet({
   notBefore: new Date("2020-01-01T00:00:00.000Z"),
   operations: ["sign", "verify"],
   ownerId: "2ce9eb4b-1088-577e-a065-c3383e7c821f",
-  privateKey: "UUZtKSFfTTZXaWx0WVNGd3FsWjVzRFRvcWVaTWZ4KjA",
+  privateKey: "YUlESEBWcUBGT3ZWSEVuZ1NkQEVyamx3QFNuc0F0TXU",
   type: "oct",
   updated: new Date("2019-12-28T08:00:00.000Z"),
   use: "sig",
