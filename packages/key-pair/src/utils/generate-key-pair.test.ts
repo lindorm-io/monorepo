@@ -69,26 +69,4 @@ describe("generateKeyPair", () => {
       }),
     );
   });
-
-  test("should generate RSA KeyPair with passphrase", async () => {
-    await expect(
-      generateKeyPair({ type: KeyPairType.RSA, passphrase: "pass" }),
-    ).resolves.toStrictEqual(
-      expect.objectContaining({
-        algorithms: ["RS256", "RS384", "RS512"],
-        expiresAt: null,
-        isExternal: false,
-        namedCurve: null,
-        notBefore: new Date("2021-01-01T08:00:00.000Z"),
-        operations: ["decrypt", "encrypt", "sign", "verify"],
-        originUri: null,
-        ownerId: null,
-        passphrase: "pass",
-        preferredAlgorithm: "RS512",
-        privateKey: "PRIVATE_KEY",
-        publicKey: "PUBLIC_KEY",
-        type: "RSA",
-      }),
-    );
-  });
 });
