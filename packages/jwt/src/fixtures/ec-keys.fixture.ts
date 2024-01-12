@@ -1,6 +1,7 @@
 import { EcKeySet } from "@lindorm-io/jwk";
 
 export const EC_KEY_SET = EcKeySet.fromPem({
+  id: "d8f5d07a-d333-5c15-827b-e5b868c2e161",
   curve: "P-521",
   privateKey:
     "-----BEGIN PRIVATE KEY-----\n" +
