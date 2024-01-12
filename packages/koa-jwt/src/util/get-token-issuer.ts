@@ -1,6 +1,6 @@
-import { DefaultLindormJwtContext } from "../types";
-import { JWT } from "@lindorm-io/jwt";
 import { ServerError } from "@lindorm-io/errors";
+import { JWT } from "@lindorm-io/jwt";
+import { DefaultLindormJwtContext } from "../types";
 
 export const getJwt = (ctx: DefaultLindormJwtContext, issuer: string): JWT => {
   if (!ctx.keystore) {
@@ -8,8 +8,6 @@ export const getJwt = (ctx: DefaultLindormJwtContext, issuer: string): JWT => {
       description: "Keystore not set",
     });
   }
-
-  ctx.keystore.assert();
 
   return new JWT({ issuer }, ctx.keystore, ctx.logger);
 };

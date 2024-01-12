@@ -1,15 +1,7 @@
 import { createMockLogger } from "@lindorm-io/core-logger";
 import { ServerError } from "@lindorm-io/errors";
 import { JWT } from "@lindorm-io/jwt";
-import {
-  KeyPair,
-  KeyPairAlgorithm,
-  KeyPairType,
-  Keystore,
-  KeystoreError,
-  NamedCurve,
-  createTestKeystore,
-} from "@lindorm-io/key-pair";
+import { createTestKeystore } from "@lindorm-io/keystore";
 import { Metric } from "@lindorm-io/koa";
 import MockDate from "mockdate";
 import { jwtMiddleware } from "./jwt-middleware";
@@ -48,23 +40,5 @@ describe("jwtMiddleware", () => {
     ctx.keystore = undefined;
 
     await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(ServerError);
-  });
-
-  test("should throw EmptyKeystoreError", async () => {
-    ctx.keystore = new Keystore({
-      keys: [
-        new KeyPair({
-          id: "59c9f0ac-115a-47b1-b635-a85f88729fc7",
-          algorithms: [KeyPairAlgorithm.ES512],
-          expiresAt: new Date("1980-01-01T00:00:00.000Z"),
-          namedCurve: NamedCurve.P521,
-          privateKey: "privateKey",
-          publicKey: "publicKey",
-          type: KeyPairType.EC,
-        }),
-      ],
-    });
-
-    await expect(jwtMiddleware(options)(ctx, next)).rejects.toThrow(KeystoreError);
   });
 });

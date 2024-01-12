@@ -1,5 +1,5 @@
 import { JWT } from "@lindorm-io/jwt";
-import { Keystore } from "@lindorm-io/key-pair";
+import { Keystore } from "@lindorm-io/keystore";
 import {
   DefaultLindormContext,
   DefaultLindormKoaContext,
