@@ -1,6 +1,7 @@
 import { RsaKeySet } from "@lindorm-io/jwk";
 
 export const RSA_KEY_SET = RsaKeySet.fromPem({
+  id: "70656f6a-b043-5114-82f4-d3c947bfd5ed",
   publicKey:
     "-----BEGIN RSA PUBLIC KEY-----\n" +
     "MIICCgKCAgEAsy0BEjwn7F87mZOjqRpryYWZYCftiAm4CBFXb1e/9jhOPGYTt6IL\n" +

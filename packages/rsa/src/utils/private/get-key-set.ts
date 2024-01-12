@@ -5,20 +5,18 @@ import { CreateRsaSignatureOptions } from "../../types";
 type Options = Pick<CreateRsaSignatureOptions, "key" | "keySet">;
 
 export const getKeySet = ({ key, keySet }: Options): RsaKeySet => {
-  if (keySet && WebKeySet.isRsaKeySet(keySet)) {
+  if (WebKeySet.isRsaKeySet(keySet)) {
     return keySet;
   }
 
-  if (WebKeySet.isDer(key) && WebKeySet.isRsaDer(key)) {
-    return RsaKeySet.fromDer(key);
-  }
+  if (key) {
+    const keySet = WebKeySet.createKeySet(key);
 
-  if (WebKeySet.isJwk(key) && WebKeySet.isRsaJwk(key)) {
-    return RsaKeySet.fromJwk(key);
-  }
+    if (!WebKeySet.isRsaKeySet(keySet)) {
+      throw new RsaError("Invalid key or key set");
+    }
 
-  if (WebKeySet.isPem(key) && WebKeySet.isRsaPem(key)) {
-    return RsaKeySet.fromPem(key);
+    return keySet;
   }
 
   throw new RsaError("Invalid key or key set");
