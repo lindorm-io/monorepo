@@ -1,6 +1,5 @@
 import {
   AxiosClientCredentialsMiddlewareOptions,
-  AxiosClientProperties,
   axiosClientCredentialsMiddleware,
 } from "@lindorm-io/axios";
 import { Logger } from "@lindorm-io/core-logger";
@@ -18,7 +17,6 @@ type Options = {
   host: string;
   port?: number;
   alias: string;
-  client?: Partial<AxiosClientProperties>;
   clientCredentials?: AxiosClientCredentialsMiddlewareOptions;
   logger: Logger;
   memoryDatabase: IMemoryDatabase;
@@ -32,7 +30,6 @@ export const storedKeySetJwksMemoryWorker = (options: Options): IntervalWorker =
     host,
     port,
     alias,
-    client,
     clientCredentials,
     memoryDatabase,
     path,
@@ -63,7 +60,6 @@ export const storedKeySetJwksMemoryWorker = (options: Options): IntervalWorker =
             host,
             port,
             alias,
-            client,
             middleware: clientCredentialsMiddleware ? [clientCredentialsMiddleware()] : [],
             path,
           },

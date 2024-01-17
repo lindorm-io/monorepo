@@ -11,7 +11,6 @@ export const jwksKeysMiddleware =
         host: config.host,
         port: config.port,
         alias: config.alias,
-        client: config.client,
         path: config.path,
       },
       ctx.logger,
