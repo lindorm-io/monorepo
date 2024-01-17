@@ -30,7 +30,9 @@ export class Keystore {
   }
 
   public get validKeys(): Array<WebKeySet> {
-    return this.allKeys.filter(isKeySetActive).filter(isKeySetNotExpired);
+    const valid = this.allKeys.filter(isKeySetActive).filter(isKeySetNotExpired);
+    this.#logger.silly("Found valid keys", { keys: valid.map((key) => key.metadata) });
+    return valid;
   }
 
   // public
@@ -58,11 +60,15 @@ export class Keystore {
   }
 
   public findKeys(use?: KeySetUsage, type?: KeySetType): Array<WebKeySet> {
+    this.#logger.debug("Finding keys", { use, type });
+
     const keys = this.validKeys.filter(isKeySetCorrectType(type)).filter(isKeySetCorrectUsage(use));
+
+    this.#logger.silly("Found keys", { use, type, keys: keys.map((key) => key.metadata) });
 
     if (!keys.length) {
       throw new KeystoreError("Keys not found", {
-        debug: { type },
+        debug: { use, type },
         description: "No keys of type were found in Keystore",
       });
     }
