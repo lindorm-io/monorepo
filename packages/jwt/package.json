@@ -25,13 +25,13 @@
     "@lindorm-io/core": "^0.8.11",
     "@lindorm-io/errors": "^0.1.21",
     "@lindorm-io/expiry": "^0.2.1",
+    "@lindorm-io/keystore": "^0.1.0",
     "@lindorm-io/random": "^0.2.6",
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@lindorm-io/common-types": "^0.5.2",
     "@lindorm-io/jwk": "^0.2.0",
-    "@lindorm-io/keystore": "^0.1.0",
     "@types/jsonwebtoken": "^9.0.4",
     "date-fns": "^2.30.0"
   }

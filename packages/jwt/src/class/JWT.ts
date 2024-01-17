@@ -373,7 +373,7 @@ export class JWT {
       throw new TokenError("Missing private key");
     }
 
-    this.#logger.silly("Resolving secret key", { key });
+    this.#logger.silly("Resolving secret key", { key: key.metadata });
 
     return pem.privateKey;
   }
@@ -383,7 +383,7 @@ export class JWT {
 
     const key = this.#keystore.findKey("sig", keyType || this.#keyType);
 
-    this.#logger.silly("Found signing key", { keyType, key });
+    this.#logger.silly("Found signing key", { keyType, key: key.metadata });
 
     return key;
   }
@@ -399,7 +399,7 @@ export class JWT {
       },
     };
 
-    this.#logger.silly("Resolving sign options", { key, jwksUrl, options });
+    this.#logger.silly("Resolving sign options", { key: key.metadata, jwksUrl, options });
 
     return options;
   }
