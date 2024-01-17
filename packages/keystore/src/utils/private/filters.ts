@@ -1,10 +1,11 @@
 import { KeySetType, KeySetUsage, WebKeySet } from "@lindorm-io/jwk";
-import { isAfter } from "date-fns";
+import { isAfter, isDate, isEqual } from "date-fns";
 
 const isKeySetExpired = (keySet: WebKeySet): boolean =>
-  !!keySet.expiresAt && isAfter(new Date(), keySet.expiresAt);
+  !!keySet.expiresAt && isDate(keySet.expiresAt) && isAfter(new Date(), keySet.expiresAt);
 
-export const isKeySetActive = (keySet: WebKeySet): boolean => isAfter(new Date(), keySet.notBefore);
+export const isKeySetActive = (keySet: WebKeySet): boolean =>
+  isAfter(new Date(), keySet.notBefore) || isEqual(new Date(), keySet.notBefore);
 
 export const isKeySetCorrectType =
   (type?: KeySetType) =>
