@@ -1,4 +1,4 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
+import { AesEncryption, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -72,7 +72,7 @@ export type ClientExpiry = {
 };
 
 export type ClientIdTokenEncryption = {
-  algorithm: AesAlgorithm | null;
+  algorithm: AesEncryption | null;
   encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm | null;
 };
 
@@ -251,7 +251,7 @@ const schema = Joi.object<ClientAttributes>()
     idTokenEncryption: Joi.object<ClientIdTokenEncryption>()
       .keys({
         algorithm: Joi.string()
-          .valid(...Object.values(AesAlgorithm))
+          .valid(...Object.values(AesEncryption))
           .allow(null)
           .required(),
         encryptionKeyAlgorithm: Joi.string()

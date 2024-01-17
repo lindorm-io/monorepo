@@ -97,12 +97,12 @@ describe("/oauth2/token", () => {
       keys: [
         {
           alg: "RS512",
-          keyOps: ["decrypt", "encrypt", "verify"],
+          e: "AQAB",
+          key_ops: ["decrypt", "encrypt", "verify"],
           kid: "2d60172d-ac8a-4eaf-8ccd-873fc22dcb28",
           kty: "RSA",
-          use: "sig",
           n: "yjql5hIlllH81iamrW5BtOjIc9TKD0+dMazmKhKq/waqKcYtgI06p4YmF940f3OW8dKKXRLBbvu++VBN6/RMP9JFpYg1r4U1UbqwDMFeRRFiMZgH86FW6KhhyECxkWm6/5NRdu7cEw5mNVi08i0MsxuvFWEvSTArBLP5Ctw9m3KNza/HRlO4oVPaiwtxadTlqyYsFr2cEwjZvAadrrj1tLiasCX/UcmBE5Csoo8hayUXdM9hofg2QBXYGKiRTCr5WnxIKfagmzhGdClmZw6C+/8QWogm3tREq52IX5DPwEjUJ0Lq2AZ2O7HMpMx0NwkwrDSysT6K+klphyrpe1WG0RvEzeSQ7jfRf5Xe997LPv5LB6nFz4HtOaVcM2sEGHqS9iPWByAX4Y+2zvQvbDQPAcpEVojPRWJeZLEYJUvIhEeZ5Q9pOobF0qKH3dxxZNSDCXkVSrne6au7sfSR7toqqnBSOTpWCluzw1SjYBKd6cP0tNgkjUEvJFb1QsAV3GNbppFch4LCc5/MSX07l1MdlZ44H8TYAA20VWmsYBW00EFRITe0bNIAxl5wos3NLduozOMZwWRXawDWUQqejeJjggM2QtO0yuRuvVFlhQqs5sHz8fsux7RIkE/gVDy51ai+hUQ4GL3o0ELSsLzfTzUhRvUqSW8/kAf5GZnygQgGrMs=",
-          e: "AQAB",
+          use: "enc",
         },
       ],
     });

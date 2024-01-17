@@ -1,5 +1,4 @@
 import { Environment } from "@lindorm-io/common-enums";
-import { KeyPairType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import {
@@ -37,9 +36,25 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    exposed: ["public"],
+    encOptions: configuration.server.workers
+      ? {
+          algorithm: "RS512",
+          modulus: 4,
+          type: "RSA",
+          use: "enc",
+        }
+      : undefined,
+    sigOptions: configuration.server.workers
+      ? {
+          algorithm: "ES512",
+          curve: "P-521",
+          type: "EC",
+          use: "sig",
+        }
+      : undefined,
+    exportKeys: "public",
+    exportExternalKeys: false,
     storage: ["memory"],
-    generated: configuration.server.workers ? [KeyPairType.EC] : [],
   },
   logger,
   memoryDatabase,

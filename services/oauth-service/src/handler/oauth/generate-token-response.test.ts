@@ -1,5 +1,6 @@
+import { AesEncryption } from "@lindorm-io/aes";
 import { Scope } from "@lindorm-io/common-enums";
-import { AesAlgorithm, createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
+import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
 import {
@@ -83,7 +84,7 @@ describe("generateTokenResponse", () => {
   });
 
   test("should resolve body with encrypted id token", async () => {
-    client.idTokenEncryption.algorithm = AesAlgorithm.AES_256_GCM;
+    client.idTokenEncryption.algorithm = AesEncryption.AES_256_GCM;
 
     clientSession.scopes = [Scope.OPENID];
 

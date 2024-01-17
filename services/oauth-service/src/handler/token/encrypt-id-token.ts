@@ -1,27 +1,20 @@
-import { TransformMode, axiosTransformResponseDataMiddleware } from "@lindorm-io/axios";
 import { ServerError } from "@lindorm-io/errors";
-import { encryptJwe } from "@lindorm-io/jwt";
-import { DefaultJWK, KeyJWK, KeyPair, KeyPairType } from "@lindorm-io/key-pair";
+import { WebKeySet } from "@lindorm-io/jwk";
+import { JWE } from "@lindorm-io/jwt";
+import { Keystore } from "@lindorm-io/keystore";
+import { getKeysFromJwks } from "@lindorm-io/koa-keystore";
+import { randomUUID } from "crypto";
 import { Client } from "../../entity";
 import { ServerKoaContext } from "../../types";
-
-type JWK = DefaultJWK & KeyJWK;
-
-type JwkResponse = {
-  keys: Array<JWK>;
-};
 
 export const encryptIdToken = async (
   ctx: ServerKoaContext,
   client: Client,
   idToken: string,
 ): Promise<string> => {
-  const {
-    axios: { axiosClient },
-  } = ctx;
+  const { logger } = ctx;
 
-  let key: string | undefined;
-  let keyId: string | undefined;
+  const keystore = new Keystore([], logger);
 
   if (!client.idTokenEncryption.algorithm) {
     throw new ServerError("ID Token Encryption failed", {
@@ -30,47 +23,30 @@ export const encryptIdToken = async (
   }
 
   if (client.jwks.length) {
-    key = client.jwks[0];
+    const key = WebKeySet.fromJwk({
+      alg: "HS512",
+      k: client.jwks[0],
+      key_ops: ["encrypt", "decrypt"],
+      kid: randomUUID(),
+      kty: "oct",
+      use: "enc",
+    });
+
+    keystore.addKey(key);
   } else if (client.jwksUri) {
-    const {
-      data: { keys },
-    } = await axiosClient.get<JwkResponse>(client.jwksUri, {
-      middleware: [axiosTransformResponseDataMiddleware(TransformMode.CAMEL)],
-    });
+    const keys = await getKeysFromJwks({ baseURL: client.jwksUri, path: "" }, logger);
 
-    const rsaKeys = keys.filter((key) => key.kty === KeyPairType.RSA);
-
-    if (!rsaKeys.length) {
-      throw new ServerError("ID Token Encryption failed", {
-        description: "No RSA keys found",
-      });
-    }
-
-    const keyPair = KeyPair.fromJWK(rsaKeys[0]);
-
-    if (!keyPair.publicKey) {
-      throw new ServerError("ID Token Encryption failed", {
-        description: "No public key found on key pair",
-      });
-    }
-
-    key = keyPair.publicKey;
-    keyId = keyPair.id;
+    keystore.addKeys(keys);
   }
 
-  if (!key) {
-    throw new ServerError("ID Token Encryption failed", {
-      description: "No key found",
-    });
-  }
+  const jwe = new JWE(
+    {
+      encryption: client.idTokenEncryption.algorithm,
+      encryptionKeyAlgorithm: client.idTokenEncryption.encryptionKeyAlgorithm ?? undefined,
+    },
+    keystore,
+    logger,
+  );
 
-  const jwe = encryptJwe({
-    algorithm: client.idTokenEncryption.algorithm,
-    encryptionKeyAlgorithm: client.idTokenEncryption.encryptionKeyAlgorithm || undefined,
-    key,
-    keyId,
-    token: idToken,
-  });
-
-  return jwe;
+  return jwe.encrypt(idToken);
 };

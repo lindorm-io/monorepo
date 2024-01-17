@@ -1,6 +1,6 @@
 import { CryptoArgon } from "@lindorm-io/crypto";
-import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
+import { createTestStoredKeySet } from "@lindorm-io/keystore";
+import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import {
   AuthenticationTokenSessionCache,
@@ -59,6 +59,6 @@ export const setupIntegration = async (): Promise<void> => {
 
   TEST_ARGON = argon;
 
-  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
-  await keyPairCache.create(createTestKeyPair());
+  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  await keyPairCache.create(createTestStoredKeySet());
 };

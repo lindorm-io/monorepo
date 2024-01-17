@@ -1,4 +1,4 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
+import { AesEncryption, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   AuthenticationMethod,
   AuthenticationStrategy,
@@ -67,7 +67,7 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       ...(options.expiry || {}),
     },
     idTokenEncryption: {
-      algorithm: AesAlgorithm.AES_256_GCM,
+      algorithm: AesEncryption.AES_256_GCM,
       encryptionKeyAlgorithm: AesEncryptionKeyAlgorithm.RSA_OAEP_256,
     },
 

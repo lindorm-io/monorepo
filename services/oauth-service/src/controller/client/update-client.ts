@@ -1,4 +1,4 @@
-import { AesAlgorithm, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
+import { AesEncryption, AesEncryptionKeyAlgorithm } from "@lindorm-io/aes";
 import {
   OpenIdBackchannelAuthMode,
   OpenIdClientProfile,
@@ -91,7 +91,7 @@ export const updateClientSchema = Joi.object<RequestData>()
     }),
     idTokenEncryption: Joi.object<ClientIdTokenEncryption>().keys({
       algorithm: Joi.string()
-        .valid(...Object.values(AesAlgorithm))
+        .valid(...Object.values(AesEncryption))
         .allow(null),
       encryptionKeyAlgorithm: Joi.string()
         .valid(...Object.values(AesEncryptionKeyAlgorithm))

@@ -1,6 +1,7 @@
+import { AesEncryption } from "@lindorm-io/aes";
 import { OpenIdResponseMode, OpenIdResponseType } from "@lindorm-io/common-enums";
 import { baseHash } from "@lindorm-io/core";
-import { AesAlgorithm, createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
+import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { AuthorizationSession, Client, ClientSession } from "../../entity";
 import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
@@ -170,7 +171,7 @@ describe("generateCallbackResponse", () => {
   });
 
   test("should resolve with encryped id token", async () => {
-    client.idTokenEncryption.algorithm = AesAlgorithm.AES_256_GCM;
+    client.idTokenEncryption.algorithm = AesEncryption.AES_256_GCM;
 
     authorizationSession = createTestAuthorizationSession({
       redirectData: null,
