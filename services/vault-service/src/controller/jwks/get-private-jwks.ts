@@ -1,9 +1,9 @@
 import { ControllerResponse } from "@lindorm-io/koa";
-import { JWK } from "@lindorm-io/key-pair";
+import { ExternalJwk } from "../../../../../packages/jwk/dist";
 import { ServerKoaController } from "../../types";
 
 type ResponseBody = {
-  keys: Array<JWK>;
+  keys: Array<ExternalJwk>;
 };
 
 export const getPrivateJwksController: ServerKoaController = async (
@@ -11,5 +11,5 @@ export const getPrivateJwksController: ServerKoaController = async (
 ): ControllerResponse<ResponseBody> => {
   const { keystore } = ctx;
 
-  return { body: { keys: keystore.getJWKS({ exposePrivate: true }) } };
+  return { body: { keys: keystore.getJwks("both") } };
 };

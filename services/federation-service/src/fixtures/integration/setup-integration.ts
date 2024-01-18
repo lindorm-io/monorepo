@@ -1,6 +1,6 @@
-import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
+import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
+import { createTestStoredKeySet } from "@lindorm-io/keystore";
 import { FederationSessionCache } from "../../infrastructure";
 import { memoryDatabase, redisConnection } from "../../instance";
 
@@ -13,6 +13,6 @@ export const setupIntegration = async (): Promise<void> => {
 
   TEST_FEDERATION_SESSION_CACHE = new FederationSessionCache(redisConnection, logger);
 
-  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
-  await keyPairCache.create(createTestKeyPair());
+  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  await keyPairCache.create(createTestStoredKeySet());
 };

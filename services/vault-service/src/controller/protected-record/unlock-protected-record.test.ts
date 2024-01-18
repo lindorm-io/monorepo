@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { isAfter as _isAfter } from "date-fns";
 import MockDate from "mockdate";
 import { createTestProtectedRecord } from "../../fixtures/entity";
 import { unlockProtectedRecordController } from "./unlock-protected-record";
@@ -16,12 +15,10 @@ jest.mock("@lindorm-io/aes", () => ({
     }
   },
 }));
+
 jest.mock("@lindorm-io/string-blob", () => ({
   parseBlob: jest.fn().mockReturnValue("parsed-blob"),
 }));
-jest.mock("date-fns");
-
-const isAfter = _isAfter as jest.Mock;
 
 describe("unlockProtectedRecordController", () => {
   let ctx: any;
@@ -44,8 +41,6 @@ describe("unlockProtectedRecordController", () => {
         },
       },
     };
-
-    isAfter.mockReturnValue(false);
   });
 
   afterEach(jest.resetAllMocks);
@@ -72,7 +67,7 @@ describe("unlockProtectedRecordController", () => {
   });
 
   test("should destroy and throw on expired data", async () => {
-    isAfter.mockReturnValue(true);
+    ctx.entity.protectedRecord.expires = new Date("2020-01-01T08:00:00.000Z");
 
     await expect(unlockProtectedRecordController(ctx)).rejects.toThrow(ClientError);
 

@@ -51,7 +51,7 @@
   "devDependencies": {
     "@lindorm-io/common-types": "^0.5.1",
     "@lindorm-io/jwt": "^0.11.4",
-    "@lindorm-io/key-pair": "^0.8.0",
+    "@lindorm-io/keystore": "^0.1.0",
     "@lindorm-io/winston": "^0.5.13",
     "@lindorm-io/yaml-typing": "^0.0.17",
     "@types/config": "^3.3.3",

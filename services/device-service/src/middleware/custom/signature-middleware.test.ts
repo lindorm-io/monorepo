@@ -1,8 +1,11 @@
+import { createShaHash } from "@lindorm-io/crypto";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
+import { RsaAlgorithm, RsaFormat, createRsaSignature } from "@lindorm-io/rsa";
 import { createMockLogger } from "@lindorm-io/winston";
 import MockDate from "mockdate";
 import { PublicKey } from "../../entity";
 import { createTestPublicKey } from "../../fixtures/entity";
+import { RSA_KEY_SET } from "../../fixtures/integration/rsa-keys.fixture";
 import {
   destructHeaderDigest as _destructHeaderDigest,
   destructHeaderSignature as _destructHeaderSignature,
@@ -19,24 +22,53 @@ const destructHeaderSignature = _destructHeaderSignature as jest.Mock;
 describe("signatureMiddleware", () => {
   let ctx: any;
   let digest: string;
+  let signature: string;
   let next: () => Promise<void>;
 
   beforeEach(() => {
-    digest = [
-      `algorithm="SHA512"`,
+    const body = {
+      foo: "bar",
+      bar: "baz",
+      random: "TNUakzVKuuVNeESg",
+    };
+
+    const bodyHash = createShaHash({
+      algorithm: "SHA512",
+      data: JSON.stringify(body),
+      format: "base64",
+    });
+
+    digest = [`algorithm="SHA512"`, `format="base64"`, `hash="${bodyHash}"`].join(",");
+
+    const headers = {
+      date: new Date().toUTCString(),
+      digest,
+      "x-device-installation-id": "a185818a-d759-4741-bdb2-7c1d3526ff1d",
+      "x-device-link-id": "76db1d22-fd02-4b59-8d30-d8b403e939c9",
+      "x-device-name": "Test Device Name",
+      "x-device-system-version": "14.4.2",
+      "x-device-unique-id": "64e01335b0c646eda8851d4afd5bec04",
+      "x-request-id": "4c5ce43c-7428-5781-9b89-0d774e8a977b",
+    };
+
+    const headersHash = createRsaSignature({
+      algorithm: RsaAlgorithm.RSA_SHA512,
+      data: JSON.stringify(headers),
+      format: RsaFormat.BASE64,
+      keySet: RSA_KEY_SET,
+    });
+
+    signature = [
+      `algorithm="RSA-SHA512"`,
       `format="base64"`,
-      `hash="CDfArYwmrrHV2CnGBP+y0uWZvHeSEAUNzAnGplRYZA/hICyhBKlfCC577qcyHAhvh8NGrLufKq0moA49PGcU6w=="`,
+      `hash="${headersHash}"`,
+      `headers="${Object.keys(headers).join(" ")}"`,
+      `key="70656f6a-b043-5114-82f4-d3c947bfd5ed"`,
     ].join(",");
 
     ctx = {
       entity: {},
-      request: {
-        body: {
-          foo: "bar",
-          bar: "baz",
-          random: "TNUakzVKuuVNeESg",
-        },
-      },
+      request: { body },
       mongo: {
         publicKeyRepository: createMockMongoRepository(createTestPublicKey),
       },
@@ -47,6 +79,8 @@ describe("signatureMiddleware", () => {
             return "Sun, 01 Jan 2023 08:00:00 GMT";
           case "digest":
             return digest;
+          case "signature":
+            return signature;
           case "x-device-installation-id":
             return "a185818a-d759-4741-bdb2-7c1d3526ff1d";
           case "x-device-link-id":
@@ -57,9 +91,8 @@ describe("signatureMiddleware", () => {
             return "14.4.2";
           case "x-device-unique-id":
             return "64e01335b0c646eda8851d4afd5bec04";
-
-          case "signature":
-            return "signature";
+          case "x-request-id":
+            return "4c5ce43c-7428-5781-9b89-0d774e8a977b";
         }
       }),
     };
@@ -69,23 +102,15 @@ describe("signatureMiddleware", () => {
     destructHeaderDigest.mockReturnValue({
       algorithm: "SHA512",
       format: "base64",
-      hash: "CDfArYwmrrHV2CnGBP+y0uWZvHeSEAUNzAnGplRYZA/hICyhBKlfCC577qcyHAhvh8NGrLufKq0moA49PGcU6w==",
+      hash: bodyHash,
     });
 
     destructHeaderSignature.mockReturnValue({
       algorithm: "RSA-SHA512",
       format: "base64",
-      hash: "JpfOTcLNyqYiK1TmLrZ/wh+3uITzjtETqCK/Y7uOyCQ86TswXhaCiAYlxCp6dDzUuc4tp122Oa48KIybhQwaMl74ljM1xkXIpor1mlzb7eMT0JrydOOz1ps8PhQMy8y+gYI+TsLsCPcrbe1UBq9huOnK1UHwh/kSkgFe4kBTfzkfVJg8JGah8bf6HASEt0bV4kcKCUuMabTOe2RGiuENW26HTwaQU+TUWpDDVmlY13C0ywtqLr+1q5+5ZZX54Ip+ZtMH9Nt3hS7qxRwBl0nItp8psb777ITbw9z1WJ/WT/d3E4l/10lPNEr1IlPdZSPGjfLcfEoAJCv7CXj8gyOnmpo5cTjGIWzQI+1hEoaLMTTMf/2mLbMoYPX4tx8o/4h7ffJt3mQgdseqvcHHgsYI1f+bFAw+V3p9JQKYYNBbh/7YrXFnNx7cdJ7rNelGsjefeLXdf2FhNgaFiXVKJAKI9whbUyXhet2Qy7L8XFkI+eOtB8lzvR/e5hA68qO9t7VAhlLKiKxYHGgCyuWEMMYXcEGDItaJoIIwWGtL/PsBs0xpWDSb4qwQc9pxMQcAmiq6XP0vkO1a5dKL3mjPembvuiN+dkuMy0kgoaWGbW3txIDk6GIPesTDKVH/nM3bBBsScbcQke5DQw+zluoOxYX5lnXsh/4AGZhe+f1vtSJhzoE=",
-      headers: [
-        "date",
-        "digest",
-        "x-device-installation-id",
-        "x-device-link-id",
-        "x-device-name",
-        "x-device-system-version",
-        "x-device-unique-id",
-      ],
-      key: "3b99f370-c70f-443a-9baa-2733b2bbb0c7",
+      hash: headersHash,
+      headers: Object.keys(headers),
+      key: "70656f6a-b043-5114-82f4-d3c947bfd5ed",
     });
   });
 
@@ -110,6 +135,8 @@ describe("signatureMiddleware", () => {
           return "14.4.2";
         case "x-device-unique-id":
           return "64e01335b0c646eda8851d4afd5bec04";
+        case "x-request-id":
+          return "4c5ce43c-7428-5781-9b89-0d774e8a977b";
       }
     });
 
@@ -155,6 +182,8 @@ describe("signatureMiddleware", () => {
           return undefined;
         case "digest":
           return digest;
+        case "signature":
+          return signature;
         case "x-device-installation-id":
           return "a185818a-d759-4741-bdb2-7c1d3526ff1d";
         case "x-device-link-id":
@@ -165,9 +194,8 @@ describe("signatureMiddleware", () => {
           return "14.4.2";
         case "x-device-unique-id":
           return "64e01335b0c646eda8851d4afd5bec04";
-
-        case "signature":
-          return "signature";
+        case "x-request-id":
+          return "4c5ce43c-7428-5781-9b89-0d774e8a977b";
       }
     });
 
@@ -181,6 +209,8 @@ describe("signatureMiddleware", () => {
           return "Sun, 01 Jan 2023 08:00:00 GMT";
         case "digest":
           return undefined;
+        case "signature":
+          return signature;
         case "x-device-installation-id":
           return "a185818a-d759-4741-bdb2-7c1d3526ff1d";
         case "x-device-link-id":
@@ -191,9 +221,8 @@ describe("signatureMiddleware", () => {
           return "14.4.2";
         case "x-device-unique-id":
           return "64e01335b0c646eda8851d4afd5bec04";
-
-        case "signature":
-          return "signature";
+        case "x-request-id":
+          return "4c5ce43c-7428-5781-9b89-0d774e8a977b";
       }
     });
 

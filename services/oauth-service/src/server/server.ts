@@ -36,22 +36,18 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    encOptions: configuration.server.workers
-      ? {
-          algorithm: "RS512",
-          modulus: 4,
-          type: "RSA",
-          use: "enc",
-        }
-      : undefined,
-    sigOptions: configuration.server.workers
-      ? {
-          algorithm: "ES512",
-          curve: "P-521",
-          type: "EC",
-          use: "sig",
-        }
-      : undefined,
+    encOptions: {
+      algorithm: "RS512",
+      modulus: 4,
+      type: "RSA",
+      use: "enc",
+    },
+    sigOptions: {
+      algorithm: "ES512",
+      curve: "P-521",
+      type: "EC",
+      use: "sig",
+    },
     exportKeys: "public",
     exportExternalKeys: false,
     storage: ["memory"],
@@ -79,6 +75,7 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
+  startWorkers: configuration.server.workers,
   workers,
 
   setup: async (): Promise<void> => {

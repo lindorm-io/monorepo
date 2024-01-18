@@ -35,7 +35,7 @@ describe("TotpHandler", () => {
     expect(result.uri).toContain("?secret=");
     expect(result.uri).toContain("&period=30&digits=6&algorithm=SHA1&issuer=issuer");
 
-    expect(result.signature.length).toBe(145);
+    expect(result.signature.length).toBe(157);
   });
 
   test("should verify resolving time remaining and used", () => {

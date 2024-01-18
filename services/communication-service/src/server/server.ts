@@ -46,6 +46,7 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
+  startWorkers: configuration.server.workers,
 
   setup: async (): Promise<void> => {
     await redisConnection.connect();

@@ -1,5 +1,5 @@
 import { IntervalWorker } from "@lindorm-io/koa";
-import { keyPairJwksMemoryWorker } from "@lindorm-io/koa-keystore";
+import { storedKeySetJwksMemoryWorker } from "@lindorm-io/koa-keystore";
 import { memoryDatabase } from "../instance";
 import { configuration } from "../server/configuration";
 import { logger } from "../server/logger";
@@ -10,7 +10,7 @@ for (const provider of configuration.federation_providers) {
   if (provider.response_type !== "id_token") continue;
 
   federationProvidersJwksWorkers.push(
-    keyPairJwksMemoryWorker({
+    storedKeySetJwksMemoryWorker({
       alias: provider.key,
       host: provider.base_url,
       logger,

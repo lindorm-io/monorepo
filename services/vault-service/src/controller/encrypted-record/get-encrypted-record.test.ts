@@ -1,6 +1,5 @@
 import { ClientError } from "@lindorm-io/errors";
 import { createMockMongoRepository } from "@lindorm-io/mongo";
-import { isAfter as _isAfter } from "date-fns";
 import MockDate from "mockdate";
 import { createTestEncryptedRecord } from "../../fixtures/entity";
 import { getEncryptionKey as _getEncryptionKey } from "../../handler";
@@ -17,14 +16,14 @@ jest.mock("@lindorm-io/aes", () => ({
     }
   },
 }));
+
 jest.mock("@lindorm-io/string-blob", () => ({
   parseBlob: jest.fn().mockReturnValue("parsed-blob"),
 }));
+
 jest.mock("../../handler");
-jest.mock("date-fns");
 
 const getEncryptionKey = _getEncryptionKey as jest.Mock;
-const isAfter = _isAfter as jest.Mock;
 
 describe("getEncryptedRecordController", () => {
   let ctx: any;
@@ -40,7 +39,6 @@ describe("getEncryptedRecordController", () => {
     };
 
     getEncryptionKey.mockReturnValue("secret");
-    isAfter.mockReturnValue(false);
   });
 
   afterEach(jest.resetAllMocks);
@@ -55,7 +53,7 @@ describe("getEncryptedRecordController", () => {
   });
 
   test("should destroy and throw on expired data", async () => {
-    isAfter.mockReturnValue(true);
+    ctx.entity.encryptedRecord.expires = new Date("2020-01-01T08:00:00.000Z");
 
     await expect(getEncryptedRecordController(ctx)).rejects.toThrow(ClientError);
 

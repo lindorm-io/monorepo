@@ -42,6 +42,7 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
+  startWorkers: configuration.server.workers,
   workers,
 
   setup: async (): Promise<void> => {

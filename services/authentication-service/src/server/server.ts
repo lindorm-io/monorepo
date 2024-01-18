@@ -1,5 +1,4 @@
 import { Environment } from "@lindorm-io/common-enums";
-import { KeyPairType } from "@lindorm-io/key-pair";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import {
@@ -30,9 +29,21 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    exposed: ["public"],
+    encOptions: {
+      algorithm: "RS512",
+      modulus: 4,
+      type: "RSA",
+      use: "enc",
+    },
+    sigOptions: {
+      algorithm: "ES512",
+      curve: "P-521",
+      type: "EC",
+      use: "sig",
+    },
+    exportKeys: "public",
+    exportExternalKeys: false,
     storage: ["memory"],
-    generated: configuration.server.workers ? [KeyPairType.EC] : [],
     jwks: [
       {
         host: configuration.services.device_service.host,
@@ -65,6 +76,7 @@ export const server = createNodeServer<ServerKoaContext>({
     host: service.host,
     port: service.port,
   })),
+  startWorkers: configuration.server.workers,
 
   setup: async (): Promise<void> => {
     await Promise.all([mongoConnection.connect(), redisConnection.connect()]);

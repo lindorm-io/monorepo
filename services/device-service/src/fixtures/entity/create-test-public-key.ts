@@ -1,8 +1,8 @@
 import { PublicKey, PublicKeyOptions } from "../../entity";
-import { TEST_PUBLIC_KEY } from "../integration/test-public-keys";
+import { RSA_KEY_SET } from "../integration/rsa-keys.fixture";
 
 export const createTestPublicKey = (options: Partial<PublicKeyOptions> = {}): PublicKey =>
   new PublicKey({
-    key: TEST_PUBLIC_KEY,
+    key: RSA_KEY_SET.export("pem").publicKey,
     ...options,
   });

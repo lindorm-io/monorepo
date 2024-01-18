@@ -764,12 +764,13 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@lindorm-io/aes@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/aes/-/aes-0.1.1.tgz#8af6ea92c8f89d7aca41029824a78d24a79b5f3c"
-  integrity sha512-ZjEY75e6PoZLPiBrA5FgyptYnP0qIK655S9ZOFUHN+V9LcLz3x4GOjMvl5wXTj0weJV2hcdFiFOhhqsUtUCcdg==
+"@lindorm-io/aes@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/aes/-/aes-0.3.0.tgz#80a83a4771e4d3be93117f1b2f0a48f9f22c0369"
+  integrity sha512-YJQDO7gtHUqb13+5O3mdEXzA0QKTk7NAKvp1cW+d0jctah7Uqus/wv/m18cBGYZFAvUSCBHFcwrp+Aq7Ed+dIw==
   dependencies:
     "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/jwk" "^0.2.0"
 
 "@lindorm-io/amqp@^0.3.2":
   version "0.3.2"
@@ -782,16 +783,16 @@
     amqplib "^0.10.3"
     deepmerge "^4.3.1"
 
-"@lindorm-io/axios@^0.6.17":
-  version "0.6.17"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/axios/-/axios-0.6.17.tgz#1919af192075d20f6d1391d486b4a424d45578a8"
-  integrity sha512-UI0UoPe5+AxItxwYkhxaBEuu+FxFCS6keE3ke9i5g42EuekkZzre7dv48s5MBh41tNE401r1NUcoF50VgoE4bg==
+"@lindorm-io/axios@^0.6.18":
+  version "0.6.18"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/axios/-/axios-0.6.18.tgz#af91333db659f61f2b599284e7f157ecc1f4e98e"
+  integrity sha512-3lLVoZ1qqQhWSSJx60FFbpJ7eiVFqhNzVG8/6yrtY2Sl9oOgoMWgRGwgkheBP3RFacseY+vOsisXPHD8JKmY8A==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
-    "@lindorm-io/common-enums" "^0.1.1"
+    "@lindorm-io/common-enums" "^0.1.2"
     "@lindorm-io/middleware" "^0.1.5"
     "@lindorm-io/retry" "^0.1.5"
-    "@lindorm-io/url" "^0.2.17"
+    "@lindorm-io/url" "^0.2.18"
     axios "1.6.0"
     uuid "^9.0.1"
 
@@ -803,15 +804,15 @@
     "@lindorm-io/core" "^0.8.11"
     change-case "^4.1.2"
 
-"@lindorm-io/common-enums@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/common-enums/-/common-enums-0.1.1.tgz#94252c5fe8caab8528c7c2a7458d507fd3ecfd85"
-  integrity sha512-1BezSkHSkLoXD+elrkXPAS/4ZI9mMUf4g4QlV44Sae80TBo5XvwVYf5y2eO/3m01NUClQlXVaPhRRLrvmE7PYQ==
+"@lindorm-io/common-enums@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/common-enums/-/common-enums-0.1.2.tgz#b6d93519659bda8eaa450485fa0eaa58e366a518"
+  integrity sha512-yQeQcIWIvPeB63fj8lJGJl+L35jDYCnlVAhml9zhwqzvmpkeF64sbgHsKXx0jWhOgBSQDeqXM08S2gJ2JfxSMg==
 
-"@lindorm-io/common-types@^0.5.1":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/common-types/-/common-types-0.5.1.tgz#72d75bc9339cc2e0aa9f63231f767a554a9908fe"
-  integrity sha512-prWcijH8B+h3JHM005C7Ds9LQ9blekGBCmHiT0f7qJwlkrBLvW9wqBeWIVRj+q2P8k6p661Bf78QjmSsFo3WQA==
+"@lindorm-io/common-types@^0.5.2":
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/common-types/-/common-types-0.5.2.tgz#1945715ed02215a953cd6e7b2f74882402f0786a"
+  integrity sha512-94R0yTMIRep+bCUMHB1rjNy4YZByLIAYW5FMjcrSlycx1WpJtvpz1nd7vq9kFRfq6HRdPipjNl4xaOF5/Goa8Q==
 
 "@lindorm-io/core-connection@^0.1.21":
   version "0.1.21"
@@ -838,19 +839,20 @@
   resolved "https://registry.yarnpkg.com/@lindorm-io/core/-/core-0.8.11.tgz#5fa8acd8d7a323c840abc3c61521f2c3d6bd77bf"
   integrity sha512-1uR4kn4jQBdCemdnIi4OOEvE9wmgN/2vlLCbyc5sS3OV7AxyhvK/SEMH0oOj/BThDSnJI6kiWYQVbPJFddvmOg==
 
-"@lindorm-io/crypto@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/crypto/-/crypto-0.2.0.tgz#cb37dd981cfc928d7e707ba3bee6121fcd9eb7d8"
-  integrity sha512-DE4DRPE8WDe/EzV/d80rxeDiQV7VmodQ0tfO59+Hr2STHgXlqOHxDxb+hpC2M2aOitpLeNiFB5ClEQ8Uefz1dw==
+"@lindorm-io/crypto@^0.3.2":
+  version "0.3.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/crypto/-/crypto-0.3.2.tgz#6a1674543a49bf4f35487f7bff4cdf6b948af84a"
+  integrity sha512-W5QymiwrXZR7lk788bpfqLvnVZdTD5zk0/LlNXa9ndWL2/CV4sj0qWxFVMGsZFDChVF/GyZHg1qHcI8s8Fo40Q==
   dependencies:
+    "@lindorm-io/aes" "^0.3.0"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/errors" "^0.1.21"
     argon2 "^0.31.2"
 
-"@lindorm-io/entity@^0.3.13":
-  version "0.3.13"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/entity/-/entity-0.3.13.tgz#78e67dce09edbe3af812a516d7b765923e33d198"
-  integrity sha512-MFasnZRtO/N2ikqM1fQHlCJe1qqHl3GXs47HAU4cxsRSrfpoF68GYJYeZ3ukPOmx8UiSLVDoCVRl856tU1XhpA==
+"@lindorm-io/entity@^0.3.14":
+  version "0.3.14"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/entity/-/entity-0.3.14.tgz#69ec3619f4aeb104f8843c2d4fb292449514350b"
+  integrity sha512-zbb/rfbMhsW40444UV0krKn4PNYz2pD//vA2DJP/CwXBi4vCD7e7n5KBRwE38WOLNSh6ZHeTo5L99mmwnXpYUA==
   dependencies:
     "@lindorm-io/errors" "^0.1.21"
     joi "^17.11.0"
@@ -871,141 +873,151 @@
     "@lindorm-io/readable-time" "^0.1.1"
     date-fns "^2.30.0"
 
-"@lindorm-io/in-memory-cache@^0.3.5":
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/in-memory-cache/-/in-memory-cache-0.3.5.tgz#2f7f88b4c1973940db15c536f1cd0fa10ab67c83"
-  integrity sha512-bqBW/lPufArvQXmlq+U9y1f5hrK4EZENWcxhAwav/4NpuT5MXseDkqtUgFdFe9Gvttc1uxOudC/5QD45BO5kww==
+"@lindorm-io/in-memory-cache@^0.3.6":
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/in-memory-cache/-/in-memory-cache-0.3.6.tgz#c4c3c2f7a7fcaa68843c70e63502d95013fe7e4d"
+  integrity sha512-h3PwY0p9uXKZv7wsnEYNqae7vVlAx2NQb5ToDzHkogT/eRGrfIG2LOg639IsVIa9SlNXtdnyJzy7yu7+L7+6eQ==
   dependencies:
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
     date-fns "^2.30.0"
     lodash "^4.17.21"
 
-"@lindorm-io/jwt@^0.11.4":
-  version "0.11.4"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/jwt/-/jwt-0.11.4.tgz#11d852733d19d7f06634299ba0b9656e0a74857b"
-  integrity sha512-Okb2F8SSgSd+RgKsRc6iAR+GnFDDslS0qeo9jMx/A/liBUAh8PuSKqLNJkTExSq9CYosWk0/Akyj5iPgyAccVQ==
+"@lindorm-io/jwk@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/jwk/-/jwk-0.2.0.tgz#c039636c7c774812e31965c31df6acf684a32b75"
+  integrity sha512-gCSEkZSXxMafs/wGNrPo7uioyU/cCwl+Bq/xJjmCTXbuknwrPRkzEZxu72zJF2KrhNlVX6mSDgNxznQJJ5WB/A==
   dependencies:
+    "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/random" "^0.2.6"
+
+"@lindorm-io/jwt@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/jwt/-/jwt-0.13.0.tgz#a42d3f220f163adad89355801b70ea2bac9a1d73"
+  integrity sha512-DDk+RhsZtqbdD56f3Txr4Hy0VMGtZSnLm9EKjTKJHwpO/xg0tIdewBSCQfj11KXvAoz+2j+kg+GqJar8HJXA8Q==
+  dependencies:
+    "@lindorm-io/aes" "^0.3.0"
     "@lindorm-io/case" "^0.2.0"
-    "@lindorm-io/common-enums" "^0.1.1"
+    "@lindorm-io/common-enums" "^0.1.2"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/errors" "^0.1.21"
     "@lindorm-io/expiry" "^0.2.1"
-    "@lindorm-io/random" "^0.2.5"
+    "@lindorm-io/random" "^0.2.6"
     jsonwebtoken "^9.0.2"
 
-"@lindorm-io/key-pair@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/key-pair/-/key-pair-0.8.0.tgz#3b505b099e005e207858bc2847d94b17f2b409c5"
-  integrity sha512-QhFsDWVaP0DdA0mTesS9/IfzQEL8Waog/IYzx9v6v8PC3YQlT2jRTNI2bV8KGcmhbxw9oUUutPZLsZpC4+A6kg==
+"@lindorm-io/key-pair@^0.8.2":
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/key-pair/-/key-pair-0.8.2.tgz#c6f9660960d6e7b1b1bbf6369d01277b3f0174c7"
+  integrity sha512-QuW2UrydjfTVtVo29mlbLs3aAozqjn1VZnawDeBqg/rR4T/yTtPXcYLcaTTqOilSVpmepcX4N/E0Q1iEKSc8aQ==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
+    "@lindorm-io/common-enums" "^0.1.2"
     "@lindorm-io/core" "^0.8.11"
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
-    "@lindorm-io/random" "^0.2.5"
+    "@lindorm-io/rsa" "^0.2.0"
     date-fns "^2.30.0"
     joi "^17.11.0"
     lodash "^4.17.21"
 
-"@lindorm-io/koa-amqp@^0.1.9":
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-amqp/-/koa-amqp-0.1.9.tgz#94c70104b022b74b4391bb676196416e646ad27a"
-  integrity sha512-IWe9s2a97w1Jc+ZKZYDFGpt6TcNixEWExg7t/oHl7xbwTSC+MEb1wWnXSsW06EAzc4HLN/UXcEZCjGXd6f2P6g==
+"@lindorm-io/koa-amqp@^0.1.11":
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-amqp/-/koa-amqp-0.1.11.tgz#58aeb9eb42a01a0c5f81385fede9055cf39099b9"
+  integrity sha512-RRnx316S+rJbi/enoOPRP6rXi3uON4toNn14r0IWaCn2/KTeWz+UOrWrbGTtcoBtjxc0ZUyBTct2hTlhAB/AUw==
   dependencies:
     "@lindorm-io/amqp" "^0.3.2"
     "@lindorm-io/errors" "^0.1.21"
-    "@lindorm-io/koa" "^0.17.9"
+    "@lindorm-io/koa" "^0.17.11"
 
-"@lindorm-io/koa-axios@^0.1.52":
-  version "0.1.52"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-axios/-/koa-axios-0.1.52.tgz#9233db1a80b3a9fb042f17504cd7d7ceab309414"
-  integrity sha512-fXoHY4nqrbZobFvL6Kh6Bx3g0VrF/EKdAwhqS60QFfGg6FgbdMUFYS1zLABgms+SNHwE9S1E1TfU1dzQcHX/Ow==
+"@lindorm-io/koa-axios@^0.1.54":
+  version "0.1.54"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-axios/-/koa-axios-0.1.54.tgz#15fe3b4d644d5a496109741481473a6995eab1a8"
+  integrity sha512-D6aW0jynLt7UTjb/b2w5HIChRuVr/XRI2thG/FXIBHaCAEV8qL1Z3tuLFDqzpm2HHZiaeHJAMqkekzUcqrRKCQ==
   dependencies:
-    "@lindorm-io/axios" "^0.6.17"
-    "@lindorm-io/koa" "^0.17.9"
+    "@lindorm-io/axios" "^0.6.18"
+    "@lindorm-io/koa" "^0.17.11"
 
-"@lindorm-io/koa-bearer-auth@^0.4.13":
-  version "0.4.13"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-bearer-auth/-/koa-bearer-auth-0.4.13.tgz#f1d3637cbb5930b95b19c5257e342de014a6f90d"
-  integrity sha512-TTGKsMK3GjiUyXm4EVY7fAdXJsrqcqSWZ92v8H06Y8Q1kTAmxpiExtYNzR3OgRVYpxhjtVCzA1fiqoW8ajFKdw==
-  dependencies:
-    "@lindorm-io/core" "^0.8.11"
-    "@lindorm-io/errors" "^0.1.21"
-    "@lindorm-io/jwt" "^0.11.4"
-    "@lindorm-io/key-pair" "^0.8.0"
-    "@lindorm-io/koa" "^0.17.9"
-    "@lindorm-io/koa-jwt" "^0.6.13"
-    object-path "^0.11.8"
-
-"@lindorm-io/koa-jwt@^0.6.13":
-  version "0.6.13"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-jwt/-/koa-jwt-0.6.13.tgz#b95d9d92a4303538b45948aec2c6811b1ec00235"
-  integrity sha512-ZsCCnDINEd4jdpTYxWYuhqMuvll31fkmjN/fxlOz3+E8Nc7cotJWjU+4BxZ6nU1pCIeLBUmRCO9O9w08Fi2OqA==
+"@lindorm-io/koa-bearer-auth@^0.4.17":
+  version "0.4.17"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-bearer-auth/-/koa-bearer-auth-0.4.17.tgz#a30caa7c96dd5fa2f9409153990adcda1b114d16"
+  integrity sha512-IBP3SFj64wxdg4dJS+nX4DS7cBSoI/rp4IhLJWgNy71B5xLSwHBCNGKv8DGcKH1GETaLY0onVXLxmim61XPGdA==
   dependencies:
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/errors" "^0.1.21"
-    "@lindorm-io/jwt" "^0.11.4"
-    "@lindorm-io/key-pair" "^0.8.0"
-    "@lindorm-io/koa" "^0.17.9"
+    "@lindorm-io/jwt" "^0.13.0"
+    "@lindorm-io/key-pair" "^0.8.2"
+    "@lindorm-io/koa" "^0.17.11"
+    "@lindorm-io/koa-jwt" "^0.6.17"
     object-path "^0.11.8"
 
-"@lindorm-io/koa-keystore@^0.11.9":
-  version "0.11.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.11.9.tgz#0430c233cabead26fc806d7d603ba340338b4cd0"
-  integrity sha512-QWwUHZaJ594MINyb4cTfgCrxxqQWjNAaof9axxDo+S6RACGdjy3VRGvmVeeW4D2+rQh+OUsHA9WZf383zQMw0Q==
+"@lindorm-io/koa-jwt@^0.6.17":
+  version "0.6.17"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-jwt/-/koa-jwt-0.6.17.tgz#bd805ace56df83221902af92ec68089de663d6e0"
+  integrity sha512-GIsJsJ+siUzR6ZbnSol5PiNDloK8xZpFJ+b4dLC8WDoP8wttpO6NsOLc4PSub71x4kbCy64j2C3lEJ3/wK4j6w==
   dependencies:
-    "@lindorm-io/axios" "^0.6.17"
+    "@lindorm-io/core" "^0.8.11"
+    "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/jwt" "^0.13.0"
+    "@lindorm-io/key-pair" "^0.8.2"
+    "@lindorm-io/koa" "^0.17.11"
+    object-path "^0.11.8"
+
+"@lindorm-io/koa-keystore@^0.11.12":
+  version "0.11.12"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-keystore/-/koa-keystore-0.11.12.tgz#da66a063fc9f517fea8fb486188b5e9cbcc5a574"
+  integrity sha512-tRbmejMxt675Qzy7B9ZFUrANfeBxdQaUJCzZlvaY2ruakqu7Y/edMx5hY95NPB4RUsQjQTlfByhH006u9J+ZZw==
+  dependencies:
+    "@lindorm-io/axios" "^0.6.18"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/errors" "^0.1.21"
     "@lindorm-io/expiry" "^0.2.1"
-    "@lindorm-io/in-memory-cache" "^0.3.5"
-    "@lindorm-io/key-pair" "^0.8.0"
-    "@lindorm-io/koa" "^0.17.9"
-    "@lindorm-io/mongo" "^0.12.5"
+    "@lindorm-io/in-memory-cache" "^0.3.6"
+    "@lindorm-io/key-pair" "^0.8.2"
+    "@lindorm-io/koa" "^0.17.11"
+    "@lindorm-io/mongo" "^0.12.6"
     "@lindorm-io/readable-time" "^0.1.1"
-    "@lindorm-io/redis" "^0.12.5"
+    "@lindorm-io/redis" "^0.12.6"
     "@lindorm-io/retry" "^0.1.5"
     joi "^17.11.0"
 
-"@lindorm-io/koa-mongo@^0.10.9":
-  version "0.10.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-mongo/-/koa-mongo-0.10.9.tgz#ca07ff1dca6f775ce4a9c748e637bfc492bbb439"
-  integrity sha512-Dyr9nqCbOUigZeUsbVR9Q/Gmy4f497JeSPnywBGWQ5v+jLLQasscw60TVeZoTJRixjWiAQNEZCAktK0rxZFizw==
+"@lindorm-io/koa-mongo@^0.10.12":
+  version "0.10.12"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-mongo/-/koa-mongo-0.10.12.tgz#01a868011f54900cdd7e8715911de47962fb64d1"
+  integrity sha512-+1uZd95TcjOiSQ1V1s2ZX0VAuAFb4L6vX3BrsKsG2Xi/5iRDkurAn1vTZtMeaTT9+J252MGYYs1YD5ES17BrIw==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
-    "@lindorm-io/koa" "^0.17.9"
-    "@lindorm-io/mongo" "^0.12.5"
+    "@lindorm-io/koa" "^0.17.11"
+    "@lindorm-io/mongo" "^0.12.6"
     object-path "^0.11.8"
 
-"@lindorm-io/koa-redis@^0.8.9":
-  version "0.8.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-redis/-/koa-redis-0.8.9.tgz#0c482f9a1f13360d6be386b208877c79f811dec1"
-  integrity sha512-d1ZiqVNP5L1zl1m3AliSKq6gRjT1ys5nsHHBMHVbjxKDUDTfPDuIfpJcShIbFdztAeP67iWjf2W0eWukTgBKOA==
+"@lindorm-io/koa-redis@^0.8.12":
+  version "0.8.12"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa-redis/-/koa-redis-0.8.12.tgz#1118fe081c551a7b7263d41b87043e7c958c98e3"
+  integrity sha512-myBn2IuMAw3u8mSjPiwZqKb1YapmKWqhnlOnnli9XSD9yNARLkEi4VH2QRKV6Ga0s9fXJyfXsBG2BcVsY/zW1g==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
     "@lindorm-io/core" "^0.8.11"
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
     "@lindorm-io/expiry" "^0.2.1"
-    "@lindorm-io/koa" "^0.17.9"
+    "@lindorm-io/koa" "^0.17.11"
     "@lindorm-io/readable-time" "^0.1.1"
-    "@lindorm-io/redis" "^0.12.5"
+    "@lindorm-io/redis" "^0.12.6"
     object-path "^0.11.8"
 
-"@lindorm-io/koa@^0.17.9":
-  version "0.17.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/koa/-/koa-0.17.9.tgz#c9fd992d668a637e1d686a8f0788f32494f89116"
-  integrity sha512-mMC4Ser1zKKlJsir05FSMONUevMoMZMtmUnebaTOLG0K9StzpdKfTL/UTZFbvuSDjCwdDMlKLK7DoDura52k9Q==
+"@lindorm-io/koa@^0.17.11":
+  version "0.17.11"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/koa/-/koa-0.17.11.tgz#3627196a4e5ac473c0c064aef38248a6d0338251"
+  integrity sha512-HvjkIxBCPFe1fEmz/Izz2uuai4fy8wPHI5U9+YQ7IhP9s9NtEXo0IVW2oJKDOprBiWZE4HAbcImPbDpRhWDniw==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
-    "@lindorm-io/common-enums" "^0.1.1"
+    "@lindorm-io/common-enums" "^0.1.2"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/errors" "^0.1.21"
     "@lindorm-io/retry" "^0.1.5"
-    "@lindorm-io/structure-scanner" "^0.2.1"
+    "@lindorm-io/structure-scanner" "^0.2.2"
     joi "^17.11.0"
     koa "2.14.2"
     koa-bodyparser "4.4.1"
@@ -1021,44 +1033,44 @@
   dependencies:
     clone "^2.1.2"
 
-"@lindorm-io/mongo@^0.12.5":
-  version "0.12.5"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/mongo/-/mongo-0.12.5.tgz#5a1db8da3bcdf692b1af3ec86bf7b8d64d623bc9"
-  integrity sha512-qtVbBu/kNXovn9KJT6/jnB/NLcOGGQTU6qCcJrZWcz2EH49HQb9EEeYHdbbhokUBMuWvbFAL5LIRtv897SPvWQ==
+"@lindorm-io/mongo@^0.12.6":
+  version "0.12.6"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/mongo/-/mongo-0.12.6.tgz#647bbff423fdfed01a52863c5cc26c630ae885ba"
+  integrity sha512-kGahu44VlBwwAMVOyrsBj+AJn9ZQdaHjXSx78L/RYXGnPfG2BtuXq+BV2AX5uQy1clbW9lB4WsMjTX1EPVg+pA==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/core-connection" "^0.1.21"
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
     mongodb "^6.2.0"
 
-"@lindorm-io/node-server@^0.9.9":
-  version "0.9.9"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.9.9.tgz#2902e3c362b85d9b11106570778ce85eff91c2a7"
-  integrity sha512-9Kaa/0MfNynm5ujriZlhdCmJ0YWi0H2MvEQ/wFhlk4Ac5WgegvedmZqFMiLfbMhT3mYNdgsD4ctZ0iiwSE/rGQ==
+"@lindorm-io/node-server@^0.9.13":
+  version "0.9.13"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/node-server/-/node-server-0.9.13.tgz#ea1a6e25afe7769b2930fb8e4a13418be8f9f075"
+  integrity sha512-kVwRUZg/H6WGtaYW21EMhGxhLs02MtKokyD3tantl1r7Tq9cUrjoHgrKQsZs580MLnAKRD29Bqxdam5vbOOWIQ==
   dependencies:
     "@lindorm-io/amqp" "^0.3.2"
-    "@lindorm-io/axios" "^0.6.17"
-    "@lindorm-io/jwt" "^0.11.4"
-    "@lindorm-io/key-pair" "^0.8.0"
-    "@lindorm-io/koa" "^0.17.9"
-    "@lindorm-io/koa-amqp" "^0.1.9"
-    "@lindorm-io/koa-axios" "^0.1.52"
-    "@lindorm-io/koa-jwt" "^0.6.13"
-    "@lindorm-io/koa-keystore" "^0.11.9"
-    "@lindorm-io/koa-mongo" "^0.10.9"
-    "@lindorm-io/koa-redis" "^0.8.9"
-    "@lindorm-io/mongo" "^0.12.5"
-    "@lindorm-io/redis" "^0.12.5"
+    "@lindorm-io/axios" "^0.6.18"
+    "@lindorm-io/jwt" "^0.13.0"
+    "@lindorm-io/key-pair" "^0.8.2"
+    "@lindorm-io/koa" "^0.17.11"
+    "@lindorm-io/koa-amqp" "^0.1.11"
+    "@lindorm-io/koa-axios" "^0.1.54"
+    "@lindorm-io/koa-jwt" "^0.6.17"
+    "@lindorm-io/koa-keystore" "^0.11.12"
+    "@lindorm-io/koa-mongo" "^0.10.12"
+    "@lindorm-io/koa-redis" "^0.8.12"
+    "@lindorm-io/mongo" "^0.12.6"
+    "@lindorm-io/redis" "^0.12.6"
     "@lindorm-io/winston" "^0.5.13"
     "@socket.io/redis-adapter" "^8.2.1"
     config "^3.3.9"
 
-"@lindorm-io/random@^0.2.5":
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/random/-/random-0.2.5.tgz#f7031140bf266eb8f3eb857e265454751e73b4bb"
-  integrity sha512-qr53dZ2vjFoHj2OvsgjeVX1TyTOHt3qDhT93skwQuVtf1+hCMHz6eCpD5It/mptn6bzXeKeuRnSLhJ7PSBs3Gg==
+"@lindorm-io/random@^0.2.6":
+  version "0.2.6"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/random/-/random-0.2.6.tgz#0aad83b97badb8e5e592a99672fa1c7ae7d75dab"
+  integrity sha512-M5L3aMiogLRHhjtH1xXN00ZgZCjgV8E2mdQE3AZBfBLDJtxhkMnxGaYBCrfQ8tMEvsyOST9G6YfEiYhe6JX5CQ==
 
 "@lindorm-io/readable-time@^0.1.1":
   version "0.1.1"
@@ -1067,15 +1079,15 @@
   dependencies:
     date-fns "^2.30.0"
 
-"@lindorm-io/redis@^0.12.5":
-  version "0.12.5"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/redis/-/redis-0.12.5.tgz#0fefb8ff7be81f99667d3e7869903cba666e7a28"
-  integrity sha512-UOiHwvSYiQum3aDS3DxbD3WsMhph7j3bhoqQAr1DU3w4QqM7e+YUwLdehMZeX0omusKed1j75iI+zWa55iJZKQ==
+"@lindorm-io/redis@^0.12.6":
+  version "0.12.6"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/redis/-/redis-0.12.6.tgz#7f0653e3ad884a3fcad30a1083c37bc29c10467a"
+  integrity sha512-iHvWvzbUrr/Gpes+hQcKBdK7+lGkPAusrPifJuSvlbyAtHrejZF6j6pHsZ5ZU/QrvhKnYkh2dXPHTWjlwEWX9w==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
     "@lindorm-io/core" "^0.8.11"
     "@lindorm-io/core-connection" "^0.1.21"
-    "@lindorm-io/entity" "^0.3.13"
+    "@lindorm-io/entity" "^0.3.14"
     "@lindorm-io/errors" "^0.1.21"
     "@lindorm-io/string-blob" "^0.0.27"
     date-fns "^2.30.0"
@@ -1087,6 +1099,14 @@
   resolved "https://registry.yarnpkg.com/@lindorm-io/retry/-/retry-0.1.5.tgz#405732281c88f839f1127b28127b396e09db4d8d"
   integrity sha512-7RCq6Xj9OKS5gjPLMJC3bgfxgIiPZN8RclYPx8VN8xxNSJ40K1I1DMxxBYG3CnySV+zDubBxKRaJu1j1d1+fIQ==
 
+"@lindorm-io/rsa@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/rsa/-/rsa-0.2.0.tgz#f70a4782b59ce6236bab674a4134ff1b9abdb581"
+  integrity sha512-XQzgfYhvuTMloD12Ls3mOaPOMHaduBLoJjDi83wJA5F5P5eJoWPKiruK/ygsMpcsHHh2hdys2ozR+4H7JVXnvw==
+  dependencies:
+    "@lindorm-io/errors" "^0.1.21"
+    "@lindorm-io/jwk" "^0.2.0"
+
 "@lindorm-io/string-blob@^0.0.27":
   version "0.0.27"
   resolved "https://registry.yarnpkg.com/@lindorm-io/string-blob/-/string-blob-0.0.27.tgz#7542f96316d89a093192154a4bba962a004c6352"
@@ -1094,17 +1114,17 @@
   dependencies:
     "@lindorm-io/core" "^0.8.11"
 
-"@lindorm-io/structure-scanner@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/structure-scanner/-/structure-scanner-0.2.1.tgz#5fc5bb93c1a5fb4209f77c40c6fe13ddfa8dd382"
-  integrity sha512-8tIQC42KhnFlqc+WeutENkDyF/x6iq2c35pQdH1uqw6GLREOxrwHdjFmQsiYlv9lP+VmrAlVMmNgEzFWJmiCgA==
+"@lindorm-io/structure-scanner@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/structure-scanner/-/structure-scanner-0.2.2.tgz#b8020a2455a32a48bc5038458ea329b7c62c3f64"
+  integrity sha512-gNo1lbG9pFXZruEKY3lFZrxmiiJXXeBKrSyd5YBieSYoceu6/Cy7wYejqDCVvUoZQvveNulzuTnez+jZAcHm9A==
   dependencies:
     "@lindorm-io/core" "^0.8.11"
 
-"@lindorm-io/url@^0.2.17":
-  version "0.2.17"
-  resolved "https://registry.yarnpkg.com/@lindorm-io/url/-/url-0.2.17.tgz#62b149b843f56d8c481286d57a1ed9fd4a03d4e9"
-  integrity sha512-H/2ZcTGGgNo2jtV/qlubyKjVvs3NvH/SRqPKHDCTInrxRU6Q8sK+nB81sgEUcCVAkZpy3DJD4dAJvGzdfIELYg==
+"@lindorm-io/url@^0.2.18":
+  version "0.2.18"
+  resolved "https://registry.yarnpkg.com/@lindorm-io/url/-/url-0.2.18.tgz#501b8234f75c9bd5613f05a63ad5152a4890ae2e"
+  integrity sha512-4tYFPNfUrxMvF6EUNH6DnX46KzPVpvWGWM1j2fSYeRZWrjOdnPcFnO3HwQ9bJvetm0syhErmp6pL7YK6gC4C8w==
   dependencies:
     "@lindorm-io/case" "^0.2.0"
     "@lindorm-io/core" "^0.8.11"
@@ -1305,10 +1325,10 @@
   resolved "https://registry.yarnpkg.com/@types/cookie/-/cookie-0.4.1.tgz#bfd02c1f2224567676c1545199f87c3a861d878d"
   integrity sha512-XW/Aa8APYr6jSVVA1y/DEIZX0/GMKLEVekNG727R8cs56ahETkRAy/3DR7+fJyh7oUgGwNQaRfXCun0+KbWY7Q==
 
-"@types/cookiejar@*":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@types/cookiejar/-/cookiejar-2.1.2.tgz#66ad9331f63fe8a3d3d9d8c6e3906dd10f6446e8"
-  integrity sha512-t73xJJrvdTjXrn4jLS9VSGRbz0nUY3cl2DMGDU48lKl+HR9dbbjW2A9r3g40VA++mQpy6uuHg33gy7du2BKpog==
+"@types/cookiejar@^2.1.5":
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/@types/cookiejar/-/cookiejar-2.1.5.tgz#14a3e83fa641beb169a2dd8422d91c3c345a9a78"
+  integrity sha512-he+DHOWReW0nghN24E1WUqM0efK4kI9oTqDm6XmK8ZPe2djZ90BSNdGnIyCLzCPw7/pogPlGbzI2wHGGmi4O/Q==
 
 "@types/cookies@*":
   version "0.7.7"
@@ -1446,10 +1466,10 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
-"@types/koa@^2.13.12":
-  version "2.13.12"
-  resolved "https://registry.yarnpkg.com/@types/koa/-/koa-2.13.12.tgz#70d87a9061a81909e0ee11ca50168416e8d3e795"
-  integrity sha512-vAo1KuDSYWFDB4Cs80CHvfmzSQWeUb909aQib0C0aFx4sw0K9UZFz2m5jaEP+b3X1+yr904iQiruS0hXi31jbw==
+"@types/koa@^2.14.0":
+  version "2.14.0"
+  resolved "https://registry.yarnpkg.com/@types/koa/-/koa-2.14.0.tgz#8939e8c3b695defc12f2ef9f38064509e564be18"
+  integrity sha512-DTDUyznHGNHAl+wd1n0z1jxNajduyTh8R53xoewuerdBzGo6Ogj6F2299BFtrexJw4NtgjsI5SMPCmV9gZwGXA==
   dependencies:
     "@types/accepts" "*"
     "@types/content-disposition" "*"
@@ -1464,6 +1484,11 @@
   version "4.14.202"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.202.tgz#f09dbd2fb082d507178b2f2a5c7e74bd72ff98f8"
   integrity sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ==
+
+"@types/methods@^1.1.4":
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/@types/methods/-/methods-1.1.4.tgz#d3b7ac30ac47c91054ea951ce9eed07b1051e547"
+  integrity sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==
 
 "@types/mime@^1":
   version "1.3.2"
@@ -1480,10 +1505,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.33.tgz#3c1879b276dc63e73030bb91165e62a4509cd506"
   integrity sha512-miWq2m2FiQZmaHfdZNcbpp9PuXg34W5JZ5CrJ/BaS70VuhoJENBEQybeiYSaPBRNq6KQGnjfEnc/F3PN++D+XQ==
 
-"@types/node@^20.10.2":
-  version "20.10.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.2.tgz#32a5e8228357f57714ad28d52229ab04880c2814"
-  integrity sha512-37MXfxkb0vuIlRKHNxwCkb60PNBpR94u4efQuN4JgIAm66zfCDXGSAFCef9XUWFovX2R1ok6Z7MHhtdVXXkkIw==
+"@types/node@^20.11.5":
+  version "20.11.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.5.tgz#be10c622ca7fcaa3cf226cf80166abc31389d86e"
+  integrity sha512-g557vgQjUUfN76MZAN/dt1z3dzcUsimuysco0KeluHgrPdJXkP/XdAURgyO2W9fZWHRtRBiVKzKn8vyOAwlG+w==
   dependencies:
     undici-types "~5.26.4"
 
@@ -1510,20 +1535,22 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.1.tgz#20f18294f797f2209b5f65c8e3b5c8e8261d127c"
   integrity sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==
 
-"@types/superagent@*":
-  version "4.1.15"
-  resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-4.1.15.tgz#63297de457eba5e2bc502a7609426c4cceab434a"
-  integrity sha512-mu/N4uvfDN2zVQQ5AYJI/g4qxn2bHB6521t1UuH09ShNWjebTqN0ZFuYK9uYjcgmI0dTQEs+Owi1EO6U0OkOZQ==
+"@types/superagent@^8.1.0":
+  version "8.1.1"
+  resolved "https://registry.yarnpkg.com/@types/superagent/-/superagent-8.1.1.tgz#dbc620c5df3770b0c3092f947d6d5e808adae2bc"
+  integrity sha512-YQyEXA4PgCl7EVOoSAS3o0fyPFU6erv5mMixztQYe1bqbWmmn8c+IrqoxjQeZe4MgwXikgcaZPiI/DsbmOVlzA==
   dependencies:
-    "@types/cookiejar" "*"
+    "@types/cookiejar" "^2.1.5"
+    "@types/methods" "^1.1.4"
     "@types/node" "*"
 
-"@types/supertest@^2.0.16":
-  version "2.0.16"
-  resolved "https://registry.yarnpkg.com/@types/supertest/-/supertest-2.0.16.tgz#7a1294edebecb960d957bbe9b26002a2b7f21cd7"
-  integrity sha512-6c2ogktZ06tr2ENoZivgm7YnprnhYE4ZoXGMY+oA7IuAf17M8FWvujXZGmxLv8y0PTyts4x5A+erSwVUFA8XSg==
+"@types/supertest@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@types/supertest/-/supertest-6.0.2.tgz#2af1c466456aaf82c7c6106c6b5cbd73a5e86588"
+  integrity sha512-137ypx2lk/wTQbW6An6safu9hXmajAifU/s7szAHLN/FeIm5w7yR0Wkl9fdJMRSHwOn4HLAI0DaB2TOORuhPDg==
   dependencies:
-    "@types/superagent" "*"
+    "@types/methods" "^1.1.4"
+    "@types/superagent" "^8.1.0"
 
 "@types/urijs@^1.19.19":
   version "1.19.19"
@@ -2280,6 +2307,11 @@ date-fns@^2.30.0:
   integrity sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==
   dependencies:
     "@babel/runtime" "^7.21.0"
+
+date-fns@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.2.0.tgz#c97cf685b62c829aa4ecba554e4a51768cf0bffc"
+  integrity sha512-E4KWKavANzeuusPi0jUjpuI22SURAznGkx7eZV+4i6x2A+IZxAMcajgkvuDAU1bg40+xuhW1zRdVIIM/4khuIg==
 
 debug@4, debug@^4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2, debug@^4.3.4, debug@~4.3.1, debug@~4.3.2:
   version "4.3.4"
@@ -3883,10 +3915,10 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-nock@^13.4.0:
-  version "13.4.0"
-  resolved "https://registry.yarnpkg.com/nock/-/nock-13.4.0.tgz#60aa3f7a4afa9c12052e74d8fb7550f682ef0115"
-  integrity sha512-W8NVHjO/LCTNA64yxAPHV/K47LpGYcVzgKd3Q0n6owhwvD0Dgoterc25R4rnZbckJEb6Loxz1f5QMuJpJnbSyQ==
+nock@^13.5.0:
+  version "13.5.0"
+  resolved "https://registry.yarnpkg.com/nock/-/nock-13.5.0.tgz#82cd33b0dba6095d3f5a28d0ff2edac970fa05ec"
+  integrity sha512-9hc1eCS2HtOz+sE9W7JQw/tXJktg0zoPSu48s/pYe73e25JW9ywiowbqnUSd7iZPeVawLcVpPZeZS312fwSY+g==
   dependencies:
     debug "^4.1.0"
     json-stringify-safe "^5.0.1"
@@ -3926,10 +3958,10 @@ node-releases@^2.0.3:
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.4.tgz#f38252370c43854dc48aa431c766c6c398f40476"
   integrity sha512-gbMzqQtTtDz/00jQzZ21PQzdI9PyLYqUSvD0p3naOhX4odFji0ZxYdnVwPTxmSwkmxhcFImpozceidSG+AgoPQ==
 
-nodemon@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-3.0.2.tgz#222dd0de79fc7b7b3eedba422d2b9e5fc678621e"
-  integrity sha512-9qIN2LNTrEzpOPBaWHTm4Asy1LxXLSickZStAQ4IZe7zsoIpD/A7LWxhZV3t4Zu352uBcqVnRsDXSMR2Sc3lTA==
+nodemon@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-3.0.3.tgz#244a62d1c690eece3f6165c6cdb0db03ebd80b76"
+  integrity sha512-7jH/NXbFPxVaMwmBCC2B9F/V6X1VkEdNgx3iu9jji8WxWcvhMWkmhNWhI5077zknOnZnBzba9hZP6bCPJLSReQ==
   dependencies:
     chokidar "^3.5.2"
     debug "^4"
@@ -4673,10 +4705,10 @@ strip-json-comments@^3.1.1:
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz#31f1281b3832630434831c310c01cccda8cbe006"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
 
-superagent@^8.0.5:
-  version "8.0.9"
-  resolved "https://registry.yarnpkg.com/superagent/-/superagent-8.0.9.tgz#2c6fda6fadb40516515f93e9098c0eb1602e0535"
-  integrity sha512-4C7Bh5pyHTvU33KpZgwrNKh/VQnvgtCSqPRfJAUdmrtSYePVzVg4E4OzsrbkhJj9O7SO6Bnv75K/F8XVZT8YHA==
+superagent@^8.1.2:
+  version "8.1.2"
+  resolved "https://registry.yarnpkg.com/superagent/-/superagent-8.1.2.tgz#03cb7da3ec8b32472c9d20f6c2a57c7f3765f30b"
+  integrity sha512-6WTxW1EB6yCxV5VFOIPQruWGHqc3yI7hEmZK6h+pyk69Lk/Ut7rLUY6W/ONF2MjBuGjvmMiIpsrVJ2vjrHlslA==
   dependencies:
     component-emitter "^1.3.0"
     cookiejar "^2.1.4"
@@ -4689,13 +4721,13 @@ superagent@^8.0.5:
     qs "^6.11.0"
     semver "^7.3.8"
 
-supertest@^6.3.3:
-  version "6.3.3"
-  resolved "https://registry.yarnpkg.com/supertest/-/supertest-6.3.3.tgz#42f4da199fee656106fd422c094cf6c9578141db"
-  integrity sha512-EMCG6G8gDu5qEqRQ3JjjPs6+FYT1a7Hv5ApHvtSghmOFJYtsU5S+pSb6Y2EUeCEY3CmEL3mmQ8YWlPOzQomabA==
+supertest@^6.3.4:
+  version "6.3.4"
+  resolved "https://registry.yarnpkg.com/supertest/-/supertest-6.3.4.tgz#2145c250570c2ea5d337db3552dbfb78a2286218"
+  integrity sha512-erY3HFDG0dPnhw4U+udPfrzXa4xhSG+n4rxfRuZWCUvjFWwKl+OxWf/7zk50s84/fAAs7vf5QAb9uRa0cCykxw==
   dependencies:
     methods "^1.1.2"
-    superagent "^8.0.5"
+    superagent "^8.1.2"
 
 supports-color@^5.3.0, supports-color@^5.5.0:
   version "5.5.0"
@@ -4821,10 +4853,10 @@ ts-jest@^29.1.1:
     semver "^7.5.3"
     yargs-parser "^21.0.1"
 
-ts-node@^10.9.1:
-  version "10.9.1"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
-  integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
+ts-node@^10.9.2:
+  version "10.9.2"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.2.tgz#70f021c9e185bccdca820e26dc413805c101c71f"
+  integrity sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==
   dependencies:
     "@cspotcode/source-map-support" "^0.8.0"
     "@tsconfig/node10" "^1.0.7"
@@ -4868,10 +4900,10 @@ type-is@^1.6.16, type-is@^1.6.18:
     media-typer "0.3.0"
     mime-types "~2.1.24"
 
-typescript@^5.3.2:
-  version "5.3.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.3.2.tgz#00d1c7c1c46928c5845c1ee8d0cc2791031d4c43"
-  integrity sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==
+typescript@^5.3.3:
+  version "5.3.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.3.3.tgz#b3ce6ba258e72e6305ba66f5c9b452aaee3ffe37"
+  integrity sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==
 
 uid2@1.0.0:
   version "1.0.0"

@@ -16,7 +16,7 @@ export const assertCertificateChallenge = (options: Options): void => {
   const valid = verifyRsaSignature({
     algorithm: mapCertificateMethodToRsaAlgorithm(certificateMethod),
     data: certificateChallenge,
-    key: publicKey,
+    key: { id: "ignored", publicKey, type: "RSA" },
     signature: certificateVerifier,
   });
 

@@ -1,1 +1,1 @@
-export * from "./key-pair-providers-jwks-memory-workers";
+export * from "./providers-jwks-memory-workers";

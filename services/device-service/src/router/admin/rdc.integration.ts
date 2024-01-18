@@ -14,7 +14,7 @@ import {
   getTestClientCredentials,
   setupIntegration,
 } from "../../fixtures/integration";
-import { TEST_PRIVATE_KEY } from "../../fixtures/integration/test-public-keys";
+import { RSA_KEY_SET } from "../../fixtures/integration/rsa-keys.fixture";
 import { server } from "../../server/server";
 
 MockDate.set("2021-01-01T08:00:00.000Z");
@@ -107,7 +107,7 @@ describe("/admin/rdc", () => {
       algorithm: RsaAlgorithm.RSA_SHA512,
       data: JSON.stringify(headers),
       format: RsaFormat.BASE64,
-      key: TEST_PRIVATE_KEY,
+      keySet: RSA_KEY_SET,
     });
 
     const signature = [

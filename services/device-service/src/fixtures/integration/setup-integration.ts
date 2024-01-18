@@ -1,6 +1,6 @@
-import { createTestKeyPair } from "@lindorm-io/key-pair";
-import { KeyPairMemoryCache } from "@lindorm-io/koa-keystore";
+import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
+import { createTestStoredKeySet } from "../../../../../packages/keystore/dist";
 import {
   ChallengeSessionCache,
   ClientRepository,
@@ -33,6 +33,6 @@ export const setupIntegration = async (): Promise<void> => {
   TEST_DEVICE_LINK_REPOSITORY = new DeviceLinkRepository(mongoConnection, logger);
   TEST_PUBLIC_KEY_REPOSITORY = new PublicKeyRepository(mongoConnection, logger);
 
-  const keyPairCache = new KeyPairMemoryCache(memoryDatabase, logger);
-  await keyPairCache.create(createTestKeyPair());
+  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  await keyPairCache.create(createTestStoredKeySet());
 };
