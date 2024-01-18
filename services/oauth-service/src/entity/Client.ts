@@ -14,11 +14,13 @@ import {
 } from "@lindorm-io/common-enums";
 import { LevelOfAssurance, Optional, ScopeDescription } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
-import { KeyPairAlgorithm } from "@lindorm-io/key-pair";
+import { EcAlgorithm, OctAlgorithm, RsaAlgorithm } from "@lindorm-io/jwk";
 import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_SCOPE_DESCRIPTION } from "../common";
 import { JOI_EXPIRY_REGEX } from "../constant";
+
+type KeyAlgorithm = EcAlgorithm | OctAlgorithm | RsaAlgorithm;
 
 export type ClientAllowed = {
   codeChallengeMethods: Array<PKCEMethod>;
@@ -30,13 +32,13 @@ export type ClientAllowed = {
 };
 
 export type ClientAuthenticationAssertion = {
-  algorithm: KeyPairAlgorithm | null;
+  algorithm: KeyAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
 
 export type ClientAuthorizationAssertion = {
-  algorithm: KeyPairAlgorithm | null;
+  algorithm: KeyAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
@@ -197,20 +199,14 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
     authenticationAssertion: Joi.object<ClientAuthenticationAssertion>()
       .keys({
-        algorithm: Joi.string()
-          .valid(...Object.values(KeyPairAlgorithm))
-          .allow(null)
-          .required(),
+        algorithm: Joi.string().allow(null).required(),
         issuer: Joi.string().allow(null).required(),
         secret: Joi.string().allow(null).required(),
       })
       .required(),
     authorizationAssertion: Joi.object<ClientAuthorizationAssertion>()
       .keys({
-        algorithm: Joi.string()
-          .valid(...Object.values(KeyPairAlgorithm))
-          .allow(null)
-          .required(),
+        algorithm: Joi.string().allow(null).required(),
         issuer: Joi.string().allow(null).required(),
         secret: Joi.string().allow(null).required(),
       })

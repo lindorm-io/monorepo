@@ -12,7 +12,6 @@ import {
   PKCEMethod,
   Scope,
 } from "@lindorm-io/common-enums";
-import { KeyPairAlgorithm } from "@lindorm-io/key-pair";
 import { randomString } from "@lindorm-io/random";
 import { randomUUID } from "crypto";
 import { SCOPE_OPENID, SCOPE_PROFILE } from "../../constant";
@@ -34,12 +33,12 @@ export const createTestClient = (options: Partial<ClientAttributes> = {}): Clien
       identity: [randomUUID()],
     },
     authenticationAssertion: {
-      algorithm: KeyPairAlgorithm.HS256,
+      algorithm: "HS256",
       issuer: "https://test.client.authentication.issuer",
       secret: randomString(32),
     },
     authorizationAssertion: {
-      algorithm: KeyPairAlgorithm.HS256,
+      algorithm: "HS256",
       issuer: "https://test.client.authorization.issuer",
       secret: randomString(32),
     },
