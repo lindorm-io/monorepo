@@ -38,6 +38,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
   private readonly routerDirectory: string | undefined;
   private readonly scanner: StructureScanner;
   private readonly setup: () => Promise<void>;
+  private readonly startWorkers: boolean;
   private readonly workers: Array<IntervalWorker>;
 
   private loaded: boolean;
@@ -57,6 +58,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     this.routerDirectory = options.routerDirectory;
     this.setup = options.setup ? options.setup : () => Promise.resolve();
     this.started = false;
+    this.startWorkers = options.startWorkers ?? false;
     this.workers = options.workers || [];
 
     this.scanner = new StructureScanner({
@@ -203,7 +205,10 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     await this.listen();
     await this.setup();
 
-    this.loadWorkers();
+    if (this.startWorkers) {
+      this.logger.info("Loading workers");
+      this.loadWorkers();
+    }
 
     this.started = true;
 

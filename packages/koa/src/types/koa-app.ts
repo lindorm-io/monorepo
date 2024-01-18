@@ -36,6 +36,7 @@ export interface KoaAppOptions<
   socket?: boolean;
   socketMiddleware?: Array<DefaultLindormSocketMiddleware>;
   socketOptions?: Partial<ServerOptions>;
+  startWorkers?: boolean;
   transformMode?: TransformMode;
   workers?: Array<IntervalWorker>;
 
