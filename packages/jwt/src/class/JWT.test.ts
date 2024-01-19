@@ -49,6 +49,7 @@ describe("JWT", () => {
       levelOfAssurance: 4,
       nonce: "bed190d568a5456bb15a39cf71d72022",
       notBefore: new Date(),
+      roles: ["user"],
       scopes: ["openid"],
       session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
       sessionHint: "refresh",
@@ -182,6 +183,7 @@ describe("JWT", () => {
         loa: 4,
         nbf: 1609488000,
         nonce: "bed190d568a5456bb15a39cf71d72022",
+        rls: ["user"],
         scope: "openid",
         sid: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         sih: "refresh",
@@ -252,6 +254,7 @@ describe("JWT", () => {
         nonce: "bed190d568a5456bb15a39cf71d72022",
         notBefore: 1609488000,
         now: 1609488000,
+        roles: ["user"],
         scopes: ["openid"],
         session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         sessionHint: "refresh",
@@ -340,6 +343,16 @@ describe("JWT", () => {
     expect(
       jwt.verify(token, {
         levelOfAssurance: 3,
+      }),
+    ).toBeTruthy();
+  });
+
+  test("should verify roles", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(
+      jwt.verify(token, {
+        roles: ["user"],
       }),
     ).toBeTruthy();
   });
@@ -438,6 +451,7 @@ describe("JWT", () => {
         nonce: "bed190d568a5456bb15a39cf71d72022",
         notBefore: 1609488000,
         now: 1609488000,
+        roles: ["user"],
         scopes: ["openid"],
         session: "ff33e1bb-56ce-47bb-ad23-137897fc97ff",
         sessionHint: "refresh",
@@ -482,6 +496,7 @@ describe("JWT", () => {
         nonce: null,
         notBefore: 1609488000,
         now: 1609488000,
+        roles: [],
         scopes: [],
         session: null,
         sessionHint: null,
@@ -586,6 +601,16 @@ describe("JWT", () => {
     expect(() =>
       jwt.verify(token, {
         scopes: ["unexpected"],
+      }),
+    ).toThrow(TokenError);
+  });
+
+  test("should reject invalid scope", () => {
+    const { token } = jwt.sign(optionsFull);
+
+    expect(() =>
+      jwt.verify(token, {
+        roles: ["unexpected"],
       }),
     ).toThrow(TokenError);
   });

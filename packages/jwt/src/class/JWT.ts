@@ -61,6 +61,7 @@ export class JWT {
       levelOfAssurance,
       nonce,
       notBefore,
+      roles,
       scopes,
       session,
       sessionHint,
@@ -115,6 +116,7 @@ export class JWT {
       cid: client,
       gty: grantType,
       loa: levelOfAssurance,
+      rls: roles,
       scope: scopes?.join(" "),
       sih: sessionHint,
       suh: subjectHint,
@@ -131,7 +133,11 @@ export class JWT {
 
     const token = sign(payload, privateKey, signOptions);
 
-    this.#logger.debug("Successfully signed token", { token, ...object, ...signOptions });
+    this.#logger.debug("Successfully signed token", {
+      token,
+      claims: object,
+      options: signOptions,
+    });
 
     return {
       id,
@@ -162,6 +168,7 @@ export class JWT {
       levelOfAssurance,
       maxAge,
       nonce,
+      roles,
       scopes,
       secret,
       session,
@@ -241,6 +248,10 @@ export class JWT {
         assertGreaterOrEqual(levelOfAssurance, payload.metadata.levelOfAssurance, "loa");
       }
 
+      if (roles?.length) {
+        assertClaimDifference(roles, payload.metadata.roles, "rls");
+      }
+
       if (scopes?.length) {
         assertClaimDifference(scopes, payload.metadata.scopes, "scp");
       }
@@ -305,6 +316,7 @@ export class JWT {
       loa,
       nbf,
       nonce,
+      rls,
       scope,
       sid,
       sih,
@@ -323,34 +335,35 @@ export class JWT {
       key: {
         id: keyId,
         algorithm,
-        jwksUrl: jku || null,
+        jwksUrl: jku ?? null,
       },
       metadata: {
-        accessTokenHash: at_hash || null,
+        accessTokenHash: at_hash ?? null,
         active: iat <= now && nbf <= now && exp >= now,
-        adjustedAccessLevel: (aal as AdjustedAccessLevel) || 0,
+        adjustedAccessLevel: (aal as AdjustedAccessLevel) ?? 0,
         audiences: aud,
-        authContextClass: acr || null,
-        authFactorReference: afr || null,
-        authMethodsReference: amr || [],
-        authorizedParty: azp || null,
-        authTime: auth_time || null,
-        client: cid || null,
-        codeHash: c_hash || null,
+        authContextClass: acr ?? null,
+        authFactorReference: afr ?? null,
+        authMethodsReference: amr ?? [],
+        authorizedParty: azp ?? null,
+        authTime: auth_time ?? null,
+        client: cid ?? null,
+        codeHash: c_hash ?? null,
         expires: exp,
         expiresIn: exp - now,
-        grantType: (gty as OpenIdGrantType) || null,
+        grantType: (gty as OpenIdGrantType) ?? null,
         issuedAt: iat,
         issuer: iss,
-        levelOfAssurance: (loa as LevelOfAssurance) || 0,
-        nonce: nonce || null,
+        levelOfAssurance: (loa as LevelOfAssurance) ?? 0,
+        nonce: nonce ?? null,
         notBefore: nbf,
         now,
+        roles: rls ?? [],
         scopes: scope ? scope.split(" ") : [],
-        session: sid || null,
-        sessionHint: sih || null,
-        subjectHint: suh || null,
-        tenant: tid || null,
+        session: sid ?? null,
+        sessionHint: sih ?? null,
+        subjectHint: suh ?? null,
+        tenant: tid ?? null,
         type: token_type,
       },
       subject: sub,

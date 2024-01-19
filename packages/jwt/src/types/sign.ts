@@ -26,6 +26,7 @@ export type JwtSignOptions<Claims = Record<string, never>> = {
   levelOfAssurance?: LevelOfAssurance;
   nonce?: string;
   notBefore?: Date;
+  roles?: Array<string>;
   scopes?: Array<string>;
   session?: string;
   sessionHint?: string;

@@ -5,6 +5,7 @@ describe("createOpaqueToken", () => {
   test("should create opaque token", () => {
     expect(createOpaqueToken()).toStrictEqual({
       id: expect.any(String),
+      roles: [],
       signature: expect.any(String),
       token: expect.any(String),
     });
@@ -50,6 +51,12 @@ describe("createOpaqueToken", () => {
       typ: "OPAQUE",
       oti: "token-id",
     });
+  });
+
+  test("should contain optional roles", () => {
+    const opaqueToken = createOpaqueToken({ roles: ["role1"] });
+
+    expect(opaqueToken.roles).toStrictEqual(["role1"]);
   });
 
   test("should contain optional signature length", () => {

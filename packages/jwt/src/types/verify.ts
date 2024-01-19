@@ -6,7 +6,7 @@ import { JwtAlg } from "./types";
 export type JwtVerifyOptions = {
   accessTokenHash?: string;
   adjustedAccessLevel?: AdjustedAccessLevel;
-  algorithms?: JwtAlg[];
+  algorithms?: Array<JwtAlg>;
   audience?: string;
   authorizedParty?: string;
   client?: string;
@@ -17,13 +17,14 @@ export type JwtVerifyOptions = {
   levelOfAssurance?: LevelOfAssurance;
   maxAge?: string | number;
   nonce?: string;
-  scopes?: string[];
+  roles?: Array<string>;
+  scopes?: Array<string>;
   secret?: string;
   session?: string;
   subject?: string;
-  subjectHints?: string[];
+  subjectHints?: Array<string>;
   tenant?: string;
-  types?: string[];
+  types?: Array<string>;
 };
 
 export type JwtVerify<Claims = never> = JwtDecode<Claims>;

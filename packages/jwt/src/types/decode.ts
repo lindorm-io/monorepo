@@ -29,6 +29,7 @@ export type JwtDecodeMetadata = {
   nonce: string | null;
   notBefore: number;
   now: number;
+  roles: Array<string>;
   scopes: Array<string>;
   session: string | null;
   sessionHint: string | null;

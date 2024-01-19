@@ -9,11 +9,13 @@ export type CreateOpaqueTokenOptions = {
   header?: Dict;
   length?: number;
   numbers?: RandomStringAmount;
+  roles?: Array<string>;
   symbols?: RandomStringAmount;
 };
 
 export type CreateOpaqueToken = {
   id: string;
+  roles?: Array<string>;
   signature: string;
   token: string;
 };
@@ -28,6 +30,7 @@ export const createOpaqueToken = (options: CreateOpaqueTokenOptions = {}): Creat
     id = randomUUID(),
     header = {},
     length = 128,
+    roles = [],
     numbers = "random",
     symbols = "10%",
   } = options;
@@ -42,5 +45,5 @@ export const createOpaqueToken = (options: CreateOpaqueTokenOptions = {}): Creat
   const signature = randomToken(length, { numbers, symbols });
   const token = `${hashed}.${signature}`;
 
-  return { id, signature, token };
+  return { id, roles, signature, token };
 };
