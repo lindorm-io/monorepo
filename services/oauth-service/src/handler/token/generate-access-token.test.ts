@@ -30,6 +30,7 @@ describe("generateAccessToken", () => {
     });
     opaqueToken = createOpaqueToken({
       id: "678a9ce1-7a87-4e60-ad04-946396a2056a",
+      roles: ["role1", "role2"],
     });
   });
 
@@ -41,6 +42,7 @@ describe("generateAccessToken", () => {
         id: "678a9ce1-7a87-4e60-ad04-946396a2056a",
         clientSessionId: "3423c10a-fa49-4ad7-9c9b-235bd89a956c",
         expires: new Date("2021-01-01T08:01:39.000Z"),
+        roles: ["role1", "role2"],
         signature: opaqueToken.signature,
         type: "access_token",
       }),

@@ -49,6 +49,7 @@ describe("getIdentityUserinfo", () => {
       preferredUsername: "username",
       profile: "https://profile.url/",
       pronouns: "she/her",
+      roles: ["role1", "role2"],
       socialSecurityNumber: "198056702895",
       socialSecurityNumberVerified: false,
       sub: "d821cde6-250f-4918-ad55-877a7abf0271",

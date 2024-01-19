@@ -11,11 +11,12 @@ import { OpaqueTokenType } from "../enum";
 export type OpaqueTokenAttributes = EntityAttributes & {
   clientSessionId: string;
   expires: Date;
+  roles: Array<string>;
   signature: string;
   type: OpaqueTokenType;
 };
 
-export type OpaqueTokenOptions = Optional<OpaqueTokenAttributes, EntityKeys>;
+export type OpaqueTokenOptions = Optional<OpaqueTokenAttributes, EntityKeys | "roles">;
 
 const schema = Joi.object<OpaqueTokenAttributes>()
   .keys({
@@ -23,6 +24,7 @@ const schema = Joi.object<OpaqueTokenAttributes>()
 
     clientSessionId: Joi.string().guid().required(),
     expires: Joi.date().required(),
+    roles: Joi.array().items(Joi.string()).required(),
     signature: Joi.string().min(128).required(),
     type: Joi.string()
       .valid(...Object.values(OpaqueTokenType))
@@ -33,6 +35,7 @@ const schema = Joi.object<OpaqueTokenAttributes>()
 export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
   public readonly clientSessionId: string;
   public readonly expires: Date;
+  public readonly roles: Array<string>;
   public readonly signature: string;
   public readonly type: OpaqueTokenType;
 
@@ -41,6 +44,7 @@ export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
 
     this.clientSessionId = options.clientSessionId;
     this.expires = options.expires;
+    this.roles = options.roles ?? [];
     this.signature = options.signature;
     this.type = options.type;
   }
@@ -55,6 +59,7 @@ export class OpaqueToken extends LindormEntity<OpaqueTokenAttributes> {
 
       clientSessionId: this.clientSessionId,
       expires: this.expires,
+      roles: this.roles,
       signature: this.signature,
       type: this.type,
     };

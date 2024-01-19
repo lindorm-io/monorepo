@@ -76,6 +76,7 @@ describe("/exchange", () => {
       loa: 2,
       nbf: 1609488000,
       nonce: clientSession.nonce,
+      rls: ["role1", "role2"],
       scope: "openid profile",
       sid: clientSession.id,
       sih: "refresh",

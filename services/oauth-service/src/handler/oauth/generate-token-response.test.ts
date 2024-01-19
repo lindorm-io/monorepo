@@ -3,6 +3,7 @@ import { Scope } from "@lindorm-io/common-enums";
 import { createOpaqueToken as _createOpaqueToken } from "@lindorm-io/jwt";
 import MockDate from "mockdate";
 import { Client, ClientSession } from "../../entity";
+import { TEST_GET_USERINFO_RESPONSE } from "../../fixtures/data";
 import {
   createTestAccessToken,
   createTestClient,
@@ -54,10 +55,7 @@ describe("generateTokenResponse", () => {
     encryptIdToken.mockResolvedValue("encrypted.id.token.jwe");
     generateAccessToken.mockResolvedValue(createTestAccessToken());
     generateRefreshToken.mockResolvedValue(createTestRefreshToken());
-    getIdentityUserinfo.mockResolvedValue({
-      active: true,
-      claims: { claim: true },
-    });
+    getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
   });
 
   afterEach(jest.resetAllMocks);

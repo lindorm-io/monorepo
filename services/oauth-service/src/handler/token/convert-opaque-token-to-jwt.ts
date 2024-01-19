@@ -25,6 +25,7 @@ export const convertOpaqueTokenToJwt = (
     levelOfAssurance: clientSession.levelOfAssurance,
     nonce: clientSession.nonce || randomUnreserved(16),
     notBefore: opaqueToken.created,
+    roles: opaqueToken.roles,
     scopes: clientSession.scopes,
     session: clientSession.id,
     sessionHint: clientSession.type,

@@ -29,6 +29,7 @@ describe("createOpaqueJwt", () => {
 
     expect(ctx.jwt.sign).toHaveBeenCalledWith(
       expect.objectContaining({
+        roles: ["role1", "role2"],
         sessionHint: "ephemeral",
         type: "access_token",
       }),

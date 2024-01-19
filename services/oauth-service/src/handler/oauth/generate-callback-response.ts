@@ -45,7 +45,7 @@ export const generateCallbackResponse = async (
   }
 
   if (authorizationSession.responseTypes.includes(OpenIdResponseType.TOKEN)) {
-    const accessOpaque = createOpaqueToken();
+    const accessOpaque = createOpaqueToken({ roles: claims.roles });
     const accessToken = await generateAccessToken(ctx, client, clientSession, accessOpaque);
 
     data.accessToken = accessOpaque.token;

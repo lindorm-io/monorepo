@@ -11,7 +11,7 @@ import {
   createTestClient,
   createTestClientSession,
 } from "../../fixtures/entity";
-import { getIdentityClaims as _getIdentityUserinfo } from "../identity";
+import { getIdentityClaims as _getIdentityClaims } from "../identity";
 import {
   createIdToken as _createIdToken,
   encryptIdToken as _encryptIdToken,
@@ -32,7 +32,7 @@ const createIdToken = _createIdToken as jest.Mock;
 const encryptIdToken = _encryptIdToken as jest.Mock;
 const generateAccessToken = _generateAccessToken as jest.Mock;
 const generateAuthorizationCode = _generateAuthorizationCode as jest.Mock;
-const getIdentityUserinfo = _getIdentityUserinfo as jest.Mock;
+const getIdentityClaims = _getIdentityClaims as jest.Mock;
 
 describe("generateCallbackResponse", () => {
   let ctx: any;
@@ -67,7 +67,7 @@ describe("generateCallbackResponse", () => {
     }));
     encryptIdToken.mockResolvedValue("encrypted.id.token.jwe");
     generateAccessToken.mockResolvedValue(createTestAccessToken());
-    getIdentityUserinfo.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
+    getIdentityClaims.mockResolvedValue(TEST_GET_USERINFO_RESPONSE);
     generateAuthorizationCode.mockResolvedValue(
       "vDQr4zWZxFpINepNGVialEo7yMnEoyJKcEDeMmtS0kHJ08nBqaLaljulOmjzmhhY",
     );

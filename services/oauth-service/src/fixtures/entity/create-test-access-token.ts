@@ -10,6 +10,7 @@ export const createTestAccessToken = (options: Partial<OpaqueTokenOptions> = {})
     id,
     clientSessionId: randomUUID(),
     expires: new Date("2021-01-02T08:00:00.000Z"),
+    roles: ["role1", "role2"],
     signature,
     type: OpaqueTokenType.ACCESS,
 

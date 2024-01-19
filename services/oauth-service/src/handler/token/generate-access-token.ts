@@ -22,6 +22,7 @@ export const generateAccessToken = async (
       id: opaqueToken.id,
       clientSessionId: clientSession.id,
       expires: isAfter(expires, clientSession.expires) ? clientSession.expires : expires,
+      roles: opaqueToken.roles,
       signature: opaqueToken.signature,
       type: OpaqueTokenType.ACCESS,
     }),
