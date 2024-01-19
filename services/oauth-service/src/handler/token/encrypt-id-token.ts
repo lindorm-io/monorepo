@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm-io/errors";
 import { WebKeySet } from "@lindorm-io/jwk";
-import { JWE } from "@lindorm-io/jwt";
+import { JWE, JwtAlgorithm } from "@lindorm-io/jwt";
 import { Keystore } from "@lindorm-io/keystore";
 import { getKeysFromJwks } from "@lindorm-io/koa-keystore";
 import { randomUUID } from "crypto";
@@ -24,7 +24,7 @@ export const encryptIdToken = async (
 
   if (client.jwks.length) {
     const key = WebKeySet.fromJwk({
-      alg: "HS512",
+      alg: JwtAlgorithm.HS256,
       k: client.jwks[0],
       key_ops: ["encrypt", "decrypt"],
       kid: randomUUID(),

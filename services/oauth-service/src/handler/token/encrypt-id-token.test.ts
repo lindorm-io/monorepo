@@ -8,6 +8,7 @@ import { encryptIdToken } from "./encrypt-id-token";
 
 const encryptJwe = jest.fn();
 jest.mock("@lindorm-io/jwt", () => ({
+  ...jest.requireActual("@lindorm-io/jwt"),
   JWE: class JWE {
     encrypt(...args: any[]) {
       encryptJwe(...args);

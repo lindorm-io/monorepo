@@ -2,6 +2,7 @@ import { AuthenticationMethod, OpenIdGrantType, Scope } from "@lindorm-io/common
 import { TokenRequestBody, TokenResponse } from "@lindorm-io/common-types";
 import { uniqArray } from "@lindorm-io/core";
 import { ClientError } from "@lindorm-io/errors";
+import { JwtAlgorithm } from "@lindorm-io/jwt";
 import { randomHex } from "@lindorm-io/random";
 import { difference } from "lodash";
 import { ClientSession } from "../../entity";
@@ -45,7 +46,7 @@ export const handleJwtBearerGrant = async (
   const verified = jwt.verify(assertion, {
     algorithms: client.authorizationAssertion.algorithm
       ? [client.authorizationAssertion.algorithm]
-      : ["HS256"],
+      : [JwtAlgorithm.HS256],
     audience: configuration.oauth.client_id,
     clockTolerance: 10,
     issuer: client.authorizationAssertion.issuer ? client.authorizationAssertion.issuer : client.id,

@@ -14,13 +14,11 @@ import {
 } from "@lindorm-io/common-enums";
 import { LevelOfAssurance, Optional, ScopeDescription } from "@lindorm-io/common-types";
 import { EntityAttributes, EntityKeys, JOI_ENTITY_BASE, LindormEntity } from "@lindorm-io/entity";
-import { EcAlgorithm, OctAlgorithm, RsaAlgorithm } from "@lindorm-io/jwk";
+import { JwtAlgorithm } from "@lindorm-io/jwt";
 import { ReadableTime } from "@lindorm-io/readable-time";
 import Joi from "joi";
 import { JOI_ARGON_STRING, JOI_SCOPE_DESCRIPTION } from "../common";
 import { JOI_EXPIRY_REGEX } from "../constant";
-
-type KeyAlgorithm = EcAlgorithm | OctAlgorithm | RsaAlgorithm;
 
 export type ClientAllowed = {
   codeChallengeMethods: Array<PKCEMethod>;
@@ -32,13 +30,13 @@ export type ClientAllowed = {
 };
 
 export type ClientAuthenticationAssertion = {
-  algorithm: KeyAlgorithm | null;
+  algorithm: JwtAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
 
 export type ClientAuthorizationAssertion = {
-  algorithm: KeyAlgorithm | null;
+  algorithm: JwtAlgorithm | null;
   issuer: string | null;
   secret: string | null;
 };
@@ -199,14 +197,20 @@ const schema = Joi.object<ClientAttributes>()
       .required(),
     authenticationAssertion: Joi.object<ClientAuthenticationAssertion>()
       .keys({
-        algorithm: Joi.string().allow(null).required(),
+        algorithm: Joi.string()
+          .valid(...Object.values(JwtAlgorithm))
+          .allow(null)
+          .required(),
         issuer: Joi.string().allow(null).required(),
         secret: Joi.string().allow(null).required(),
       })
       .required(),
     authorizationAssertion: Joi.object<ClientAuthorizationAssertion>()
       .keys({
-        algorithm: Joi.string().allow(null).required(),
+        algorithm: Joi.string()
+          .valid(...Object.values(JwtAlgorithm))
+          .allow(null)
+          .required(),
         issuer: Joi.string().allow(null).required(),
         secret: Joi.string().allow(null).required(),
       })
