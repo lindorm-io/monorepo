@@ -1,3 +1,4 @@
+import { RsaKeySet } from "@lindorm-io/jwk";
 import MockDate from "mockdate";
 import request from "supertest";
 import { createTestClient, createTestPublicKey } from "../../fixtures/entity";
@@ -20,13 +21,15 @@ describe("/admin/clients", () => {
   test("should create client", async () => {
     const clientCredentials = getTestClientCredentials();
 
+    const keySet = await RsaKeySet.generate(2);
+
     const response = await request(server.callback())
       .post("/admin/clients")
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
         id: "49e2e951-1910-4c35-a4bc-a77a80d502d2",
         name: "test-client-name",
-        publicKey: "test-public-key",
+        public_key: keySet.export("pem").publicKey,
       })
       .expect(200);
 
@@ -85,11 +88,14 @@ describe("/admin/clients", () => {
 
     const clientCredentials = getTestClientCredentials();
 
+    const keySet = await RsaKeySet.generate(2);
+    const pem = keySet.export("pem");
+
     const response = await request(server.callback())
       .put(`/admin/clients/${client.id}/public-key`)
       .set("Authorization", `Bearer ${clientCredentials}`)
       .send({
-        public_key: "new-public-key",
+        public_key: pem.publicKey,
       })
       .expect(200);
 
@@ -97,13 +103,9 @@ describe("/admin/clients", () => {
       public_key_id: expect.any(String),
     });
 
-    await expect(
-      TEST_PUBLIC_KEY_REPOSITORY.find({ id: response.body.public_key_id }),
-    ).resolves.toStrictEqual(
-      expect.objectContaining({
-        key: "new-public-key",
-      }),
-    );
+    const key = await TEST_PUBLIC_KEY_REPOSITORY.find({ id: response.body.public_key_id });
+
+    expect(key.keySet.export("pem").publicKey).toBe(pem.publicKey);
 
     await expect(TEST_PUBLIC_KEY_REPOSITORY.tryFind({ id: publicKey.id })).resolves.toBeUndefined();
   });

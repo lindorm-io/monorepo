@@ -73,7 +73,7 @@ export const confirmChallengeController: ServerKoaController<RequestData> = asyn
     certificateChallenge: challengeSession.certificateChallenge,
     certificateMethod: deviceLink.certificateMethod,
     certificateVerifier,
-    publicKey: publicKey.key,
+    publicKey,
   });
 
   const factors: Array<PSD2Factor> = [PSD2Factor.POSSESSION];

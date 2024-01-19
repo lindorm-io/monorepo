@@ -43,7 +43,7 @@ const handleSignature = async (ctx: ServerKoaContext, signature: string): Promis
     algorithm,
     data: JSON.stringify(values),
     format,
-    key: { id: "ignored", publicKey: ctx.entity.publicKey.key, type: "RSA" },
+    keySet: ctx.entity.publicKey.keySet,
     signature: hash,
   });
 

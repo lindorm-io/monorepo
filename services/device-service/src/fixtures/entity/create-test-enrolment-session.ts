@@ -25,7 +25,7 @@ export const createTestEnrolmentSession = (
     installationId: randomUUID(),
     name: "Test DeviceLink Name",
     nonce: randomString(16),
-    publicKey: RSA_KEY_SET.export("pem").publicKey,
+    publicKey: RSA_KEY_SET.export("b64").publicKey,
     status: SessionStatus.CONFIRMED,
     uniqueId: randomUUID(),
     ...options,

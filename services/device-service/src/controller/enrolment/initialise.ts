@@ -11,6 +11,7 @@ import {
 } from "@lindorm-io/common-types";
 import { ClientError } from "@lindorm-io/errors";
 import { expiryDate } from "@lindorm-io/expiry";
+import { RsaKeySet } from "@lindorm-io/jwk";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { randomString } from "@lindorm-io/random";
 import Joi from "joi";
@@ -78,6 +79,8 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
     });
   }
 
+  const keySet = RsaKeySet.fromPem({ id: "ignored", publicKey, type: "RSA" });
+
   const enrolmentSession = await enrolmentSessionCache.create(
     new EnrolmentSession({
       audiences,
@@ -96,7 +99,7 @@ export const initialiseEnrolmentController: ServerKoaController<RequestData> = a
       identityId,
       installationId,
       nonce,
-      publicKey,
+      publicKey: keySet.export("b64").publicKey,
       status: externalChallengeRequired ? SessionStatus.PENDING : SessionStatus.SKIP,
       uniqueId,
     }),

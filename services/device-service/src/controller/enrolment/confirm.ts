@@ -12,8 +12,10 @@ import {
 } from "@lindorm-io/common-types";
 import { CryptoLayered } from "@lindorm-io/crypto";
 import { ClientError } from "@lindorm-io/errors";
+import { RsaKeySet } from "@lindorm-io/jwk";
 import { ControllerResponse } from "@lindorm-io/koa";
 import { randomString } from "@lindorm-io/random";
+import { randomUUID } from "crypto";
 import Joi from "joi";
 import { flatten } from "lodash";
 import { ChallengeConfirmationTokenClaims, JOI_JWT } from "../../common";
@@ -58,11 +60,15 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     throw new ClientError("Invalid enrolment token");
   }
 
+  const publicKey = PublicKey.fromKeySet(
+    RsaKeySet.fromB64({ id: randomUUID(), publicKey: enrolmentSession.publicKey, type: "RSA" }),
+  );
+
   await assertCertificateChallenge({
     certificateChallenge: enrolmentSession.certificateChallenge,
     certificateMethod: enrolmentSession.certificateMethod,
     certificateVerifier,
-    publicKey: enrolmentSession.publicKey,
+    publicKey,
   });
 
   const trusted =
@@ -79,11 +85,7 @@ export const confirmEnrolmentController: ServerKoaController<RequestData> = asyn
     hmac: { secret: salt.hmac },
   });
 
-  const publicKey = await publicKeyRepository.create(
-    new PublicKey({
-      key: enrolmentSession.publicKey,
-    }),
-  );
+  await publicKeyRepository.create(publicKey);
 
   const deviceLink = await deviceLinkRepository.create(
     new DeviceLink({

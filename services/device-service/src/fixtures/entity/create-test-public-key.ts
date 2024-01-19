@@ -3,6 +3,6 @@ import { RSA_KEY_SET } from "../integration/rsa-keys.fixture";
 
 export const createTestPublicKey = (options: Partial<PublicKeyOptions> = {}): PublicKey =>
   new PublicKey({
-    key: RSA_KEY_SET.export("pem").publicKey,
+    key: RSA_KEY_SET.export("b64").publicKey,
     ...options,
   });

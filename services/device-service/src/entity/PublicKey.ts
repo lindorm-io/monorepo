@@ -5,6 +5,7 @@ import {
   LindormEntity,
   Optional,
 } from "@lindorm-io/entity";
+import { RsaKeySet } from "@lindorm-io/jwk";
 import Joi from "joi";
 
 export interface PublicKeyAttributes extends EntityAttributes {
@@ -22,23 +23,44 @@ const schema = Joi.object<PublicKeyAttributes>()
   .required();
 
 export class PublicKey extends LindormEntity<PublicKeyAttributes> {
-  public readonly key: string;
+  readonly #keySet: RsaKeySet;
 
   public constructor(options: PublicKeyOptions) {
     super(options);
 
-    this.key = options.key;
+    this.#keySet = RsaKeySet.fromB64({
+      id: this.id,
+      publicKey: options.key,
+      type: "RSA",
+    });
   }
+
+  // public generated
+
+  public get keySet(): RsaKeySet {
+    return this.#keySet;
+  }
+
+  // entity
 
   public async schemaValidation(): Promise<void> {
     await schema.validateAsync(this.toJSON());
   }
 
   public toJSON(): PublicKeyAttributes {
+    const b64 = this.#keySet.export("b64");
+
     return {
       ...this.defaultJSON(),
 
-      key: this.key,
+      key: b64.publicKey,
     };
+  }
+
+  // static
+
+  public static fromKeySet(keySet: RsaKeySet): PublicKey {
+    const { id, publicKey } = keySet.export("b64");
+    return new PublicKey({ id, key: publicKey });
   }
 }

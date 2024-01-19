@@ -1,4 +1,6 @@
+import { RsaKeySet } from "@lindorm-io/jwk";
 import { ControllerResponse } from "@lindorm-io/koa";
+import { randomUUID } from "crypto";
 import Joi from "joi";
 import { PublicKey } from "../../entity";
 import { ServerKoaController } from "../../types";
@@ -28,11 +30,9 @@ export const updateClientPublicKeyController: ServerKoaController<RequestData> =
     mongo: { clientRepository, publicKeyRepository },
   } = ctx;
 
-  const created = await publicKeyRepository.create(
-    new PublicKey({
-      key: updatedPublicKey,
-    }),
-  );
+  const keySet = RsaKeySet.fromPem({ id: randomUUID(), publicKey: updatedPublicKey, type: "RSA" });
+
+  const created = await publicKeyRepository.create(PublicKey.fromKeySet(keySet));
 
   await publicKeyRepository.destroy(publicKey);
 

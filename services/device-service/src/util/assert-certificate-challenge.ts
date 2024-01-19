@@ -1,13 +1,14 @@
 import { CertificateMethod } from "@lindorm-io/common-enums";
 import { ClientError } from "@lindorm-io/errors";
 import { verifyRsaSignature } from "@lindorm-io/rsa";
+import { PublicKey } from "../entity";
 import { mapCertificateMethodToRsaAlgorithm } from "./certificate-method-mapper";
 
 interface Options {
   certificateChallenge: string;
   certificateMethod: CertificateMethod;
   certificateVerifier: string;
-  publicKey: string;
+  publicKey: PublicKey;
 }
 
 export const assertCertificateChallenge = (options: Options): void => {
@@ -16,7 +17,7 @@ export const assertCertificateChallenge = (options: Options): void => {
   const valid = verifyRsaSignature({
     algorithm: mapCertificateMethodToRsaAlgorithm(certificateMethod),
     data: certificateChallenge,
-    key: { id: "ignored", publicKey, type: "RSA" },
+    keySet: publicKey.keySet,
     signature: certificateVerifier,
   });
 

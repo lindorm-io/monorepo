@@ -1,6 +1,7 @@
 import { createMockRedisRepository } from "@lindorm-io/redis";
 import MockDate from "mockdate";
 import { createTestEnrolmentSession } from "../../fixtures/entity";
+import { RSA_KEY_SET } from "../../fixtures/integration/rsa-keys.fixture";
 import {
   createRdcSession as _createRdcSession,
   getDeviceHeaders as _getDeviceHeaders,
@@ -37,7 +38,7 @@ describe("initialiseEnrolmentController", () => {
         certificateMethod: "certificateMethod",
         macAddress: "macAddress",
         model: "model",
-        publicKey: "publicKey",
+        publicKey: RSA_KEY_SET.export("pem").publicKey,
         systemName: "systemName",
       },
       jwt: {
