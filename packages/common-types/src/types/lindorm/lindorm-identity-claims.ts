@@ -24,6 +24,7 @@ type CustomClaims = {
   // profile
   maritalStatus: string | null;
   preferredName: string | null;
+  roles: Array<string>;
 
   // social_security_number
   socialSecurityNumber: string | null;

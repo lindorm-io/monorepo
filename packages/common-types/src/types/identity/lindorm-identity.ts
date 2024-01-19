@@ -7,22 +7,23 @@ import { LindormIdentitySSN } from "./lindorm-identity-ssn";
 
 export type LindormIdentity = {
   active: boolean;
+  avatarUri: string | null;
   birthDate: string | null;
   displayName: string | null;
   familyName: string | null;
   gender: string | null;
   givenName: string | null;
-  avatarUri: string | null;
   locale: string | null;
   middleName: string | null;
   namingSystem: NamingSystem;
   nickname: string | null;
   picture: string | null;
   preferredAccessibility: Array<string>;
+  preferredName: string | null;
   preferredUsername: string | null;
   profile: string | null;
   pronouns: string | null;
-  preferredName: string | null;
+  roles: Array<string>;
   username: string | null;
   website: string | null;
   zoneInfo: string | null;

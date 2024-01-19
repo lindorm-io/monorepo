@@ -7,6 +7,7 @@ type CustomClaims = {
   cid?: string; // client id
   gty?: string; // grant type
   loa?: number; // level of assurance
+  rls?: Array<string>; // roles
   scope?: string; // scopes
   sid?: string; // session id
   sih?: string; // session hint
