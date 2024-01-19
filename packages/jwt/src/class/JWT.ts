@@ -13,7 +13,7 @@ import { Keystore } from "@lindorm-io/keystore";
 import { createHash, randomUUID } from "crypto";
 import { Algorithm, Jwt, Secret, SignOptions, decode, sign, verify } from "jsonwebtoken";
 import { TokenError } from "../error";
-import { JwtDecode, JwtOptions, JwtSign, JwtSignOptions, JwtVerifyOptions } from "../types";
+import { JwtAlg, JwtDecode, JwtOptions, JwtSign, JwtSignOptions, JwtVerifyOptions } from "../types";
 import {
   assertClaimDifference,
   assertClaimEquals,
@@ -171,7 +171,7 @@ export class JWT {
       types,
     } = options;
 
-    let algorithms: Array<Algorithm>;
+    let algorithms: Array<JwtAlg>;
     let verifyKey: Secret;
 
     if (secret) {
@@ -185,7 +185,7 @@ export class JWT {
         throw new TokenError("Unsupported key type");
       }
 
-      algorithms = [found.metadata.algorithm as Algorithm];
+      algorithms = [found.metadata.algorithm as JwtAlg];
       verifyKey = WebKeySet.isOctPem(pem) ? pem.privateKey : pem.publicKey;
 
       if (!verifyKey) {
