@@ -132,6 +132,7 @@ describe("getIdentityResponse", () => {
       preferredUsername: "rio_wheat",
       profile: "https://profile.url/",
       pronouns: "she/her",
+      roles: ["role1", "role2", "role3"],
       socialSecurityNumbers: [
         {
           label: "home",

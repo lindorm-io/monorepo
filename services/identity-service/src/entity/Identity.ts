@@ -39,6 +39,7 @@ export type IdentityAttributes = EntityAttributes & {
   preferredUsername: string | null;
   profile: string | null;
   pronouns: string | null;
+  roles: Array<string>;
   username: string | null;
   website: string | null;
   zoneInfo: string | null;
@@ -65,6 +66,7 @@ export type IdentityOptions = Optional<
   | "preferredUsername"
   | "profile"
   | "pronouns"
+  | "roles"
   | "username"
   | "website"
   | "zoneInfo"
@@ -92,6 +94,7 @@ const schema = Joi.object<IdentityAttributes>()
     preferredUsername: Joi.string().allow(null).required(),
     profile: Joi.string().uri().allow(null).required(),
     pronouns: Joi.string().allow(null).required(),
+    roles: Joi.array().items(Joi.string()).required(),
     username: Joi.string().lowercase().allow(null).required(),
     website: Joi.string().uri().allow(null).required(),
     zoneInfo: JOI_ZONE_INFO.allow(null).required(),
@@ -117,6 +120,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public preferredUsername: string | null;
   public profile: string | null;
   public pronouns: string | null;
+  public roles: Array<string>;
   public username: string | null;
   public website: string | null;
   public zoneInfo: string | null;
@@ -124,30 +128,31 @@ export class Identity extends LindormEntity<IdentityAttributes> {
   public constructor(options: IdentityOptions) {
     super(options);
 
-    this.active = options.active !== false;
-    this.avatarUri = options.avatarUri || null;
-    this.birthDate = options.birthDate || null;
+    this.active = options.active ?? true;
+    this.avatarUri = options.avatarUri ?? null;
+    this.birthDate = options.birthDate ?? null;
     this.displayName = {
-      name: options.displayName?.name || null,
-      number: options.displayName?.number || null,
+      name: options.displayName?.name ?? null,
+      number: options.displayName?.number ?? null,
     };
-    this.familyName = options.familyName || null;
-    this.gender = options.gender || null;
-    this.givenName = options.givenName || null;
-    this.locale = options.locale || null;
-    this.maritalStatus = options.maritalStatus || null;
-    this.middleName = options.middleName || null;
-    this.namingSystem = options.namingSystem || NamingSystem.GIVEN_FAMILY;
-    this.nickname = options.nickname || null;
-    this.picture = options.picture || null;
-    this.preferredAccessibility = options.preferredAccessibility || [];
-    this.preferredName = options.preferredName || null;
-    this.preferredUsername = options.preferredUsername || null;
-    this.profile = options.profile || null;
-    this.pronouns = options.pronouns || null;
-    this.username = options.username || null;
-    this.website = options.website || null;
-    this.zoneInfo = options.zoneInfo || null;
+    this.familyName = options.familyName ?? null;
+    this.gender = options.gender ?? null;
+    this.givenName = options.givenName ?? null;
+    this.locale = options.locale ?? null;
+    this.maritalStatus = options.maritalStatus ?? null;
+    this.middleName = options.middleName ?? null;
+    this.namingSystem = options.namingSystem ?? NamingSystem.GIVEN_FAMILY;
+    this.nickname = options.nickname ?? null;
+    this.picture = options.picture ?? null;
+    this.preferredAccessibility = options.preferredAccessibility ?? [];
+    this.preferredName = options.preferredName ?? null;
+    this.preferredUsername = options.preferredUsername ?? null;
+    this.profile = options.profile ?? null;
+    this.pronouns = options.pronouns ?? null;
+    this.roles = options.roles ?? [];
+    this.username = options.username ?? null;
+    this.website = options.website ?? null;
+    this.zoneInfo = options.zoneInfo ?? null;
   }
 
   public async schemaValidation(): Promise<void> {
@@ -176,6 +181,7 @@ export class Identity extends LindormEntity<IdentityAttributes> {
       preferredUsername: this.preferredUsername,
       profile: this.profile,
       pronouns: this.pronouns,
+      roles: this.roles,
       username: this.username,
       website: this.website,
       zoneInfo: this.zoneInfo,

@@ -29,6 +29,7 @@ export const updateIdentitySchema = Joi.object<RequestData>()
     nickname: Joi.string().allow(null),
     picture: Joi.string().uri().allow(null),
     preferredAccessibility: Joi.array().items(Joi.string()),
+    roles: Joi.array().items(Joi.string()),
     profile: Joi.string().uri().allow(null),
     pronouns: Joi.string().allow(null),
     preferredName: Joi.string().allow(null),
@@ -47,18 +48,19 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
       birthDate,
       displayName,
       familyName,
+      avatarUri,
       gender,
       givenName,
-      avatarUri,
       locale,
       middleName,
       namingSystem,
       nickname,
       picture,
       preferredAccessibility,
+      preferredName,
       profile,
       pronouns,
-      preferredName,
+      roles,
       website,
       zoneInfo,
     },
@@ -133,6 +135,10 @@ export const updateIdentityController: ServerKoaController<RequestData> = async 
 
   if (pronouns !== undefined) {
     identity.pronouns = pronouns;
+  }
+
+  if (roles !== undefined) {
+    identity.roles = roles;
   }
 
   if (website !== undefined) {

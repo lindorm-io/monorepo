@@ -126,6 +126,7 @@ describe("getUserinfoController", () => {
         picture: "https://picture.url/",
         preferredUsername: "rio_wheat",
         profile: "https://profile.url/",
+        roles: ["role1", "role2", "role3"],
         sub: "785ca3ef-c68b-4db9-a4a5-9fbbd9fca40f",
         preferredName: "Olivia",
         updatedAt: 1596873600,

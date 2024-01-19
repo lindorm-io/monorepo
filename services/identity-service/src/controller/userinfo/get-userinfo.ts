@@ -68,6 +68,7 @@ export const getUserinfoController: ServerKoaController = async (
         claims.preferredUsername = identity.preferredUsername;
         claims.profile = identity.profile;
         claims.preferredName = identity.preferredName;
+        claims.roles = identity.roles;
         claims.website = identity.website;
         claims.zoneInfo = identity.zoneInfo;
         break;

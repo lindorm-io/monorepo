@@ -34,6 +34,7 @@ export const getIdentityResponse = async (
     preferredUsername: identity.preferredUsername,
     profile: identity.profile,
     pronouns: identity.pronouns,
+    roles: identity.roles,
     username: identity.username,
     website: identity.website,
     zoneInfo: identity.zoneInfo,
