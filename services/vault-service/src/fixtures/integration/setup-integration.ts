@@ -1,12 +1,12 @@
 import { createTestStoredKeySet } from "@lindorm-io/keystore";
-import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
+import { StoredKeySetRedisRepository } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import {
   EncryptedRecordRepository,
   EncryptionKeyRepository,
   ProtectedRecordRepository,
 } from "../../infrastructure";
-import { memoryDatabase, mongoConnection } from "../../instance";
+import { mongoConnection, redisConnection } from "../../instance";
 
 export let TEST_ENCRYPTED_RECORD_REPOSITORY: EncryptedRecordRepository;
 export let TEST_ENCRYPTION_KEY_REPOSITORY: EncryptionKeyRepository;
@@ -21,6 +21,6 @@ export const setupIntegration = async (): Promise<void> => {
   TEST_ENCRYPTION_KEY_REPOSITORY = new EncryptionKeyRepository(mongoConnection, logger);
   TEST_PROTECTED_RECORD_REPOSITORY = new ProtectedRecordRepository(mongoConnection, logger);
 
-  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  const keyPairCache = new StoredKeySetRedisRepository(redisConnection, logger);
   await keyPairCache.create(createTestStoredKeySet());
 };

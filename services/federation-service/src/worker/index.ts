@@ -1,1 +1,1 @@
-export * from "./providers-jwks-memory-workers";
+export * from "./federation-providers-jwks-workers";

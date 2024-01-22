@@ -15,7 +15,7 @@ import {
   OpaqueTokenCache,
   TenantRepository,
 } from "../infrastructure";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
+import { mongoConnection, redisConnection } from "../instance";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { logger } from "./logger";
@@ -50,10 +50,9 @@ export const server = createNodeServer<ServerKoaContext>({
     },
     exportKeys: "public",
     exportExternalKeys: false,
-    storage: ["memory"],
+    storage: ["redis"],
   },
   logger,
-  memoryDatabase,
   middleware,
   mongo: [BrowserSessionRepository, ClientRepository, ClientSessionRepository, TenantRepository],
   mongoConnection,

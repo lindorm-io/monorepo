@@ -9,7 +9,7 @@ import {
   MfaCookieSessionCache,
   StrategySessionCache,
 } from "../infrastructure";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
+import { mongoConnection, redisConnection } from "../instance";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { logger } from "./logger";
@@ -43,7 +43,7 @@ export const server = createNodeServer<ServerKoaContext>({
     },
     exportKeys: "public",
     exportExternalKeys: false,
-    storage: ["memory"],
+    storage: ["redis"],
     jwks: [
       {
         host: configuration.services.device_service.host,
@@ -58,7 +58,6 @@ export const server = createNodeServer<ServerKoaContext>({
     ],
   },
   logger,
-  memoryDatabase,
   middleware,
   mongo: [AccountRepository, BrowserLinkRepository],
   mongoConnection,

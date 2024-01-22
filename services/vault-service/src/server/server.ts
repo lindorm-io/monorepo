@@ -6,7 +6,7 @@ import {
   EncryptionKeyRepository,
   ProtectedRecordRepository,
 } from "../infrastructure";
-import { memoryDatabase, mongoConnection, redisConnection } from "../instance";
+import { mongoConnection, redisConnection } from "../instance";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { logger } from "./logger";
@@ -45,10 +45,9 @@ export const server = createNodeServer<ServerKoaContext>({
         name: configuration.services.oauth_service.client_name,
       },
     ],
-    storage: ["memory"],
+    storage: ["redis"],
   },
   logger,
-  memoryDatabase,
   mongo: [EncryptedRecordRepository, EncryptionKeyRepository, ProtectedRecordRepository],
   mongoConnection,
   port: configuration.server.port,

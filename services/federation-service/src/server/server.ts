@@ -2,7 +2,7 @@ import { Environment } from "@lindorm-io/common-enums";
 import { createNodeServer } from "@lindorm-io/node-server";
 import { join } from "path";
 import { FederationSessionCache } from "../infrastructure";
-import { memoryDatabase, redisConnection } from "../instance";
+import { redisConnection } from "../instance";
 import { ServerKoaContext } from "../types";
 import { configuration } from "./configuration";
 import { logger } from "./logger";
@@ -22,7 +22,7 @@ export const server = createNodeServer<ServerKoaContext>({
   issuer: configuration.server.issuer,
   keys: configuration.server.keys,
   keystore: {
-    storage: ["memory"],
+    storage: ["redis"],
     jwks: [
       {
         host: configuration.services.oauth_service.host,
@@ -32,7 +32,6 @@ export const server = createNodeServer<ServerKoaContext>({
     ],
   },
   logger,
-  memoryDatabase,
   port: configuration.server.port,
   redis: [FederationSessionCache],
   redisConnection,

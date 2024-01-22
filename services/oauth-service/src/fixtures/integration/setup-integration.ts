@@ -1,6 +1,6 @@
 import { CryptoArgon } from "@lindorm-io/crypto";
 import { createTestStoredKeySet } from "@lindorm-io/keystore";
-import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
+import { StoredKeySetRedisRepository } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import {
   AuthenticationTokenSessionCache,
@@ -16,7 +16,7 @@ import {
   OpaqueTokenCache,
   TenantRepository,
 } from "../../infrastructure";
-import { argon, memoryDatabase, mongoConnection, redisConnection } from "../../instance";
+import { argon, mongoConnection, redisConnection } from "../../instance";
 
 export let TEST_AUTHENTICATION_TOKEN_SESSION_CACHE: AuthenticationTokenSessionCache;
 export let TEST_OPAQUE_TOKEN_CACHE: OpaqueTokenCache;
@@ -59,6 +59,6 @@ export const setupIntegration = async (): Promise<void> => {
 
   TEST_ARGON = argon;
 
-  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  const keyPairCache = new StoredKeySetRedisRepository(redisConnection, logger);
   await keyPairCache.create(createTestStoredKeySet());
 };

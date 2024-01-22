@@ -1,4 +1,4 @@
-import { StoredKeySetMemoryCache } from "@lindorm-io/koa-keystore";
+import { StoredKeySetRedisRepository } from "@lindorm-io/koa-keystore";
 import { createMockLogger } from "@lindorm-io/winston";
 import { createTestStoredKeySet } from "../../../../../packages/keystore/dist";
 import {
@@ -9,7 +9,7 @@ import {
   PublicKeyRepository,
   RdcSessionCache,
 } from "../../infrastructure";
-import { memoryDatabase, mongoConnection, redisConnection } from "../../instance";
+import { mongoConnection, redisConnection } from "../../instance";
 
 export let TEST_CHALLENGE_SESSION_CACHE: ChallengeSessionCache;
 export let TEST_ENROLMENT_SESSION_CACHE: EnrolmentSessionCache;
@@ -33,6 +33,6 @@ export const setupIntegration = async (): Promise<void> => {
   TEST_DEVICE_LINK_REPOSITORY = new DeviceLinkRepository(mongoConnection, logger);
   TEST_PUBLIC_KEY_REPOSITORY = new PublicKeyRepository(mongoConnection, logger);
 
-  const keyPairCache = new StoredKeySetMemoryCache(memoryDatabase, logger);
+  const keyPairCache = new StoredKeySetRedisRepository(redisConnection, logger);
   await keyPairCache.create(createTestStoredKeySet());
 };
