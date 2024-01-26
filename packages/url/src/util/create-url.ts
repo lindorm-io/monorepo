@@ -3,6 +3,7 @@ import { ParamsRecord, QueryRecord } from "@lindorm-io/common-types";
 import { isObject } from "@lindorm-io/core";
 import { createBaseUrl } from "./create-base-url";
 import { extractSearchParams } from "./extract-search-params";
+import { replaceParams } from "./replace-params";
 
 type Options<Params = ParamsRecord, Query = QueryRecord> = {
   baseURL?: string;
@@ -11,38 +12,6 @@ type Options<Params = ParamsRecord, Query = QueryRecord> = {
   port?: number;
   query?: Query;
   queryCaseTransform?: TransformMode;
-};
-
-const replaceParamWithValue = <Params = ParamsRecord>(input: string, params: Params): string => {
-  const param = (params as Record<string, any>)[input.replace(":", "")];
-
-  if (!param) {
-    throw new Error(`Parameter [ ${input} ] has no replacement variable`);
-  }
-
-  if (Array.isArray(param)) {
-    return param.join(" ");
-  }
-
-  return param.toString();
-};
-
-const addParamsToPathname = <Params = ParamsRecord>(pathname: string, params?: Params): string => {
-  if (!isObject(params)) {
-    return pathname;
-  }
-
-  const array: Array<string> = [];
-
-  for (const item of pathname.split("/")) {
-    if (item.startsWith(":")) {
-      array.push(replaceParamWithValue<Params>(item, params));
-    } else {
-      array.push(item);
-    }
-  }
-
-  return array.join("/");
 };
 
 const addQueryToURL = <Query = QueryRecord>(
@@ -71,7 +40,7 @@ const addToURL = <Params = ParamsRecord, Query = QueryRecord>(
   url: URL,
   options: Options<Params, Query> = {},
 ): URL => {
-  const pathname = addParamsToPathname<Params>(url.pathname, options.params);
+  const pathname = replaceParams<Params>(url.pathname, options.params);
   const string = url.toString().replace(url.pathname, pathname);
   return addQueryToURL<Query>(new URL(string), options.query, options.queryCaseTransform);
 };
