@@ -3,6 +3,7 @@ import { Logger } from "@lindorm-io/core-logger";
 import { LindormError } from "@lindorm-io/errors";
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { IRedisConnection } from "@lindorm-io/redis";
 import clone from "clone";
 import { HandlerNotRegisteredError } from "../error";
 import { QueryHandlerImplementation } from "../handler";
@@ -11,8 +12,10 @@ import {
   MongoViewRepository,
   NoopMongoViewRepository,
   NoopPostgresViewRepository,
+  NoopRedisViewRepository,
   PostgresViewRepository,
 } from "../infrastructure";
+import { RedisViewRepository } from "../infrastructure/redis";
 import {
   DtoClass,
   IQueryDomain,
@@ -29,6 +32,7 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
   private readonly logger: Logger;
   private readonly mongo: IMongoConnection | undefined;
   private readonly postgres: IPostgresConnection | undefined;
+  private readonly redis: IRedisConnection | undefined;
   private readonly queryHandlers: Array<IQueryHandler>;
 
   public constructor(options: QueryDomainOptions, logger: Logger) {
@@ -36,6 +40,7 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
 
     this.mongo = options.mongo;
     this.postgres = options.postgres;
+    this.redis = options.redis;
 
     this.queryHandlers = [];
   }
@@ -102,6 +107,9 @@ export class QueryDomain<TQuery extends DtoClass = DtoClass, TState extends Stat
           postgres: this.postgres
             ? new PostgresViewRepository<TState>(this.postgres, queryHandler.view, this.logger)
             : new NoopPostgresViewRepository(),
+          redis: this.redis
+            ? new RedisViewRepository<TState>(this.redis, queryHandler.view, this.logger)
+            : new NoopRedisViewRepository(),
         },
       };
 

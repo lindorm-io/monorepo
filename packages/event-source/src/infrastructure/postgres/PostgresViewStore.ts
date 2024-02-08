@@ -245,7 +245,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       this.logger.debug("Inserted processed causation ids", { viewIdentifier, causationIds });
     } catch (err: any) {
-      this.logger.error("Failed to ", err);
+      this.logger.error("Failed to insert processed causation ids", err);
 
       throw err;
     }
@@ -301,7 +301,7 @@ export class PostgresViewStore extends PostgresBase implements IViewStore {
 
       this.logger.debug("Updated view", { filter, data });
     } catch (err: any) {
-      this.logger.error("Failed to ", err);
+      this.logger.error("Failed to update view", err);
 
       throw err;
     }

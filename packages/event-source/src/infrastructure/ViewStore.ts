@@ -19,12 +19,14 @@ import {
 import { MemoryViewStore } from "./memory";
 import { MongoViewStore } from "./mongo";
 import { PostgresViewStore } from "./postgres";
+import { RedisViewStore } from "./redis";
 
 export class ViewStore implements IDomainViewStore {
   private readonly logger: Logger;
   private readonly memory: IViewStore;
   private readonly mongo: IViewStore | undefined;
   private readonly postgres: IViewStore | undefined;
+  private readonly redis: IViewStore | undefined;
 
   public constructor(options: ViewStoreOptions, logger: Logger) {
     this.logger = logger.createChildLogger(["ViewStore"]);
@@ -37,6 +39,10 @@ export class ViewStore implements IDomainViewStore {
 
     if (options.postgres) {
       this.postgres = new PostgresViewStore(options.postgres, logger);
+    }
+
+    if (options.redis) {
+      this.redis = new RedisViewStore(options.redis, logger);
     }
   }
 
@@ -199,6 +205,12 @@ export class ViewStore implements IDomainViewStore {
           throw new Error("Postgres connection not provided");
         }
         return this.postgres;
+
+      case ViewStoreType.REDIS:
+        if (!this.redis) {
+          throw new Error("Redis connection not provided");
+        }
+        return this.redis;
 
       default:
         throw new Error("Invalid store type");

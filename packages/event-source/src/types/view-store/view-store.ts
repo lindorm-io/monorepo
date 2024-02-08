@@ -1,16 +1,18 @@
 import { IMongoConnection } from "@lindorm-io/mongo";
 import { IPostgresConnection } from "@lindorm-io/postgres";
+import { IRedisConnection } from "@lindorm-io/redis";
 import { View } from "../../model";
 import { ViewEventHandlerAdapter } from "../handler";
 import { IMessage } from "../message";
 import { IView, ViewIdentifier } from "../model";
 import { ViewStoreAttributes } from "./view-store-attributes";
 
-export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres";
+export type ViewStoreAdapterType = "custom" | "memory" | "mongo" | "postgres" | "redis";
 
 export interface ViewStoreOptions {
   mongo?: IMongoConnection;
   postgres?: IPostgresConnection;
+  redis?: IRedisConnection;
 }
 
 export interface ViewUpdateFilter extends ViewIdentifier {

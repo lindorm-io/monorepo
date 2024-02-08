@@ -28,3 +28,10 @@ services:
     container_name: rabbitmq_hbqYxzId
     ports:
       - "5002:5672"
+
+  redis:
+    image: redis
+    restart: always
+    container_name: redis_Lm0SBE7L
+    ports:
+      - "5012:6379"

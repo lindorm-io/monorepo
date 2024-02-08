@@ -39,6 +39,7 @@
     "@lindorm-io/mongo": "^0.12.6",
     "@lindorm-io/postgres": "^0.1.21",
     "@lindorm-io/random": "^0.2.6",
+    "@lindorm-io/redis": "^0.12.6",
     "@lindorm-io/string-blob": "^0.0.27",
     "@lindorm-io/structure-scanner": "^0.2.2",
     "clone": "^2.1.2",

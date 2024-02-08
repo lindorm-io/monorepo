@@ -1,12 +1,18 @@
-import { Constructor, DtoClass, State } from "../generic";
-import { HandlerIdentifier } from "./handler";
-import { IMemoryRepository, IMongoRepository, IPostgresRepository } from "../view-repository";
 import { Logger } from "@lindorm-io/core-logger";
+import { Constructor, DtoClass, State } from "../generic";
+import {
+  IMemoryRepository,
+  IMongoRepository,
+  IPostgresRepository,
+  IRedisRepository,
+} from "../view-repository";
+import { HandlerIdentifier } from "./handler";
 
 export interface QueryRepositories<TState extends State = State> {
   memory: IMemoryRepository<TState>;
   mongo: IMongoRepository<TState>;
   postgres: IPostgresRepository<TState>;
+  redis: IRedisRepository<TState>;
 }
 
 export interface QueryHandlerContext<

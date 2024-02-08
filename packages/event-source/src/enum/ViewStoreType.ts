@@ -3,4 +3,5 @@ export enum ViewStoreType {
   MEMORY = "memory",
   MONGO = "mongo",
   POSTGRES = "postgres",
+  REDIS = "redis",
 }
