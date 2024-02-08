@@ -1,25 +1,24 @@
-import { Logger } from "@lindorm-io/core-logger";
-import { RedisRepositoryError } from "../errors";
-import { RedisIndex } from "./RedisIndex";
-import { filter as _filter, find, uniqBy } from "lodash";
-import { getUnixTime } from "date-fns";
-import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
 import { snakeCase } from "@lindorm-io/case";
-import {
-  IRedisConnection,
-  PostChangeCallback,
-  RedisDocument,
-  RedisEntity,
-  RedisRepository,
-  RedisRepositoryFindOptions,
-  RedisRepositoryOptions,
-} from "../types";
+import { Logger } from "@lindorm-io/core-logger";
 import {
   EntityNotCreatedError,
   EntityNotFoundError,
   EntityNotRemovedError,
   EntityNotUpdatedError,
 } from "@lindorm-io/entity";
+import { parseBlob, stringifyBlob } from "@lindorm-io/string-blob";
+import { getUnixTime } from "date-fns";
+import { filter as _filter, find, uniqBy } from "lodash";
+import { RedisRepositoryError } from "../errors";
+import {
+  IRedisConnection,
+  PostChangeCallback,
+  RedisDocument,
+  RedisEntity,
+  RedisRepository,
+  RedisRepositoryOptions,
+} from "../types";
+import { RedisIndex } from "./RedisIndex";
 
 export abstract class RedisRepositoryBase<
   Document extends RedisDocument,
@@ -103,7 +102,7 @@ export abstract class RedisRepositoryBase<
     filter: Partial<Document>,
     callback?: PostChangeCallback<Entity>,
   ): Promise<void> {
-    const results: Array<Entity> = await this.filterEntities(filter, { scan: true });
+    const results: Array<Entity> = await this.filterEntities(filter);
 
     const promises = [];
 
@@ -135,11 +134,8 @@ export abstract class RedisRepositoryBase<
     await Promise.all(promises);
   }
 
-  public async find(
-    filter: Partial<Document>,
-    options?: RedisRepositoryFindOptions,
-  ): Promise<Entity> {
-    const results: Array<Entity> = await this.filterEntities(filter, options);
+  public async find(filter: Partial<Document>): Promise<Entity> {
+    const results: Array<Entity> = await this.filterEntities(filter);
 
     if (results.length) {
       const found = find(results, filter) as unknown as Entity;
@@ -154,12 +150,9 @@ export abstract class RedisRepositoryBase<
     });
   }
 
-  public async findMany(
-    filter: Partial<Document>,
-    options?: RedisRepositoryFindOptions,
-  ): Promise<Array<Entity>> {
+  public async findMany(filter: Partial<Document>): Promise<Array<Entity>> {
     if (Object.keys(filter).length) {
-      return await this.filterEntities(filter, options);
+      return await this.filterEntities(filter);
     }
 
     return await this.scanEntities();
@@ -180,12 +173,9 @@ export abstract class RedisRepositoryBase<
     }
   }
 
-  public async tryFind(
-    filter: Partial<Document>,
-    options?: RedisRepositoryFindOptions,
-  ): Promise<Entity | null> {
+  public async tryFind(filter: Partial<Document>): Promise<Entity | null> {
     try {
-      return await this.find(filter, options);
+      return await this.find(filter);
     } catch (err: any) {
       if (err instanceof EntityNotFoundError) {
         return null;
@@ -249,12 +239,7 @@ export abstract class RedisRepositoryBase<
 
   // private
 
-  private async filterEntities(
-    filter: Partial<Document>,
-    options: RedisRepositoryFindOptions = {},
-  ): Promise<Array<Entity>> {
-    const { scan = true } = options || {};
-
+  private async filterEntities(filter: Partial<Document>): Promise<Array<Entity>> {
     if (filter.id) {
       const entity = await this.getEntity(filter.id);
 
@@ -267,7 +252,7 @@ export abstract class RedisRepositoryBase<
 
     let results: Array<Entity> = await this.indexEntities(filter);
 
-    if (!results.length && scan) {
+    if (!results.length) {
       results = await this.scanEntities();
     }
 
@@ -285,24 +270,16 @@ export abstract class RedisRepositoryBase<
       }
 
       const entityIds = await index.get(value);
-      const cleanup: Array<string> = [];
+      const keys = entityIds.map((id) => this.getKey(id));
 
-      for (const id of entityIds) {
-        const entity = await this.getEntity(id);
+      const { data: entities, cleanup } = await this.multiGet(keys);
 
-        if (entity) {
-          results.push(entity);
-        } else {
-          cleanup.push(id);
-        }
+      for (const entity of entities) {
+        results.push(entity);
       }
 
       if (cleanup.length) {
-        this.logger.debug("cleanup invoked", {
-          cleanup,
-        });
-
-        await index.sub(key, cleanup);
+        await index.sub(value as string, cleanup);
       }
     }
 
@@ -314,42 +291,97 @@ export abstract class RedisRepositoryBase<
 
     await this.connection.connect();
 
-    let cursor = 0;
-    let entityKeys: Array<string> = [];
-
-    do {
-      const [cursorString, keys] = await this.connection.client.scan(
-        cursor,
-        "MATCH",
-        this.getKey("*"),
-      );
-
-      cursor = parseInt(cursorString, 10);
-      entityKeys = [entityKeys, keys].flat();
-    } while (cursor !== 0);
+    const keys = await this.scanKeys(this.getKey("*"));
+    const { data } = await this.multiGet(keys);
 
     this.logger.debug("scan entities", {
       input: {
-        method: "scan",
+        method: "mget",
+        keys,
       },
       result: {
-        success: !!entityKeys.length,
+        success: !!data.length,
         time: Date.now() - start,
       },
     });
 
-    const results: Array<Entity> = [];
+    return data;
+  }
 
-    for (const key of entityKeys) {
-      const id = key.replace(this.getKey(""), "");
-      const entity = await this.getEntity(id);
+  private async multiGet(
+    keys: Array<string>,
+  ): Promise<{ data: Array<Entity>; cleanup: Array<string> }> {
+    const start = Date.now();
 
-      if (entity) {
-        results.push(entity);
+    this.logger.debug("multi get", { keys });
+
+    await this.connection.connect();
+
+    if (!keys.length) return { data: [], cleanup: [] };
+
+    const result = await this.connection.client.mget(...keys);
+
+    this.logger.debug("multi get", {
+      input: {
+        method: "mget",
+        keys,
+      },
+      result: {
+        success: !!result.length,
+        time: Date.now() - start,
+      },
+    });
+
+    const data: Array<Entity> = [];
+    const cleanup: Array<string> = [];
+
+    for (let i = 0; i < result.length; i++) {
+      const item = result[i];
+
+      if (!item) {
+        const key = keys[i];
+        cleanup.push(key.replace(this.getKeyPrefix(), ""));
+        continue;
       }
+
+      data.push(this.createEntity(parseBlob(item) as Document));
     }
 
-    return uniqBy(results, "id");
+    this.logger.debug("multi get", {
+      data,
+      cleanup,
+    });
+
+    return { data, cleanup };
+  }
+
+  private async scanKeys(pattern: string): Promise<Array<string>> {
+    const start = Date.now();
+
+    let cursor = "0";
+    let keys: Array<string> = [];
+
+    await this.connection.connect();
+
+    do {
+      const reply = await this.connection.client.scan(cursor, "MATCH", pattern, "COUNT", 100);
+
+      cursor = reply[0];
+      keys = keys.concat(reply[1]);
+    } while (cursor !== "0");
+
+    this.logger.debug("scan keys", {
+      input: {
+        method: "scan",
+        pattern,
+      },
+      result: {
+        success: true,
+        time: Date.now() - start,
+      },
+    });
+
+    return keys;
   }
 
   private async getEntity(id: string): Promise<Entity | null> {
@@ -468,8 +500,12 @@ export abstract class RedisRepositoryBase<
     });
   }
 
+  private getKeyPrefix(): string {
+    return `${this.connection.namespace}/entity/${this.prefix}/`;
+  }
+
   private getKey(key: string): string {
-    return `${this.connection.namespace}/entity/${this.prefix}/${key}`;
+    return this.getKeyPrefix() + key;
   }
 
   private getExpiry(entity: Document): number | undefined {

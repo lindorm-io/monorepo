@@ -1,10 +1,11 @@
-import MockDate from "mockdate";
+import { createMockLogger } from "@lindorm-io/core-logger";
+import { TestEntity } from "@lindorm-io/entity";
+import { randomUUID } from "crypto";
 import { Redis } from "ioredis";
+import MockDate from "mockdate";
 import { RedisConnection } from "../connections";
 import { TestEntityExpires, TestRedisRepository, TestRedisRepositoryExpires } from "../mocks";
-import { TestEntity } from "@lindorm-io/entity";
-import { createMockLogger } from "@lindorm-io/core-logger";
-import { randomUUID } from "crypto";
+import { RedisIndex } from "./RedisIndex";
 
 MockDate.set("2022-01-01T08:00:00.000Z");
 
@@ -14,6 +15,7 @@ const entityExpiresKey = (entity: any): string => `ns/entity/test_entity_expires
 describe("LindormCache", () => {
   let cache: TestRedisRepository;
   let connection: RedisConnection;
+  let index: RedisIndex<any>;
   let entity: TestEntity;
   let redis: Redis;
 
@@ -33,6 +35,7 @@ describe("LindormCache", () => {
 
     redis = connection.client;
     cache = new TestRedisRepository(connection, logger);
+    index = new RedisIndex<any>(connection, logger, { indexKey: "name", prefix: "TestEntity" });
   }, 30000);
 
   afterAll(async () => {
@@ -111,8 +114,19 @@ describe("LindormCache", () => {
     );
   });
 
-  test("should find using name", async () => {
+  test("should find using indexed name", async () => {
     await expect(cache.find({ name: "test-entity-name" })).resolves.toStrictEqual(entity);
+  });
+
+  test("should cleanup unused indices", async () => {
+    const uuid = randomUUID();
+    await index.add("test-entity-name", uuid);
+
+    await expect(cache.find({ name: "test-entity-name" })).resolves.toStrictEqual(entity);
+
+    await expect(index.get("test-entity-name")).resolves.not.toStrictEqual(
+      expect.arrayContaining([uuid]),
+    );
   });
 
   test("should find many", async () => {

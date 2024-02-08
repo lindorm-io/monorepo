@@ -9,10 +9,10 @@ export interface RedisRepository<Document extends RedisDocument, Entity extends 
   deleteMany(filter: Partial<Document>, callback?: PostChangeCallback<Entity>): Promise<void>;
   destroy(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<void>;
   destroyMany(entities: Array<Entity>, callback?: PostChangeCallback<Entity>): Promise<void>;
-  find(filter: Partial<Document>, options?: RedisRepositoryFindOptions): Promise<Entity>;
-  findMany(filter: Partial<Document>, options?: RedisRepositoryFindOptions): Promise<Array<Entity>>;
+  find(filter: Partial<Document>): Promise<Entity>;
+  findMany(filter: Partial<Document>): Promise<Array<Entity>>;
   findOrCreate(filter: Partial<Document>, callback?: PostChangeCallback<Entity>): Promise<Entity>;
-  tryFind(filter: Partial<Document>, options?: RedisRepositoryFindOptions): Promise<Entity | null>;
+  tryFind(filter: Partial<Document>): Promise<Entity | null>;
   ttl(entity: Entity): Promise<number>;
   update(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity>;
   updateMany(
@@ -20,10 +20,6 @@ export interface RedisRepository<Document extends RedisDocument, Entity extends 
     callback?: PostChangeCallback<Entity>,
   ): Promise<Array<Entity>>;
   upsert(entity: Entity, callback?: PostChangeCallback<Entity>): Promise<Entity>;
-}
-
-export interface RedisRepositoryFindOptions {
-  scan?: boolean;
 }
 
 export type PostChangeCallback<Entity extends RedisEntity> = (entity: Entity) => Promise<void>;
