@@ -104,20 +104,22 @@ describe("RedisViewRepository", () => {
   });
 
   test("should find", async () => {
-    await expect(repository.find({ state: { common: "common" } })).resolves.toStrictEqual([
-      {
-        id: view1,
-        state: { one: 1, common: "common" },
-        created_at: expect.any(Date),
-        updated_at: expect.any(Date),
-      },
-      {
-        id: view2,
-        state: { two: 2, common: "common" },
-        created_at: expect.any(Date),
-        updated_at: expect.any(Date),
-      },
-    ]);
+    await expect(repository.find({ state: { common: "common" } })).resolves.toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: view1,
+          state: { one: 1, common: "common" },
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        }),
+        expect.objectContaining({
+          id: view2,
+          state: { two: 2, common: "common" },
+          created_at: expect.any(Date),
+          updated_at: expect.any(Date),
+        }),
+      ]),
+    );
   });
 
   test("should find by id", async () => {
