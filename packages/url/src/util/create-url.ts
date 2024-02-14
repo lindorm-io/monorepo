@@ -36,16 +36,16 @@ const addQueryToURL = <Query = QueryRecord>(
   return url;
 };
 
-const addToURL = <Params = ParamsRecord, Query = QueryRecord>(
+const addToURL = <Params extends ParamsRecord = ParamsRecord, Query = QueryRecord>(
   url: URL,
-  options: Options<Params, Query> = {},
+  options: Options<Params, Query>,
 ): URL => {
   const pathname = replaceParams<Params>(url.pathname, options.params);
   const string = url.toString().replace(url.pathname, pathname);
   return addQueryToURL<Query>(new URL(string), options.query, options.queryCaseTransform);
 };
 
-export const createURL = <Params = ParamsRecord, Query = QueryRecord>(
+export const createURL = <Params extends ParamsRecord = ParamsRecord, Query = QueryRecord>(
   pathOrUrl: URL | string,
   options: Options<Params, Query> = {},
 ): URL => {

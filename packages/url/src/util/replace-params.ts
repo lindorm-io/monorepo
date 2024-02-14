@@ -28,8 +28,11 @@ const findAllMatches = (input: string): Array<Match> => {
   return matches;
 };
 
-export const replaceParams = <Params = ParamsRecord>(pathname: string, params?: Params): string => {
-  if (!isObject(params)) {
+export const replaceParams = <Params extends ParamsRecord = ParamsRecord>(
+  pathname: string,
+  params?: Params,
+): string => {
+  if (!params || !isObject(params) || !Object.keys(params).length) {
     return pathname;
   }
 
@@ -55,7 +58,7 @@ export const replaceParams = <Params = ParamsRecord>(pathname: string, params?: 
     if (Array.isArray(value)) {
       result = result.replace(match.path, value.join(" "));
     } else {
-      result = result.replace(match.path, value);
+      result = result.replace(match.path, value.toString());
     }
   }
 
