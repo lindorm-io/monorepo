@@ -1,6 +1,7 @@
-import { LoggerBase } from "./LoggerBase";
+import { LogLevel } from "../enum";
 import {
   ConsoleOptions,
+  FilterCallback,
   Level,
   LogContext,
   Logger,
@@ -8,7 +9,8 @@ import {
   LoggerOptions,
   LogSession,
 } from "../types";
-import { LogLevel } from "../enum";
+import { defaultFilterCallback } from "../util";
+import { LoggerBase } from "./LoggerBase";
 
 const addConsole = jest.fn();
 const createChildLogger = jest.fn();
@@ -169,8 +171,11 @@ describe("LoggerBase", () => {
     expect(createSessionLogger).toHaveBeenCalledWith({ id: "id" });
   });
 
-  test("should add filter", () => {
+  test("should add default filter", () => {
     logger.setFilter("filtered.path.message");
+
+    expect(logger.filters).toStrictEqual({ "filtered.path.message": defaultFilterCallback });
+
     logger.silly("message", {
       mock: "details",
       filtered: { path: { message: "message" } },
@@ -183,6 +188,37 @@ describe("LoggerBase", () => {
           filtered: {
             path: {
               message: "[Filtered]",
+            },
+          },
+          mock: "details",
+        },
+      ],
+      level: "silly",
+      message: "message",
+      session: {},
+      time: expect.any(Date),
+    });
+  });
+
+  test("should add custom filter", () => {
+    const customFilter: FilterCallback = (value) => `custom+${value}`;
+
+    logger.setFilter("filtered.path.message", customFilter);
+
+    expect(logger.filters).toStrictEqual({ "filtered.path.message": customFilter });
+
+    logger.silly("message", {
+      mock: "details",
+      filtered: { path: { message: "message" } },
+    });
+
+    expect(log).toHaveBeenCalledWith({
+      context: [],
+      details: [
+        {
+          filtered: {
+            path: {
+              message: "custom+message",
             },
           },
           mock: "details",
