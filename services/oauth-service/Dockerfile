@@ -1,5 +1,5 @@
 # Create base image only when needed
-FROM node:14-alpine AS base_image
+FROM node:18-alpine AS base_image
 
 RUN apk --no-cache -U upgrade
 RUN apk add --no-cache libc6-compat
