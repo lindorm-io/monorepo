@@ -39,8 +39,6 @@ export class RedisViewRepository<TState extends State = State>
 
     const filtered = filter(collection, findFilter);
 
-    console.log({ keys, data, collection, filtered });
-
     return filtered.map((x) => ({
       id: x.id,
       state: x.state,
