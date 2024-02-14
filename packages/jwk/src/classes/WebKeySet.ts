@@ -47,38 +47,38 @@ import { OkpKeySet } from "./OkpKeySet";
 import { RsaKeySet } from "./RsaKeySet";
 
 export class WebKeySet {
+  // public
+  public readonly keySet: KeySet;
+
   // private readonly
-  readonly #algorithm: KeySetAlgorithm;
-  readonly #createdAt: Date;
-  readonly #isExternal: boolean;
-  readonly #jwkUri: string | undefined;
-  readonly #ownerId: string | undefined;
-  readonly #type: KeySetType;
-  readonly #use: KeySetUsage;
+  private readonly _algorithm: KeySetAlgorithm;
+  private readonly _createdAt: Date;
+  private readonly _isExternal: boolean;
+  private readonly _jwkUri: string | undefined;
+  private readonly _ownerId: string | undefined;
+  private readonly _type: KeySetType;
+  private readonly _use: KeySetUsage;
 
   // private
-  #expiresAt: Date | undefined;
-  #notBefore: Date;
-  #operations: Array<KeySetOperations>;
-  #updatedAt: Date;
-
-  // generated
-  readonly #keySet: KeySet;
+  _expiresAt: Date | undefined;
+  _notBefore: Date;
+  _operations: Array<KeySetOperations>;
+  _updatedAt: Date;
 
   public constructor(options: WebKeySetOptions) {
-    this.#algorithm = options.algorithm;
-    this.#createdAt = options.createdAt ?? new Date();
-    this.#expiresAt = options.expiresAt;
-    this.#isExternal = options.isExternal ?? false;
-    this.#jwkUri = options.jwkUri;
-    this.#notBefore = options.notBefore ?? new Date();
-    this.#operations = options.operations ?? [];
-    this.#ownerId = options.ownerId;
-    this.#type = options.type;
-    this.#updatedAt = options.updatedAt ?? options.createdAt ?? new Date();
-    this.#use = options.use;
+    this._algorithm = options.algorithm;
+    this._createdAt = options.createdAt ?? new Date();
+    this._expiresAt = options.expiresAt;
+    this._isExternal = options.isExternal ?? false;
+    this._jwkUri = options.jwkUri;
+    this._notBefore = options.notBefore ?? new Date();
+    this._operations = options.operations ?? [];
+    this._ownerId = options.ownerId;
+    this._type = options.type;
+    this._updatedAt = options.updatedAt ?? options.createdAt ?? new Date();
+    this._use = options.use;
 
-    this.#keySet = WebKeySet.createKeySet({
+    this.keySet = WebKeySet.createKeySet({
       ...options,
       id: options.id ?? randomUUID(),
     } as KeySetDer);
@@ -87,78 +87,78 @@ export class WebKeySet {
   // getters and setters
 
   public get id(): string {
-    return this.#keySet.id;
+    return this.keySet.id;
   }
 
   public get algorithm(): KeySetAlgorithm {
-    return this.#algorithm;
+    return this._algorithm;
   }
 
   public get createdAt(): Date {
-    return this.#createdAt;
+    return this._createdAt;
   }
 
   public get curve(): KeySetCurve | undefined {
-    if (WebKeySet.isEcKeySet(this.#keySet) || WebKeySet.isOkpKeySet(this.#keySet)) {
-      return this.#keySet.curve;
+    if (WebKeySet.isEcKeySet(this.keySet) || WebKeySet.isOkpKeySet(this.keySet)) {
+      return this.keySet.curve;
     }
     return undefined;
   }
 
   public get expiresAt(): Date | undefined {
-    return this.#expiresAt;
+    return this._expiresAt;
   }
 
   public set expiresAt(date: Date | undefined) {
-    this.#expiresAt = date;
-    this.#updatedAt = new Date();
+    this._expiresAt = date;
+    this._updatedAt = new Date();
   }
 
   public get expiresIn(): number | undefined {
-    if (!this.#expiresAt) return undefined;
-    return Math.round((this.#expiresAt.getTime() - Date.now()) / 1000);
+    if (!this._expiresAt) return undefined;
+    return Math.round((this._expiresAt.getTime() - Date.now()) / 1000);
   }
 
   public get isExternal(): boolean {
-    return this.#isExternal;
+    return this._isExternal;
   }
 
   public get jwkUri(): string | undefined {
-    return this.#jwkUri;
+    return this._jwkUri;
   }
 
   public get notBefore(): Date {
-    return this.#notBefore;
+    return this._notBefore;
   }
 
   public set notBefore(date: Date) {
-    this.#notBefore = date;
-    this.#updatedAt = new Date();
+    this._notBefore = date;
+    this._updatedAt = new Date();
   }
 
   public get operations(): Array<KeySetOperations> {
-    return this.#operations;
+    return this._operations;
   }
 
   public set operations(operations: Array<KeySetOperations>) {
-    this.#operations = operations;
-    this.#updatedAt = new Date();
+    this._operations = operations;
+    this._updatedAt = new Date();
   }
 
   public get ownerId(): string | undefined {
-    return this.#ownerId;
+    return this._ownerId;
   }
 
   public get type(): KeySetType {
-    return this.#type;
+    return this._type;
   }
 
   public get updatedAt(): Date {
-    return this.#updatedAt;
+    return this._updatedAt;
   }
 
   public get use(): KeySetUsage {
-    return this.#use;
+    return this._use;
   }
 
   // extra getters
@@ -183,17 +183,11 @@ export class WebKeySet {
   }
 
   public get hasPrivateKey(): boolean {
-    return this.#keySet.hasPrivateKey;
+    return this.keySet.hasPrivateKey;
   }
 
   public get hasPublicKey(): boolean {
-    return this.#keySet.hasPublicKey;
-  }
-
-  // public generated
-
-  public get keySet(): KeySet {
-    return this.#keySet;
+    return this.keySet.hasPublicKey;
   }
 
   // public methods
@@ -206,11 +200,11 @@ export class WebKeySet {
     format: KeySetExportFormat,
     keys: KeySetExportKeys = "both",
   ): T {
-    return this.#keySet.export(format as any, keys) as T;
+    return this.keySet.export(format as any, keys) as T;
   }
 
   public jwk(keys: KeySetExportKeys = "public"): LindormJwk {
-    const jwk = this.#keySet.export("jwk", keys);
+    const jwk = this.keySet.export("jwk", keys);
     return {
       alg: this.algorithm,
       exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,

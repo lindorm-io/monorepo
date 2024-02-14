@@ -23,22 +23,16 @@ const schema = Joi.object<PublicKeyAttributes>()
   .required();
 
 export class PublicKey extends LindormEntity<PublicKeyAttributes> {
-  readonly #keySet: RsaKeySet;
+  public readonly keySet: RsaKeySet;
 
   public constructor(options: PublicKeyOptions) {
     super(options);
 
-    this.#keySet = RsaKeySet.fromB64({
+    this.keySet = RsaKeySet.fromB64({
       id: this.id,
       publicKey: options.key,
       type: "RSA",
     });
-  }
-
-  // public generated
-
-  public get keySet(): RsaKeySet {
-    return this.#keySet;
   }
 
   // entity
@@ -48,7 +42,7 @@ export class PublicKey extends LindormEntity<PublicKeyAttributes> {
   }
 
   public toJSON(): PublicKeyAttributes {
-    const b64 = this.#keySet.export("b64");
+    const b64 = this.keySet.export("b64");
 
     return {
       ...this.defaultJSON(),

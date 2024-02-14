@@ -19,45 +19,43 @@ import {
 const generateKeyPair = promisify(_generateKeyPair);
 
 export class RsaKeySet {
-  readonly #id: string;
-  readonly #privateKey: Buffer | undefined;
-  readonly #publicKey: Buffer;
-  readonly #type: "RSA";
+  private readonly _id: string;
+  private readonly _privateKey: Buffer | undefined;
+  private readonly _publicKey: Buffer;
 
   public constructor(options: RsaKeySetDer) {
-    this.#id = options.id;
-    this.#privateKey = options.privateKey;
-    this.#publicKey = options.publicKey;
-    this.#type = options.type;
+    this._id = options.id;
+    this._privateKey = options.privateKey;
+    this._publicKey = options.publicKey;
   }
 
   // public metadata
 
   public get id(): string {
-    return this.#id;
+    return this._id;
   }
 
   public get type(): "RSA" {
-    return this.#type;
+    return "RSA";
   }
 
   public get modulus(): 1024 | 2048 | 3072 | 4096 {
-    if (this.#privateKey) {
-      return this.#privateKey.length > 2200
+    if (this._privateKey) {
+      return this._privateKey.length > 2200
         ? 4096
-        : this.#privateKey.length > 1700
+        : this._privateKey.length > 1700
         ? 3072
-        : this.#privateKey.length > 1000
+        : this._privateKey.length > 1000
         ? 2048
         : 1024;
     }
 
-    if (this.#publicKey) {
-      return this.#publicKey.length > 500
+    if (this._publicKey) {
+      return this._publicKey.length > 500
         ? 4096
-        : this.#publicKey.length > 300
+        : this._publicKey.length > 300
         ? 3072
-        : this.#publicKey.length > 200
+        : this._publicKey.length > 200
         ? 2048
         : 1024;
     }
@@ -66,11 +64,11 @@ export class RsaKeySet {
   }
 
   public get hasPrivateKey(): boolean {
-    return Buffer.isBuffer(this.#privateKey);
+    return Buffer.isBuffer(this._privateKey);
   }
 
   public get hasPublicKey(): boolean {
-    return Buffer.isBuffer(this.#publicKey);
+    return Buffer.isBuffer(this._publicKey);
   }
 
   // public export
@@ -246,42 +244,42 @@ export class RsaKeySet {
   // private format
 
   private formatBase64Url(keys: KeySetExportKeys = "both"): RsaKeySetB64 {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
-      id: this.#id,
+      id: this._id,
       privateKey:
-        keys === "both" && this.#privateKey ? this.#privateKey.toString("base64url") : undefined,
-      publicKey: this.#publicKey.toString("base64url"),
-      type: this.#type,
+        keys === "both" && this._privateKey ? this._privateKey.toString("base64url") : undefined,
+      publicKey: this._publicKey.toString("base64url"),
+      type: this.type,
     };
   }
 
   private formatDer(keys: KeySetExportKeys = "both"): RsaKeySetDer {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
-      id: this.#id,
-      privateKey: keys === "both" ? this.#privateKey : undefined,
-      publicKey: this.#publicKey,
-      type: this.#type,
+      id: this._id,
+      privateKey: keys === "both" ? this._privateKey : undefined,
+      publicKey: this._publicKey,
+      type: this.type,
     };
   }
 
   private formatJwk(keys: KeySetExportKeys = "both"): RsaKeySetJwk {
     const result: RsaKeySetJwk = {
-      kid: this.#id,
+      kid: this._id,
       e: "",
       n: "",
-      kty: this.#type,
+      kty: this.type,
     };
 
-    if (keys === "both" && this.#privateKey) {
-      const keyObject = createPrivateKey({ key: this.#privateKey, format: "der", type: "pkcs1" });
+    if (keys === "both" && this._privateKey) {
+      const keyObject = createPrivateKey({ key: this._privateKey, format: "der", type: "pkcs1" });
       const { n, e, d, p, q, dp, dq, qi, kty } = keyObject.export({ format: "jwk" });
 
       if (!e) {
@@ -322,12 +320,12 @@ export class RsaKeySet {
       result.qi = qi;
     }
 
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     if (!result.e && !result.n) {
-      const keyObject = createPublicKey({ key: this.#publicKey, format: "der", type: "pkcs1" });
+      const keyObject = createPublicKey({ key: this._publicKey, format: "der", type: "pkcs1" });
       const { e, n, kty } = keyObject.export({ format: "jwk" });
 
       if (!e) {
@@ -349,14 +347,14 @@ export class RsaKeySet {
 
   private formatPem(keys: KeySetExportKeys = "both"): RsaKeySetPem {
     const result: RsaKeySetPem = {
-      id: this.#id,
+      id: this._id,
       publicKey: "",
-      type: this.#type,
+      type: this.type,
     };
 
-    if (keys === "both" && this.#privateKey) {
+    if (keys === "both" && this._privateKey) {
       const privateObject = createPrivateKey({
-        key: this.#privateKey,
+        key: this._privateKey,
         format: "der",
         type: "pkcs1",
       });
@@ -369,11 +367,11 @@ export class RsaKeySet {
       result.privateKey = privateKey;
     }
 
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
-    const publicObject = createPublicKey({ key: this.#publicKey, format: "der", type: "pkcs1" });
+    const publicObject = createPublicKey({ key: this._publicKey, format: "der", type: "pkcs1" });
     const publicKey = publicObject.export({ format: "pem", type: "pkcs1" });
 
     if (typeof publicKey !== "string") {

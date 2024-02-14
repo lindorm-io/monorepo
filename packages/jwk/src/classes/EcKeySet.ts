@@ -29,40 +29,38 @@ const CURVES: Array<EllipticCurve> = [
 ];
 
 export class EcKeySet {
-  readonly #id: string;
-  readonly #curve: EllipticCurve;
-  readonly #privateKey: Buffer | undefined;
-  readonly #publicKey: Buffer;
-  readonly #type: "EC";
+  private readonly _id: string;
+  private readonly _curve: EllipticCurve;
+  private readonly _privateKey: Buffer | undefined;
+  private readonly _publicKey: Buffer;
 
   public constructor(options: EcKeySetDer) {
-    this.#id = options.id;
-    this.#curve = options.curve;
-    this.#privateKey = options.privateKey;
-    this.#publicKey = options.publicKey;
-    this.#type = options.type;
+    this._id = options.id;
+    this._curve = options.curve;
+    this._privateKey = options.privateKey;
+    this._publicKey = options.publicKey;
   }
 
   // public metadata
 
   public get id(): string {
-    return this.#id;
+    return this._id;
   }
 
   public get curve(): EllipticCurve {
-    return this.#curve;
+    return this._curve;
   }
 
   public get type(): "EC" {
-    return this.#type;
+    return "EC";
   }
 
   public get hasPrivateKey(): boolean {
-    return Buffer.isBuffer(this.#privateKey);
+    return Buffer.isBuffer(this._privateKey);
   }
 
   public get hasPublicKey(): boolean {
-    return Buffer.isBuffer(this.#publicKey);
+    return Buffer.isBuffer(this._publicKey);
   }
 
   // public export
@@ -270,46 +268,46 @@ export class EcKeySet {
   // private format
 
   private formatBase64Url(keys: KeySetExportKeys = "both"): EcKeySetB64 {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
-      id: this.#id,
-      curve: this.#curve,
+      id: this._id,
+      curve: this._curve,
       privateKey:
-        keys === "both" && this.#privateKey ? this.#privateKey.toString("base64url") : undefined,
-      publicKey: this.#publicKey.toString("base64url"),
-      type: this.#type,
+        keys === "both" && this._privateKey ? this._privateKey.toString("base64url") : undefined,
+      publicKey: this._publicKey.toString("base64url"),
+      type: this.type,
     };
   }
 
   private formatDer(keys: KeySetExportKeys = "both"): EcKeySetDer {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     return {
-      id: this.#id,
-      curve: this.#curve,
-      privateKey: keys === "both" ? this.#privateKey : undefined,
-      publicKey: this.#publicKey,
-      type: this.#type,
+      id: this._id,
+      curve: this._curve,
+      privateKey: keys === "both" ? this._privateKey : undefined,
+      publicKey: this._publicKey,
+      type: this.type,
     };
   }
 
   private formatJwk(keys: KeySetExportKeys = "both"): EcKeySetJwk {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
-    const result: EcKeySetJwk = { crv: this.#curve, x: "", y: "", kid: this.#id, kty: this.#type };
+    const result: EcKeySetJwk = { crv: this._curve, x: "", y: "", kid: this._id, kty: this.type };
 
-    if (keys === "both" && this.#privateKey) {
-      const keyObject = createPrivateKey({ key: this.#privateKey, format: "der", type: "pkcs8" });
+    if (keys === "both" && this._privateKey) {
+      const keyObject = createPrivateKey({ key: this._privateKey, format: "der", type: "pkcs8" });
       const { crv, d, x, y, kty } = keyObject.export({ format: "jwk" });
 
-      if (crv !== this.#curve) {
+      if (crv !== this._curve) {
         throw new JwkError("Key export failed", { debug: { crv } });
       }
       if (!d) {
@@ -331,10 +329,10 @@ export class EcKeySet {
     }
 
     if (!result.x && !result.y) {
-      const keyObject = createPublicKey({ key: this.#publicKey, format: "der", type: "spki" });
+      const keyObject = createPublicKey({ key: this._publicKey, format: "der", type: "spki" });
       const { crv, x, y, kty } = keyObject.export({ format: "jwk" });
 
-      if (crv !== this.#curve) {
+      if (crv !== this._curve) {
         throw new JwkError("Key export failed", { debug: { crv } });
       }
       if (!x) {
@@ -355,20 +353,20 @@ export class EcKeySet {
   }
 
   private formatPem(keys: KeySetExportKeys = "both"): EcKeySetPem {
-    if (!this.#publicKey) {
+    if (!this._publicKey) {
       throw new JwkError("Public key not available");
     }
 
     const result: EcKeySetPem = {
-      id: this.#id,
-      curve: this.#curve,
+      id: this._id,
+      curve: this._curve,
       publicKey: "",
-      type: this.#type,
+      type: this.type,
     };
 
-    if (keys === "both" && this.#privateKey) {
+    if (keys === "both" && this._privateKey) {
       const privateObject = createPrivateKey({
-        key: this.#privateKey,
+        key: this._privateKey,
         format: "der",
         type: "pkcs8",
       });
@@ -381,7 +379,7 @@ export class EcKeySet {
       result.privateKey = privateKey;
     }
 
-    const publicObject = createPublicKey({ key: this.#publicKey, format: "der", type: "spki" });
+    const publicObject = createPublicKey({ key: this._publicKey, format: "der", type: "spki" });
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (typeof publicKey !== "string") {
@@ -397,10 +395,10 @@ export class EcKeySet {
     const jwk = this.formatJwk(keys);
 
     const result: EcKeySetRaw = {
-      id: this.#id,
-      curve: this.#curve,
+      id: this._id,
+      curve: this._curve,
       publicKey: Buffer.alloc(0),
-      type: this.#type,
+      type: this.type,
     };
 
     if (jwk.d) {

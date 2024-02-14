@@ -25,21 +25,21 @@ import {
 } from "../util/private";
 
 export class JWT {
-  readonly #clockTolerance: number;
-  readonly #issuer: string;
-  readonly #jwksUrl: string | undefined;
-  readonly #keystore: Keystore;
-  readonly #keyType: KeySetType | undefined;
-  readonly #logger: Logger;
+  private readonly clockTolerance: number;
+  private readonly issuer: string;
+  private readonly jwksUrl: string | undefined;
+  private readonly keystore: Keystore;
+  private readonly keyType: KeySetType | undefined;
+  private readonly logger: Logger;
 
   public constructor(options: JwtOptions, keystore: Keystore, logger: Logger) {
-    this.#logger = logger.createChildLogger(["jwt"]);
+    this.logger = logger.createChildLogger(["jwt"]);
 
-    this.#clockTolerance = options.clockTolerance || 0;
-    this.#issuer = options.issuer;
-    this.#jwksUrl = options.jwksUrl;
-    this.#keystore = keystore;
-    this.#keyType = options.keyType;
+    this.clockTolerance = options.clockTolerance || 0;
+    this.issuer = options.issuer;
+    this.jwksUrl = options.jwksUrl;
+    this.keystore = keystore;
+    this.keyType = options.keyType;
   }
 
   public sign<Claims = Record<string, any>>(options: JwtSignOptions<Claims>): JwtSign {
@@ -56,7 +56,7 @@ export class JWT {
       client,
       grantType,
       issuedAt,
-      jwksUrl = this.#jwksUrl,
+      jwksUrl = this.jwksUrl,
       keyType,
       levelOfAssurance,
       nonce,
@@ -85,7 +85,7 @@ export class JWT {
       ? this.createHash(options.code, 256)
       : undefined;
 
-    this.#logger.debug("Signing token", {
+    this.logger.debug("Signing token", {
       options,
     });
 
@@ -94,7 +94,7 @@ export class JWT {
       aud: audiences,
       exp: expiresUnix,
       iat: getUnixTime(issuedAt || now),
-      iss: this.#issuer,
+      iss: this.issuer,
       jti: id,
       nbf: getUnixTime(notBefore || now),
       sub: subject,
@@ -133,7 +133,7 @@ export class JWT {
 
     const token = sign(payload, privateKey, signOptions);
 
-    this.#logger.debug("Successfully signed token", {
+    this.logger.debug("Successfully signed token", {
       token,
       claims: object,
       options: signOptions,
@@ -152,7 +152,7 @@ export class JWT {
     token: string,
     options: JwtVerifyOptions = {},
   ): JwtDecode<Claims> {
-    this.#logger.debug("verify token", { token, options });
+    this.logger.debug("verify token", { token, options });
 
     const payload = JWT.decodePayload<Claims>(token);
     const {
@@ -164,7 +164,7 @@ export class JWT {
       clockTolerance,
       codeHash,
       grantType,
-      issuer = this.#issuer,
+      issuer = this.issuer,
       levelOfAssurance,
       maxAge,
       nonce,
@@ -185,7 +185,7 @@ export class JWT {
       algorithms = options.algorithms || ["HS256"];
       verifyKey = secret;
     } else if (payload.key.id) {
-      const found = this.#keystore.getKey(payload.key.id);
+      const found = this.keystore.getKey(payload.key.id);
       const pem = found.export("pem");
 
       if (pem.type === "OKP") {
@@ -207,14 +207,14 @@ export class JWT {
         algorithms,
         audience,
         clockTimestamp: getUnixTime(),
-        clockTolerance: clockTolerance || this.#clockTolerance,
+        clockTolerance: clockTolerance || this.clockTolerance,
         issuer,
         maxAge,
         nonce,
         subject,
       });
     } catch (err: any) {
-      this.#logger.error("Failed to verify token", err);
+      this.logger.error("Failed to verify token", err);
 
       throw new TokenError("Invalid token", { error: err });
     }
@@ -272,11 +272,11 @@ export class JWT {
         assertClaimEquals(tenant, payload.metadata.tenant, "tid");
       }
 
-      this.#logger.debug("verify token success", { claims: payload });
+      this.logger.debug("verify token success", { claims: payload });
 
       return payload;
     } catch (err: any) {
-      this.#logger.error("Failed to validate token", err);
+      this.logger.error("Failed to validate token", err);
 
       throw err;
     }
@@ -386,17 +386,17 @@ export class JWT {
       throw new TokenError("Missing private key");
     }
 
-    this.#logger.silly("Resolving secret key", { key: key.metadata });
+    this.logger.silly("Resolving secret key", { key: key.metadata });
 
     return pem.privateKey;
   }
 
   private getSigningKey(keyType?: KeySetType): WebKeySet {
-    this.#logger.silly("Finding signing key", { keyType });
+    this.logger.silly("Finding signing key", { keyType });
 
-    const key = this.#keystore.findKey("sig", keyType || this.#keyType);
+    const key = this.keystore.findKey("sig", keyType || this.keyType);
 
-    this.#logger.silly("Found signing key", { keyType, key: key.metadata });
+    this.logger.silly("Found signing key", { keyType, key: key.metadata });
 
     return key;
   }
@@ -412,7 +412,7 @@ export class JWT {
       },
     };
 
-    this.#logger.silly("Resolving sign options", { key: key.metadata, jwksUrl, options });
+    this.logger.silly("Resolving sign options", { key: key.metadata, jwksUrl, options });
 
     return options;
   }

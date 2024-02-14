@@ -64,7 +64,7 @@ const schema = Joi.object<StoredKeySetAttributes>()
   .required();
 
 export class StoredKeySet extends LindormEntity<StoredKeySetAttributes> {
-  readonly #webKeySet: WebKeySet;
+  public readonly webKeySet: WebKeySet;
 
   public constructor(webKeySet: WebKeySet);
   public constructor(options: StoredKeySetOptions);
@@ -72,11 +72,11 @@ export class StoredKeySet extends LindormEntity<StoredKeySetAttributes> {
     if (options instanceof WebKeySet) {
       super({ id: options.id, created: options.createdAt, updated: options.updatedAt });
 
-      this.#webKeySet = options;
+      this.webKeySet = options;
     } else {
       super(options);
 
-      this.#webKeySet = new WebKeySet({
+      this.webKeySet = new WebKeySet({
         id: this.id,
         algorithm: options.algorithm,
         createdAt: this.created,
@@ -96,12 +96,6 @@ export class StoredKeySet extends LindormEntity<StoredKeySetAttributes> {
     }
   }
 
-  // public generated
-
-  public get webKeySet(): WebKeySet {
-    return this.#webKeySet;
-  }
-
   // entity
 
   public async schemaValidation(): Promise<void> {
@@ -110,26 +104,26 @@ export class StoredKeySet extends LindormEntity<StoredKeySetAttributes> {
 
   public toJSON(): StoredKeySetAttributes {
     const { revision, version } = this.defaultJSON();
-    const b64 = this.#webKeySet.export("b64");
+    const b64 = this.webKeySet.export("b64");
     const publicKey = WebKeySet.isOctB64(b64) ? null : b64.publicKey;
 
     return {
-      id: this.#webKeySet.id,
-      algorithm: this.#webKeySet.algorithm,
-      created: this.#webKeySet.createdAt,
-      curve: this.#webKeySet.curve ?? null,
-      expiresAt: this.#webKeySet.expiresAt ?? null,
-      isExternal: this.#webKeySet.isExternal,
-      jwkUri: this.#webKeySet.jwkUri ?? null,
-      notBefore: this.#webKeySet.notBefore,
-      operations: this.#webKeySet.operations,
-      ownerId: this.#webKeySet.ownerId ?? null,
+      id: this.webKeySet.id,
+      algorithm: this.webKeySet.algorithm,
+      created: this.webKeySet.createdAt,
+      curve: this.webKeySet.curve ?? null,
+      expiresAt: this.webKeySet.expiresAt ?? null,
+      isExternal: this.webKeySet.isExternal,
+      jwkUri: this.webKeySet.jwkUri ?? null,
+      notBefore: this.webKeySet.notBefore,
+      operations: this.webKeySet.operations,
+      ownerId: this.webKeySet.ownerId ?? null,
       privateKey: b64.privateKey ?? null,
       publicKey: publicKey ?? null,
       revision,
-      type: this.#webKeySet.type,
-      updated: this.#webKeySet.updatedAt,
-      use: this.#webKeySet.use,
+      type: this.webKeySet.type,
+      updated: this.webKeySet.updatedAt,
+      use: this.webKeySet.use,
       version,
     };
   }

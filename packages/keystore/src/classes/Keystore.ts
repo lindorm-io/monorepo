@@ -13,12 +13,12 @@ import {
 } from "../utils/private";
 
 export class Keystore {
-  readonly #keys: Array<WebKeySet>;
-  readonly #logger: Logger;
+  private readonly keys: Array<WebKeySet>;
+  private readonly logger: Logger;
 
   public constructor(keys: Array<StoredKeySet | WebKeySet>, logger: Logger) {
-    this.#keys = [];
-    this.#logger = logger.createChildLogger(["Keystore"]);
+    this.keys = [];
+    this.logger = logger.createChildLogger(["Keystore"]);
 
     this.addKeys(keys);
   }
@@ -26,12 +26,12 @@ export class Keystore {
   // public getters
 
   public get allKeys(): Array<WebKeySet> {
-    return orderBy(uniqBy(this.#keys, "id"), ["created", "expires"], ["desc", "asc"]);
+    return orderBy(uniqBy(this.keys, "id"), ["created", "expires"], ["desc", "asc"]);
   }
 
   public get validKeys(): Array<WebKeySet> {
     const valid = this.allKeys.filter(isKeySetActive).filter(isKeySetNotExpired);
-    this.#logger.silly("Found valid keys", { keys: valid.map((key) => key.metadata) });
+    this.logger.silly("Found valid keys", { keys: valid.map((key) => key.metadata) });
     return valid;
   }
 
@@ -39,14 +39,14 @@ export class Keystore {
 
   public addKey(key: StoredKeySet | WebKeySet): void {
     if (key instanceof StoredKeySet) {
-      this.#logger.silly("Adding StoredKeySet", { id: key.id });
-      this.#keys.push(key.webKeySet);
+      this.logger.silly("Adding StoredKeySet", { id: key.id });
+      this.keys.push(key.webKeySet);
       return;
     }
 
     if (key instanceof WebKeySet) {
-      this.#logger.silly("Adding WebKeySet", { id: key.id });
-      this.#keys.push(key);
+      this.logger.silly("Adding WebKeySet", { id: key.id });
+      this.keys.push(key);
       return;
     }
 
@@ -60,11 +60,11 @@ export class Keystore {
   }
 
   public findKeys(use?: KeySetUsage, type?: KeySetType): Array<WebKeySet> {
-    this.#logger.debug("Finding keys", { use, type });
+    this.logger.debug("Finding keys", { use, type });
 
     const keys = this.validKeys.filter(isKeySetCorrectType(type)).filter(isKeySetCorrectUsage(use));
 
-    this.#logger.silly("Found keys", { use, type, keys: keys.map((key) => key.metadata) });
+    this.logger.silly("Found keys", { use, type, keys: keys.map((key) => key.metadata) });
 
     if (!keys.length) {
       throw new KeystoreError("Keys not found", {
@@ -87,7 +87,7 @@ export class Keystore {
     }
 
     if (keys.length > 1) {
-      this.#logger.warn("Multiple keys found, resolving newest in list", { keys });
+      this.logger.warn("Multiple keys found, resolving newest in list", { keys });
     }
 
     return keys[0];

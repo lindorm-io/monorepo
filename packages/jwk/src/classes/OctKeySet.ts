@@ -13,28 +13,26 @@ import { isOctSecret } from "../utils/private";
 import { generateOctSecret } from "../utils/private/generate-oct-secret";
 
 export class OctKeySet {
-  readonly #id: string;
-  readonly #privateKey: Buffer;
-  readonly #type: "oct";
+  private readonly _id: string;
+  private readonly _privateKey: Buffer;
 
   public constructor(options: OctKeySetDer) {
-    this.#id = options.id;
-    this.#privateKey = options.privateKey;
-    this.#type = options.type;
+    this._id = options.id;
+    this._privateKey = options.privateKey;
   }
 
   // public metadata
 
   public get id(): string {
-    return this.#id;
+    return this._id;
   }
 
   public get type(): "oct" {
-    return this.#type;
+    return "oct";
   }
 
   public get hasPrivateKey(): boolean {
-    return Buffer.isBuffer(this.#privateKey);
+    return Buffer.isBuffer(this._privateKey);
   }
 
   public get hasPublicKey(): boolean {
@@ -154,33 +152,33 @@ export class OctKeySet {
 
   private formatBase64Url(): OctKeySetB64 {
     return {
-      id: this.#id,
-      privateKey: this.#privateKey.toString("base64url"),
-      type: this.#type,
+      id: this._id,
+      privateKey: this._privateKey.toString("base64url"),
+      type: this.type,
     };
   }
 
   private formatDer(): OctKeySetDer {
     return {
-      id: this.#id,
-      privateKey: this.#privateKey,
-      type: this.#type,
+      id: this._id,
+      privateKey: this._privateKey,
+      type: this.type,
     };
   }
 
   private formatJwk(): OctKeySetJwk {
     return {
-      kid: this.#id,
-      k: this.#privateKey.toString("base64url"),
-      kty: this.#type,
+      kid: this._id,
+      k: this._privateKey.toString("base64url"),
+      kty: this.type,
     };
   }
 
   private formatPem(): OctKeySetPem {
     return {
-      id: this.#id,
-      privateKey: this.#privateKey.toString("utf-8"),
-      type: this.#type,
+      id: this._id,
+      privateKey: this._privateKey.toString("utf-8"),
+      type: this.type,
     };
   }
 }
