@@ -1,5 +1,5 @@
 import { CLIENT_ERROR_TITLE } from "../constants";
-import { ClientErrorStatus } from "../enum";
+import { ClientErrorStatus } from "../enums";
 import { HttpStatusError } from "./HttpStatusError";
 import { LindormErrorOptions } from "./LindormError";
 

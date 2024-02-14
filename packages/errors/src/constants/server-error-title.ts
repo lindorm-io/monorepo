@@ -1,4 +1,4 @@
-import { ServerErrorStatus } from "../enum";
+import { ServerErrorStatus } from "../enums";
 
 export const SERVER_ERROR_TITLE: Record<ServerErrorStatus, string> = {
   [ServerErrorStatus.INTERNAL_SERVER_ERROR]: "Internal Server Error",

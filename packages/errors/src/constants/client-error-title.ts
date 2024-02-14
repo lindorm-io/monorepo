@@ -1,4 +1,4 @@
-import { ClientErrorStatus } from "../enum";
+import { ClientErrorStatus } from "../enums";
 
 export const CLIENT_ERROR_TITLE: Record<ClientErrorStatus, string> = {
   [ClientErrorStatus.BAD_REQUEST]: "Bad Request",
