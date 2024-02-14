@@ -10,12 +10,13 @@ import Router from "koa-router";
 import userAgent from "koa-useragent";
 import { Server as IOServer } from "socket.io";
 import {
-  dataHandlingMiddleware,
   defaultStatusMiddleware,
   errorMiddleware,
   initContextMiddleware,
   initSocketContextMiddleware,
   metadataMiddleware,
+  requestDataMiddleware,
+  responseDataMiddleware,
   responseTimeMiddleware,
   sessionLoggerMiddleware,
   socketIoMiddleware,
@@ -53,7 +54,7 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
     this.environment = options.environment || Environment.DEVELOPMENT;
     this.host = options.host;
     this.loaded = false;
-    this.logger = options.logger;
+    this.logger = options.logger.createChildLogger("koa");
     this.port = options.port;
     this.routerDirectory = options.routerDirectory;
     this.setup = options.setup ? options.setup : () => Promise.resolve();
@@ -71,10 +72,11 @@ export class KoaApp<Context extends DefaultLindormKoaContext = DefaultLindormKoa
       defaultStatusMiddleware,
       initContextMiddleware(options),
       utilContextMiddleware,
-      dataHandlingMiddleware,
+      requestDataMiddleware,
       metadataMiddleware,
       sessionLoggerMiddleware(this.logger),
       errorMiddleware,
+      responseDataMiddleware,
       responseTimeMiddleware,
       ...(options.middleware || []),
     ];

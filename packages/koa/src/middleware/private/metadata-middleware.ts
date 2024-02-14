@@ -2,25 +2,23 @@ import { ClientError } from "@lindorm-io/errors";
 import { randomUUID } from "crypto";
 import { DefaultLindormMiddleware } from "../../types";
 
-const GUID_REGEX = new RegExp(
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-);
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
-  const correlationId = ctx.get("x-correlation-id") || randomUUID();
-  const requestId = ctx.get("x-request-id") || randomUUID();
+  const correlationId = ctx.get("x-correlation-id")?.toLowerCase() || randomUUID();
+  const requestId = ctx.get("x-request-id")?.toLowerCase() || randomUUID();
   const requestDate = ctx.get("date");
   const date = requestDate ? new Date(requestDate) : new Date();
 
-  if (!GUID_REGEX.test(correlationId)) {
+  if (!new RegExp(UUID_V4).test(correlationId)) {
     throw new ClientError("Invalid correlation id format", {
-      description: "GUID v4 expected",
+      description: "UUID v4 expected",
     });
   }
 
-  if (!GUID_REGEX.test(requestId)) {
+  if (!new RegExp(UUID_V4).test(requestId)) {
     throw new ClientError("Invalid request id format", {
-      description: "GUID v4 expected",
+      description: "UUID v4 expected",
     });
   }
 
@@ -32,9 +30,9 @@ export const metadataMiddleware: DefaultLindormMiddleware = async (ctx, next): P
 
   ctx.metadata = { date, correlationId, requestId };
 
-  await next();
-
   ctx.set("Date", new Date().toUTCString());
   ctx.set("X-Correlation-ID", correlationId);
   ctx.set("X-Request-ID", requestId);
+
+  await next();
 };

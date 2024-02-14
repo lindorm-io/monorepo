@@ -1,11 +1,8 @@
-import { DefaultLindormMiddleware } from "../../types";
-import { camelCase, transformCase } from "@lindorm-io/case";
+import { camelCase } from "@lindorm-io/case";
 import { isObject } from "@lindorm-io/core";
+import { DefaultLindormMiddleware } from "../../types";
 
-export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
-  ctx,
-  next,
-): Promise<void> => {
+export const requestDataMiddleware: DefaultLindormMiddleware = async (ctx, next): Promise<void> => {
   const body = isObject(ctx.request.body) ? camelCase(ctx.request.body) : {};
   const query = isObject(ctx.query) ? camelCase<Record<string, string>>(ctx.query) : {};
 
@@ -19,6 +16,4 @@ export const dataHandlingMiddleware: DefaultLindormMiddleware = async (
   };
 
   await next();
-
-  ctx.body = isObject(ctx.body) ? transformCase(ctx.body, ctx.config.transformMode) : ctx.body;
 };

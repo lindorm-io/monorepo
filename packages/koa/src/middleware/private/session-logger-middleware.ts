@@ -40,7 +40,7 @@ export const sessionLoggerMiddleware =
         response: {
           body: ctx.response.body,
           config: ctx.config,
-          header: ctx.response.header,
+          headers: ctx.response.header,
           message: ctx.response.message,
           metrics: ctx.metrics,
           server: ctx.server,

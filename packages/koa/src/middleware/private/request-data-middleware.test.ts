@@ -1,5 +1,5 @@
 import MockDate from "mockdate";
-import { dataHandlingMiddleware } from "./data-handling-middleware";
+import { requestDataMiddleware } from "./request-data-middleware";
 
 MockDate.set("2020-01-01T08:00:00.000Z");
 
@@ -51,7 +51,7 @@ describe("dataHandlingMiddleware", () => {
   });
 
   test("should transform and merge all incoming data into one object on context", async () => {
-    await expect(dataHandlingMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(requestDataMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.data).toStrictEqual({
       array: ["array"],
@@ -70,34 +70,11 @@ describe("dataHandlingMiddleware", () => {
     });
   });
 
-  test("should transform all outgoing body to snake_case", async () => {
-    await expect(dataHandlingMiddleware(ctx, next)).resolves.toBeUndefined();
-
-    expect(ctx.body).toStrictEqual({
-      array: ["array"],
-      camel_case_two: "camelCaseTwo",
-      date: date,
-      error: error,
-      pascal_case_two: "PascalCaseTwo",
-      snake_case_two: "snake_case_two",
-      string: "string",
-    });
-  });
-
   test("should not fail if data is undefined", async () => {
     ctx = { request: { body: undefined }, body: undefined };
 
-    await expect(dataHandlingMiddleware(ctx, next)).resolves.toBeUndefined();
+    await expect(requestDataMiddleware(ctx, next)).resolves.toBeUndefined();
 
     expect(ctx.data).toStrictEqual({});
-    expect(ctx.body).toBeUndefined();
-  });
-
-  test("should not convert response body when not object", async () => {
-    ctx = { query: "", request: { body: {} }, body: "string" };
-
-    await expect(dataHandlingMiddleware(ctx, next)).resolves.toBeUndefined();
-
-    expect(ctx.body).toBe("string");
   });
 });
