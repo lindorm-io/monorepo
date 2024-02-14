@@ -27,12 +27,17 @@ describe("ClientError", () => {
   });
 
   describe("options", () => {
-    test("should automatically set statusCode", () => {
+    test("should automatically set statusCode and title", () => {
       expect(new ClientError("message").statusCode).toBe(400);
+      expect(new ClientError("message").title).toBe("Bad Request");
     });
 
     test("should use statusCode", () => {
       expect(new ClientError("message", { statusCode: 401 }).statusCode).toBe(401);
+    });
+
+    test("should use title", () => {
+      expect(new ClientError("message", { title: "title" }).title).toBe("title");
     });
   });
 

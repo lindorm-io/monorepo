@@ -1,14 +1,18 @@
+import { CLIENT_ERROR_TITLE } from "../constants";
+import { ClientErrorStatus } from "../enum";
 import { HttpStatusError } from "./HttpStatusError";
 import { LindormErrorOptions } from "./LindormError";
-import { ClientErrorStatus } from "../enum";
 
 interface Options extends LindormErrorOptions {
-  statusCode?: number;
+  statusCode?: ClientErrorStatus;
 }
 
 export class ClientError extends HttpStatusError {
-  public constructor(message: string, options?: Options) {
-    super(message, { ...(options || {}), statusCode: options?.statusCode || 400 });
+  public constructor(message: string, options: Options = {}) {
+    const statusCode = options?.statusCode || ClientErrorStatus.BAD_REQUEST;
+    const title = options?.title || CLIENT_ERROR_TITLE[statusCode];
+
+    super(message, { ...options, statusCode, title });
   }
 
   public static get StatusCode(): typeof ClientErrorStatus {

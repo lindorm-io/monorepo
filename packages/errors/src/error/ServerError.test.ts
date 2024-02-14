@@ -1,7 +1,7 @@
 import { ExtendableError } from "./ExtendableError";
 import { HttpStatusError } from "./HttpStatusError";
-import { ServerError } from "./ServerError";
 import { LindormError } from "./LindormError";
+import { ServerError } from "./ServerError";
 
 describe("ServerError", () => {
   describe("instanceOf", () => {
@@ -27,12 +27,17 @@ describe("ServerError", () => {
   });
 
   describe("statusCode", () => {
-    test("should automatically set statusCode", () => {
+    test("should automatically set statusCode and title", () => {
       expect(new ServerError("message").statusCode).toBe(500);
+      expect(new ServerError("message").title).toBe("Internal Server Error");
     });
 
     test("should use statusCode", () => {
       expect(new ServerError("message", { statusCode: 501 }).statusCode).toBe(501);
+    });
+
+    test("should use title", () => {
+      expect(new ServerError("message", { title: "title" }).title).toBe("title");
     });
   });
 
