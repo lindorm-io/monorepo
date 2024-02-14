@@ -1,5 +1,5 @@
-import { LindormError } from "@lindorm-io/errors";
 import { LogLevel } from "@lindorm-io/core-logger";
+import { LindormError } from "@lindorm-io/errors";
 import { WinstonLogger } from "../src";
 
 const logger = new WinstonLogger();
