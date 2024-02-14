@@ -1,6 +1,6 @@
+import { createMockLogger } from "@lindorm-io/core-logger";
 import { RedirectError, ServerError } from "@lindorm-io/errors";
 import { errorMiddleware } from "./error-middleware";
-import { createMockLogger } from "@lindorm-io/core-logger";
 
 describe("errorMiddleware", () => {
   let ctx: any;
@@ -79,7 +79,7 @@ describe("errorMiddleware", () => {
         description: null,
         message: "message",
         name: "ServerError",
-        title: null,
+        title: "Internal Server Error",
       },
     });
     expect(ctx.logger.error).toHaveBeenCalled();

@@ -12,8 +12,6 @@ describe("responseTimeMiddleware", () => {
 
   beforeEach(() => {
     ctx = {
-      getMetric: jest.fn(() => ({ end: jest.fn() })),
-      metrics: { responseTime: 100 },
       set: jest.fn(),
     };
   });
@@ -23,6 +21,6 @@ describe("responseTimeMiddleware", () => {
 
     expect(ctx.set.mock.calls[0]).toEqual(["X-Start-Time", "1577865600000"]);
     expect(ctx.set.mock.calls[1]).toEqual(["X-Current-Time", "1577865683456"]);
-    expect(ctx.set.mock.calls[2]).toEqual(["X-Response-Time", "100ms"]);
+    expect(ctx.set.mock.calls[2]).toEqual(["X-Response-Time", "83456ms"]);
   });
 });
