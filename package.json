@@ -23,7 +23,7 @@
     "dev:compd": "concurrently -n authentication,communication,device,identity,oauth,federation,vault 'yarn --cwd services/authentication-service dev' 'yarn --cwd services/communication-service dev' 'yarn --cwd services/device-service dev' 'yarn --cwd services/identity-service dev' 'yarn --cwd services/oauth-service dev' 'yarn --cwd services/federation-service dev' 'yarn --cwd services/vault-service dev' --kill-others-on-fail",
     "lint": "lerna exec -- eslint . --ext .ts",
     "lint:changed": "lerna exec --since --include-dependents -- eslint . --ext .js,.jsx,.ts,.tsx",
-    "prepare": "husky install",
+    "prepare": "husky",
     "release": "yarn build:changed && yarn typecheck:changed && yarn test:changed && cross-env HUSKY_BYPASS=true lerna publish",
     "test": "lerna run test:ci",
     "test:changed": "lerna run --since --include-dependents test:ci",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@commitlint/cli": "^18.2.0",
     "@commitlint/config-conventional": "^18.1.0",
+    "@commitlint/config-lerna-scopes": "^18.4.4",
     "@types/jest": "^29.5.7",
     "@types/node": "^20.8.10",
     "@types/supertest": "^2.0.15",
@@ -68,18 +69,6 @@
   "volta": {
     "node": "19.9.0",
     "yarn": "1.22.17"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "[[ -n $HUSKY_BYPASS ]] || commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged",
-      "pre-push": "yarn verify:changed"
-    }
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
   },
   "workspaces": [
     "packages/*"
