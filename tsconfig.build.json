@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "noUnusedLocals": true,
+    "removeComments": true,
+    "sourceMap": true
+  },
+  "exclude": [
+    "**/__fixtures__/**/*",
+    "**/__mocks__/**/*",
+    "**/__snapshots__/**/*",
+    "**/*.fixture.ts",
+    "**/*.integration.ts",
+    "**/*.snap",
+    "**/*.test.ts"
+  ]
+}

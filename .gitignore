@@ -1,0 +1,23 @@
+# Folders
+.certs
+.jest
+dist
+node_modules
+tmp
+
+# Default
+.DS_Store
+Thumbs.db
+
+# NPM
+.npmrc
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
