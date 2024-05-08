@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`sentenceCase should convert CONSTANT_CASE 1`] = `"Constant case"`;
+
+exports[`sentenceCase should convert Capital Case 1`] = `"Capital case"`;
+
+exports[`sentenceCase should convert PascalCase 1`] = `"Pascal case"`;
+
+exports[`sentenceCase should convert Sentence case 1`] = `"Sentence case"`;
+
+exports[`sentenceCase should convert array with objects 1`] = `
+[
+  {
+    "Camel case": true,
+    "Capital case": true,
+    "Constant case": true,
+    "Dot case": true,
+    "Kebab case": true,
+    "Lower case": true,
+    "Pascal case": true,
+    "Path case": true,
+    "Sentence case": true,
+    "Snake case": true,
+  },
+  {
+    "Camel case": true,
+    "Capital case": true,
+    "Constant case": true,
+    "Dot case": true,
+    "Kebab case": true,
+    "Lower case": true,
+    "Pascal case": true,
+    "Path case": true,
+    "Sentence case": true,
+    "Snake case": true,
+  },
+]
+`;
+
+exports[`sentenceCase should convert array with strings 1`] = `
+[
+  "Camel case",
+  "Capital case",
+  "Constant case",
+  "Dot case",
+  "Kebab case",
+  "Lower case",
+  "Pascal case",
+  "Path case",
+  "Sentence case",
+  "Snake case",
+]
+`;
+
+exports[`sentenceCase should convert camelCase 1`] = `"Camel case"`;
+
+exports[`sentenceCase should convert dot.case 1`] = `"Dot case"`;
+
+exports[`sentenceCase should convert kebab-case 1`] = `"Kebab case"`;
+
+exports[`sentenceCase should convert lower case 1`] = `"Lower case"`;
+
+exports[`sentenceCase should convert object keys 1`] = `
+{
+  "Camel case": true,
+  "Capital case": true,
+  "Constant case": true,
+  "Dot case": true,
+  "Kebab case": true,
+  "Lower case": true,
+  "Pascal case": true,
+  "Path case": true,
+  "Sentence case": true,
+  "Snake case": true,
+}
+`;
+
+exports[`sentenceCase should convert path/case 1`] = `"Path case"`;
+
+exports[`sentenceCase should convert snake_case 1`] = `"Snake case"`;

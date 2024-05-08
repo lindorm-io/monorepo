@@ -1,0 +1,241 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`changeCase with camel mode should convert CONSTANT_CASE 1`] = `"constantCase"`;
+
+exports[`changeCase with camel mode should convert Capital Case 1`] = `"capitalCase"`;
+
+exports[`changeCase with camel mode should convert PascalCase 1`] = `"pascalCase"`;
+
+exports[`changeCase with camel mode should convert Sentence case 1`] = `"sentenceCase"`;
+
+exports[`changeCase with camel mode should convert camelCase 1`] = `"camelCase"`;
+
+exports[`changeCase with camel mode should convert dot.case 1`] = `"dotCase"`;
+
+exports[`changeCase with camel mode should convert kebab-case 1`] = `"kebabCase"`;
+
+exports[`changeCase with camel mode should convert lower case 1`] = `"lowerCase"`;
+
+exports[`changeCase with camel mode should convert path/case 1`] = `"pathCase"`;
+
+exports[`changeCase with camel mode should convert snake_case 1`] = `"snakeCase"`;
+
+exports[`changeCase with capital mode should convert CONSTANT_CASE 1`] = `"Constant Case"`;
+
+exports[`changeCase with capital mode should convert Capital Case 1`] = `"Capital Case"`;
+
+exports[`changeCase with capital mode should convert PascalCase 1`] = `"Pascal Case"`;
+
+exports[`changeCase with capital mode should convert Sentence case 1`] = `"Sentence Case"`;
+
+exports[`changeCase with capital mode should convert camelCase 1`] = `"Camel Case"`;
+
+exports[`changeCase with capital mode should convert dot.case 1`] = `"Dot Case"`;
+
+exports[`changeCase with capital mode should convert kebab-case 1`] = `"Kebab Case"`;
+
+exports[`changeCase with capital mode should convert lower case 1`] = `"Lower Case"`;
+
+exports[`changeCase with capital mode should convert path/case 1`] = `"Path Case"`;
+
+exports[`changeCase with capital mode should convert snake_case 1`] = `"Snake Case"`;
+
+exports[`changeCase with constant mode should convert CONSTANT_CASE 1`] = `"CONSTANT_CASE"`;
+
+exports[`changeCase with constant mode should convert Capital Case 1`] = `"CAPITAL_CASE"`;
+
+exports[`changeCase with constant mode should convert PascalCase 1`] = `"PASCAL_CASE"`;
+
+exports[`changeCase with constant mode should convert Sentence case 1`] = `"SENTENCE_CASE"`;
+
+exports[`changeCase with constant mode should convert camelCase 1`] = `"CAMEL_CASE"`;
+
+exports[`changeCase with constant mode should convert dot.case 1`] = `"DOT_CASE"`;
+
+exports[`changeCase with constant mode should convert kebab-case 1`] = `"KEBAB_CASE"`;
+
+exports[`changeCase with constant mode should convert lower case 1`] = `"LOWER_CASE"`;
+
+exports[`changeCase with constant mode should convert path/case 1`] = `"PATH_CASE"`;
+
+exports[`changeCase with constant mode should convert snake_case 1`] = `"SNAKE_CASE"`;
+
+exports[`changeCase with dot mode should convert CONSTANT_CASE 1`] = `"constant.case"`;
+
+exports[`changeCase with dot mode should convert Capital Case 1`] = `"capital.case"`;
+
+exports[`changeCase with dot mode should convert PascalCase 1`] = `"pascal.case"`;
+
+exports[`changeCase with dot mode should convert Sentence case 1`] = `"sentence.case"`;
+
+exports[`changeCase with dot mode should convert camelCase 1`] = `"camel.case"`;
+
+exports[`changeCase with dot mode should convert dot.case 1`] = `"dot.case"`;
+
+exports[`changeCase with dot mode should convert kebab-case 1`] = `"kebab.case"`;
+
+exports[`changeCase with dot mode should convert lower case 1`] = `"lower.case"`;
+
+exports[`changeCase with dot mode should convert path/case 1`] = `"path.case"`;
+
+exports[`changeCase with dot mode should convert snake_case 1`] = `"snake.case"`;
+
+exports[`changeCase with header mode should convert CONSTANT_CASE 1`] = `"Constant-Case"`;
+
+exports[`changeCase with header mode should convert Capital Case 1`] = `"Capital-Case"`;
+
+exports[`changeCase with header mode should convert PascalCase 1`] = `"Pascal-Case"`;
+
+exports[`changeCase with header mode should convert Sentence case 1`] = `"Sentence-Case"`;
+
+exports[`changeCase with header mode should convert camelCase 1`] = `"Camel-Case"`;
+
+exports[`changeCase with header mode should convert dot.case 1`] = `"Dot-Case"`;
+
+exports[`changeCase with header mode should convert kebab-case 1`] = `"Kebab-Case"`;
+
+exports[`changeCase with header mode should convert lower case 1`] = `"Lower-Case"`;
+
+exports[`changeCase with header mode should convert path/case 1`] = `"Path-Case"`;
+
+exports[`changeCase with header mode should convert snake_case 1`] = `"Snake-Case"`;
+
+exports[`changeCase with kebab mode should convert CONSTANT_CASE 1`] = `"constant-case"`;
+
+exports[`changeCase with kebab mode should convert Capital Case 1`] = `"capital-case"`;
+
+exports[`changeCase with kebab mode should convert PascalCase 1`] = `"pascal-case"`;
+
+exports[`changeCase with kebab mode should convert Sentence case 1`] = `"sentence-case"`;
+
+exports[`changeCase with kebab mode should convert camelCase 1`] = `"camel-case"`;
+
+exports[`changeCase with kebab mode should convert dot.case 1`] = `"dot-case"`;
+
+exports[`changeCase with kebab mode should convert kebab-case 1`] = `"kebab-case"`;
+
+exports[`changeCase with kebab mode should convert lower case 1`] = `"lower-case"`;
+
+exports[`changeCase with kebab mode should convert path/case 1`] = `"path-case"`;
+
+exports[`changeCase with kebab mode should convert snake_case 1`] = `"snake-case"`;
+
+exports[`changeCase with lower mode should convert CONSTANT_CASE 1`] = `"constant case"`;
+
+exports[`changeCase with lower mode should convert Capital Case 1`] = `"capital case"`;
+
+exports[`changeCase with lower mode should convert PascalCase 1`] = `"pascal case"`;
+
+exports[`changeCase with lower mode should convert Sentence case 1`] = `"sentence case"`;
+
+exports[`changeCase with lower mode should convert camelCase 1`] = `"camel case"`;
+
+exports[`changeCase with lower mode should convert dot.case 1`] = `"dot case"`;
+
+exports[`changeCase with lower mode should convert kebab-case 1`] = `"kebab case"`;
+
+exports[`changeCase with lower mode should convert lower case 1`] = `"lower case"`;
+
+exports[`changeCase with lower mode should convert path/case 1`] = `"path case"`;
+
+exports[`changeCase with lower mode should convert snake_case 1`] = `"snake case"`;
+
+exports[`changeCase with none mode should convert CONSTANT_CASE 1`] = `"CONSTANT_CASE"`;
+
+exports[`changeCase with none mode should convert Capital Case 1`] = `"Capital Case"`;
+
+exports[`changeCase with none mode should convert PascalCase 1`] = `"PascalCase"`;
+
+exports[`changeCase with none mode should convert Sentence case 1`] = `"Sentence case"`;
+
+exports[`changeCase with none mode should convert camelCase 1`] = `"camelCase"`;
+
+exports[`changeCase with none mode should convert dot.case 1`] = `"dot.case"`;
+
+exports[`changeCase with none mode should convert kebab-case 1`] = `"kebab-case"`;
+
+exports[`changeCase with none mode should convert lower case 1`] = `"lower case"`;
+
+exports[`changeCase with none mode should convert path/case 1`] = `"path/case"`;
+
+exports[`changeCase with none mode should convert snake_case 1`] = `"snake_case"`;
+
+exports[`changeCase with pascal mode should convert CONSTANT_CASE 1`] = `"ConstantCase"`;
+
+exports[`changeCase with pascal mode should convert Capital Case 1`] = `"CapitalCase"`;
+
+exports[`changeCase with pascal mode should convert PascalCase 1`] = `"PascalCase"`;
+
+exports[`changeCase with pascal mode should convert Sentence case 1`] = `"SentenceCase"`;
+
+exports[`changeCase with pascal mode should convert camelCase 1`] = `"CamelCase"`;
+
+exports[`changeCase with pascal mode should convert dot.case 1`] = `"DotCase"`;
+
+exports[`changeCase with pascal mode should convert kebab-case 1`] = `"KebabCase"`;
+
+exports[`changeCase with pascal mode should convert lower case 1`] = `"LowerCase"`;
+
+exports[`changeCase with pascal mode should convert path/case 1`] = `"PathCase"`;
+
+exports[`changeCase with pascal mode should convert snake_case 1`] = `"SnakeCase"`;
+
+exports[`changeCase with path mode should convert CONSTANT_CASE 1`] = `"constant/case"`;
+
+exports[`changeCase with path mode should convert Capital Case 1`] = `"capital/case"`;
+
+exports[`changeCase with path mode should convert PascalCase 1`] = `"pascal/case"`;
+
+exports[`changeCase with path mode should convert Sentence case 1`] = `"sentence/case"`;
+
+exports[`changeCase with path mode should convert camelCase 1`] = `"camel/case"`;
+
+exports[`changeCase with path mode should convert dot.case 1`] = `"dot/case"`;
+
+exports[`changeCase with path mode should convert kebab-case 1`] = `"kebab/case"`;
+
+exports[`changeCase with path mode should convert lower case 1`] = `"lower/case"`;
+
+exports[`changeCase with path mode should convert path/case 1`] = `"path/case"`;
+
+exports[`changeCase with path mode should convert snake_case 1`] = `"snake/case"`;
+
+exports[`changeCase with sentence mode should convert CONSTANT_CASE 1`] = `"Constant case"`;
+
+exports[`changeCase with sentence mode should convert Capital Case 1`] = `"Capital case"`;
+
+exports[`changeCase with sentence mode should convert PascalCase 1`] = `"Pascal case"`;
+
+exports[`changeCase with sentence mode should convert Sentence case 1`] = `"Sentence case"`;
+
+exports[`changeCase with sentence mode should convert camelCase 1`] = `"Camel case"`;
+
+exports[`changeCase with sentence mode should convert dot.case 1`] = `"Dot case"`;
+
+exports[`changeCase with sentence mode should convert kebab-case 1`] = `"Kebab case"`;
+
+exports[`changeCase with sentence mode should convert lower case 1`] = `"Lower case"`;
+
+exports[`changeCase with sentence mode should convert path/case 1`] = `"Path case"`;
+
+exports[`changeCase with sentence mode should convert snake_case 1`] = `"Snake case"`;
+
+exports[`changeCase with snake mode should convert CONSTANT_CASE 1`] = `"constant_case"`;
+
+exports[`changeCase with snake mode should convert Capital Case 1`] = `"capital_case"`;
+
+exports[`changeCase with snake mode should convert PascalCase 1`] = `"pascal_case"`;
+
+exports[`changeCase with snake mode should convert Sentence case 1`] = `"sentence_case"`;
+
+exports[`changeCase with snake mode should convert camelCase 1`] = `"camel_case"`;
+
+exports[`changeCase with snake mode should convert dot.case 1`] = `"dot_case"`;
+
+exports[`changeCase with snake mode should convert kebab-case 1`] = `"kebab_case"`;
+
+exports[`changeCase with snake mode should convert lower case 1`] = `"lower_case"`;
+
+exports[`changeCase with snake mode should convert path/case 1`] = `"path_case"`;
+
+exports[`changeCase with snake mode should convert snake_case 1`] = `"snake_case"`;

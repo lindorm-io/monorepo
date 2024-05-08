@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`headerCase should convert CONSTANT_CASE 1`] = `"Constant-Case"`;
+
+exports[`headerCase should convert Capital Case 1`] = `"Capital-Case"`;
+
+exports[`headerCase should convert PascalCase 1`] = `"Pascal-Case"`;
+
+exports[`headerCase should convert Sentence case 1`] = `"Sentence-Case"`;
+
+exports[`headerCase should convert array with objects 1`] = `
+[
+  {
+    "Camel-Case": true,
+    "Capital-Case": true,
+    "Constant-Case": true,
+    "Dot-Case": true,
+    "Kebab-Case": true,
+    "Lower-Case": true,
+    "Pascal-Case": true,
+    "Path-Case": true,
+    "Sentence-Case": true,
+    "Snake-Case": true,
+  },
+  {
+    "Camel-Case": true,
+    "Capital-Case": true,
+    "Constant-Case": true,
+    "Dot-Case": true,
+    "Kebab-Case": true,
+    "Lower-Case": true,
+    "Pascal-Case": true,
+    "Path-Case": true,
+    "Sentence-Case": true,
+    "Snake-Case": true,
+  },
+]
+`;
+
+exports[`headerCase should convert array with strings 1`] = `
+[
+  "Camel-Case",
+  "Capital-Case",
+  "Constant-Case",
+  "Dot-Case",
+  "Kebab-Case",
+  "Lower-Case",
+  "Pascal-Case",
+  "Path-Case",
+  "Sentence-Case",
+  "Snake-Case",
+]
+`;
+
+exports[`headerCase should convert camelCase 1`] = `"Camel-Case"`;
+
+exports[`headerCase should convert dot.case 1`] = `"Dot-Case"`;
+
+exports[`headerCase should convert kebab-case 1`] = `"Kebab-Case"`;
+
+exports[`headerCase should convert lower case 1`] = `"Lower-Case"`;
+
+exports[`headerCase should convert object keys 1`] = `
+{
+  "Camel-Case": true,
+  "Capital-Case": true,
+  "Constant-Case": true,
+  "Dot-Case": true,
+  "Kebab-Case": true,
+  "Lower-Case": true,
+  "Pascal-Case": true,
+  "Path-Case": true,
+  "Sentence-Case": true,
+  "Snake-Case": true,
+}
+`;
+
+exports[`headerCase should convert path/case 1`] = `"Path-Case"`;
+
+exports[`headerCase should convert snake_case 1`] = `"Snake-Case"`;

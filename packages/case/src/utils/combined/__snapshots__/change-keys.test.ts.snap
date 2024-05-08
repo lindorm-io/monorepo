@@ -1,0 +1,529 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`changeCase with camel mode should convert array with objects 1`] = `
+[
+  {
+    "camelCase": true,
+    "capitalCase": true,
+    "constantCase": true,
+    "dotCase": true,
+    "kebabCase": true,
+    "lowerCase": true,
+    "pascalCase": true,
+    "pathCase": true,
+    "sentenceCase": true,
+    "snakeCase": true,
+  },
+  {
+    "camelCase": true,
+    "capitalCase": true,
+    "constantCase": true,
+    "dotCase": true,
+    "kebabCase": true,
+    "lowerCase": true,
+    "pascalCase": true,
+    "pathCase": true,
+    "sentenceCase": true,
+    "snakeCase": true,
+  },
+]
+`;
+
+exports[`changeCase with camel mode should convert object 1`] = `
+{
+  "camelCase": true,
+  "capitalCase": true,
+  "constantCase": true,
+  "dotCase": true,
+  "kebabCase": true,
+  "lowerCase": true,
+  "pascalCase": true,
+  "pathCase": true,
+  "sentenceCase": true,
+  "snakeCase": true,
+}
+`;
+
+exports[`changeCase with capital mode should convert array with objects 1`] = `
+[
+  {
+    "Camel Case": true,
+    "Capital Case": true,
+    "Constant Case": true,
+    "Dot Case": true,
+    "Kebab Case": true,
+    "Lower Case": true,
+    "Pascal Case": true,
+    "Path Case": true,
+    "Sentence Case": true,
+    "Snake Case": true,
+  },
+  {
+    "Camel Case": true,
+    "Capital Case": true,
+    "Constant Case": true,
+    "Dot Case": true,
+    "Kebab Case": true,
+    "Lower Case": true,
+    "Pascal Case": true,
+    "Path Case": true,
+    "Sentence Case": true,
+    "Snake Case": true,
+  },
+]
+`;
+
+exports[`changeCase with capital mode should convert object 1`] = `
+{
+  "Camel Case": true,
+  "Capital Case": true,
+  "Constant Case": true,
+  "Dot Case": true,
+  "Kebab Case": true,
+  "Lower Case": true,
+  "Pascal Case": true,
+  "Path Case": true,
+  "Sentence Case": true,
+  "Snake Case": true,
+}
+`;
+
+exports[`changeCase with constant mode should convert array with objects 1`] = `
+[
+  {
+    "CAMEL_CASE": true,
+    "CAPITAL_CASE": true,
+    "CONSTANT_CASE": true,
+    "DOT_CASE": true,
+    "KEBAB_CASE": true,
+    "LOWER_CASE": true,
+    "PASCAL_CASE": true,
+    "PATH_CASE": true,
+    "SENTENCE_CASE": true,
+    "SNAKE_CASE": true,
+  },
+  {
+    "CAMEL_CASE": true,
+    "CAPITAL_CASE": true,
+    "CONSTANT_CASE": true,
+    "DOT_CASE": true,
+    "KEBAB_CASE": true,
+    "LOWER_CASE": true,
+    "PASCAL_CASE": true,
+    "PATH_CASE": true,
+    "SENTENCE_CASE": true,
+    "SNAKE_CASE": true,
+  },
+]
+`;
+
+exports[`changeCase with constant mode should convert object 1`] = `
+{
+  "CAMEL_CASE": true,
+  "CAPITAL_CASE": true,
+  "CONSTANT_CASE": true,
+  "DOT_CASE": true,
+  "KEBAB_CASE": true,
+  "LOWER_CASE": true,
+  "PASCAL_CASE": true,
+  "PATH_CASE": true,
+  "SENTENCE_CASE": true,
+  "SNAKE_CASE": true,
+}
+`;
+
+exports[`changeCase with dot mode should convert array with objects 1`] = `
+[
+  {
+    "camel.case": true,
+    "capital.case": true,
+    "constant.case": true,
+    "dot.case": true,
+    "kebab.case": true,
+    "lower.case": true,
+    "pascal.case": true,
+    "path.case": true,
+    "sentence.case": true,
+    "snake.case": true,
+  },
+  {
+    "camel.case": true,
+    "capital.case": true,
+    "constant.case": true,
+    "dot.case": true,
+    "kebab.case": true,
+    "lower.case": true,
+    "pascal.case": true,
+    "path.case": true,
+    "sentence.case": true,
+    "snake.case": true,
+  },
+]
+`;
+
+exports[`changeCase with dot mode should convert object 1`] = `
+{
+  "camel.case": true,
+  "capital.case": true,
+  "constant.case": true,
+  "dot.case": true,
+  "kebab.case": true,
+  "lower.case": true,
+  "pascal.case": true,
+  "path.case": true,
+  "sentence.case": true,
+  "snake.case": true,
+}
+`;
+
+exports[`changeCase with header mode should convert array with objects 1`] = `
+[
+  {
+    "Camel-Case": true,
+    "Capital-Case": true,
+    "Constant-Case": true,
+    "Dot-Case": true,
+    "Kebab-Case": true,
+    "Lower-Case": true,
+    "Pascal-Case": true,
+    "Path-Case": true,
+    "Sentence-Case": true,
+    "Snake-Case": true,
+  },
+  {
+    "Camel-Case": true,
+    "Capital-Case": true,
+    "Constant-Case": true,
+    "Dot-Case": true,
+    "Kebab-Case": true,
+    "Lower-Case": true,
+    "Pascal-Case": true,
+    "Path-Case": true,
+    "Sentence-Case": true,
+    "Snake-Case": true,
+  },
+]
+`;
+
+exports[`changeCase with header mode should convert object 1`] = `
+{
+  "Camel-Case": true,
+  "Capital-Case": true,
+  "Constant-Case": true,
+  "Dot-Case": true,
+  "Kebab-Case": true,
+  "Lower-Case": true,
+  "Pascal-Case": true,
+  "Path-Case": true,
+  "Sentence-Case": true,
+  "Snake-Case": true,
+}
+`;
+
+exports[`changeCase with kebab mode should convert array with objects 1`] = `
+[
+  {
+    "camel-case": true,
+    "capital-case": true,
+    "constant-case": true,
+    "dot-case": true,
+    "kebab-case": true,
+    "lower-case": true,
+    "pascal-case": true,
+    "path-case": true,
+    "sentence-case": true,
+    "snake-case": true,
+  },
+  {
+    "camel-case": true,
+    "capital-case": true,
+    "constant-case": true,
+    "dot-case": true,
+    "kebab-case": true,
+    "lower-case": true,
+    "pascal-case": true,
+    "path-case": true,
+    "sentence-case": true,
+    "snake-case": true,
+  },
+]
+`;
+
+exports[`changeCase with kebab mode should convert object 1`] = `
+{
+  "camel-case": true,
+  "capital-case": true,
+  "constant-case": true,
+  "dot-case": true,
+  "kebab-case": true,
+  "lower-case": true,
+  "pascal-case": true,
+  "path-case": true,
+  "sentence-case": true,
+  "snake-case": true,
+}
+`;
+
+exports[`changeCase with lower mode should convert array with objects 1`] = `
+[
+  {
+    "camel case": true,
+    "capital case": true,
+    "constant case": true,
+    "dot case": true,
+    "kebab case": true,
+    "lower case": true,
+    "pascal case": true,
+    "path case": true,
+    "sentence case": true,
+    "snake case": true,
+  },
+  {
+    "camel case": true,
+    "capital case": true,
+    "constant case": true,
+    "dot case": true,
+    "kebab case": true,
+    "lower case": true,
+    "pascal case": true,
+    "path case": true,
+    "sentence case": true,
+    "snake case": true,
+  },
+]
+`;
+
+exports[`changeCase with lower mode should convert object 1`] = `
+{
+  "camel case": true,
+  "capital case": true,
+  "constant case": true,
+  "dot case": true,
+  "kebab case": true,
+  "lower case": true,
+  "pascal case": true,
+  "path case": true,
+  "sentence case": true,
+  "snake case": true,
+}
+`;
+
+exports[`changeCase with none mode should convert array with objects 1`] = `
+[
+  {
+    "CONSTANT_CASE": true,
+    "Capital Case": true,
+    "PascalCase": true,
+    "Sentence case": true,
+    "camelCase": true,
+    "dot.case": true,
+    "kebab-case": true,
+    "lower case": true,
+    "path/case": true,
+    "snake_case": true,
+  },
+  {
+    "CONSTANT_CASE": true,
+    "Capital Case": true,
+    "PascalCase": true,
+    "Sentence case": true,
+    "camelCase": true,
+    "dot.case": true,
+    "kebab-case": true,
+    "lower case": true,
+    "path/case": true,
+    "snake_case": true,
+  },
+]
+`;
+
+exports[`changeCase with none mode should convert object 1`] = `
+{
+  "CONSTANT_CASE": true,
+  "Capital Case": true,
+  "PascalCase": true,
+  "Sentence case": true,
+  "camelCase": true,
+  "dot.case": true,
+  "kebab-case": true,
+  "lower case": true,
+  "path/case": true,
+  "snake_case": true,
+}
+`;
+
+exports[`changeCase with pascal mode should convert array with objects 1`] = `
+[
+  {
+    "CamelCase": true,
+    "CapitalCase": true,
+    "ConstantCase": true,
+    "DotCase": true,
+    "KebabCase": true,
+    "LowerCase": true,
+    "PascalCase": true,
+    "PathCase": true,
+    "SentenceCase": true,
+    "SnakeCase": true,
+  },
+  {
+    "CamelCase": true,
+    "CapitalCase": true,
+    "ConstantCase": true,
+    "DotCase": true,
+    "KebabCase": true,
+    "LowerCase": true,
+    "PascalCase": true,
+    "PathCase": true,
+    "SentenceCase": true,
+    "SnakeCase": true,
+  },
+]
+`;
+
+exports[`changeCase with pascal mode should convert object 1`] = `
+{
+  "CamelCase": true,
+  "CapitalCase": true,
+  "ConstantCase": true,
+  "DotCase": true,
+  "KebabCase": true,
+  "LowerCase": true,
+  "PascalCase": true,
+  "PathCase": true,
+  "SentenceCase": true,
+  "SnakeCase": true,
+}
+`;
+
+exports[`changeCase with path mode should convert array with objects 1`] = `
+[
+  {
+    "camel/case": true,
+    "capital/case": true,
+    "constant/case": true,
+    "dot/case": true,
+    "kebab/case": true,
+    "lower/case": true,
+    "pascal/case": true,
+    "path/case": true,
+    "sentence/case": true,
+    "snake/case": true,
+  },
+  {
+    "camel/case": true,
+    "capital/case": true,
+    "constant/case": true,
+    "dot/case": true,
+    "kebab/case": true,
+    "lower/case": true,
+    "pascal/case": true,
+    "path/case": true,
+    "sentence/case": true,
+    "snake/case": true,
+  },
+]
+`;
+
+exports[`changeCase with path mode should convert object 1`] = `
+{
+  "camel/case": true,
+  "capital/case": true,
+  "constant/case": true,
+  "dot/case": true,
+  "kebab/case": true,
+  "lower/case": true,
+  "pascal/case": true,
+  "path/case": true,
+  "sentence/case": true,
+  "snake/case": true,
+}
+`;
+
+exports[`changeCase with sentence mode should convert array with objects 1`] = `
+[
+  {
+    "Camel case": true,
+    "Capital case": true,
+    "Constant case": true,
+    "Dot case": true,
+    "Kebab case": true,
+    "Lower case": true,
+    "Pascal case": true,
+    "Path case": true,
+    "Sentence case": true,
+    "Snake case": true,
+  },
+  {
+    "Camel case": true,
+    "Capital case": true,
+    "Constant case": true,
+    "Dot case": true,
+    "Kebab case": true,
+    "Lower case": true,
+    "Pascal case": true,
+    "Path case": true,
+    "Sentence case": true,
+    "Snake case": true,
+  },
+]
+`;
+
+exports[`changeCase with sentence mode should convert object 1`] = `
+{
+  "Camel case": true,
+  "Capital case": true,
+  "Constant case": true,
+  "Dot case": true,
+  "Kebab case": true,
+  "Lower case": true,
+  "Pascal case": true,
+  "Path case": true,
+  "Sentence case": true,
+  "Snake case": true,
+}
+`;
+
+exports[`changeCase with snake mode should convert array with objects 1`] = `
+[
+  {
+    "camel_case": true,
+    "capital_case": true,
+    "constant_case": true,
+    "dot_case": true,
+    "kebab_case": true,
+    "lower_case": true,
+    "pascal_case": true,
+    "path_case": true,
+    "sentence_case": true,
+    "snake_case": true,
+  },
+  {
+    "camel_case": true,
+    "capital_case": true,
+    "constant_case": true,
+    "dot_case": true,
+    "kebab_case": true,
+    "lower_case": true,
+    "pascal_case": true,
+    "path_case": true,
+    "sentence_case": true,
+    "snake_case": true,
+  },
+]
+`;
+
+exports[`changeCase with snake mode should convert object 1`] = `
+{
+  "camel_case": true,
+  "capital_case": true,
+  "constant_case": true,
+  "dot_case": true,
+  "kebab_case": true,
+  "lower_case": true,
+  "pascal_case": true,
+  "path_case": true,
+  "sentence_case": true,
+  "snake_case": true,
+}
+`;
