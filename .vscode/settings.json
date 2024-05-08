@@ -22,8 +22,5 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "github-actions.workflows.pinned.workflows": [
-    ".github/workflows/main-push.yml",
-    ".github/workflows/pull-request.yml"
-  ]
+  "github-actions.workflows.pinned.workflows": [".github/workflows/main-push.yml"]
 }
