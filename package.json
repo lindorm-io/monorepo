@@ -3,23 +3,15 @@
   "version": "0.0.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
-  "maintainers": [
-    "jonn@lindorm.io"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:lindorm-io/monorepo.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lindorm-io/monorepo/issues"
-  },
+  "repository": "https://github.com/lindorm-io/monorepo",
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
   "scripts": {
     "build": "lerna run build",
     "lint": "lerna exec -- eslint . --ext .ts,.tsx",
     "prepare": "husky",
     "release": "lerna publish",
-    "test": "lerna run ci:test",
-    "typecheck": "lerna run ci:typecheck",
+    "test": "lerna run test:ci",
+    "typecheck": "lerna run typecheck:ci",
     "update": "ncu -u && lerna run update && npm install && npm audit fix"
   },
   "devDependencies": {
