@@ -13,6 +13,10 @@ export const TEST_ERROR: any = new Error();
 export const TEST_FINITE: any = 123456;
 export const TEST_FUNCTION: any = () => {};
 export const TEST_INFINITY: any = Infinity;
+export const TEST_JWE: any =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Lm9zcHJleS5ubyIsImlhdCI6MTYxNzQwNzQwMn0.eyJzdWIiOiJ0ZXN0Lm9zcHJleS5ubyIsImlhdCI6MTYxNzQwNzQwMn0.eyJzdWIiOiJ0ZXN0Lm9zcHJleS5ubyIsImlhdCI6MTYxNzQwNzQwMn0.1J9";
+export const TEST_JWT: any =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0Lm9zcHJleS5ubyIsImlhdCI6MTYxNzQwNzQwMn0.1J9";
 export const TEST_NAN: any = NaN;
 export const TEST_NEGATIVE_INFINITY: any = -Infinity;
 export const TEST_NULL: any = null;
@@ -36,6 +40,8 @@ export const TEST_FIXTURES = {
   TEST_FINITE,
   TEST_FUNCTION,
   TEST_INFINITY,
+  TEST_JWE,
+  TEST_JWT,
   TEST_NAN,
   TEST_NEGATIVE_INFINITY,
   TEST_NULL,

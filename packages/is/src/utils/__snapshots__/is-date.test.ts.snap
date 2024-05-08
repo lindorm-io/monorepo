@@ -22,6 +22,10 @@ exports[`isDate should resolve TEST_FUNCTION 1`] = `false`;
 
 exports[`isDate should resolve TEST_INFINITY 1`] = `false`;
 
+exports[`isDate should resolve TEST_JWE 1`] = `false`;
+
+exports[`isDate should resolve TEST_JWT 1`] = `false`;
+
 exports[`isDate should resolve TEST_NAN 1`] = `false`;
 
 exports[`isDate should resolve TEST_NEGATIVE_INFINITY 1`] = `false`;

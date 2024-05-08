@@ -6,6 +6,8 @@ export * from "./is-empty";
 export * from "./is-error";
 export * from "./is-finite";
 export * from "./is-function";
+export * from "./is-jwe";
+export * from "./is-jwt";
 export * from "./is-nan";
 export * from "./is-null";
 export * from "./is-number";
