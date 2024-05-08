@@ -26,6 +26,7 @@ module.exports = {
   ignorePatterns: [
     "__fixtures__",
     "__mocks__",
+    "__snapshots__",
     "*.d.ts",
     "*.fixture.*",
     "*.integration.*",
