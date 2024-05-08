@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.1...@lindorm/is@0.1.2) (2024-05-08)
+
+### Bug Fixes
+
+- add jwt and jwe checks ([b27c1a9](https://github.com/lindorm-io/monorepo/commit/b27c1a986066c8305489bbbf4fd70ca3ef5b1a2f))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.0...@lindorm/is@0.1.1) (2024-05-08)
 
 ### Bug Fixes
