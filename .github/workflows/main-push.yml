@@ -1,0 +1,52 @@
+name: main-push
+
+on:
+  push:
+    branches:
+      - "main"
+
+env:
+  NODE_VERSION: 20.x
+
+jobs:
+  test_and_release:
+    name: Test and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Use Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Validate Code
+        run: |
+          npm run lint
+          npm run build
+          npm run typecheck
+
+      # - name: Use Docker
+      #   uses: isbang/compose-action@v1.5.1
+      #   with:
+      #     compose-file: "./docker-compose.yml"
+      #     down-flags: "--volumes"
+
+      - name: Test
+        run: npm run test
+
+      - name: Authenticate Package Registry
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
+
+      - name: Release
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          npm run release
