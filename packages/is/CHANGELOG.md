@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.0...@lindorm/is@0.1.1) (2024-05-08)
+
+### Bug Fixes
+
+- improve function type check ([068810c](https://github.com/lindorm-io/monorepo/commit/068810cac3ca995baff35063ea2d0cc3e50ee20b))
+
 # 0.1.0 (2024-05-08)
 
 ### Features
