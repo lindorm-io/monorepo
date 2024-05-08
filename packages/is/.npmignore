@@ -1,0 +1,8 @@
+/node_modules
+/src
+
+docker-compose.yml
+jest.config.integration.js
+jest.config.js
+tsconfig.build.json
+tsconfig.json

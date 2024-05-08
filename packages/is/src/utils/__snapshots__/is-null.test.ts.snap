@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`isNull should resolve TEST_ARRAY 1`] = `false`;
+
+exports[`isNull should resolve TEST_BOOLEAN 1`] = `false`;
+
+exports[`isNull should resolve TEST_CLASS 1`] = `false`;
+
+exports[`isNull should resolve TEST_DATE 1`] = `false`;
+
+exports[`isNull should resolve TEST_EMPTY_ARRAY 1`] = `false`;
+
+exports[`isNull should resolve TEST_EMPTY_OBJECT 1`] = `false`;
+
+exports[`isNull should resolve TEST_EMPTY_STRING 1`] = `false`;
+
+exports[`isNull should resolve TEST_ERROR 1`] = `false`;
+
+exports[`isNull should resolve TEST_FINITE 1`] = `false`;
+
+exports[`isNull should resolve TEST_FUNCTION 1`] = `false`;
+
+exports[`isNull should resolve TEST_INFINITY 1`] = `false`;
+
+exports[`isNull should resolve TEST_NAN 1`] = `false`;
+
+exports[`isNull should resolve TEST_NEGATIVE_INFINITY 1`] = `false`;
+
+exports[`isNull should resolve TEST_NULL 1`] = `true`;
+
+exports[`isNull should resolve TEST_NUMBER 1`] = `false`;
+
+exports[`isNull should resolve TEST_OBJECT 1`] = `false`;
+
+exports[`isNull should resolve TEST_PROMISE 1`] = `false`;
+
+exports[`isNull should resolve TEST_STRING 1`] = `false`;
+
+exports[`isNull should resolve TEST_UNDEFINED 1`] = `false`;
+
+exports[`isNull should resolve TEST_URL 1`] = `false`;
+
+exports[`isNull should resolve TEST_URL_STRING 1`] = `false`;
