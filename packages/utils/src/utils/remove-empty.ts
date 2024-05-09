@@ -1,6 +1,7 @@
 import { isArray, isEmpty, isObject } from "@lindorm/is";
 import { Dict } from "@lindorm/types";
-import { _removeFromArray, _removeFromObject } from "./private";
+import { _removeFromArray } from "./private/remove-from-array";
+import { _removeFromObject } from "./private/remove-from-object";
 
 export function removeEmpty<T extends Array<any> = Array<any>>(array: T): T;
 export function removeEmpty<T extends Dict = Dict>(dict: T): T;

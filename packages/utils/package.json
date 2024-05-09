@@ -27,5 +27,8 @@
   },
   "dependencies": {
     "@lindorm/is": "^0.1.2"
+  },
+  "devDependencies": {
+    "@lindorm/types": "^0.1.2"
   }
 }
