@@ -1,33 +1,20 @@
-import { ComposedMiddleware, Dispatch, Middleware, Next } from "../types";
+import { Middleware } from "../types";
+import { _createDispatcher } from "./private/create-dispatcher";
 
-export const composeMiddleware =
-  <Context>(middleware: Array<Middleware<Context>>): ComposedMiddleware<Context> =>
-  (context: Context, next?: Next): Promise<void> => {
-    let index = -1;
+type Options = {
+  useClone?: boolean;
+};
 
-    const dispatch: Dispatch = (i: number) => {
-      if (i <= index) {
-        return Promise.reject(new Error("next() called multiple times"));
-      }
+export const composeMiddleware = async <Context>(
+  context: Context,
+  middleware: Array<Middleware<Context>>,
+  options: Options = {},
+): Promise<Context> => {
+  const { useClone = true } = options;
 
-      index = i;
+  const ctx = useClone ? Object.assign({}, context) : context;
 
-      let mw = middleware[i];
+  await _createDispatcher<Context>(middleware)(ctx);
 
-      if (i === middleware.length) {
-        mw = next as Middleware<Context>;
-      }
-
-      if (!mw) {
-        return Promise.resolve();
-      }
-
-      try {
-        return Promise.resolve(mw(context, dispatch.bind(null, i + 1)));
-      } catch (err) {
-        return Promise.reject(err);
-      }
-    };
-
-    return dispatch(0);
-  };
+  return ctx;
+};

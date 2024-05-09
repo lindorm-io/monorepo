@@ -1,68 +1,62 @@
-import { Middleware, Next } from "../types";
+import { Middleware } from "../types";
 import { composeMiddleware } from "./compose-middleware";
 
 describe("composeMiddleware", () => {
   let ctx: any;
-  let next: Next;
 
-  const mw1: Middleware<any> = async (c, n) => {
-    c.mw1before = true;
+  const mw: Middleware<any> = async (c, n) => {
+    c.mwbefore = true;
     c.before = 1;
 
     await n();
 
-    c.mw1after = true;
+    c.mwafter = true;
     c.after = 1;
   };
 
-  const mw2: Middleware<any> = async (c, n) => {
-    c.mw2before = true;
-    c.before = 2;
-
-    await n();
-
-    c.mw2after = true;
-    c.after = 2;
-  };
-
-  const mw3: Middleware<any> = async () => {
-    throw new Error("message");
+  const mwE: Middleware<any> = async () => {
+    throw new Error("error");
   };
 
   beforeEach(() => {
-    ctx = {};
-    next = () => Promise.resolve();
+    ctx = { context: "context" };
   });
 
   afterEach(jest.resetAllMocks);
 
-  test("should compose", async () => {
-    expect(composeMiddleware([mw1, mw2])).toBeInstanceOf(Function);
+  test("should resolve", async () => {
+    await expect(composeMiddleware(ctx, [mw])).resolves.toEqual({
+      after: 1,
+      before: 1,
+      context: "context",
+      mwafter: true,
+      mwbefore: true,
+    });
+
+    expect(ctx).toEqual({ context: "context" });
   });
 
-  test("should resolve", async () => {
-    const composed = composeMiddleware([mw1, mw2]);
+  test("should resolve without cloning context", async () => {
+    await expect(composeMiddleware(ctx, [mw], { useClone: false })).resolves.toEqual({
+      after: 1,
+      before: 1,
+      context: "context",
+      mwafter: true,
+      mwbefore: true,
+    });
 
-    await expect(composed(ctx, next)).resolves.not.toThrow();
+    expect(ctx).toEqual({
+      after: 1,
+      before: 1,
+      context: "context",
+      mwafter: true,
+      mwbefore: true,
+    });
   });
 
   test("should throw", async () => {
-    const composed = composeMiddleware([mw1, mw2, mw3]);
+    await expect(composeMiddleware(ctx, [mwE])).rejects.toThrow();
 
-    await expect(composed(ctx, next)).rejects.toThrow(new Error("message"));
-  });
-
-  test("should run all middleware", async () => {
-    const composed = composeMiddleware([mw1, mw2]);
-    await composed(ctx, next);
-
-    expect(ctx.mw1before).toEqual(true);
-    expect(ctx.mw1after).toEqual(true);
-
-    expect(ctx.mw2before).toEqual(true);
-    expect(ctx.mw2after).toEqual(true);
-
-    expect(ctx.before).toEqual(2);
-    expect(ctx.after).toEqual(1);
+    expect(ctx).toEqual({ context: "context" });
   });
 });
