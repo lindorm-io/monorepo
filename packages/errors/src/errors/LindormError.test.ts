@@ -13,7 +13,7 @@ describe("LindormError", () => {
     });
 
     test("should be an LindormError", () => {
-      expect(new LindormError("message").name).toBe("LindormError");
+      expect(new LindormError("message").name).toEqual("LindormError");
     });
   });
 
@@ -26,7 +26,7 @@ describe("LindormError", () => {
           debug: { value: "debug" },
           title: "title",
         }),
-      ).toStrictEqual(
+      ).toEqual(
         expect.objectContaining({
           code: "code",
           data: { value: "data" },
@@ -51,7 +51,7 @@ describe("LindormError", () => {
     });
 
     test("should store normal error on context", () => {
-      expect(new LindormError("message", { error })).toStrictEqual(
+      expect(new LindormError("message", { error })).toEqual(
         expect.objectContaining({
           errors: ["Error: error message"],
         }),
@@ -59,7 +59,7 @@ describe("LindormError", () => {
     });
 
     test("should inherit values from lindorm errors", () => {
-      expect(new LindormError("message", { error: extendsError })).toStrictEqual(
+      expect(new LindormError("message", { error: extendsError })).toEqual(
         expect.objectContaining({
           code: "code",
           data: { value: "data" },
@@ -71,7 +71,7 @@ describe("LindormError", () => {
     });
 
     test("should inherit values from any errors", () => {
-      expect(new LindormError("message", { error: externalError })).toStrictEqual(
+      expect(new LindormError("message", { error: externalError })).toEqual(
         expect.objectContaining({
           errors: ["ExternalError: external error message"],
         }),
