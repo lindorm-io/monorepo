@@ -1,0 +1,46 @@
+{
+  "name": "@lindorm/conduit",
+  "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "repository": {
+    "url": "https://github.com/lindorm-io/monorepo",
+    "directory": "packages/conduit"
+  },
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "example": "ts-node example",
+    "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
+    "test:ci": "npm run test:unit",
+    "test:integration": "jest --config jest.config.integration.js --",
+    "test:unit": "jest --config jest.config.js --",
+    "test": "jest --watch --",
+    "typecheck:ci": "tsc",
+    "typecheck": "tsc --watch",
+    "update": "ncu -u"
+  },
+  "dependencies": {
+    "@lindorm/enums": "^0.1.1",
+    "@lindorm/is": "^0.1.2",
+    "@lindorm/middleware": "^0.1.0",
+    "@lindorm/retry": "^0.1.0",
+    "@lindorm/url": "^0.1.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@lindorm/logger": "^0.1.1",
+    "@lindorm/types": "^0.1.2",
+    "@types/uuid": "^9.0.8",
+    "fetch-mock": "^9.11.0",
+    "form-data": "^4.0.0"
+  },
+  "peerDependencies": {
+    "form-data": "^4.0.0"
+  }
+}
