@@ -11,10 +11,10 @@ export type _RandomStringAmount =
   | "90%"
   | number;
 
-export type _CustomSymbols = "default" | "token" | "unreserved";
+export type _CustomSymbols = "default" | "secret" | "token" | "unreserved";
 
 export type _CreateRandomStringOptions = {
-  customSymbols?: _CustomSymbols;
+  custom?: _CustomSymbols;
   numbersMax?: _RandomStringAmount;
   symbolsMax?: _RandomStringAmount;
 };

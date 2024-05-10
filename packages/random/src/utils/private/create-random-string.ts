@@ -10,12 +10,12 @@ export const _createRandomString = (
   length: number,
   options: _CreateRandomStringOptions = {},
 ): string => {
-  const { customSymbols = "default", numbersMax = 0, symbolsMax = 0 } = options;
+  const { custom = "default", numbersMax = 0, symbolsMax = 0 } = options;
 
   const lengthInt = Math.round(length);
   const numbersAmount = _getAmount(lengthInt, numbersMax);
   const symbolsAmount = _getAmount(lengthInt, symbolsMax);
-  const symbols = _getSymbols(customSymbols);
+  const symbols = _getSymbols(custom);
 
   const result: string[] = [];
 
