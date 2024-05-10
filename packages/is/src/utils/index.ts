@@ -1,5 +1,6 @@
 export * from "./is-array";
 export * from "./is-boolean";
+export * from "./is-buffer";
 export * from "./is-class";
 export * from "./is-date";
 export * from "./is-empty";

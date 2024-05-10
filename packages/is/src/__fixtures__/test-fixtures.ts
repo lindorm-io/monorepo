@@ -4,6 +4,7 @@ class TestClass {
 
 export const TEST_ARRAY: any = ["array"];
 export const TEST_BOOLEAN: any = true;
+export const TEST_BUFFER: any = Buffer.from("test", "utf8");
 export const TEST_CLASS: any = new TestClass();
 export const TEST_DATE: any = new Date();
 export const TEST_EMPTY_ARRAY: any = ["array"];
@@ -31,6 +32,7 @@ export const TEST_URL: any = new URL(TEST_URL_STRING);
 export const TEST_FIXTURES = {
   TEST_ARRAY,
   TEST_BOOLEAN,
+  TEST_BUFFER,
   TEST_CLASS,
   TEST_DATE,
   TEST_EMPTY_ARRAY,

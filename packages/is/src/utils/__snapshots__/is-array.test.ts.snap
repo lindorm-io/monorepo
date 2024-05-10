@@ -4,6 +4,8 @@ exports[`isArray should resolve TEST_ARRAY 1`] = `true`;
 
 exports[`isArray should resolve TEST_BOOLEAN 1`] = `false`;
 
+exports[`isArray should resolve TEST_BUFFER 1`] = `false`;
+
 exports[`isArray should resolve TEST_CLASS 1`] = `false`;
 
 exports[`isArray should resolve TEST_DATE 1`] = `false`;
