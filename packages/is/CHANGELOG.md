@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.3...@lindorm/is@0.1.4) (2024-05-10)
+
+### Bug Fixes
+
+- add buffer check ([aebcb1a](https://github.com/lindorm-io/monorepo/commit/aebcb1a9074792381a2d60b574b18a33adcbff43))
+
 ## [0.1.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.2...@lindorm/is@0.1.3) (2024-05-10)
 
 **Note:** Version bump only for package @lindorm/is
