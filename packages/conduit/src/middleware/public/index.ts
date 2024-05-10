@@ -4,6 +4,7 @@ export * from "./conduit-change-request-body-middleware";
 export * from "./conduit-change-request-headers-middleware";
 export * from "./conduit-change-request-query-middleware";
 export * from "./conduit-change-response-data-middleware";
+export * from "./conduit-client-credentials-middleware";
 export * from "./conduit-correlation-middleware";
 export * from "./conduit-header-middleware";
 export * from "./conduit-headers-middleware";
