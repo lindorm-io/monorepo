@@ -2,6 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { randomUUID } from "crypto";
+import { KryptosError } from "../errors";
 import {
   EcKryptos,
   FormatOptions,
@@ -53,16 +54,16 @@ export class Kryptos implements KryptosAttributes {
   private readonly _createdAt: Date;
   private readonly _curve: KryptosCurve | undefined;
   private readonly _isExternal: boolean;
-  private readonly _jwksUri: string | undefined;
-  private readonly _ownerId: string;
   private readonly _privateKey: Buffer | undefined;
   private readonly _publicKey: Buffer | undefined;
   private readonly _type: KryptosType;
 
   private _algorithm: KryptosAlgorithm | undefined;
   private _expiresAt: Date | undefined;
+  private _jwksUri: string | undefined;
   private _notBefore: Date;
   private _operations: Array<KryptosOperation>;
+  private _ownerId: string | undefined;
   private _updatedAt: Date;
   private _use: KryptosUse | undefined;
 
@@ -76,7 +77,7 @@ export class Kryptos implements KryptosAttributes {
     this._jwksUri = options.jwksUri ?? undefined;
     this._notBefore = options.notBefore ?? new Date();
     this._operations = options.operations ?? [];
-    this._ownerId = options.ownerId ?? "";
+    this._ownerId = options.ownerId ?? undefined;
     this._privateKey = options.privateKey ?? undefined;
     this._publicKey = options.publicKey ?? undefined;
     this._type = options.type;
@@ -134,6 +135,11 @@ export class Kryptos implements KryptosAttributes {
     return this._jwksUri;
   }
 
+  public set jwksUri(uri: string | undefined) {
+    this._jwksUri = uri;
+    this._updatedAt = new Date();
+  }
+
   public get notBefore(): Date {
     return this._notBefore;
   }
@@ -152,8 +158,13 @@ export class Kryptos implements KryptosAttributes {
     this._updatedAt = new Date();
   }
 
-  public get ownerId(): string {
+  public get ownerId(): string | undefined {
     return this._ownerId;
+  }
+
+  public set ownerId(ownerId: string | undefined) {
+    this._ownerId = ownerId;
+    this._updatedAt = new Date();
   }
 
   public get type(): KryptosType {
@@ -238,7 +249,7 @@ export class Kryptos implements KryptosAttributes {
         return this._toRaw(mode) as K;
 
       default:
-        throw new Error(`Invalid key format: ${format}`);
+        throw new KryptosError(`Invalid key format: ${format}`);
     }
   }
 
@@ -288,7 +299,7 @@ export class Kryptos implements KryptosAttributes {
         break;
 
       default:
-        throw new Error(`Invalid key type: ${type}`);
+        throw new KryptosError(`Invalid key type: ${type}`);
     }
 
     return new Kryptos({ ...options, ...result, type });
@@ -302,27 +313,27 @@ export class Kryptos implements KryptosAttributes {
   public static from(format: KryptosFormat, arg: KryptosFrom): Kryptos {
     switch (format) {
       case "b64":
-        if (!_isB64(arg)) throw new Error("Invalid key format");
+        if (!_isB64(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos(_fromB64(arg));
 
       case "der":
-        if (!_isDer(arg)) throw new Error("Invalid key format");
+        if (!_isDer(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos(arg);
 
       case "jwk":
-        if (!_isJwk(arg)) throw new Error("Invalid key format");
+        if (!_isJwk(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos(_fromJwk(arg));
 
       case "pem":
-        if (!_isPem(arg)) throw new Error("Invalid key format");
+        if (!_isPem(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos(_fromPem(arg as KryptosPem));
 
       case "raw":
-        if (!_isRaw(arg)) throw new Error("Invalid key format");
+        if (!_isRaw(arg)) throw new KryptosError("Invalid key format");
         return new Kryptos(_fromRaw(arg as KryptosRaw));
 
       default:
-        throw new Error("Invalid key format");
+        throw new KryptosError("Invalid key format");
     }
   }
 
@@ -381,7 +392,7 @@ export class Kryptos implements KryptosAttributes {
         return _exportRsaToJwk(this._formatOptions(mode));
 
       default:
-        throw new Error(`Invalid key type: ${this._type}`);
+        throw new KryptosError("Unexpected key type");
     }
   }
 
@@ -400,7 +411,7 @@ export class Kryptos implements KryptosAttributes {
         return _exportRsaToPem(this._formatOptions(mode));
 
       default:
-        throw new Error(`Invalid key type: ${this._type}`);
+        throw new KryptosError("Unexpected key type");
     }
   }
 
@@ -412,10 +423,10 @@ export class Kryptos implements KryptosAttributes {
       case "oct":
       case "OKP":
       case "RSA":
-        throw new Error("Raw export not supported for this key type");
+        throw new KryptosError("Raw export not supported for this key type");
 
       default:
-        throw new Error(`Invalid key type: ${this._type}`);
+        throw new KryptosError("Unexpected key type");
     }
   }
 
@@ -436,7 +447,7 @@ export class Kryptos implements KryptosAttributes {
         return "RS256";
 
       default:
-        throw new Error(`Invalid key type: ${this._type}`);
+        throw new KryptosError("Unexpected key type");
     }
   }
 

@@ -1,6 +1,7 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey } from "crypto";
 import { promisify } from "util";
+import { KryptosError } from "../../errors";
 import {
   FormatOptions,
   GenerateRsaOptions,
@@ -12,11 +13,13 @@ import {
 
 const generateKeyPair = promisify(_generateKeyPair);
 
+const MODULUS = [1, 2, 3, 4] as const;
+
 export const _generateRsaKey = async (options: GenerateRsaOptions): Promise<GenerateRsaResult> => {
   const modulus = options.modulus ?? 4;
 
-  if (![1, 2, 3, 4].includes(modulus)) {
-    throw new Error("Modulus needs to be [ 1 | 2 | 3 | 4 ]");
+  if (!MODULUS.includes(modulus)) {
+    throw new KryptosError("Invalid modulus", { data: { valid: MODULUS } });
   }
 
   const { privateKey, publicKey } = await generateKeyPair("rsa", {
@@ -30,7 +33,7 @@ export const _generateRsaKey = async (options: GenerateRsaOptions): Promise<Gene
 
 export const _createRsaDerFromJwk = (options: RsaKeyJwk): KryptosDer => {
   if (options.kty !== "RSA") {
-    throw new Error("Type needs to be [ RSA ]");
+    throw new KryptosError("Invalid type", { data: { valid: "RSA" } });
   }
 
   const result: KryptosDer = {
@@ -42,7 +45,7 @@ export const _createRsaDerFromJwk = (options: RsaKeyJwk): KryptosDer => {
     const privateKey = privateObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(privateKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.privateKey = privateKey;
@@ -53,14 +56,14 @@ export const _createRsaDerFromJwk = (options: RsaKeyJwk): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey) {
-    throw new Error("Key creation failed");
+    throw new KryptosError("Key creation failed");
   }
 
   return result;
@@ -68,7 +71,7 @@ export const _createRsaDerFromJwk = (options: RsaKeyJwk): KryptosDer => {
 
 export const _createRsaDerFromPem = (options: KryptosPem): KryptosDer => {
   if (options.type !== "RSA") {
-    throw new Error("Type needs to be [ RSA ]");
+    throw new KryptosError("Invalid type", { data: { valid: "RSA" } });
   }
 
   const result: KryptosDer = {
@@ -87,10 +90,10 @@ export const _createRsaDerFromPem = (options: KryptosPem): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(privateKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.privateKey = privateKey;
@@ -102,14 +105,14 @@ export const _createRsaDerFromPem = (options: KryptosPem): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey) {
-    throw new Error("Key creation failed");
+    throw new KryptosError("Key creation failed");
   }
 
   return result;
@@ -117,7 +120,7 @@ export const _createRsaDerFromPem = (options: KryptosPem): KryptosDer => {
 
 export const _exportRsaToJwk = (options: FormatOptions): RsaKeyJwk => {
   if (options.type !== "RSA") {
-    throw new Error("Type needs to be [ RSA ]");
+    throw new KryptosError("Invalid type", { data: { valid: "RSA" } });
   }
 
   const result: RsaKeyJwk = { e: "", n: "", kty: options.type };
@@ -127,31 +130,31 @@ export const _exportRsaToJwk = (options: FormatOptions): RsaKeyJwk => {
     const { n, e, d, p, q, dp, dq, qi, kty } = keyObject.export({ format: "jwk" });
 
     if (!e) {
-      throw new Error("Key export failed [ e ]");
+      throw new KryptosError("Key export failed [ e ]");
     }
     if (!n) {
-      throw new Error("Key export failed [ n ]");
+      throw new KryptosError("Key export failed [ n ]");
     }
     if (!d) {
-      throw new Error("Key export failed [ d ]");
+      throw new KryptosError("Key export failed [ d ]");
     }
     if (!p) {
-      throw new Error("Key export failed [ p ]");
+      throw new KryptosError("Key export failed [ p ]");
     }
     if (!q) {
-      throw new Error("Key export failed [ q ]");
+      throw new KryptosError("Key export failed [ q ]");
     }
     if (!dp) {
-      throw new Error("Key export failed [ dp ]");
+      throw new KryptosError("Key export failed [ dp ]");
     }
     if (!dq) {
-      throw new Error("Key export failed [ dq ]");
+      throw new KryptosError("Key export failed [ dq ]");
     }
     if (!qi) {
-      throw new Error("Key export failed [ qi ]");
+      throw new KryptosError("Key export failed [ qi ]");
     }
     if (kty !== options.type) {
-      throw new Error("Key export failed [ kty ]");
+      throw new KryptosError("Key export failed [ kty ]");
     }
 
     result.e = e;
@@ -166,20 +169,20 @@ export const _exportRsaToJwk = (options: FormatOptions): RsaKeyJwk => {
 
   if (!result.e?.length && !result.n?.length) {
     if (!options.publicKey) {
-      throw new Error("Public key not available");
+      throw new KryptosError("Public key is required");
     }
 
     const keyObject = createPublicKey({ key: options.publicKey, format: "der", type: "pkcs1" });
     const { e, n, kty } = keyObject.export({ format: "jwk" });
 
     if (!e) {
-      throw new Error("Key export failed [ e ]");
+      throw new KryptosError("Key export failed [ e ]");
     }
     if (!n) {
-      throw new Error("Key export failed [ n ]");
+      throw new KryptosError("Key export failed [ n ]");
     }
     if (kty !== "RSA") {
-      throw new Error("Key export failed [ kty ]");
+      throw new KryptosError("Key export failed [ kty ]");
     }
 
     result.e = e;
@@ -187,7 +190,7 @@ export const _exportRsaToJwk = (options: FormatOptions): RsaKeyJwk => {
   }
 
   if (!result.e?.length || !result.n?.length) {
-    throw new Error("Key export failed");
+    throw new KryptosError("Key export failed");
   }
 
   return result;
@@ -195,7 +198,7 @@ export const _exportRsaToJwk = (options: FormatOptions): RsaKeyJwk => {
 
 export const _exportRsaToPem = (options: FormatOptions): KryptosPem => {
   if (options.type !== "RSA") {
-    throw new Error("Type needs to be [ RSA ]");
+    throw new KryptosError("Invalid type", { data: { valid: "RSA" } });
   }
 
   const result: KryptosPem = {
@@ -214,10 +217,10 @@ export const _exportRsaToPem = (options: FormatOptions): KryptosPem => {
     const publicKey = publicObject.export({ format: "pem", type: "pkcs1" });
 
     if (!isString(privateKey)) {
-      throw new Error("Key export failed [ private ]");
+      throw new KryptosError("Key export failed [ private ]");
     }
     if (!isString(publicKey)) {
-      throw new Error("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [ public ]");
     }
 
     result.privateKey = privateKey;
@@ -226,21 +229,21 @@ export const _exportRsaToPem = (options: FormatOptions): KryptosPem => {
 
   if (!result.publicKey && options.publicKey) {
     if (!options.publicKey) {
-      throw new Error("Public key not available");
+      throw new KryptosError("Public key is required");
     }
 
     const publicObject = createPublicKey({ key: options.publicKey, format: "der", type: "pkcs1" });
     const publicKey = publicObject.export({ format: "pem", type: "pkcs1" });
 
     if (!isString(publicKey)) {
-      throw new Error("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [ public ]");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.publicKey) {
-    throw new Error("Key export failed ");
+    throw new KryptosError("Key export failed ");
   }
 
   return result;

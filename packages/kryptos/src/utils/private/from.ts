@@ -1,3 +1,4 @@
+import { KryptosError } from "../../errors";
 import {
   EcKeyJwk,
   KryptosB64,
@@ -6,6 +7,7 @@ import {
   KryptosOptions,
   KryptosPem,
   KryptosRaw,
+  KryptosType,
   OctKeyJwk,
   OkpKeyJwk,
   RsaKeyJwk,
@@ -14,6 +16,8 @@ import { _createEcDerFromJwk, _createEcDerFromPem, _createEcDerFromRaw } from ".
 import { _createOctDerFromJwk, _createOctDerFromPem } from "./oct";
 import { _createOkpDerFromJwk, _createOkpDerFromPem } from "./okp";
 import { _createRsaDerFromJwk, _createRsaDerFromPem } from "./rsa";
+
+const TYPES: Array<KryptosType> = ["EC", "oct", "OKP", "RSA"] as const;
 
 export const _fromB64 = (b64: KryptosB64): KryptosOptions => {
   return {
@@ -45,7 +49,7 @@ export const _fromJwk = (jwk: KryptosFromJwk): KryptosOptions => {
       break;
 
     default:
-      throw new Error("Invalid key type");
+      throw new KryptosError("Invalid key type", { data: { valid: TYPES } });
   }
 
   return {
@@ -82,7 +86,7 @@ export const _fromPem = (pem: KryptosPem): KryptosOptions => {
       return _createRsaDerFromPem(pem);
 
     default:
-      throw new Error(`Invalid key type: ${pem.type}`);
+      throw new KryptosError("Invalid key type", { data: { valid: TYPES } });
   }
 };
 
@@ -94,9 +98,9 @@ export const _fromRaw = (raw: KryptosRaw): KryptosOptions => {
     case "oct":
     case "OKP":
     case "RSA":
-      throw new Error("Raw import not supported for this key type");
+      throw new KryptosError("Raw import not supported for this key type");
 
     default:
-      throw new Error(`Invalid key type: ${raw.type}`);
+      throw new KryptosError("Invalid key type", { data: { valid: TYPES } });
   }
 };

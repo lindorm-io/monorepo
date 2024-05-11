@@ -1,6 +1,7 @@
 import { isBuffer, isString } from "@lindorm/is";
 import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey } from "crypto";
 import { promisify } from "util";
+import { KryptosError } from "../../errors";
 import {
   EcKeyJwk,
   FormatOptions,
@@ -14,15 +15,20 @@ import {
 
 const generateKeyPair = promisify(_generateKeyPair);
 
-const CURVES = ["P-256", "P-384", "P-521", "secp256k1", "secp384r1", "secp521r1"];
+const CURVES: Array<KryptosCurve> = [
+  "P-256",
+  "P-384",
+  "P-521",
+  "secp256k1",
+  "secp384r1",
+  "secp521r1",
+] as const;
 
 export const _generateEcKey = async (options: GenerateEcOptions): Promise<GenerateEcResult> => {
   const curve = options.curve ?? "P-521";
 
   if (!CURVES.includes(curve)) {
-    throw new Error(
-      "Curve needs to be [ P-256 | P-384 | P-521 | secp256k1 | secp384r1 | secp521r1]",
-    );
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
   const { privateKey, publicKey } = await generateKeyPair("ec", {
@@ -36,13 +42,13 @@ export const _generateEcKey = async (options: GenerateEcOptions): Promise<Genera
 
 export const _createEcDerFromJwk = (options: EcKeyJwk): KryptosDer => {
   if (options.kty !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
+    throw new KryptosError("Invalid type", { data: { valid: "EC" } });
   }
   if (!options.crv) {
-    throw new Error("Curve is required");
+    throw new KryptosError("Curve is required");
   }
   if (!CURVES.includes(options.crv)) {
-    throw new Error("Curve needs to be [ P-256 | P-384 | P-521 ]");
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
   const result: KryptosDer = {
@@ -55,7 +61,7 @@ export const _createEcDerFromJwk = (options: EcKeyJwk): KryptosDer => {
     const privateKey = privateObject.export({ format: "der", type: "pkcs8" });
 
     if (!isBuffer(privateKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.privateKey = privateKey;
@@ -66,14 +72,14 @@ export const _createEcDerFromJwk = (options: EcKeyJwk): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey) {
-    throw new Error("Key creation failed");
+    throw new KryptosError("Key creation failed");
   }
 
   return result;
@@ -81,13 +87,13 @@ export const _createEcDerFromJwk = (options: EcKeyJwk): KryptosDer => {
 
 export const _createEcDerFromPem = (options: KryptosPem): KryptosDer => {
   if (options.type !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
+    throw new KryptosError("Invalid type", { data: { valid: "EC" } });
   }
   if (!options.curve) {
-    throw new Error("Curve is required");
+    throw new KryptosError("Curve is required");
   }
   if (!CURVES.includes(options.curve)) {
-    throw new Error("Curve needs to be [ P-256 | P-384 | P-521 ]");
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
   const result: KryptosDer = {
@@ -107,10 +113,10 @@ export const _createEcDerFromPem = (options: KryptosPem): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(privateKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.privateKey = privateKey;
@@ -122,14 +128,14 @@ export const _createEcDerFromPem = (options: KryptosPem): KryptosDer => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {
-      throw new Error("Key creation failed");
+      throw new KryptosError("Key creation failed");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey) {
-    throw new Error("Key creation failed");
+    throw new KryptosError("Key creation failed");
   }
 
   return result;
@@ -137,13 +143,13 @@ export const _createEcDerFromPem = (options: KryptosPem): KryptosDer => {
 
 export const _createEcDerFromRaw = (options: KryptosRaw): KryptosDer => {
   if (options.type !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
+    throw new KryptosError("Invalid type", { data: { valid: "EC" } });
   }
   if (!options.curve) {
-    throw new Error("Curve is required");
+    throw new KryptosError("Curve is required");
   }
   if (!options.publicKey) {
-    throw new Error("Public key is required");
+    throw new KryptosError("Public key is required");
   }
 
   const len = _getCurveLength(options.curve);
@@ -164,13 +170,13 @@ export const _createEcDerFromRaw = (options: KryptosRaw): KryptosDer => {
 
 export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
   if (options.type !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
+    throw new KryptosError("Invalid type", { data: { valid: "EC" } });
   }
   if (!options.curve) {
-    throw new Error("Curve is required");
+    throw new KryptosError("Curve is required");
   }
   if (!CURVES.includes(options.curve)) {
-    throw new Error("Curve needs to be [ P-256 | P-384 | P-521 ]");
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
   const result: EcKeyJwk = { x: "", y: "", crv: options.curve, kty: options.type };
@@ -180,19 +186,19 @@ export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
     const { crv, d, x, y, kty } = keyObject.export({ format: "jwk" });
 
     if (crv !== options.curve) {
-      throw new Error("Key export failed [ crv ]");
+      throw new KryptosError("Key export failed [ crv ]");
     }
     if (!d) {
-      throw new Error("Key export failed [ d ]");
+      throw new KryptosError("Key export failed [ d ]");
     }
     if (!x) {
-      throw new Error("Key export failed [ x ]");
+      throw new KryptosError("Key export failed [ x ]");
     }
     if (!y) {
-      throw new Error("Key export failed [ y ]");
+      throw new KryptosError("Key export failed [ y ]");
     }
     if (kty !== options.type) {
-      throw new Error("Key export failed [ kty ]");
+      throw new KryptosError("Key export failed [ kty ]");
     }
 
     result.d = d;
@@ -202,23 +208,23 @@ export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
 
   if (!result.x?.length && !result.y?.length) {
     if (!options.publicKey) {
-      throw new Error("Public key not available");
+      throw new KryptosError("Public key is required");
     }
 
     const keyObject = createPublicKey({ key: options.publicKey, format: "der", type: "spki" });
     const { crv, x, y, kty } = keyObject.export({ format: "jwk" });
 
     if (crv !== options.curve) {
-      throw new Error("Key export failed [ crv ]");
+      throw new KryptosError("Key export failed [ crv ]");
     }
     if (!x) {
-      throw new Error("Key export failed [ x ]");
+      throw new KryptosError("Key export failed [ x ]");
     }
     if (!y) {
-      throw new Error("Key export failed [ y ]");
+      throw new KryptosError("Key export failed [ y ]");
     }
     if (kty !== options.type) {
-      throw new Error("Key export failed [ kty ]");
+      throw new KryptosError("Key export failed [ kty ]");
     }
 
     result.x = x;
@@ -226,7 +232,7 @@ export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
   }
 
   if (!result.x?.length || !result.y?.length) {
-    throw new Error("Key export failed");
+    throw new KryptosError("Key export failed");
   }
 
   return result;
@@ -234,13 +240,13 @@ export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
 
 export const _exportEcToPem = (options: FormatOptions): KryptosPem => {
   if (options.type !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
+    throw new KryptosError("Invalid type", { data: { valid: "EC" } });
   }
   if (!options.curve) {
-    throw new Error("Curve is required");
+    throw new KryptosError("Curve is required");
   }
   if (!CURVES.includes(options.curve)) {
-    throw new Error("Curve needs to be [ P-256 | P-384 | P-521 ]");
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
   const result: KryptosPem = {
@@ -260,10 +266,10 @@ export const _exportEcToPem = (options: FormatOptions): KryptosPem => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(privateKey)) {
-      throw new Error("Key export failed [ private ]");
+      throw new KryptosError("Key export failed [ private ]");
     }
     if (!isString(publicKey)) {
-      throw new Error("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [ public ]");
     }
 
     result.privateKey = privateKey;
@@ -275,14 +281,14 @@ export const _exportEcToPem = (options: FormatOptions): KryptosPem => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(publicKey)) {
-      throw new Error("Key export failed [ public ]");
+      throw new KryptosError("Key export failed [ public ]");
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.publicKey) {
-    throw new Error("Key export failed ");
+    throw new KryptosError("Key export failed ");
   }
 
   return result;
@@ -292,7 +298,7 @@ export const _exportEcToRaw = (options: FormatOptions): KryptosRaw => {
   const jwk = _exportEcToJwk(options);
 
   if (!jwk.x || !jwk.y) {
-    throw new Error("Key export failed");
+    throw new KryptosError("Key export failed");
   }
 
   const result: KryptosRaw = {
@@ -326,6 +332,6 @@ const _getCurveLength = (curve: KryptosCurve): number => {
       return 132;
 
     default:
-      throw new Error("Unsupported curve");
+      throw new KryptosError("Unsupported curve");
   }
 };

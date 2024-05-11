@@ -28,6 +28,7 @@
   "dependencies": {
     "@lindorm/b64": "^0.1.1",
     "@lindorm/date": "^0.1.2",
+    "@lindorm/errors": "^0.1.4",
     "@lindorm/is": "^0.1.4",
     "@lindorm/random": "^0.1.1",
     "@lindorm/utils": "^0.1.3"
