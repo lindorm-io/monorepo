@@ -7,7 +7,7 @@
   "bugs": "https://github.com/lindorm-io/monorepo/issues",
   "scripts": {
     "build": "lerna run build",
-    "init": "ts-node ./.scripts/initialise-package.ts",
+    "init": "ts-node ./.scripts/initialise-package && npm i",
     "lint": "lerna exec -- eslint . --ext .ts,.tsx",
     "prepare": "husky",
     "release": "lerna publish",
