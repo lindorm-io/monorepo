@@ -2,8 +2,8 @@ import { isObject, isString } from "@lindorm/is";
 import { Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../errors";
 import {
-  AesCipherOptions,
   AesEncryptionData,
+  AesKitOptions,
   BufferFormat,
   DecryptAesDataOptions,
   Encryption,
@@ -25,7 +25,7 @@ export class AesKit {
   private readonly integrityHash: IntegrityHash;
   private readonly kryptos: Kryptos;
 
-  public constructor(options: AesCipherOptions) {
+  public constructor(options: AesKitOptions) {
     this.encryption = options.encryption || "aes-256-gcm";
     this.encryptionKeyAlgorithm = options.encryptionKeyAlgorithm || "RSA-OAEP-256";
     this.format = options.format || "base64url";
