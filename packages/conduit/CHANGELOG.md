@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.1...@lindorm/conduit@0.1.2) (2024-05-11)
+
+### Bug Fixes
+
+- align with retry config ([6e8094b](https://github.com/lindorm-io/monorepo/commit/6e8094b59469c450f5d6fc05ee2cd4e23d21c1ca))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.1.0...@lindorm/conduit@0.1.1) (2024-05-10)
 
 ### Bug Fixes

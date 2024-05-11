@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,7 +29,7 @@
     "@lindorm/enums": "^0.1.1",
     "@lindorm/is": "^0.1.4",
     "@lindorm/middleware": "^0.1.1",
-    "@lindorm/retry": "^0.1.1",
+    "@lindorm/retry": "^0.1.2",
     "@lindorm/url": "^0.1.2",
     "uuid": "^9.0.1"
   },

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.1...@lindorm/retry@0.1.2) (2024-05-11)
+
+### Bug Fixes
+
+- add max attempts to config ([614eef9](https://github.com/lindorm-io/monorepo/commit/614eef99ded60850e546fd1672ac55616821632b))
+
 ## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.0...@lindorm/retry@0.1.1) (2024-05-10)
 
 **Note:** Version bump only for package @lindorm/retry
