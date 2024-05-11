@@ -4,26 +4,32 @@ import { OkpKeyJwk } from "./okp";
 import { RsaKeyJwk } from "./rsa";
 import { KryptosCurve, KryptosType } from "./types";
 
-type KryptosString = {
+export type KryptosB64 = {
   curve?: KryptosCurve;
   privateKey?: string;
   publicKey?: string;
   type: KryptosType;
 };
 
-type KryptosBuffer = {
+export type KryptosDer = {
   curve?: KryptosCurve;
   privateKey?: Buffer;
   publicKey?: Buffer;
   type: KryptosType;
 };
 
-export type KryptosB64 = KryptosString;
-
-export type KryptosDer = KryptosBuffer;
-
 export type KryptosJwk = EcKeyJwk | OctKeyJwk | OkpKeyJwk | RsaKeyJwk;
 
-export type KryptosPem = KryptosString;
+export type KryptosPem = {
+  curve?: KryptosCurve;
+  privateKey?: string;
+  publicKey?: string;
+  type: KryptosType;
+};
 
-export type KryptosRaw = KryptosBuffer;
+export type KryptosRaw = {
+  curve?: KryptosCurve;
+  privateKey?: Buffer;
+  publicKey?: Buffer;
+  type: KryptosType;
+};

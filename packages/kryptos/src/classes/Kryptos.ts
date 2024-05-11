@@ -13,7 +13,11 @@ import {
   KryptosExportMode,
   KryptosFormat,
   KryptosFrom,
+  KryptosFromB64,
+  KryptosFromDer,
   KryptosFromJwk,
+  KryptosFromPem,
+  KryptosFromRaw,
   KryptosJwk,
   KryptosOperation,
   KryptosOptions,
@@ -29,7 +33,8 @@ import {
   _exportEcToRaw,
   _generateEcKey,
 } from "../utils/private/ec";
-import { _fromB64, _fromJwk, _fromPem, _fromRaw, _getFromFormat } from "../utils/private/from";
+import { _fromB64, _fromJwk, _fromPem, _fromRaw } from "../utils/private/from";
+import { _isB64, _isDer, _isJwk, _isPem, _isRaw } from "../utils/private/is";
 import { _exportOctToJwk, _exportOctToPem, _generateOctKey } from "../utils/private/oct";
 import { _exportOkpToJwk, _exportOkpToPem, _generateOkpKey } from "../utils/private/okp";
 import { _exportRsaToJwk, _exportRsaToPem, _generateRsaKey } from "../utils/private/rsa";
@@ -277,26 +282,31 @@ export class Kryptos implements KryptosAttributes {
     return new Kryptos({ ...options, privateKey, publicKey });
   }
 
-  public static from(b64: KryptosB64, format?: "b64"): Kryptos;
-  public static from(der: KryptosDer, format?: "der"): Kryptos;
-  public static from(jwk: KryptosFromJwk, format?: "jwk"): Kryptos;
-  public static from(pem: KryptosPem, format?: "pem"): Kryptos;
-  public static from(raw: KryptosRaw, format?: "raw"): Kryptos;
-  public static from(arg: KryptosFrom, format?: KryptosFormat): Kryptos {
-    switch (_getFromFormat(arg, format)) {
+  public static from(format: "b64", b64: KryptosFromB64): Kryptos;
+  public static from(format: "der", der: KryptosFromDer): Kryptos;
+  public static from(format: "jwk", jwk: KryptosFromJwk): Kryptos;
+  public static from(format: "pem", pem: KryptosFromPem): Kryptos;
+  public static from(format: "raw", raw: KryptosFromRaw): Kryptos;
+  public static from(format: KryptosFormat, arg: KryptosFrom): Kryptos {
+    switch (format) {
       case "b64":
-        return new Kryptos(_fromB64(arg as KryptosB64));
+        if (!_isB64(arg)) throw new Error("Invalid key format");
+        return new Kryptos(_fromB64(arg));
 
       case "der":
-        return new Kryptos(arg as KryptosDer);
+        if (!_isDer(arg)) throw new Error("Invalid key format");
+        return new Kryptos(arg);
 
       case "jwk":
-        return new Kryptos(_fromJwk(arg as KryptosFromJwk));
+        if (!_isJwk(arg)) throw new Error("Invalid key format");
+        return new Kryptos(_fromJwk(arg));
 
       case "pem":
+        if (!_isPem(arg)) throw new Error("Invalid key format");
         return new Kryptos(_fromPem(arg as KryptosPem));
 
       case "raw":
+        if (!_isRaw(arg)) throw new Error("Invalid key format");
         return new Kryptos(_fromRaw(arg as KryptosRaw));
 
       default:

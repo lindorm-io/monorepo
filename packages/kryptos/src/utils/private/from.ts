@@ -2,8 +2,6 @@ import {
   EcKeyJwk,
   KryptosB64,
   KryptosDer,
-  KryptosFormat,
-  KryptosFrom,
   KryptosFromJwk,
   KryptosOptions,
   KryptosPem,
@@ -13,22 +11,9 @@ import {
   RsaKeyJwk,
 } from "../../types";
 import { _createEcDerFromJwk, _createEcDerFromPem, _createEcDerFromRaw } from "./ec";
-import { _isB64, _isDer, _isJwk, _isPem, _isRaw } from "./is";
 import { _createOctDerFromJwk, _createOctDerFromPem } from "./oct";
 import { _createOkpDerFromJwk, _createOkpDerFromPem } from "./okp";
 import { _createRsaDerFromJwk, _createRsaDerFromPem } from "./rsa";
-
-export const _getFromFormat = (from: KryptosFrom, format?: KryptosFormat): KryptosFormat => {
-  if (format) return format;
-
-  if (_isB64(from)) return "b64";
-  if (_isDer(from)) return "der";
-  if (_isJwk(from)) return "jwk";
-  if (_isPem(from)) return "pem";
-  if (_isRaw(from)) return "raw";
-
-  throw new Error("Invalid key format");
-};
 
 export const _fromB64 = (b64: KryptosB64): KryptosOptions => {
   return {

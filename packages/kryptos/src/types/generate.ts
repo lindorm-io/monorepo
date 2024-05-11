@@ -1,4 +1,4 @@
-import { KryptosOptions } from "./crypto-key";
+import { KryptosOptions } from "./kryptos";
 import { OctKeySize } from "./oct";
 import { RsaModulusSize } from "./rsa";
 

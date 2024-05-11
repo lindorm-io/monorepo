@@ -20,8 +20,4 @@ export type LindormJwkMetadata = {
   uat: number;
 };
 
-export type PublicJwk = KryptosJwk & JwkMetadata;
-
-export type LindormJwk = PublicJwk & LindormJwkMetadata;
-
-export type ExternalJwk = PublicJwk & Partial<LindormJwkMetadata>;
+export type LindormJwk = KryptosJwk & JwkMetadata & LindormJwkMetadata;

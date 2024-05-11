@@ -103,7 +103,7 @@ describe("Kryptos (RSA)", () => {
   });
 
   test("should create from existing B64 key", async () => {
-    const key = Kryptos.from(TEST_RSA_KEY_B64);
+    const key = Kryptos.from("b64", TEST_RSA_KEY_B64);
 
     expect(key.export("b64")).toEqual(TEST_RSA_KEY_B64);
 
@@ -133,7 +133,7 @@ describe("Kryptos (RSA)", () => {
   });
 
   test("should create from existing JWK key", async () => {
-    const key = Kryptos.from(TEST_RSA_KEY_JWK);
+    const key = Kryptos.from("jwk", TEST_RSA_KEY_JWK);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),
@@ -157,7 +157,7 @@ describe("Kryptos (RSA)", () => {
   });
 
   test("should create from existing PEM key", async () => {
-    const key = Kryptos.from(TEST_RSA_KEY_PEM);
+    const key = Kryptos.from("pem", TEST_RSA_KEY_PEM);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),

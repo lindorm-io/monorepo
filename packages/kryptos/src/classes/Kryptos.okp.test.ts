@@ -97,7 +97,7 @@ describe("Kryptos (OKP)", () => {
   });
 
   test("should create from existing B64 key", async () => {
-    const key = Kryptos.from(TEST_OKP_KEY_B64);
+    const key = Kryptos.from("b64", TEST_OKP_KEY_B64);
 
     expect(key.export("b64")).toEqual(TEST_OKP_KEY_B64);
 
@@ -124,7 +124,7 @@ describe("Kryptos (OKP)", () => {
   });
 
   test("should create from existing JWK key", async () => {
-    const key = Kryptos.from(TEST_OKP_KEY_JWK);
+    const key = Kryptos.from("jwk", TEST_OKP_KEY_JWK);
 
     expect(key.export("b64")).toEqual({
       curve: "Ed25519",
@@ -151,7 +151,7 @@ describe("Kryptos (OKP)", () => {
   });
 
   test("should create from existing PEM key", async () => {
-    const key = Kryptos.from(TEST_OKP_KEY_PEM);
+    const key = Kryptos.from("pem", TEST_OKP_KEY_PEM);
 
     expect(key.export("b64")).toEqual({
       curve: "Ed25519",

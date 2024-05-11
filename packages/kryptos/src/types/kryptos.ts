@@ -19,6 +19,12 @@ export type KryptosAttributes = {
   use: KryptosUse | undefined;
 };
 
+export type KryptosOptions = Partial<Omit<KryptosAttributes, "type">> &
+  Pick<KryptosAttributes, "type"> & {
+    privateKey?: Buffer;
+    publicKey?: Buffer;
+  };
+
 export type EcKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
   curve: "P-256" | "P-384" | "P-521" | "secp256k1" | "secp384r1" | "secp521r1";
   type: "EC";
@@ -37,22 +43,4 @@ export type OkpKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
 export type RsaKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
   curve: undefined;
   type: "RSA";
-};
-
-export type KryptosOptions = {
-  id?: string;
-  algorithm?: KryptosAlgorithm;
-  createdAt?: Date;
-  curve?: KryptosCurve;
-  expiresAt?: Date;
-  isExternal?: boolean;
-  jwksUri?: string;
-  notBefore?: Date;
-  operations?: Array<KryptosOperation>;
-  ownerId?: string;
-  privateKey?: Buffer;
-  publicKey?: Buffer;
-  type: KryptosType;
-  updatedAt?: Date;
-  use?: KryptosUse;
 };

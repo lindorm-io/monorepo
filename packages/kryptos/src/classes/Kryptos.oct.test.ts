@@ -87,7 +87,7 @@ describe("Kryptos (oct)", () => {
   });
 
   test("should create from existing B64 key", async () => {
-    const key = Kryptos.from(TEST_OCT_KEY_B64);
+    const key = Kryptos.from("b64", TEST_OCT_KEY_B64);
 
     expect(key.export("b64")).toEqual(TEST_OCT_KEY_B64);
 
@@ -108,7 +108,7 @@ describe("Kryptos (oct)", () => {
   });
 
   test("should create from existing JWK key", async () => {
-    const key = Kryptos.from(TEST_OCT_KEY_JWK);
+    const key = Kryptos.from("jwk", TEST_OCT_KEY_JWK);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),
@@ -129,7 +129,7 @@ describe("Kryptos (oct)", () => {
   });
 
   test("should create from existing PEM key", async () => {
-    const key = Kryptos.from(TEST_OCT_KEY_PEM);
+    const key = Kryptos.from("pem", TEST_OCT_KEY_PEM);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),
