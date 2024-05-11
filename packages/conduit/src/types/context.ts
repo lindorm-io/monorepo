@@ -1,7 +1,8 @@
 import { Environment } from "@lindorm/enums";
+import { RetryConfig } from "@lindorm/retry";
 import { Readable } from "stream";
 import { ConfigContext } from "./overrides";
-import { ConduitRetryOptions, RetryCallback } from "./retry";
+import { RetryCallback } from "./retry";
 
 export type AppContext = {
   alias: string | null;
@@ -29,7 +30,7 @@ export type RequestContext<
   params: Params;
   query: Query;
   retryCallback: RetryCallback;
-  retryOptions: ConduitRetryOptions;
+  retryConfig: RetryConfig;
   stream: Readable | undefined;
   url: string;
 };

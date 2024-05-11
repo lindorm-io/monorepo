@@ -15,13 +15,13 @@ export const _requestWithRetry = async <T = any>(
   } catch (raw: any) {
     const err = raw.isAxiosError ? ConduitError.fromAxiosError(raw) : raw;
 
-    if (!ctx.req.retryCallback(err, attempt, ctx.req.retryOptions)) {
+    if (!ctx.req.retryCallback(err, attempt, ctx.req.retryConfig)) {
       ctx.logger?.debug("Conduit retry callback returned false, not retrying");
 
       throw err;
     }
 
-    const timeout = calculateRetry(attempt, ctx.req.retryOptions);
+    const timeout = calculateRetry(attempt, ctx.req.retryConfig);
     const nextAttempt = attempt + 1;
 
     ctx.logger?.debug("Conduit request failed, retrying after timeout", { nextAttempt, timeout });

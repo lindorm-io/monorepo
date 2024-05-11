@@ -1,10 +1,11 @@
 import { HttpMethod } from "@lindorm/enums";
+import { RetryOptions } from "@lindorm/retry";
 import { Dict, Header, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
 import { ConduitUsing } from "../enums";
 import { ConduitMiddleware } from "./conduit";
 import { ConfigOptions } from "./overrides";
-import { ConduitRetryOptions, RetryCallback } from "./retry";
+import { RetryCallback } from "./retry";
 
 export type MethodOptions = {
   method: HttpMethod;
@@ -22,7 +23,7 @@ export type RequestOptions<D = any, B = Dict, P = Dict<Param>, Q = Dict<Query>> 
   params?: P;
   query?: Q;
   retryCallback?: RetryCallback;
-  retryOptions?: ConduitRetryOptions;
+  retryOptions?: RetryOptions;
   stream?: Readable;
   timeout?: number;
   using?: ConduitUsing;

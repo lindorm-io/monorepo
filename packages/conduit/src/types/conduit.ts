@@ -1,11 +1,12 @@
 import { Environment } from "@lindorm/enums";
 import { Logger } from "@lindorm/logger";
 import { Middleware } from "@lindorm/middleware";
+import { RetryOptions } from "@lindorm/retry";
 import { ConduitUsing } from "../enums";
 import { AppContext, RequestContext } from "./context";
 import { ConfigOptions } from "./overrides";
 import { ConduitResponse } from "./response";
-import { ConduitRetryOptions, RetryCallback } from "./retry";
+import { RetryCallback } from "./retry";
 
 export type ConduitContext<
   ResponseData = any,
@@ -35,7 +36,7 @@ export type ConduitOptions = {
   logger?: Logger;
   middleware?: Array<ConduitMiddleware>;
   retryCallback?: RetryCallback;
-  retryOptions?: ConduitRetryOptions;
+  retryOptions?: RetryOptions;
   timeout?: number;
   using?: ConduitUsing;
   withCredentials?: boolean;

@@ -1,8 +1,8 @@
 import { RetryCallback } from "../../types";
 
 export const _defaultRetryCallback: RetryCallback = (err, attempt, options) => {
-  if (!options.maximumAttempts) return false;
-  if (attempt > options.maximumAttempts) return false;
+  if (!options.maxAttempts) return false;
+  if (attempt > options.maxAttempts) return false;
 
   switch (err.response?.status) {
     case 500:

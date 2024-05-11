@@ -41,8 +41,8 @@ describe("composeFetchConfig", () => {
       },
       stream: undefined,
       retryCallback: () => true,
-      retryOptions: {
-        maximumAttempts: 3,
+      retryConfig: {
+        maxAttempts: 3,
         strategy: RetryStrategy.Linear,
         timeout: 25,
         timeoutMax: 3000,

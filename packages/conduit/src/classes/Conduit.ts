@@ -1,6 +1,7 @@
 import { HttpMethod } from "@lindorm/enums";
 import { Logger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
+import { RetryConfig } from "@lindorm/retry";
 import { Dict } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import { v4 as uuid } from "uuid";
@@ -17,7 +18,6 @@ import {
   ConduitMiddleware,
   ConduitOptions,
   ConduitResponse,
-  ConduitRetryConfig,
   ConfigContext,
   MethodOptions,
   RequestContext,
@@ -35,7 +35,7 @@ export class Conduit {
   private readonly logger: Logger | undefined;
   private readonly middleware: Array<ConduitMiddleware>;
   private readonly retryCallback: RetryCallback;
-  private readonly retryConfig: ConduitRetryConfig;
+  private readonly retryConfig: RetryConfig;
   private readonly using: ConduitUsing;
 
   public constructor(options: ConduitOptions = {}) {
@@ -253,7 +253,7 @@ export class Conduit {
       params: params as RequestParams,
       query: { ...searchParams, ...query },
       retryCallback,
-      retryOptions: { ...this.retryConfig, ...retryOptions },
+      retryConfig: { ...this.retryConfig, ...retryOptions },
       stream,
       url,
     };

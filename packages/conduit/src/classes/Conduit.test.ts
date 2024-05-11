@@ -45,7 +45,7 @@ describe("Conduit", () => {
       conduit = new Conduit({
         baseUrl: "http://test.lindorm.io",
         retryOptions: {
-          maximumAttempts: 3,
+          maxAttempts: 3,
           strategy: RetryStrategy.Linear,
           timeout: 25,
           timeoutMax: 3000,
@@ -181,7 +181,7 @@ describe("Conduit", () => {
       conduit = new Conduit({
         baseUrl: "http://test.lindorm.io",
         retryOptions: {
-          maximumAttempts: 3,
+          maxAttempts: 3,
           strategy: RetryStrategy.Linear,
           timeout: 25,
           timeoutMax: 3000,
@@ -226,7 +226,7 @@ describe("Conduit", () => {
         baseUrl: "http://test.lindorm.io",
         middleware: [mw],
         retryOptions: {
-          maximumAttempts: 3,
+          maxAttempts: 3,
           strategy: RetryStrategy.Linear,
           timeout: 25,
           timeoutMax: 3000,

@@ -11,7 +11,7 @@ export const _requestLogger: ConduitMiddleware = async (ctx, next) => {
       metadata: ctx.req.metadata,
       params: ctx.req.params,
       query: ctx.req.query,
-      retryOptions: ctx.req.retryOptions,
+      retryConfig: ctx.req.retryConfig,
       stream: ctx.req.stream ? Object.keys(ctx.req.stream) : {},
       url: ctx.req.url,
     },
