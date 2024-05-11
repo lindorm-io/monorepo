@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.1.0...@lindorm/aes@0.1.1) (2024-05-11)
+
+### Bug Fixes
+
+- amend wrong export path and rename ([87e6dd1](https://github.com/lindorm-io/monorepo/commit/87e6dd12057fe35c1c0b26a327a098015f041b44))
+
 # 0.1.0 (2024-05-11)
 
 ### Features
