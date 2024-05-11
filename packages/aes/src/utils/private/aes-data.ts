@@ -1,12 +1,12 @@
 import { createCipheriv, createDecipheriv } from "crypto";
-import { LATEST_AES_VERSION } from "../constants";
-import { AesEncryptionData, DecryptAesDataOptions, EncryptAesDataOptions } from "../types";
-import { _getAuthTag, _setAuthTag } from "./private/auth-tag";
-import { _getDecryptionKey } from "./private/get-decryption-key";
-import { _getEncryptionKeys } from "./private/get-encryption-keys";
-import { _getInitialisationVector } from "./private/get-initialisation-vector";
+import { LATEST_AES_VERSION } from "../../constants";
+import { AesEncryptionData, DecryptAesDataOptions, EncryptAesDataOptions } from "../../types";
+import { _getAuthTag, _setAuthTag } from "./auth-tag";
+import { _getDecryptionKey } from "./get-decryption-key";
+import { _getEncryptionKeys } from "./get-encryption-keys";
+import { _getInitialisationVector } from "./get-initialisation-vector";
 
-export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
+export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionData => {
   const {
     data,
     encryption = "aes-256-gcm",
@@ -52,7 +52,7 @@ export const encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDat
   };
 };
 
-export const decryptAesData = (options: DecryptAesDataOptions): string => {
+export const _decryptAesData = (options: DecryptAesDataOptions): string => {
   const {
     authTag,
     content,

@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@lindorm/errors": "^0.1.4",
+    "@lindorm/is": "^0.1.4",
     "@lindorm/kryptos": "^0.2.0"
   }
 }
