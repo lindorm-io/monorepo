@@ -1,6 +1,6 @@
 export type BufferFormat = "base64" | "base64url" | "hex";
 
-export type SignatureAlgorithm =
+export type HashAlgorithm =
   | "RSA-SHA256"
   | "RSA-SHA384"
   | "RSA-SHA512"

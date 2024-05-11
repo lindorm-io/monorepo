@@ -1,13 +1,9 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { BufferFormat, RsaKitOptions, SignatureAlgorithm } from "../types";
-import {
-  assertRsaSignature,
-  createRsaSignature,
-  verifyRsaSignature,
-} from "../utils/private/rsa-signature";
+import { BufferFormat, HashAlgorithm, RsaKitOptions } from "../types";
+import { _assertRsaHash, _createRsaHash, _verifyRsaHash } from "../utils/private/rsa-hash";
 
 export class RsaKit {
-  private readonly algorithm: SignatureAlgorithm;
+  private readonly algorithm: HashAlgorithm;
   private readonly format: BufferFormat;
   private readonly kryptos: Kryptos;
 
@@ -17,8 +13,8 @@ export class RsaKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: string): string {
-    return createRsaSignature({
+  public hash(data: string): string {
+    return _createRsaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,
@@ -26,23 +22,23 @@ export class RsaKit {
     });
   }
 
-  public verify(data: string, signature: string): boolean {
-    return verifyRsaSignature({
+  public verify(data: string, hash: string): boolean {
+    return _verifyRsaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
-      signature,
+      hash,
     });
   }
 
-  public assert(data: string, signature: string): void {
-    return assertRsaSignature({
+  public assert(data: string, hash: string): void {
+    return _assertRsaHash({
       algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
-      signature,
+      hash,
     });
   }
 }

@@ -1,9 +1,9 @@
 import { randomBytes } from "crypto";
 import { RSA_KEYS } from "../../__fixtures__/rsa-keys.fixture";
 import { RsaError } from "../../errors";
-import { assertRsaSignature, createRsaSignature, verifyRsaSignature } from "./rsa-signature";
+import { _assertRsaHash, _createRsaHash, _verifyRsaHash } from "./rsa-hash";
 
-describe("rsa-signature", () => {
+describe("rsa-hash", () => {
   let data: string;
 
   beforeEach(() => {
@@ -11,9 +11,9 @@ describe("rsa-signature", () => {
   });
 
   describe("algorithms", () => {
-    test("should create signature with RSA_SHA256", () => {
+    test("should create hash with RSA_SHA256", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "RSA-SHA256",
           kryptos: RSA_KEYS,
           data,
@@ -21,9 +21,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with RSA_SHA384", () => {
+    test("should create hash with RSA_SHA384", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "RSA-SHA384",
           kryptos: RSA_KEYS,
           data,
@@ -31,9 +31,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with RSA_SHA512", () => {
+    test("should create hash with RSA_SHA512", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "RSA-SHA512",
           kryptos: RSA_KEYS,
           data,
@@ -41,9 +41,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with SHA256", () => {
+    test("should create hash with SHA256", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "sha256",
           kryptos: RSA_KEYS,
           data,
@@ -51,9 +51,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with SHA384", () => {
+    test("should create hash with SHA384", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "sha384",
           kryptos: RSA_KEYS,
           data,
@@ -61,9 +61,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature with SHA512", () => {
+    test("should create hash with SHA512", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           algorithm: "sha512",
           kryptos: RSA_KEYS,
           data,
@@ -73,9 +73,9 @@ describe("rsa-signature", () => {
   });
 
   describe("formats", () => {
-    test("should create signature at base64 digest", () => {
+    test("should create hash at base64 digest", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           kryptos: RSA_KEYS,
           data,
           format: "base64",
@@ -83,9 +83,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature at base64url digest", () => {
+    test("should create hash at base64url digest", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           kryptos: RSA_KEYS,
           data,
           format: "base64url",
@@ -93,9 +93,9 @@ describe("rsa-signature", () => {
       ).toStrictEqual(expect.any(String));
     });
 
-    test("should create signature at hex digest", () => {
+    test("should create hash at hex digest", () => {
       expect(
-        createRsaSignature({
+        _createRsaHash({
           kryptos: RSA_KEYS,
           data,
           format: "hex",
@@ -105,49 +105,49 @@ describe("rsa-signature", () => {
   });
 
   describe("verify", () => {
-    test("should verify signature", () => {
-      const signature = createRsaSignature({
+    test("should verify hash", () => {
+      const hash = _createRsaHash({
         kryptos: RSA_KEYS,
         data,
       });
 
       expect(
-        verifyRsaSignature({
+        _verifyRsaHash({
           data,
           kryptos: RSA_KEYS,
-          signature,
+          hash,
         }),
       ).toBe(true);
     });
   });
 
   describe("assert", () => {
-    test("should assert signature", () => {
-      const signature = createRsaSignature({
+    test("should assert hash", () => {
+      const hash = _createRsaHash({
         kryptos: RSA_KEYS,
         data,
       });
 
       expect(() =>
-        assertRsaSignature({
+        _assertRsaHash({
           data,
           kryptos: RSA_KEYS,
-          signature,
+          hash,
         }),
       ).not.toThrow();
     });
 
-    test("should throw error on invalid signature", () => {
-      const signature = createRsaSignature({
+    test("should throw error on invalid hash", () => {
+      const hash = _createRsaHash({
         kryptos: RSA_KEYS,
         data,
       });
 
       expect(() =>
-        assertRsaSignature({
+        _assertRsaHash({
           data: "invalid",
           kryptos: RSA_KEYS,
-          signature,
+          hash,
         }),
       ).toThrow(RsaError);
     });

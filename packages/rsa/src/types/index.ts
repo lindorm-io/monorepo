@@ -1,3 +1,3 @@
-export * from "./rsa-signature";
-export * from "./rsa-signature-class";
+export * from "./rsa-hash";
+export * from "./rsa-hash-class";
 export * from "./types";

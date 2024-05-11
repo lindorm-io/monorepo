@@ -4,34 +4,34 @@ import { RsaError } from "../errors";
 import { RsaKit } from "./RsaKit";
 
 describe("RsaKit", () => {
-  let rsaKit: RsaKit;
-  let string: string;
-  let signature: string;
+  let kit: RsaKit;
+  let data: string;
+  let hash: string;
 
   beforeEach(() => {
-    string = randomBytes(32).toString("hex");
-    rsaKit = new RsaKit({ kryptos: RSA_KEYS });
-    signature = rsaKit.sign(string);
+    data = randomBytes(32).toString("hex");
+    kit = new RsaKit({ kryptos: RSA_KEYS });
+    hash = kit.hash(data);
   });
 
   test("should sign", () => {
-    expect(signature).toEqual(expect.any(String));
-    expect(signature).not.toEqual(string);
+    expect(hash).toEqual(expect.any(String));
+    expect(hash).not.toEqual(data);
   });
 
   test("should verify", () => {
-    expect(rsaKit.verify(string, signature)).toEqual(true);
+    expect(kit.verify(data, hash)).toEqual(true);
   });
 
   test("should reject", () => {
-    expect(rsaKit.verify("wrong", signature)).toEqual(false);
+    expect(kit.verify("wrong", hash)).toEqual(false);
   });
 
   test("should assert", () => {
-    expect(() => rsaKit.assert(string, signature)).not.toThrow();
+    expect(() => kit.assert(data, hash)).not.toThrow();
   });
 
   test("should throw error", () => {
-    expect(() => rsaKit.assert("wrong", signature)).toThrow(RsaError);
+    expect(() => kit.assert("wrong", hash)).toThrow(RsaError);
   });
 });
