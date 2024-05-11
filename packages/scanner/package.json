@@ -1,0 +1,34 @@
+{
+  "name": "@lindorm/scanner",
+  "version": "0.0.0",
+  "license": "AGPL-3.0-or-later",
+  "author": "Jonn Nilsson",
+  "repository": {
+    "url": "https://github.com/lindorm-io/monorepo",
+    "directory": "packages/scanner"
+  },
+  "bugs": "https://github.com/lindorm-io/monorepo/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc -b ./tsconfig.build.json",
+    "example": "ts-node example",
+    "integration": "compd --file docker-compose.yml jest --config jest.config.integration.js --watch --",
+    "test:ci": "npm run test:unit",
+    "test:integration": "jest --config jest.config.integration.js --",
+    "test:unit": "jest --config jest.config.js --",
+    "test": "jest --watch --",
+    "typecheck:ci": "tsc",
+    "typecheck": "tsc --watch",
+    "update": "ncu -u"
+  },
+  "dependencies": {
+    "@lindorm/is": "^0.1.4"
+  },
+  "devDependencies": {
+    "@lindorm/logger": "^0.1.3"
+  }
+}
