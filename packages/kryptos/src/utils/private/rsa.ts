@@ -3,8 +3,8 @@ import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey 
 import { promisify } from "util";
 import {
   FormatOptions,
-  GenerateOptions,
-  GenerateResult,
+  GenerateRsaOptions,
+  GenerateRsaResult,
   KryptosDer,
   KryptosPem,
   RsaKeyJwk,
@@ -12,16 +12,9 @@ import {
 
 const generateKeyPair = promisify(_generateKeyPair);
 
-export const _generateRsaKey = async (options: GenerateOptions): Promise<GenerateResult> => {
-  if (options.type !== "RSA") {
-    throw new Error("Type needs to be [ RSA ]");
-  }
-
+export const _generateRsaKey = async (options: GenerateRsaOptions): Promise<GenerateRsaResult> => {
   const modulus = options.modulus ?? 4;
 
-  if (!modulus) {
-    throw new Error("Modulus is required");
-  }
   if (![1, 2, 3, 4].includes(modulus)) {
     throw new Error("Modulus needs to be [ 1 | 2 | 3 | 4 ]");
   }

@@ -3,8 +3,8 @@ import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey 
 import { promisify } from "util";
 import {
   FormatOptions,
-  GenerateOptions,
-  GenerateResult,
+  GenerateOkpOptions,
+  GenerateOkpResult,
   KryptosDer,
   KryptosPem,
   OkpKeyJwk,
@@ -14,40 +14,19 @@ const generateKeyPair = promisify(_generateKeyPair);
 
 const CURVES = ["Ed25519", "X25519"];
 
-export const _generateOkpKey = async (options: GenerateOptions): Promise<GenerateResult> => {
-  if (options.type !== "OKP") {
-    throw new Error("Type needs to be [ OKP ]");
-  }
-  if (!options.curve) {
-    throw new Error("Curve is required");
-  }
-  if (!CURVES.includes(options.curve)) {
-    throw new Error("Curve needs to be [ Ed25519 | X25519 ]");
+export const _generateOkpKey = async (options: GenerateOkpOptions): Promise<GenerateOkpResult> => {
+  const curve = options.curve ?? "Ed25519";
+
+  if (!CURVES.includes(curve)) {
+    throw new Error("Curve needs to be [ Ed25519 | Ed448 | X25519 | X448 ]");
   }
 
-  let privateKey: Buffer;
-  let publicKey: Buffer;
+  const { privateKey, publicKey } = await generateKeyPair(curve.toLowerCase() as any, {
+    privateKeyEncoding: { format: "der", type: "pkcs8" },
+    publicKeyEncoding: { format: "der", type: "spki" },
+  });
 
-  switch (options.curve) {
-    case "Ed25519":
-      ({ privateKey, publicKey } = await generateKeyPair("ed25519", {
-        privateKeyEncoding: { format: "der", type: "pkcs8" },
-        publicKeyEncoding: { format: "der", type: "spki" },
-      }));
-      break;
-
-    case "X25519":
-      ({ privateKey, publicKey } = await generateKeyPair("x25519", {
-        privateKeyEncoding: { format: "der", type: "pkcs8" },
-        publicKeyEncoding: { format: "der", type: "spki" },
-      }));
-      break;
-
-    default:
-      throw new Error("Curve needs to be [ Ed25519 | X25519]");
-  }
-
-  return { privateKey, publicKey };
+  return { curve, privateKey, publicKey };
 };
 
 export const _createOkpDerFromJwk = (options: OkpKeyJwk): KryptosDer => {

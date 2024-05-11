@@ -6,3 +6,5 @@ export type OkpKeyJwk = {
   crv: KryptosCurve;
   kty: KryptosType;
 };
+
+export type OkpCurve = "Ed25519" | "Ed448" | "X25519" | "X448";

@@ -2,8 +2,8 @@ import { B64 } from "@lindorm/b64";
 import { randomSecret } from "@lindorm/random";
 import {
   FormatOptions,
-  GenerateOptions,
-  GenerateResult,
+  GenerateOctOptions,
+  GenerateOctResult,
   KryptosDer,
   KryptosPem,
   OctKeyJwk,
@@ -12,16 +12,9 @@ import {
 export const HEADER_SIZE = 4 as const;
 export const HEADER_SYMBOL = "@" as const;
 
-export const _generateOctKey = async (options: GenerateOptions): Promise<GenerateResult> => {
-  if (options.type !== "oct") {
-    throw new Error("Type needs to be [ oct ]");
-  }
-
+export const _generateOctKey = async (options: GenerateOctOptions): Promise<GenerateOctResult> => {
   const size = options.size ?? 32;
 
-  if (!size) {
-    throw new Error("Size is required");
-  }
   if (![16, 24, 32].includes(size)) {
     throw new Error("Size needs to be [ 16 | 24 | 32 ]");
   }

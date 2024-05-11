@@ -7,10 +7,12 @@ MockDate.set(MockedDate.toISOString());
 
 describe("Kryptos (OKP)", () => {
   test("should generate", async () => {
-    const key = await Kryptos.generate({
-      curve: "Ed25519",
-      type: "OKP",
-    });
+    const key = await Kryptos.generate("OKP");
+
+    expect(Kryptos.isEc(key)).toBe(false);
+    expect(Kryptos.isOct(key)).toBe(false);
+    expect(Kryptos.isOkp(key)).toBe(true);
+    expect(Kryptos.isRsa(key)).toBe(false);
 
     expect(key.export("b64")).toEqual({
       curve: "Ed25519",
@@ -42,7 +44,7 @@ describe("Kryptos (OKP)", () => {
   });
 
   test("should export metadata as json or jwk", async () => {
-    const key = await Kryptos.generate({
+    const key = await Kryptos.generate("OKP", {
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
       algorithm: "ECDH-ES",
       createdAt: new Date("2024-05-08T00:00:00.000Z"),
@@ -53,7 +55,6 @@ describe("Kryptos (OKP)", () => {
       notBefore: new Date("2024-05-10T01:00:00.000Z"),
       operations: ["encrypt", "decrypt"],
       ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-      type: "OKP",
       updatedAt: new Date("2024-05-09T00:00:00.000Z"),
       use: "enc",
     });

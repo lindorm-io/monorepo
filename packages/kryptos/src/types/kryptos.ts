@@ -1,3 +1,5 @@
+import { EcCurve } from "./ec";
+import { OkpCurve } from "./okp";
 import { KryptosAlgorithm, KryptosCurve, KryptosOperation, KryptosType, KryptosUse } from "./types";
 
 export type KryptosAttributes = {
@@ -25,22 +27,22 @@ export type KryptosOptions = Partial<Omit<KryptosAttributes, "type">> &
     publicKey?: Buffer;
   };
 
-export type EcKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
-  curve: "P-256" | "P-384" | "P-521" | "secp256k1" | "secp384r1" | "secp521r1";
+export type EcKryptos = Omit<KryptosAttributes, "curve" | "type"> & {
+  curve: EcCurve;
   type: "EC";
 };
 
-export type OctKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
+export type OctKryptos = Omit<KryptosAttributes, "curve" | "type"> & {
   curve: undefined;
   type: "oct";
 };
 
-export type OkpKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
-  curve: "Ed25519" | "X25519";
+export type OkpKryptos = Omit<KryptosAttributes, "curve" | "type"> & {
+  curve: OkpCurve;
   type: "OKP";
 };
 
-export type RsaKryptosAttributes = Omit<KryptosAttributes, "curve" | "type"> & {
+export type RsaKryptos = Omit<KryptosAttributes, "curve" | "type"> & {
   curve: undefined;
   type: "RSA";
 };

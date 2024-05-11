@@ -1,3 +1,6 @@
+import { EcCurve } from "./ec";
+import { OkpCurve } from "./okp";
+
 export type KryptosAlgorithm =
   // EC Keys
   | "ES256"
@@ -18,20 +21,7 @@ export type KryptosAlgorithm =
   | "RS384"
   | "RS512";
 
-export type KryptosCurve =
-  // Nist
-  | "P-256"
-  | "P-384"
-  | "P-521"
-
-  // Specific
-  | "secp256k1"
-  | "secp384r1"
-  | "secp521r1"
-
-  // Octet
-  | "Ed25519"
-  | "X25519";
+export type KryptosCurve = EcCurve | OkpCurve;
 
 export type KryptosExportMode = "both" | "public";
 

@@ -12,10 +12,12 @@ MockDate.set(MockedDate.toISOString());
 
 describe("Kryptos", () => {
   test("should generate EC", async () => {
-    const key = await Kryptos.generate({
-      curve: "P-521",
-      type: "EC",
-    });
+    const key = await Kryptos.generate("EC");
+
+    expect(Kryptos.isEc(key)).toBe(true);
+    expect(Kryptos.isOct(key)).toBe(false);
+    expect(Kryptos.isOkp(key)).toBe(false);
+    expect(Kryptos.isRsa(key)).toBe(false);
 
     expect(key.export("b64")).toEqual({
       curve: "P-521",
@@ -48,7 +50,7 @@ describe("Kryptos", () => {
   });
 
   test("should export metadata as json or jwk", async () => {
-    const key = await Kryptos.generate({
+    const key = await Kryptos.generate("EC", {
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
       algorithm: "ES512",
       createdAt: new Date("2024-05-08T00:00:00.000Z"),
@@ -59,7 +61,6 @@ describe("Kryptos", () => {
       notBefore: new Date("2024-05-10T01:00:00.000Z"),
       operations: ["encrypt", "decrypt"],
       ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-      type: "EC",
       updatedAt: new Date("2024-05-09T00:00:00.000Z"),
       use: "enc",
     });

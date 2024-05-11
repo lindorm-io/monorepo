@@ -3,8 +3,14 @@ import { getUnixTime } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { randomUUID } from "crypto";
 import {
+  EcKryptos,
   FormatOptions,
+  GenerateEcOptions,
+  GenerateOctOptions,
+  GenerateOkpOptions,
   GenerateOptions,
+  GenerateResult,
+  GenerateRsaOptions,
   KryptosAlgorithm,
   KryptosAttributes,
   KryptosB64,
@@ -26,6 +32,9 @@ import {
   KryptosType,
   KryptosUse,
   LindormJwk,
+  OctKryptos,
+  OkpKryptos,
+  RsaKryptos,
 } from "../types";
 import {
   _exportEcToJwk,
@@ -254,32 +263,35 @@ export class Kryptos implements KryptosAttributes {
 
   // public static
 
-  public static async generate(options: GenerateOptions): Promise<Kryptos> {
-    let privateKey: Buffer;
-    let publicKey: Buffer | undefined;
+  public static async generate(type: "EC", options?: GenerateEcOptions): Promise<Kryptos>;
+  public static async generate(type: "oct", options?: GenerateOctOptions): Promise<Kryptos>;
+  public static async generate(type: "OKP", options?: GenerateOkpOptions): Promise<Kryptos>;
+  public static async generate(type: "RSA", options?: GenerateRsaOptions): Promise<Kryptos>;
+  public static async generate(type: KryptosType, options: GenerateOptions = {}): Promise<Kryptos> {
+    let result: GenerateResult;
 
-    switch (options.type) {
+    switch (type) {
       case "EC":
-        ({ privateKey, publicKey } = await _generateEcKey(options));
+        result = await _generateEcKey(options as GenerateEcOptions);
         break;
 
       case "oct":
-        ({ privateKey } = await _generateOctKey(options));
+        result = await _generateOctKey(options as GenerateOctOptions);
         break;
 
       case "OKP":
-        ({ privateKey, publicKey } = await _generateOkpKey(options));
+        result = await _generateOkpKey(options as GenerateOkpOptions);
         break;
 
       case "RSA":
-        ({ privateKey, publicKey } = await _generateRsaKey(options));
+        result = await _generateRsaKey(options as GenerateRsaOptions);
         break;
 
       default:
-        throw new Error(`Invalid key type: ${options.type}`);
+        throw new Error(`Invalid key type: ${type}`);
     }
 
-    return new Kryptos({ ...options, privateKey, publicKey });
+    return new Kryptos({ ...options, ...result, type });
   }
 
   public static from(format: "b64", b64: KryptosFromB64): Kryptos;
@@ -312,6 +324,22 @@ export class Kryptos implements KryptosAttributes {
       default:
         throw new Error("Invalid key format");
     }
+  }
+
+  public static isEc(kryptos: any): kryptos is EcKryptos {
+    return kryptos instanceof Kryptos && kryptos.type === "EC" && kryptos.curve !== undefined;
+  }
+
+  public static isOct(kryptos: any): kryptos is OctKryptos {
+    return kryptos instanceof Kryptos && kryptos.type === "oct" && kryptos.curve === undefined;
+  }
+
+  public static isOkp(kryptos: any): kryptos is OkpKryptos {
+    return kryptos instanceof Kryptos && kryptos.type === "OKP" && kryptos.curve !== undefined;
+  }
+
+  public static isRsa(kryptos: any): kryptos is RsaKryptos {
+    return kryptos instanceof Kryptos && kryptos.type === "RSA" && kryptos.curve === undefined;
   }
 
   // private methods

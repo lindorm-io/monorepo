@@ -7,10 +7,12 @@ MockDate.set(MockedDate.toISOString());
 
 describe("Kryptos (oct)", () => {
   test("should generate", async () => {
-    const key = await Kryptos.generate({
-      size: 32,
-      type: "oct",
-    });
+    const key = await Kryptos.generate("oct");
+
+    expect(Kryptos.isEc(key)).toBe(false);
+    expect(Kryptos.isOct(key)).toBe(true);
+    expect(Kryptos.isOkp(key)).toBe(false);
+    expect(Kryptos.isRsa(key)).toBe(false);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),
@@ -34,7 +36,7 @@ describe("Kryptos (oct)", () => {
   });
 
   test("should export metadata as json or jwk", async () => {
-    const key = await Kryptos.generate({
+    const key = await Kryptos.generate("oct", {
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
       algorithm: "HS512",
       createdAt: new Date("2024-05-08T00:00:00.000Z"),
@@ -45,7 +47,6 @@ describe("Kryptos (oct)", () => {
       operations: ["encrypt", "decrypt"],
       ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
       size: 32,
-      type: "oct",
       updatedAt: new Date("2024-05-09T00:00:00.000Z"),
       use: "enc",
     });

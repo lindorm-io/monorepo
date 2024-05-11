@@ -4,8 +4,8 @@ import { promisify } from "util";
 import {
   EcKeyJwk,
   FormatOptions,
-  GenerateOptions,
-  GenerateResult,
+  GenerateEcOptions,
+  GenerateEcResult,
   KryptosCurve,
   KryptosDer,
   KryptosPem,
@@ -16,24 +16,22 @@ const generateKeyPair = promisify(_generateKeyPair);
 
 const CURVES = ["P-256", "P-384", "P-521", "secp256k1", "secp384r1", "secp521r1"];
 
-export const _generateEcKey = async (options: GenerateOptions): Promise<GenerateResult> => {
-  if (options.type !== "EC") {
-    throw new Error("Type needs to be [ EC ]");
-  }
-  if (!options.curve) {
-    throw new Error("Curve is required");
-  }
-  if (!CURVES.includes(options.curve)) {
-    throw new Error("Curve needs to be [ P-256 | P-384 | P-521 ]");
+export const _generateEcKey = async (options: GenerateEcOptions): Promise<GenerateEcResult> => {
+  const curve = options.curve ?? "P-521";
+
+  if (!CURVES.includes(curve)) {
+    throw new Error(
+      "Curve needs to be [ P-256 | P-384 | P-521 | secp256k1 | secp384r1 | secp521r1]",
+    );
   }
 
   const { privateKey, publicKey } = await generateKeyPair("ec", {
-    namedCurve: options.curve,
+    namedCurve: curve,
     privateKeyEncoding: { format: "der", type: "pkcs8" },
     publicKeyEncoding: { format: "der", type: "spki" },
   });
 
-  return { privateKey, publicKey };
+  return { curve, privateKey, publicKey };
 };
 
 export const _createEcDerFromJwk = (options: EcKeyJwk): KryptosDer => {

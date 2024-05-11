@@ -7,10 +7,12 @@ MockDate.set(MockedDate.toISOString());
 
 describe("Kryptos (RSA)", () => {
   test("should generate", async () => {
-    const key = await Kryptos.generate({
-      modulus: 1,
-      type: "RSA",
-    });
+    const key = await Kryptos.generate("RSA", { modulus: 1 });
+
+    expect(Kryptos.isEc(key)).toBe(false);
+    expect(Kryptos.isOct(key)).toBe(false);
+    expect(Kryptos.isOkp(key)).toBe(false);
+    expect(Kryptos.isRsa(key)).toBe(true);
 
     expect(key.export("b64")).toEqual({
       privateKey: expect.any(String),
@@ -44,7 +46,7 @@ describe("Kryptos (RSA)", () => {
   });
 
   test("should export metadata as json or jwk", async () => {
-    const key = await Kryptos.generate({
+    const key = await Kryptos.generate("RSA", {
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
       algorithm: "ES512",
       createdAt: new Date("2024-05-08T00:00:00.000Z"),
@@ -55,7 +57,6 @@ describe("Kryptos (RSA)", () => {
       modulus: 2,
       operations: ["encrypt", "decrypt"],
       ownerId: "2c3d8e05-b382-5b31-898c-2d1f6009f5c1",
-      type: "RSA",
       updatedAt: new Date("2024-05-09T00:00:00.000Z"),
       use: "enc",
     });
