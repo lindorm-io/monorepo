@@ -1,5 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
-import { randomBytes } from "crypto";
+import { TEST_OCT_KEY } from "../__fixtures__/keys";
 import { EnigmaError } from "../errors";
 import { EnigmaKit } from "./EnigmaKit";
 
@@ -8,12 +7,9 @@ describe("EnigmaKit", () => {
   let hash: string;
 
   beforeEach(async () => {
-    const secret = randomBytes(16).toString("hex");
-    const kryptos = await Kryptos.generate("oct");
-
     kit = new EnigmaKit({
-      aes: { kryptos },
-      hmac: { secret },
+      aes: { kryptos: TEST_OCT_KEY },
+      oct: { kryptos: TEST_OCT_KEY },
     });
     hash = await kit.hash("string");
   });

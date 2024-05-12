@@ -1,3 +1,5 @@
+import { Kryptos } from "@lindorm/kryptos";
+import { TEST_OCT_KEY } from "../__fixtures__/keys";
 import { ArgonError } from "../errors";
 import { ArgonKit } from "./ArgonKit";
 
@@ -105,9 +107,7 @@ describe("ArgonKit", () => {
 
   describe("with secret", () => {
     beforeEach(async () => {
-      kit = new ArgonKit({
-        secret: "secret",
-      });
+      kit = new ArgonKit({ kryptos: TEST_OCT_KEY });
       hash = await kit.hash("string");
     });
 
@@ -128,9 +128,8 @@ describe("ArgonKit", () => {
     });
 
     test("should reject on wrong secret", async () => {
-      const kit2 = new ArgonKit({
-        secret: "wrong",
-      });
+      const kryptos = await Kryptos.generate("oct");
+      const kit2 = new ArgonKit({ kryptos });
 
       await expect(kit2.verify("string", hash)).resolves.toBe(false);
     });

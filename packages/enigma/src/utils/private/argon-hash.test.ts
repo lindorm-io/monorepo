@@ -1,3 +1,4 @@
+import { TEST_OCT_KEY } from "../../__fixtures__/keys";
 import { ArgonError } from "../../errors";
 import { _assertArgonHash, _createArgonHash, _verifyArgonHash } from "./argon-hash";
 
@@ -9,7 +10,7 @@ describe("argon-hash", () => {
   });
 
   it("should resolve with secret", async () => {
-    await expect(_createArgonHash({ data: "data", secret: "secret" })).resolves.toStrictEqual(
+    await expect(_createArgonHash({ data: "data", kryptos: TEST_OCT_KEY })).resolves.toStrictEqual(
       expect.stringContaining("$argon2id$v=19$m=65536,t=12,p=8$"),
     );
   });
@@ -21,9 +22,11 @@ describe("argon-hash", () => {
   });
 
   it("should verify data with secret", async () => {
-    const hash = await _createArgonHash({ data: "data", secret: "secret" });
+    const hash = await _createArgonHash({ data: "data", kryptos: TEST_OCT_KEY });
 
-    await expect(_verifyArgonHash({ data: "data", hash, secret: "secret" })).resolves.toBe(true);
+    await expect(_verifyArgonHash({ data: "data", hash, kryptos: TEST_OCT_KEY })).resolves.toBe(
+      true,
+    );
   });
 
   it("should assert data", async () => {
@@ -33,9 +36,11 @@ describe("argon-hash", () => {
   });
 
   it("should assert data with secret", async () => {
-    const hash = await _createArgonHash({ data: "data", secret: "secret" });
+    const hash = await _createArgonHash({ data: "data", kryptos: TEST_OCT_KEY });
 
-    await expect(_assertArgonHash({ data: "data", hash, secret: "secret" })).resolves.not.toThrow();
+    await expect(
+      _assertArgonHash({ data: "data", hash, kryptos: TEST_OCT_KEY }),
+    ).resolves.not.toThrow();
   });
 
   it("should verify invalid data", async () => {
