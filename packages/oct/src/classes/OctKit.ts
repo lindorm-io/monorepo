@@ -1,5 +1,5 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { OctSignatureAlgorithm, OctSignatureFormat, OctSignatureKitOptions } from "../types";
+import { OctKitOptions, OctSignatureAlgorithm, OctSignatureFormat } from "../types";
 import {
   _assertOctSignature,
   _createOctSignature,
@@ -11,7 +11,7 @@ export class OctKit {
   private readonly format: OctSignatureFormat | undefined;
   private readonly kryptos: Kryptos;
 
-  public constructor(options: OctSignatureKitOptions) {
+  public constructor(options: OctKitOptions) {
     this.algorithm = options.algorithm;
     this.format = options.format;
     this.kryptos = options.kryptos;

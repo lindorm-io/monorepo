@@ -19,7 +19,7 @@ export type VerifyOctSignatureOptions = {
   signature: string;
 };
 
-export type OctSignatureKitOptions = {
+export type OctKitOptions = {
   algorithm?: OctSignatureAlgorithm;
   format?: OctSignatureFormat;
   kryptos: Kryptos;
