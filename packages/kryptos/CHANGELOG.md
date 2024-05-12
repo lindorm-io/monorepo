@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.2.0...@lindorm/kryptos@0.2.1) (2024-05-12)
+
+### Bug Fixes
+
+- resolve bugs in kryptos ([73a98de](https://github.com/lindorm-io/monorepo/commit/73a98de215e7432acef1c9e60d0cd7b0631ae711))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.1.0...@lindorm/kryptos@0.2.0) (2024-05-11)
 
 ### Bug Fixes
