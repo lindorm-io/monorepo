@@ -1,4 +1,4 @@
-import { KryptosCurve } from "@lindorm/kryptos";
+import { EcCurve } from "@lindorm/kryptos";
 import { AesError } from "../../errors";
 import {
   AesEncryptionData,
@@ -30,7 +30,7 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
   }
 
   const { cek, crv: curve, eka, f, ih, iv, kid, tag, v, x, y, kty: keyType } = values;
-  const crv = curve as KryptosCurve;
+  const crv = curve as EcCurve;
   const format = f as BufferFormat;
   const kty = keyType as "EC";
 

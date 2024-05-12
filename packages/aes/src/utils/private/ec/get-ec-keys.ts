@@ -1,4 +1,4 @@
-import { EcKeyJwk, Kryptos } from "@lindorm/kryptos";
+import { EcCurve, EcKeyJwk, Kryptos } from "@lindorm/kryptos";
 import { createECDH } from "crypto";
 import { AesError } from "../../../errors";
 import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../../types";
@@ -33,7 +33,15 @@ export const _getEcEncryptionKeys = ({
     });
   }
 
-  const { curve, publicKey } = kryptos.export("raw");
+  if (!Kryptos.isEc(kryptos)) {
+    throw new AesError("Invalid kryptos type", {
+      debug: { kryptos },
+    });
+  }
+
+  const exported = kryptos.export("raw");
+  const curve = exported.curve as EcCurve;
+  const publicKey = exported.publicKey;
 
   if (!publicKey) {
     throw new AesError("Missing public key");
@@ -64,7 +72,15 @@ export const _getEcDecryptionKey = ({
   kryptos,
   publicEncryptionJwk,
 }: DecryptOptions): Buffer => {
-  const { curve, privateKey } = kryptos.export("raw");
+  if (!Kryptos.isEc(kryptos)) {
+    throw new AesError("Invalid kryptos type", {
+      debug: { kryptos },
+    });
+  }
+
+  const exported = kryptos.export("raw");
+  const curve = exported.curve as EcCurve;
+  const privateKey = exported.privateKey;
 
   if (!privateKey) {
     throw new AesError("Missing private key");
