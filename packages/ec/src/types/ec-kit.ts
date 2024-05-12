@@ -2,7 +2,7 @@ import { Kryptos } from "@lindorm/kryptos";
 
 export type EcSignatureAlgorithm = "SHA256" | "SHA384" | "SHA512";
 
-export type EcSignatureFormat = "base64" | "hex";
+export type EcSignatureFormat = "base64" | "base64url" | "hex";
 
 export type CreateEcSignatureOptions = {
   algorithm?: EcSignatureAlgorithm;
