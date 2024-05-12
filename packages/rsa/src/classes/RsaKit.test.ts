@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { RSA_KEYS } from "../__fixtures__/rsa-keys.fixture";
+import { TEST_RSA_KEY } from "../__fixtures__/keys";
 import { RsaError } from "../errors";
 import { RsaKit } from "./RsaKit";
 
@@ -10,8 +10,8 @@ describe("RsaKit", () => {
 
   beforeEach(() => {
     data = randomBytes(32).toString("hex");
-    kit = new RsaKit({ kryptos: RSA_KEYS });
-    hash = kit.hash(data);
+    kit = new RsaKit({ kryptos: TEST_RSA_KEY });
+    hash = kit.sign(data);
   });
 
   test("should sign", () => {

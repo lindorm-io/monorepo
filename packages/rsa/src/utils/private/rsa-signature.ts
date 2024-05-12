@@ -1,14 +1,14 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { createSign, createVerify } from "crypto";
 import { RsaError } from "../../errors";
-import { CreateRsaHashOptions, VerifyRsaHashOptions } from "../../types";
+import { CreateRsaSignatureOptions, VerifyRsaSignatureOptions } from "../../types";
 
-export const _createRsaHash = ({
+export const _createRsaSignature = ({
   algorithm = "RSA-SHA256",
   data,
   format = "base64url",
   kryptos,
-}: CreateRsaHashOptions): string => {
+}: CreateRsaSignatureOptions): string => {
   if (!Kryptos.isRsa(kryptos)) {
     throw new RsaError("Invalid kryptos type");
   }
@@ -19,18 +19,16 @@ export const _createRsaHash = ({
     throw new RsaError("Private key not found in key set");
   }
 
-  const sign = createSign(algorithm).update(data).end();
-
-  return sign.sign(privateKey, format);
+  return createSign(algorithm).update(data).end().sign(privateKey, format);
 };
 
-export const _verifyRsaHash = ({
+export const _verifyRsaSignature = ({
   algorithm = "RSA-SHA256",
   data,
   format = "base64url",
   kryptos,
-  hash,
-}: VerifyRsaHashOptions): boolean => {
+  signature,
+}: VerifyRsaSignatureOptions): boolean => {
   if (!Kryptos.isRsa(kryptos)) {
     throw new RsaError("Invalid kryptos type");
   }
@@ -41,12 +39,10 @@ export const _verifyRsaHash = ({
     throw new RsaError("Public key not found in key set");
   }
 
-  const verifier = createVerify(algorithm).update(data).end();
-
-  return verifier.verify(publicKey, hash, format);
+  return createVerify(algorithm).update(data).end().verify(publicKey, signature, format);
 };
 
-export const _assertRsaHash = (options: VerifyRsaHashOptions): void => {
-  if (_verifyRsaHash(options)) return;
-  throw new RsaError("Invalid hash");
+export const _assertRsaSignature = (options: VerifyRsaSignatureOptions): void => {
+  if (_verifyRsaSignature(options)) return;
+  throw new RsaError("Invalid signature");
 };
