@@ -1,25 +1,9 @@
-import { EcCurve } from "./ec";
-import { OkpCurve } from "./okp";
+import { EcAlgorithm, EcCurve } from "./ec";
+import { OctAlgorithm } from "./oct";
+import { OkpAlgorithm, OkpCurve } from "./okp";
+import { RsaAlgorithm } from "./rsa";
 
-export type KryptosAlgorithm =
-  // EC Keys
-  | "ES256"
-  | "ES384"
-  | "ES512"
-
-  // Oct Keys
-  | "HS256"
-  | "HS384"
-  | "HS512"
-
-  // OKP Keys
-  | "EdDSA"
-  | "ECDH-ES"
-
-  // RSA Keys
-  | "RS256"
-  | "RS384"
-  | "RS512";
+export type KryptosAlgorithm = EcAlgorithm | OctAlgorithm | OkpAlgorithm | RsaAlgorithm;
 
 export type KryptosCurve = EcCurve | OkpCurve;
 

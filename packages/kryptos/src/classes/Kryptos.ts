@@ -465,13 +465,15 @@ export class Kryptos implements KryptosAttributes {
   private calculateAlgorithm(): KryptosAlgorithm {
     switch (this._type) {
       case "EC":
-        return "ES256";
+        if (this._curve === "P-256") return "ES256";
+        if (this._curve === "P-384") return "ES384";
+        return "ES512";
 
       case "oct":
         return "HS256";
 
       case "OKP":
-        return "ECDH-ES";
+        return "EdDSA";
 
       case "RSA":
         return "RS256";

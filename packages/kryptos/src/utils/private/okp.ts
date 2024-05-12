@@ -9,6 +9,7 @@ import {
   KryptosCurve,
   KryptosDer,
   KryptosPem,
+  OkpCurve,
   OkpKeyJwk,
 } from "../../types";
 
@@ -131,7 +132,7 @@ export const _exportOkpToJwk = (options: FormatOptions): OkpKeyJwk => {
     throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
-  const result: OkpKeyJwk = { x: "", crv: options.curve, kty: options.type };
+  const result: OkpKeyJwk = { x: "", crv: options.curve as OkpCurve, kty: options.type };
 
   if (options.mode === "both" && options.privateKey) {
     const keyObject = createPrivateKey({ key: options.privateKey, format: "der", type: "pkcs8" });

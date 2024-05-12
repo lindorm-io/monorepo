@@ -1,4 +1,6 @@
-export type RsaModulusSize = 1 | 2 | 3 | 4;
+export type RsaAlgorithm = "RS256" | "RS384" | "RS512";
+
+export type RsaModulus = 1 | 2 | 3 | 4;
 
 export type RsaKeyJwk = {
   e: string;

@@ -3,6 +3,7 @@ import { generateKeyPair as _generateKeyPair, createPrivateKey, createPublicKey 
 import { promisify } from "util";
 import { KryptosError } from "../../errors";
 import {
+  EcCurve,
   EcKeyJwk,
   FormatOptions,
   GenerateEcOptions,
@@ -15,14 +16,7 @@ import {
 
 const generateKeyPair = promisify(_generateKeyPair);
 
-const CURVES: Array<KryptosCurve> = [
-  "P-256",
-  "P-384",
-  "P-521",
-  "secp256k1",
-  "secp384r1",
-  "secp521r1",
-] as const;
+const CURVES: Array<KryptosCurve> = ["P-256", "P-384", "P-521"] as const;
 
 export const _generateEcKey = async (options: GenerateEcOptions): Promise<GenerateEcResult> => {
   const curve = options.curve ?? "P-521";
@@ -151,11 +145,14 @@ export const _createEcDerFromRaw = (options: KryptosRaw): KryptosDer => {
   if (!options.publicKey) {
     throw new KryptosError("Public key is required");
   }
+  if (!CURVES.includes(options.curve)) {
+    throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
+  }
 
   const len = _getCurveLength(options.curve);
 
   const jwk: EcKeyJwk = {
-    crv: options.curve,
+    crv: options.curve as EcCurve,
     kty: options.type,
     x: options.publicKey.subarray(-len, -len / 2).toString("base64"),
     y: options.publicKey.subarray(-len / 2).toString("base64"),
@@ -179,7 +176,7 @@ export const _exportEcToJwk = (options: FormatOptions): EcKeyJwk => {
     throw new KryptosError("Invalid curve", { data: { valid: CURVES } });
   }
 
-  const result: EcKeyJwk = { x: "", y: "", crv: options.curve, kty: options.type };
+  const result: EcKeyJwk = { x: "", y: "", crv: options.curve as EcCurve, kty: options.type };
 
   if (options.mode === "both" && options.privateKey) {
     const keyObject = createPrivateKey({ key: options.privateKey, format: "der", type: "pkcs8" });
@@ -320,15 +317,12 @@ export const _exportEcToRaw = (options: FormatOptions): KryptosRaw => {
 const _getCurveLength = (curve: KryptosCurve): number => {
   switch (curve) {
     case "P-256":
-    case "secp256k1":
       return 64;
 
     case "P-384":
-    case "secp384r1":
       return 96;
 
     case "P-521":
-    case "secp521r1":
       return 132;
 
     default:

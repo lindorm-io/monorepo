@@ -46,7 +46,7 @@ describe("Kryptos (OKP)", () => {
   test("should export metadata as json or jwk", async () => {
     const key = await Kryptos.generate("OKP", {
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
-      algorithm: "ECDH-ES",
+      algorithm: "EdDSA",
       createdAt: new Date("2023-01-01T00:00:00.000Z"),
       curve: "Ed25519",
       expiresAt: new Date("2025-01-01T00:00:00.000Z"),
@@ -62,7 +62,7 @@ describe("Kryptos (OKP)", () => {
 
     expect(key.toJSON()).toEqual({
       id: "27c10c28-a076-5614-a1f7-1f5d92d10d45",
-      algorithm: "ECDH-ES",
+      algorithm: "EdDSA",
       createdAt: new Date("2023-01-01T00:00:00.000Z"),
       curve: "Ed25519",
       expiresAt: new Date("2025-01-01T00:00:00.000Z"),
@@ -82,7 +82,7 @@ describe("Kryptos (OKP)", () => {
     });
 
     expect(key.toJWK("both")).toEqual({
-      alg: "ECDH-ES",
+      alg: "EdDSA",
       crv: "Ed25519",
       d: expect.any(String),
       exp: 1735689600,

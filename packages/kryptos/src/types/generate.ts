@@ -1,8 +1,8 @@
 import { EcCurve } from "./ec";
 import { KryptosOptions } from "./kryptos";
-import { OctKeySize } from "./oct";
+import { OctSize } from "./oct";
 import { OkpCurve } from "./okp";
-import { RsaModulusSize } from "./rsa";
+import { RsaModulus } from "./rsa";
 
 type StdOptions = Omit<KryptosOptions, "curve" | "privateKey" | "publicKey" | "type">;
 
@@ -18,7 +18,7 @@ export type GenerateEcResult = StdResult & {
 };
 
 export type GenerateOctOptions = StdOptions & {
-  size?: OctKeySize;
+  size?: OctSize;
 };
 
 export type GenerateOctResult = StdResult;
@@ -33,7 +33,7 @@ export type GenerateOkpResult = StdResult & {
 };
 
 export type GenerateRsaOptions = StdOptions & {
-  modulus?: RsaModulusSize;
+  modulus?: RsaModulus;
 };
 
 export type GenerateRsaResult = StdResult & {
