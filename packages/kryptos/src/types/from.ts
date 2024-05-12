@@ -2,19 +2,19 @@ import { KryptosB64, KryptosDer, KryptosJwk, KryptosPem, KryptosRaw } from "./co
 import { JwkMetadata, LindormJwkMetadata } from "./jwk";
 import { KryptosOptions } from "./kryptos";
 
-type StdOptions = Omit<KryptosOptions, "privateKey" | "publicKey">;
+export type KryptosStdOptions = Omit<KryptosOptions, "curve" | "privateKey" | "publicKey" | "type">;
 
-type JwkOptions = Partial<JwkMetadata> & Partial<LindormJwkMetadata>;
+export type KryptosJwkOptions = Partial<JwkMetadata> & Partial<LindormJwkMetadata>;
 
-export type KryptosFromB64 = StdOptions & KryptosB64;
+export type KryptosFromB64 = KryptosStdOptions & KryptosB64;
 
-export type KryptosFromDer = StdOptions & KryptosDer;
+export type KryptosFromDer = KryptosStdOptions & KryptosDer;
 
-export type KryptosFromJwk = JwkOptions & KryptosJwk;
+export type KryptosFromJwk = KryptosJwkOptions & KryptosJwk;
 
-export type KryptosFromPem = StdOptions & KryptosPem;
+export type KryptosFromPem = KryptosStdOptions & KryptosPem;
 
-export type KryptosFromRaw = StdOptions & KryptosRaw;
+export type KryptosFromRaw = KryptosStdOptions & KryptosRaw;
 
 export type KryptosFrom =
   | KryptosFromB64

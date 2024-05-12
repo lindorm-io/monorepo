@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { getUnixTime } from "@lindorm/date";
+import { getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { randomUUID } from "crypto";
 import { KryptosError } from "../errors";
@@ -15,6 +15,7 @@ import {
   KryptosAlgorithm,
   KryptosAttributes,
   KryptosB64,
+  KryptosClone,
   KryptosCurve,
   KryptosDer,
   KryptosExportMode,
@@ -43,7 +44,15 @@ import {
   _exportEcToRaw,
   _generateEcKey,
 } from "../utils/private/ec";
-import { _fromB64, _fromJwk, _fromPem, _fromRaw } from "../utils/private/from";
+import {
+  _fromB64,
+  _fromDer,
+  _fromJwk,
+  _fromJwkOptions,
+  _fromPem,
+  _fromRaw,
+  _fromStdOptions,
+} from "../utils/private/from";
 import { _isB64, _isDer, _isJwk, _isPem, _isRaw } from "../utils/private/is";
 import { _exportOctToJwk, _exportOctToPem, _generateOctKey } from "../utils/private/oct";
 import { _exportOkpToJwk, _exportOkpToPem, _generateOkpKey } from "../utils/private/okp";
@@ -60,6 +69,7 @@ export class Kryptos implements KryptosAttributes {
 
   private _algorithm: KryptosAlgorithm | undefined;
   private _expiresAt: Date | undefined;
+  private _issuer: string | undefined;
   private _jwksUri: string | undefined;
   private _notBefore: Date;
   private _operations: Array<KryptosOperation>;
@@ -74,6 +84,7 @@ export class Kryptos implements KryptosAttributes {
     this._curve = options.curve ?? undefined;
     this._expiresAt = options.expiresAt ?? undefined;
     this._isExternal = options.isExternal ?? false;
+    this._issuer = options.issuer ?? undefined;
     this._jwksUri = options.jwksUri ?? undefined;
     this._notBefore = options.notBefore ?? new Date();
     this._operations = options.operations ?? [];
@@ -119,16 +130,28 @@ export class Kryptos implements KryptosAttributes {
 
   public get expiresIn(): number | undefined {
     if (!this._expiresAt) return undefined;
-    return Math.round((this._expiresAt.getTime() - Date.now()) / 1000);
+    return getUnixTime(this._expiresAt) - getUnixTime(new Date());
+  }
+
+  public get isActive(): boolean {
+    return Boolean(this.isUsable && !this.isExpired);
   }
 
   public get isExpired(): boolean {
     if (!this._expiresAt) return false;
-    return this._expiresAt.getTime() < Date.now();
+    return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
   }
 
   public get isExternal(): boolean {
     return this._isExternal;
+  }
+
+  public get isUsable(): boolean {
+    return isEqual(new Date(), this._notBefore) || isAfter(new Date(), this._notBefore);
+  }
+
+  public get issuer(): string | undefined {
+    return this._issuer;
   }
 
   public get jwksUri(): string | undefined {
@@ -175,10 +198,6 @@ export class Kryptos implements KryptosAttributes {
     return this._updatedAt;
   }
 
-  public get isUsable(): boolean {
-    return !this.isExpired && this._notBefore.getTime() < Date.now();
-  }
-
   public get use(): KryptosUse | undefined {
     return this._use;
   }
@@ -208,8 +227,10 @@ export class Kryptos implements KryptosAttributes {
       curve: this.curve,
       expiresAt: this.expiresAt,
       expiresIn: this.expiresIn,
+      isActive: this.isActive,
       isExpired: this.isExpired,
       isExternal: this.isExternal,
+      issuer: this.issuer,
       isUsable: this.isUsable,
       jwksUri: this.jwksUri,
       notBefore: this.notBefore,
@@ -223,6 +244,15 @@ export class Kryptos implements KryptosAttributes {
 
   // public methods
 
+  public clone(options: KryptosClone = {}): Kryptos {
+    return new Kryptos({
+      ...this.toJSON(),
+      ...options,
+      privateKey: this._privateKey,
+      publicKey: this._publicKey,
+    });
+  }
+
   public export<K extends KryptosB64>(format: "b64", mode?: KryptosExportMode): K;
   public export<K extends KryptosDer>(format: "der", mode?: KryptosExportMode): K;
   public export<K extends KryptosJwk>(format: "jwk", mode?: KryptosExportMode): K;
@@ -234,19 +264,19 @@ export class Kryptos implements KryptosAttributes {
   ): K {
     switch (format) {
       case "b64":
-        return this._toBase64Url(mode) as K;
+        return this.toBase64Url(mode) as K;
 
       case "der":
-        return this._toDer(mode) as K;
+        return this.toDer(mode) as K;
 
       case "jwk":
-        return this._toJwk(mode) as K;
+        return this.toJwk(mode) as K;
 
       case "pem":
-        return this._toPem(mode) as K;
+        return this.toPem(mode) as K;
 
       case "raw":
-        return this._toRaw(mode) as K;
+        return this.toRaw(mode) as K;
 
       default:
         throw new KryptosError(`Invalid key format: ${format}`);
@@ -257,10 +287,10 @@ export class Kryptos implements KryptosAttributes {
     const keys = this.export<KryptosJwk>("jwk", mode);
 
     return {
-      alg: this.algorithm ?? this._calculateAlgorithm(),
+      alg: this.algorithm ?? this.calculateAlgorithm(),
       exp: this.expiresAt ? getUnixTime(this.expiresAt) : undefined,
-      expires_in: this.expiresIn,
       iat: getUnixTime(this.createdAt),
+      iss: this.issuer,
       jku: this.jwksUri ?? undefined,
       key_ops: this.operations,
       kid: this.id,
@@ -314,23 +344,23 @@ export class Kryptos implements KryptosAttributes {
     switch (format) {
       case "b64":
         if (!_isB64(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos(_fromB64(arg));
+        return new Kryptos({ ..._fromStdOptions(arg), ..._fromB64(arg) });
 
       case "der":
         if (!_isDer(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos(arg);
+        return new Kryptos({ ..._fromStdOptions(arg), ..._fromDer(arg) });
 
       case "jwk":
         if (!_isJwk(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos(_fromJwk(arg));
+        return new Kryptos({ ..._fromJwkOptions(arg), ..._fromJwk(arg) });
 
       case "pem":
         if (!_isPem(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos(_fromPem(arg as KryptosPem));
+        return new Kryptos({ ..._fromStdOptions(arg), ..._fromPem(arg) });
 
       case "raw":
         if (!_isRaw(arg)) throw new KryptosError("Invalid key format");
-        return new Kryptos(_fromRaw(arg as KryptosRaw));
+        return new Kryptos({ ..._fromStdOptions(arg), ..._fromRaw(arg) });
 
       default:
         throw new KryptosError("Invalid key format");
@@ -355,7 +385,7 @@ export class Kryptos implements KryptosAttributes {
 
   // private methods
 
-  private _toBase64Url(mode: KryptosExportMode): KryptosB64 {
+  private toBase64Url(mode: KryptosExportMode): KryptosB64 {
     return {
       ...(this._curve ? { curve: this._curve } : {}),
       ...(mode === "both" && this._privateKey
@@ -368,7 +398,7 @@ export class Kryptos implements KryptosAttributes {
 
   // private export methods
 
-  private _toDer(mode: KryptosExportMode): KryptosDer {
+  private toDer(mode: KryptosExportMode): KryptosDer {
     return {
       ...(this._curve ? { curve: this._curve } : {}),
       ...(mode === "both" && this._privateKey ? { privateKey: this._privateKey } : {}),
@@ -377,48 +407,48 @@ export class Kryptos implements KryptosAttributes {
     };
   }
 
-  private _toJwk(mode: KryptosExportMode): KryptosJwk {
+  private toJwk(mode: KryptosExportMode): KryptosJwk {
     switch (this._type) {
       case "EC":
-        return _exportEcToJwk(this._formatOptions(mode));
+        return _exportEcToJwk(this.formatOptions(mode));
 
       case "oct":
-        return _exportOctToJwk(this._formatOptions(mode));
+        return _exportOctToJwk(this.formatOptions(mode));
 
       case "OKP":
-        return _exportOkpToJwk(this._formatOptions(mode));
+        return _exportOkpToJwk(this.formatOptions(mode));
 
       case "RSA":
-        return _exportRsaToJwk(this._formatOptions(mode));
+        return _exportRsaToJwk(this.formatOptions(mode));
 
       default:
         throw new KryptosError("Unexpected key type");
     }
   }
 
-  private _toPem(mode: KryptosExportMode): KryptosPem {
+  private toPem(mode: KryptosExportMode): KryptosPem {
     switch (this._type) {
       case "EC":
-        return _exportEcToPem(this._formatOptions(mode));
+        return _exportEcToPem(this.formatOptions(mode));
 
       case "oct":
-        return _exportOctToPem(this._formatOptions(mode));
+        return _exportOctToPem(this.formatOptions(mode));
 
       case "OKP":
-        return _exportOkpToPem(this._formatOptions(mode));
+        return _exportOkpToPem(this.formatOptions(mode));
 
       case "RSA":
-        return _exportRsaToPem(this._formatOptions(mode));
+        return _exportRsaToPem(this.formatOptions(mode));
 
       default:
         throw new KryptosError("Unexpected key type");
     }
   }
 
-  private _toRaw(mode: KryptosExportMode): KryptosRaw {
+  private toRaw(mode: KryptosExportMode): KryptosRaw {
     switch (this._type) {
       case "EC":
-        return _exportEcToRaw(this._formatOptions(mode));
+        return _exportEcToRaw(this.formatOptions(mode));
 
       case "oct":
       case "OKP":
@@ -432,7 +462,7 @@ export class Kryptos implements KryptosAttributes {
 
   // private helpers
 
-  private _calculateAlgorithm(): KryptosAlgorithm {
+  private calculateAlgorithm(): KryptosAlgorithm {
     switch (this._type) {
       case "EC":
         return "ES256";
@@ -451,7 +481,7 @@ export class Kryptos implements KryptosAttributes {
     }
   }
 
-  private _formatOptions(mode: KryptosExportMode): FormatOptions {
+  private formatOptions(mode: KryptosExportMode): FormatOptions {
     return {
       curve: this._curve,
       mode,

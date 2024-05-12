@@ -12,8 +12,8 @@ export type JwkMetadata = {
 
 export type LindormJwkMetadata = {
   exp?: number;
-  expires_in?: number;
   iat: number;
+  iss?: string;
   jku?: string;
   nbf: number;
   owner_id?: string;
