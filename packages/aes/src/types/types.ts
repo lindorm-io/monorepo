@@ -1,8 +1,6 @@
 import { EcKeyJwk } from "@lindorm/kryptos";
 
-export type BufferFormat = "base64" | "base64url" | "hex";
-
-export type Encryption =
+export type AesEncryption =
   | "aes-128-cbc"
   | "aes-192-cbc"
   | "aes-256-cbc"
@@ -10,7 +8,7 @@ export type Encryption =
   | "aes-192-gcm"
   | "aes-256-gcm";
 
-export type EncryptionKeyAlgorithm =
+export type AesEncryptionKeyAlgorithm =
   | "ECDH-ES"
   | "RSA-OAEP"
   | "RSA-OAEP-256"
@@ -18,10 +16,6 @@ export type EncryptionKeyAlgorithm =
   | "RSA-OAEP-512"
   | "RSA-PRIVATE-KEY";
 
-export type IntegrityHash = "sha256" | "sha384" | "sha512";
-
 export type PublicEncryptionJwk = Pick<EcKeyJwk, "crv" | "kty" | "x" | "y">;
 
-export type Secret = Buffer | string;
-
-export type ShaHash = "sha1" | "sha256" | "sha384" | "sha512";
+export type AesSecret = Buffer | string;

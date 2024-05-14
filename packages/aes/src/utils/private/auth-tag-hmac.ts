@@ -6,7 +6,7 @@ export const createHmacAuthTag = ({
   content,
   encryptionKey,
   initialisationVector,
-  integrityHash = "sha256",
+  integrityHash = "SHA256",
 }: CreateHmacAuthTag): Buffer => {
   const hmac = createHmac(integrityHash, encryptionKey);
 

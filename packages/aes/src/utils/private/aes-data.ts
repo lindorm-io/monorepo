@@ -1,6 +1,11 @@
 import { createCipheriv, createDecipheriv } from "crypto";
 import { LATEST_AES_VERSION } from "../../constants";
-import { AesEncryptionData, DecryptAesDataOptions, EncryptAesDataOptions } from "../../types";
+import {
+  AesEncryptionData,
+  AesEncryptionKeyAlgorithm,
+  DecryptAesDataOptions,
+  EncryptAesDataOptions,
+} from "../../types";
 import { _getAuthTag, _setAuthTag } from "./auth-tag";
 import { _getDecryptionKey } from "./get-decryption-key";
 import { _getEncryptionKeys } from "./get-encryption-keys";
@@ -10,7 +15,6 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
   const {
     data,
     encryption = "aes-256-gcm",
-    encryptionKeyAlgorithm,
     format = "base64url",
     integrityHash,
     kryptos,
@@ -19,7 +23,6 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
   const { encryptionKey, publicEncryptionJwk, publicEncryptionKey } = _getEncryptionKeys({
     encryption,
     kryptos,
-    encryptionKeyAlgorithm,
   });
 
   const initialisationVector = _getInitialisationVector(encryption);
@@ -44,8 +47,7 @@ export const _encryptAesData = (options: EncryptAesDataOptions): AesEncryptionDa
     initialisationVector,
     integrityHash,
     keyId: kryptos.id ? Buffer.from(kryptos.id, format) : undefined,
-    encryptionKeyAlgorithm:
-      encryptionKeyAlgorithm && publicEncryptionKey ? encryptionKeyAlgorithm : undefined,
+    encryptionKeyAlgorithm: kryptos.algorithm as AesEncryptionKeyAlgorithm,
     publicEncryptionJwk,
     publicEncryptionKey,
     version: LATEST_AES_VERSION,
@@ -57,7 +59,6 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
     authTag,
     content,
     encryption,
-    encryptionKeyAlgorithm,
     initialisationVector,
     integrityHash,
     kryptos,
@@ -67,7 +68,6 @@ export const _decryptAesData = (options: DecryptAesDataOptions): string => {
 
   const decryptionKey = _getDecryptionKey({
     encryption,
-    encryptionKeyAlgorithm,
     kryptos,
     publicEncryptionJwk,
     publicEncryptionKey,

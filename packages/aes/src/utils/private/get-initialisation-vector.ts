@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { AesError } from "../../errors";
-import { Encryption } from "../../types";
+import { AesEncryption } from "../../types";
 
-export const _getInitialisationVector = (encryption: Encryption): Buffer => {
+export const _getInitialisationVector = (encryption: AesEncryption): Buffer => {
   switch (encryption) {
     case "aes-128-cbc":
     case "aes-192-cbc":

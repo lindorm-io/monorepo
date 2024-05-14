@@ -1,19 +1,20 @@
+import { ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../../../errors";
-import { EncryptionKeyAlgorithm, ShaHash } from "../../../types";
+import { AesEncryptionKeyAlgorithm } from "../../../types";
 
-export const _getOaepHash = (encryption: EncryptionKeyAlgorithm): ShaHash => {
+export const _getOaepHash = (encryption: AesEncryptionKeyAlgorithm): ShaAlgorithm => {
   switch (encryption) {
     case "RSA-OAEP":
-      return "sha1";
+      return "SHA1";
 
     case "RSA-OAEP-256":
-      return "sha256";
+      return "SHA256";
 
     case "RSA-OAEP-384":
-      return "sha384";
+      return "SHA384";
 
     case "RSA-OAEP-512":
-      return "sha512";
+      return "SHA512";
 
     default:
       throw new AesError("Unexpected encryption key algorithm", {

@@ -1,13 +1,14 @@
+import { ShaAlgorithm } from "@lindorm/types";
 import { Cipher, CipherGCM, Decipher, DecipherGCM } from "crypto";
-import { Encryption, IntegrityHash } from "./types";
+import { AesEncryption } from "./types";
 
 export type GetAuthTagOptions = {
   cipher: Cipher | CipherGCM;
   content: Buffer;
-  encryption: Encryption;
+  encryption: AesEncryption;
   encryptionKey: Buffer;
   initialisationVector: Buffer;
-  integrityHash?: IntegrityHash;
+  integrityHash?: ShaAlgorithm;
 };
 
 export type SetAuthTagOptions = {
@@ -15,16 +16,16 @@ export type SetAuthTagOptions = {
   content: Buffer;
   decipher: Decipher | DecipherGCM;
   decryptionKey: Buffer;
-  encryption: Encryption;
+  encryption: AesEncryption;
   initialisationVector: Buffer;
-  integrityHash?: IntegrityHash;
+  integrityHash?: ShaAlgorithm;
 };
 
 export type CreateHmacAuthTag = {
   content: Buffer;
   encryptionKey: Buffer;
   initialisationVector: Buffer;
-  integrityHash: IntegrityHash;
+  integrityHash: ShaAlgorithm;
 };
 
 export type VerifyHmacAuthTag = CreateHmacAuthTag & { authTag: Buffer };

@@ -1,5 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { OkpKitOptions, OkpSignatureFormat } from "../types";
+import { BufferFormat } from "@lindorm/types";
+import { OkpKitOptions } from "../types";
 import {
   _assertOkpSignature,
   _createOkpSignature,
@@ -7,11 +8,11 @@ import {
 } from "../utils/private/okp-signature";
 
 export class OkpKit {
-  private readonly format: OkpSignatureFormat | undefined;
+  private readonly format: BufferFormat;
   private readonly kryptos: Kryptos;
 
   public constructor(options: OkpKitOptions) {
-    this.format = options.format;
+    this.format = options.format ?? "base64";
     this.kryptos = options.kryptos;
   }
 

@@ -29,7 +29,7 @@ describe("AesKit", () => {
       encryptionKeyAlgorithm: undefined,
       format: "base64url",
       initialisationVector: expect.any(Buffer),
-      integrityHash: "sha256",
+      integrityHash: "SHA256",
       keyId: expect.any(Buffer),
       publicEncryptionJwk: undefined,
       publicEncryptionKey: undefined,

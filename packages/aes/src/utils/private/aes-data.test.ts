@@ -1,8 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { EC_KEY_SET } from "../../__fixtures__/ec-keys.fixture";
-import { OCT_KEY_SET } from "../../__fixtures__/oct-keys.fixture";
-import { RSA_KEY_SET } from "../../__fixtures__/rsa-keys.fixture";
+import { TEST_EC_KEY, TEST_OCT_KEY, TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { _decryptAesData, _encryptAesData } from "./aes-data";
 
 describe("aes-data", () => {
@@ -15,10 +13,10 @@ describe("aes-data", () => {
   });
 
   test("should encrypt", () => {
-    expect(_encryptAesData({ data, kryptos })).toStrictEqual({
-      encryption: "aes-256-gcm",
+    expect(_encryptAesData({ data, kryptos })).toEqual({
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
+      encryption: "aes-256-gcm",
       encryptionKeyAlgorithm: undefined,
       format: "base64url",
       initialisationVector: expect.any(Buffer),
@@ -74,13 +72,13 @@ describe("aes-data", () => {
       const encryption = _encryptAesData({
         encryption: "aes-256-cbc",
         data,
-        integrityHash: "sha256",
+        integrityHash: "SHA256",
         kryptos,
       });
 
       expect(encryption.encryption).toBe("aes-256-cbc");
-      expect(encryption.authTag).toStrictEqual(expect.any(Buffer));
-      expect(encryption.integrityHash).toBe("sha256");
+      expect(encryption.authTag).toEqual(expect.any(Buffer));
+      expect(encryption.integrityHash).toBe("SHA256");
       expect(_decryptAesData({ ...encryption, kryptos })).toBe(data);
     });
   });
@@ -159,13 +157,12 @@ describe("aes-data", () => {
     test("should encrypt and decrypt", () => {
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "ECDH-ES",
-        kryptos: EC_KEY_SET,
+        kryptos: TEST_EC_KEY,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
-      expect(encryption.encryptionKeyAlgorithm).toBe(undefined);
-      expect(_decryptAesData({ ...encryption, kryptos: EC_KEY_SET })).toBe(data);
+      expect(encryption.encryptionKeyAlgorithm).toBe("ECDH-ES");
+      expect(_decryptAesData({ ...encryption, kryptos: TEST_EC_KEY })).toBe(data);
     });
   });
 
@@ -173,86 +170,74 @@ describe("aes-data", () => {
     test("should encrypt and decrypt", () => {
       const encryption = _encryptAesData({
         data,
-        kryptos: OCT_KEY_SET,
+        kryptos: TEST_OCT_KEY,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
-      expect(encryption.encryptionKeyAlgorithm).toBe(undefined);
-      expect(_decryptAesData({ ...encryption, kryptos: OCT_KEY_SET })).toBe(data);
+      expect(encryption.encryptionKeyAlgorithm).toBe("dir");
+      expect(_decryptAesData({ ...encryption, kryptos: TEST_OCT_KEY })).toBe(data);
     });
   });
 
   describe("rsa", () => {
-    test("should encrypt and decrypt", () => {
-      const encryption = _encryptAesData({
-        data,
-        encryptionKeyAlgorithm: "RSA-PRIVATE-KEY",
-        kryptos: RSA_KEY_SET,
-      });
-
-      expect(encryption.encryption).toBe("aes-256-gcm");
-      expect(encryption.encryptionKeyAlgorithm).toBe("RSA-PRIVATE-KEY");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
-    });
-
     test("should encrypt and decrypt with RSA-PRIVATE-KEY", () => {
+      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-PRIVATE-KEY" });
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "RSA-PRIVATE-KEY",
-        kryptos: RSA_KEY_SET,
+        kryptos: key,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-PRIVATE-KEY");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
+      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
     });
 
     test("should encrypt and decrypt with RSA-OAEP", () => {
+      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP" });
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "RSA-OAEP",
-        kryptos: RSA_KEY_SET,
+        kryptos: key,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
+      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
     });
 
     test("should encrypt and decrypt with RSA-OAEP-256", () => {
+      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP-256" });
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "RSA-OAEP-256",
-        kryptos: RSA_KEY_SET,
+        kryptos: key,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-256");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
+      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
     });
 
     test("should encrypt and decrypt with RSA-OAEP-384", () => {
+      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP-384" });
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "RSA-OAEP-384",
-        kryptos: RSA_KEY_SET,
+        kryptos: key,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-384");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
+      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
     });
 
     test("should encrypt and decrypt with RSA-OAEP-512", () => {
+      const key = TEST_RSA_KEY.clone({ algorithm: "RSA-OAEP-512" });
       const encryption = _encryptAesData({
         data,
-        encryptionKeyAlgorithm: "RSA-OAEP-512",
-        kryptos: RSA_KEY_SET,
+        kryptos: key,
       });
 
       expect(encryption.encryption).toBe("aes-256-gcm");
       expect(encryption.encryptionKeyAlgorithm).toBe("RSA-OAEP-512");
-      expect(_decryptAesData({ ...encryption, kryptos: RSA_KEY_SET })).toBe(data);
+      expect(_decryptAesData({ ...encryption, kryptos: key })).toBe(data);
     });
   });
 });

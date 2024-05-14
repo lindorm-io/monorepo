@@ -1,19 +1,14 @@
 import { EcCurve } from "@lindorm/kryptos";
+import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../../errors";
-import {
-  AesEncryptionData,
-  BufferFormat,
-  Encryption,
-  EncryptionKeyAlgorithm,
-  IntegrityHash,
-} from "../../types";
+import { AesEncryption, AesEncryptionData, AesEncryptionKeyAlgorithm } from "../../types";
 
 const regex = /(?<key>[a-z]+)=(?<value>.+)/g;
 
 export const _decodeAesString = (data: string): AesEncryptionData => {
   const [_, alg, array, content] = data.split("$");
 
-  const algorithm = alg as Encryption;
+  const algorithm = alg as AesEncryption;
   const items = array.split(",");
   const values: Record<string, string> = {};
 
@@ -38,9 +33,9 @@ export const _decodeAesString = (data: string): AesEncryptionData => {
     encryption: algorithm,
     authTag: tag ? Buffer.from(tag, format) : undefined,
     content: Buffer.from(content, format),
-    encryptionKeyAlgorithm: eka as EncryptionKeyAlgorithm,
+    encryptionKeyAlgorithm: eka as AesEncryptionKeyAlgorithm,
     format,
-    integrityHash: ih as IntegrityHash,
+    integrityHash: ih as ShaAlgorithm,
     initialisationVector: Buffer.from(iv, format),
     keyId: kid ? Buffer.from(kid, format) : undefined,
     publicEncryptionJwk: crv && x && y && kty ? { crv, x, y, kty } : undefined,

@@ -1,5 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { RsaKitOptions, RsaSignatureAlgorithm, RsaSignatureFormat } from "../types";
+import { BufferFormat } from "@lindorm/types";
+import { RsaKitOptions } from "../types";
 import {
   _assertRsaSignature,
   _createRsaSignature,
@@ -7,19 +8,16 @@ import {
 } from "../utils/private/rsa-signature";
 
 export class RsaKit {
-  private readonly algorithm: RsaSignatureAlgorithm;
-  private readonly format: RsaSignatureFormat;
+  private readonly format: BufferFormat;
   private readonly kryptos: Kryptos;
 
   public constructor(options: RsaKitOptions) {
-    this.algorithm = options.algorithm || "RSA-SHA256";
-    this.format = options.format || "base64url";
+    this.format = options.format ?? "base64";
     this.kryptos = options.kryptos;
   }
 
   public sign(data: string): string {
     return _createRsaSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -28,7 +26,6 @@ export class RsaKit {
 
   public verify(data: string, signature: string): boolean {
     return _verifyRsaSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -38,7 +35,6 @@ export class RsaKit {
 
   public assert(data: string, signature: string): void {
     return _assertRsaSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,

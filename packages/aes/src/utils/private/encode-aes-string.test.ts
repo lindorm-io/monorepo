@@ -7,7 +7,7 @@ describe("encodeAesString", () => {
       authTag: Buffer.from("authTag"),
       content: Buffer.from("encryption"),
       format: "base64url",
-      integrityHash: "sha256",
+      integrityHash: "SHA256",
       initialisationVector: Buffer.from("initialisationVector"),
       encryptionKeyAlgorithm: "RSA-OAEP-256",
       keyId: Buffer.from("keyId"),
@@ -29,7 +29,7 @@ describe("encodeAesString", () => {
     expect(string).toContain("cek=cHVibGljRW5jcnlwdGlvbktleQ");
     expect(string).toContain("crv=P-521");
     expect(string).toContain("eka=RSA-OAEP-256");
-    expect(string).toContain("ih=sha256");
+    expect(string).toContain("ih=SHA256");
     expect(string).toContain("iv=aW5pdGlhbGlzYXRpb25WZWN0b3I");
     expect(string).toContain("kid=a2V5SWQ");
     expect(string).toContain("tag=YXV0aFRhZw");

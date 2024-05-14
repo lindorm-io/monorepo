@@ -1,15 +1,8 @@
 import { isObject, isString } from "@lindorm/is";
 import { Kryptos } from "@lindorm/kryptos";
+import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
 import { AesError } from "../errors";
-import {
-  AesEncryptionData,
-  AesKitOptions,
-  BufferFormat,
-  DecryptAesDataOptions,
-  Encryption,
-  EncryptionKeyAlgorithm,
-  IntegrityHash,
-} from "../types";
+import { AesEncryption, AesEncryptionData, AesKitOptions, DecryptAesDataOptions } from "../types";
 import {
   _assertAesCipher,
   _decryptAesCipher,
@@ -19,17 +12,15 @@ import {
 import { _decryptAesData, _encryptAesData } from "../utils/private/aes-data";
 
 export class AesKit {
-  private readonly encryption: Encryption;
-  private readonly encryptionKeyAlgorithm: EncryptionKeyAlgorithm;
+  private readonly encryption: AesEncryption;
   private readonly format: BufferFormat;
-  private readonly integrityHash: IntegrityHash;
+  private readonly integrityHash: ShaAlgorithm;
   private readonly kryptos: Kryptos;
 
   public constructor(options: AesKitOptions) {
     this.encryption = options.encryption || "aes-256-gcm";
-    this.encryptionKeyAlgorithm = options.encryptionKeyAlgorithm || "RSA-OAEP-256";
     this.format = options.format || "base64url";
-    this.integrityHash = options.integrityHash || "sha256";
+    this.integrityHash = options.integrityHash || "SHA256";
     this.kryptos = options.kryptos;
   }
 
@@ -41,7 +32,6 @@ export class AesKit {
         return _encryptAesCipher({
           data: arg,
           encryption: this.encryption,
-          encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
           format: this.format,
           integrityHash: this.integrityHash,
           kryptos: this.kryptos,
@@ -51,7 +41,6 @@ export class AesKit {
         return _encryptAesData({
           data: arg,
           encryption: this.encryption,
-          encryptionKeyAlgorithm: this.encryptionKeyAlgorithm,
           format: this.format,
           integrityHash: this.integrityHash,
           kryptos: this.kryptos,

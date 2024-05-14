@@ -1,10 +1,10 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { BufferFormat, Encryption, EncryptionKeyAlgorithm, IntegrityHash } from "./types";
+import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
+import { AesEncryption } from "./types";
 
 export type AesKitOptions = {
-  encryption?: Encryption;
-  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  encryption?: AesEncryption;
   format?: BufferFormat;
-  integrityHash?: IntegrityHash;
+  integrityHash?: ShaAlgorithm;
   kryptos: Kryptos;
 };

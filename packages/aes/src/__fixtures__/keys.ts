@@ -8,6 +8,40 @@ const defaults = {
   jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
 };
 
+const EC: KryptosFromB64 = {
+  ...defaults,
+  id: "9e568fdb-ed87-5a24-800a-44e1a143d5da",
+  curve: "P-521",
+  createdAt: new Date("2023-01-01T00:00:00.000Z"),
+  privateKey:
+    "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
+  publicKey:
+    "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
+  type: "EC",
+};
+
+export const TEST_EC_KEY = Kryptos.from("b64", {
+  ...EC,
+  algorithm: "ECDH-ES",
+  operations: ["encrypt", "decrypt"],
+  use: "enc",
+});
+
+const OCT: KryptosFromB64 = {
+  ...defaults,
+  id: "c124f42f-5a61-582d-9fdd-b834de3336a2",
+  createdAt: new Date("2023-01-01T00:10:00.000Z"),
+  privateKey: "NjVhNF9EK0BTUWJAd0AwUU9IQWkmdTgwWEo2QDJmYjI",
+  type: "oct",
+};
+
+export const TEST_OCT_KEY = Kryptos.from("b64", {
+  ...OCT,
+  algorithm: "dir",
+  operations: ["encrypt", "decrypt", "deriveKey"],
+  use: "enc",
+});
+
 const RSA: KryptosFromB64 = {
   ...defaults,
   id: "8bb9bd86-2e70-5cd0-a1cc-b60a5eb6d574",
@@ -21,7 +55,7 @@ const RSA: KryptosFromB64 = {
 
 export const TEST_RSA_KEY = Kryptos.from("b64", {
   ...RSA,
-  algorithm: "RS512",
-  operations: ["sign", "verify"],
-  use: "sig",
+  algorithm: "RSA-OAEP-256",
+  operations: ["encrypt", "decrypt"],
+  use: "enc",
 });

@@ -1,23 +1,24 @@
+import { ShaAlgorithm } from "@lindorm/types";
 import { createHmac } from "crypto";
 import { AesError } from "../../../errors";
-import { Encryption, ShaHash } from "../../../types";
+import { AesEncryption } from "../../../types";
 import { _calculateSecretLength } from "./calculate-secret-length";
 
 type Options = {
-  encryption: Encryption;
-  hash?: ShaHash;
+  encryption: AesEncryption;
+  hash?: ShaAlgorithm;
   initialKeyringMaterial: Buffer;
 };
 
-const getHashLength = (hash: ShaHash): number => {
+const getHashLength = (hash: ShaAlgorithm): number => {
   switch (hash) {
-    case "sha256":
+    case "SHA256":
       return 32;
 
-    case "sha384":
+    case "SHA384":
       return 48;
 
-    case "sha512":
+    case "SHA512":
       return 64;
 
     default:
@@ -27,7 +28,7 @@ const getHashLength = (hash: ShaHash): number => {
 
 export const _createKeyDerivation = ({
   encryption,
-  hash = "sha256",
+  hash = "SHA256",
   initialKeyringMaterial,
 }: Options): Buffer => {
   const length = _calculateSecretLength(encryption);

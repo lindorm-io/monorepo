@@ -1,10 +1,10 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
-import { Encryption } from "../../../types";
+import { AesEncryption } from "../../../types";
 import { _createKeyDerivation } from "../secret/create-key-derivation";
 
 type EncryptOptions = {
-  encryption: Encryption;
+  encryption: AesEncryption;
   kryptos: Kryptos;
 };
 

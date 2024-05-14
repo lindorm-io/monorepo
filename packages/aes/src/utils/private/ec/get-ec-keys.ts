@@ -1,13 +1,12 @@
 import { EcCurve, EcKeyJwk, Kryptos } from "@lindorm/kryptos";
 import { createECDH } from "crypto";
 import { AesError } from "../../../errors";
-import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../../types";
+import { AesEncryption, PublicEncryptionJwk } from "../../../types";
 import { _createKeyDerivation } from "../secret/create-key-derivation";
 import { _getKeyCurve, _getNistCurve } from "./get-key-curve";
 
 type EncryptOptions = {
-  encryption: Encryption;
-  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  encryption: AesEncryption;
   kryptos: Kryptos;
 };
 
@@ -17,22 +16,12 @@ type EncryptResult = {
 };
 
 type DecryptOptions = {
-  encryption: Encryption;
+  encryption: AesEncryption;
   kryptos: Kryptos;
   publicEncryptionJwk: PublicEncryptionJwk;
 };
 
-export const _getEcEncryptionKeys = ({
-  encryption,
-  encryptionKeyAlgorithm,
-  kryptos,
-}: EncryptOptions): EncryptResult => {
-  if (encryptionKeyAlgorithm !== "ECDH-ES") {
-    throw new AesError("Mismatched options values", {
-      debug: { encryptionKeyAlgorithm, kryptos },
-    });
-  }
-
+export const _getEcEncryptionKeys = ({ encryption, kryptos }: EncryptOptions): EncryptResult => {
   if (!Kryptos.isEc(kryptos)) {
     throw new AesError("Invalid kryptos type", {
       debug: { kryptos },

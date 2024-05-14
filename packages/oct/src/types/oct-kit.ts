@@ -1,26 +1,20 @@
 import { Kryptos } from "@lindorm/kryptos";
-
-export type OctSignatureAlgorithm = "SHA256" | "SHA384" | "SHA512";
-
-export type OctSignatureFormat = "base64" | "base64url" | "hex";
+import { BufferFormat } from "@lindorm/types";
 
 export type CreateOctSignatureOptions = {
-  algorithm?: OctSignatureAlgorithm;
   data: string;
-  format?: OctSignatureFormat;
+  format: BufferFormat;
   kryptos: Kryptos;
 };
 
 export type VerifyOctSignatureOptions = {
-  algorithm?: OctSignatureAlgorithm;
   data: string;
-  format?: OctSignatureFormat;
+  format: BufferFormat;
   kryptos: Kryptos;
   signature: string;
 };
 
 export type OctKitOptions = {
-  algorithm?: OctSignatureAlgorithm;
-  format?: OctSignatureFormat;
+  format?: BufferFormat;
   kryptos: Kryptos;
 };

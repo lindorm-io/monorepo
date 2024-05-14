@@ -1,21 +1,20 @@
 import { Kryptos } from "@lindorm/kryptos";
-
-export type OkpSignatureFormat = "base64" | "base64url" | "hex";
+import { BufferFormat } from "@lindorm/types";
 
 export type CreateOkpSignatureOptions = {
   data: string;
-  format?: OkpSignatureFormat;
+  format: BufferFormat;
   kryptos: Kryptos;
 };
 
 export type VerifyOkpSignatureOptions = {
   data: string;
-  format?: OkpSignatureFormat;
+  format: BufferFormat;
   signature: string;
   kryptos: Kryptos;
 };
 
 export type OkpKitOptions = {
-  format?: OkpSignatureFormat;
+  format?: BufferFormat;
   kryptos: Kryptos;
 };

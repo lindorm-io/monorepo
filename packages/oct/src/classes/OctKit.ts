@@ -1,5 +1,6 @@
 import { Kryptos } from "@lindorm/kryptos";
-import { OctKitOptions, OctSignatureAlgorithm, OctSignatureFormat } from "../types";
+import { BufferFormat } from "@lindorm/types";
+import { OctKitOptions } from "../types";
 import {
   _assertOctSignature,
   _createOctSignature,
@@ -7,19 +8,16 @@ import {
 } from "../utils/private/oct-signature";
 
 export class OctKit {
-  private readonly algorithm: OctSignatureAlgorithm | undefined;
-  private readonly format: OctSignatureFormat | undefined;
+  private readonly format: BufferFormat;
   private readonly kryptos: Kryptos;
 
   public constructor(options: OctKitOptions) {
-    this.algorithm = options.algorithm;
-    this.format = options.format;
+    this.format = options.format ?? "base64";
     this.kryptos = options.kryptos;
   }
 
   public sign(data: string): string {
     return _createOctSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -28,7 +26,6 @@ export class OctKit {
 
   public verify(data: string, signature: string): boolean {
     return _verifyOctSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,
@@ -38,7 +35,6 @@ export class OctKit {
 
   public assert(data: string, signature: string): void {
     return _assertOctSignature({
-      algorithm: this.algorithm,
       data,
       format: this.format,
       kryptos: this.kryptos,

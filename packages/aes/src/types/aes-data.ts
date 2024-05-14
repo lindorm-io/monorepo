@@ -1,28 +1,21 @@
 import { Kryptos } from "@lindorm/kryptos";
-import {
-  BufferFormat,
-  Encryption,
-  EncryptionKeyAlgorithm,
-  IntegrityHash,
-  PublicEncryptionJwk,
-} from "./types";
+import { BufferFormat, ShaAlgorithm } from "@lindorm/types";
+import { AesEncryption, PublicEncryptionJwk } from "./types";
 
 export type EncryptAesDataOptions = {
   data: Buffer | string;
-  encryption?: Encryption;
-  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  encryption?: AesEncryption;
   format?: BufferFormat;
-  integrityHash?: IntegrityHash;
+  integrityHash?: ShaAlgorithm;
   kryptos: Kryptos;
 };
 
 export type DecryptAesDataOptions = {
   authTag?: Buffer;
   content: Buffer;
-  encryption: Encryption;
-  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  encryption: AesEncryption;
   initialisationVector: Buffer;
-  integrityHash?: IntegrityHash;
+  integrityHash?: ShaAlgorithm;
   kryptos: Kryptos;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;

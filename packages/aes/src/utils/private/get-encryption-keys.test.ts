@@ -1,6 +1,4 @@
-import { EC_KEY_SET } from "../../__fixtures__/ec-keys.fixture";
-import { OCT_KEY_SET } from "../../__fixtures__/oct-keys.fixture";
-import { RSA_KEY_SET } from "../../__fixtures__/rsa-keys.fixture";
+import { TEST_EC_KEY, TEST_OCT_KEY, TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { _getEcEncryptionKeys } from "./ec/get-ec-keys";
 import { _getEncryptionKeys } from "./get-encryption-keys";
 import { _getOctEncryptionKeys } from "./oct/get-oct-keys";
@@ -27,8 +25,7 @@ describe("getEncryptionKeys", () => {
     expect(
       _getEncryptionKeys({
         encryption: "aes-256-gcm",
-        encryptionKeyAlgorithm: "ECDH-ES",
-        kryptos: EC_KEY_SET,
+        kryptos: TEST_EC_KEY,
       }),
     ).toBe("getEcEncryptionKeys");
 
@@ -39,8 +36,7 @@ describe("getEncryptionKeys", () => {
     expect(
       _getEncryptionKeys({
         encryption: "aes-256-gcm",
-        encryptionKeyAlgorithm: "RSA-OAEP-256",
-        kryptos: RSA_KEY_SET,
+        kryptos: TEST_RSA_KEY,
       }),
     ).toBe("getRsaEncryptionKeys");
 
@@ -51,7 +47,7 @@ describe("getEncryptionKeys", () => {
     expect(
       _getEncryptionKeys({
         encryption: "aes-256-gcm",
-        kryptos: OCT_KEY_SET,
+        kryptos: TEST_OCT_KEY,
       }),
     ).toBe("getOctEncryptionKeys");
 

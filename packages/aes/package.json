@@ -29,5 +29,8 @@
     "@lindorm/errors": "^0.1.4",
     "@lindorm/is": "^0.1.4",
     "@lindorm/kryptos": "^0.2.1"
+  },
+  "devDependencies": {
+    "@lindorm/types": "^0.1.3"
   }
 }

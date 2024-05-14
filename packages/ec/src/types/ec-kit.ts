@@ -1,26 +1,22 @@
 import { Kryptos } from "@lindorm/kryptos";
+import { BufferFormat } from "@lindorm/types";
 
-export type EcSignatureAlgorithm = "SHA256" | "SHA384" | "SHA512";
-
-export type EcSignatureFormat = "base64" | "base64url" | "hex";
+export type EcSignatureFormat = BufferFormat | "raw";
 
 export type CreateEcSignatureOptions = {
-  algorithm?: EcSignatureAlgorithm;
   data: string;
-  format?: EcSignatureFormat;
+  format: EcSignatureFormat;
   kryptos: Kryptos;
 };
 
 export type VerifyEcSignatureOptions = {
-  algorithm?: EcSignatureAlgorithm;
   data: string;
-  format?: EcSignatureFormat;
-  signature: string;
+  format: EcSignatureFormat;
   kryptos: Kryptos;
+  signature: string;
 };
 
 export type EcKitOptions = {
-  algorithm?: EcSignatureAlgorithm;
   format?: EcSignatureFormat;
   kryptos: Kryptos;
 };

@@ -1,54 +1,46 @@
-import { Kryptos } from "@lindorm/kryptos";
 import { createSign, createVerify } from "crypto";
 import { EcError } from "../../errors";
 import { CreateEcSignatureOptions, VerifyEcSignatureOptions } from "../../types/ec-kit";
+import { _getSignKey, _getVerifyKey } from "./get-key";
+import { _mapEcAlgorithm } from "./map-algorithm";
+import { _derToRaw, _rawToDer } from "./raw";
 
-export const _createEcSignature = ({
-  algorithm = "SHA256",
-  data,
-  format = "base64",
-  kryptos,
-}: CreateEcSignatureOptions): string => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
+export const _createEcSignature = ({ data, format, kryptos }: CreateEcSignatureOptions): string => {
+  const der = createSign(_mapEcAlgorithm(kryptos)).update(data).end().sign(_getSignKey(kryptos));
+
+  if (format === "raw") {
+    return _derToRaw(kryptos, der).toString("base64url");
   }
 
-  const { privateKey } = kryptos.export("pem");
-
-  if (!privateKey) {
-    throw new EcError("Missing private key");
-  }
-
-  return createSign(algorithm).update(data).end().sign(privateKey, format);
+  return der.toString(format);
 };
 
 export const _verifyEcSignature = ({
-  algorithm = "SHA256",
   data,
-  format = "base64",
+  format,
   kryptos,
   signature,
 }: VerifyEcSignatureOptions): boolean => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
+  let der: Buffer;
+
+  if (format === "raw") {
+    der = _rawToDer(kryptos, Buffer.from(signature, "base64url"));
+  } else {
+    der = Buffer.from(signature, format);
   }
 
-  const { publicKey } = kryptos.export("pem");
-
-  if (!publicKey) {
-    throw new EcError("Missing private key");
-  }
-
-  return createVerify(algorithm).update(data).end().verify(publicKey, signature, format);
+  return createVerify(_mapEcAlgorithm(kryptos))
+    .update(data)
+    .end()
+    .verify(_getVerifyKey(kryptos), der);
 };
 
 export const _assertEcSignature = ({
-  algorithm,
   data,
   format,
   kryptos,
   signature,
 }: VerifyEcSignatureOptions): void => {
-  if (_verifyEcSignature({ algorithm, data, format, kryptos, signature })) return;
+  if (_verifyEcSignature({ data, format, kryptos, signature })) return;
   throw new EcError("Invalid signature");
 };

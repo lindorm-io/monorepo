@@ -1,13 +1,12 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../../errors";
-import { Encryption, EncryptionKeyAlgorithm, PublicEncryptionJwk } from "../../types";
+import { AesEncryption, PublicEncryptionJwk } from "../../types";
 import { _getEcDecryptionKey } from "./ec/get-ec-keys";
 import { _getOctDecryptionKey } from "./oct/get-oct-keys";
 import { _getRsaDecryptionKey } from "./rsa/get-rsa-keys";
 
 type Options = {
-  encryption: Encryption;
-  encryptionKeyAlgorithm?: EncryptionKeyAlgorithm;
+  encryption: AesEncryption;
   kryptos: Kryptos;
   publicEncryptionJwk?: PublicEncryptionJwk;
   publicEncryptionKey?: Buffer;
@@ -15,7 +14,6 @@ type Options = {
 
 export const _getDecryptionKey = ({
   encryption,
-  encryptionKeyAlgorithm,
   kryptos,
   publicEncryptionJwk,
   publicEncryptionKey,
@@ -27,7 +25,7 @@ export const _getDecryptionKey = ({
           debug: { publicEncryptionJwk },
         });
       }
-      return _getEcDecryptionKey({ encryption, kryptos, publicEncryptionJwk });
+      return _getEcDecryptionKey({ encryption, publicEncryptionJwk, kryptos });
 
     case "RSA":
       if (!publicEncryptionKey) {
@@ -35,7 +33,7 @@ export const _getDecryptionKey = ({
           debug: { publicEncryptionKey },
         });
       }
-      return _getRsaDecryptionKey({ encryptionKeyAlgorithm, kryptos, publicEncryptionKey });
+      return _getRsaDecryptionKey({ publicEncryptionKey, kryptos });
 
     case "oct":
       return _getOctDecryptionKey({ encryption, kryptos });

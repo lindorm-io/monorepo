@@ -1,6 +1,4 @@
-import { EC_KEY_SET } from "../../__fixtures__/ec-keys.fixture";
-import { OCT_KEY_SET } from "../../__fixtures__/oct-keys.fixture";
-import { RSA_KEY_SET } from "../../__fixtures__/rsa-keys.fixture";
+import { TEST_EC_KEY, TEST_OCT_KEY, TEST_RSA_KEY } from "../../__fixtures__/keys";
 import { AesError } from "../../errors";
 import { _getEcDecryptionKey } from "./ec/get-ec-keys";
 import { _getDecryptionKey } from "./get-decryption-key";
@@ -28,12 +26,11 @@ describe("getDecryptionKey", () => {
     expect(
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        kryptos: EC_KEY_SET,
-        encryptionKeyAlgorithm: "ECDH-ES",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
         publicEncryptionJwk: { crv: "P-521", x: "x", y: "y", kty: "EC" },
+        kryptos: TEST_EC_KEY,
       }),
-    ).toStrictEqual("getEcDecryptionKey");
+    ).toEqual("getEcDecryptionKey");
 
     expect(getEcDecryptionKey).toHaveBeenCalled();
   });
@@ -42,11 +39,10 @@ describe("getDecryptionKey", () => {
     expect(
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        kryptos: RSA_KEY_SET,
-        encryptionKeyAlgorithm: "RSA-OAEP-256",
         publicEncryptionKey: Buffer.from("public-encryption-key"),
+        kryptos: TEST_RSA_KEY,
       }),
-    ).toStrictEqual("getRsaDecryptionKey");
+    ).toEqual("getRsaDecryptionKey");
 
     expect(getRsaDecryptionKey).toHaveBeenCalled();
   });
@@ -55,9 +51,9 @@ describe("getDecryptionKey", () => {
     expect(
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        kryptos: OCT_KEY_SET,
+        kryptos: TEST_OCT_KEY,
       }),
-    ).toStrictEqual("getOctDecryptionKey");
+    ).toEqual("getOctDecryptionKey");
 
     expect(getOctDecryptionKey).toHaveBeenCalled();
   });
@@ -66,7 +62,7 @@ describe("getDecryptionKey", () => {
     expect(() =>
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        kryptos: RSA_KEY_SET,
+        kryptos: TEST_RSA_KEY,
       }),
     ).toThrow(AesError);
   });
@@ -75,8 +71,7 @@ describe("getDecryptionKey", () => {
     expect(() =>
       _getDecryptionKey({
         encryption: "aes-256-gcm",
-        kryptos: RSA_KEY_SET,
-        encryptionKeyAlgorithm: "RSA-OAEP-256",
+        kryptos: TEST_RSA_KEY,
       }),
     ).toThrow(AesError);
   });

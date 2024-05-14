@@ -1,4 +1,4 @@
-import { RSA_KEY_SET } from "../../../__fixtures__/rsa-keys.fixture";
+import { TEST_RSA_KEY } from "../../../__fixtures__/keys";
 import { _generateEncryptionKey } from "./generate-encryption-key";
 import { _getRsaDecryptionKey, _getRsaEncryptionKeys } from "./get-rsa-keys";
 import { _createPublicEncryptionKey, _decryptPublicEncryptionKey } from "./public-encryption-key";
@@ -21,10 +21,9 @@ describe("get-rsa-keys", () => {
     expect(
       _getRsaEncryptionKeys({
         encryption: "aes-128-cbc",
-        encryptionKeyAlgorithm: "RSA-OAEP",
-        kryptos: RSA_KEY_SET,
+        kryptos: TEST_RSA_KEY,
       }),
-    ).toStrictEqual({
+    ).toEqual({
       encryptionKey: "generateEncryptionKey",
       publicEncryptionKey: "createPublicEncryptionKey",
     });
@@ -33,9 +32,8 @@ describe("get-rsa-keys", () => {
   test("should return rsa decryption key", () => {
     expect(
       _getRsaDecryptionKey({
-        encryptionKeyAlgorithm: "RSA-OAEP",
-        kryptos: RSA_KEY_SET,
         publicEncryptionKey: Buffer.from("publicEncryptionKey"),
+        kryptos: TEST_RSA_KEY,
       }),
     ).toBe("decryptPublicEncryptionKey");
   });
