@@ -4,13 +4,13 @@ import { _assertArgonHash, _createArgonHash, _verifyArgonHash } from "./argon-ha
 
 describe("argon-hash", () => {
   it("should resolve", async () => {
-    await expect(_createArgonHash({ data: "data" })).resolves.toStrictEqual(
+    await expect(_createArgonHash({ data: "data" })).resolves.toEqual(
       expect.stringContaining("$argon2id$v=19$m=65536,t=12,p=8$"),
     );
   });
 
   it("should resolve with secret", async () => {
-    await expect(_createArgonHash({ data: "data", kryptos: TEST_OCT_KEY })).resolves.toStrictEqual(
+    await expect(_createArgonHash({ data: "data", kryptos: TEST_OCT_KEY })).resolves.toEqual(
       expect.stringContaining("$argon2id$v=19$m=65536,t=12,p=8$"),
     );
   });
