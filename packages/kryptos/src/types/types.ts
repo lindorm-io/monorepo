@@ -1,9 +1,8 @@
-import { EcAlgorithm, EcCurve } from "./ec";
-import { OctAlgorithm } from "./oct";
-import { OkpAlgorithm, OkpCurve } from "./okp";
-import { RsaAlgorithm } from "./rsa";
+import { JweAlgorithm, JwtAlgorithm } from "./algorithm";
+import { EcCurve } from "./ec";
+import { OkpCurve } from "./okp";
 
-export type KryptosAlgorithm = EcAlgorithm | OctAlgorithm | OkpAlgorithm | RsaAlgorithm;
+export type KryptosAlgorithm = JwtAlgorithm | JweAlgorithm;
 
 export type KryptosCurve = EcCurve | OkpCurve;
 

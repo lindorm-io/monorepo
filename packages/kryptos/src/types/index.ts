@@ -1,3 +1,4 @@
+export * from "./algorithm";
 export * from "./combined";
 export * from "./ec";
 export * from "./format";

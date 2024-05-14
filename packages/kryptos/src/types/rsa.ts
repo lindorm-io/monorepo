@@ -1,4 +1,13 @@
-export type RsaAlgorithm = "RS256" | "RS384" | "RS512";
+export type RsaSigAlgorithm = "RS256" | "RS384" | "RS512" | "PS256" | "PS384" | "PS512";
+
+export type RsaEncAlgorithm =
+  | "RSA-OAEP"
+  | "RSA-OAEP-256"
+  | "RSA-OAEP-384"
+  | "RSA-OAEP-512"
+  | "RSA-PRIVATE-KEY";
+
+export type RsaAlgorithm = RsaEncAlgorithm | RsaSigAlgorithm;
 
 export type RsaModulus = 1 | 2 | 3 | 4;
 
