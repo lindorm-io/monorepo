@@ -1,15 +1,22 @@
-import { EcAlgorithm, EcCurve } from "./ec";
-import { OctAlgorithm } from "./oct";
-import { OkpAlgorithm, OkpCurve } from "./okp";
-import { RsaAlgorithm } from "./rsa";
-import { KryptosAlgorithm, KryptosCurve, KryptosOperation, KryptosType, KryptosUse } from "./types";
+import { Optional } from "@lindorm/types";
+import { EcGenerate } from "./ec";
+import { OctGenerate } from "./oct";
+import { OkpGenerate } from "./okp";
+import { RsaGenerate, RsaModulus } from "./rsa";
+import {
+  KryptosAlgorithm,
+  KryptosCurve,
+  KryptosOperation,
+  KryptosType,
+  KryptosUse,
+} from "./types";
 
-export type SetKryptosAttributes = {
+export type KryptosAttributes = {
   id: string;
-  algorithm: KryptosAlgorithm | undefined;
+  algorithm: KryptosAlgorithm;
   createdAt: Date;
   curve: KryptosCurve | undefined;
-  expiresAt: Date | undefined;
+  expiresAt: Date;
   isExternal: boolean;
   issuer: string | undefined;
   jwksUri: string | undefined;
@@ -18,46 +25,56 @@ export type SetKryptosAttributes = {
   ownerId: string | undefined;
   type: KryptosType;
   updatedAt: Date;
-  use: KryptosUse | undefined;
+  use: KryptosUse;
 };
 
-export type CalculatedKryptosAttributes = {
-  expiresIn: number | undefined;
+export type KryptosMetadata = {
+  expiresIn: number;
   isActive: boolean;
   isExpired: boolean;
   isUsable: boolean;
+  modulus: RsaModulus | undefined;
 };
 
-export type KryptosAttributes = SetKryptosAttributes & CalculatedKryptosAttributes;
+export type KryptosLike = Partial<KryptosAttributes>;
 
-export type KryptosOptions = Partial<Omit<SetKryptosAttributes, "type">> &
-  Pick<SetKryptosAttributes, "type"> & {
-    privateKey?: Buffer;
-    publicKey?: Buffer;
-  };
+type StdOptions = Optional<
+  KryptosAttributes,
+  | "id"
+  | "createdAt"
+  | "curve"
+  | "expiresAt"
+  | "isExternal"
+  | "issuer"
+  | "jwksUri"
+  | "notBefore"
+  | "operations"
+  | "ownerId"
+  | "updatedAt"
+>;
 
-export type KryptosClone = Omit<KryptosOptions, "privateKey" | "publicKey" | "type">;
-
-export type EcKryptos = Omit<KryptosAttributes, "algorithm" | "curve" | "type"> & {
-  algorithm: EcAlgorithm;
-  curve: EcCurve;
-  type: "EC";
+export type KryptosKeys = {
+  privateKey?: Buffer;
+  publicKey?: Buffer;
 };
 
-export type OctKryptos = Omit<KryptosAttributes, "algorithm" | "curve" | "type"> & {
-  algorithm: OctAlgorithm;
-  curve: undefined;
-  type: "oct";
-};
+export type KryptosOptions = StdOptions & KryptosKeys;
 
-export type OkpKryptos = Omit<KryptosAttributes, "algorithm" | "curve" | "type"> & {
-  algorithm: OkpAlgorithm;
-  curve: OkpCurve;
-  type: "OKP";
-};
+type StdGenerate = Pick<
+  StdOptions,
+  "expiresAt" | "issuer" | "jwksUri" | "notBefore" | "operations" | "ownerId" | "use"
+>;
 
-export type RsaKryptos = Omit<KryptosAttributes, "algorithm" | "curve" | "type"> & {
-  algorithm: RsaAlgorithm;
-  curve: undefined;
-  type: "RSA";
-};
+export type GenerateEcOptions = StdGenerate & EcGenerate;
+
+export type GenerateOctOptions = StdGenerate & OctGenerate;
+
+export type GenerateOkpOptions = StdGenerate & OkpGenerate;
+
+export type GenerateRsaOptions = StdGenerate & RsaGenerate;
+
+export type GenerateKryptosOptions =
+  | GenerateEcOptions
+  | GenerateOctOptions
+  | GenerateOkpOptions
+  | GenerateRsaOptions;

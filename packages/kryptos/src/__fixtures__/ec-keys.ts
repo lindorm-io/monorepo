@@ -1,23 +1,28 @@
-import { KryptosB64, KryptosJwk, KryptosPem, KryptosRaw } from "../types";
+import { EcB64, EcJwk, EcPem, EcRaw } from "../types";
 
-export const TEST_EC_KEY_B64: KryptosB64 = {
+export const TEST_EC_KEY_B64: EcB64 = {
+  algorithm: "ES512",
   curve: "P-521",
   privateKey:
     "MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIATAYo3DQYroDV5EgJSUs_kOIvnEScZen73gXa5oQkub0ekQmgOJdPQjINUsdYRn67QK_oBdNUhVbtG_qdxqIgarehgYkDgYYABACN2PIVpRTdfXLmNxkg8Bk2m5netqYsNW2Lefhklr2jfJiVUJUDPoZoGfabGzHEgsKjP2HRbPsEI_tND3x4N9VW0QAID2UYXa7GN0izHWIFRdjVYuR5-0jywFtd-o_N2POdrvlV8xumdVK-TiSPEIdfKoL_Iu0e7IKTsJsj-UmE8rDJnw",
   publicKey:
     "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAjdjyFaUU3X1y5jcZIPAZNpuZ3ramLDVti3n4ZJa9o3yYlVCVAz6GaBn2mxsxxILCoz9h0Wz7BCP7TQ98eDfVVtEACA9lGF2uxjdIsx1iBUXY1WLkeftI8sBbXfqPzdjzna75VfMbpnVSvk4kjxCHXyqC_yLtHuyCk7CbI_lJhPKwyZ8",
   type: "EC",
+  use: "sig",
 };
 
-export const TEST_EC_KEY_JWK: KryptosJwk = {
+export const TEST_EC_KEY_JWK: EcJwk = {
+  alg: "ES512",
   x: "APR_foe7ldh7LLa8ZFvQA6t2niQqzdFbV38w7jt5KrCcMGoIizvVqHEf4DeFe-KGI8u3QiP7UNVrU1yuldAoEwhw",
   y: "ABzy87I16-HAaIfLYfT1vayxG0HuHX8h771d9EnX_vweC1fcMHetmzYDKT5heXvVE4JmREBsoGwdk4e7vDSD5RVR",
   crv: "P-521",
   kty: "EC",
   d: "AcDSceRWjuYGq83oE_BgW_P7SRwYhUrLRAvhsjxCFe9iE3gyKBurav6YguL-OWJJ40dGQ7XJQW1D8S4or8QMuLIE",
+  use: "sig",
 };
 
-export const TEST_EC_KEY_PEM: KryptosPem = {
+export const TEST_EC_KEY_PEM: EcPem = {
+  algorithm: "ES512",
   curve: "P-521",
   type: "EC",
   privateKey:
@@ -36,9 +41,11 @@ export const TEST_EC_KEY_PEM: KryptosPem = {
     "sjXr4cBoh8th9PW9rLEbQe4dfyHvvV30Sdf+/B4LV9wwd62bNgMpPmF5e9UTgmZE\n" +
     "QGygbB2Th7u8NIPlFVE=\n" +
     "-----END PUBLIC KEY-----\n",
+  use: "sig",
 };
 
-export const TEST_EC_KEY_RAW: KryptosRaw = {
+export const TEST_EC_KEY_RAW: EcRaw = {
+  algorithm: "ES512",
   curve: "P-521",
   type: "EC",
   privateKey: Buffer.from(
@@ -49,4 +56,5 @@ export const TEST_EC_KEY_RAW: KryptosRaw = {
     "04007cd4063ff95e1f17bd821bddde896f055f518f7584fc9a2eaf4877421476b789273435bc30d7293b65dfecdf202bf4a48ac9c43194fa66903ad341fa51a60c8c4300f49820da39721f3acca92dafedf273d5545ded424c822f75394ba9979bf44f57a87f56a5aa6da830e760adb0044e99d71dd09a4d140bdeb5abfb4bc01387366337",
     "hex",
   ),
+  use: "sig",
 };

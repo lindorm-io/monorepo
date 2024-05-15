@@ -1,13 +1,12 @@
-import { KryptosJwk } from "./combined";
-import { KryptosAlgorithm, KryptosOperation, KryptosUse } from "./types";
+import { Optional } from "@lindorm/types";
+import { KryptosAlgorithm, KryptosOperation, KryptosType, KryptosUse } from "./types";
 
 export type JwkMetadata = {
   alg: KryptosAlgorithm;
-  kid: string;
-  use: KryptosUse;
-
-  // specific for private keys
   key_ops: Array<KryptosOperation>;
+  kid: string;
+  kty: KryptosType;
+  use: KryptosUse;
 };
 
 export type LindormJwkMetadata = {
@@ -20,4 +19,7 @@ export type LindormJwkMetadata = {
   uat: number;
 };
 
-export type LindormJwk = KryptosJwk & JwkMetadata & LindormJwkMetadata;
+export type LindormJwk = JwkMetadata & LindormJwkMetadata;
+
+export type UnknownJwk = Optional<JwkMetadata, "kid" | "key_ops"> &
+  Partial<LindormJwkMetadata>;
