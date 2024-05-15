@@ -1,8 +1,8 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosEc } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { EcError } from "../../errors";
 
-export const _mapEcAlgorithm = (kryptos: Kryptos): ShaAlgorithm => {
+export const _mapEcAlgorithm = (kryptos: KryptosEc): ShaAlgorithm => {
   if (!Kryptos.isEc(kryptos)) {
     throw new EcError("Invalid kryptos type", { debug: { kryptos } });
   }

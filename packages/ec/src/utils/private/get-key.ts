@@ -1,11 +1,7 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosEc } from "@lindorm/kryptos";
 import { EcError } from "../../errors";
 
-export const _getSignKey = (kryptos: Kryptos): string => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
-  }
-
+export const _getSignKey = (kryptos: KryptosEc): string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -15,11 +11,7 @@ export const _getSignKey = (kryptos: Kryptos): string => {
   return privateKey;
 };
 
-export const _getVerifyKey = (kryptos: Kryptos): string => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
-  }
-
+export const _getVerifyKey = (kryptos: KryptosEc): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {

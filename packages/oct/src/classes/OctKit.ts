@@ -1,5 +1,6 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosOct } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
+import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
 import {
   _assertOctSignature,
@@ -9,10 +10,15 @@ import {
 
 export class OctKit {
   private readonly format: BufferFormat;
-  private readonly kryptos: Kryptos;
+  private readonly kryptos: KryptosOct;
 
   public constructor(options: OctKitOptions) {
     this.format = options.format ?? "base64";
+
+    if (!Kryptos.isOct(options.kryptos)) {
+      throw new OctError("Invalid Kryptos instance");
+    }
+
     this.kryptos = options.kryptos;
   }
 

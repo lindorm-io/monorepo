@@ -1,5 +1,6 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosOkp } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
+import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
 import {
   _assertOkpSignature,
@@ -9,10 +10,15 @@ import {
 
 export class OkpKit {
   private readonly format: BufferFormat;
-  private readonly kryptos: Kryptos;
+  private readonly kryptos: KryptosOkp;
 
   public constructor(options: OkpKitOptions) {
     this.format = options.format ?? "base64";
+
+    if (!Kryptos.isOkp(options.kryptos)) {
+      throw new OkpError("Invalid Kryptos instance");
+    }
+
     this.kryptos = options.kryptos;
   }
 

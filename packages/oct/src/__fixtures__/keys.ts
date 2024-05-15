@@ -1,24 +1,10 @@
-import { Kryptos, KryptosFromB64 } from "@lindorm/kryptos";
+import { Kryptos } from "@lindorm/kryptos";
 
-const defaults = {
-  notBefore: new Date("2023-01-01T01:00:00.000Z"),
-  updatedAt: new Date("2024-01-01T01:00:00.000Z"),
-  expiresAt: new Date("2024-03-01T00:00:00.000Z"),
-  issuer: "https://test.lindorm.io/",
-  jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
-};
-
-const OCT: KryptosFromB64 = {
-  ...defaults,
-  id: "c124f42f-5a61-582d-9fdd-b834de3336a2",
-  createdAt: new Date("2023-01-01T00:10:00.000Z"),
-  privateKey: "NjVhNF9EK0BTUWJAd0AwUU9IQWkmdTgwWEo2QDJmYjI",
+export const TEST_OCT_KEY = Kryptos.make({
+  algorithm: "HS512",
+  privateKey:
+    "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
+  publicKey: "",
   type: "oct",
-};
-
-export const TEST_OCT_KEY = Kryptos.from("b64", {
-  ...OCT,
-  algorithm: "HS256",
-  operations: ["sign", "verify"],
   use: "sig",
 });

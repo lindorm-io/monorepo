@@ -1,11 +1,7 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosOkp } from "@lindorm/kryptos";
 import { OkpError } from "../../errors";
 
-export const _getSignKey = (kryptos: Kryptos): string => {
-  if (!Kryptos.isOkp(kryptos)) {
-    throw new OkpError("Invalid kryptos type");
-  }
-
+export const _getSignKey = (kryptos: KryptosOkp): string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -15,11 +11,7 @@ export const _getSignKey = (kryptos: Kryptos): string => {
   return privateKey;
 };
 
-export const _getVerifyKey = (kryptos: Kryptos): string => {
-  if (!Kryptos.isOkp(kryptos)) {
-    throw new OkpError("Invalid kryptos type");
-  }
-
+export const _getVerifyKey = (kryptos: KryptosOkp): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {

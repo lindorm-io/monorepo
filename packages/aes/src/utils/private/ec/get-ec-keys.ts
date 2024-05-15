@@ -1,4 +1,4 @@
-import { EcCurve, EcKeyJwk, Kryptos } from "@lindorm/kryptos";
+import { EcCurve, EcJwk, Kryptos, KryptosEc } from "@lindorm/kryptos";
 import { createECDH } from "crypto";
 import { AesError } from "../../../errors";
 import { AesEncryption, PublicEncryptionJwk } from "../../../types";
@@ -7,7 +7,7 @@ import { _getKeyCurve, _getNistCurve } from "./get-key-curve";
 
 type EncryptOptions = {
   encryption: AesEncryption;
-  kryptos: Kryptos;
+  kryptos: KryptosEc;
 };
 
 type EncryptResult = {
@@ -17,11 +17,14 @@ type EncryptResult = {
 
 type DecryptOptions = {
   encryption: AesEncryption;
-  kryptos: Kryptos;
+  kryptos: KryptosEc;
   publicEncryptionJwk: PublicEncryptionJwk;
 };
 
-export const _getEcEncryptionKeys = ({ encryption, kryptos }: EncryptOptions): EncryptResult => {
+export const _getEcEncryptionKeys = ({
+  encryption,
+  kryptos,
+}: EncryptOptions): EncryptResult => {
   if (!Kryptos.isEc(kryptos)) {
     throw new AesError("Invalid kryptos type", {
       debug: { kryptos },
@@ -42,16 +45,20 @@ export const _getEcEncryptionKeys = ({ encryption, kryptos }: EncryptOptions): E
   const senderKeyPair = createECDH(_getKeyCurve(curve));
   const senderPublicKey = senderKeyPair.generateKeys();
   const sharedSecret = senderKeyPair.computeSecret(publicKey);
-  const encryptionKey = _createKeyDerivation({ encryption, initialKeyringMaterial: sharedSecret });
+  const encryptionKey = _createKeyDerivation({
+    encryption,
+    initialKeyringMaterial: sharedSecret,
+  });
 
   const publicEncryptionKryptos = Kryptos.from("raw", {
-    id: kryptos.id,
+    algorithm: "ECDH-ES",
     curve: _getNistCurve(curve),
     publicKey: senderPublicKey,
     type: "EC",
+    use: "enc",
   });
 
-  const { crv, kty, x, y } = publicEncryptionKryptos.export<EcKeyJwk>("jwk");
+  const { crv, kty, x, y } = publicEncryptionKryptos.export<EcJwk>("jwk");
 
   return { encryptionKey, publicEncryptionJwk: { crv, kty, x, y } };
 };
@@ -81,7 +88,11 @@ export const _getEcDecryptionKey = ({
   const receiverKeyPair = createECDH(_getKeyCurve(curve));
   receiverKeyPair.setPrivateKey(privateKey);
 
-  const publicEncryptionKryptos = Kryptos.from("jwk", publicEncryptionJwk);
+  const publicEncryptionKryptos = Kryptos.from("jwk", {
+    ...publicEncryptionJwk,
+    alg: "ECDH-ES",
+    use: "enc",
+  });
   const { publicKey } = publicEncryptionKryptos.export("raw");
 
   if (!publicKey) {

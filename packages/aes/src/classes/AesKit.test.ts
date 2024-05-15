@@ -9,7 +9,7 @@ describe("AesKit", () => {
   let cipher: string;
 
   beforeEach(async () => {
-    const kryptos = await Kryptos.generate("oct");
+    const kryptos = await Kryptos.generate({ type: "oct", use: "enc", size: 64 });
 
     string = randomBytes(32).toString("hex");
     aesKit = new AesKit({ kryptos });
@@ -26,7 +26,7 @@ describe("AesKit", () => {
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
       encryption: "aes-256-gcm",
-      encryptionKeyAlgorithm: undefined,
+      encryptionKeyAlgorithm: "dir",
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: "SHA256",

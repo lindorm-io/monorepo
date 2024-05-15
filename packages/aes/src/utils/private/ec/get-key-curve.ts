@@ -1,8 +1,8 @@
-import { KryptosCurve } from "@lindorm/kryptos";
+import { EcCurve } from "@lindorm/kryptos";
 import { AesError } from "../../../errors";
 import { AesCurve } from "../../../types";
 
-export const _getKeyCurve = (curve: AesCurve): AesCurve => {
+export const _getKeyCurve = (curve: EcCurve | AesCurve): AesCurve => {
   switch (curve) {
     case "P-256":
     case "secp256k1":
@@ -21,7 +21,7 @@ export const _getKeyCurve = (curve: AesCurve): AesCurve => {
   }
 };
 
-export const _getNistCurve = (curve: AesCurve): KryptosCurve => {
+export const _getNistCurve = (curve: EcCurve | AesCurve): EcCurve => {
   switch (curve) {
     case "P-256":
     case "secp256k1":

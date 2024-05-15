@@ -1,16 +1,16 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosRsa } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type CreateRsaSignatureOptions = {
   data: string;
   format: BufferFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosRsa;
 };
 
 export type VerifyRsaSignatureOptions = {
   data: string;
   format: BufferFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosRsa;
   signature: string;
 };
 

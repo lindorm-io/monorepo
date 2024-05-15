@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosEc } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type EcSignatureFormat = BufferFormat | "raw";
@@ -6,13 +6,13 @@ export type EcSignatureFormat = BufferFormat | "raw";
 export type CreateEcSignatureOptions = {
   data: string;
   format: EcSignatureFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosEc;
 };
 
 export type VerifyEcSignatureOptions = {
   data: string;
   format: EcSignatureFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosEc;
   signature: string;
 };
 

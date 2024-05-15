@@ -1,5 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
-import { EcError } from "../../errors";
+import { EcCurve, KryptosEc } from "@lindorm/kryptos";
 
 const KEY_SIZES = {
   "P-256": 32,
@@ -7,12 +6,8 @@ const KEY_SIZES = {
   "P-521": 66,
 };
 
-export const _derToRaw = (kryptos: Kryptos, derSignature: Buffer): Buffer => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
-  }
-
-  const keySize = KEY_SIZES[kryptos.curve];
+export const _derToRaw = (kryptos: KryptosEc, derSignature: Buffer): Buffer => {
+  const keySize = KEY_SIZES[kryptos.curve as EcCurve];
 
   if (derSignature[0] !== 0x30) {
     throw new Error("Invalid DER format");
@@ -44,18 +39,20 @@ export const _derToRaw = (kryptos: Kryptos, derSignature: Buffer): Buffer => {
   const truncatedR = r.length > keySize ? r.subarray(r.length - keySize) : r;
   const truncatedS = s.length > keySize ? s.subarray(s.length - keySize) : s;
 
-  const paddedR = Buffer.concat([Buffer.alloc(keySize - truncatedR.length, 0), truncatedR]);
-  const paddedS = Buffer.concat([Buffer.alloc(keySize - truncatedS.length, 0), truncatedS]);
+  const paddedR = Buffer.concat([
+    Buffer.alloc(keySize - truncatedR.length, 0),
+    truncatedR,
+  ]);
+  const paddedS = Buffer.concat([
+    Buffer.alloc(keySize - truncatedS.length, 0),
+    truncatedS,
+  ]);
 
   return Buffer.concat([paddedR, paddedS]);
 };
 
-export const _rawToDer = (kryptos: Kryptos, rawSignature: Buffer): Buffer => {
-  if (!Kryptos.isEc(kryptos)) {
-    throw new EcError("Invalid kryptos type");
-  }
-
-  const keySize = KEY_SIZES[kryptos.curve];
+export const _rawToDer = (kryptos: KryptosEc, rawSignature: Buffer): Buffer => {
+  const keySize = KEY_SIZES[kryptos.curve as EcCurve];
 
   if (rawSignature.length !== 2 * keySize) {
     throw new Error("Invalid raw signature length");

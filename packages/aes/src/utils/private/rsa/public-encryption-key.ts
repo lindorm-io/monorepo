@@ -1,19 +1,28 @@
-import { Kryptos } from "@lindorm/kryptos";
-import { constants, privateDecrypt, privateEncrypt, publicDecrypt, publicEncrypt } from "crypto";
+import { Kryptos, KryptosRsa } from "@lindorm/kryptos";
+import {
+  constants,
+  privateDecrypt,
+  privateEncrypt,
+  publicDecrypt,
+  publicEncrypt,
+} from "crypto";
 import { AesError } from "../../../errors";
 import { _getOaepHash } from "./get-oaep-hash";
 
 type EncryptOptions = {
   encryptionKey: Buffer;
-  kryptos: Kryptos;
+  kryptos: KryptosRsa;
 };
 
 type DecryptOptions = {
   publicEncryptionKey: Buffer;
-  kryptos: Kryptos;
+  kryptos: KryptosRsa;
 };
 
-export const _createPublicEncryptionKey = ({ encryptionKey, kryptos }: EncryptOptions): Buffer => {
+export const _createPublicEncryptionKey = ({
+  encryptionKey,
+  kryptos,
+}: EncryptOptions): Buffer => {
   if (!Kryptos.isRsa(kryptos)) {
     throw new AesError("Invalid kryptos type");
   }

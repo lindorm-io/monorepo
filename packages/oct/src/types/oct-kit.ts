@@ -1,16 +1,16 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { Kryptos, KryptosOct } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type CreateOctSignatureOptions = {
   data: string;
   format: BufferFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosOct;
 };
 
 export type VerifyOctSignatureOptions = {
   data: string;
   format: BufferFormat;
-  kryptos: Kryptos;
+  kryptos: KryptosOct;
   signature: string;
 };
 

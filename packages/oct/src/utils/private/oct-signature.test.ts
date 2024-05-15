@@ -1,7 +1,11 @@
 import { randomBytes } from "crypto";
 import { TEST_OCT_KEY } from "../../__fixtures__/keys";
 import { OctError } from "../../errors";
-import { _assertOctSignature, _createOctSignature, _verifyOctSignature } from "./oct-signature";
+import {
+  _assertOctSignature,
+  _createOctSignature,
+  _verifyOctSignature,
+} from "./oct-signature";
 
 describe("signature", () => {
   const format = "base64";

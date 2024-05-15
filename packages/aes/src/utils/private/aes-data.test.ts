@@ -9,7 +9,7 @@ describe("aes-data", () => {
 
   beforeEach(async () => {
     data = randomBytes(32).toString("hex");
-    kryptos = await Kryptos.generate("oct");
+    kryptos = await Kryptos.generate({ type: "oct", use: "enc", size: 64 });
   });
 
   test("should encrypt", () => {
@@ -17,7 +17,7 @@ describe("aes-data", () => {
       authTag: expect.any(Buffer),
       content: expect.any(Buffer),
       encryption: "aes-256-gcm",
-      encryptionKeyAlgorithm: undefined,
+      encryptionKeyAlgorithm: "dir",
       format: "base64url",
       initialisationVector: expect.any(Buffer),
       integrityHash: undefined,

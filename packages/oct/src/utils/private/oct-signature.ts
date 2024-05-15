@@ -4,8 +4,14 @@ import { CreateOctSignatureOptions, VerifyOctSignatureOptions } from "../../type
 import { _getPrivateKey } from "./get-key";
 import { _mapOctAlgorithm } from "./map-algorithm";
 
-export const _createOctSignature = ({ data, format, kryptos }: CreateOctSignatureOptions): string =>
-  createHmac(_mapOctAlgorithm(kryptos), _getPrivateKey(kryptos)).update(data).digest(format);
+export const _createOctSignature = ({
+  data,
+  format,
+  kryptos,
+}: CreateOctSignatureOptions): string =>
+  createHmac(_mapOctAlgorithm(kryptos), _getPrivateKey(kryptos))
+    .update(data)
+    .digest(format);
 
 export const _verifyOctSignature = ({
   data,

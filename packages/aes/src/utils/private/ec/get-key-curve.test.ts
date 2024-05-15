@@ -1,11 +1,11 @@
-import { EcCurve } from "@lindorm/kryptos";
+import { EcCurve, EcDer } from "@lindorm/kryptos";
 import { TEST_EC_KEY } from "../../../__fixtures__/keys";
 import { AesError } from "../../../errors";
 import { _getKeyCurve } from "./get-key-curve";
 
 describe("getKeyCurve", () => {
   test("should return curve", () => {
-    const exported = TEST_EC_KEY.export("der");
+    const exported = TEST_EC_KEY.export<EcDer>("der");
     const curve = exported.curve as EcCurve;
 
     if (!curve) {

@@ -1,12 +1,8 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { KryptosRsa } from "@lindorm/kryptos";
 import { SignPrivateKeyInput, VerifyPublicKeyInput } from "crypto";
 import { RsaError } from "../../errors";
 
-export const _getSignKey = (kryptos: Kryptos): SignPrivateKeyInput | string => {
-  if (!Kryptos.isRsa(kryptos)) {
-    throw new RsaError("Invalid kryptos type", { debug: { kryptos } });
-  }
-
+export const _getSignKey = (kryptos: KryptosRsa): SignPrivateKeyInput | string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -28,11 +24,7 @@ export const _getSignKey = (kryptos: Kryptos): SignPrivateKeyInput | string => {
   throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });
 };
 
-export const _getVerifyKey = (kryptos: Kryptos): VerifyPublicKeyInput | string => {
-  if (!Kryptos.isRsa(kryptos)) {
-    throw new RsaError("Invalid kryptos type", { debug: { kryptos } });
-  }
-
+export const _getVerifyKey = (kryptos: KryptosRsa): VerifyPublicKeyInput | string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
