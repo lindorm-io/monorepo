@@ -113,7 +113,8 @@ export class Kryptos implements IKryptos {
     }
   }
 
-  // Getters and Setters
+  // getters and setters
+
   public get id(): string {
     return this._id;
   }
@@ -228,15 +229,17 @@ export class Kryptos implements IKryptos {
   }
 
   // metadata
+
   public get hasPrivateKey(): boolean {
-    return isBuffer(this._privateKey);
+    return isBuffer(this._privateKey) && this._privateKey.length > 0;
   }
 
   public get hasPublicKey(): boolean {
-    return isBuffer(this._publicKey);
+    return isBuffer(this._publicKey) && this._publicKey.length > 0;
   }
 
   // to json
+
   public toJSON(): KryptosAttributes & KryptosMetadata {
     return removeUndefined({
       id: this.id,
@@ -262,6 +265,7 @@ export class Kryptos implements IKryptos {
   }
 
   // public methods
+
   public clone(options: KryptosClone = {}): Kryptos {
     const id = Object.keys(options).length ? randomUUID() : this.id;
     const algorithm =
