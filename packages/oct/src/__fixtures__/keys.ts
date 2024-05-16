@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
 
 export const TEST_OCT_KEY = Kryptos.make({
   algorithm: "HS512",
@@ -7,4 +7,4 @@ export const TEST_OCT_KEY = Kryptos.make({
   publicKey: "",
   type: "oct",
   use: "sig",
-});
+}) as IKryptosOct;

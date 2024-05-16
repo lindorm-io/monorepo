@@ -1,4 +1,4 @@
-import { TEST_OKP_KEY } from "../__fixtures__/keys";
+import { TEST_OKP_KEY_25519 } from "../__fixtures__/keys";
 import { OkpError } from "../errors";
 import { OkpKit } from "./OkpKit";
 
@@ -7,7 +7,7 @@ describe("OkpKit", () => {
   let signature: string;
 
   beforeEach(() => {
-    kit = new OkpKit({ kryptos: TEST_OKP_KEY });
+    kit = new OkpKit({ kryptos: TEST_OKP_KEY_25519 });
     signature = kit.sign("string");
   });
 

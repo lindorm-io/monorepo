@@ -1,4 +1,4 @@
-import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
+import { IKryptos, IKryptosOct } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type CreateOctSignatureOptions = {
@@ -16,5 +16,5 @@ export type VerifyOctSignatureOptions = {
 
 export type OctKitOptions = {
   format?: BufferFormat;
-  kryptos: Kryptos;
+  kryptos: IKryptos;
 };

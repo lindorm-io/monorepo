@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptosRsa, Kryptos } from "@lindorm/kryptos";
 
 export const TEST_RSA_KEY = Kryptos.make({
   algorithm: "RS512",
@@ -8,4 +8,4 @@ export const TEST_RSA_KEY = Kryptos.make({
     "MIICCgKCAgEA7cxLHoxaHdYU8EX2ij5m42XIQYWBUxKMOfVbV2OX0nNHEdojXfRfONvrAHwsvRqcdN44yv1E1be18qs5HRB67D3qLeRjXcjegdjWvQj66IFVZIxQHNJ-LXDbAYs7gez8RYbBObnDzfrqy9vIPZet1tbqvlxv9aTR38x3ORJ4Y6Ym9StbKOUIo7BLIvoc1M5uNUIEnFKKZhbmVR423-F50w_E0618KExZgeur_8cMsSWZxyl0oeSI-rIodjfVJbshT1yy98zKRj-mMnyPKgHQARr9SwDA5Xlt9L2fVZ72xgwaPOBUgFoDTPQsqQ3Rkj7nYUSqwQVEL0-oH2K7U3OeGeKyIQMNzRdSfYMw3gSc5dtwqX64oK33lN2jzTKa0clSZjqJ4jzUL1YrXMddF07dMQqjN2mGjeZVy5LaO4B58Y5l-kO01KdwA-_LcDhkNgbKiZMZVtNPlVkR3nCvInt5cqPOqMOcLW3oA1wmh7zauWqorklpSSs75zw8ETtzATSJv8h7kUG9Bl1QQgdBkGqKb4ZG-r5Bj6pwJrHVmgPSMowP8P9G13iQLFdKX714A3DMKDc03TJvs2yVK81YUCtO5aRdwb0q0YcFqn9BHI3cmO-kOhXquMakPQ3zW_FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ",
   type: "RSA",
   use: "sig",
-});
+}) as IKryptosRsa;

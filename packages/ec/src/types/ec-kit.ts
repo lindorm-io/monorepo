@@ -1,4 +1,4 @@
-import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
+import { IKryptos, IKryptosEc } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type EcSignatureFormat = BufferFormat | "raw";
@@ -18,5 +18,5 @@ export type VerifyEcSignatureOptions = {
 
 export type EcKitOptions = {
   format?: EcSignatureFormat;
-  kryptos: Kryptos;
+  kryptos: IKryptos;
 };

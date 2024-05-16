@@ -51,7 +51,7 @@ export interface IKryptosOkp extends IKryptos {
   export(format: "pem"): OkpPem;
 }
 
-export interface KryptosRsa extends IKryptos {
+export interface IKryptosRsa extends IKryptos {
   algorithm: RsaAlgorithm;
   curve: undefined;
   type: "RSA";

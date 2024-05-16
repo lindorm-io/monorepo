@@ -40,7 +40,7 @@ import {
   IKryptosEc,
   IKryptosOct,
   IKryptosOkp,
-  KryptosRsa,
+  IKryptosRsa,
 } from "../types/interfaces";
 import { _exportToB64 } from "../utils/private/export/export-b64";
 import { _exportToDer } from "../utils/private/export/export-der";
@@ -424,7 +424,7 @@ export class Kryptos implements IKryptos {
     );
   }
 
-  public static isRsa(kryptos: KryptosLike): kryptos is KryptosRsa {
+  public static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
     return (
       kryptos instanceof Kryptos && kryptos.type === "RSA" && kryptos.curve === undefined
     );

@@ -1,4 +1,4 @@
-import { Kryptos } from "@lindorm/kryptos";
+import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
 
 export const TEST_EC_KEY_256 = Kryptos.make({
   id: "693db144-37fe-521a-817b-2686c6306d9d",
@@ -11,7 +11,7 @@ export const TEST_EC_KEY_256 = Kryptos.make({
   type: "EC",
   operations: ["sign", "verify"],
   use: "sig",
-});
+}) as IKryptosEc;
 
 export const TEST_EC_KEY_384 = Kryptos.make({
   id: "4f095e70-6694-511d-bc64-76fb6ca283f6",
@@ -24,7 +24,7 @@ export const TEST_EC_KEY_384 = Kryptos.make({
   type: "EC",
   operations: ["sign", "verify"],
   use: "sig",
-});
+}) as IKryptosEc;
 
 export const TEST_EC_KEY_512 = Kryptos.make({
   id: "9e568fdb-ed87-5a24-800a-44e1a143d5da",
@@ -37,4 +37,4 @@ export const TEST_EC_KEY_512 = Kryptos.make({
   type: "EC",
   operations: ["sign", "verify"],
   use: "sig",
-});
+}) as IKryptosEc;

@@ -1,4 +1,4 @@
-import { Kryptos, KryptosRsa } from "@lindorm/kryptos";
+import { IKryptosRsa, Kryptos } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { RsaError } from "../errors";
 import { RsaKitOptions } from "../types";
@@ -10,7 +10,7 @@ import {
 
 export class RsaKit {
   private readonly format: BufferFormat;
-  private readonly kryptos: KryptosRsa;
+  private readonly kryptos: IKryptosRsa;
 
   public constructor(options: RsaKitOptions) {
     this.format = options.format ?? "base64";
