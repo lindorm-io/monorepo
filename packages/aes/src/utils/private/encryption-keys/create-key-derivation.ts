@@ -1,13 +1,19 @@
 import { ShaAlgorithm } from "@lindorm/types";
-import { createHmac } from "crypto";
+import { createHmac, randomBytes } from "crypto";
 import { AesError } from "../../../errors";
 import { AesEncryption } from "../../../types";
-import { _calculateSecretLength } from "./calculate-secret-length";
+import { _calculateEncryptionKeyLength } from "./calculate-encryption-key-length";
 
 type Options = {
   encryption: AesEncryption;
   hash?: ShaAlgorithm;
-  initialKeyringMaterial: Buffer;
+  initialKeyMaterial: Buffer;
+  salt?: Buffer;
+};
+
+type Result = {
+  encryptionKey: Buffer;
+  salt: Buffer;
 };
 
 const getHashLength = (hash: ShaAlgorithm): number => {
@@ -29,27 +35,27 @@ const getHashLength = (hash: ShaAlgorithm): number => {
 export const _createKeyDerivation = ({
   encryption,
   hash = "SHA256",
-  initialKeyringMaterial,
-}: Options): Buffer => {
-  const length = _calculateSecretLength(encryption);
+  initialKeyMaterial,
+  salt = randomBytes(16),
+}: Options): Result => {
+  const encryptionKeyLength = _calculateEncryptionKeyLength(encryption);
   const hashLength = getHashLength(hash);
 
   // Step 1: Extract
-  const prk = createHmac(hash, Buffer.alloc(hashLength, 0)).update(initialKeyringMaterial).digest();
+  const prk = createHmac(hash, salt).update(initialKeyMaterial).digest();
 
   // Step 2: Expand
-  const blocks = [];
+  const blocks: Buffer[] = [];
   let block = Buffer.alloc(0);
 
-  for (let i = 1; blocks.length * hashLength < length; i++) {
+  for (let i = 1; blocks.length * hashLength < encryptionKeyLength; i++) {
     block = createHmac(hash, prk)
-      .update(block)
-      .update(Buffer.from([i]))
+      .update(Buffer.concat([block, Buffer.from([i])]))
       .digest();
-
     blocks.push(block);
   }
 
-  // Concatenate the blocks and slice to the desired length
-  return Buffer.concat(blocks).subarray(0, length);
+  const encryptionKey = Buffer.concat(blocks).subarray(0, encryptionKeyLength);
+
+  return { encryptionKey, salt };
 };

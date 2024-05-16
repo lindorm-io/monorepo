@@ -20,6 +20,15 @@ export const TEST_OCT_KEY = Kryptos.from("b64", {
   use: "enc",
 });
 
+export const TEST_OKP_KEY = Kryptos.from("b64", {
+  algorithm: "ECDH-ES",
+  curve: "X25519",
+  privateKey: "MC4CAQAwBQYDK2VuBCIEILg8BMTo-I04LCbAAECICMTwx4w6J0d1P9PhpNN8ocVz",
+  publicKey: "MCowBQYDK2VuAyEAahY7DQXMXDRj-i9-ssIfCkaEYe_UYtRq9Z6HqJBKMWc",
+  type: "OKP",
+  use: "enc",
+});
+
 export const TEST_RSA_KEY = Kryptos.from("b64", {
   algorithm: "RS512",
   privateKey:

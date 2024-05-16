@@ -2,7 +2,7 @@ import { Kryptos } from "@lindorm/kryptos";
 import { pbkdf2Sync, randomBytes } from "crypto";
 import { AesError } from "../../../errors";
 import { AesEncryption } from "../../../types";
-import { _calculateSecretLength } from "../secret/calculate-secret-length";
+import { _calculateEncryptionKeyLength } from "../encryption-keys/calculate-encryption-key-length";
 
 type EncryptOptions = {
   encryption: AesEncryption;
@@ -33,7 +33,7 @@ export const _getOctEncryptionKeys = ({
   }
 
   const salt = randomBytes(16); // Generate a random salt
-  const length = _calculateSecretLength(encryption);
+  const length = _calculateEncryptionKeyLength(encryption);
   const iterations = 100000;
 
   const encryptionKey = pbkdf2Sync(der.privateKey, salt, iterations, length, "SHA256");
@@ -53,7 +53,7 @@ export const _getOctDecryptionKey = ({
     throw new AesError("Unable to decrypt AES without private key");
   }
 
-  const length = _calculateSecretLength(encryption);
+  const length = _calculateEncryptionKeyLength(encryption);
 
   return pbkdf2Sync(der.privateKey, salt, iterations, length, "SHA256");
 };

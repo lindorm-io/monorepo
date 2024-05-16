@@ -1,7 +1,7 @@
 import { Kryptos } from "@lindorm/kryptos";
 import { AesError } from "../../errors";
 import { AesEncryption, PublicEncryptionJwk } from "../../types";
-import { _getEcDecryptionKey } from "./ec/get-ec-keys";
+import { _getDiffieHellmanDecryptionKey } from "./encryption-keys/shared-secret";
 import { _getOctDecryptionKey } from "./oct/get-oct-keys";
 import { _getRsaDecryptionKey } from "./rsa/get-rsa-keys";
 
@@ -24,16 +24,22 @@ export const _getDecryptionKey = ({
 }: Options): Buffer => {
   switch (kryptos.type) {
     case "EC":
-      if (!publicEncryptionJwk) {
-        throw new AesError("Unable to decrypt AES cipher without public encryption JWK", {
-          debug: { publicEncryptionJwk },
+    case "OKP":
+      if (!publicEncryptionJwk || !salt) {
+        throw new AesError("Invalid decryption data", {
+          debug: { publicEncryptionJwk, salt },
         });
       }
-      return _getEcDecryptionKey({ encryption, publicEncryptionJwk, kryptos });
+      return _getDiffieHellmanDecryptionKey({
+        encryption,
+        publicEncryptionJwk,
+        kryptos,
+        salt,
+      });
 
     case "RSA":
       if (!publicEncryptionKey) {
-        throw new AesError("Unable to decrypt AES cipher without public encryption key", {
+        throw new AesError("Invalid decryption data", {
           debug: { publicEncryptionKey },
         });
       }
@@ -41,14 +47,14 @@ export const _getDecryptionKey = ({
 
     case "oct":
       if (!iterations || !salt) {
-        throw new AesError("Unable to decrypt AES cipher without iterations and salt", {
+        throw new AesError("Invalid decryption data", {
           debug: { iterations, salt },
         });
       }
       return _getOctDecryptionKey({ encryption, iterations, kryptos, salt });
 
     default:
-      throw new AesError("Unexpected encryption key type", {
+      throw new AesError("Unexpected key type", {
         debug: { kryptos },
       });
   }

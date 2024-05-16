@@ -10,7 +10,7 @@ describe("AesKit", () => {
   let cipher: string;
 
   beforeEach(async () => {
-    const kryptos = await Kryptos.generate({ type: "oct", use: "enc", size: 64 });
+    const kryptos = Kryptos.generate({ type: "oct", use: "enc", size: 64 });
 
     string = randomBytes(32).toString("hex");
     aesKit = new AesKit({ kryptos });

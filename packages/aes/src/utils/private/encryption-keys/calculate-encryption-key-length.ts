@@ -1,7 +1,7 @@
 import { AesError } from "../../../errors";
 import { AesEncryption } from "../../../types";
 
-export const _calculateSecretLength = (encryption: AesEncryption): number => {
+export const _calculateEncryptionKeyLength = (encryption: AesEncryption): number => {
   switch (encryption) {
     case "aes-128-cbc":
     case "aes-128-gcm":

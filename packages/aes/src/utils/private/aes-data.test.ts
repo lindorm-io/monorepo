@@ -10,7 +10,7 @@ describe("aes-data", () => {
 
   beforeEach(async () => {
     data = randomBytes(32).toString("hex");
-    kryptos = await Kryptos.generate({ type: "oct", use: "enc", size: 64 });
+    kryptos = Kryptos.generate({ type: "oct", use: "enc", size: 64 });
   });
 
   test("should encrypt", () => {

@@ -1,4 +1,4 @@
-import { Kryptos, KryptosRsa } from "@lindorm/kryptos";
+import { Kryptos } from "@lindorm/kryptos";
 import {
   constants,
   privateDecrypt,
@@ -11,12 +11,12 @@ import { _getOaepHash } from "./get-oaep-hash";
 
 type EncryptOptions = {
   encryptionKey: Buffer;
-  kryptos: KryptosRsa;
+  kryptos: Kryptos;
 };
 
 type DecryptOptions = {
   publicEncryptionKey: Buffer;
-  kryptos: KryptosRsa;
+  kryptos: Kryptos;
 };
 
 export const _createPublicEncryptionKey = ({
