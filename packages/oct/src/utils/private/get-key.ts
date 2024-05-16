@@ -1,7 +1,7 @@
-import { KryptosOct } from "@lindorm/kryptos";
+import { IKryptosOct } from "@lindorm/kryptos";
 import { OctError } from "../../errors";
 
-export const _getPrivateKey = (kryptos: KryptosOct): string => {
+export const _getPrivateKey = (kryptos: IKryptosOct): string => {
   const { privateKey } = kryptos.export("b64");
 
   if (!privateKey) {

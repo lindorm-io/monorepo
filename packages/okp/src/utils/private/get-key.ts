@@ -1,7 +1,7 @@
-import { KryptosOkp } from "@lindorm/kryptos";
+import { IKryptosOkp } from "@lindorm/kryptos";
 import { OkpError } from "../../errors";
 
-export const _getSignKey = (kryptos: KryptosOkp): string => {
+export const _getSignKey = (kryptos: IKryptosOkp): string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -11,7 +11,7 @@ export const _getSignKey = (kryptos: KryptosOkp): string => {
   return privateKey;
 };
 
-export const _getVerifyKey = (kryptos: KryptosOkp): string => {
+export const _getVerifyKey = (kryptos: IKryptosOkp): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {

@@ -1,4 +1,4 @@
-import { Kryptos, KryptosOct } from "@lindorm/kryptos";
+import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { OctError } from "../errors";
 import { OctKitOptions } from "../types";
@@ -10,7 +10,7 @@ import {
 
 export class OctKit {
   private readonly format: BufferFormat;
-  private readonly kryptos: KryptosOct;
+  private readonly kryptos: IKryptosOct;
 
   public constructor(options: OctKitOptions) {
     this.format = options.format ?? "base64";

@@ -1,17 +1,17 @@
-import { Kryptos, KryptosOkp } from "@lindorm/kryptos";
+import { IKryptosOkp, Kryptos } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 
 export type CreateOkpSignatureOptions = {
   data: string;
   format: BufferFormat;
-  kryptos: KryptosOkp;
+  kryptos: IKryptosOkp;
 };
 
 export type VerifyOkpSignatureOptions = {
   data: string;
   format: BufferFormat;
   signature: string;
-  kryptos: KryptosOkp;
+  kryptos: IKryptosOkp;
 };
 
 export type OkpKitOptions = {

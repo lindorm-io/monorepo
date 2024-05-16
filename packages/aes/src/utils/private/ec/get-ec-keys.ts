@@ -1,4 +1,4 @@
-import { EcCurve, EcJwk, Kryptos, KryptosEc } from "@lindorm/kryptos";
+import { EcCurve, EcJwk, IKryptosEc, Kryptos } from "@lindorm/kryptos";
 import { createECDH } from "crypto";
 import { AesError } from "../../../errors";
 import { AesEncryption, PublicEncryptionJwk } from "../../../types";
@@ -7,7 +7,7 @@ import { _getKeyCurve, _getNistCurve } from "./get-key-curve";
 
 type EncryptOptions = {
   encryption: AesEncryption;
-  kryptos: KryptosEc;
+  kryptos: IKryptosEc;
 };
 
 type EncryptResult = {
@@ -17,7 +17,7 @@ type EncryptResult = {
 
 type DecryptOptions = {
   encryption: AesEncryption;
-  kryptos: KryptosEc;
+  kryptos: IKryptosEc;
   publicEncryptionJwk: PublicEncryptionJwk;
 };
 

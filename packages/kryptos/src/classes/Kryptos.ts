@@ -39,11 +39,11 @@ import {
 } from "../types";
 import {
   IKryptos,
-  KryptosEc,
-  KryptosOct,
-  KryptosOkp,
+  IKryptosEc,
+  IKryptosOct,
+  IKryptosOkp,
   KryptosRsa,
-} from "../types/interface";
+} from "../types/interfaces";
 import { _exportToB64 } from "../utils/private/export/export-b64";
 import { _exportToDer } from "../utils/private/export/export-der";
 import { _exportToJwk } from "../utils/private/export/export-jwk";
@@ -427,19 +427,19 @@ export class Kryptos implements IKryptos {
     throw new KryptosError("Invalid key format");
   }
 
-  public static isEc(kryptos: KryptosLike): kryptos is KryptosEc {
+  public static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
     return (
       kryptos instanceof Kryptos && kryptos.type === "EC" && kryptos.curve !== undefined
     );
   }
 
-  public static isOct(kryptos: KryptosLike): kryptos is KryptosOct {
+  public static isOct(kryptos: KryptosLike): kryptos is IKryptosOct {
     return (
       kryptos instanceof Kryptos && kryptos.type === "oct" && kryptos.curve === undefined
     );
   }
 
-  public static isOkp(kryptos: KryptosLike): kryptos is KryptosOkp {
+  public static isOkp(kryptos: KryptosLike): kryptos is IKryptosOkp {
     return (
       kryptos instanceof Kryptos && kryptos.type === "OKP" && kryptos.curve !== undefined
     );

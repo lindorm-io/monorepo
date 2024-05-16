@@ -1,4 +1,4 @@
-import { Kryptos, KryptosEc } from "@lindorm/kryptos";
+import { IKryptosEc, Kryptos } from "@lindorm/kryptos";
 import { EcError } from "../errors";
 import { EcKitOptions, EcSignatureFormat } from "../types";
 import {
@@ -9,7 +9,7 @@ import {
 
 export class EcKit {
   private readonly format: EcSignatureFormat;
-  private readonly kryptos: KryptosEc;
+  private readonly kryptos: IKryptosEc;
 
   public constructor(options: EcKitOptions) {
     this.format = options.format ?? "base64";

@@ -1,4 +1,4 @@
-import { Kryptos, KryptosOkp } from "@lindorm/kryptos";
+import { IKryptosOkp, Kryptos } from "@lindorm/kryptos";
 import { BufferFormat } from "@lindorm/types";
 import { OkpError } from "../errors";
 import { OkpKitOptions } from "../types";
@@ -10,7 +10,7 @@ import {
 
 export class OkpKit {
   private readonly format: BufferFormat;
-  private readonly kryptos: KryptosOkp;
+  private readonly kryptos: IKryptosOkp;
 
   public constructor(options: OkpKitOptions) {
     this.format = options.format ?? "base64";

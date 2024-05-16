@@ -1,8 +1,8 @@
-import { Kryptos, KryptosOct } from "@lindorm/kryptos";
+import { IKryptosOct, Kryptos } from "@lindorm/kryptos";
 import { ShaAlgorithm } from "@lindorm/types";
 import { OctError } from "../../errors";
 
-export const _mapOctAlgorithm = (kryptos: KryptosOct): ShaAlgorithm => {
+export const _mapOctAlgorithm = (kryptos: IKryptosOct): ShaAlgorithm => {
   if (!Kryptos.isOct(kryptos)) {
     throw new OctError("Invalid kryptos type", { debug: { kryptos } });
   }

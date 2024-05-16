@@ -3,7 +3,7 @@ export * from "./clone";
 export * from "./ec";
 export * from "./export";
 export * from "./from";
-export * from "./interface";
+export * from "./interfaces";
 export * from "./jwk";
 export * from "./kryptos";
 export * from "./oct";

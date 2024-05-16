@@ -19,7 +19,7 @@ export interface IKryptos extends KryptosAttributes, KryptosMetadata {
   export(format: "raw"): KryptosRaw;
 }
 
-export interface KryptosEc extends IKryptos {
+export interface IKryptosEc extends IKryptos {
   export(format: "b64"): EcB64;
   export(format: "der"): EcDer;
   export(format: "jwk"): EcJwk;
@@ -27,7 +27,7 @@ export interface KryptosEc extends IKryptos {
   export(format: "raw"): EcRaw;
 }
 
-export interface KryptosOct extends IKryptos {
+export interface IKryptosOct extends IKryptos {
   export(format: "b64"): OctB64;
   export(format: "der"): OctDer;
   export(format: "jwk"): OctJwk;
@@ -35,7 +35,7 @@ export interface KryptosOct extends IKryptos {
   export(format: "raw"): KryptosRaw;
 }
 
-export interface KryptosOkp extends IKryptos {
+export interface IKryptosOkp extends IKryptos {
   export(format: "b64"): OkpB64;
   export(format: "der"): OkpDer;
   export(format: "jwk"): OkpJwk;

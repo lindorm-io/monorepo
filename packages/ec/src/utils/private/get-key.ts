@@ -1,7 +1,7 @@
-import { KryptosEc } from "@lindorm/kryptos";
+import { IKryptosEc } from "@lindorm/kryptos";
 import { EcError } from "../../errors";
 
-export const _getSignKey = (kryptos: KryptosEc): string => {
+export const _getSignKey = (kryptos: IKryptosEc): string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
@@ -11,7 +11,7 @@ export const _getSignKey = (kryptos: KryptosEc): string => {
   return privateKey;
 };
 
-export const _getVerifyKey = (kryptos: KryptosEc): string => {
+export const _getVerifyKey = (kryptos: IKryptosEc): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
